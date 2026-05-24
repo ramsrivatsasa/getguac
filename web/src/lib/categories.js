@@ -1,0 +1,109 @@
+// Spending categories with catchy short names + emojis + colors.
+// These live in one place so the picker, badge, parser, and analytics agree.
+export const CATEGORIES = [
+  { slug: 'grub',       label: 'Grub',      emoji: '🥑', desc: 'Groceries & food shopping',           color: 'emerald' },
+  { slug: 'eats',       label: 'Eats',      emoji: '🍽️', desc: 'Restaurants & dining',                color: 'orange' },
+  { slug: 'subs',       label: 'Subs',      emoji: '🔁', desc: 'Streaming + recurring subscriptions', color: 'violet' },
+  { slug: 'bills',      label: 'Bills',     emoji: '💡', desc: 'Utilities — mobile, internet, power', color: 'sky' },
+  { slug: 'tech',       label: 'Tech',      emoji: '📱', desc: 'Electronics, gadgets, computers',     color: 'sky' },
+  { slug: 'big-stuff',  label: 'Big Stuff', emoji: '🔌', desc: 'Appliances & large purchases',        color: 'indigo' },
+  { slug: 'fix-it',     label: 'Fix-It',    emoji: '🛠️', desc: 'Home maintenance, hardware, tools',   color: 'amber' },
+  { slug: 'outdoors',   label: 'Outdoors',  emoji: '🌳', desc: 'Garden, yard, plants',                color: 'lime' },
+  { slug: 'supplies',   label: 'Supplies',  emoji: '📎', desc: 'Stationery, office & school supplies', color: 'indigo' },
+  { slug: 'fits',       label: 'Fits',      emoji: '👔', desc: 'Clothing & shoes',                    color: 'fuchsia' },
+  { slug: 'wellness',   label: 'Wellness',  emoji: '💊', desc: 'Pharmacy, health, fitness',           color: 'rose' },
+  { slug: 'gas-up',     label: 'Gas Up',    emoji: '⛽', desc: 'Fuel & auto service',                 color: 'red' },
+  { slug: 'fun',        label: 'Fun',       emoji: '🎬', desc: 'Entertainment, concerts, gaming',      color: 'violet' },
+  { slug: 'gifting',    label: 'Gifting',   emoji: '🎁', desc: 'Gifts for others',                    color: 'pink' },
+  { slug: 'misc',       label: 'Misc',      emoji: '📦', desc: 'Anything else',                       color: 'gray' },
+]
+
+// Optional fine-grained tags per category. These live alongside the
+// top-level category (a grocery receipt is `category: 'grub'` and may carry
+// `tags: ['vegetables', 'meat']`). Designed for the receipt/item picker UI.
+export const SUB_TAGS_BY_CATEGORY = {
+  grub: [
+    { slug: 'pantry',     emoji: '🥫', label: 'Pantry' },
+    { slug: 'snacks',     emoji: '🍿', label: 'Snacks' },
+    { slug: 'vegetables', emoji: '🥦', label: 'Veggies' },
+    { slug: 'fruit',      emoji: '🍎', label: 'Fruit' },
+    { slug: 'meat',       emoji: '🥩', label: 'Meat' },
+    { slug: 'seafood',    emoji: '🐟', label: 'Seafood' },
+    { slug: 'eggs',       emoji: '🥚', label: 'Eggs' },
+    { slug: 'dairy',      emoji: '🧀', label: 'Dairy' },
+    { slug: 'spices',     emoji: '🌶️', label: 'Spices' },
+    { slug: 'baking',     emoji: '🥖', label: 'Baking' },
+    { slug: 'frozen',     emoji: '🧊', label: 'Frozen' },
+    { slug: 'beverages',  emoji: '🥤', label: 'Beverages' },
+    { slug: 'household',  emoji: '🧻', label: 'Household' },
+  ],
+  bills: [
+    { slug: 'mobile',      emoji: '📱', label: 'Mobile' },
+    { slug: 'internet',    emoji: '📡', label: 'Internet' },
+    { slug: 'electricity', emoji: '💡', label: 'Electric' },
+    { slug: 'water',       emoji: '💧', label: 'Water' },
+    { slug: 'natural-gas', emoji: '🔥', label: 'Gas' },
+    { slug: 'trash',       emoji: '🗑️', label: 'Trash' },
+    { slug: 'insurance',   emoji: '🛡️', label: 'Insurance' },
+  ],
+  subs: [
+    { slug: 'streaming',   emoji: '📺', label: 'Streaming' },
+    { slug: 'music',       emoji: '🎵', label: 'Music' },
+    { slug: 'software',    emoji: '💻', label: 'Software' },
+    { slug: 'cloud',       emoji: '☁️', label: 'Cloud' },
+    { slug: 'news',        emoji: '📰', label: 'News' },
+    { slug: 'gaming-sub',  emoji: '🎮', label: 'Gaming' },
+    { slug: 'gym-sub',     emoji: '🏋️', label: 'Gym' },
+    { slug: 'ai-tools',    emoji: '🤖', label: 'AI tools' },
+  ],
+  supplies: [
+    { slug: 'office',      emoji: '🖥️', label: 'Office' },
+    { slug: 'school',      emoji: '🎒', label: 'School' },
+    { slug: 'stationery',  emoji: '🖊️', label: 'Stationery' },
+    { slug: 'craft',       emoji: '🎨', label: 'Craft' },
+    { slug: 'print',       emoji: '🖨️', label: 'Print/ink' },
+  ],
+  wellness: [
+    { slug: 'pharmacy',    emoji: '💊', label: 'Pharmacy' },
+    { slug: 'gym',         emoji: '🏋️', label: 'Gym' },
+    { slug: 'dental',      emoji: '🦷', label: 'Dental' },
+    { slug: 'vision',      emoji: '👓', label: 'Vision' },
+    { slug: 'medical',     emoji: '🩺', label: 'Medical' },
+  ],
+}
+
+export const SUB_TAG_BY_SLUG = (() => {
+  const m = new Map()
+  for (const arr of Object.values(SUB_TAGS_BY_CATEGORY)) {
+    for (const t of arr) m.set(t.slug, t)
+  }
+  return Object.fromEntries(m)
+})()
+
+export const CATEGORY_BY_SLUG = Object.fromEntries(CATEGORIES.map(c => [c.slug, c]))
+
+// Light tailwind color map per category — for badges/pills.
+const TONE = {
+  emerald:  'bg-emerald-100 text-emerald-800 border-emerald-200',
+  orange:   'bg-orange-100 text-orange-800 border-orange-200',
+  sky:      'bg-sky-100 text-sky-800 border-sky-200',
+  indigo:   'bg-indigo-100 text-indigo-800 border-indigo-200',
+  amber:    'bg-amber-100 text-amber-900 border-amber-200',
+  lime:     'bg-lime-100 text-lime-800 border-lime-200',
+  fuchsia:  'bg-fuchsia-100 text-fuchsia-800 border-fuchsia-200',
+  rose:     'bg-rose-100 text-rose-700 border-rose-200',
+  red:      'bg-red-100 text-red-700 border-red-200',
+  violet:   'bg-violet-100 text-violet-800 border-violet-200',
+  pink:     'bg-pink-100 text-pink-700 border-pink-200',
+  gray:     'bg-gray-100 text-gray-700 border-gray-200',
+}
+
+export function categoryClass(slug) {
+  const c = CATEGORY_BY_SLUG[slug]
+  return TONE[c?.color || 'gray']
+}
+
+export function categoryLabel(slug) {
+  const c = CATEGORY_BY_SLUG[slug]
+  return c ? `${c.emoji} ${c.label}` : '— Uncategorized'
+}

@@ -1,0 +1,246 @@
+// Receipt parser. Primary: Google Gemini 2.0 Flash (native PDF + image support).
+// Fallback: Groq Llama 3.3 70B (PDF text extracted via pdf-parse) — used if Gemini
+// returns an error AND a Groq key is configured. Both return the same JSON shape.
+
+import pdfParse from 'pdf-parse'
+import { rateLimit, rateKey } from '../../../lib/apiGuard'
+
+export const runtime = 'nodejs'
+export const maxDuration = 60
+
+// Max 5 MB per receipt — reject larger uploads at the door
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024
+
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash'
+const GROQ_TEXT_MODEL   = process.env.GROQ_TEXT_MODEL   || 'llama-3.3-70b-versatile'
+const GROQ_VISION_MODEL = process.env.GROQ_VISION_MODEL || 'meta-llama/llama-4-scout-17b-16e-instruct'
+const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions'
+
+const SYSTEM_PROMPT = `You extract structured data from retail receipts (in-store, e-receipt emails, and order confirmations).
+
+Return ONLY a single JSON object. No prose, no markdown fences. Schema:
+
+{
+  "store_name": string,
+  "store": {
+    "location_name": string|null,
+    "address": string|null,
+    "city": string|null,
+    "state": string|null,
+    "zip": string|null,
+    "phone_no": string|null,
+    "website": string|null,
+    "store_no": string|null
+  },
+  "date": string,                        // YYYY-MM-DD (transaction date, NOT email/forwarded date)
+  "total_amount": number,                // positive purchases, NEGATIVE for returns
+  "tax_paid": number,                    // negative on returns
+  "payment_method": string|null,
+  "payment_last4": string|null,
+  "is_return": boolean,
+  "category": string|null,               // ONE of: "grub", "eats", "tech", "big-stuff", "fix-it", "outdoors", "fits", "wellness", "gas-up", "fun", "gifting", "misc"
+  "items": [
+    { "sku": string|null, "model": string|null, "item_name": string, "qty": number, "price": number, "refund_policy_id": string|null, "returned": boolean }
+  ],
+  "refund_policies": [
+    { "policy_id": string|null, "days": number|null, "expiry_date": string|null, "eligible": boolean, "details": string|null }
+  ]
+}
+
+Rules:
+- Unknown fields → null (or [] for arrays). Never invent.
+- Expand abbreviations: "BEGPLANT4" → "Burpee Eggplant #4", "75LM FLASHLI" → "Defiant 75LM Flashlight".
+- Home Depot "4@3.33 13.32" → qty: 4, price: 13.32 (the line total, not per-unit).
+- For returns, all money is negative AND is_return true AND each returned line has returned: true.
+- date = transaction date printed on the receipt (NOT email forward date).
+- Output JSON only.`
+
+function safeParseJson(raw) {
+  if (!raw) return null
+  let s = raw.trim()
+  s = s.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim()
+  const a = s.indexOf('{'), b = s.lastIndexOf('}')
+  if (a >= 0 && b > a) s = s.slice(a, b + 1)
+  try { return JSON.parse(s) } catch { return null }
+}
+
+// ── Gemini path ────────────────────────────────────────────────────
+async function callGemini({ apiKey, mimeType, base64 }) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`
+  const body = {
+    systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+    contents: [{
+      role: 'user',
+      parts: [
+        { inline_data: { mime_type: mimeType, data: base64 } },
+        { text: 'Extract per the schema. JSON only.' },
+      ],
+    }],
+    generationConfig: { responseMimeType: 'application/json', temperature: 0.1, maxOutputTokens: 4096 },
+  }
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json?.error?.message || `Gemini ${res.status}`)
+  return {
+    text: json?.candidates?.[0]?.content?.parts?.map(p => p.text).filter(Boolean).join('') || '',
+    usage: json?.usageMetadata,
+    provider: 'gemini',
+    model: GEMINI_MODEL,
+  }
+}
+
+// ── Groq path (fallback) ───────────────────────────────────────────
+async function callGroq({ apiKey, model, messages }) {
+  const res = await fetch(GROQ_URL, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model, messages,
+      response_format: { type: 'json_object' },
+      temperature: 0.1,
+      max_tokens: 4096,
+    }),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json?.error?.message || `Groq ${res.status}`)
+  return {
+    text: json?.choices?.[0]?.message?.content || '',
+    usage: json?.usage,
+    provider: 'groq',
+    model,
+  }
+}
+
+async function callGroqForFile({ apiKey, mimeType, buffer }) {
+  if (mimeType === 'application/pdf') {
+    const extracted = await pdfParse(buffer)
+    if (!extracted.text || extracted.text.trim().length < 10) throw new Error('PDF text empty')
+    return callGroq({
+      apiKey, model: GROQ_TEXT_MODEL,
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user', content: `Receipt text:\n\n---\n${extracted.text}\n---\n\nJSON only.` },
+      ],
+    })
+  }
+  const dataUrl = `data:${mimeType};base64,${buffer.toString('base64')}`
+  return callGroq({
+    apiKey, model: GROQ_VISION_MODEL,
+    messages: [{
+      role: 'user',
+      content: [
+        { type: 'text', text: SYSTEM_PROMPT + '\n\nExtract this receipt:' },
+        { type: 'image_url', image_url: { url: dataUrl } },
+      ],
+    }],
+  })
+}
+
+// ── Route handler ──────────────────────────────────────────────────
+export async function POST(request) {
+  try {
+    // Rate limit — 10 parses/min per IP+session
+    const rl = rateLimit(rateKey(request, 'parse-receipt'), { limit: 10, windowMs: 60_000 })
+    if (!rl.ok) {
+      return Response.json(
+        { error: `Too many parses. Try again in ${rl.retryAfter}s.` },
+        { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } }
+      )
+    }
+
+    const geminiKey = process.env.GEMINI_API_KEY
+    const groqKey   = process.env.GROQ_API_KEY
+    if (!geminiKey && !groqKey) {
+      return Response.json({ error: 'No AI provider configured. Set GEMINI_API_KEY or GROQ_API_KEY in .env.local.' }, { status: 500 })
+    }
+
+    const formData = await request.formData()
+    const file = formData.get('file')
+    if (!file) return Response.json({ error: 'No file provided' }, { status: 400 })
+
+    const mimeType = file.type || 'application/pdf'
+    if (mimeType !== 'application/pdf' && !mimeType.startsWith('image/')) {
+      return Response.json({ error: `Unsupported file type: ${mimeType}` }, { status: 415 })
+    }
+    if (file.size && file.size > MAX_UPLOAD_BYTES) {
+      return Response.json({ error: `File too large (${(file.size/1024/1024).toFixed(1)} MB). Max ${MAX_UPLOAD_BYTES/1024/1024} MB.` }, { status: 413 })
+    }
+
+    const bytes = await file.arrayBuffer()
+    const buffer = Buffer.from(bytes)
+    const base64 = buffer.toString('base64')
+
+    let result
+    let geminiError = null
+
+    // Try Gemini first
+    if (geminiKey) {
+      try {
+        result = await callGemini({ apiKey: geminiKey, mimeType, base64 })
+      } catch (err) {
+        geminiError = err.message
+        console.warn('[parse-receipt] Gemini failed, will try Groq:', err.message)
+      }
+    }
+
+    // Fall back to Groq if Gemini failed (or wasn't configured)
+    if (!result && groqKey) {
+      result = await callGroqForFile({ apiKey: groqKey, mimeType, buffer })
+    }
+
+    if (!result) {
+      return Response.json({ error: geminiError || 'Both providers failed' }, { status: 502 })
+    }
+
+    const parsed = safeParseJson(result.text)
+    if (!parsed) {
+      console.error('[parse-receipt] non-JSON response:', result.text?.slice(0, 500))
+      return Response.json({ error: 'AI returned malformed JSON' }, { status: 502 })
+    }
+
+    console.log('[parse-receipt]', {
+      provider: result.provider, model: result.model,
+      store: parsed.store_name, date: parsed.date,
+      total: parsed.total_amount, items: parsed.items?.length || 0,
+    })
+
+    return Response.json({
+      store_name: parsed.store_name || '',
+      store_address: parsed.store?.address || '',
+      store_city: parsed.store?.city || '',
+      store_state: parsed.store?.state || '',
+      store_zip: parsed.store?.zip || '',
+      store_phone: parsed.store?.phone_no || '',
+      store_website: parsed.store?.website || '',
+      store_no: parsed.store?.store_no || '',
+      location_name: parsed.store?.location_name || '',
+      date: parsed.date || new Date().toISOString().slice(0, 10),
+      total_amount: Number(parsed.total_amount ?? 0),
+      tax_paid: Number(parsed.tax_paid ?? 0),
+      payment_method: parsed.payment_method || '',
+      payment_last4: parsed.payment_last4 || '',
+      is_return: Boolean(parsed.is_return),
+      category: parsed.category || null,
+      items: Array.isArray(parsed.items) ? parsed.items.map(it => ({
+        sku: it.sku || '', model: it.model || '', item_name: it.item_name || '',
+        qty: Number(it.qty || 1), price: Number(it.price || 0),
+        refund_policy_id: it.refund_policy_id || '', returned: Boolean(it.returned),
+      })) : [],
+      refund_policies: Array.isArray(parsed.refund_policies) ? parsed.refund_policies.map(p => ({
+        policy_id: p.policy_id || '', days: p.days != null ? Number(p.days) : null,
+        expiry_date: p.expiry_date || null, eligible: p.eligible !== false,
+        details: p.details || '',
+      })) : [],
+      _provider: result.provider,
+      _model: result.model,
+      _usage: result.usage,
+    })
+  } catch (err) {
+    console.error('[parse-receipt]', err)
+    return Response.json({ error: err.message || 'Parse failed' }, { status: 500 })
+  }
+}

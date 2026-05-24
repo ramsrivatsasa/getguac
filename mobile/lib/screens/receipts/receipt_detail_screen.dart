@@ -23,10 +23,9 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
   }
 
   Future<void> _load() async {
-    final uid = context.read<AppAuthProvider>().currentUser?.uid ?? '';
     final provider = context.read<ReceiptProvider>();
     final receipt = provider.receipts.where((r) => r.id == widget.id).firstOrNull;
-    final items = await provider.getItems(uid, widget.id);
+    final items = await provider.getItems(widget.id);
     setState(() { _receipt = receipt; _items = items; _loading = false; });
   }
 
@@ -108,8 +107,6 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
     final nameCtrl = TextEditingController();
     final priceCtrl = TextEditingController();
     final qtyCtrl = TextEditingController(text: '1');
-    final uid = context.read<AppAuthProvider>().currentUser?.uid ?? '';
-
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -131,8 +128,8 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
                 qty: int.tryParse(qtyCtrl.text) ?? 1,
                 price: double.tryParse(priceCtrl.text) ?? 0,
               );
-              await context.read<ReceiptProvider>().addItem(uid, widget.id, item);
-              final items = await context.read<ReceiptProvider>().getItems(uid, widget.id);
+              await context.read<ReceiptProvider>().addItem(widget.id, item);
+              final items = await context.read<ReceiptProvider>().getItems(widget.id);
               setState(() => _items = items);
               if (mounted) Navigator.of(ctx).pop();
             },

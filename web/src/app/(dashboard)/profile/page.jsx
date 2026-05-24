@@ -6,6 +6,7 @@ import toast from 'react-hot-toast'
 import { Save, CreditCard, Plus, Trash2, User } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
 import PrivacyPanel from '../../../components/PrivacyPanel'
+import EmailAliasPicker from '../../../components/EmailAliasPicker'
 
 export default function ProfilePage() {
   const sb = createClient()
@@ -77,15 +78,13 @@ export default function ProfilePage() {
           <div><label className="label">Age</label><input type="number" className="input" value={form.age || ''} onChange={s('age')} /></div>
         </div>
 
-        <div className="bg-blue-50 rounded-xl px-4 py-3 text-sm">
-          <span className="text-gray-500">GetGuac Email: </span>
-          <span className="font-mono text-blue-800">{user?.id?.substring(0, 8)}@getguac.app</span>
-        </div>
-
         <button onClick={() => saveProfile.mutate()} disabled={saveProfile.isPending} className="btn-primary">
           <Save size={15} /> {saveProfile.isPending ? 'Saving…' : 'Save Profile'}
         </button>
       </div>
+
+      {/* Vanity email picker (replaces the static GetGuac Email line) */}
+      {user?.id && <EmailAliasPicker userId={user.id} />}
 
       {/* Payment options */}
       <div className="card space-y-4">

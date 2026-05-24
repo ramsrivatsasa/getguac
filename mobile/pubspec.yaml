@@ -16,7 +16,8 @@ dependencies:
   # Camera & Image
   camera: ^0.10.5+9
   image_picker: ^1.1.2
-  file_picker: ^8.0.3
+  # file_picker removed for v1 — not used yet, ships compileSdk=34 which breaks builds.
+  # Add back when we need PDF/document picking on mobile (use the latest version).
 
   # Navigation & State
   go_router: ^13.2.4

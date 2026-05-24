@@ -18,7 +18,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
   @override
   void initState() {
     super.initState();
-    if (context.read<AppAuthProvider>().currentUser?.uid != null) {
+    if (context.read<AppAuthProvider>().currentUser?.id != null) {
       context.read<RewardProvider>().loadRewards();
     }
   }

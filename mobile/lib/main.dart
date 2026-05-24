@@ -6,6 +6,12 @@ import 'providers/receipt_provider.dart';
 import 'providers/reward_provider.dart';
 import 'router.dart';
 
+// Brand palette — matches the web app (emerald + lime).
+const kBrandPrimary    = Color(0xFF15803d); // emerald-700 — main brand
+const kBrandPrimaryDk  = Color(0xFF064e3b); // emerald-900 — accents
+const kBrandAccent     = Color(0xFF84cc16); // lime-500   — pop
+const kBrandSurface    = Color(0xFFf0fdf4); // emerald-50 — soft background
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -34,16 +40,68 @@ class GetGuacApp extends StatelessWidget {
         title: 'GetGuac',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1e3a8a), primary: const Color(0xFF1e3a8a)),
           useMaterial3: true,
-          appBarTheme: const AppBarTheme(backgroundColor: Color(0xFF1e3a8a), foregroundColor: Colors.white, elevation: 0),
-          inputDecorationTheme: InputDecorationTheme(border: OutlineInputBorder(borderRadius: BorderRadius.circular(10))),
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: kBrandPrimary,
+            primary: kBrandPrimary,
+            secondary: kBrandAccent,
+            surface: Colors.white,
+          ),
+          scaffoldBackgroundColor: const Color(0xFFf8fafc),
+          appBarTheme: const AppBarTheme(
+            backgroundColor: Colors.white,
+            foregroundColor: kBrandPrimaryDk,
+            elevation: 0,
+            scrolledUnderElevation: 1,
+            centerTitle: false,
+            titleTextStyle: TextStyle(
+              color: kBrandPrimaryDk,
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          inputDecorationTheme: InputDecorationTheme(
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFe5e7eb)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: kBrandPrimary, width: 2),
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          ),
           elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF1d4ed8), foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              backgroundColor: kBrandPrimary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 18),
+              elevation: 0,
+            ),
+          ),
+          filledButtonTheme: FilledButtonThemeData(
+            style: FilledButton.styleFrom(
+              backgroundColor: kBrandPrimary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               padding: const EdgeInsets.symmetric(vertical: 14),
             ),
+          ),
+          textButtonTheme: TextButtonThemeData(
+            style: TextButton.styleFrom(foregroundColor: kBrandPrimary),
+          ),
+          cardTheme: CardThemeData(
+            elevation: 1,
+            shadowColor: Colors.black12,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          ),
+          navigationBarTheme: NavigationBarThemeData(
+            backgroundColor: Colors.white,
+            indicatorColor: kBrandPrimary.withOpacity(0.15),
+            labelTextStyle: WidgetStateProperty.all(const TextStyle(
+              fontSize: 12, fontWeight: FontWeight.w700,
+            )),
           ),
         ),
         routerConfig: appRouter,

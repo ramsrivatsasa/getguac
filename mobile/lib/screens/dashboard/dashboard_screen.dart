@@ -18,11 +18,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    final uid = context.read<AppAuthProvider>().currentUser?.uid;
-    if (uid != null) {
-      context.read<ReceiptProvider>().loadReceipts(uid);
-      context.read<RewardProvider>().loadRewards(uid);
-    }
+    // Providers read the current user from Supabase auth internally.
+    context.read<ReceiptProvider>().loadReceipts();
+    context.read<RewardProvider>().loadRewards();
   }
 
   @override

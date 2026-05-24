@@ -22,7 +22,7 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
   @override
   void initState() {
     super.initState();
-    if (context.read<AppAuthProvider>().currentUser?.uid != null) {
+    if (context.read<AppAuthProvider>().currentUser?.id != null) {
       context.read<ReceiptProvider>().loadReceipts();
     }
   }
@@ -32,7 +32,7 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
     final img = await picker.pickImage(source: ImageSource.camera);
     if (img == null || !mounted) return;
 
-    final uid = context.read<AppAuthProvider>().currentUser?.uid;
+    final uid = context.read<AppAuthProvider>().currentUser?.id;
     if (uid == null) return;
 
     if (!mounted) return;
@@ -40,7 +40,7 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
   }
 
   void _addManual() {
-    final uid = context.read<AppAuthProvider>().currentUser?.uid;
+    final uid = context.read<AppAuthProvider>().currentUser?.id;
     if (uid == null) return;
     showDialog(context: context, builder: (ctx) => _AddReceiptDialog(uid: uid));
   }
@@ -97,7 +97,7 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
   }
 
   void _editReceipt(Receipt r) {
-    final uid = context.read<AppAuthProvider>().currentUser?.uid;
+    final uid = context.read<AppAuthProvider>().currentUser?.id;
     if (uid == null) return;
     showDialog(context: context, builder: (_) => _AddReceiptDialog(uid: uid, existing: r));
   }

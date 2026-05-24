@@ -8,7 +8,8 @@ import GuacMascot from '../../../components/GuacMascot'
 
 export default function LoginPage() {
   const router = useRouter()
-  const [form, setForm] = useState({ email: '', password: '' })
+  // `identifier` accepts a username (email_alias) OR an email address.
+  const [form, setForm] = useState({ identifier: '', password: '' })
   const [loading, setLoading] = useState(false)
   const [resetOpen, setResetOpen] = useState(false)
   const [resetEmail, setResetEmail] = useState('')
@@ -17,14 +18,23 @@ export default function LoginPage() {
   async function handleSubmit(e) {
     e.preventDefault()
     setLoading(true)
-    const sb = createClient()
-    const { error } = await sb.auth.signInWithPassword(form)
-    if (error) {
-      toast.error(error.message)
-      setLoading(false)
-    } else {
+    try {
+      const res = await fetch('/api/auth/sign-in', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast.error(data.error || 'Invalid username or password')
+        setLoading(false)
+        return
+      }
       router.push('/dashboard')
       router.refresh()
+    } catch (err) {
+      toast.error(err.message || 'Sign-in failed')
+      setLoading(false)
     }
   }
 
@@ -62,20 +72,29 @@ export default function LoginPage() {
           <h2 className="text-xl font-bold text-gray-900 mb-6">Sign In</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="label">Email</label>
-              <input type="email" required className="input" placeholder="you@example.com"
-                value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} />
+              <label className="label">Username or email</label>
+              <input
+                type="text"
+                required
+                autoComplete="username"
+                autoCapitalize="off"
+                spellCheck={false}
+                className="input"
+                placeholder="ram   or   ram@gmail.com"
+                value={form.identifier}
+                onChange={e => setForm(p => ({ ...p, identifier: e.target.value }))}
+              />
             </div>
             <div>
               <div className="flex items-center justify-between">
                 <label className="label mb-0">Password</label>
                 <button type="button"
-                  onClick={() => { setResetEmail(form.email); setResetOpen(true) }}
+                  onClick={() => { setResetEmail(form.identifier.includes('@') ? form.identifier : ''); setResetOpen(true) }}
                   className="text-[11px] font-semibold text-emerald-700 hover:text-emerald-900 hover:underline mb-1">
                   Forgot password?
                 </button>
               </div>
-              <input type="password" required className="input" placeholder="••••••••"
+              <input type="password" required autoComplete="current-password" className="input" placeholder="••••••••"
                 value={form.password} onChange={e => setForm(p => ({ ...p, password: e.target.value }))} />
             </div>
             <button type="submit" disabled={loading} className="btn-primary w-full justify-center py-2.5 mt-1">

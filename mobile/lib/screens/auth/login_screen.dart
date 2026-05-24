@@ -12,7 +12,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailCtrl = TextEditingController();
+  final _identifierCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   bool _loading = false;
 
@@ -20,7 +20,10 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
     try {
-      await context.read<AppAuthProvider>().login(_emailCtrl.text.trim(), _passCtrl.text);
+      // Accepts either an email or a username (the email_alias).
+      // Username login server-side resolution happens on the web; for mobile
+      // v1 we just pass whatever they typed and Supabase tries email.
+      await context.read<AppAuthProvider>().login(_identifierCtrl.text.trim(), _passCtrl.text);
       if (mounted) context.go('/dashboard');
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
@@ -35,8 +38,9 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topLeft, end: Alignment.bottomRight,
-            colors: [Color(0xFF1e3a8a), Color(0xFF2563eb)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF065f46), Color(0xFF15803d), Color(0xFF65a30d)], // emerald-800 → green-700 → lime-600
           ),
         ),
         child: SafeArea(
@@ -45,15 +49,46 @@ class _LoginScreenState extends State<LoginScreen> {
               padding: const EdgeInsets.all(24),
               child: Column(
                 children: [
-                  const Icon(Icons.receipt_long, color: Colors.white, size: 64),
-                  const SizedBox(height: 12),
-                  const Text('EzeReceipts', style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
+                  // Avocado mascot tile
+                  Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(32),
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFFa3e635), Color(0xFF22c55e), Color(0xFF15803d)],
+                      ),
+                      boxShadow: [
+                        BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 18, offset: const Offset(0, 8)),
+                      ],
+                      border: Border.all(color: Colors.white, width: 3),
+                    ),
+                    child: const Center(
+                      child: Text('🥑', style: TextStyle(fontSize: 72)),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'GetGuac',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 36,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
                   const SizedBox(height: 4),
-                  const Text('Manage your receipts & rewards', style: TextStyle(color: Colors.white70, fontSize: 14)),
-                  const SizedBox(height: 36),
+                  const Text(
+                    'Smash your spend — keep what counts.',
+                    style: TextStyle(color: Colors.white70, fontSize: 13),
+                  ),
+                  const SizedBox(height: 32),
                   Card(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    elevation: 8,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    elevation: 12,
+                    shadowColor: Colors.black54,
                     child: Padding(
                       padding: const EdgeInsets.all(24),
                       child: Form(
@@ -61,35 +96,72 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            const Text('Sign In', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                            const Text(
+                              'Sign In',
+                              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF064e3b)),
+                            ),
                             const SizedBox(height: 20),
                             TextFormField(
-                              controller: _emailCtrl,
+                              controller: _identifierCtrl,
                               keyboardType: TextInputType.emailAddress,
-                              decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.email)),
-                              validator: (v) => v!.isEmpty ? 'Required' : null,
+                              autocorrect: false,
+                              decoration: InputDecoration(
+                                labelText: 'Username or email',
+                                hintText: 'ram   or   ram@gmail.com',
+                                prefixIcon: const Icon(Icons.person_outline, color: Color(0xFF15803d)),
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFF15803d), width: 2),
+                                ),
+                              ),
+                              validator: (v) => v == null || v.isEmpty ? 'Required' : null,
                             ),
                             const SizedBox(height: 14),
                             TextFormField(
                               controller: _passCtrl,
                               obscureText: true,
-                              decoration: const InputDecoration(labelText: 'Password', prefixIcon: Icon(Icons.lock)),
-                              validator: (v) => v!.isEmpty ? 'Required' : null,
+                              decoration: InputDecoration(
+                                labelText: 'Password',
+                                prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF15803d)),
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFF15803d), width: 2),
+                                ),
+                              ),
+                              validator: (v) => v == null || v.isEmpty ? 'Required' : null,
                             ),
                             const SizedBox(height: 20),
-                            ElevatedButton(
+                            FilledButton(
                               onPressed: _loading ? null : _login,
-                              child: _loading ? const CircularProgressIndicator(color: Colors.white) : const Text('Sign In'),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: const Color(0xFF15803d),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                              child: _loading
+                                  ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+                                  : const Text('Sign In', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                             ),
                             const SizedBox(height: 12),
                             TextButton(
                               onPressed: () => context.go('/register'),
-                              child: const Text("Don't have an account? Register"),
+                              child: const Text(
+                                "New here? Create an account 🥑",
+                                style: TextStyle(color: Color(0xFF15803d), fontWeight: FontWeight.w600),
+                              ),
                             ),
                           ],
                         ),
                       ),
                     ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'getguac.app',
+                    style: TextStyle(color: Colors.white54, fontSize: 11, letterSpacing: 0.5),
                   ),
                 ],
               ),

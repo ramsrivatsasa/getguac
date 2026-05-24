@@ -36,6 +36,21 @@ export async function middleware(request) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
+  // ── Android device → /download redirect ───────────────────────────────
+  // First-time Android visitors hitting the homepage get nudged to the
+  // download page. We set a cookie so subsequent visits respect their
+  // browsing intent. Only fires on the bare `/` path so deep-links work.
+  if (pathname === '/') {
+    const ua = (request.headers.get('user-agent') || '').toLowerCase()
+    const isAndroid = /android/.test(ua) && !/wv\)/.test(ua)  // skip in-app webviews
+    const dismissed = request.cookies.get('seen_download')?.value === '1'
+    if (isAndroid && !dismissed) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/download'
+      return NextResponse.redirect(url)
+    }
+  }
+
   return supabaseResponse
 }
 

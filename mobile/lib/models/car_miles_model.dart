@@ -6,6 +6,8 @@ class CarTrip {
   final double totalMiles;
   final String description;
   final String category; // Business or Personal
+  final String fromAddress;
+  final String toAddress;
 
   CarTrip({
     required this.id,
@@ -14,6 +16,8 @@ class CarTrip {
     required this.totalMiles,
     this.description = '',
     required this.category,
+    this.fromAddress = '',
+    this.toAddress = '',
   });
 
   factory CarTrip.fromMap(String id, Map<String, dynamic> map) => CarTrip(
@@ -23,6 +27,8 @@ class CarTrip {
         totalMiles: double.tryParse(map['total_miles']?.toString() ?? '0') ?? 0,
         description: map['description'] ?? '',
         category: map['category'] ?? 'Personal',
+        fromAddress: map['from_address'] ?? '',
+        toAddress: map['to_address'] ?? '',
       );
 
   Map<String, dynamic> toMap() => {
@@ -31,5 +37,7 @@ class CarTrip {
         'total_miles': totalMiles,
         'description': description,
         'category': category,
+        'from_address': fromAddress,
+        'to_address': toAddress,
       };
 }

@@ -23,7 +23,10 @@ export async function GET(request) {
   const url = new URL(request.url)
   const folder    = url.searchParams.get('folder')   || 'inbox'
   const page      = Math.max(0, parseInt(url.searchParams.get('page') || '0', 10))
-  const pageSize  = Math.min(100, Math.max(10, parseInt(url.searchParams.get('pageSize') || '50', 10)))
+  // Default 200 covers ~99% of users without needing a "load more" UI on the
+  // current clients. Cap 500 keeps a single page payload under ~250 KB.
+  // When users routinely cross 500 messages, wire up infinite scroll.
+  const pageSize  = Math.min(500, Math.max(10, parseInt(url.searchParams.get('pageSize') || '200', 10)))
   const filter    = url.searchParams.get('filter') || ''  // '', 'unread', 'receipts', 'starred'
   const q         = (url.searchParams.get('q') || '').trim().toLowerCase()
 

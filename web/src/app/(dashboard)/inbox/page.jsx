@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { PanelGroup, Panel, PanelResizeHandle } from 'react-resizable-panels'
 import toast from 'react-hot-toast'
 import {
-  Mail, Search, Inbox as InboxIcon, Star, Archive, Trash2, Reply, Send, Loader2, X, Sparkles, Filter, Edit3, RefreshCw, ChevronsLeft, ChevronsRight,
+  Mail, Search, Inbox as InboxIcon, Star, Archive, Trash2, Reply, Send, Loader2, X, Sparkles, Filter, Edit3, RefreshCw, ChevronsLeft, ChevronsRight, DownloadCloud,
 } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
 
@@ -90,6 +90,28 @@ export default function InboxPage() {
     },
   })
 
+  // Force-pull from IMAP across every folder (INBOX, g, receipts). Rate-limited
+  // server-side to 1 call per 5 min per user — the toast surfaces that cooldown
+  // along with per-folder counts so the user can see exactly what arrived.
+  const backfill = useMutation({
+    mutationFn: async () => {
+      const res = await fetch('/api/email/backfill', { method: 'POST' })
+      const body = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(body?.error || `Backfill failed (${res.status})`)
+      return body
+    },
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ['inbox'] })
+      const perFolder = data?.messages_per_folder || {}
+      const counts = Object.entries(perFolder).map(([k, v]) => `${k}: ${v}`).join(', ')
+      toast.success(
+        `Backfill: ${data?.inserted || 0} new, ${data?.drafted || 0} drafted${counts ? ` (${counts})` : ''}`,
+        { duration: 6000 }
+      )
+    },
+    onError: (e) => toast.error(e.message),
+  })
+
   const messages = list.data?.messages || []
   const total = list.data?.total || 0
 
@@ -110,6 +132,15 @@ export default function InboxPage() {
             title="Refresh"
           >
             <RefreshCw size={14} className={list.isFetching ? 'animate-spin' : ''} /> Refresh
+          </button>
+          <button
+            onClick={() => backfill.mutate()}
+            disabled={backfill.isPending}
+            className="btn-secondary flex items-center gap-2"
+            title="Force-pull from IMAP (1/5 min). Use this when a forwarded receipt isn't showing up."
+          >
+            <DownloadCloud size={14} className={backfill.isPending ? 'animate-pulse' : ''} />
+            {backfill.isPending ? 'Pulling…' : 'Backfill'}
           </button>
           <button
             onClick={() => { setComposePrefill(null); setComposeOpen(true) }}

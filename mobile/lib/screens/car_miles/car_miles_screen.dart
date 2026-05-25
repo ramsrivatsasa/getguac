@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/car_miles_model.dart';
+import '../../services/share_intent_service.dart';
 
 const _kBrand = Color(0xFF15803d);
 const _kTripCols = 'id, start_date, end_date, total_miles, description, category';
@@ -21,6 +22,26 @@ class _CarMilesScreenState extends State<CarMilesScreen> {
   void initState() {
     super.initState();
     _load();
+    // If we landed here via a Google Maps share, pop the trip dialog with
+    // the shared destination pre-filled. Single-use — consume() clears it.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final pending = PendingShare.instance.consume();
+      if (pending != null && mounted) {
+        _add(prefillDestination: pending);
+      }
+    });
+    PendingShare.instance.addListener(_onShareArrived);
+  }
+
+  @override
+  void dispose() {
+    PendingShare.instance.removeListener(_onShareArrived);
+    super.dispose();
+  }
+
+  void _onShareArrived() {
+    final pending = PendingShare.instance.consume();
+    if (pending != null && mounted) _add(prefillDestination: pending);
   }
 
   Future<void> _load() async {
@@ -41,8 +62,13 @@ class _CarMilesScreenState extends State<CarMilesScreen> {
     }
   }
 
-  Future<void> _add() async {
-    final descCtrl = TextEditingController();
+  Future<void> _add({String? prefillDestination}) async {
+    // If we got a Google Maps share, drop the destination into the description
+    // so the user just needs to add miles + category. Strip the noisy URL
+    // boilerplate Maps appends.
+    final descCtrl = TextEditingController(
+      text: prefillDestination == null ? '' : _cleanSharedText(prefillDestination),
+    );
     final milesCtrl = TextEditingController();
     final today = DateTime.now().toIso8601String().substring(0, 10);
     String startDate = today;
@@ -176,6 +202,19 @@ class _CarMilesScreenState extends State<CarMilesScreen> {
       Text('${miles.toStringAsFixed(1)} mi', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: _kBrand)),
     ]),
   ));
+
+  /// Google Maps shares typically look like:
+  ///   "Place Name\n123 Main St, City, ST\nhttps://maps.app.goo.gl/abc"
+  /// We keep the first 2-3 lines as a description and drop the URL.
+  String _cleanSharedText(String raw) {
+    final lines = raw.split(RegExp(r'[\r\n]+'))
+      .map((l) => l.trim())
+      .where((l) => l.isNotEmpty && !RegExp(r'^https?://').hasMatch(l))
+      .toList();
+    if (lines.isEmpty) return raw;
+    final joined = lines.take(3).join(' · ');
+    return joined.length > 140 ? '${joined.substring(0, 140)}…' : joined;
+  }
 }
 
 class _DatePickRow extends StatelessWidget {

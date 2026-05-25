@@ -1,7 +1,7 @@
 name: getguac
 description: GetGuac — Smart receipt & rewards management
 publish_to: 'none'
-version: 0.2.16+26
+version: 0.2.17+27
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -38,6 +38,9 @@ dependencies:
   # WebView for HTML email rendering. Official Flutter team package — battle-tested,
   # unlike flutter_html 3.0 beta which crashed the app on init (see v0.2.4 → 0.2.5).
   webview_flutter: ^4.10.0
+  # Receive shared URLs/text from other apps (Google Maps → "Share to GetGuac")
+  # so users can log a trip from a Maps destination with one tap.
+  receive_sharing_intent: ^1.8.0
 
   # Utils
   intl: ^0.19.0

@@ -306,10 +306,17 @@ class _MessageTile extends StatelessWidget {
                 child: const Text('+g', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: _kBrand)),
               ),
               if (m.processed && m.receiptId != null) Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 margin: const EdgeInsets.only(left: 4),
-                decoration: BoxDecoration(color: const Color(0xFFfef3c7), borderRadius: BorderRadius.circular(99)),
-                child: const Text('Filed', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: Color(0xFFb45309))),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(colors: [Color(0xFFa3e635), Color(0xFF15803d)]),
+                  borderRadius: BorderRadius.circular(99),
+                ),
+                child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                  Icon(Icons.check_circle, color: Colors.white, size: 10),
+                  SizedBox(width: 3),
+                  Text('Receipt', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Colors.white)),
+                ]),
               ),
               const SizedBox(width: 6),
               Text(_shortDate(m.receivedAt), style: const TextStyle(fontSize: 10, color: Colors.black45)),

@@ -23,7 +23,9 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
   void initState() {
     super.initState();
     if (context.read<AppAuthProvider>().currentUser?.id != null) {
-      context.read<ReceiptProvider>().loadReceipts();
+      // Force-refresh so receipts auto-filed by the email poller appear right
+      // away (the 60s cache would otherwise hide brand-new entries).
+      context.read<ReceiptProvider>().loadReceipts(force: true);
     }
   }
 
@@ -146,10 +148,15 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
           ),
         ),
         Expanded(
-          child: loading
+          child: RefreshIndicator(
+            onRefresh: () => context.read<ReceiptProvider>().loadReceipts(force: true),
+            child: loading
             ? const Center(child: CircularProgressIndicator())
             : filtered.isEmpty
-              ? const Center(child: Text('No receipts yet. Tap + to add.', style: TextStyle(color: Colors.grey)))
+              ? ListView(children: const [
+                  SizedBox(height: 120),
+                  Center(child: Text('No receipts yet. Pull to refresh or tap + to add.', style: TextStyle(color: Colors.grey))),
+                ])
               : ListView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   itemCount: filtered.length,
@@ -189,6 +196,7 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
                     );
                   },
                 ),
+          ),
         ),
       ]),
     );

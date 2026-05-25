@@ -132,7 +132,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ]),
             const SizedBox(height: 18),
 
-            // CTA pills
+            // CTA pills — primary actions
             Row(children: [
               Expanded(child: _ctaPill(
                 gradient: const LinearGradient(
@@ -154,6 +154,67 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 title: 'Guacanomics',
                 subtitle: 'Smash your spend',
                 onTap: () => context.go('/guacscore'),
+              )),
+            ]),
+            const SizedBox(height: 10),
+            // Feature pills — the rest of the menu surfaced directly on the dashboard
+            Row(children: [
+              Expanded(child: _ctaPill(
+                gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight,
+                  colors: [Color(0xFFfcd34d), Color(0xFFca8a04)]),
+                icon: Icons.mark_email_unread_rounded,
+                title: 'Inbox',
+                subtitle: 'Mail + auto-receipts',
+                onTap: () => context.go('/inbox'),
+              )),
+              const SizedBox(width: 10),
+              Expanded(child: _ctaPill(
+                gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight,
+                  colors: [Color(0xFFa78bfa), Color(0xFF7c3aed)]),
+                icon: Icons.auto_fix_high,
+                title: 'GuacWizard',
+                subtitle: 'Bank Bite + insights',
+                onTap: () => context.go('/guacwizard'),
+              )),
+            ]),
+            const SizedBox(height: 10),
+            Row(children: [
+              Expanded(child: _ctaPill(
+                gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight,
+                  colors: [Color(0xFFf472b6), Color(0xFFdb2777)]),
+                icon: Icons.card_giftcard_rounded,
+                title: 'Rewards',
+                subtitle: 'Loyalty + expiring',
+                onTap: () => context.go('/rewards'),
+              )),
+              const SizedBox(width: 10),
+              Expanded(child: _ctaPill(
+                gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight,
+                  colors: [Color(0xFFfde047), Color(0xFFca8a04)]),
+                icon: Icons.inventory_2,
+                title: 'Stash',
+                subtitle: 'Everything you own',
+                onTap: () => context.go('/stash'),
+              )),
+            ]),
+            const SizedBox(height: 10),
+            Row(children: [
+              Expanded(child: _ctaPill(
+                gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight,
+                  colors: [Color(0xFFf9a8d4), Color(0xFFdb2777)]),
+                icon: Icons.local_offer,
+                title: 'Steals',
+                subtitle: 'AI price hunt',
+                onTap: () => context.go('/steals'),
+              )),
+              const SizedBox(width: 10),
+              Expanded(child: _ctaPill(
+                gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight,
+                  colors: [Color(0xFF67e8f9), Color(0xFF0891b2)]),
+                icon: Icons.directions_car_filled_rounded,
+                title: 'Car Miles',
+                subtitle: 'Trip log',
+                onTap: () => context.go('/car-miles'),
               )),
             ]),
             const SizedBox(height: 18),

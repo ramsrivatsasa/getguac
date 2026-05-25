@@ -169,7 +169,32 @@ class _InboxDetailScreenState extends State<InboxDetailScreen> {
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              // Sender / date
+              // Receipt-filed callout (top of detail when applicable, so the user
+              // immediately sees the green status without scrolling)
+              if (processed && receiptId != null) ...[
+                _ReceiptFiledBanner(receiptId: receiptId, onTap: () => context.go('/receipts/$receiptId')),
+                const SizedBox(height: 12),
+              ] else if (m['is_receipts_hook'] == true) ...[
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFfff7ed),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFfed7aa)),
+                  ),
+                  child: const Row(children: [
+                    Icon(Icons.hourglass_top, color: Color(0xFFc2410c), size: 18),
+                    SizedBox(width: 8),
+                    Expanded(child: Text(
+                      'Sent to +g — Guac-AI is processing this. Receipt will appear in /receipts shortly.',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF9a3412)),
+                    )),
+                  ]),
+                ),
+                const SizedBox(height: 12),
+              ],
+
+              // Sender / date — primary headers
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
@@ -177,39 +202,34 @@ class _InboxDetailScreenState extends State<InboxDetailScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('From', style: TextStyle(fontSize: 10, color: Colors.black.withValues(alpha: 0.5), fontWeight: FontWeight.w700, letterSpacing: 1)),
-                  const SizedBox(height: 2),
-                  Text(m['from_addr']?.toString() ?? '—',
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
-                  const SizedBox(height: 8),
-                  Text(_formatReceived(m['received_at']?.toString()),
-                    style: const TextStyle(fontSize: 11, color: Colors.black54)),
+                  _HeaderRow(label: 'From',  value: m['from_addr']?.toString() ?? '—', bold: true),
+                  _HeaderRow(label: 'To',    value: m['to_addr']?.toString() ?? '—'),
+                  if ((m['delivered_to']?.toString() ?? '').isNotEmpty)
+                    _HeaderRow(label: 'Delivered-To', value: m['delivered_to'].toString()),
+                  _HeaderRow(label: 'Date',  value: _formatReceived(m['received_at']?.toString())),
                 ]),
               ),
-              if (processed && receiptId != null) ...[
-                const SizedBox(height: 12),
-                InkWell(
-                  onTap: () => context.go('/receipts/$receiptId'),
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
+
+              // Expandable "show more headers" section
+              ExpansionTile(
+                tilePadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+                title: const Text('Email headers', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF6b7280))),
+                childrenPadding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                children: [
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFfef3c7),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFfde68a)),
+                      color: const Color(0xFFf3f4f6),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Row(children: const [
-                      Icon(Icons.auto_awesome, color: Color(0xFFb45309), size: 18),
-                      SizedBox(width: 8),
-                      Expanded(child: Text(
-                        'Guac-AI parsed this as a receipt — tap to open',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFFb45309)),
-                      )),
-                      Icon(Icons.chevron_right, color: Color(0xFFb45309), size: 18),
-                    ]),
+                    child: SelectableText(
+                      _formatAllHeaders(m),
+                      style: const TextStyle(fontFamily: 'monospace', fontSize: 11, height: 1.5),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
               const SizedBox(height: 16),
               // For now we render plain text. Rich HTML email rendering needs
               // a WebView wrapper which had startup issues — coming back as
@@ -282,6 +302,92 @@ class _InboxDetailScreenState extends State<InboxDetailScreen> {
     final local = d.toLocal();
     return '${local.toIso8601String().substring(0, 16).replaceFirst('T', ' ')}';
   }
+}
+
+class _ReceiptFiledBanner extends StatelessWidget {
+  final String receiptId;
+  final VoidCallback onTap;
+  const _ReceiptFiledBanner({required this.receiptId, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft, end: Alignment.bottomRight,
+            colors: [Color(0xFFa3e635), Color(0xFF15803d)],
+          ),
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: const [BoxShadow(color: Color(0x4015803d), blurRadius: 8, offset: Offset(0, 3))],
+        ),
+        child: Row(children: const [
+          Icon(Icons.check_circle, color: Colors.white, size: 22),
+          SizedBox(width: 10),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+            Text('Receipt filed by Guac-AI 🥑',
+              style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w900)),
+            SizedBox(height: 2),
+            Text('Tap to open the parsed receipt',
+              style: TextStyle(color: Colors.white70, fontSize: 11)),
+          ])),
+          Icon(Icons.arrow_forward, color: Colors.white, size: 18),
+        ]),
+      ),
+    );
+  }
+}
+
+class _HeaderRow extends StatelessWidget {
+  final String label;
+  final String value;
+  final bool bold;
+  const _HeaderRow({required this.label, required this.value, this.bold = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        SizedBox(
+          width: 90,
+          child: Text(label.toUpperCase(),
+            style: TextStyle(fontSize: 9, color: Colors.black.withValues(alpha: 0.5),
+              fontWeight: FontWeight.w800, letterSpacing: 1)),
+        ),
+        Expanded(child: SelectableText(value,
+          style: TextStyle(fontSize: 12, fontWeight: bold ? FontWeight.w700 : FontWeight.w500))),
+      ]),
+    );
+  }
+}
+
+/// Build a full plain-text dump of every header we have stored.
+/// Useful for power users wanting to inspect routing or debug spam.
+String _formatAllHeaders(Map<String, dynamic> m) {
+  String safe(dynamic v) => v?.toString() ?? '';
+  final lines = <String>[
+    'From:          ${safe(m['from_addr'])}',
+    'To:            ${safe(m['to_addr'])}',
+    if ((m['delivered_to']?.toString() ?? '').isNotEmpty)
+      'Delivered-To:  ${m['delivered_to']}',
+    'Subject:       ${safe(m['subject'])}',
+    'Date:          ${safe(m['received_at'])}',
+    if ((m['message_id']?.toString() ?? '').isNotEmpty)
+      'Message-Id:    ${m['message_id']}',
+    if ((m['uid'] ?? '').toString().isNotEmpty)
+      'IMAP UID:      ${m['uid']}',
+    if (m['is_receipts_hook'] == true)
+      'Hook:          +g (auto-receipt)',
+    if (m['has_attachments'] == true)
+      'Attachments:   yes',
+    if (m['processed'] == true)
+      'Processed:     yes (receipt_id=${m['receipt_id']})',
+  ];
+  return lines.join('\n');
 }
 
 /// Strip HTML tags into newline-friendly plain text. Not a full HTML renderer,

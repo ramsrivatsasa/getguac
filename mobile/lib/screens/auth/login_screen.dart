@@ -176,7 +176,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 4),
                   const Text(
-                    'Smash your spend — keep what counts.',
+                    'Your Guac-AI personal finance sidekick.',
                     style: TextStyle(color: Colors.white70, fontSize: 13),
                   ),
                   const SizedBox(height: 32),

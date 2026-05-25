@@ -58,7 +58,8 @@ export default function Sidebar({ isAdmin }) {
   async function handleLogout() {
     const sb = createClient()
     await sb.auth.signOut()
-    router.push('/login')
+    // Land users on the marketing home page so they see the brand, not a bare login form.
+    router.push('/')
     router.refresh()
   }
 

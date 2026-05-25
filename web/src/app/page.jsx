@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '../lib/supabase/server'
 import {
-  Sparkles, ScanLine, Camera, Star, Undo2, Gift, Car, ShoppingCart, Store, Tag, Shield, ArrowRight, Package, Utensils
+  Sparkles, Wand2, Star, Gift, ShoppingCart, Tag, Shield, ArrowRight, Package, BadgeDollarSign, Banknote, Brain, Trophy, Smile, PieChart
 } from 'lucide-react'
 import GuacMascot from '../components/GuacMascot'
 
@@ -21,11 +21,12 @@ export default async function Home() {
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-lime-300 via-emerald-400 to-emerald-700 shadow-md ring-2 ring-white flex items-center justify-center text-xl">🥑</div>
             <div className="leading-none">
               <div className="text-lg font-black tracking-tight text-emerald-900">GetGuac</div>
-              <div className="text-[9px] text-emerald-600 font-semibold uppercase tracking-wider mt-0.5">smash your spend</div>
+              <div className="text-[9px] text-emerald-600 font-semibold uppercase tracking-wider mt-0.5">your money's wingman</div>
             </div>
           </Link>
           <nav className="flex items-center gap-2">
-            <a href="#features" className="hidden sm:inline text-sm font-semibold text-gray-600 hover:text-emerald-800 px-3 py-1.5 rounded-full">Features</a>
+            <a href="#brain"    className="hidden sm:inline text-sm font-semibold text-gray-600 hover:text-emerald-800 px-3 py-1.5 rounded-full">The brain</a>
+            <a href="#powers"   className="hidden sm:inline text-sm font-semibold text-gray-600 hover:text-emerald-800 px-3 py-1.5 rounded-full">Superpowers</a>
             <a href="#how"      className="hidden sm:inline text-sm font-semibold text-gray-600 hover:text-emerald-800 px-3 py-1.5 rounded-full">How it works</a>
             <Link href="/download" className="hidden sm:inline-flex items-center gap-1 text-sm font-semibold text-emerald-700 hover:text-emerald-900 px-3 py-1.5 rounded-full">
               📱 Download
@@ -41,37 +42,38 @@ export default async function Home() {
         <div className="grid lg:grid-cols-5 gap-10 items-center">
           <div className="lg:col-span-3 space-y-6">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider">
-              <Sparkles size={12} /> Guac-AI receipt smasher
+              <Sparkles size={12} /> Guac-AI · personal finance assistant
             </span>
             <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-gray-900 leading-[1.05]">
-              Smash your spend.<br />
-              <span className="bg-gradient-to-br from-emerald-500 via-lime-500 to-amber-500 bg-clip-text text-transparent">Keep what counts.</span>
+              Meet your money's<br />
+              <span className="bg-gradient-to-br from-emerald-500 via-lime-500 to-amber-500 bg-clip-text text-transparent">smartest sidekick.</span>
             </h1>
             <p className="text-lg text-gray-600 max-w-xl leading-relaxed">
-              Drop a receipt — photo, PDF, or email forward. Guac-AI extracts every line, tags the store, tracks rewards,
-              and tells you which purchases were worth it. Your guac, your call.
+              GetGuac is your <span className="font-bold text-emerald-700">Guac-AI</span> finance brain — it reads your receipts and bank statements,
+              scores every purchase, sniffs out hidden fees, and tells you exactly where your money
+              gets eaten. <span className="font-semibold">Smash your spend. Keep your guac.</span>
             </p>
             <div className="flex flex-wrap items-center gap-3">
               <Link href="/register" className="btn-primary text-base px-6 py-3">
-                <span className="text-lg">🥑</span> Start free <ArrowRight size={16} />
+                <span className="text-lg">🥑</span> Meet your sidekick <ArrowRight size={16} />
               </Link>
               <Link href="/login" className="btn-secondary text-base px-6 py-3">
-                I have an account
+                I'm already in
               </Link>
               <Link href="/download" className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gray-900 hover:bg-black text-white font-bold text-base shadow transition-colors">
-                📱 Download Android app
+                📱 Get the Android app
               </Link>
             </div>
             <div className="flex items-center gap-5 text-xs text-gray-500 pt-3">
-              <span className="inline-flex items-center gap-1"><Shield size={12} className="text-emerald-500" /> Private, RLS-protected data</span>
-              <span className="inline-flex items-center gap-1"><Tag size={12} className="text-emerald-500" /> No card required</span>
+              <span className="inline-flex items-center gap-1"><Shield size={12} className="text-emerald-500" /> Private. Yours. RLS-locked.</span>
+              <span className="inline-flex items-center gap-1"><Tag size={12} className="text-emerald-500" /> Free. No card. No catch.</span>
             </div>
           </div>
 
           <div className="lg:col-span-2 relative flex justify-center">
             <div className="absolute inset-0 bg-gradient-to-br from-lime-200/50 to-emerald-200/50 rounded-full blur-3xl" />
             <div className="relative">
-              <GuacMascot expression="celebrating" size={260} />
+              <GuacMascot expression="rich" size={260} />
             </div>
           </div>
         </div>
@@ -79,10 +81,10 @@ export default async function Home() {
         {/* Trust strip */}
         <div className="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { stat: 'Guac-AI',   label: 'Receipt parser' },
-            { stat: 'PDF + 📷', label: 'Drop or snap' },
-            { stat: '12+',       label: 'Categories' },
-            { stat: '5★',         label: 'Worth-it rating' },
+            { stat: '0–100',     label: 'GuacScore rating' },
+            { stat: 'Guac-AI',  label: 'Reads receipts + statements' },
+            { stat: '🦷',        label: 'Tracks every bank bite' },
+            { stat: '🧙‍♂️',     label: 'GuacWizard insights' },
           ].map(b => (
             <div key={b.label} className="bg-white border border-emerald-100 rounded-2xl p-3 text-center shadow-sm">
               <p className="text-xl font-extrabold text-emerald-700">{b.stat}</p>
@@ -92,17 +94,46 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* THE BRAIN — what Guac-AI actually does */}
+      <section id="brain" className="max-w-6xl mx-auto px-4 sm:px-6 pb-16">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight flex items-center justify-center gap-2 flex-wrap">
+            <Brain size={28} className="text-emerald-600" /> The brain behind the guac
+          </h2>
+          <p className="text-gray-500 mt-2 max-w-2xl mx-auto">
+            Most apps just track. Guac-AI <span className="italic">thinks</span>. It tags, scores,
+            spots patterns, and nudges you — like a CFO that lives in your pocket and never sends a bill.
+          </p>
+        </div>
+        <div className="grid md:grid-cols-3 gap-5">
+          {BRAIN_CARDS.map(c => (
+            <div key={c.title} className={`rounded-3xl border border-gray-100 p-6 shadow-sm hover:shadow-lg transition-all bg-gradient-to-br ${c.bg}`}>
+              <div className={`w-14 h-14 rounded-2xl ${c.accent} text-white shadow-md flex items-center justify-center mb-4`}>
+                <c.icon size={26} />
+              </div>
+              <h3 className="font-extrabold text-lg text-gray-900">{c.title}</h3>
+              <p className="text-sm text-gray-700 mt-1.5 leading-relaxed">{c.body}</p>
+              {c.tag && (
+                <span className={`inline-block mt-3 text-[10px] font-bold uppercase tracking-wider ${c.tagColor} px-2 py-0.5 rounded-full`}>
+                  {c.tag}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* HOW IT WORKS */}
       <section id="how" className="max-w-6xl mx-auto px-4 sm:px-6 pb-16">
         <div className="text-center mb-10">
-          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">How GetGuac works</h2>
-          <p className="text-gray-500 mt-2">Three taps from receipt to insight.</p>
+          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">From paper pile to power move</h2>
+          <p className="text-gray-500 mt-2">Three taps. That's it.</p>
         </div>
         <div className="grid md:grid-cols-3 gap-5">
           {[
-            { n: '1', emoji: '📷', title: 'Drop or snap', body: 'Drag a PDF, email forward, or snap a photo. Guac-AI handles the rest.' },
-            { n: '2', emoji: '🧾', title: 'Auto-organized', body: 'Items, categories, store locations, refund policies — all extracted and saved.' },
-            { n: '3', emoji: '💎', title: 'Rate & learn', body: 'Worth It? rating + Guacanomics charts surface what you actually need.' },
+            { n: '1', emoji: '📷', title: 'Feed your guac', body: 'Snap a receipt, forward an email, drop a bank-statement PDF. Guac-AI takes it from there.' },
+            { n: '2', emoji: '✨', title: 'Auto-everything',  body: 'Store, items, categories, APRs, interest, fees — all extracted, tagged, reconciled.' },
+            { n: '3', emoji: '🧠', title: 'Smarter every receipt', body: 'GuacScore, GuacWizard, Bank Bite, Stash predictions — the more you feed it, the sharper it gets.' },
           ].map(s => (
             <div key={s.n} className="card relative overflow-hidden">
               <span className="absolute -right-3 -top-3 text-7xl font-black text-emerald-50 select-none">{s.n}</span>
@@ -116,15 +147,15 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* FEATURES GRID */}
-      <section id="features" className="bg-white border-y border-emerald-100">
+      {/* SUPERPOWERS GRID */}
+      <section id="powers" className="bg-white border-y border-emerald-100">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16">
           <div className="text-center mb-10">
-            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">Everything in one bowl</h2>
-            <p className="text-gray-500 mt-2">Receipts, rewards, mileage, returns, restaurants — all chopped, mixed, smashed.</p>
+            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">Guac-AI superpowers</h2>
+            <p className="text-gray-500 mt-2">Twelve tools, one avocado. Each one a little smarter than your bank.</p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {FEATURES.map(f => (
+            {POWERS.map(f => (
               <div key={f.title} className={`relative rounded-2xl border border-gray-100 p-4 hover:shadow-md transition-all bg-gradient-to-br ${f.bg}`}>
                 <div className={`w-11 h-11 rounded-2xl ${f.accent} text-white shadow-md flex items-center justify-center mb-3`}>
                   <f.icon size={20} />
@@ -140,17 +171,17 @@ export default async function Home() {
       {/* FINAL CTA */}
       <section className="max-w-4xl mx-auto px-4 sm:px-6 py-20 text-center">
         <div className="flex justify-center mb-4">
-          <GuacMascot expression="happy" size={140} />
+          <GuacMascot expression="celebrating" size={140} />
         </div>
         <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-          Ready to <span className="bg-gradient-to-br from-emerald-500 to-lime-600 bg-clip-text text-transparent">smash your spend?</span>
+          Ready to <span className="bg-gradient-to-br from-emerald-500 to-lime-600 bg-clip-text text-transparent">put a brain on your money?</span>
         </h2>
         <p className="text-gray-500 mt-3 max-w-md mx-auto">
-          Free, private, and yours. No card. No spam. Just your guac.
+          Free, private, and on your side. No fees, no card, no spam — just your guac, sharper every day.
         </p>
         <div className="flex flex-wrap justify-center gap-3 mt-6">
           <Link href="/register" className="btn-primary text-base px-6 py-3">
-            <span className="text-lg">🥑</span> Get started <ArrowRight size={16} />
+            <span className="text-lg">🥑</span> Hire your sidekick <ArrowRight size={16} />
           </Link>
           <Link href="/login" className="btn-secondary text-base px-6 py-3">Sign in</Link>
         </div>
@@ -162,10 +193,11 @@ export default async function Home() {
           <div className="flex items-center gap-2">
             <span className="text-base">🥑</span>
             <span className="font-bold text-emerald-900">GetGuac</span>
-            <span>— smash your spend</span>
+            <span>— your money's wingman</span>
           </div>
           <div className="flex items-center gap-4">
-            <a href="#features" className="hover:text-emerald-800">Features</a>
+            <a href="#brain" className="hover:text-emerald-800">The brain</a>
+            <a href="#powers" className="hover:text-emerald-800">Superpowers</a>
             <a href="#how" className="hover:text-emerald-800">How it works</a>
             <Link href="/login" className="hover:text-emerald-800">Sign in</Link>
           </div>
@@ -175,29 +207,61 @@ export default async function Home() {
   )
 }
 
-const FEATURES = [
-  { icon: ScanLine,    title: 'Guac-AI receipt parser', body: 'PDFs and images become structured data — store, items, SKUs, refund policies, payment.',
-    accent: 'bg-emerald-500',  bg: 'from-emerald-50 to-lime-50' },
-  { icon: Camera,      title: 'Camera capture',       body: 'Snap a paper receipt with your phone. Same auto-fill pipeline.',
-    accent: 'bg-sky-500',      bg: 'from-sky-50 to-emerald-50' },
-  { icon: Sparkles,    title: 'Guacanomics',          body: 'Spending trends, top stores, category breakdown, regret-spend — all live charts.',
+// Three big "brain" cards — the headline AI features
+const BRAIN_CARDS = [
+  {
+    icon: Trophy,
+    title: 'GuacScore',
+    body: 'A 0–100 grade for every dollar you spent. Weighted by amount, rated by your own taste, dinged by fees. Beat your high score.',
+    accent: 'bg-gradient-to-br from-emerald-400 to-green-700',
+    bg: 'from-emerald-50 to-lime-50',
+    tag: 'Your spending IQ',
+    tagColor: 'bg-emerald-100 text-emerald-800',
+  },
+  {
+    icon: Wand2,
+    title: 'GuacWizard',
+    body: 'Bank statements in, insights out. Interest, fees, regret-spend, hidden subscriptions — all surfaced with a "do this next" nudge.',
+    accent: 'bg-gradient-to-br from-violet-400 to-purple-700',
+    bg: 'from-violet-50 to-fuchsia-50',
+    tag: 'AI insights',
+    tagColor: 'bg-violet-100 text-violet-800',
+  },
+  {
+    icon: BadgeDollarSign,
+    title: 'Bank Bite Tracker',
+    body: 'Every interest charge, every overdraft, every annual fee — itemized per card, scored against your spend. Watch it go to zero.',
+    accent: 'bg-gradient-to-br from-rose-400 to-red-700',
+    bg: 'from-rose-50 to-orange-50',
+    tag: 'Hidden cost killer',
+    tagColor: 'bg-rose-100 text-rose-800',
+  },
+]
+
+// 12 "superpowers" — the broader product surface
+const POWERS = [
+  { icon: Sparkles,         title: 'Guacanomics',        body: 'Spend trends, top stores, category mix, regret-spend — beautiful live charts, no spreadsheet wrangling.',
     accent: 'bg-amber-500',    bg: 'from-amber-50 to-yellow-50' },
-  { icon: Star,        title: 'Worth It? rating',     body: 'Five-star rating per receipt and per item. See what you actually needed.',
+  { icon: Banknote,         title: 'Bank statements',    body: 'Drop a credit-card PDF. Guac-AI extracts transactions, APRs, payments, and surfaces fees in seconds.',
+    accent: 'bg-sky-500',      bg: 'from-sky-50 to-emerald-50' },
+  { icon: Star,             title: 'Worth-It rating',    body: 'Five-star verdict per receipt and per item. Train Guac-AI on what “worth it” means to you.',
     accent: 'bg-rose-500',     bg: 'from-rose-50 to-pink-50' },
-  { icon: Package,     title: 'Stash catalog',        body: 'Every product you\'ve ever bought, grouped by store. Compare prices across locations.',
+  { icon: Package,          title: 'Stash catalog',      body: 'Every product you’ve ever bought, grouped + searchable. Predicts when you’ll run out.',
     accent: 'bg-indigo-500',   bg: 'from-indigo-50 to-violet-50' },
-  { icon: Utensils,    title: 'Bites menu',           body: 'Every dish you\'ve tried — thumbs up keepers, reorder to a Smashlist.',
-    accent: 'bg-orange-500',   bg: 'from-orange-50 to-amber-50' },
-  { icon: ShoppingCart, title: 'Themed Smashlists',   body: 'Pantry, Cravings, Snack Stack, Grub & Grab. One-tap reorders from past purchases.',
-    accent: 'bg-lime-500',     bg: 'from-lime-50 to-emerald-50' },
-  { icon: Gift,        title: 'Rewards tracker',      body: 'Loyalty numbers, points, expiry dates — auto-extracted and surfaced before they lapse.',
+  { icon: BadgeDollarSign,  title: 'Steals hunter',      body: 'AI-powered price hunt across the web for anything you’ve bought before — or anything you want to.',
     accent: 'bg-pink-500',     bg: 'from-pink-50 to-rose-50' },
-  { icon: Undo2,       title: 'Returns radar',        body: 'Refund policy parsed per item. Days remaining shown clearly. One click marks returned.',
-    accent: 'bg-red-500',      bg: 'from-red-50 to-rose-50' },
-  { icon: Car,         title: 'Car miles + tags',     body: 'Auto-calc distance from any two addresses. Tag trips for taxes (Business / Commute / Client).',
-    accent: 'bg-violet-500',   bg: 'from-violet-50 to-purple-50' },
-  { icon: Store,       title: 'Store directory',      body: 'Multiple locations per chain, duplicate detection, directions + distance from you.',
+  { icon: ShoppingCart,     title: 'Smashlists',         body: 'Pantry, Cravings, Snack Stack, Grub & Grab. One tap re-orders from your own past wins.',
+    accent: 'bg-lime-500',     bg: 'from-lime-50 to-emerald-50' },
+  { icon: Gift,             title: 'Rewards radar',      body: 'Points, loyalty numbers, expiry dates — auto-pulled from receipts and surfaced before they lapse.',
     accent: 'bg-fuchsia-500',  bg: 'from-fuchsia-50 to-pink-50' },
-  { icon: Tag,         title: 'Custom categories',    body: '12 presets (Grub, Tech, Fix-It, Wellness…) plus your own with custom emoji + color.',
-    accent: 'bg-emerald-600',  bg: 'from-emerald-50 to-green-50' },
+  { icon: PieChart,         title: 'Category brain',     body: '12 smart presets (Grub, Tech, Fix-It, Wellness…) plus your own custom tags, learned over time.',
+    accent: 'bg-emerald-500',  bg: 'from-emerald-50 to-green-50' },
+  { icon: Smile,            title: 'Returns radar',      body: 'Refund policy parsed per item. Days remaining shown clearly. One click marks it returned.',
+    accent: 'bg-red-500',      bg: 'from-red-50 to-rose-50' },
+  { icon: Tag,              title: 'Car miles + tags',   body: 'Auto-calc distance between any two addresses. Tag trips for taxes (Business / Commute / Client).',
+    accent: 'bg-violet-500',   bg: 'from-violet-50 to-purple-50' },
+  { icon: Shield,           title: 'Private by default', body: 'Row-level security on every table. Your data stays yours — export or wipe with a click.',
+    accent: 'bg-teal-500',     bg: 'from-teal-50 to-cyan-50' },
+  { icon: Sparkles,         title: 'Mobile + web + AI',  body: 'Native Android app, full web app, and a Guac-AI brain that travels with you wherever you sign in.',
+    accent: 'bg-orange-500',   bg: 'from-orange-50 to-amber-50' },
 ]

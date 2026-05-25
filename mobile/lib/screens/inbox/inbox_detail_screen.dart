@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 import 'inbox_screen.dart' show openInboxComposer;
 
 const _kBrand = Color(0xFF15803d);
@@ -231,41 +232,18 @@ class _InboxDetailScreenState extends State<InboxDetailScreen> {
                 ],
               ),
               const SizedBox(height: 16),
-              // For now we render plain text. Rich HTML email rendering needs
-              // a WebView wrapper which had startup issues — coming back as
-              // a follow-up. The plain text version still has all the
-              // info, just none of the styling/logos.
-              if (bodyText.isNotEmpty)
+              // Render the rich HTML email when present; gracefully fall back
+              // to plain text if WebView fails to init (defensive — keeps the
+              // app loading even on devices with broken Android System WebView).
+              if (hasHtml)
+                _MessageBody(html: bodyHtml, text: bodyText.isNotEmpty ? bodyText : _htmlToText(bodyHtml))
+              else if (bodyText.isNotEmpty)
                 SelectableText(
                   bodyText,
                   style: const TextStyle(fontSize: 13.5, height: 1.5),
                 )
-              else if (hasHtml)
-                SelectableText(
-                  _htmlToText(bodyHtml),
-                  style: const TextStyle(fontSize: 13.5, height: 1.5),
-                )
               else
                 const Text('(Empty body)', style: TextStyle(color: Colors.black38)),
-              if (hasHtml) ...[
-                const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  onPressed: () {
-                    // Open the rich HTML version on the web app's /inbox/:id
-                    // (which renders inside a sandboxed iframe).
-                    launchUrl(
-                      Uri.parse('https://getguac.app/inbox?msg=${widget.id}'),
-                      mode: LaunchMode.externalApplication,
-                    ).catchError((_) => false);
-                  },
-                  icon: const Icon(Icons.open_in_browser, size: 16),
-                  label: const Text('Open rich version (logos, tables) in browser'),
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: _kBrand),
-                    foregroundColor: _kBrand,
-                  ),
-                ),
-              ],
               const SizedBox(height: 24),
               Row(children: [
                 Expanded(child: OutlinedButton.icon(
@@ -388,6 +366,137 @@ String _formatAllHeaders(Map<String, dynamic> m) {
       'Processed:     yes (receipt_id=${m['receipt_id']})',
   ];
   return lines.join('\n');
+}
+
+/// Toggle between rich (WebView) and plain text versions of an email body.
+/// Defaults to Rich when HTML is available. If WebView init throws, falls
+/// back silently to text so the user always sees something.
+class _MessageBody extends StatefulWidget {
+  final String html;
+  final String text;
+  const _MessageBody({required this.html, required this.text});
+  @override
+  State<_MessageBody> createState() => _MessageBodyState();
+}
+
+class _MessageBodyState extends State<_MessageBody> {
+  bool _showRich = true;
+  WebViewController? _controller;
+  bool _webViewFailed = false;
+  double _height = 480;
+
+  static const _kBrand = Color(0xFF15803d);
+
+  @override
+  void initState() {
+    super.initState();
+    _initWebView();
+  }
+
+  void _initWebView() {
+    try {
+      final ctrl = WebViewController()
+        ..setJavaScriptMode(JavaScriptMode.unrestricted)
+        ..setBackgroundColor(Colors.white)
+        ..setNavigationDelegate(NavigationDelegate(
+          onNavigationRequest: (req) {
+            // Anything other than the initial load opens in the system browser
+            // (links, images, "click here to view"). Email pages don't get to
+            // navigate inside the in-app WebView.
+            if (req.url == 'about:blank' || req.url.startsWith('data:')) {
+              return NavigationDecision.navigate;
+            }
+            launchUrl(Uri.parse(req.url), mode: LaunchMode.externalApplication)
+                .catchError((_) => false);
+            return NavigationDecision.prevent;
+          },
+          onWebResourceError: (_) {
+            // Don't crash on broken images / blocked resources.
+          },
+        ))
+        ..loadHtmlString(_wrapEmail(widget.html));
+      _controller = ctrl;
+    } catch (e) {
+      _webViewFailed = true;
+    }
+  }
+
+  String _wrapEmail(String body) => '''
+<!doctype html>
+<html><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<base target="_blank">
+<style>
+  html, body { margin: 0; padding: 12px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #111827; font-size: 14px; line-height: 1.5; word-wrap: break-word; }
+  img { max-width: 100%; height: auto; }
+  table { max-width: 100%; border-collapse: collapse; }
+  a { color: #15803d; }
+  pre, code { background: #f3f4f6; padding: 2px 4px; border-radius: 4px; }
+</style>
+</head><body>$body</body></html>
+''';
+
+  @override
+  Widget build(BuildContext context) {
+    final canShowRich = !_webViewFailed && _controller != null && widget.html.trim().isNotEmpty;
+    final viewing = (_showRich && canShowRich) ? 'rich' : 'text';
+
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      if (canShowRich)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Row(children: [
+            const Text('View:', style: TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w700)),
+            const SizedBox(width: 6),
+            _modeChip('Rich', viewing == 'rich', () => setState(() => _showRich = true)),
+            const SizedBox(width: 4),
+            _modeChip('Plain', viewing == 'text', () => setState(() => _showRich = false)),
+            const Spacer(),
+            if (viewing == 'rich')
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                icon: const Icon(Icons.unfold_more, size: 16),
+                tooltip: 'Make taller',
+                onPressed: () => setState(() => _height += 200),
+              ),
+          ]),
+        ),
+      if (viewing == 'rich' && canShowRich)
+        Container(
+          height: _height,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: const Color(0xFFe5e7eb)),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: WebViewWidget(controller: _controller!),
+        )
+      else
+        SelectableText(
+          widget.text,
+          style: const TextStyle(fontSize: 13.5, height: 1.5),
+        ),
+    ]);
+  }
+
+  Widget _modeChip(String label, bool active, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: active ? const Color(0xFFd1fae5) : Colors.transparent,
+          borderRadius: BorderRadius.circular(99),
+        ),
+        child: Text(label, style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+          color: active ? _kBrand : Colors.black54,
+        )),
+      ),
+    );
+  }
 }
 
 /// Strip HTML tags into newline-friendly plain text. Not a full HTML renderer,

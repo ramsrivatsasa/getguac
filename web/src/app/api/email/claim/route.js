@@ -10,7 +10,39 @@
 
 import { createClient } from '../../../../lib/supabase/server'
 import { rateLimit, rateKey } from '../../../../lib/apiGuard'
+import { createMailbox, mailboxExists, fullEmail, receiptsAddress } from '../../../../lib/migadu'
+import { encryptSecret, generateMailboxPassword } from '../../../../lib/crypto'
 export const runtime = 'nodejs'
+
+// Provision a real Migadu mailbox for a newly-claimed alias. Best-effort:
+// if Migadu provisioning fails the alias stays claimed in the DB so the user
+// can retry later — we don't want a transient API hiccup to lose the alias.
+async function provisionMailbox(sb, user, alias) {
+  // Skip if Migadu isn't configured yet (lets the app run without email infra).
+  if (!process.env.MIGADU_API_KEY || !process.env.EMAIL_ENCRYPTION_KEY) {
+    return { provisioned: false, reason: 'not_configured' }
+  }
+  try {
+    const already = await mailboxExists(alias)
+    if (already) {
+      return { provisioned: true, reason: 'already_existed' }
+    }
+    const password = generateMailboxPassword()
+    const name = [user.user_metadata?.firstName, user.user_metadata?.lastName].filter(Boolean).join(' ') || alias
+    await createMailbox({ localPart: alias, password, name })
+    const encrypted = encryptSecret(password)
+    await sb.from('profiles')
+      .update({
+        email_inbox_provisioned: true,
+        email_inbox_password_enc: encrypted,
+      })
+      .eq('id', user.id)
+    return { provisioned: true, password, email: fullEmail(alias), receipts: receiptsAddress(alias) }
+  } catch (e) {
+    console.error('[email/claim] mailbox provisioning failed:', e.message)
+    return { provisioned: false, reason: 'error', error: e.message }
+  }
+}
 
 export async function POST(request) {
   try {
@@ -35,7 +67,15 @@ export async function POST(request) {
     const row = Array.isArray(data) ? data[0] : data
     const status = row?.status
 
-    if (status === 'claimed')          return Response.json({ alias: row.alias, status, full: `${row.alias}@${process.env.EMAIL_DOMAIN || 'getguac.app'}` })
+    if (status === 'claimed') {
+      const prov = await provisionMailbox(sb, user, row.alias)
+      return Response.json({
+        alias: row.alias,
+        status,
+        full: `${row.alias}@${process.env.EMAIL_DOMAIN || 'getguac.app'}`,
+        mailbox: prov,
+      })
+    }
     if (status === 'taken')            return Response.json({ alias: row.alias, status }, { status: 409 })
     if (status === 'reserved')         return Response.json({ alias: row.alias, status }, { status: 409 })
     if (status === 'invalid')          return Response.json({ alias: row?.alias || raw, status }, { status: 400 })

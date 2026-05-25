@@ -99,24 +99,57 @@ export default function EmailAliasPicker({ userId }) {
 
       {/* Currently-claimed alias */}
       {currentFull ? (
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4">
-          <p className="text-[10px] uppercase tracking-wider font-bold text-emerald-700">Current address</p>
-          <div className="flex items-center gap-2 mt-1">
-            <span className="font-mono text-base font-bold text-emerald-900 truncate">{currentFull}</span>
-            <button
-              type="button"
-              onClick={() => copyAlias(currentFull)}
-              className="ml-auto text-emerald-700 hover:text-emerald-900 p-1 rounded-md hover:bg-emerald-100/60"
-              title="Copy"
-            >
-              <Copy size={14} />
-            </button>
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4 space-y-3">
+          <div>
+            <p className="text-[10px] uppercase tracking-wider font-bold text-emerald-700">Personal mailbox</p>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="font-mono text-base font-bold text-emerald-900 truncate">{currentFull}</span>
+              <button
+                type="button"
+                onClick={() => copyAlias(currentFull)}
+                className="ml-auto text-emerald-700 hover:text-emerald-900 p-1 rounded-md hover:bg-emerald-100/60"
+                title="Copy"
+              >
+                <Copy size={14} />
+              </button>
+            </div>
+            <p className="text-[10px] text-emerald-700/70 mt-1">Personal inbox — GetGuac never reads it.</p>
+          </div>
+          <div className="border-t border-emerald-200/70" />
+          <div>
+            <p className="text-[10px] uppercase tracking-wider font-bold text-emerald-700 flex items-center gap-1">
+              <span>🥑</span> Receipts hook
+            </p>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="font-mono text-sm font-bold text-emerald-900 truncate">
+                {profile.email_alias}+receipts@{EMAIL_DOMAIN}
+              </span>
+              <button
+                type="button"
+                onClick={() => copyAlias(`${profile.email_alias}+receipts@${EMAIL_DOMAIN}`)}
+                className="ml-auto text-emerald-700 hover:text-emerald-900 p-1 rounded-md hover:bg-emerald-100/60"
+                title="Copy"
+              >
+                <Copy size={14} />
+              </button>
+            </div>
+            <p className="text-[10px] text-emerald-700/80 mt-1">
+              Forward order confirmations here — GetGuac auto-creates the receipt within 10 minutes.
+            </p>
           </div>
           {profile.alias_set_at && (
-            <p className="text-[10px] text-emerald-700/70 mt-1">
+            <p className="text-[10px] text-emerald-700/70">
               Claimed {new Date(profile.alias_set_at).toLocaleDateString()}
             </p>
           )}
+          <a
+            href="https://webmail.migadu.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-xs font-bold text-emerald-800 hover:text-emerald-900 hover:underline"
+          >
+            Open webmail →
+          </a>
         </div>
       ) : (
         <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-3 flex items-start gap-2">

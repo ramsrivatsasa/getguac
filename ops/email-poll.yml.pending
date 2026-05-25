@@ -1,0 +1,24 @@
+name: Email Inbox Poll
+
+# Polls every user's Migadu mailbox for new messages. Free tier of GitHub
+# Actions runs cron up to every 5 minutes; we pick 10 min as a balance of
+# freshness vs total minutes spent. Schedule is UTC.
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:  # manual trigger from Actions UI
+
+permissions:
+  contents: read
+
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger /api/email/poll
+        run: |
+          curl --fail --silent --show-error \
+            --max-time 60 \
+            -X POST \
+            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.APP_URL }}/api/email/poll"

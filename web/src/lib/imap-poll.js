@@ -11,12 +11,14 @@ import { ImapFlow } from 'imapflow'
 import { simpleParser } from 'mailparser'
 import { ENDPOINTS, fullEmail } from './migadu'
 
-// How many UIDs to walk back on the first poll for a freshly-provisioned mailbox.
-// Stops a user's old marketing emails from flooding the receipts pipeline.
-const FIRST_RUN_LOOKBACK_UIDS = 50
+// Max messages to fetch in a single poll run. Stops a single run from
+// timing out on a backfill of thousands of historical messages — the next
+// cron run will pick up where this one left off via the lastUid cursor.
+const MAX_PER_RUN = 200
 
-// Pull only messages that haven't been seen yet (UID > lastUid).
-// On first run with no lastUid we still cap how far back we look.
+// Pull every message UID > lastUid. On first run (lastUid null) we go all
+// the way back to UID 1 so the user's historical mail backfills over a few
+// cron ticks.
 export async function pollMailbox({ localPart, password, lastUid = null }) {
   const client = new ImapFlow({
     host: ENDPOINTS.imap.host,
@@ -36,15 +38,13 @@ export async function pollMailbox({ localPart, password, lastUid = null }) {
       const exists = mb?.exists || 0
       if (!exists) return results
 
-      // Build the UID range to fetch
-      let range
-      if (lastUid && lastUid > 0) {
-        range = `${lastUid + 1}:*`
-      } else {
-        // First run: only the last N messages — avoids reprocessing years of old mail.
-        const startUid = Math.max(1, (mb.uidNext || exists + 1) - FIRST_RUN_LOOKBACK_UIDS)
-        range = `${startUid}:*`
-      }
+      // Build the UID range to fetch.
+      // - Incremental: anything since the last cursor.
+      // - First run: from UID 1 (download EVERY message in the mailbox so the
+      //   user's full history shows up). MAX_PER_RUN below caps per-run so a
+      //   single poll doesn't time out on huge inboxes; the cron picks up the
+      //   next batch on its next tick.
+      const range = lastUid && lastUid > 0 ? `${lastUid + 1}:*` : '1:*'
 
       for await (const msg of client.fetch(range, {
         envelope: true,
@@ -97,6 +97,7 @@ export async function pollMailbox({ localPart, password, lastUid = null }) {
         })
         if (msg.uid > results.highestUid) results.highestUid = msg.uid
         results.fetched++
+        if (results.fetched >= MAX_PER_RUN) break;  // next cron tick will continue
       }
     } finally {
       lock.release()

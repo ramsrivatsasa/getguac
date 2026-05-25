@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../providers/receipt_provider.dart';
 import '../../models/receipt_model.dart';
 import '../../widgets/worth_it_rating.dart';
@@ -423,6 +424,19 @@ class _ImageViewerState extends State<_ImageViewer> {
         elevation: 0,
         leading: IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.of(context).pop()),
         title: const Text('Receipt image', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.download),
+            tooltip: 'Save to phone',
+            onPressed: () {
+              // Open the image URL in the browser — user long-presses
+              // to save to gallery via Chrome's native save action.
+              final urlToSave = _resolvedUrl ?? widget.url;
+              launchUrl(Uri.parse(urlToSave), mode: LaunchMode.externalApplication)
+                  .catchError((_) => false);
+            },
+          ),
+        ],
       ),
       body: GestureDetector(
         onTap: () => Navigator.of(context).pop(),

@@ -434,15 +434,19 @@ export default function ReceiptDetailPage() {
                         onChange={e => updateItem.mutate({ id: item.id, returned: e.target.checked })} />
                     </td>
                     <td className="px-3 py-2">
-                      <button
-                        type="button"
-                        onClick={() => handleAddToSmashlist(item)}
-                        title="Add to Smashlist"
-                        aria-label="Add to Smashlist"
-                        className="relative w-10 h-10 rounded-full bg-gradient-to-br from-amber-300 via-rose-500 to-fuchsia-600 text-white shadow-md hover:shadow-xl hover:scale-110 active:scale-95 transition-all flex items-center justify-center ring-2 ring-white hover:ring-amber-200 group">
-                        <span className="absolute -top-1 -right-1 text-[10px] drop-shadow-sm">🥑</span>
-                        <ShoppingCart size={15} className="drop-shadow-sm" />
-                      </button>
+                      {(item.returned || current.is_return || current.from_statement) ? (
+                        <span className="text-[10px] text-gray-400">—</span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleAddToSmashlist(item)}
+                          title="Add to Smashlist"
+                          aria-label="Add to Smashlist"
+                          className="relative w-10 h-10 rounded-full bg-gradient-to-br from-amber-300 via-rose-500 to-fuchsia-600 text-white shadow-md hover:shadow-xl hover:scale-110 active:scale-95 transition-all flex items-center justify-center ring-2 ring-white hover:ring-amber-200 group">
+                          <span className="absolute -top-1 -right-1 text-[10px] drop-shadow-sm">🥑</span>
+                          <ShoppingCart size={15} className="drop-shadow-sm" />
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}

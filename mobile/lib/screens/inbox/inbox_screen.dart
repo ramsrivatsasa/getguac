@@ -112,6 +112,54 @@ class _InboxScreenState extends State<InboxScreen> {
     await _load();
   }
 
+  /// Force re-pull EVERY message from the mailbox starting at UID 1.
+  /// Server enforces a 5-min cooldown and a 200-message-per-call cap.
+  Future<void> _backfillAll() async {
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session == null) return;
+    if (!mounted) return;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Backfill all mail?'),
+        content: const Text(
+          'GetGuac will re-download every message in your mailbox from the start. '
+          '+g messages will also be auto-filed as receipts. This may take a few '
+          'rounds for large inboxes (200 messages per call, 5-min cooldown).',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Backfill')),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+    setState(() => _loading = true);
+    try {
+      final res = await http.post(
+        Uri.parse('$_kApiBase/api/email/backfill'),
+        headers: {'Authorization': 'Bearer ${session.accessToken}'},
+      );
+      if (res.statusCode == 429) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('On cooldown — try again in 5 min.')),
+        );
+      } else if (res.statusCode == 200) {
+        final body = json.decode(res.body) as Map<String, dynamic>;
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Fetched ${body['fetched']} · filed ${body['drafted']} receipts. ${body['note']}')),
+        );
+      } else {
+        final err = json.decode(res.body)['error'] ?? 'Backfill failed';
+        throw Exception(err);
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+    } finally {
+      await _load();  // also refreshes _loading
+    }
+  }
+
   void _onSearchChanged(String v) {
     _searchDebounce?.cancel();
     _searchDebounce = Timer(const Duration(milliseconds: 300), () {
@@ -134,6 +182,20 @@ class _InboxScreenState extends State<InboxScreen> {
             _openComposer(context, prefill: null);
           }, tooltip: 'Compose'),
           IconButton(icon: const Icon(Icons.refresh), onPressed: _refresh, tooltip: 'Refresh'),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            onSelected: (v) {
+              if (v == 'backfill') _backfillAll();
+            },
+            itemBuilder: (_) => const [
+              PopupMenuItem(value: 'backfill', child: ListTile(
+                leading: Icon(Icons.cloud_download_outlined, size: 18),
+                title: Text('Backfill all mail', style: TextStyle(fontSize: 13)),
+                subtitle: Text('Download every message from the start', style: TextStyle(fontSize: 11)),
+                visualDensity: VisualDensity.compact,
+              )),
+            ],
+          ),
         ],
       ),
       body: Column(children: [

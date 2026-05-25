@@ -5,7 +5,6 @@
 // For exact driving distance, swap in Google Distance Matrix or OpenRouteService.
 
 import { rateLimit, rateKey } from '../../../lib/apiGuard'
-
 export const runtime = 'nodejs'
 
 const EARTH_MILES = 3958.8

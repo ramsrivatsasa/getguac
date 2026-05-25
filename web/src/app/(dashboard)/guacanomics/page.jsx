@@ -8,7 +8,6 @@ import { createClient } from '../../../lib/supabase/client'
 import { DollarSign, TrendingUp, Undo2, Receipt as ReceiptIcon, Banknote } from 'lucide-react'
 import GuacoScoreCard from '../../../components/GuacoScoreCard'
 import { CATEGORY_BY_SLUG } from '../../../lib/categories'
-
 // Lazy-load the chart-heavy section (~all of recharts) so the initial
 // Guacanomics shell doesn't ship the chart bundle to viewers who bounce.
 const Charts = dynamic(() => import('./Charts'), {

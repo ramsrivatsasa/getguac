@@ -2,9 +2,8 @@
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import {
-  ShieldCheck, Lock, Download, Trash2, AlertTriangle, Loader2, Eye, EyeOff,
+  ShieldCheck, Lock, Download, Trash2, AlertTriangle, Loader2, Eye, EyeOff
 } from 'lucide-react'
-
 // Categories that can be selectively deleted. Order matters — drives row order.
 const DELETE_CATEGORIES = [
   { key: 'embeddings',     label: 'Item embeddings (semantic vectors)', emoji: '🧠', danger: false, desc: 'Inferred AI data — safe to clear, regeneratable from your items.' },

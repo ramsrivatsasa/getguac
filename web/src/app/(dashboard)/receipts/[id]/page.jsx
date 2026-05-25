@@ -6,7 +6,7 @@ import toast from 'react-hot-toast'
 import { ArrowLeft, Save, Plus, Shield, MapPin, Phone, Hash, Sparkles, MessageCircle, ImageIcon, ShoppingCart, Tag } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { addToShoppingList, setStashProductCategory } from '../../../../lib/db'
-import { CATEGORIES, CATEGORY_BY_SLUG } from '../../../../lib/categories'
+import { CATEGORIES } from '../../../../lib/categories'
 import CategoryPicker from '../../../../components/CategoryPicker'
 
 const RECEIPT_RATING_META = {

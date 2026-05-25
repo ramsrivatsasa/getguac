@@ -1,7 +1,6 @@
 'use client'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getRewards, upsertReward, deleteReward } from '../lib/db'
-
 export function useRewards() {
   return useQuery({
     queryKey: ['rewards'],

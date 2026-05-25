@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../providers/reward_provider.dart';
 import '../../services/update_service.dart';
+import '../../widgets/guac_mascot.dart';
 
 const _kBrand = Color(0xFFdb2777);
 
@@ -59,12 +60,12 @@ class _StealsScreenState extends State<StealsScreen> {
           Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [_kBrand.withOpacity(0.12), _kBrand.withOpacity(0.04)]),
+              gradient: LinearGradient(colors: [_kBrand.withValues(alpha: 0.12), _kBrand.withValues(alpha: 0.04)]),
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: _kBrand.withOpacity(0.25)),
+              border: Border.all(color: _kBrand.withValues(alpha: 0.25)),
             ),
             child: Row(children: [
-              const Text('💎', style: TextStyle(fontSize: 44)),
+              const GuacMascot(mood: MascotMood.rich, size: 60),
               const SizedBox(width: 12),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 const Text('Find a Steal', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: _kBrand)),

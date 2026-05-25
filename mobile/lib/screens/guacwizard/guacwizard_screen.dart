@@ -101,9 +101,9 @@ class _GuacWizardScreenState extends State<GuacWizardScreen> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                gradient: LinearGradient(colors: [_kBrand.withOpacity(0.12), _kBrand.withOpacity(0.04)]),
+                gradient: LinearGradient(colors: [_kBrand.withValues(alpha: 0.12), _kBrand.withValues(alpha: 0.04)]),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: _kBrand.withOpacity(0.25)),
+                border: Border.all(color: _kBrand.withValues(alpha: 0.25)),
               ),
               child: Row(children: [
                 const Text('🧙‍♂️', style: TextStyle(fontSize: 48)),
@@ -157,9 +157,9 @@ class _GuacWizardScreenState extends State<GuacWizardScreen> {
     return Expanded(child: Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(label, style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w700)),

@@ -3,7 +3,6 @@
 
 import { createClient } from '../../../../lib/supabase/server'
 import { rateLimit, rateKey } from '../../../../lib/apiGuard'
-
 export const runtime = 'nodejs'
 
 const ALLOWED_FIELDS = new Set([

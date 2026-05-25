@@ -32,11 +32,14 @@ class AppAuthProvider extends ChangeNotifier {
     }
   }
 
+  // Only the columns actually used by mobile screens — keeps the payload tiny.
+  static const _kProfileCols = 'id, firstName, lastName, email_alias, is_admin';
+
   Future<void> fetchProfile(String uid) async {
     // .maybeSingle() returns null if no row — .single() throws "PGRST116".
     // Newly registered users often don't have a profiles row until the
     // server-side trigger creates one.
-    final data = await _sb.from('profiles').select().eq('id', uid).maybeSingle();
+    final data = await _sb.from('profiles').select(_kProfileCols).eq('id', uid).maybeSingle();
     userProfile = data;
     notifyListeners();
   }

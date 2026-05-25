@@ -4,7 +4,6 @@ import { useParams, useRouter } from 'next/navigation'
 import { useRewards, useUpsertReward } from '../../../../hooks/useRewards'
 import toast from 'react-hot-toast'
 import { ArrowLeft, Save } from 'lucide-react'
-
 export default function RewardDetailPage() {
   const { id } = useParams()
   const router = useRouter()

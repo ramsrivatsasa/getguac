@@ -1,7 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import { X, Monitor, Loader2, ClipboardPaste } from 'lucide-react'
-
 // Capture a screenshot of another screen, window, or browser tab using the
 // W3C Screen Capture API (`getDisplayMedia`). Browsers ALWAYS prompt the user
 // to pick what to share — there is no way to capture silently.

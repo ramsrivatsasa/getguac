@@ -1,5 +1,5 @@
 'use client'
-import { useMemo, useState, useEffect, Fragment } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useDropzone } from 'react-dropzone'
@@ -8,12 +8,10 @@ import toast from 'react-hot-toast'
 import { createClient } from '../../../lib/supabase/client'
 import { useStore } from '../../../store'
 import {
-  Banknote, FileText, AlertTriangle, Percent, CreditCard, Trash2, ExternalLink,
-  ChevronDown, ChevronRight, Sparkles, ArrowLeft, Plus, Upload, Calendar, Clock, TrendingUp, Wand2, Loader2, RefreshCw,
+  Banknote, FileText, AlertTriangle, Percent, CreditCard, Trash2, ExternalLink, ChevronDown, ChevronRight, Sparkles, ArrowLeft, Upload, Calendar, Clock, Wand2, Loader2, RefreshCw
 } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
 import { bankAccountTotals, PERIODS } from '../../../lib/financeInsights'
-
 const FEE_KIND_TONE = {
   interest: 'bg-orange-100 text-orange-800 border-orange-200',
   fee:      'bg-amber-100 text-amber-800 border-amber-200',

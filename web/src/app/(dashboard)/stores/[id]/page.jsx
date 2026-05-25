@@ -6,7 +6,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getStore, updateStore, getReceipts } from '../../../../lib/db'
 import toast from 'react-hot-toast'
 import { ArrowLeft, Save, Store, Phone, Globe, MapPin, Receipt, ChevronRight, Hash, Navigation, Crosshair, Loader2 } from 'lucide-react'
-
 export default function StoreDetailPage() {
   const { id } = useParams()
   const router = useRouter()

@@ -4,8 +4,7 @@ import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import {
-  Package, Search, ShoppingCart, ExternalLink, Star, Store as StoreIcon,
-  ChevronDown, ChevronRight, BadgeDollarSign, LayoutGrid, List,
+  Search, ShoppingCart, ExternalLink, Star, Store as StoreIcon, ChevronDown, ChevronRight, BadgeDollarSign, LayoutGrid, List
 } from 'lucide-react'
 import { useQueryClient, useMutation } from '@tanstack/react-query'
 import { getStashItems, addToShoppingList, setStashProductCategory } from '../../../lib/db'

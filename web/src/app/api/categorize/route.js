@@ -9,7 +9,6 @@
 
 import { rateLimit, rateKey, validate, v } from '../../../lib/apiGuard'
 import { createClient } from '../../../lib/supabase/server'
-
 export const runtime = 'nodejs'
 export const maxDuration = 60
 

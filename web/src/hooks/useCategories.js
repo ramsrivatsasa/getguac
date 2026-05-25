@@ -2,7 +2,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getUserCategories, createUserCategory, deleteUserCategory } from '../lib/db'
 import { CATEGORIES as PRESETS, categoryClass } from '../lib/categories'
-
 // Merges built-in presets with the user's custom categories.
 export function useCategories() {
   const { data: custom = [] } = useQuery({

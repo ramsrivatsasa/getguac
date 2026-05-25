@@ -6,7 +6,6 @@ import { createClient } from '../../../lib/supabase/client'
 import { generateInsights, PERIODS } from '../../../lib/financeInsights'
 import GuacMascot from '../../../components/GuacMascot'
 import { TrendingUp, TrendingDown, AlertTriangle, Percent, CreditCard, Banknote, Sparkles } from 'lucide-react'
-
 const SEVERITY_STYLE = {
   good:    { card: 'bg-emerald-50 border-emerald-200', label: 'text-emerald-700' },
   neutral: { card: 'bg-gray-50 border-gray-200',       label: 'text-gray-700' },

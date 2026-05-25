@@ -4,7 +4,6 @@
 import { enhanceSearchQuery } from '../../../lib/guacSearch'
 import { profileToPromptContext } from '../../../lib/userProfile'
 import { rateLimit, rateKey, validate, v } from '../../../lib/apiGuard'
-
 export const runtime = 'nodejs'
 export const maxDuration = 45
 

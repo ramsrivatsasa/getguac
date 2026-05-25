@@ -1,7 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import { X, Camera, RefreshCw, Loader2 } from 'lucide-react'
-
 // Opens the device camera (rear if available) in an overlay, lets the user snap
 // a still, then returns the result to the parent as a File via onCapture.
 // Works on Chrome / Firefox / Edge / Safari, desktop and mobile.

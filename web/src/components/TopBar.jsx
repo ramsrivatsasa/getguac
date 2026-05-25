@@ -1,7 +1,6 @@
 'use client'
 import { useStore } from '../store'
 import { Menu } from 'lucide-react'
-
 export default function TopBar({ user }) {
   const { setSidebarOpen } = useStore()
   return (

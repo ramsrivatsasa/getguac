@@ -1,7 +1,6 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { MapPin, Loader2 } from 'lucide-react'
-
 // Free address autocomplete using OpenStreetMap Nominatim.
 // Debounces 350ms (also respects Nominatim's 1 req/s policy).
 // Calls onSelect({ address, lat, lng }) when the user picks a suggestion.

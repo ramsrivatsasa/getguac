@@ -10,7 +10,6 @@
 
 import { createClient } from '../../../../lib/supabase/server'
 import { rateLimit, rateKey } from '../../../../lib/apiGuard'
-
 export const runtime = 'nodejs'
 
 export async function POST(request) {

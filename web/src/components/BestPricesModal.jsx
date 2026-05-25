@@ -1,14 +1,12 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import {
-  X, Loader2, Search, ExternalLink, ShoppingCart, BadgeDollarSign,
-  Globe, Crown, Wand2,
+  X, Search, ExternalLink, ShoppingCart, Globe, Crown, Wand2
 } from 'lucide-react'
 import GuacMascot from './GuacMascot'
 import { getStashItems } from '../lib/db'
-
 async function fetchBestPrices({ item_name, sku, category, stashItems }) {
   const res = await fetch('/api/best-prices', {
     method: 'POST',

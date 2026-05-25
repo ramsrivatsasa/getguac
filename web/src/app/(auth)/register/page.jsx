@@ -5,7 +5,6 @@ import Link from 'next/link'
 import toast from 'react-hot-toast'
 import GuacMascot from '../../../components/GuacMascot'
 import { Check, X, Loader2, AlertCircle } from 'lucide-react'
-
 const VALID_USERNAME_RE = /^[a-z0-9]([a-z0-9._-]{1,30}[a-z0-9])?$/
 
 export default function RegisterPage() {

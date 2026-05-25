@@ -6,7 +6,6 @@
 //     to edit every field anyway
 //
 import { createClient } from './supabase/client'
-
 // Columns the list pages actually display. Skip `created_at`, `processed`,
 // `payment_method`, `payment_last4`, `validation_*`, `validated_at` etc. that
 // no list view shows. Saves ~40% on payload size for big receipt sets.

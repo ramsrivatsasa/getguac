@@ -6,12 +6,10 @@ import toast from 'react-hot-toast'
 import Link from 'next/link'
 import { createClient } from '../../../lib/supabase/client'
 import {
-  Upload, Loader2, FileText, Image as ImageIcon, Check, ShieldCheck,
-  ShoppingBag, Undo2, AlertTriangle, Percent, CreditCard, ChevronDown, ChevronRight, Briefcase, Banknote,
+  Upload, Loader2, FileText, Image as ImageIcon, Check, ShieldCheck, ShoppingBag, Undo2, AlertTriangle, Percent, CreditCard, ChevronDown, ChevronRight, Briefcase, Banknote
 } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
 import { CATEGORIES, CATEGORY_BY_SLUG } from '../../../lib/categories'
-
 // Sections used to group rows in the preview. Each kind picks a section.
 const SECTIONS = [
   { key: 'purchase', label: 'Spending',      icon: ShoppingBag,   tone: 'rose',    desc: 'Merchant purchases — these become receipts and feed your analytics.' },

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/guac_mascot.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -81,22 +82,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             child: Column(
               children: [
                 const SizedBox(height: 16),
-                // Mascot pill
-                Container(
-                  width: 88,
-                  height: 88,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFa3e635), Color(0xFF22c55e), Color(0xFF15803d)],
-                    ),
-                    border: Border.all(color: Colors.white, width: 3),
-                    boxShadow: [
-                      BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 14, offset: const Offset(0, 6)),
-                    ],
-                  ),
-                  child: const Center(child: Text('🥑', style: TextStyle(fontSize: 52))),
-                ),
+                const GuacMascot(size: 100),
                 const SizedBox(height: 12),
                 const Text(
                   'Join GetGuac',

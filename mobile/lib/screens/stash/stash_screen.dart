@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../widgets/guac_mascot.dart';
 
 const _kBrand = Color(0xFFca8a04);
 
@@ -100,9 +101,9 @@ class _StashScreenState extends State<StashScreen> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(colors: [_kBrand.withOpacity(0.12), _kBrand.withOpacity(0.04)]),
+                        gradient: LinearGradient(colors: [_kBrand.withValues(alpha: 0.12), _kBrand.withValues(alpha: 0.04)]),
                         borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: _kBrand.withOpacity(0.25)),
+                        border: Border.all(color: _kBrand.withValues(alpha: 0.25)),
                       ),
                       child: Row(children: [
                         const Text('📦', style: TextStyle(fontSize: 40)),
@@ -127,7 +128,7 @@ class _StashScreenState extends State<StashScreen> {
                     ...filtered.map((i) => Card(
                       child: ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: _kBrand.withOpacity(0.15),
+                          backgroundColor: _kBrand.withValues(alpha: 0.15),
                           child: Text('×${i.qty}', style: const TextStyle(color: _kBrand, fontWeight: FontWeight.w800, fontSize: 12)),
                         ),
                         title: Text(i.name, style: const TextStyle(fontWeight: FontWeight.w700)),
@@ -146,10 +147,10 @@ class _StashScreenState extends State<StashScreen> {
     );
   }
 
-  Widget _emptyState() => ListView(children: [
-    const SizedBox(height: 80),
-    Center(child: Column(children: const [
-      Text('📦', style: TextStyle(fontSize: 80)),
+  Widget _emptyState() => ListView(children: const [
+    SizedBox(height: 60),
+    Center(child: Column(children: [
+      GuacMascot(mood: MascotMood.relaxing, size: 130),
       SizedBox(height: 16),
       Text('Your stash is empty', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
       SizedBox(height: 8),

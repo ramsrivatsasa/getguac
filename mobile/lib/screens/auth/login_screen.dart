@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/biometric_service.dart';
 import '../../services/update_service.dart';
+import '../../widgets/guac_mascot.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -39,14 +40,7 @@ class _LoginScreenState extends State<LoginScreen> {
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(children: [
-          Container(
-            width: 44, height: 44,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: const LinearGradient(colors: [Color(0xFFa3e635), Color(0xFF15803d)]),
-            ),
-            child: const Center(child: Text('🥑', style: TextStyle(fontSize: 24))),
-          ),
+          const GuacMascot(size: 40),
           const SizedBox(width: 12),
           const Expanded(child: Text('Update available')),
         ]),
@@ -168,26 +162,8 @@ class _LoginScreenState extends State<LoginScreen> {
               padding: const EdgeInsets.all(24),
               child: Column(
                 children: [
-                  // Avocado mascot tile
-                  Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(32),
-                      gradient: const LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [Color(0xFFa3e635), Color(0xFF22c55e), Color(0xFF15803d)],
-                      ),
-                      boxShadow: [
-                        BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 18, offset: const Offset(0, 8)),
-                      ],
-                      border: Border.all(color: Colors.white, width: 3),
-                    ),
-                    child: const Center(
-                      child: Text('🥑', style: TextStyle(fontSize: 72)),
-                    ),
-                  ),
+                  // Avocado mascot — SVG matches the web brand
+                  const GuacMascot(size: 140),
                   const SizedBox(height: 16),
                   const Text(
                     'GetGuac',

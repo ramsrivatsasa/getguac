@@ -11,7 +11,6 @@
 import pdfParse from 'pdf-parse'
 import { rateLimit, rateKey } from '../../../lib/apiGuard'
 import { createClient } from '../../../lib/supabase/server'
-
 export const runtime = 'nodejs'
 export const maxDuration = 60
 

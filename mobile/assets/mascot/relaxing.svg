@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 280">
+  <defs>
+    <radialGradient id="guacBody" cx="35%" cy="30%" r="80%">
+      <stop offset="0%"   stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#064e3b"/>
+    </radialGradient>
+    <radialGradient id="guacFlesh" cx="50%" cy="40%" r="70%">
+      <stop offset="0%"   stop-color="#d9f99d"/>
+      <stop offset="100%" stop-color="#84cc16"/>
+    </radialGradient>
+    <radialGradient id="guacPit" cx="38%" cy="32%" r="75%">
+      <stop offset="0%"   stop-color="#fcd34d"/>
+      <stop offset="50%"  stop-color="#d97706"/>
+      <stop offset="100%" stop-color="#78350f"/>
+    </radialGradient>
+  </defs>
+  <g transform="translate(120 14) rotate(-22)">
+    <ellipse cx="0" cy="0" rx="9" ry="20" fill="#65a30d"/>
+    <path d="M 0 -16 Q 4 0 0 16" stroke="#3f6212" stroke-width="1.4" fill="none"/>
+  </g>
+  <rect x="106" y="22" width="3" height="14" rx="1.5" fill="#3f6212"/>
+  <path d="M 110 32 C 92 34, 82 48, 80 72 C 80 92, 70 108, 60 130 C 46 162, 44 200, 70 226 C 88 244, 132 244, 150 226 C 176 200, 174 162, 160 130 C 150 108, 140 92, 140 72 C 138 48, 128 34, 110 32 Z" fill="url(#guacBody)"/>
+  <path d="M 86 60 C 78 80, 70 110, 64 140" stroke="white" stroke-width="6" stroke-linecap="round" fill="none" opacity="0.18"/>
+  <path d="M 110 50 C 96 52, 89 62, 88 80 C 88 96, 80 110, 72 130 C 60 158, 60 192, 82 214 C 96 226, 124 226, 138 214 C 160 192, 160 158, 148 130 C 140 110, 132 96, 132 80 C 131 62, 124 52, 110 50 Z" fill="url(#guacFlesh)"/>
+  <ellipse cx="110" cy="172" rx="38" ry="40" fill="url(#guacPit)"/>
+  <ellipse cx="96" cy="158" rx="11" ry="6" fill="#fef3c7" opacity="0.55"/>
+  <circle cx="80"  cy="190" r="6" fill="#fb7185" opacity="0.55"/>
+  <circle cx="140" cy="190" r="6" fill="#fb7185" opacity="0.55"/>
+  <line x1="100" y1="166" x2="120" y2="166" stroke="#1f2937" stroke-width="3" stroke-linecap="round"/>
+  <rect x="78"  y="158" width="26" height="18" rx="5" fill="#1f2937"/>
+  <rect x="82"  y="161" width="8"  height="5"  rx="1.5" fill="#374151" opacity="0.8"/>
+  <rect x="116" y="158" width="26" height="18" rx="5" fill="#1f2937"/>
+  <rect x="120" y="161" width="8"  height="5"  rx="1.5" fill="#374151" opacity="0.8"/>
+  <path d="M 100 194 Q 110 204, 120 194" stroke="#1f2937" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+</svg>

@@ -98,7 +98,7 @@ class GetGuacApp extends StatelessWidget {
           ),
           navigationBarTheme: NavigationBarThemeData(
             backgroundColor: Colors.white,
-            indicatorColor: kBrandPrimary.withOpacity(0.15),
+            indicatorColor: kBrandPrimary.withValues(alpha: 0.15),
             labelTextStyle: WidgetStateProperty.all(const TextStyle(
               fontSize: 12, fontWeight: FontWeight.w700,
             )),

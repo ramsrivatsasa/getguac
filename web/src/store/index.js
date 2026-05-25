@@ -1,6 +1,5 @@
 'use client'
 import { create } from 'zustand'
-
 // Client-only UI state — server state lives in TanStack Query
 const readBool = (key, fallback = false) => {
   if (typeof window === 'undefined') return fallback

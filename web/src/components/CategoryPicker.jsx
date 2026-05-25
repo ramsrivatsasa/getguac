@@ -2,7 +2,6 @@
 import { useState } from 'react'
 import toast from 'react-hot-toast'
 import { useCategories, useCreateCategory, categoryClass } from '../hooks/useCategories'
-
 // Drop-in category dropdown. Shows presets + user custom categories, plus a
 // "+ New category" option that pops a quick-create modal. Calls onChange(slug).
 //

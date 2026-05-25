@@ -4,9 +4,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '../lib/supabase/client'
 import { useStore } from '../store'
 import {
-  LayoutDashboard, Receipt, Gift, ShoppingCart, Car, User, LogOut, X,
-  ShieldCheck, Store, Undo2, Sparkles, ChevronsLeft, ChevronsRight, Package, Utensils,
-  BadgeDollarSign, FileText, Banknote, Wand2,
+  LayoutDashboard, Receipt, Gift, ShoppingCart, Car, User, X, Store, Undo2, Sparkles, ChevronsLeft, ChevronsRight, Package, Utensils, BadgeDollarSign, Banknote, Wand2
 } from 'lucide-react'
 import clsx from 'clsx'
 import GuacMascot from './GuacMascot'

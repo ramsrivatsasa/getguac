@@ -27,6 +27,12 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
     }
   }
 
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
   Future<void> _captureReceipt() async {
     final picker = ImagePicker();
     final img = await picker.pickImage(source: ImageSource.camera);
@@ -217,6 +223,15 @@ class _AddReceiptDialogState extends State<_AddReceiptDialog> {
     _rewardNo = TextEditingController(text: e?.rewardNo ?? '');
     _date = e?.date ?? DateTime.now().toIso8601String().substring(0, 10);
     _business = e?.businessPurchase ?? false;
+  }
+
+  @override
+  void dispose() {
+    _store.dispose();
+    _amount.dispose();
+    _tax.dispose();
+    _rewardNo.dispose();
+    super.dispose();
   }
 
   Future<void> _save() async {

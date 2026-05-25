@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../providers/receipt_provider.dart';
+import '../../widgets/guac_mascot.dart';
 
 const _kBrand = Color(0xFF15803d);
 
@@ -87,9 +88,9 @@ class _GuacScoreScreenState extends State<GuacScoreScreen> {
             Container(
               padding: const EdgeInsets.all(28),
               decoration: BoxDecoration(
-                gradient: LinearGradient(colors: [tone.withOpacity(0.15), tone.withOpacity(0.05)]),
+                gradient: LinearGradient(colors: [tone.withValues(alpha: 0.15), tone.withValues(alpha: 0.05)]),
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: tone.withOpacity(0.3), width: 2),
+                border: Border.all(color: tone.withValues(alpha: 0.3), width: 2),
               ),
               child: Row(children: [
                 Stack(alignment: Alignment.center, children: [
@@ -165,12 +166,12 @@ class _GuacScoreScreenState extends State<GuacScoreScreen> {
         color: const Color(0xFFf0fdf4),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Column(children: [
-        const Text('🥑', style: TextStyle(fontSize: 80)),
-        const SizedBox(height: 16),
-        const Text('Rate to unlock your score', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-        const SizedBox(height: 8),
-        const Text('Open any receipt, give it 1–5 stars based on how worth-it the purchase felt.', textAlign: TextAlign.center, style: TextStyle(color: Colors.black87)),
+      child: Column(children: const [
+        GuacMascot(mood: MascotMood.relaxing, size: 120),
+        SizedBox(height: 16),
+        Text('Rate to unlock your score', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+        SizedBox(height: 8),
+        Text('Open any receipt, give it 1–5 stars based on how worth-it the purchase felt.', textAlign: TextAlign.center, style: TextStyle(color: Colors.black87)),
       ]),
     );
   }

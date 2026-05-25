@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/guac_mascot.dart';
 
 // Minimal Supabase-backed profile screen. The richer version (alias picker,
 // privacy panel, etc.) lives on the web and will come to mobile next.
@@ -11,9 +11,13 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final user = context.read<AppAuthProvider>().currentUser;
+    final auth = context.watch<AppAuthProvider>();
+    final user = auth.currentUser;
     final email = user?.email ?? '—';
     final uid = user?.id ?? '—';
+    final firstName = auth.userProfile?['firstName'] ?? '';
+    final lastName = auth.userProfile?['lastName'] ?? '';
+    final alias = auth.userProfile?['email_alias'];
 
     return Scaffold(
       appBar: AppBar(
@@ -22,10 +26,7 @@ class ProfileScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Sign out',
-            onPressed: () async {
-              await Supabase.instance.client.auth.signOut();
-              if (context.mounted) context.go('/login');
-            },
+            onPressed: () => _signOut(context),
           ),
         ],
       ),
@@ -34,48 +35,47 @@ class ProfileScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Center(
-              child: CircleAvatar(
-                radius: 48,
-                backgroundColor: Colors.green.shade100,
-                child: const Text('🥑', style: TextStyle(fontSize: 56)),
-              ),
-            ),
-            const SizedBox(height: 24),
+            const Center(child: GuacMascot(size: 110)),
+            const SizedBox(height: 12),
+            if (firstName.toString().isNotEmpty)
+              Center(child: Text('$firstName $lastName'.trim(),
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800))),
+            const SizedBox(height: 16),
             _Row(label: 'Email', value: email),
+            if (alias != null && alias.toString().isNotEmpty) ...[
+              const Divider(),
+              _Row(label: '@getguac alias', value: '$alias@getguac.app'),
+            ],
             const Divider(),
             _Row(label: 'User ID', value: uid.length > 12 ? '${uid.substring(0, 8)}…' : uid),
             const Divider(),
             const SizedBox(height: 24),
-            Card(
-              child: ListTile(
-                leading: const Icon(Icons.alternate_email, color: Colors.green),
-                title: const Text('Pick your @getguac.app email'),
-                subtitle: const Text('Tap to open the web picker'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () {
-                  // Could deep-link to the web; placeholder for now.
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Open getguac.app/profile to claim your address.')),
-                  );
-                },
+            if (alias == null || alias.toString().isEmpty)
+              Card(
+                child: ListTile(
+                  leading: const Icon(Icons.alternate_email, color: Colors.green),
+                  title: const Text('Pick your @getguac.app email'),
+                  subtitle: const Text('Tap to open the web picker'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Open getguac.app/profile to claim your address.')),
+                    );
+                  },
+                ),
               ),
-            ),
             const SizedBox(height: 8),
-            Card(
+            const Card(
               child: ListTile(
-                leading: const Icon(Icons.privacy_tip, color: Colors.blueGrey),
-                title: const Text('Privacy & data'),
-                subtitle: const Text('Manage on getguac.app/profile'),
-                trailing: const Icon(Icons.open_in_new),
+                leading: Icon(Icons.privacy_tip, color: Colors.blueGrey),
+                title: Text('Privacy & data'),
+                subtitle: Text('Manage on getguac.app/profile'),
+                trailing: Icon(Icons.open_in_new),
               ),
             ),
             const Spacer(),
             FilledButton.tonalIcon(
-              onPressed: () async {
-                await Supabase.instance.client.auth.signOut();
-                if (context.mounted) context.go('/login');
-              },
+              onPressed: () => _signOut(context),
               icon: const Icon(Icons.logout),
               label: const Text('Sign out'),
             ),
@@ -83,6 +83,11 @@ class ProfileScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _signOut(BuildContext context) async {
+    await context.read<AppAuthProvider>().logout();
+    if (context.mounted) context.go('/login');
   }
 }
 

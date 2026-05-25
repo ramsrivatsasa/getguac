@@ -7,7 +7,6 @@
 import { createClient } from '../../../lib/supabase/server'
 import { embedOne } from '../../../lib/embeddings'
 import { rateLimit, rateKey, validate, v } from '../../../lib/apiGuard'
-
 export const runtime = 'nodejs'
 
 export async function POST(request) {

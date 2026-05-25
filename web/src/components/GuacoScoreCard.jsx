@@ -1,6 +1,6 @@
 'use client'
 import Link from 'next/link'
-import { calculateGuacoScore, GUACOSCORE_GRADES } from '../lib/guacoscore'
+import { calculateGuacoScore } from '../lib/guacoscore'
 import GuacMascot from './GuacMascot'
 
 const GRADE_TINT = {

@@ -15,7 +15,6 @@
 
 import { createClient } from '../../../../lib/supabase/server'
 import { rateLimit, rateKey, validate, v } from '../../../../lib/apiGuard'
-
 export const runtime = 'nodejs'
 
 const MAX_ROWS = 200

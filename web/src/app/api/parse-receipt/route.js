@@ -4,7 +4,6 @@
 
 import pdfParse from 'pdf-parse'
 import { rateLimit, rateKey } from '../../../lib/apiGuard'
-
 export const runtime = 'nodejs'
 export const maxDuration = 60
 

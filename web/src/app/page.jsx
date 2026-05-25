@@ -2,8 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '../lib/supabase/server'
 import {
-  Sparkles, ScanLine, Camera, ReceiptText, Star, Undo2, Gift, Car,
-  ShoppingCart, Store, Tag, Shield, ArrowRight, MapPin, Package, Utensils,
+  Sparkles, ScanLine, Camera, Star, Undo2, Gift, Car, ShoppingCart, Store, Tag, Shield, ArrowRight, Package, Utensils
 } from 'lucide-react'
 import GuacMascot from '../components/GuacMascot'
 

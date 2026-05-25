@@ -9,7 +9,6 @@
 import { createClient } from '../../../../lib/supabase/server'
 import { embedTexts, buildItemEmbedText } from '../../../../lib/embeddings'
 import { rateLimit, rateKey } from '../../../../lib/apiGuard'
-
 export const runtime = 'nodejs'
 export const maxDuration = 60
 

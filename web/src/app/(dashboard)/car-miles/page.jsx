@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { useTrips, useUpsertTrip, useDeleteTrip } from '../../../hooks/useTrips'
 import toast from 'react-hot-toast'
-import { Plus, Trash2, Car, Pencil, X, MapPin, Calculator, Loader2, Crosshair, Store as StoreIcon } from 'lucide-react'
+import { Trash2, Car, Pencil, MapPin, Calculator, Loader2, Crosshair } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { getStores } from '../../../lib/db'
 import AddressInput from '../../../components/AddressInput'

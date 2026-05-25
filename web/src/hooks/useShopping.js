@@ -1,7 +1,6 @@
 'use client'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getShoppingList, upsertShoppingItem, deleteShoppingItem } from '../lib/db'
-
 export function useShoppingList() {
   return useQuery({ queryKey: ['shopping'], queryFn: getShoppingList, staleTime: 1000 * 60 * 5 })
 }

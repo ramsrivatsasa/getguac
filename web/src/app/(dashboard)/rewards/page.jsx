@@ -3,7 +3,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRewards, useUpsertReward, useDeleteReward } from '../../../hooks/useRewards'
 import toast from 'react-hot-toast'
-import { Plus, Trash2, Eye } from 'lucide-react'
+import { Trash2, Eye } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
 
 const EMPTY = { reward_no: '', expiry_date: '', reward_type: '', reward_title: '', description: '', store_name: '' }

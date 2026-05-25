@@ -1,8 +1,7 @@
 'use client'
 import Link from 'next/link'
 import {
-  BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+  BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts'
 import { Sparkles, TrendingDown, Tag, Calendar, ShoppingBag } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'

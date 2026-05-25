@@ -1,6 +1,5 @@
 import './globals.css'
 import { Providers } from './providers'
-
 export const metadata = {
   title: 'GetGuac',
   description: 'Smart receipt management, rewards tracking & spending insights',

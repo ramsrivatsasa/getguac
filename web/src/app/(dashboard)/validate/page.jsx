@@ -1,17 +1,16 @@
 'use client'
 import { useState, useMemo, Fragment } from 'react'
 import Link from 'next/link'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import {
-  Star, Sparkles, Search, ChevronDown, ChevronRight as ChevRight,
+  Search, ChevronDown, ChevronRight as ChevRight
 } from 'lucide-react'
 import { PieChart, Pie, Cell, Tooltip as RTooltip, ResponsiveContainer } from 'recharts'
 import GuacMascot from '../../../components/GuacMascot'
 import { subDays, subWeeks, subMonths, subYears } from 'date-fns'
 import { useReceipts, useReceipt } from '../../../hooks/useReceipts'
 import { setReceiptValidation, setItemValidation } from '../../../lib/db'
-
 const RATING_LABELS = {
   5: { label: 'Essential', emoji: '💎', color: 'emerald', fill: '#10b981' },
   4: { label: 'Important', emoji: '✅', color: 'lime',    fill: '#84cc16' },

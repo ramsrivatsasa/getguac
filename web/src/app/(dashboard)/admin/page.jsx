@@ -2,7 +2,6 @@
 import { useState } from 'react'
 import { createClient } from '../../../lib/supabase/client'
 import { ShieldCheck, Search } from 'lucide-react'
-
 export default function AdminPage() {
   const [type, setType] = useState('receipts')
   const [userName, setUserName] = useState('')

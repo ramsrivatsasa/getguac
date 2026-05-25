@@ -1,7 +1,6 @@
 'use client'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getTrips, upsertTrip, deleteTrip } from '../lib/db'
-
 export function useTrips() {
   return useQuery({ queryKey: ['trips'], queryFn: getTrips, staleTime: 1000 * 60 * 5 })
 }

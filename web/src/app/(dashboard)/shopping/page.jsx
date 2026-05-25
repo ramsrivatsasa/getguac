@@ -3,7 +3,7 @@ import { useState, useMemo } from 'react'
 import { useShoppingList, useUpsertShoppingItem, useDeleteShoppingItem } from '../../../hooks/useShopping'
 import { SHOPPING_LISTS, SHOPPING_LIST_META } from '../../../lib/db'
 import toast from 'react-hot-toast'
-import { Plus, Trash2, CheckCircle, Circle } from 'lucide-react'
+import { Trash2, CheckCircle, Circle } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
 
 const EMPTY = { sku: '', item_name: '', order_date: '', qty: '1', price: '', store_name_id: '', comments: '', frequency: 'Monthly', list_name: 'Pantry', approved: false, sent_to_store: false }

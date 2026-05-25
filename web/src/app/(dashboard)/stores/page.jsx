@@ -5,7 +5,6 @@ import Link from 'next/link'
 import toast from 'react-hot-toast'
 import { Store, Phone, Globe, MapPin, ChevronRight, ChevronDown, Search, Trash2, AlertTriangle } from 'lucide-react'
 import { getStores, deleteStore } from '../../../lib/db'
-
 function normalizePhone(p) {
   if (!p) return ''
   return String(p).replace(/\D+/g, '')

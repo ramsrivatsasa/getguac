@@ -122,17 +122,17 @@ class ProfileScreen extends StatelessWidget {
             subtitle: 'AI price hunt + expiring rewards',
             onTap: () => context.go('/steals'),
           ),
+          _MenuTile(
+            icon: Icons.card_giftcard_rounded,
+            iconColor: const Color(0xFFdb2777),
+            iconBg: const Color(0xFFfce7f3),
+            title: 'Rewards',
+            subtitle: 'Loyalty + expiring offers',
+            onTap: () => context.go('/rewards'),
+          ),
 
           const SizedBox(height: 16),
           _SectionHeader(label: 'More'),
-          _MenuTile(
-            icon: Icons.directions_car,
-            iconColor: const Color(0xFF0891b2),
-            iconBg: const Color(0xFFcffafe),
-            title: 'Car Miles',
-            subtitle: 'Log trips, track mileage',
-            onTap: () => context.go('/car-miles'),
-          ),
           _MenuTile(
             icon: Icons.shield_outlined,
             iconColor: const Color(0xFF15803d),

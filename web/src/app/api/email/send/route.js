@@ -5,7 +5,7 @@
 // send to email_messages (folder='sent') so the user sees it in their Sent view.
 
 import nodemailer from 'nodemailer'
-import { createClient } from '../../../../lib/supabase/server'
+import { createApiClient } from '../../../../lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { rateLimit, rateKey } from '../../../../lib/apiGuard'
 import { decryptSecret } from '../../../../lib/crypto'
@@ -28,7 +28,7 @@ export async function POST(request) {
   const rl = rateLimit(rateKey(request, 'email-send'), { limit: 10, windowMs: 60_000 })
   if (!rl.ok) return Response.json({ error: 'Too many sends. Try again shortly.' }, { status: 429 })
 
-  const sb = createClient()
+  const sb = createApiClient()
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return Response.json({ error: 'Not signed in' }, { status: 401 })
 

@@ -2,7 +2,7 @@
 // PATCH  /api/email/:id  → update fields (read_at, starred, folder)
 // DELETE /api/email/:id  → move to trash (folder='trash'); 2nd delete from trash removes the row
 
-import { createClient } from '../../../../lib/supabase/server'
+import { createApiClient } from '../../../../lib/supabase/server'
 import { rateLimit, rateKey } from '../../../../lib/apiGuard'
 export const runtime = 'nodejs'
 
@@ -12,7 +12,7 @@ const DETAIL_COLS =
   'is_receipts_hook, processed, receipt_id, read_at, starred, folder, created_at'
 
 export async function GET(request, { params }) {
-  const sb = createClient()
+  const sb = createApiClient()
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return Response.json({ error: 'Not signed in' }, { status: 401 })
 
@@ -37,7 +37,7 @@ export async function PATCH(request, { params }) {
   const rl = rateLimit(rateKey(request, 'email-patch'), { limit: 60, windowMs: 60_000 })
   if (!rl.ok) return Response.json({ error: 'rate limited' }, { status: 429 })
 
-  const sb = createClient()
+  const sb = createApiClient()
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return Response.json({ error: 'Not signed in' }, { status: 401 })
 
@@ -54,7 +54,7 @@ export async function PATCH(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
-  const sb = createClient()
+  const sb = createApiClient()
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return Response.json({ error: 'Not signed in' }, { status: 401 })
 

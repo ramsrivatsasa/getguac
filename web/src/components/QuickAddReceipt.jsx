@@ -122,16 +122,14 @@ export default function QuickAddReceipt() {
     }
   }, [])
 
-  // Hide on auth pages, Smashlist, Bank/Statements (own upload flow), and on
-  // GuacWizard (a money-insights page — receipt-add doesn't belong there).
-  if (
-    pathname?.startsWith('/login') ||
-    pathname?.startsWith('/register') ||
-    pathname?.startsWith('/shopping') ||
-    pathname?.startsWith('/bank') ||
-    pathname?.startsWith('/statements') ||
-    pathname?.startsWith('/guacwizard')
-  ) return null
+  // The "Quick Add Receipt" FAB only makes sense on Dashboard + Receipts.
+  // Other pages have their own context-appropriate add buttons (Bank →
+  // Add Statement, Rewards → Add Reward, Smashlist → Add Item, etc.).
+  const showOn = (
+    pathname === '/dashboard' ||
+    pathname?.startsWith('/receipts')
+  )
+  if (!showOn) return null
 
   function handleOverlayDrop(e) {
     e.preventDefault()

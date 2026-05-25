@@ -3,7 +3,7 @@
 // Returns the current user's mailbox slice. Cheap query — selects only the
 // columns the inbox list view needs, not the full bodies.
 
-import { createClient } from '../../../../lib/supabase/server'
+import { createApiClient } from '../../../../lib/supabase/server'
 import { rateLimit, rateKey } from '../../../../lib/apiGuard'
 export const runtime = 'nodejs'
 
@@ -16,7 +16,7 @@ export async function GET(request) {
   const rl = rateLimit(rateKey(request, 'email-list'), { limit: 60, windowMs: 60_000 })
   if (!rl.ok) return Response.json({ error: 'rate limited' }, { status: 429 })
 
-  const sb = createClient()
+  const sb = createApiClient()
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return Response.json({ error: 'Not signed in' }, { status: 401 })
 

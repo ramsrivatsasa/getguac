@@ -14,6 +14,7 @@
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { pollMailbox, isReceiptsAddress } from '../../../../lib/imap-poll'
 import { decryptSecret } from '../../../../lib/crypto'
+import { draftReceiptFromEmail } from '../../../../lib/email-to-receipt'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -116,27 +117,21 @@ export async function POST(request) {
         }
         summary.messages++
 
-        // Auto-process +receipts messages: create a draft receipt the user
-        // can open in /receipts. Full AI extraction runs in the background
-        // when the user opens it (or via a later batch job).
+        // Auto-process +receipts messages: AI-parse the body and create a
+        // fully-populated receipt. Falls back to a stub with a sensible
+        // store-name guess (sender display name or subject pattern) if AI
+        // parsing fails or no key is configured.
         if (isHook) {
-          const draftStore = (m.fromAddr.match(/<([^>]+)>/)?.[1] || m.fromAddr || '').split('@')[1]?.split('.')[0] || 'Receipt by email'
-          const { data: rcpt } = await sb.from('receipts').insert({
-            user_id: u.id,
-            store_name: draftStore,
-            date: (m.receivedAt instanceof Date ? m.receivedAt : new Date(m.receivedAt)).toISOString().slice(0, 10),
-            total_amount: 0,
-            tax_paid: 0,
-            receipt_link: '',
-            business_purchase: false,
-            processed: false,
-            validation_comment: `From email: ${m.subject}\n\n${m.preview}`,
-          }).select('id').single()
-
-          if (rcpt?.id) {
-            await sb.from('email_messages')
-              .update({ receipt_id: rcpt.id, processed: true })
-              .eq('id', insertedMsg.id)
+          try {
+            const { receipt_id } = await draftReceiptFromEmail(sb, u.id, m)
+            if (receipt_id) {
+              await sb.from('email_messages')
+                .update({ receipt_id, processed: true })
+                .eq('id', insertedMsg.id)
+            }
+          } catch (e) {
+            console.warn('[email/poll] draft from email failed:', e.message)
+            summary.errors.push({ user: u.id, uid: m.uid, error: `draft: ${e.message}` })
           }
         }
       }

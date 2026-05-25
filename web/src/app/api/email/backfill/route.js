@@ -17,6 +17,7 @@ import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { rateLimit, userRateKey } from '../../../../lib/apiGuard'
 import { decryptSecret } from '../../../../lib/crypto'
 import { pollMailbox, isReceiptsAddress } from '../../../../lib/imap-poll'
+import { draftReceiptFromEmail } from '../../../../lib/email-to-receipt'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -99,23 +100,18 @@ export async function POST(request) {
     }
     summary.inserted++
 
-    // Auto-draft a receipt for +g mail
+    // Auto-draft a receipt for +g mail via the shared engine: AI-parse body,
+    // fall back to a smarter stub if parsing fails.
     if (isHook) {
-      const draftStore = (m.fromAddr.match(/<([^>]+)>/)?.[1] || m.fromAddr || '').split('@')[1]?.split('.')[0] || 'Receipt by email'
-      const { data: rcpt } = await admin.from('receipts').insert({
-        user_id: user.id,
-        store_name: draftStore,
-        date: (m.receivedAt instanceof Date ? m.receivedAt : new Date(m.receivedAt)).toISOString().slice(0, 10),
-        total_amount: 0,
-        tax_paid: 0,
-        receipt_link: '',
-        business_purchase: false,
-        processed: false,
-        validation_comment: `From email: ${m.subject}\n\n${m.preview}`,
-      }).select('id').single()
-      if (rcpt?.id) {
-        await admin.from('email_messages').update({ receipt_id: rcpt.id, processed: true }).eq('id', insertedMsg.id)
-        summary.drafted++
+      try {
+        const { receipt_id, processed } = await draftReceiptFromEmail(admin, user.id, m)
+        if (receipt_id) {
+          await admin.from('email_messages').update({ receipt_id, processed: true }).eq('id', insertedMsg.id)
+          if (processed) summary.drafted++
+        }
+      } catch (e) {
+        console.warn('[email/backfill] draft from email failed:', e.message)
+        summary.errors.push({ uid: m.uid, error: `draft: ${e.message}` })
       }
     }
   }

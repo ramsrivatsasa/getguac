@@ -1,7 +1,7 @@
 name: getguac
 description: GetGuac — Smart receipt & rewards management
 publish_to: 'none'
-version: 0.2.3+13
+version: 0.2.4+14
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -35,6 +35,8 @@ dependencies:
   cupertino_icons: ^1.0.6
   fl_chart: ^0.67.0
   flutter_svg: ^2.0.10+1
+  # Render HTML email bodies in the in-app Inbox. ~150 KB added to bundle.
+  flutter_html: ^3.0.0-beta.2
 
   # Utils
   intl: ^0.19.0

@@ -392,11 +392,73 @@ function MessagePreview({ m, onStar, onTrash, onReply }) {
           <a href={`/receipts/${m.receipt_id}`} className="ml-auto font-bold text-amber-800 hover:underline">Open receipt →</a>
         </div>
       )}
-      <div className="flex-1 overflow-y-auto p-5 text-sm text-gray-800 whitespace-pre-wrap leading-relaxed font-sans">
-        {m.body_text ? m.body_text : m.preview ? m.preview + '…' : '(Empty body. Open in full webmail if needed.)'}
+      <div className="flex-1 overflow-y-auto bg-white">
+        <MessageBody m={m} />
       </div>
     </div>
   )
+}
+
+// Renders the message body. Prefers the HTML version (full layout, images,
+// tables, logos) inside a sandboxed iframe so the email's CSS can't escape
+// and clobber our app's styles. Falls back to plain text otherwise.
+function MessageBody({ m }) {
+  const [view, setView] = useState(m.body_html ? 'html' : 'text')
+  const hasHtml = !!m.body_html
+  const hasText = !!m.body_text
+
+  if (!hasHtml && !hasText) {
+    return <div className="p-5 text-sm text-gray-400">(Empty body)</div>
+  }
+
+  return (
+    <div className="flex flex-col h-full">
+      {hasHtml && hasText && (
+        <div className="px-4 pt-3 pb-1 border-b border-gray-100 flex items-center gap-1 text-[11px] shrink-0">
+          <span className="text-gray-400 mr-1">View:</span>
+          <button
+            onClick={() => setView('html')}
+            className={`px-2 py-1 rounded-full font-semibold ${view === 'html' ? 'bg-emerald-100 text-emerald-900' : 'text-gray-500 hover:bg-gray-100'}`}
+          >Rich</button>
+          <button
+            onClick={() => setView('text')}
+            className={`px-2 py-1 rounded-full font-semibold ${view === 'text' ? 'bg-emerald-100 text-emerald-900' : 'text-gray-500 hover:bg-gray-100'}`}
+          >Plain</button>
+        </div>
+      )}
+      {view === 'html' && hasHtml ? (
+        <iframe
+          // Sandboxed: allow popups (for clicking links), block scripts + same-origin
+          // so email JS / cookies can't touch our app. Images and styles work fine.
+          sandbox="allow-popups allow-popups-to-escape-sandbox"
+          srcDoc={buildEmailSrcDoc(m.body_html)}
+          title={`email-${m.id}`}
+          className="flex-1 w-full bg-white border-0"
+        />
+      ) : (
+        <div className="flex-1 p-5 text-sm text-gray-800 whitespace-pre-wrap leading-relaxed font-sans overflow-y-auto">
+          {m.body_text || (m.preview ? m.preview + '…' : '(Empty body)')}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Wrap the raw HTML with a base styling preamble so it renders consistently
+// inside the iframe (most marketing emails assume Gmail-ish defaults).
+function buildEmailSrcDoc(html) {
+  return `<!doctype html><html><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<base target="_blank">
+<style>
+  html, body { margin: 0; padding: 16px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #111827; }
+  body { word-wrap: break-word; }
+  img { max-width: 100%; height: auto; }
+  table { max-width: 100%; }
+  a { color: #15803d; }
+</style>
+</head><body>${html}</body></html>`
 }
 
 function ComposeModal({ prefill, onClose, onSent }) {

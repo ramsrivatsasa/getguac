@@ -2,9 +2,11 @@
 // Mirrors the right-hand pane on the web /inbox UI.
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_html/flutter_html.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'inbox_screen.dart' show openInboxComposer;
 
 const _kBrand = Color(0xFF15803d);
@@ -133,7 +135,9 @@ class _InboxDetailScreenState extends State<InboxDetailScreen> {
     final starred = m['starred'] == true;
     final processed = m['processed'] == true;
     final receiptId = m['receipt_id']?.toString();
-    final bodyText = (m['body_text'] ?? m['preview'] ?? '(Empty body)').toString();
+    final bodyText = (m['body_text'] ?? m['preview'] ?? '').toString();
+    final bodyHtml = (m['body_html'] ?? '').toString();
+    final hasHtml = bodyHtml.trim().isNotEmpty;
 
     return Scaffold(
       appBar: AppBar(
@@ -208,10 +212,33 @@ class _InboxDetailScreenState extends State<InboxDetailScreen> {
                 ),
               ],
               const SizedBox(height: 16),
-              SelectableText(
-                bodyText,
-                style: const TextStyle(fontSize: 13.5, height: 1.5),
-              ),
+              if (hasHtml)
+                Html(
+                  data: bodyHtml,
+                  style: {
+                    'body': Style(
+                      fontSize: FontSize(13.5),
+                      lineHeight: const LineHeight(1.45),
+                      margin: Margins.zero,
+                      padding: HtmlPaddings.zero,
+                    ),
+                    'img': Style(width: Width(100, Unit.percent), height: Height.auto()),
+                    'table': Style(width: Width(100, Unit.percent)),
+                    'a': Style(color: const Color(0xFF15803d)),
+                    'p': Style(margin: Margins.only(bottom: 8)),
+                  },
+                  onLinkTap: (url, _, __) {
+                    if (url == null) return;
+                    launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication).catchError((_) => false);
+                  },
+                )
+              else if (bodyText.isNotEmpty)
+                SelectableText(
+                  bodyText,
+                  style: const TextStyle(fontSize: 13.5, height: 1.5),
+                )
+              else
+                const Text('(Empty body)', style: TextStyle(color: Colors.black38)),
               const SizedBox(height: 24),
               Row(children: [
                 Expanded(child: OutlinedButton.icon(

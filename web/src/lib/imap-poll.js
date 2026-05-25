@@ -52,14 +52,19 @@ export async function pollMailbox({ localPart, password, lastUid = null }) {
         uid: true,
         source: true,
         bodyStructure: false,
-        headers: ['delivered-to', 'to', 'from', 'subject', 'message-id'],
       }, { uid: true })) {
         if (!msg.uid || (lastUid && msg.uid <= lastUid)) continue
 
         const parsed = await simpleParser(msg.source).catch(() => null)
         if (!parsed) continue
 
-        const deliveredTo = (msg.headers?.get('delivered-to') || '').toLowerCase()
+        // mailparser exposes a Map at parsed.headers — that's the reliable
+        // source for Delivered-To. (imapflow's msg.headers when requested
+        // as a list returns a Buffer, not a Map, so .get() throws.)
+        const deliveredToRaw = parsed.headers?.get?.('delivered-to')
+        const deliveredTo = String(
+          Array.isArray(deliveredToRaw) ? deliveredToRaw[0] : (deliveredToRaw || '')
+        ).toLowerCase()
         const toHeader   = parsed.to?.text || ''
         const fromHeader = parsed.from?.text || ''
         const subject    = parsed.subject || ''

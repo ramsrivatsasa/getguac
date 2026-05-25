@@ -14,11 +14,11 @@ class _NavItem {
 }
 
 const _items = <_NavItem>[
-  _NavItem('/dashboard', Icons.dashboard_rounded,    'Home',     Color(0xFF15803d), [Color(0xFFa3e635), Color(0xFF15803d)]),
-  _NavItem('/receipts',  Icons.receipt_long_rounded, 'Receipts', Color(0xFF1d4ed8), [Color(0xFF60a5fa), Color(0xFF1d4ed8)]),
-  _NavItem('/shopping',  Icons.shopping_cart_rounded,'Smashlist',Color(0xFFca8a04), [Color(0xFFfcd34d), Color(0xFFca8a04)]),
-  _NavItem('/rewards',   Icons.card_giftcard_rounded,'Rewards',  Color(0xFFdb2777), [Color(0xFFf472b6), Color(0xFFdb2777)]),
-  _NavItem('/profile',   Icons.person_rounded,       'Profile',  Color(0xFF7c3aed), [Color(0xFFa78bfa), Color(0xFF7c3aed)]),
+  _NavItem('/dashboard', Icons.dashboard_rounded,        'Home',     Color(0xFF15803d), [Color(0xFFa3e635), Color(0xFF15803d)]),
+  _NavItem('/receipts',  Icons.receipt_long_rounded,     'Receipts', Color(0xFF1d4ed8), [Color(0xFF60a5fa), Color(0xFF1d4ed8)]),
+  _NavItem('/inbox',     Icons.mark_email_unread_rounded,'Inbox',    Color(0xFFca8a04), [Color(0xFFfcd34d), Color(0xFFca8a04)]),
+  _NavItem('/rewards',   Icons.card_giftcard_rounded,    'Rewards',  Color(0xFFdb2777), [Color(0xFFf472b6), Color(0xFFdb2777)]),
+  _NavItem('/profile',   Icons.person_rounded,           'Profile',  Color(0xFF7c3aed), [Color(0xFFa78bfa), Color(0xFF7c3aed)]),
 ];
 
 class MainScaffold extends StatelessWidget {
@@ -35,7 +35,7 @@ class MainScaffold extends StatelessWidget {
     // Sub-routes that don't have a dedicated tab — fall back to closest
     if (loc.startsWith('/car-miles') || loc.startsWith('/guacscore') ||
         loc.startsWith('/guacwizard') || loc.startsWith('/stash') ||
-        loc.startsWith('/steals')) {
+        loc.startsWith('/steals')   || loc.startsWith('/shopping')) {
       return 0;
     }
     return 0;

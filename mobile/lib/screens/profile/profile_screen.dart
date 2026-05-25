@@ -91,6 +91,16 @@ class ProfileScreen extends StatelessWidget {
           const SizedBox(height: 16),
           Card(
             child: ListTile(
+              leading: const Icon(Icons.shopping_cart, color: Color(0xFFca8a04)),
+              title: const Text('Smashlist', style: TextStyle(fontWeight: FontWeight.w700)),
+              subtitle: const Text('Pantry, Cravings, Snacks, Grub & Grab'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.go('/shopping'),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Card(
+            child: ListTile(
               leading: const Icon(Icons.directions_car, color: Color(0xFF0891b2)),
               title: const Text('Car Miles', style: TextStyle(fontWeight: FontWeight.w700)),
               subtitle: const Text('Log trips, track mileage'),

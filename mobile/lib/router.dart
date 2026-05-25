@@ -15,6 +15,8 @@ import 'screens/guacscore/guacscore_screen.dart';
 import 'screens/guacwizard/guacwizard_screen.dart';
 import 'screens/stash/stash_screen.dart';
 import 'screens/steals/steals_screen.dart';
+import 'screens/inbox/inbox_screen.dart';
+import 'screens/inbox/inbox_detail_screen.dart';
 import 'widgets/main_scaffold.dart';
 
 final appRouter = GoRouter(
@@ -45,6 +47,8 @@ final appRouter = GoRouter(
         GoRoute(path: '/guacwizard', builder: (_, __) => const GuacWizardScreen()),
         GoRoute(path: '/stash', builder: (_, __) => const StashScreen()),
         GoRoute(path: '/steals', builder: (_, __) => const StealsScreen()),
+        GoRoute(path: '/inbox', builder: (_, __) => const InboxScreen()),
+        GoRoute(path: '/inbox/:id', builder: (_, state) => InboxDetailScreen(id: state.pathParameters['id']!)),
       ],
     ),
   ],

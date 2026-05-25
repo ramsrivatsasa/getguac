@@ -258,7 +258,66 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
               ),
               const SizedBox(height: 8),
               if (_items.isEmpty)
-                const Text('No items. Tap Add Item to add.', style: TextStyle(color: Colors.grey))
+                if (r.fromStatement)
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFf3f4f6),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFe5e7eb)),
+                    ),
+                    child: Row(children: const [
+                      Text('💳', style: TextStyle(fontSize: 22)),
+                      SizedBox(width: 10),
+                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text('Straight from your card statement',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF374151))),
+                        SizedBox(height: 2),
+                        Text("Banks only share the total — no per-item breakdown.\nSnap or forward the original receipt to unlock items + Worth-It scoring.",
+                          style: TextStyle(fontSize: 11, color: Color(0xFF6b7280), height: 1.4)),
+                      ])),
+                    ]),
+                  )
+                else if (r.isReturn)
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFfee2e2),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFfecaca)),
+                    ),
+                    child: Row(children: const [
+                      Text('↩️', style: TextStyle(fontSize: 22)),
+                      SizedBox(width: 10),
+                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text('Refund / return',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF991b1b))),
+                        SizedBox(height: 2),
+                        Text("Money came back — no items to track here.",
+                          style: TextStyle(fontSize: 11, color: Color(0xFFb91c1c))),
+                      ])),
+                    ]),
+                  )
+                else
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFf0fdf4),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFa7f3d0)),
+                    ),
+                    child: Row(children: const [
+                      Text('🥑', style: TextStyle(fontSize: 22)),
+                      SizedBox(width: 10),
+                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text('Nothing chopped yet',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF064e3b))),
+                        SizedBox(height: 2),
+                        Text("Tap Add Item to log each line by hand,\nor re-scan a clearer photo so Guac-AI can pull them in.",
+                          style: TextStyle(fontSize: 11, color: Color(0xFF065f46), height: 1.4)),
+                      ])),
+                    ]),
+                  )
               else
                 ..._items.map((item) => Card(
                   child: Padding(

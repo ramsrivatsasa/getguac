@@ -12,7 +12,8 @@ import { createClient } from './supabase/client'
 const RECEIPTS_LIST_COLS =
   'id, user_id, store_name, store_id, store_location_id, date, total_amount, tax_paid, ' +
   'reward_no, receipt_link, business_purchase, rating, validation_tags, category, ' +
-  'from_statement, statement_source, statement_import_id, reconciled, reconciled_with'
+  'from_statement, statement_source, statement_import_id, reconciled, reconciled_with, ' +
+  'is_return, receipt_items(count)'
 
 // Receipts
 export async function getReceipts({ dateFrom, dateTo, storeId, storeLocationId } = {}) {

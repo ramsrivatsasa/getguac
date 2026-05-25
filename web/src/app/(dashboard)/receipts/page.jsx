@@ -816,13 +816,31 @@ export default function ReceiptsPage() {
                           <input type="checkbox" className="w-4 h-4 rounded cursor-pointer" checked={selected.has(r.id)}
                             onChange={() => toggleOne(r.id)} aria-label={`Select ${r.store_name}`} />
                         </td>
-                        <td className="px-4 py-3" onClick={e => { e.stopPropagation(); toggleExpanded(r.id) }}>
-                          <button type="button"
-                            className="inline-flex items-center gap-1 font-mono text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
-                            title="Click to show line items">
-                            {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
-                            {r.id?.slice(0, 8) || '—'}
-                          </button>
+                        <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                          {(() => {
+                            // Item count comes back from Supabase as receipt_items: [{ count: N }]
+                            const itemCount = Array.isArray(r.receipt_items) ? (r.receipt_items[0]?.count ?? 0) : 0
+                            const canExpand = itemCount > 0
+                            if (!canExpand) {
+                              // No items → just show the ID as static text, no chevron / no click target
+                              return (
+                                <span className="font-mono text-xs text-gray-400 px-2 py-1" title="No line items">
+                                  {r.id?.slice(0, 8) || '—'}
+                                </span>
+                              )
+                            }
+                            return (
+                              <button
+                                type="button"
+                                onClick={() => toggleExpanded(r.id)}
+                                className="inline-flex items-center gap-1 font-mono text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
+                                title={`Click to show ${itemCount} line item${itemCount === 1 ? '' : 's'}`}>
+                                {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                                {r.id?.slice(0, 8) || '—'}
+                                <span className="ml-1 text-[10px] text-gray-400">·{itemCount}</span>
+                              </button>
+                            )
+                          })()}
                         </td>
                         <td className="px-4 py-3">
                           <div className="font-medium text-blue-700 hover:underline">{r.store_name}</div>
@@ -902,7 +920,39 @@ function ReceiptLineItems({ receiptId }) {
   const items = data?.receipt_items || []
   const policies = data?.receipt_refund_policies || []
   if (items.length === 0 && policies.length === 0) {
-    return <div className="text-xs text-gray-400 py-2">No line items or refund policy captured for this receipt.</div>
+    // Statement-imported receipts never have line items — your card issuer
+    // only gives a total. Show a friendly note instead of the bare "no items".
+    if (data?.from_statement) {
+      return (
+        <div className="flex items-center gap-2 py-2 px-3 rounded-xl bg-gradient-to-r from-slate-50 to-gray-50 border border-gray-200">
+          <span className="text-lg">💳</span>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold text-gray-700">Straight from your card statement</p>
+            <p className="text-[11px] text-gray-500">Your bank only shares the total — no per-item breakdown. Snap or forward the original receipt to unlock items + Worth-It scoring.</p>
+          </div>
+        </div>
+      )
+    }
+    if (data?.is_return) {
+      return (
+        <div className="flex items-center gap-2 py-2 px-3 rounded-xl bg-rose-50 border border-rose-200">
+          <span className="text-lg">↩️</span>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold text-rose-900">Refund / return</p>
+            <p className="text-[11px] text-rose-700">Money came back — no items to track here.</p>
+          </div>
+        </div>
+      )
+    }
+    return (
+      <div className="flex items-center gap-2 py-2 px-3 rounded-xl bg-emerald-50 border border-emerald-200">
+        <span className="text-lg">🥑</span>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-bold text-emerald-900">Nothing chopped yet</p>
+          <p className="text-[11px] text-emerald-700">Open the receipt to add items, or re-scan a clearer photo so Guac-AI can pull them in.</p>
+        </div>
+      </div>
+    )
   }
 
   function handleToggleReturn(item) {
@@ -1026,15 +1076,19 @@ function ReceiptLineItems({ receiptId }) {
                 </td>
               )}
               <td className="px-3 py-1.5">
-                <button
-                  type="button"
-                  onClick={() => handleAddToSmashlist(it)}
-                  title="Add to Smashlist"
-                  aria-label="Add to Smashlist"
-                  className="relative w-9 h-9 rounded-full bg-gradient-to-br from-amber-300 via-rose-500 to-fuchsia-600 text-white shadow-md hover:shadow-xl hover:scale-110 active:scale-95 transition-all flex items-center justify-center ring-2 ring-white hover:ring-amber-200">
-                  <span className="absolute -top-1 -right-1 text-[9px] drop-shadow-sm">🥑</span>
-                  <ShoppingCart size={13} className="drop-shadow-sm" />
-                </button>
+                {(it.returned || data?.is_return || data?.from_statement) ? (
+                  <span className="text-[10px] text-gray-300">—</span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handleAddToSmashlist(it)}
+                    title="Add to Smashlist"
+                    aria-label="Add to Smashlist"
+                    className="relative w-9 h-9 rounded-full bg-gradient-to-br from-amber-300 via-rose-500 to-fuchsia-600 text-white shadow-md hover:shadow-xl hover:scale-110 active:scale-95 transition-all flex items-center justify-center ring-2 ring-white hover:ring-amber-200">
+                    <span className="absolute -top-1 -right-1 text-[9px] drop-shadow-sm">🥑</span>
+                    <ShoppingCart size={13} className="drop-shadow-sm" />
+                  </button>
+                )}
               </td>
             </tr>
           ))}

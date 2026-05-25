@@ -159,56 +159,84 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    // Worth-It rating for the whole receipt
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                      margin: const EdgeInsets.only(bottom: 12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFf0fdf4),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFFa7f3d0)),
-                      ),
-                      child: Row(children: [
-                        const Icon(Icons.thumbs_up_down_outlined, size: 18, color: Color(0xFF15803d)),
-                        const SizedBox(width: 8),
-                        const Text('Worth it?',
-                          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: Color(0xFF064e3b))),
-                        const Spacer(),
-                        WorthItRating(
-                          value: r.rating,
-                          showLabel: true,
-                          size: 24,
-                          onChanged: (v) async {
-                            await context.read<ReceiptProvider>().updateReceipt(r.id, {'rating': v});
-                            if (mounted) setState(() => _receipt = Receipt(
-                              id: r.id, storeName: r.storeName, date: r.date,
-                              totalAmount: r.totalAmount, taxPaid: r.taxPaid,
-                              rewardNo: r.rewardNo, receiptLink: r.receiptLink,
-                              businessPurchase: r.businessPurchase, processed: r.processed,
-                              category: r.category, rating: v,
-                            ));
-                          },
+                    // Source badge for statement-imported entries
+                    if (r.fromStatement || r.isReturn)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: r.isReturn ? const Color(0xFFfee2e2) : const Color(0xFFf3f4f6),
+                          borderRadius: BorderRadius.circular(99),
                         ),
-                      ]),
-                    ),
+                        child: Row(mainAxisSize: MainAxisSize.min, children: [
+                          Icon(r.isReturn ? Icons.undo : Icons.account_balance_wallet_outlined,
+                            size: 12, color: r.isReturn ? const Color(0xFF991b1b) : const Color(0xFF6b7280)),
+                          const SizedBox(width: 4),
+                          Text(
+                            r.isReturn ? 'Refund / return' : 'From credit-card statement',
+                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800,
+                              color: r.isReturn ? const Color(0xFF991b1b) : const Color(0xFF374151)),
+                          ),
+                        ]),
+                      ),
+
+                    // Worth-It rating — only for real purchases, not statement imports or returns
+                    if (!r.hideRatingUI)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFf0fdf4),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFa7f3d0)),
+                        ),
+                        child: Row(children: [
+                          const Icon(Icons.thumbs_up_down_outlined, size: 18, color: Color(0xFF15803d)),
+                          const SizedBox(width: 8),
+                          const Text('Worth it?',
+                            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: Color(0xFF064e3b))),
+                          const Spacer(),
+                          WorthItRating(
+                            value: r.rating,
+                            showLabel: true,
+                            size: 24,
+                            onChanged: (v) async {
+                              await context.read<ReceiptProvider>().updateReceipt(r.id, {'rating': v});
+                              if (mounted) setState(() => _receipt = Receipt(
+                                id: r.id, storeName: r.storeName, date: r.date,
+                                totalAmount: r.totalAmount, taxPaid: r.taxPaid,
+                                rewardNo: r.rewardNo, receiptLink: r.receiptLink,
+                                businessPurchase: r.businessPurchase, processed: r.processed,
+                                category: r.category, rating: v,
+                                fromStatement: r.fromStatement, isReturn: r.isReturn,
+                              ));
+                            },
+                          ),
+                        ]),
+                      ),
                     _row('Store', r.storeName),
                     _row('Date', r.date),
                     _row('Total Amount', '\$${r.totalAmount.toStringAsFixed(2)}'),
                     _row('Tax Paid', '\$${r.taxPaid.toStringAsFixed(2)}'),
                     _row('Reward No', r.rewardNo.isEmpty ? '—' : r.rewardNo),
                     _row('Business', r.businessPurchase ? 'Yes' : 'No'),
-                    if (r.receiptLink.isNotEmpty)
+
+                    // Big, clear "View Receipt Image" — only when an image actually
+                    // exists (statement-imported receipts never have one).
+                    if (r.receiptLink.isNotEmpty && !r.fromStatement)
                       Padding(
-                        padding: const EdgeInsets.only(top: 12),
+                        padding: const EdgeInsets.only(top: 14),
                         child: SizedBox(
                           width: double.infinity,
                           child: FilledButton.icon(
                             onPressed: () => _viewImage(r.receiptLink),
-                            icon: const Icon(Icons.image_outlined),
-                            label: const Text('View Receipt Image'),
+                            icon: const Icon(Icons.photo_camera_back_outlined, size: 20),
+                            label: const Text('View Receipt Image',
+                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
                             style: FilledButton.styleFrom(
                               backgroundColor: const Color(0xFF15803d),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
                           ),
                         ),
@@ -253,15 +281,18 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
                           ),
                       ]),
                       const SizedBox(height: 4),
-                      WorthItRating(
-                        value: item.rating,
-                        size: 18,
-                        onChanged: (v) async {
-                          await context.read<ReceiptProvider>().updateItem(item.id, {'rating': v});
-                          final items = await context.read<ReceiptProvider>().getItems(widget.id);
-                          if (mounted) setState(() => _items = items);
-                        },
-                      ),
+                      // Hide rating UI on returned items and on statement-imported
+                      // receipts (those line items don't represent rateable purchases).
+                      if (!item.returned && !r.fromStatement && !r.isReturn)
+                        WorthItRating(
+                          value: item.rating,
+                          size: 18,
+                          onChanged: (v) async {
+                            await context.read<ReceiptProvider>().updateItem(item.id, {'rating': v});
+                            final items = await context.read<ReceiptProvider>().getItems(widget.id);
+                            if (mounted) setState(() => _items = items);
+                          },
+                        ),
                     ]),
                   ),
                 )),

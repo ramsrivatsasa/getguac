@@ -12,6 +12,9 @@ class Receipt {
   final bool processed;
   final String? category;
   final int? rating;
+  final bool fromStatement;  // imported from a credit-card statement (no image, no rating)
+  final bool isReturn;       // return / refund — no rating, no Worth It widget
+  final int itemCount;       // # of receipt_items rows — shown as "N lines" on the list
 
   Receipt({
     required this.id,
@@ -25,7 +28,14 @@ class Receipt {
     this.processed = false,
     this.category,
     this.rating,
+    this.fromStatement = false,
+    this.isReturn = false,
+    this.itemCount = 0,
   });
+
+  /// True if rating UI should be hidden: returns, statement imports, and any
+  /// transaction with non-positive amount (refund / payment / fee).
+  bool get hideRatingUI => fromStatement || isReturn || totalAmount <= 0;
 
   factory Receipt.fromMap(String id, Map<String, dynamic> map) => Receipt(
         id: id,
@@ -39,6 +49,17 @@ class Receipt {
         processed: map['processed'] ?? false,
         category: map['category'],
         rating: map['rating'],
+        fromStatement: map['from_statement'] == true,
+        isReturn: map['is_return'] == true,
+        // Supabase returns a count aggregate as [{count: N}] or an int depending on version.
+        itemCount: () {
+          final raw = map['receipt_items'];
+          if (raw is List && raw.isNotEmpty && raw.first is Map) {
+            return (raw.first['count'] as int?) ?? 0;
+          }
+          if (raw is int) return raw;
+          return 0;
+        }(),
       );
 
   // Build a payload for INSERT/UPDATE against the `receipts` table. Only

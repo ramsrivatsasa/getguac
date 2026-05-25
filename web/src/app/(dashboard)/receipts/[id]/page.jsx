@@ -160,7 +160,9 @@ export default function ReceiptDetailPage() {
           </div>
         </div>
 
-        {/* Worth It? rating */}
+        {/* Worth It? rating — hidden for statement-imported, returns, and non-positive totals.
+            Those aren't rateable purchases. */}
+        {!current.from_statement && !current.is_return && (parseFloat(current.total_amount ?? 0) > 0) && (
         <div className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50/70 via-white to-lime-50/40 p-4 space-y-3">
           <div className="flex items-center gap-2">
             <span className="text-base">🥑</span>
@@ -234,6 +236,20 @@ export default function ReceiptDetailPage() {
           </div>
           <p className="text-[10px] text-gray-400">Changes save when you click <span className="font-semibold">Save Changes</span> below.</p>
         </div>
+        )}
+
+        {/* Source pill for statement-imported / refund entries */}
+        {(current.from_statement || current.is_return) && (
+          <div className={`rounded-2xl border p-3 text-xs font-semibold ${
+            current.is_return
+              ? 'border-rose-200 bg-rose-50/60 text-rose-900'
+              : 'border-gray-200 bg-gray-50 text-gray-700'
+          }`}>
+            {current.is_return
+              ? '↩️ Refund / return — no Worth It? rating or image.'
+              : '💳 Imported from a credit-card statement — no receipt image, no Worth It? rating.'}
+          </div>
+        )}
 
         {location && (
           <div className="bg-gray-50/70 rounded-xl px-4 py-3 text-sm text-gray-600 flex flex-wrap gap-x-5 gap-y-1">
@@ -254,15 +270,15 @@ export default function ReceiptDetailPage() {
             )}
           </div>
         )}
-        {current.receipt_link && (
+        {current.receipt_link && !current.from_statement && (
           <a
             href={current.receipt_link}
             target="_blank"
             rel="noreferrer"
             title="View receipt image"
             aria-label="View receipt image"
-            className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 hover:bg-emerald-200 hover:scale-110 active:scale-95 transition-all shadow-sm">
-            <ImageIcon size={16} />
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 active:scale-95 transition-all shadow-sm font-bold text-sm">
+            <ImageIcon size={16} /> View image
           </a>
         )}
         <button onClick={handleSave} disabled={updateReceipt.isPending} className="btn-primary">
@@ -372,6 +388,9 @@ export default function ReceiptDetailPage() {
                     <td className="px-3 py-2">{item.qty}</td>
                     <td className="px-3 py-2">${item.price}</td>
                     <td className="px-3 py-2">
+                      {(item.returned || current.from_statement || current.is_return) ? (
+                        <span className="text-[10px] text-gray-400">—</span>
+                      ) : (
                       <div className="flex items-center gap-0.5">
                         {[1, 2, 3, 4, 5].map(n => {
                           const emoji = { 1: '🙈', 2: '🍿', 3: '🙂', 4: '✅', 5: '💎' }[n]
@@ -395,6 +414,7 @@ export default function ReceiptDetailPage() {
                           )
                         })}
                       </div>
+                      )}
                     </td>
                     <td className="px-3 py-2">
                       {item.refund_policy_id

@@ -6,7 +6,8 @@ import '../models/receipt_model.dart';
 const _kReceiptListCols =
     'id, store_name, date, total_amount, tax_paid, reward_no, '
     'receipt_link, business_purchase, processed, category, rating, '
-    'from_statement, statement_source, reconciled';
+    'from_statement, statement_source, reconciled, is_return, '
+    'receipt_items(count)';
 
 /// Period filter applied at the DB level so we only pull the receipts the
 /// user actually needs. Smaller payload = faster screen.

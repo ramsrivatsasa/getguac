@@ -204,13 +204,40 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
                           : null,
                         title: Row(children: [
                           Expanded(child: Text(r.storeName, style: const TextStyle(fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)),
+                          if (r.fromStatement) Container(
+                            margin: const EdgeInsets.only(left: 4),
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFf3f4f6),
+                              borderRadius: BorderRadius.circular(99),
+                              border: Border.all(color: const Color(0xFFd1d5db)),
+                            ),
+                            child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                              Icon(Icons.account_balance_wallet_outlined, size: 9, color: Color(0xFF6b7280)),
+                              SizedBox(width: 2),
+                              Text('Statement', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: Color(0xFF374151))),
+                            ]),
+                          ),
+                          if (r.isReturn) Container(
+                            margin: const EdgeInsets.only(left: 4),
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFfee2e2),
+                              borderRadius: BorderRadius.circular(99),
+                            ),
+                            child: const Text('Return', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: Color(0xFF991b1b))),
+                          ),
                           if (r.rating != null) ...[
+                            const SizedBox(width: 4),
                             Icon(Icons.star, size: 13, color: _ratingColor(r.rating!)),
                             const SizedBox(width: 1),
                             Text('${r.rating}', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: _ratingColor(r.rating!))),
                           ],
                         ]),
-                        subtitle: Text('${r.date} • Tax: \$${r.taxPaid.toStringAsFixed(2)}'),
+                        subtitle: Text(
+                          '${r.date} • Tax: \$${r.taxPaid.toStringAsFixed(2)}'
+                          '${r.itemCount > 0 ? " • ${r.itemCount} ${r.itemCount == 1 ? "item" : "items"}" : ""}',
+                        ),
                         trailing: _selectionMode
                           ? Text('\$${r.totalAmount.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold))
                           : Row(mainAxisSize: MainAxisSize.min, children: [

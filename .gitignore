@@ -78,3 +78,5 @@ memory/
 .supabase/
 supabase/.branches/
 supabase/.temp/
+
+.git-commit-msg.tmp

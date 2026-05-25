@@ -160,11 +160,11 @@ export default async function Home() {
               <Shield size={28} className="text-emerald-700" />
             </div>
             <div className="flex-1 min-w-[240px]">
-              <h3 className="text-xl sm:text-2xl font-extrabold text-emerald-900">Personal mail stays personal.</h3>
+              <h3 className="text-xl sm:text-2xl font-extrabold text-emerald-900">Your guac. Your rules.</h3>
               <p className="text-sm sm:text-base text-emerald-950/80 mt-2 leading-relaxed">
-                Guac-AI <strong>only</strong> reads emails sent to your <span className="font-mono">+receipts</span> address.
-                Your bare <span className="font-mono">@getguac.app</span> inbox is yours — we never poll it, never index it.
-                Row-level security at the database means even our own engineers can&apos;t snoop. One-click account wipe whenever you want.
+                Inbox sync is an opt-in service — toggle it off in Profile and we stop syncing your mail.
+                Receipt auto-parse is limited to your <span className="font-mono">+receipts</span> address. Everything else just sits in your in-app Inbox.
+                Row-level security at the database means even our own engineers can&apos;t snoop on other users. One-click account + data wipe any time.
               </p>
               <div className="flex flex-wrap gap-3 mt-4">
                 <Link href="/security" className="inline-flex items-center gap-1 text-sm font-bold text-emerald-700 hover:text-emerald-900">

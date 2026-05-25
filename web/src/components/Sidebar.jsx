@@ -4,7 +4,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '../lib/supabase/client'
 import { useStore } from '../store'
 import {
-  LayoutDashboard, Receipt, Gift, ShoppingCart, Car, User, X, Store, Undo2, Sparkles, ChevronsLeft, ChevronsRight, Package, Utensils, BadgeDollarSign, Banknote, Wand2
+  LayoutDashboard, Receipt, Gift, ShoppingCart, Car, User, X, Store, Undo2, Sparkles, ChevronsLeft, ChevronsRight, Package, Utensils, BadgeDollarSign, Banknote, Wand2, Mail
 } from 'lucide-react'
 import clsx from 'clsx'
 import GuacMascot from './GuacMascot'
@@ -26,6 +26,7 @@ const sections = [
     title: 'Money',
     items: [
       { href: '/receipts', icon: Receipt,        label: 'Receipts', emoji: '🧾', hoverMascot: 'happy' },
+      { href: '/inbox',    icon: Mail,           label: 'Inbox',    emoji: '📬', hoverMascot: 'eating' },
       { href: '/bank',     icon: Banknote,       label: 'Bank',     emoji: '🏦', hoverMascot: 'rich' },
       { href: '/returns',  icon: Undo2,          label: 'Returns',  emoji: '↩️', hoverMascot: 'surprised' },
       { href: '/rewards',  icon: Gift,           label: 'Rewards',  emoji: '🎁', hoverMascot: 'celebrating' },

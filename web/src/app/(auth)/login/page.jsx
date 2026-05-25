@@ -80,7 +80,7 @@ export default function LoginPage() {
                 autoCapitalize="off"
                 spellCheck={false}
                 className="input"
-                placeholder="ram   or   ram@gmail.com"
+                placeholder="alex   or   alex@gmail.com"
                 value={form.identifier}
                 onChange={e => setForm(p => ({ ...p, identifier: e.target.value }))}
               />

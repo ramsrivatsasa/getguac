@@ -65,7 +65,14 @@ export async function pollMailbox({ localPart, password, lastUid = null }) {
         const subject    = parsed.subject || ''
         const messageId  = parsed.messageId || msg.envelope?.messageId || `uid:${msg.uid}`
         const receivedAt = parsed.date || msg.internalDate || new Date()
-        const preview    = (parsed.text || '').trim().slice(0, 200)
+        const bodyText   = parsed.text || ''
+        const bodyHtml   = parsed.html || ''
+        const preview    = bodyText.trim().slice(0, 200)
+        const attachments = (parsed.attachments || []).map(a => ({
+          filename: a.filename, contentType: a.contentType, size: a.size,
+          // We don't ship raw bytes in the poller result — too much memory.
+          // Attachment retrieval is on-demand from IMAP via a future endpoint.
+        }))
 
         results.messages.push({
           uid: Number(msg.uid),
@@ -76,14 +83,12 @@ export async function pollMailbox({ localPart, password, lastUid = null }) {
           subject,
           receivedAt,
           preview,
-          // For the +receipts auto-process path: full parsed body (text/html)
-          // for the receipt parser to chew on. Not persisted — we only store
-          // the metadata + preview, the parser converts the body into a receipt.
-          rawText: parsed.text || '',
-          rawHtml: parsed.html || '',
-          attachments: (parsed.attachments || []).map(a => ({
-            filename: a.filename, contentType: a.contentType, size: a.size, content: a.content,
-          })),
+          bodyText,
+          bodyHtml,
+          attachments,
+          hasAttachments: attachments.length > 0,
+          // Cap stored bodies so a single 5MB newsletter doesn't blow up Postgres.
+          // Anything bigger gets truncated; UI shows the truncation hint.
         })
         if (msg.uid > results.highestUid) results.highestUid = msg.uid
         results.fetched++

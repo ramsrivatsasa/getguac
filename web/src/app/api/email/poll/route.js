@@ -37,8 +37,9 @@ export async function POST(request) {
   const sb = adminClient()
   const { data: users, error } = await sb
     .from('profiles')
-    .select('id, email_alias, email_inbox_password_enc, email_last_poll_at')
+    .select('id, email_alias, email_inbox_password_enc, email_last_poll_at, email_processing_enabled')
     .eq('email_inbox_provisioned', true)
+    .eq('email_processing_enabled', true)
     .not('email_alias', 'is', null)
     .not('email_inbox_password_enc', 'is', null)
     .limit(500)
@@ -69,7 +70,14 @@ export async function POST(request) {
       const result = await pollMailbox({ localPart: u.email_alias, password, lastUid })
 
       for (const m of result.messages) {
-        // Insert email_messages row
+        const isHook = isReceiptsAddress(m, u.email_alias)
+        // Cap stored body sizes — 256 KB text, 512 KB html. Beyond that we
+        // truncate with a sentinel; UI can offer to fetch full from IMAP later.
+        const TEXT_CAP = 256 * 1024, HTML_CAP = 512 * 1024
+        const bodyText = m.bodyText.length > TEXT_CAP ? m.bodyText.slice(0, TEXT_CAP) + '\n\n[truncated]' : m.bodyText
+        const bodyHtml = m.bodyHtml.length > HTML_CAP ? m.bodyHtml.slice(0, HTML_CAP) : m.bodyHtml
+
+        // Insert email_messages row with full body + folder=inbox
         const { data: insertedMsg, error: insertErr } = await sb
           .from('email_messages')
           .insert({
@@ -82,6 +90,12 @@ export async function POST(request) {
             subject: m.subject,
             received_at: m.receivedAt,
             preview: m.preview,
+            body_text: bodyText,
+            body_html: bodyHtml,
+            has_attachments: m.hasAttachments,
+            attachments_summary: m.attachments,
+            is_receipts_hook: isHook,
+            folder: 'inbox',
           })
           .select('id')
           .single()
@@ -97,7 +111,7 @@ export async function POST(request) {
         // Auto-process +receipts messages: create a draft receipt the user
         // can open in /receipts. Full AI extraction runs in the background
         // when the user opens it (or via a later batch job).
-        if (isReceiptsAddress(m, u.email_alias)) {
+        if (isHook) {
           const draftStore = (m.fromAddr.match(/<([^>]+)>/)?.[1] || m.fromAddr || '').split('@')[1]?.split('.')[0] || 'Receipt by email'
           const { data: rcpt } = await sb.from('receipts').insert({
             user_id: u.id,

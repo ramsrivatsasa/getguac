@@ -61,11 +61,11 @@ export default function HowEmailWorksPage() {
             <p className="text-[10px] uppercase tracking-wider font-bold text-emerald-700">Personal</p>
             <p className="font-mono text-lg font-black text-emerald-900 mt-1">you@getguac.app</p>
             <p className="text-sm text-gray-700 mt-3 leading-relaxed">
-              Your private inbox. Sign in via webmail, read &amp; reply like any email account.
-              <strong className="text-emerald-700"> GetGuac never reads this mailbox.</strong>
-              The AI only sees what you explicitly forward to the receipts hook below.
+              Your free mailbox. Read &amp; reply right inside GetGuac at <Link href="/inbox" className="font-semibold text-emerald-700 hover:underline">/inbox</Link>.
+              We surface your mail in-app so you never have to juggle a separate webmail tab.
+              <strong className="text-emerald-700"> You can pause this in Profile → Email settings any time.</strong>
             </p>
-            <p className="text-xs text-gray-500 mt-3 flex items-center gap-1.5"><EyeOff size={11} /> Opt-in only — no auto-processing</p>
+            <p className="text-xs text-gray-500 mt-3 flex items-center gap-1.5"><EyeOff size={11} /> One-click opt-out · One-click delete-all</p>
           </div>
 
           <div className="rounded-3xl border-2 border-amber-200 bg-gradient-to-br from-amber-50/70 to-yellow-50/70 p-6 shadow-sm">
@@ -83,7 +83,7 @@ export default function HowEmailWorksPage() {
         </div>
 
         <p className="text-center text-sm text-gray-500 mt-4">
-          Both addresses land in the <strong>same</strong> mailbox — Migadu&apos;s plus-addressing routes <span className="font-mono">+receipts</span> through the same inbox.
+          Both addresses land in the <strong>same</strong> mailbox — GetGuac Mail&apos;s plus-addressing routes <span className="font-mono">+receipts</span> through the same inbox.
           GetGuac filters by the <span className="font-mono">Delivered-To</span> header so it only processes mail addressed to the receipts hook.
         </p>
       </section>
@@ -131,11 +131,11 @@ export default function HowEmailWorksPage() {
               <ul className="mt-4 space-y-2 text-emerald-950">
                 <li className="flex items-start gap-2">
                   <CheckCircle2 size={18} className="text-emerald-600 mt-0.5 shrink-0" />
-                  <span><strong>Personal mail stays personal.</strong> The poller never opens messages addressed to your bare <span className="font-mono">@getguac.app</span> handle.</span>
+                  <span><strong>Inbox processing is an opt-in service.</strong> Toggle it off in Profile → Email settings and we stop fetching mail. Your mailbox keeps working for send/receive; we just stop syncing it into the app.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle2 size={18} className="text-emerald-600 mt-0.5 shrink-0" />
-                  <span><strong>The receipts hook is opt-in by definition.</strong> No mail gets processed unless someone — you, a merchant, an auto-forward rule — explicitly sent it to the <span className="font-mono">+receipts</span> address.</span>
+                  <span><strong>Auto-parse is limited to <span className="font-mono">+receipts</span>.</strong> Only mail sent to your <span className="font-mono">+receipts</span> address is auto-filed as a receipt. Everything else just sits in your Inbox.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle2 size={18} className="text-emerald-600 mt-0.5 shrink-0" />
@@ -160,7 +160,7 @@ export default function HowEmailWorksPage() {
             { n: '1', t: 'Claim your handle at signup', b: 'Pick a username (e.g. alex). You get alex@getguac.app + alex+receipts@getguac.app provisioned the moment you sign up — yours forever, no extra setup.' },
             { n: '2', t: 'Use the address everywhere',  b: 'Sign up for Amazon, Walmart, Target, loyalty programs — anywhere you don\'t want to give out your real Gmail. Order confirmations land in your @getguac.app inbox.' },
             { n: '3', t: 'Forward to +receipts',        b: 'Set one auto-forward rule in Gmail/Outlook: "subject contains: order confirmation → forward to alex+receipts@getguac.app". Or hit Forward on individual emails as they come in.' },
-            { n: '4', t: 'Email arrives at Migadu',     b: 'Your receipts hook routes through Migadu (a privacy-first European mail host). The message sits in your mailbox with the Delivered-To header showing +receipts.' },
+            { n: '4', t: 'Email arrives at your GetGuac Mail inbox', b: 'Mail sent to your address lands in your GetGuac mailbox — hosted in a privacy-first data centre in Europe. The Delivered-To header is preserved so we know whether it was the bare address or +receipts.' },
             { n: '5', t: 'Guac-AI poller picks it up',  b: 'Every 10 minutes our cron job logs in via encrypted IMAP, fetches new messages, and filters for the +receipts tag. Personal mail is skipped.' },
             { n: '6', t: 'AI extracts the receipt',     b: 'Store name, line items, total, taxes, payment method — all parsed and saved to your Receipts table. The original message stays in your mailbox.' },
             { n: '7', t: 'Shows up in your Receipts feed', b: 'You see the receipt within 10 minutes. Tap to edit, rate it, or assign a category. The AI gets sharper with every receipt you process.' },

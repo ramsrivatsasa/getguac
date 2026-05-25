@@ -107,9 +107,9 @@ export default function SecurityPage() {
             Anyone claiming &quot;true end-to-end encryption&quot; for an AI assistant is lying or shipping a broken product. Here&apos;s what our servers can actually read:
           </p>
           <ul className="space-y-2 text-sm text-amber-950">
+            <li className="flex items-start gap-2"><span className="text-amber-700">•</span> Mail arriving at your <span className="font-mono">@getguac.app</span> inbox — so the in-app Inbox can show it to you and Guac-AI can auto-file <span className="font-mono">+receipts</span> messages. <strong>Opt-out in Profile any time.</strong></li>
             <li className="flex items-start gap-2"><span className="text-amber-700">•</span> The contents of receipts you upload (image, PDF, or email) — our AI parses store, items, totals.</li>
             <li className="flex items-start gap-2"><span className="text-amber-700">•</span> Bank statements you upload — same parser, extracts transactions + fees.</li>
-            <li className="flex items-start gap-2"><span className="text-amber-700">•</span> Emails sent to <span className="font-mono">your-handle+receipts@getguac.app</span> — your opt-in receipts inbox.</li>
             <li className="flex items-start gap-2"><span className="text-amber-700">•</span> Your sign-in email, name, and any optional profile fields you fill in.</li>
           </ul>
         </div>
@@ -124,8 +124,8 @@ export default function SecurityPage() {
           <Layer
             no
             icon={Mail}
-            title="Your personal email"
-            body="Mail sent to your-handle@getguac.app (without +receipts) lands in your mailbox and stays there. We don't poll it. We don't index it. We don't process it."
+            title="Mail from before you signed up"
+            body="GetGuac Mail only stores mail received after your inbox was provisioned. Old mail history from other providers is never imported, scanned, or copied."
           />
           <Layer
             no
@@ -143,7 +143,7 @@ export default function SecurityPage() {
             no
             icon={Eye}
             title="Your data on someone else's screen"
-            body="No data sharing with advertisers, analytics brokers, or AI training. Your receipts train you, not us."
+            body="No data sharing with advertisers, analytics brokers, or third-party marketing. Your guac stays in your bowl."
           />
         </div>
       </section>
@@ -161,8 +161,8 @@ export default function SecurityPage() {
           />
           <Control
             icon={Mail}
-            title="Don't want receipts processing? Don't forward."
-            body="The +receipts inbox is 100% opt-in. If you never forward an email to your-handle+receipts@getguac.app, we never look at one. You can also delete the mailbox entirely."
+            title="Pause inbox processing"
+            body="A single toggle in Profile → Email settings turns off the poller. We stop reading your inbox until you turn it back on. Your mailbox itself keeps working — you just lose the in-app Inbox + auto-receipt parsing."
             cta="Profile → Email settings"
             href="/profile"
           />

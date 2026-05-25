@@ -31,7 +31,6 @@ const PRIVACY_TOGGLES = [
   { key: 'scrub_payment_last4',  label: 'Hide payment card last-4',  desc: 'When on, all payment_last4 fields are blanked from new receipts.' },
   { key: 'scrub_addresses',      label: 'Hide street addresses',     desc: 'Trim full street addresses on receipts and car trips. City + state preserved.' },
   { key: 'block_telemetry',      label: 'Block telemetry',           desc: 'Never send anonymous usage events.' },
-  { key: 'disallow_ai_training', label: 'Never train AI on my data', desc: 'Excludes your records from any future training set, even anonymized.' },
 ]
 
 export default function PrivacyPanel() {

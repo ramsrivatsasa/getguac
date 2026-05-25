@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
+import Link from 'next/link'
 import toast from 'react-hot-toast'
 import { Mail, Check, X, Loader2, Copy, Sparkles, AlertCircle } from 'lucide-react'
 import { createClient } from '../lib/supabase/client'
@@ -113,7 +114,7 @@ export default function EmailAliasPicker({ userId }) {
                 <Copy size={14} />
               </button>
             </div>
-            <p className="text-[10px] text-emerald-700/70 mt-1">Personal inbox — GetGuac never reads it.</p>
+            <p className="text-[10px] text-emerald-700/70 mt-1">Read &amp; send mail right inside GetGuac. Pause inbox sync any time.</p>
           </div>
           <div className="border-t border-emerald-200/70" />
           <div>
@@ -142,14 +143,12 @@ export default function EmailAliasPicker({ userId }) {
               Claimed {new Date(profile.alias_set_at).toLocaleDateString()}
             </p>
           )}
-          <a
-            href="https://webmail.migadu.com"
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            href="/inbox"
             className="inline-flex items-center gap-2 text-xs font-bold text-emerald-800 hover:text-emerald-900 hover:underline"
           >
-            Open webmail →
-          </a>
+            Open my GetGuac Inbox →
+          </Link>
         </div>
       ) : (
         <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-3 flex items-start gap-2">

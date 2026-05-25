@@ -32,9 +32,9 @@ export default function PrivacyNote({ variant = 'banner', showDelete = true, cla
         <div className="flex-1 min-w-0">
           <p className="text-sm font-bold text-emerald-900">Your guac. Your rules.</p>
           <ul className="mt-1.5 space-y-1 text-[12px] text-emerald-900/90 leading-snug">
-            <li>• Row-level security — only you can see your data. We can&apos;t read it without your account.</li>
-            <li>• No selling. No ads. No third-party sharing.</li>
-            <li>• Receipts, statements, and emails are stored encrypted at rest in Supabase.</li>
+            <li>• Row-level security — only you can see your data. No selling, no ads, no third-party sharing.</li>
+            <li>• Inbox sync is opt-in — turn it off in Profile and we stop reading your mail.</li>
+            <li>• Receipts, statements, and emails are encrypted at rest. <Link href="/security" className="underline hover:text-emerald-700">Full security details</Link>.</li>
             {showDelete && (
               <li className="font-semibold text-emerald-900">
                 <Trash2 size={11} className="inline mr-1 -mt-0.5" />

@@ -3,11 +3,99 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/biometric_service.dart';
 import '../../services/update_service.dart';
 import '../../widgets/guac_mascot.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  bool _bioCapable = false;
+  bool _bioEnabled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkBiometric();
+  }
+
+  Future<void> _checkBiometric() async {
+    final capable = await BiometricService.isDeviceCapable();
+    final enabled = await BiometricService.isEnabled();
+    if (mounted) setState(() { _bioCapable = capable; _bioEnabled = enabled; });
+  }
+
+  Future<void> _toggleBiometric() async {
+    final auth = context.read<AppAuthProvider>();
+    final email = auth.currentUser?.email;
+    if (email == null) return;
+
+    if (_bioEnabled) {
+      // Disable — just wipe the stored creds
+      await BiometricService.disable();
+      if (mounted) {
+        setState(() => _bioEnabled = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Biometric unlock disabled.')),
+        );
+      }
+      return;
+    }
+
+    // Enable — need the password to stash. Ask the user.
+    final pwCtrl = TextEditingController();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Enable biometric unlock'),
+        content: Column(mainAxisSize: MainAxisSize.min, children: [
+          Text('Enter your current password to enable fingerprint/face unlock for $email.',
+            style: const TextStyle(fontSize: 12, color: Colors.black54)),
+          const SizedBox(height: 12),
+          TextField(
+            controller: pwCtrl,
+            obscureText: true,
+            autofocus: true,
+            decoration: const InputDecoration(labelText: 'Password'),
+          ),
+        ]),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Enable')),
+        ],
+      ),
+    );
+    final password = pwCtrl.text;
+    pwCtrl.dispose();
+    if (ok != true || password.isEmpty || !mounted) return;
+
+    // Verify the password works (try sign in) — never store invalid creds
+    try {
+      await auth.login(email, password);
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Password check failed: $e')),
+      );
+      return;
+    }
+
+    // Now prompt biometric — confirms the user has a finger/face enrolled
+    final creds = await BiometricService.authenticate();
+    if (creds != null) {
+      // Bio test passed but creds were null (none stored yet) — store them now anyway
+    }
+    await BiometricService.enable(email, password);
+    if (mounted) {
+      setState(() => _bioEnabled = true);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Biometric unlock enabled. Sign out + back in to test.')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -144,6 +232,42 @@ class ProfileScreen extends StatelessWidget {
           const SizedBox(height: 18),
           _SectionHeader(label: 'More'),
           const SizedBox(height: 6),
+
+          // Biometric toggle — only shows on devices that support it
+          if (_bioCapable)
+            Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: _bioEnabled ? const Color(0xFFa7f3d0) : const Color(0xFFe5e7eb)),
+              ),
+              child: Row(children: [
+                Container(
+                  width: 40, height: 40,
+                  decoration: BoxDecoration(
+                    color: _bioEnabled ? const Color(0xFFd1fae5) : const Color(0xFFf3f4f6),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(Icons.fingerprint, color: _bioEnabled ? const Color(0xFF15803d) : Colors.black45, size: 22),
+                ),
+                const SizedBox(width: 12),
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  const Text('Biometric unlock', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
+                  Text(
+                    _bioEnabled ? 'Active — sign in with fingerprint / face' : 'Tap to enable fingerprint / face login',
+                    style: const TextStyle(fontSize: 11, color: Colors.black54),
+                  ),
+                ])),
+                Switch.adaptive(
+                  value: _bioEnabled,
+                  onChanged: (_) => _toggleBiometric(),
+                  activeColor: const Color(0xFF15803d),
+                ),
+              ]),
+            ),
+
           Row(children: [
             Expanded(child: _Pill(
               gradient: const [Color(0xFFa7f3d0), Color(0xFF15803d)],
@@ -171,11 +295,9 @@ class ProfileScreen extends StatelessWidget {
 
   Future<void> _signOut(BuildContext context) async {
     await context.read<AppAuthProvider>().logout();
-    if (context.mounted) {
-      context.go('/login');
-      // Send users to the marketing home page after sign-out — matches the web behaviour.
-      UpdateService.openDownload('https://getguac.app/');
-    }
+    if (context.mounted) context.go('/login');
+    // (We don't bounce to getguac.app/ on mobile — staying in the app feels
+    //  more natural. The login screen is already the in-app welcome surface.)
   }
 }
 

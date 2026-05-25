@@ -10,7 +10,7 @@ export default function TopBar({ user }) {
       </button>
       <span className="text-2xl drop-shadow">🥑</span>
       <span className="font-black tracking-tight">GetGuac</span>
-      <span className="text-[10px] uppercase tracking-wider text-emerald-200/80 ml-1">smash your spend</span>
+      <span className="text-[10px] uppercase tracking-wider text-emerald-200/80 ml-1">money's wingman</span>
     </header>
   )
 }

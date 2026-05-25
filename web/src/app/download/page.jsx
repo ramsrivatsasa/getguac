@@ -7,9 +7,9 @@ import GuacMascot from '../../components/GuacMascot'
 // Latest Android release — bump these when you cut a new version on GitHub.
 // In a future iteration we can fetch /repos/ramsrivatsasa/getguac/releases/latest at build time.
 const ANDROID_RELEASE = {
-  version: 'v0.2.9',
+  version: 'v0.2.11',
   releasedAt: '2026-05-25',
-  base: 'https://github.com/ramsrivatsasa/getguac/releases/download/v0.2.9',
+  base: 'https://github.com/ramsrivatsasa/getguac/releases/download/v0.2.11',
   apks: [
     { abi: 'arm64-v8a',   sizeMB: 20.0, label: 'Most modern Android phones (Samsung, Pixel, OnePlus, etc.)', file: 'app-arm64-v8a-release.apk',   primary: true  },
     { abi: 'armeabi-v7a', sizeMB: 17.7, label: 'Older 32-bit Android phones',                                   file: 'app-armeabi-v7a-release.apk', primary: false },
@@ -54,7 +54,7 @@ export default function DownloadPage() {
             <span className="text-6xl">🥑</span>
           </div>
           <h1 className="text-4xl sm:text-5xl font-black text-white tracking-tight">Download GetGuac</h1>
-          <p className="text-emerald-100 mt-2 text-sm sm:text-base">Smash your spend — on your phone, in your pocket.</p>
+          <p className="text-emerald-100 mt-2 text-sm sm:text-base">Money's wingman — on your phone, in your pocket.</p>
         </div>
 
         {/* Android — primary on Android, but always visible */}

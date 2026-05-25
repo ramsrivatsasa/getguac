@@ -78,7 +78,7 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
             <Sparkles size={18} className="text-green-100" />
             <div className="text-left">
               <p className="font-extrabold text-sm leading-tight">Guacanomics</p>
-              <p className="text-[11px] text-green-100/90 leading-tight">Smash your spend</p>
+              <p className="text-[11px] text-green-100/90 leading-tight">Money's wingman</p>
             </div>
             <ArrowRight size={16} className="text-green-100 group-hover:translate-x-0.5 transition-transform" />
           </Link>

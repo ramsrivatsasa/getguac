@@ -51,7 +51,7 @@ export default async function Home() {
             <p className="text-lg text-gray-600 max-w-xl leading-relaxed">
               GetGuac is your <span className="font-bold text-emerald-700">Guac-AI</span> finance brain — it reads your receipts and bank statements,
               scores every purchase, sniffs out hidden fees, and tells you exactly where your money
-              gets eaten. <span className="font-semibold">Smash your spend. Keep your guac.</span>
+              gets eaten. <span className="font-semibold">Money's wingman. Keep your guac.</span>
             </p>
             <div className="flex flex-wrap items-center gap-3">
               <Link href="/register" className="btn-primary text-base px-6 py-3">

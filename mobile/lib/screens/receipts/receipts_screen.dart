@@ -23,9 +23,9 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
   void initState() {
     super.initState();
     if (context.read<AppAuthProvider>().currentUser?.id != null) {
-      // Force-refresh so receipts auto-filed by the email poller appear right
-      // away (the 60s cache would otherwise hide brand-new entries).
-      context.read<ReceiptProvider>().loadReceipts(force: true);
+      // Honour the 60s cache so re-entering the tab doesn't network-spam.
+      // Pull-to-refresh forces a fresh fetch when the user actually wants one.
+      context.read<ReceiptProvider>().loadReceipts();
     }
   }
 
@@ -139,6 +139,36 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
       ),
       floatingActionButton: _selectionMode ? null : FloatingActionButton(onPressed: _addManual, child: const Icon(Icons.add)),
       body: Column(children: [
+        // Period chips — scope the query to save load time on big accounts
+        Container(
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+          alignment: Alignment.centerLeft,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(children: [
+              const Padding(
+                padding: EdgeInsets.only(right: 6),
+                child: Text('Show:', style: TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w700)),
+              ),
+              for (final p in ReceiptPeriod.values)
+                Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: ChoiceChip(
+                    label: Text(p.label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800)),
+                    selected: context.watch<ReceiptProvider>().currentPeriod == p,
+                    onSelected: (_) => context.read<ReceiptProvider>().loadReceipts(period: p),
+                    selectedColor: const Color(0xFFd1fae5),
+                    labelStyle: TextStyle(
+                      color: context.watch<ReceiptProvider>().currentPeriod == p
+                        ? const Color(0xFF064e3b) : Colors.black54,
+                    ),
+                    visualDensity: VisualDensity.compact,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
+            ]),
+          ),
+        ),
         Padding(
           padding: const EdgeInsets.all(12),
           child: TextField(
@@ -149,7 +179,10 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
         ),
         Expanded(
           child: RefreshIndicator(
-            onRefresh: () => context.read<ReceiptProvider>().loadReceipts(force: true),
+            onRefresh: () {
+              final p = context.read<ReceiptProvider>();
+              return p.loadReceipts(period: p.currentPeriod, force: true);
+            },
             child: loading
             ? const Center(child: CircularProgressIndicator())
             : filtered.isEmpty

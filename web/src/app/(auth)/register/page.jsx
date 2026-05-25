@@ -93,7 +93,7 @@ export default function RegisterPage() {
             <GuacMascot expression="celebrating" size={110} />
           </div>
           <h1 className="text-3xl font-black text-white mt-2">GetGuac</h1>
-          <p className="text-emerald-100 text-sm mt-1">Create your account — smash your spend</p>
+          <p className="text-emerald-100 text-sm mt-1">Create your account — money's wingman</p>
         </div>
 
         <div className="card shadow-2xl">

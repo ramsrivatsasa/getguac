@@ -39,11 +39,14 @@ class _StashScreenState extends State<StashScreen> {
     setState(() => _loading = true);
     try {
       final sb = Supabase.instance.client;
-      // Join via receipts so we get the date + receipt id without a second roundtrip
+      // Join via receipts so we get the date + receipt id without a second roundtrip.
+      // Skip items belonging to receipts that came from a credit-card statement
+      // (they don't have real per-line product data — Stash would just be noise).
       final rows = await sb
           .from('receipt_items')
-          .select('item_name, qty, price, category, returned, receipt_id, receipts!inner(date)')
+          .select('item_name, qty, price, category, returned, receipt_id, receipts!inner(date, from_statement)')
           .eq('returned', false)
+          .eq('receipts.from_statement', false)
           .order('item_name')
           .limit(2000);
 

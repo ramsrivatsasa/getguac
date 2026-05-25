@@ -93,7 +93,7 @@ export default function Sidebar({ isAdmin }) {
             {!collapsed && (
               <div className="min-w-0 font-sans">
                 <div className="text-xl font-black tracking-tight text-emerald-900 leading-none font-sans">GetGuac</div>
-                <div className="text-[10px] text-emerald-600 font-semibold mt-1 uppercase tracking-wider font-sans">smash your spend</div>
+                <div className="text-[10px] text-emerald-600 font-semibold mt-1 uppercase tracking-wider font-sans">money's wingman</div>
               </div>
             )}
           </Link>

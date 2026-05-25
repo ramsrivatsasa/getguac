@@ -65,7 +65,7 @@ export default function LoginPage() {
             <GuacMascot expression="angel" size={130} />
           </div>
           <h1 className="text-4xl font-black text-white tracking-tight">GetGuac</h1>
-          <p className="text-emerald-100 mt-1 text-sm">Smash your spend — keep what counts.</p>
+          <p className="text-emerald-100 mt-1 text-sm">Money's wingman — every dollar earns its smash.</p>
         </div>
 
         <div className="card shadow-2xl">

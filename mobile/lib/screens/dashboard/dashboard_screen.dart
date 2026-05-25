@@ -152,7 +152,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 icon: Icons.auto_awesome,
                 title: 'Guacanomics',
-                subtitle: 'Smash your spend',
+                subtitle: 'GuacScore + insights',
                 onTap: () => context.go('/guacscore'),
               )),
             ]),
@@ -268,7 +268,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         const Text('GetGuac', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 18)),
         const SizedBox(width: 12),
-        const Text('SMASH YOUR SPEND',
+        const Text("MONEY'S WINGMAN",
           style: TextStyle(color: Color(0xFFa3e635), fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 1)),
       ]),
       actions: [

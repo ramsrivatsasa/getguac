@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/biometric_service.dart';
+import '../../services/update_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -24,6 +25,75 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     super.initState();
     _checkBiometric();
+    _checkForUpdate();
+  }
+
+  Future<void> _checkForUpdate() async {
+    // Slight delay so the login screen renders first before a dialog pops.
+    await Future.delayed(const Duration(milliseconds: 600));
+    final update = await UpdateService.checkForUpdate();
+    if (!mounted || update == null) return;
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(children: [
+          Container(
+            width: 44, height: 44,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: const LinearGradient(colors: [Color(0xFFa3e635), Color(0xFF15803d)]),
+            ),
+            child: const Center(child: Text('🥑', style: TextStyle(fontSize: 24))),
+          ),
+          const SizedBox(width: 12),
+          const Expanded(child: Text('Update available')),
+        ]),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '${update.tag} is out. Sign-in and data fixes are in this release — installing is recommended.',
+              style: const TextStyle(height: 1.4),
+            ),
+            if (update.releaseNotes != null && update.releaseNotes!.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Container(
+                constraints: const BoxConstraints(maxHeight: 140),
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFf0fdf4),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: SingleChildScrollView(
+                  child: Text(update.releaseNotes!.length > 280
+                      ? '${update.releaseNotes!.substring(0, 280)}…'
+                      : update.releaseNotes!,
+                    style: const TextStyle(fontSize: 12, color: Color(0xFF065f46)),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Later'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: const Color(0xFF15803d)),
+            onPressed: () {
+              Navigator.pop(ctx);
+              UpdateService.openDownload(update.downloadUrl);
+            },
+            child: const Text('Update now'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _checkBiometric() async {

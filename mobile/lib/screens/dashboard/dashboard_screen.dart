@@ -15,7 +15,6 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   int _tabIdx = 0; // 0=Monthly, 1=Weekly, 2=Daily
-  AvailableUpdate? _update;
 
   @override
   void initState() {
@@ -23,59 +22,76 @@ class _DashboardScreenState extends State<DashboardScreen> {
     // Providers read the current user from Supabase auth internally.
     context.read<ReceiptProvider>().loadReceipts();
     context.read<RewardProvider>().loadRewards();
-    // Fire-and-forget update check (silent failure on offline / rate limit)
-    UpdateService.checkForUpdate().then((u) {
-      if (mounted && u != null) setState(() => _update = u);
-    });
+    // (Update check now lives on the login screen so users are prompted
+    // BEFORE they hit the dashboard — covers them even if a release fixes
+    // a sign-in bug.)
   }
 
-  Widget _updateBanner() {
-    if (_update == null) return const SizedBox.shrink();
-    final u = _update!;
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF15803d), Color(0xFF65a30d)],
-        ),
-        borderRadius: BorderRadius.circular(14),
-      ),
+  // Feature tiles row — quick links to web equivalents (GuacScore, Wizard,
+  // Stash, Steals). Tapping opens getguac.app/<feature> in a browser.
+  Widget _featureGrid() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 4, bottom: 12),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text('🥑', style: TextStyle(fontSize: 28)),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Update available: ${u.tag}',
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 14),
-                ),
-                const Text(
-                  'Tap to download the latest version',
-                  style: TextStyle(color: Colors.white70, fontSize: 11),
-                ),
-              ],
-            ),
+          _featureTile(
+            emoji: '📊',
+            label: 'GuacScore',
+            color: const Color(0xFF15803d),
+            url: 'https://getguac.app/guacanomics',
           ),
-          FilledButton(
-            onPressed: () => UpdateService.openDownload(u.downloadUrl),
-            style: FilledButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: const Color(0xFF15803d),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            ),
-            child: const Text('Update', style: TextStyle(fontWeight: FontWeight.w800)),
+          _featureTile(
+            emoji: '🧙‍♂️',
+            label: 'Wizard',
+            color: const Color(0xFF7c3aed),
+            url: 'https://getguac.app/guacwizard',
           ),
-          IconButton(
-            icon: const Icon(Icons.close, color: Colors.white70, size: 18),
-            onPressed: () => setState(() => _update = null),
-            visualDensity: VisualDensity.compact,
+          _featureTile(
+            emoji: '📦',
+            label: 'Stash',
+            color: const Color(0xFFca8a04),
+            url: 'https://getguac.app/stash',
+          ),
+          _featureTile(
+            emoji: '💎',
+            label: 'Steals',
+            color: const Color(0xFFdb2777),
+            url: 'https://getguac.app/steals',
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _featureTile({required String emoji, required String label, required Color color, required String url}) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => UpdateService.openDownload(url),  // launchUrl helper
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: color.withOpacity(0.2), width: 1),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(emoji, style: const TextStyle(fontSize: 28)),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -109,8 +125,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          // In-app update banner (only when a newer GitHub release exists)
-          _updateBanner(),
+          // Quick-link tiles to GuacScore / Wizard / Stash / Steals (open on web)
+          _featureGrid(),
           // Stat cards
           Row(children: [
             _statCard('Total Spent', '\$${totalSpend.toStringAsFixed(2)}', Icons.attach_money, Colors.blue),

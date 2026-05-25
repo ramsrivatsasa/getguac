@@ -4,7 +4,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 import GuacMascot from '../../../components/GuacMascot'
-import { Check, X, Loader2, AlertCircle } from 'lucide-react'
+import PrivacyNote from '../../../components/PrivacyNote'
+import { Check, X, Loader2, AlertCircle, AtSign } from 'lucide-react'
 const VALID_USERNAME_RE = /^[a-z0-9]([a-z0-9._-]{1,30}[a-z0-9])?$/
 
 export default function RegisterPage() {
@@ -96,12 +97,18 @@ export default function RegisterPage() {
         </div>
 
         <div className="card shadow-2xl">
-          <h2 className="text-xl font-bold mb-5">Create Account</h2>
+          <h2 className="text-xl font-bold mb-4">Create Account</h2>
+          <PrivacyNote className="mb-5" showDelete={false} />
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Username — the one the user will log in with */}
-            <div>
-              <label className="label">Pick your username</label>
-              <div className="flex items-stretch rounded-xl border-2 border-gray-200 focus-within:border-emerald-400 transition-colors overflow-hidden">
+            {/* Username = sign-in handle AND @getguac.app email alias */}
+            <div className="rounded-2xl border-2 border-emerald-200 bg-emerald-50/40 p-3">
+              <label className="text-[11px] uppercase tracking-wider font-bold text-emerald-800 flex items-center gap-1.5">
+                <AtSign size={12} /> Pick your GetGuac handle
+              </label>
+              <p className="text-[11px] text-emerald-900/80 mt-1 mb-2">
+                This becomes your sign-in name <strong>and</strong> your free <span className="font-mono">@getguac.app</span> email — yours forever.
+              </p>
+              <div className="flex items-stretch rounded-xl border-2 border-white focus-within:border-emerald-400 transition-colors overflow-hidden bg-white">
                 <input
                   required
                   autoCapitalize="off"
@@ -117,13 +124,13 @@ export default function RegisterPage() {
                   @getguac.app
                 </span>
               </div>
-              <div className="mt-1 min-h-[18px] text-xs">
+              <div className="mt-1.5 min-h-[18px] text-xs">
                 {!usernameNorm ? (
-                  <span className="text-gray-400">You&apos;ll use this (or your email) to sign in. 3–32 chars · a-z 0-9 . _ -</span>
+                  <span className="text-gray-500">3–32 chars · a-z 0-9 . _ -</span>
                 ) : checkingUsername ? (
                   <span className="text-gray-500 inline-flex items-center gap-1"><Loader2 size={11} className="animate-spin" /> Checking…</span>
                 ) : usernameStatus === 'available' ? (
-                  <span className="text-emerald-700 font-semibold inline-flex items-center gap-1"><Check size={12} /> {usernameNorm} is available</span>
+                  <span className="text-emerald-700 font-semibold inline-flex items-center gap-1"><Check size={12} /> <span className="font-mono">{usernameNorm}@getguac.app</span> is available</span>
                 ) : usernameStatus === 'taken' ? (
                   <span className="text-rose-700 font-semibold inline-flex items-center gap-1"><X size={12} /> Already taken</span>
                 ) : usernameStatus === 'reserved' ? (
@@ -165,6 +172,15 @@ export default function RegisterPage() {
             Already have an account?{' '}
             <Link href="/login" className="text-emerald-700 font-semibold hover:underline">Sign In</Link>
           </p>
+          <div className="mt-4 pt-4 border-t border-gray-100 text-center">
+            <p className="text-[11px] text-gray-500">
+              You stay in control. Change your mind?{' '}
+              <Link href="/profile" className="text-emerald-700 font-semibold hover:underline">
+                Delete your account + all data
+              </Link>{' '}
+              in one click — no questions.
+            </p>
+          </div>
         </div>
       </div>
     </div>

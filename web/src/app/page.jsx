@@ -25,10 +25,10 @@ export default async function Home() {
             </div>
           </Link>
           <nav className="flex items-center gap-2">
-            <a href="#brain"    className="hidden sm:inline text-sm font-semibold text-gray-600 hover:text-emerald-800 px-3 py-1.5 rounded-full">The brain</a>
-            <a href="#powers"   className="hidden sm:inline text-sm font-semibold text-gray-600 hover:text-emerald-800 px-3 py-1.5 rounded-full">Superpowers</a>
-            <a href="#how"      className="hidden sm:inline text-sm font-semibold text-gray-600 hover:text-emerald-800 px-3 py-1.5 rounded-full">How it works</a>
-            <Link href="/download" className="hidden sm:inline-flex items-center gap-1 text-sm font-semibold text-emerald-700 hover:text-emerald-900 px-3 py-1.5 rounded-full">
+            <a href="#brain"    className="hidden md:inline text-sm font-semibold text-gray-600 hover:text-emerald-800 px-3 py-1.5 rounded-full">The brain</a>
+            <Link href="/how-email-works" className="hidden md:inline text-sm font-semibold text-gray-600 hover:text-emerald-800 px-3 py-1.5 rounded-full">How email works</Link>
+            <Link href="/security" className="hidden md:inline text-sm font-semibold text-gray-600 hover:text-emerald-800 px-3 py-1.5 rounded-full">Security</Link>
+            <Link href="/download" className="hidden md:inline-flex items-center gap-1 text-sm font-semibold text-emerald-700 hover:text-emerald-900 px-3 py-1.5 rounded-full">
               📱 Download
             </Link>
             <Link href="/login" className="btn-secondary">Sign in</Link>
@@ -127,23 +127,57 @@ export default async function Home() {
       <section id="how" className="max-w-6xl mx-auto px-4 sm:px-6 pb-16">
         <div className="text-center mb-10">
           <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">From paper pile to power move</h2>
-          <p className="text-gray-500 mt-2">Three taps. That's it.</p>
+          <p className="text-gray-500 mt-2">Five steps. Most happen automatically.</p>
         </div>
-        <div className="grid md:grid-cols-3 gap-5">
+        <div className="grid md:grid-cols-5 gap-3">
           {[
-            { n: '1', emoji: '📷', title: 'Feed your guac', body: 'Snap a receipt, forward an email, drop a bank-statement PDF. Guac-AI takes it from there.' },
-            { n: '2', emoji: '✨', title: 'Auto-everything',  body: 'Store, items, categories, APRs, interest, fees — all extracted, tagged, reconciled.' },
-            { n: '3', emoji: '🧠', title: 'Smarter every receipt', body: 'GuacScore, GuacWizard, Bank Bite, Stash predictions — the more you feed it, the sharper it gets.' },
+            { n: '1', emoji: '🧑‍💼', title: 'Claim your handle',     body: 'Pick a username at signup. You get ram@getguac.app + ram+receipts@getguac.app for free, forever.' },
+            { n: '2', emoji: '🛍️', title: 'Use it everywhere',     body: 'Sign up for Amazon, Walmart, Target, loyalty programs — all using your @getguac.app address.' },
+            { n: '3', emoji: '📨', title: 'Forward to +receipts',  body: 'Set one auto-forward rule in Gmail/Outlook. Order confirmations go to your +receipts address.' },
+            { n: '4', emoji: '✨', title: 'Guac-AI parses it all',  body: 'Within 10 minutes the AI extracts store, items, total, tax, payment, even refund policies.' },
+            { n: '5', emoji: '🧠', title: 'Insights compound',       body: 'GuacScore, GuacWizard, Bank Bite tracker — the more you feed Guac-AI, the sharper it gets.' },
           ].map(s => (
             <div key={s.n} className="card relative overflow-hidden">
               <span className="absolute -right-3 -top-3 text-7xl font-black text-emerald-50 select-none">{s.n}</span>
               <div className="relative">
                 <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-green-600 text-white shadow-md flex items-center justify-center text-2xl">{s.emoji}</div>
-                <h3 className="font-bold text-lg mt-3 text-gray-900">{s.title}</h3>
-                <p className="text-sm text-gray-600 mt-1 leading-relaxed">{s.body}</p>
+                <h3 className="font-bold text-sm mt-3 text-gray-900 leading-tight">{s.title}</h3>
+                <p className="text-xs text-gray-600 mt-1 leading-relaxed">{s.body}</p>
               </div>
             </div>
           ))}
+        </div>
+        <div className="text-center mt-6">
+          <Link href="/how-email-works" className="inline-flex items-center gap-1 text-sm font-bold text-emerald-700 hover:text-emerald-900">
+            See the email flow in detail <ArrowRight size={14} />
+          </Link>
+        </div>
+      </section>
+
+      {/* PRIVACY STRIP */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-16">
+        <div className="rounded-3xl border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 to-lime-50 p-6 sm:p-8">
+          <div className="flex items-start gap-5 flex-wrap">
+            <div className="w-16 h-16 rounded-2xl bg-emerald-100 ring-2 ring-emerald-200 flex items-center justify-center shrink-0">
+              <Shield size={28} className="text-emerald-700" />
+            </div>
+            <div className="flex-1 min-w-[240px]">
+              <h3 className="text-xl sm:text-2xl font-extrabold text-emerald-900">Personal mail stays personal.</h3>
+              <p className="text-sm sm:text-base text-emerald-950/80 mt-2 leading-relaxed">
+                Guac-AI <strong>only</strong> reads emails sent to your <span className="font-mono">+receipts</span> address.
+                Your bare <span className="font-mono">@getguac.app</span> inbox is yours — we never poll it, never index it.
+                Row-level security at the database means even our own engineers can&apos;t snoop. One-click account wipe whenever you want.
+              </p>
+              <div className="flex flex-wrap gap-3 mt-4">
+                <Link href="/security" className="inline-flex items-center gap-1 text-sm font-bold text-emerald-700 hover:text-emerald-900">
+                  What we can &amp; can&apos;t see <ArrowRight size={14} />
+                </Link>
+                <Link href="/how-email-works" className="inline-flex items-center gap-1 text-sm font-bold text-emerald-700 hover:text-emerald-900">
+                  How the email flow works <ArrowRight size={14} />
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -195,10 +229,10 @@ export default async function Home() {
             <span className="font-bold text-emerald-900">GetGuac</span>
             <span>— your money's wingman</span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-wrap">
             <a href="#brain" className="hover:text-emerald-800">The brain</a>
-            <a href="#powers" className="hover:text-emerald-800">Superpowers</a>
-            <a href="#how" className="hover:text-emerald-800">How it works</a>
+            <Link href="/how-email-works" className="hover:text-emerald-800">How email works</Link>
+            <Link href="/security" className="hover:text-emerald-800">Security</Link>
             <Link href="/login" className="hover:text-emerald-800">Sign in</Link>
           </div>
         </div>

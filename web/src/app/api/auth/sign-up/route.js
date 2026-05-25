@@ -8,7 +8,36 @@
 import { createClient } from '../../../../lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { rateLimit, rateKey } from '../../../../lib/apiGuard'
+import { createMailbox, mailboxExists } from '../../../../lib/migadu'
+import { encryptSecret, generateMailboxPassword } from '../../../../lib/crypto'
 export const runtime = 'nodejs'
+
+// Best-effort: provision the Migadu mailbox at signup so the user's
+// ram@getguac.app + ram+receipts@getguac.app are live immediately.
+// Failures don't block the account creation — the alias is already claimed
+// in the DB and provisioning will retry on next visit to /profile.
+async function provisionMailboxAtSignup(sbAdmin, userId, username, displayName) {
+  if (!process.env.MIGADU_API_KEY || !process.env.EMAIL_ENCRYPTION_KEY) {
+    return { provisioned: false, reason: 'not_configured' }
+  }
+  try {
+    if (await mailboxExists(username)) {
+      return { provisioned: true, reason: 'already_existed' }
+    }
+    const password = generateMailboxPassword()
+    await createMailbox({ localPart: username, password, name: displayName || username })
+    await sbAdmin.from('profiles')
+      .update({
+        email_inbox_provisioned: true,
+        email_inbox_password_enc: encryptSecret(password),
+      })
+      .eq('id', userId)
+    return { provisioned: true }
+  } catch (e) {
+    console.error('[auth/sign-up] mailbox provisioning failed:', e.message)
+    return { provisioned: false, error: e.message }
+  }
+}
 
 const VALID_USERNAME_RE = /^[a-z0-9]([a-z0-9._-]{1,30}[a-z0-9])?$/
 
@@ -99,7 +128,10 @@ export async function POST(request) {
       return Response.json({ ok: true, username_claim_failed: upErr.message })
     }
 
-    return Response.json({ ok: true, username })
+    const displayName = [first_name, last_name].filter(Boolean).join(' ') || username
+    const mailbox = await provisionMailboxAtSignup(sbAdmin, userId, username, displayName)
+
+    return Response.json({ ok: true, username, mailbox })
   } catch (err) {
     console.error('[auth/sign-up]', err)
     return Response.json({ error: 'Sign-up failed' }, { status: 500 })

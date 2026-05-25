@@ -184,7 +184,6 @@ export default function SecurityPage() {
         <div className="rounded-2xl border border-rose-200 bg-rose-50/40 p-5 space-y-3 text-sm text-rose-950">
           <p><strong>Vault feature (planned)</strong> — A true end-to-end-encrypted notes section for things AI doesn&apos;t need to read (passport numbers, account numbers, recovery codes). Key derived from your password — losing it means losing the data.</p>
           <p><strong>Per-field encryption (in progress)</strong> — High-sensitivity columns like alternative email and mobile number being moved to AES-GCM encryption so even our DB doesn&apos;t see the plaintext.</p>
-          <p><strong>SOC 2 / external audit (later)</strong> — Once we have real users we&apos;ll commission an independent security audit and publish the report.</p>
         </div>
       </section>
 

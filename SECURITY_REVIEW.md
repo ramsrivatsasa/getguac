@@ -74,7 +74,6 @@ but it captures the current state and an actionable punch-list.
 
 - **"End-to-end encryption" for receipts/statements**: incompatible with the Guac-AI feature set. See `/security` page on the live app for the honest explainer.
 - **HIPAA / PCI compliance**: out of scope — GetGuac doesn't store health data and never holds raw card numbers (only last-4 from receipts).
-- **SOC 2**: deferred until we have paying users to justify the audit cost (~$20k/yr).
 
 ## 5. Quick wins shippable today
 

@@ -123,6 +123,11 @@ export async function POST(request) {
   return Response.json({
     ok: true,
     ...summary,
+    // Diagnostic — surfaces which IMAP folders the poller actually walked, so
+    // it's obvious from the response whether new folders (g, receipts) are
+    // being discovered, and what the per-folder progress looks like.
+    folders_polled: Object.keys(result.highestUidByFolder || {}),
+    highest_uid_by_folder: result.highestUidByFolder || {},
     note: result.fetched >= 200
       ? 'Batch of 200 fetched — call backfill again to continue (5 min cooldown between calls).'
       : 'Backfill complete.',

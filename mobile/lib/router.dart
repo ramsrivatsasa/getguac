@@ -12,6 +12,10 @@ import 'screens/rewards/reward_detail_screen.dart';
 import 'screens/shopping/shopping_list_screen.dart';
 import 'screens/car_miles/car_miles_screen.dart';
 import 'screens/profile/profile_screen.dart';
+import 'screens/guacscore/guacscore_screen.dart';
+import 'screens/guacwizard/guacwizard_screen.dart';
+import 'screens/stash/stash_screen.dart';
+import 'screens/steals/steals_screen.dart';
 import 'widgets/main_scaffold.dart';
 
 final appRouter = GoRouter(
@@ -38,6 +42,10 @@ final appRouter = GoRouter(
         GoRoute(path: '/shopping', builder: (_, __) => const ShoppingListScreen()),
         GoRoute(path: '/car-miles', builder: (_, __) => const CarMilesScreen()),
         GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
+        GoRoute(path: '/guacscore', builder: (_, __) => const GuacScoreScreen()),
+        GoRoute(path: '/guacwizard', builder: (_, __) => const GuacWizardScreen()),
+        GoRoute(path: '/stash', builder: (_, __) => const StashScreen()),
+        GoRoute(path: '/steals', builder: (_, __) => const StealsScreen()),
       ],
     ),
   ],

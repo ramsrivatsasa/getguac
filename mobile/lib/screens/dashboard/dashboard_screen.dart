@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/receipt_provider.dart';
 import '../../providers/reward_provider.dart';
-import '../../services/update_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -27,47 +26,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
     // a sign-in bug.)
   }
 
-  // Feature tiles row — quick links to web equivalents (GuacScore, Wizard,
-  // Stash, Steals). Tapping opens getguac.app/<feature> in a browser.
+  // Native feature tiles — route into Flutter screens, no web bounces.
+  // Icons mirror the web (Sparkles, Wand2, Package, BadgeDollarSign).
   Widget _featureGrid() {
     return Padding(
       padding: const EdgeInsets.only(top: 4, bottom: 12),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          _featureTile(
-            emoji: '📊',
-            label: 'GuacScore',
-            color: const Color(0xFF15803d),
-            url: 'https://getguac.app/guacanomics',
-          ),
-          _featureTile(
-            emoji: '🧙‍♂️',
-            label: 'Wizard',
-            color: const Color(0xFF7c3aed),
-            url: 'https://getguac.app/guacwizard',
-          ),
-          _featureTile(
-            emoji: '📦',
-            label: 'Stash',
-            color: const Color(0xFFca8a04),
-            url: 'https://getguac.app/stash',
-          ),
-          _featureTile(
-            emoji: '💎',
-            label: 'Steals',
-            color: const Color(0xFFdb2777),
-            url: 'https://getguac.app/steals',
-          ),
+          _featureTile(icon: Icons.auto_awesome,  label: 'GuacScore', color: const Color(0xFF15803d), route: '/guacscore'),
+          _featureTile(icon: Icons.auto_fix_high, label: 'Wizard',    color: const Color(0xFF7c3aed), route: '/guacwizard'),
+          _featureTile(icon: Icons.inventory_2,   label: 'Stash',     color: const Color(0xFFca8a04), route: '/stash'),
+          _featureTile(icon: Icons.local_offer,   label: 'Steals',    color: const Color(0xFFdb2777), route: '/steals'),
         ],
       ),
     );
   }
 
-  Widget _featureTile({required String emoji, required String label, required Color color, required String url}) {
+  Widget _featureTile({required IconData icon, required String label, required Color color, required String route}) {
     return Expanded(
       child: GestureDetector(
-        onTap: () => UpdateService.openDownload(url),  // launchUrl helper
+        onTap: () => context.go(route),
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 4),
           padding: const EdgeInsets.symmetric(vertical: 12),
@@ -79,8 +58,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(emoji, style: const TextStyle(fontSize: 28)),
-              const SizedBox(height: 4),
+              Icon(icon, size: 26, color: color),
+              const SizedBox(height: 6),
               Text(
                 label,
                 style: TextStyle(

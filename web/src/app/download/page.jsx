@@ -7,9 +7,9 @@ import GuacMascot from '../../components/GuacMascot'
 // Latest Android release — bump these when you cut a new version on GitHub.
 // In a future iteration we can fetch /repos/ramsrivatsasa/getguac/releases/latest at build time.
 const ANDROID_RELEASE = {
-  version: 'v0.1.9',
+  version: 'v0.2.0',
   releasedAt: '2026-05-25',
-  base: 'https://github.com/ramsrivatsasa/getguac/releases/download/v0.1.9',
+  base: 'https://github.com/ramsrivatsasa/getguac/releases/download/v0.2.0',
   apks: [
     { abi: 'arm64-v8a',   sizeMB: 20.0, label: 'Most modern Android phones (Samsung, Pixel, OnePlus, etc.)', file: 'app-arm64-v8a-release.apk',   primary: true  },
     { abi: 'armeabi-v7a', sizeMB: 17.7, label: 'Older 32-bit Android phones',                                   file: 'app-armeabi-v7a-release.apk', primary: false },

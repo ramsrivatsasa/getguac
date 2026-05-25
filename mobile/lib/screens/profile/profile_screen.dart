@@ -65,6 +65,16 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
             const SizedBox(height: 8),
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.directions_car, color: Color(0xFF0891b2)),
+                title: const Text('Car Miles'),
+                subtitle: const Text('Log trips, track mileage'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.go('/car-miles'),
+              ),
+            ),
+            const SizedBox(height: 4),
             const Card(
               child: ListTile(
                 leading: Icon(Icons.privacy_tip, color: Colors.blueGrey),

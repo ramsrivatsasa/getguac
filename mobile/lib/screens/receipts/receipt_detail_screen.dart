@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../providers/receipt_provider.dart';
 import '../../models/receipt_model.dart';
 
@@ -22,6 +23,15 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
     _load();
   }
 
+  @override
+  void didUpdateWidget(ReceiptDetailScreen old) {
+    super.didUpdateWidget(old);
+    if (old.id != widget.id) {
+      setState(() { _loading = true; _receipt = null; _items = []; });
+      _load();
+    }
+  }
+
   Future<void> _load() async {
     final provider = context.read<ReceiptProvider>();
     final receipt = provider.receipts.where((r) => r.id == widget.id).firstOrNull;
@@ -29,7 +39,36 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
     if (mounted) setState(() { _receipt = receipt; _items = items; _loading = false; });
   }
 
+  // Sibling navigation — pulls the visible receipts list from the provider
+  // and finds the current row's neighbours.
+  List<Receipt> get _siblings => context.read<ReceiptProvider>().receipts;
+  int get _currentIdx => _siblings.indexWhere((r) => r.id == widget.id);
+
   void _goBack() => context.go('/receipts');
+
+  void _goPrev() {
+    final i = _currentIdx;
+    if (i <= 0) {
+      _toast('Already at the first receipt');
+      return;
+    }
+    context.go('/receipts/${_siblings[i - 1].id}');
+  }
+
+  void _goNext() {
+    final i = _currentIdx;
+    if (i < 0 || i >= _siblings.length - 1) {
+      _toast('Already at the last receipt');
+      return;
+    }
+    context.go('/receipts/${_siblings[i + 1].id}');
+  }
+
+  void _toast(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg), duration: const Duration(milliseconds: 900)),
+    );
+  }
 
   void _viewImage(String url) {
     Navigator.of(context).push(MaterialPageRoute(
@@ -53,15 +92,34 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
       );
     }
     final r = _receipt!;
+    final idx = _currentIdx;
+    final total = _siblings.length;
+    final hasPrev = idx > 0;
+    final hasNext = idx >= 0 && idx < total - 1;
 
-    // GestureDetector wraps the whole body so a right-swipe from anywhere
-    // (not just the screen edge) pops to /receipts. Threshold is generous so
-    // accidental horizontal scrolls don't trigger.
     return Scaffold(
       appBar: AppBar(
         leading: BackButton(onPressed: _goBack),
         title: Text(r.storeName, overflow: TextOverflow.ellipsis),
         actions: [
+          if (total > 0)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 4),
+              child: Text(
+                '${idx + 1}/$total',
+                style: const TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w700),
+              ),
+            ),
+          IconButton(
+            icon: const Icon(Icons.chevron_left),
+            onPressed: hasPrev ? _goPrev : null,
+            tooltip: 'Previous',
+          ),
+          IconButton(
+            icon: const Icon(Icons.chevron_right),
+            onPressed: hasNext ? _goNext : null,
+            tooltip: 'Next',
+          ),
           IconButton(icon: const Icon(Icons.close), tooltip: 'Close', onPressed: _goBack),
         ],
       ),
@@ -70,13 +128,32 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
         onPopInvoked: (didPop) { if (!didPop) _goBack(); },
         child: GestureDetector(
           behavior: HitTestBehavior.translucent,
+          // Double-tap anywhere closes the detail screen
+          onDoubleTap: _goBack,
+          // Left swipe → previous, right swipe → next
           onHorizontalDragEnd: (details) {
             final v = details.primaryVelocity ?? 0;
-            if (v > 600) _goBack();   // fast right-swipe
+            if (v < -400) _goPrev();        // finger moves left
+            else if (v > 400) _goNext();    // finger moves right
           },
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              // Hint banner — fades once user has navigated at least once. (Always on for now.)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                margin: const EdgeInsets.only(bottom: 10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFf0fdf4),
+                  borderRadius: BorderRadius.circular(99),
+                  border: Border.all(color: const Color(0xFFa7f3d0)),
+                ),
+                child: const Text(
+                  '← swipe for prev / next → · double-tap to close',
+                  style: TextStyle(fontSize: 10, color: Color(0xFF065f46), fontWeight: FontWeight.w700),
+                  textAlign: TextAlign.center,
+                ),
+              ),
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -130,6 +207,7 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
                       : null,
                   ),
                 )),
+              const SizedBox(height: 60),
             ]),
           ),
         ),
@@ -188,10 +266,63 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
   }
 }
 
-/// Full-screen pinch-to-zoom image viewer. Tap or back button to close.
-class _ImageViewer extends StatelessWidget {
+/// Full-screen pinch-to-zoom image viewer. Resolves a signed URL via Supabase
+/// storage so it works whether the bucket is public or private. Tap or
+/// back button to close.
+class _ImageViewer extends StatefulWidget {
   final String url;
   const _ImageViewer({required this.url});
+  @override
+  State<_ImageViewer> createState() => _ImageViewerState();
+}
+
+class _ImageViewerState extends State<_ImageViewer> {
+  String? _resolvedUrl;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _resolve();
+  }
+
+  /// Try to turn the stored receipt_link into a working URL.
+  /// 1) Parse the storage path out of the stored URL.
+  /// 2) Ask Supabase for a 1-hour signed URL (works regardless of bucket visibility).
+  /// 3) On failure, fall back to the raw URL — it'll work if the bucket is public.
+  Future<void> _resolve() async {
+    try {
+      final uri = Uri.tryParse(widget.url);
+      if (uri == null) {
+        if (mounted) setState(() => _resolvedUrl = widget.url);
+        return;
+      }
+      // Find "/object/<public|sign>/<bucket>/<rest...>" then extract bucket + path
+      final segs = uri.pathSegments;
+      final objIdx = segs.indexOf('object');
+      if (objIdx >= 0 && objIdx + 2 < segs.length) {
+        // segs: [..., 'object', 'public'|'sign'|'authenticated', 'receipts', 'uid', 'file.jpg']
+        final bucket = segs[objIdx + 2];
+        final pathSegs = segs.sublist(objIdx + 3);
+        final path = pathSegs.join('/');
+        if (bucket.isNotEmpty && path.isNotEmpty) {
+          final signed = await Supabase.instance.client.storage
+              .from(bucket)
+              .createSignedUrl(path, 3600);
+          if (mounted) setState(() => _resolvedUrl = signed);
+          return;
+        }
+      }
+      // Couldn't parse a path — just use the original
+      if (mounted) setState(() => _resolvedUrl = widget.url);
+    } catch (e) {
+      // Signed URL creation failed — try the raw URL as a last resort
+      if (mounted) setState(() {
+        _resolvedUrl = widget.url;
+        _error = 'Signed URL failed: $e';
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -206,34 +337,42 @@ class _ImageViewer extends StatelessWidget {
       ),
       body: GestureDetector(
         onTap: () => Navigator.of(context).pop(),
-        child: InteractiveViewer(
-          minScale: 0.5,
-          maxScale: 5,
-          child: Center(
-            child: Image.network(
-              url,
-              fit: BoxFit.contain,
-              loadingBuilder: (_, child, progress) {
-                if (progress == null) return child;
-                return const Center(child: CircularProgressIndicator(color: Colors.white));
-              },
-              errorBuilder: (_, error, __) => Center(
-                child: Column(mainAxisSize: MainAxisSize.min, children: [
-                  const Icon(Icons.broken_image_outlined, size: 64, color: Colors.white54),
-                  const SizedBox(height: 12),
-                  Text('Could not load image', style: TextStyle(color: Colors.white.withValues(alpha: 0.7))),
-                  const SizedBox(height: 4),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 32),
-                    child: Text(error.toString(),
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 11)),
+        child: _resolvedUrl == null
+          ? const Center(child: CircularProgressIndicator(color: Colors.white))
+          : InteractiveViewer(
+              minScale: 0.5,
+              maxScale: 5,
+              child: Center(
+                child: Image.network(
+                  _resolvedUrl!,
+                  fit: BoxFit.contain,
+                  loadingBuilder: (_, child, progress) {
+                    if (progress == null) return child;
+                    return const Center(child: CircularProgressIndicator(color: Colors.white));
+                  },
+                  errorBuilder: (_, error, __) => Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(mainAxisSize: MainAxisSize.min, children: [
+                        const Icon(Icons.broken_image_outlined, size: 64, color: Colors.white54),
+                        const SizedBox(height: 12),
+                        Text('Could not load image', style: TextStyle(color: Colors.white.withValues(alpha: 0.7))),
+                        const SizedBox(height: 4),
+                        Text(error.toString(),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 11)),
+                        if (_error != null) ...[
+                          const SizedBox(height: 4),
+                          Text(_error!,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 10)),
+                        ],
+                      ]),
+                    ),
                   ),
-                ]),
+                ),
               ),
             ),
-          ),
-        ),
       ),
     );
   }

@@ -15,8 +15,8 @@ class ProfileScreen extends StatelessWidget {
     final user = auth.currentUser;
     final email = user?.email ?? '—';
     final uid = user?.id ?? '—';
-    final firstName = auth.userProfile?['firstName'] ?? '';
-    final lastName = auth.userProfile?['lastName'] ?? '';
+    final firstName = auth.userProfile?['first_name'] ?? '';
+    final lastName = auth.userProfile?['last_name'] ?? '';
     final alias = auth.userProfile?['email_alias'];
 
     return Scaffold(

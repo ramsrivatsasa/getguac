@@ -1,10 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 import '../../providers/auth_provider.dart';
 import '../../providers/receipt_provider.dart';
 import '../../providers/reward_provider.dart';
+import '../../models/receipt_model.dart';
+import '../../widgets/guac_mascot.dart';
+
+const _kEmerald700 = Color(0xFF15803d);
+const _kEmerald800 = Color(0xFF166534);
+const _kEmerald900 = Color(0xFF064e3b);
+const _kEmerald50  = Color(0xFFf0fdf4);
+const _kEmerald100 = Color(0xFFdcfce7);
+
+enum _Period { daily, weekly, monthly, yearly }
+
+const _kCountOptions = {
+  _Period.daily:   [1, 3, 7, 14, 30, 60, 90],
+  _Period.weekly:  [1, 2, 4, 8, 12, 26, 52],
+  _Period.monthly: [1, 3, 6, 12, 24, 36],
+  _Period.yearly:  [1, 2, 3, 5, 10],
+};
+const _kDefaultCount = {_Period.daily: 7, _Period.weekly: 4, _Period.monthly: 3, _Period.yearly: 1};
+const _kUnitLabel    = {_Period.daily: 'day', _Period.weekly: 'week', _Period.monthly: 'month', _Period.yearly: 'year'};
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -13,224 +35,524 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  int _tabIdx = 0; // 0=Monthly, 1=Weekly, 2=Daily
+  _Period _period = _Period.monthly;
+  int _periodCount = 3;
 
   @override
   void initState() {
     super.initState();
-    // Providers read the current user from Supabase auth internally.
     context.read<ReceiptProvider>().loadReceipts();
     context.read<RewardProvider>().loadRewards();
-    // (Update check now lives on the login screen so users are prompted
-    // BEFORE they hit the dashboard — covers them even if a release fixes
-    // a sign-in bug.)
   }
 
-  // Native feature tiles — route into Flutter screens, no web bounces.
-  // Icons mirror the web (Sparkles, Wand2, Package, BadgeDollarSign).
-  Widget _featureGrid() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 4, bottom: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          _featureTile(icon: Icons.auto_awesome,  label: 'GuacScore', color: const Color(0xFF15803d), route: '/guacscore'),
-          _featureTile(icon: Icons.auto_fix_high, label: 'Wizard',    color: const Color(0xFF7c3aed), route: '/guacwizard'),
-          _featureTile(icon: Icons.inventory_2,   label: 'Stash',     color: const Color(0xFFca8a04), route: '/stash'),
-          _featureTile(icon: Icons.local_offer,   label: 'Steals',    color: const Color(0xFFdb2777), route: '/steals'),
-        ],
-      ),
-    );
+  DateTime _periodCutoff() {
+    final now = DateTime.now();
+    switch (_period) {
+      case _Period.daily:   return now.subtract(Duration(days: _periodCount));
+      case _Period.weekly:  return now.subtract(Duration(days: _periodCount * 7));
+      case _Period.monthly: return DateTime(now.year, now.month - _periodCount, now.day);
+      case _Period.yearly:  return DateTime(now.year - _periodCount, now.month, now.day);
+    }
   }
 
-  Widget _featureTile({required IconData icon, required String label, required Color color, required String route}) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => context.go(route),
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 4),
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 26, color: color),
-              const SizedBox(height: 6),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  color: color,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+  void _selectPeriod(_Period p) {
+    setState(() {
+      _period = p;
+      _periodCount = _kDefaultCount[p]!;
+    });
+  }
+
+  Future<void> _captureReceipt() async {
+    final picker = ImagePicker();
+    final img = await picker.pickImage(source: ImageSource.camera, imageQuality: 80);
+    if (img == null || !mounted) return;
+    final uid = context.read<AppAuthProvider>().currentUser?.id;
+    if (uid == null) return;
+    if (!mounted) return;
+    // Quick stub — for full add flow, send users to the receipts screen.
+    final provider = context.read<ReceiptProvider>();
+    try {
+      final placeholder = Receipt(
+        id: '', storeName: 'New Receipt',
+        date: DateTime.now().toIso8601String().substring(0, 10),
+        totalAmount: 0, taxPaid: 0,
+      );
+      await provider.addReceipt(placeholder, imageFile: File(img.path));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Receipt added. Open it from Receipts to fill details.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Capture failed: $e')));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AppAuthProvider>();
     final receipts = context.watch<ReceiptProvider>().receipts;
-    final rewards = context.watch<RewardProvider>().rewards;
+    final rewards  = context.watch<RewardProvider>().rewards;
+    final firstName = auth.userProfile?['first_name']?.toString().trim();
+    final greeting = (firstName == null || firstName.isEmpty) ? 'there' : firstName;
 
-    final now = DateTime.now();
+    final cutoff = _periodCutoff();
     final filtered = receipts.where((r) {
-      try {
-        final d = DateTime.parse(r.date);
-        if (_tabIdx == 2) return d.year == now.year && d.month == now.month && d.day == now.day;
-        if (_tabIdx == 1) return d.isAfter(now.subtract(const Duration(days: 7)));
-        return d.year == now.year && d.month == now.month;
-      } catch (_) { return false; }
+      final d = DateTime.tryParse(r.date);
+      return d != null && d.isAfter(cutoff);
     }).toList();
 
     final totalSpend = filtered.fold<double>(0, (s, r) => s + r.totalAmount);
-    final totalTax = filtered.fold<double>(0, (s, r) => s + r.taxPaid);
+    final totalTax   = filtered.fold<double>(0, (s, r) => s + r.taxPaid);
+    final rangeLabel = 'Last $_periodCount ${_kUnitLabel[_period]}${_periodCount == 1 ? '' : 's'}';
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Welcome, ${auth.userProfile?['firstName'] ?? 'User'}'),
-        actions: [
-          IconButton(icon: const Icon(Icons.notifications_outlined), onPressed: () {}),
-        ],
+      backgroundColor: const Color(0xFFf9fafb),
+      appBar: _buildAppBar(),
+      floatingActionButton: _buildFab(),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          final receiptProv = context.read<ReceiptProvider>();
+          final rewardProv = context.read<RewardProvider>();
+          await receiptProv.loadReceipts(force: true);
+          await rewardProv.loadRewards(force: true);
+        },
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
+          children: [
+            // Greeting
+            Row(children: [
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('Good day, $greeting 👋',
+                  style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: _kEmerald900, height: 1.1)),
+                const SizedBox(height: 4),
+                const Text("Here's your financial snapshot",
+                  style: TextStyle(fontSize: 13, color: Colors.black54)),
+              ])),
+            ]),
+            const SizedBox(height: 18),
+
+            // CTA pills
+            Row(children: [
+              Expanded(child: _ctaPill(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft, end: Alignment.bottomRight,
+                  colors: [Color(0xFFfbbf24), Color(0xFFf59e0b), Color(0xFFe11d48)],
+                ),
+                emoji: '🥑',
+                title: 'Worth It?',
+                subtitle: 'Rate every purchase',
+                onTap: () => context.go('/receipts'),
+              )),
+              const SizedBox(width: 10),
+              Expanded(child: _ctaPill(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft, end: Alignment.bottomRight,
+                  colors: [Color(0xFF22c55e), _kEmerald700],
+                ),
+                icon: Icons.auto_awesome,
+                title: 'Guacanomics',
+                subtitle: 'Smash your spend',
+                onTap: () => context.go('/guacscore'),
+              )),
+            ]),
+            const SizedBox(height: 18),
+
+            // Period selector pill
+            _periodSelector(),
+            const SizedBox(height: 8),
+            _periodCountRow(filtered.length, rangeLabel),
+            const SizedBox(height: 16),
+
+            // Stat tiles
+            _statGrid(filtered, totalSpend, totalTax, rewards.length),
+            const SizedBox(height: 20),
+
+            // Spending chart
+            _spendingChart(filtered),
+            const SizedBox(height: 20),
+
+            // Recent transactions
+            if (filtered.isNotEmpty) _recentTransactions(filtered),
+
+            // Recent rewards
+            if (rewards.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              _recentRewards(rewards),
+            ],
+          ],
+        ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          // Quick-link tiles to GuacScore / Wizard / Stash / Steals (open on web)
-          _featureGrid(),
-          // Stat cards
-          Row(children: [
-            _statCard('Total Spent', '\$${totalSpend.toStringAsFixed(2)}', Icons.attach_money, Colors.blue),
-            const SizedBox(width: 12),
-            _statCard('Tax Paid', '\$${totalTax.toStringAsFixed(2)}', Icons.receipt, Colors.orange),
-          ]),
-          const SizedBox(height: 12),
-          Row(children: [
-            _statCard('Receipts', '${filtered.length}', Icons.receipt_long, Colors.green),
-            const SizedBox(width: 12),
-            _statCard('Rewards', '${rewards.length}', Icons.card_giftcard, Colors.purple),
-          ]),
-          const SizedBox(height: 20),
+    );
+  }
 
-          // Time period tabs
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Spending', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 12),
-                  SegmentedButton<int>(
-                    segments: const [
-                      ButtonSegment(value: 0, label: Text('Monthly')),
-                      ButtonSegment(value: 1, label: Text('Weekly')),
-                      ButtonSegment(value: 2, label: Text('Daily')),
-                    ],
-                    selected: {_tabIdx},
-                    onSelectionChanged: (s) => setState(() => _tabIdx = s.first),
-                  ),
-                  const SizedBox(height: 16),
-                  if (filtered.isEmpty)
-                    const Center(child: Padding(
-                      padding: EdgeInsets.all(20),
-                      child: Text('No transactions for this period', style: TextStyle(color: Colors.grey)),
-                    ))
-                  else
-                    SizedBox(
-                      height: 180,
-                      child: BarChart(BarChartData(
-                        barGroups: filtered.take(7).toList().asMap().entries.map((e) => BarChartGroupData(
-                          x: e.key,
-                          barRods: [BarChartRodData(toY: e.value.totalAmount, color: const Color(0xFF1d4ed8), width: 16, borderRadius: BorderRadius.circular(4))],
-                        )).toList(),
-                        gridData: FlGridData(show: false),
-                        borderData: FlBorderData(show: false),
-                        titlesData: FlTitlesData(
-                          leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                          bottomTitles: AxisTitles(sideTitles: SideTitles(
-                            showTitles: true,
-                            getTitlesWidget: (v, meta) {
-                              final idx = v.toInt();
-                              if (idx >= filtered.length) return const SizedBox();
-                              return Text(filtered[idx].storeName.length > 6 ? filtered[idx].storeName.substring(0, 6) : filtered[idx].storeName,
-                                style: const TextStyle(fontSize: 9));
-                            },
-                          )),
-                        ),
-                      )),
-                    ),
-                ],
-              ),
-            ),
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      backgroundColor: _kEmerald800,
+      foregroundColor: Colors.white,
+      elevation: 0,
+      titleSpacing: 0,
+      systemOverlayStyle: SystemUiOverlayStyle.light,
+      iconTheme: const IconThemeData(color: Colors.white),
+      title: Row(children: [
+        Container(
+          width: 36, height: 36,
+          margin: const EdgeInsets.only(right: 8),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white.withValues(alpha: 0.12),
           ),
-          const SizedBox(height: 16),
+          padding: const EdgeInsets.all(4),
+          child: const GuacMascot(size: 28),
+        ),
+        const Text('GetGuac', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 18)),
+        const SizedBox(width: 12),
+        const Text('SMASH YOUR SPEND',
+          style: TextStyle(color: Color(0xFFa3e635), fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 1)),
+      ]),
+      actions: [
+        IconButton(icon: const Icon(Icons.notifications_outlined), onPressed: () {}),
+      ],
+    );
+  }
 
-          // Recent receipts
-          const Text('Recent Transactions', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          ...filtered.take(5).map((r) => ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(r.storeName, style: const TextStyle(fontWeight: FontWeight.w500)),
-            subtitle: Text(r.date, style: const TextStyle(fontSize: 12)),
-            trailing: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('\$${r.totalAmount.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold)),
-                if (r.businessPurchase)
-                  Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                    decoration: BoxDecoration(color: Colors.blue.shade100, borderRadius: BorderRadius.circular(8)),
-                    child: const Text('Business', style: TextStyle(fontSize: 10, color: Colors.blue))),
-              ],
-            ),
-            onTap: () => context.go('/receipts/${r.id}'),
-          )),
-          const SizedBox(height: 16),
+  Widget _buildFab() {
+    return FloatingActionButton.extended(
+      onPressed: _captureReceipt,
+      backgroundColor: _kEmerald700,
+      foregroundColor: Colors.white,
+      elevation: 6,
+      icon: const GuacMascot(size: 24),
+      label: const Icon(Icons.camera_alt, size: 20),
+    );
+  }
 
-          // Recent rewards
-          const Text('Recent Rewards', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          ...rewards.take(3).map((r) => Card(
-            child: ListTile(
-              leading: const Icon(Icons.card_giftcard, color: Colors.purple),
-              title: Text(r.rewardTitle, style: const TextStyle(fontWeight: FontWeight.w500)),
-              subtitle: Text('${r.storeName} • Expires ${r.expiryDate}'),
-              trailing: r.isExpired
-                ? const Text('Expired', style: TextStyle(color: Colors.red, fontSize: 12))
-                : const Text('Active', style: TextStyle(color: Colors.green, fontSize: 12)),
-              onTap: () => context.go('/rewards/${r.id}'),
-            ),
-          )),
+  Widget _ctaPill({LinearGradient? gradient, IconData? icon, String? emoji, required String title, required String subtitle, required VoidCallback onTap}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(40),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          gradient: gradient,
+          borderRadius: BorderRadius.circular(40),
+          boxShadow: [BoxShadow(color: (gradient?.colors.last ?? _kEmerald700).withValues(alpha: 0.35), blurRadius: 8, offset: const Offset(0, 3))],
+        ),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          if (emoji != null) Text(emoji, style: const TextStyle(fontSize: 22)),
+          if (icon != null) Icon(icon, size: 22, color: Colors.white),
+          const SizedBox(width: 8),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+            Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 14, height: 1.0)),
+            const SizedBox(height: 2),
+            Text(subtitle, style: TextStyle(color: Colors.white.withValues(alpha: 0.92), fontSize: 10, height: 1.0)),
+          ])),
+          const Icon(Icons.arrow_forward, size: 16, color: Colors.white),
         ]),
       ),
     );
   }
 
-  Widget _statCard(String label, String value, IconData icon, MaterialColor color) {
-    return Expanded(child: Card(
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Row(children: [
-          Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: color.shade100, borderRadius: BorderRadius.circular(10)),
-            child: Icon(icon, color: color.shade700, size: 20)),
-          const SizedBox(width: 10),
-          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey)),
-            Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          ]),
+  Widget _periodSelector() {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: _kEmerald50,
+        borderRadius: BorderRadius.circular(40),
+        border: Border.all(color: _kEmerald100),
+      ),
+      child: Row(children: _Period.values.map((p) {
+        final active = _period == p;
+        return Expanded(child: GestureDetector(
+          onTap: () => _selectPeriod(p),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            decoration: BoxDecoration(
+              color: active ? Colors.white : Colors.transparent,
+              borderRadius: BorderRadius.circular(40),
+              boxShadow: active ? [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 4)] : null,
+            ),
+            alignment: Alignment.center,
+            child: Text(p.name[0].toUpperCase() + p.name.substring(1),
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: active ? _kEmerald900 : _kEmerald700.withValues(alpha: 0.7),
+              )),
+          ),
+        ));
+      }).toList()),
+    );
+  }
+
+  Widget _periodCountRow(int txCount, String rangeLabel) {
+    final opts = _kCountOptions[_period]!;
+    return Row(children: [
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: _kEmerald100),
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 4)],
+        ),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          const Text('Last ', style: TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w700)),
+          DropdownButton<int>(
+            value: opts.contains(_periodCount) ? _periodCount : opts.first,
+            underline: const SizedBox.shrink(),
+            isDense: true,
+            style: const TextStyle(fontSize: 13, color: _kEmerald800, fontWeight: FontWeight.w900),
+            items: opts.map((n) => DropdownMenuItem(value: n, child: Text('$n'))).toList(),
+            onChanged: (n) { if (n != null) setState(() => _periodCount = n); },
+          ),
+          Text(' ${_kUnitLabel[_period]}${_periodCount == 1 ? '' : 's'}',
+            style: const TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w700)),
         ]),
       ),
-    ));
+      const SizedBox(width: 10),
+      Expanded(child: Text('$txCount transaction${txCount == 1 ? '' : 's'} • $rangeLabel',
+        style: const TextStyle(fontSize: 11, color: Colors.black45),
+        overflow: TextOverflow.ellipsis)),
+    ]);
+  }
+
+  Widget _statGrid(List<Receipt> filtered, double totalSpend, double totalTax, int rewardCount) {
+    return Column(children: [
+      Row(children: [
+        Expanded(child: _StatTile(
+          label: 'GuacScore',
+          value: 'Rate to unlock',
+          isLeader: true,
+          icon: null,
+          iconBg: _kEmerald100,
+          iconChild: const GuacMascot(size: 38),
+          valueColor: _kEmerald800,
+          onTap: () => context.go('/guacscore'),
+        )),
+        const SizedBox(width: 10),
+        Expanded(child: _StatTile(
+          label: 'Total Spent',
+          value: '\$${totalSpend.toStringAsFixed(2)}',
+          icon: Icons.attach_money,
+          iconGradient: const LinearGradient(colors: [Color(0xFFfb7185), Color(0xFFe11d48), Color(0xFF9f1239)]),
+          iconColor: Colors.white,
+        )),
+      ]),
+      const SizedBox(height: 10),
+      Row(children: [
+        Expanded(child: _StatTile(
+          label: 'Tax Paid',
+          value: '\$${totalTax.toStringAsFixed(2)}',
+          icon: Icons.trending_up,
+          iconBg: const Color(0xFFfef3c7),
+          iconColor: const Color(0xFFb45309),
+        )),
+        const SizedBox(width: 10),
+        Expanded(child: _StatTile(
+          label: 'Transactions',
+          value: '${filtered.length}',
+          icon: Icons.receipt_long,
+          iconBg: const Color(0xFFd1fae5),
+          iconColor: _kEmerald700,
+          onTap: () => context.go('/receipts'),
+        )),
+      ]),
+      const SizedBox(height: 10),
+      Row(children: [
+        Expanded(child: _StatTile(
+          label: 'Rewards',
+          value: '$rewardCount',
+          icon: Icons.card_giftcard,
+          iconBg: const Color(0xFFecfccb),
+          iconColor: const Color(0xFF65a30d),
+          onTap: () => context.go('/rewards'),
+        )),
+        const SizedBox(width: 10),
+        const Expanded(child: SizedBox()),  // keep grid alignment
+      ]),
+    ]);
+  }
+
+  Widget _spendingChart(List<Receipt> filtered) {
+    final data = filtered.take(8).toList().reversed.toList();
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6)],
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Text('Spending by Store', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: Color(0xFF111827))),
+        const SizedBox(height: 12),
+        if (data.isEmpty)
+          const SizedBox(height: 160, child: Center(child: Text('No transactions for this period', style: TextStyle(color: Colors.black38, fontSize: 13))))
+        else
+          SizedBox(
+            height: 200,
+            child: BarChart(BarChartData(
+              alignment: BarChartAlignment.spaceAround,
+              maxY: (data.map((r) => r.totalAmount).reduce((a, b) => a > b ? a : b)) * 1.2,
+              gridData: const FlGridData(show: false),
+              borderData: FlBorderData(show: false),
+              barGroups: data.asMap().entries.map((e) => BarChartGroupData(
+                x: e.key,
+                barRods: [BarChartRodData(
+                  toY: e.value.totalAmount,
+                  color: const Color(0xFFe11d48),
+                  width: 18,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+                )],
+              )).toList(),
+              titlesData: FlTitlesData(
+                leftTitles:   const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                topTitles:    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                rightTitles:  const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                bottomTitles: AxisTitles(sideTitles: SideTitles(
+                  showTitles: true,
+                  reservedSize: 28,
+                  getTitlesWidget: (v, _) {
+                    final idx = v.toInt();
+                    if (idx < 0 || idx >= data.length) return const SizedBox();
+                    final name = data[idx].storeName;
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Text(name.length > 6 ? name.substring(0, 6) : name,
+                        style: const TextStyle(fontSize: 10, color: Colors.black54)),
+                    );
+                  },
+                )),
+              ),
+            )),
+          ),
+      ]),
+    );
+  }
+
+  Widget _recentTransactions(List<Receipt> filtered) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6)],
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          const Expanded(child: Text('Recent Transactions', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14))),
+          InkWell(
+            onTap: () => context.go('/receipts'),
+            child: const Padding(padding: EdgeInsets.all(4), child: Icon(Icons.arrow_forward, size: 16, color: _kEmerald700)),
+          ),
+        ]),
+        const SizedBox(height: 4),
+        ...filtered.take(5).map((r) => ListTile(
+          contentPadding: EdgeInsets.zero,
+          dense: true,
+          title: Text(r.storeName, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+          subtitle: Text(r.date, style: const TextStyle(fontSize: 11, color: Colors.black45)),
+          trailing: Text('\$${r.totalAmount.toStringAsFixed(2)}',
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
+          onTap: () => context.go('/receipts/${r.id}'),
+        )),
+      ]),
+    );
+  }
+
+  Widget _recentRewards(List rewards) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6)],
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          const Expanded(child: Text('Rewards', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14))),
+          InkWell(
+            onTap: () => context.go('/rewards'),
+            child: const Padding(padding: EdgeInsets.all(4), child: Icon(Icons.arrow_forward, size: 16, color: _kEmerald700)),
+          ),
+        ]),
+        const SizedBox(height: 4),
+        ...rewards.take(4).map((r) => ListTile(
+          contentPadding: EdgeInsets.zero,
+          dense: true,
+          title: Text(r.rewardTitle, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+          subtitle: Text(r.storeName, style: const TextStyle(fontSize: 11, color: Colors.black45)),
+          trailing: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              color: r.isExpired ? const Color(0xFFfee2e2) : const Color(0xFFd1fae5),
+              borderRadius: BorderRadius.circular(99),
+            ),
+            child: Text(r.isExpired ? 'Expired' : r.expiryDate,
+              style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800,
+                color: r.isExpired ? const Color(0xFF991b1b) : _kEmerald800)),
+          ),
+          onTap: () => context.go('/rewards/${r.id}'),
+        )),
+      ]),
+    );
+  }
+}
+
+class _StatTile extends StatelessWidget {
+  final String label;
+  final String value;
+  final IconData? icon;
+  final Color? iconBg;
+  final LinearGradient? iconGradient;
+  final Color? iconColor;
+  final Widget? iconChild;
+  final Color? valueColor;
+  final bool isLeader;
+  final VoidCallback? onTap;
+  const _StatTile({
+    required this.label, required this.value,
+    this.icon, this.iconBg, this.iconGradient, this.iconColor, this.iconChild,
+    this.valueColor, this.isLeader = false, this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6)],
+        ),
+        child: Row(children: [
+          Container(
+            width: 46, height: 46,
+            decoration: BoxDecoration(
+              color: iconGradient == null ? iconBg : null,
+              gradient: iconGradient,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: iconChild ?? (icon != null ? Icon(icon, size: 22, color: iconColor) : null),
+          ),
+          const SizedBox(width: 10),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+            Text(label, style: const TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 2),
+            Text(value,
+              style: TextStyle(
+                fontSize: isLeader ? 13 : 17,
+                fontWeight: FontWeight.w900,
+                color: valueColor ?? const Color(0xFF111827),
+              ),
+              maxLines: 1, overflow: TextOverflow.ellipsis,
+            ),
+          ])),
+        ]),
+      ),
+    );
   }
 }

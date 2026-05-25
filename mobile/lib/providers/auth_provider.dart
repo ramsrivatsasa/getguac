@@ -33,7 +33,7 @@ class AppAuthProvider extends ChangeNotifier {
   }
 
   // Only the columns actually used by mobile screens — keeps the payload tiny.
-  static const _kProfileCols = 'id, firstName, lastName, email_alias, is_admin';
+  static const _kProfileCols = 'id, first_name, last_name, email_alias, is_admin';
 
   Future<void> fetchProfile(String uid) async {
     // .maybeSingle() returns null if no row — .single() throws "PGRST116".

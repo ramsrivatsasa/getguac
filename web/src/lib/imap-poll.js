@@ -108,12 +108,20 @@ export async function pollMailbox({ localPart, password, lastUid = null }) {
   return results
 }
 
-// Detect whether a message was sent to the +receipts plus address — used to
-// trigger auto-processing. We check Delivered-To first (most reliable on Migadu)
-// then fall back to scanning the To header.
+// Detect whether a message was sent to one of our receipt-hook plus addresses.
+// We accept the short default '+g' (brand-friendly: g for guac) AND the
+// legacy '+receipts' so existing forwarding rules keep working.
+//
+// Checks Delivered-To first (most reliable on Migadu / Postfix-style servers)
+// then falls back to scanning the To header.
+const RECEIPT_TAGS = ['+g', '+receipts']
+
 export function isReceiptsAddress(message, localPart) {
-  const target = `${localPart}+receipts@`
   const dt = (message.deliveredTo || '').toLowerCase()
   const to = (message.toAddr || '').toLowerCase()
-  return dt.includes(target) || to.includes(target)
+  for (const tag of RECEIPT_TAGS) {
+    const target = `${localPart}${tag}@`
+    if (dt.includes(target) || to.includes(target)) return true
+  }
+  return false
 }

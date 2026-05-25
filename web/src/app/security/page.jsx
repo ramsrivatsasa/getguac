@@ -107,7 +107,7 @@ export default function SecurityPage() {
             Anyone claiming &quot;true end-to-end encryption&quot; for an AI assistant is lying or shipping a broken product. Here&apos;s what our servers can actually read:
           </p>
           <ul className="space-y-2 text-sm text-amber-950">
-            <li className="flex items-start gap-2"><span className="text-amber-700">•</span> Mail arriving at your <span className="font-mono">@getguac.app</span> inbox — so the in-app Inbox can show it to you and Guac-AI can auto-file <span className="font-mono">+receipts</span> messages. <strong>Opt-out in Profile any time.</strong></li>
+            <li className="flex items-start gap-2"><span className="text-amber-700">•</span> Mail arriving at your <span className="font-mono">@getguac.app</span> inbox — so the in-app Inbox can show it to you and Guac-AI can auto-file <span className="font-mono">+g</span> messages. <strong>Opt-out in Profile any time.</strong></li>
             <li className="flex items-start gap-2"><span className="text-amber-700">•</span> The contents of receipts you upload (image, PDF, or email) — our AI parses store, items, totals.</li>
             <li className="flex items-start gap-2"><span className="text-amber-700">•</span> Bank statements you upload — same parser, extracts transactions + fees.</li>
             <li className="flex items-start gap-2"><span className="text-amber-700">•</span> Your sign-in email, name, and any optional profile fields you fill in.</li>

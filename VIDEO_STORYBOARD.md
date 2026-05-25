@@ -54,7 +54,7 @@ Aspect ratios to export:
 ## SCENE 3 — The two-email magic (0:18–0:38) — **THIS IS THE BIG ONE**
 **Visual:** Split screen.
   - Left: a personal-looking email envelope, label `you@getguac.app`, with a 🔒 padlock and big text `PRIVATE`.
-  - Right: a glowing magic envelope, label `you+receipts@getguac.app`, with a sparkle ✨ and big text `AUTO-PROCESS`.
+  - Right: a glowing magic envelope, label `you+g@getguac.app`, with a sparkle ✨ and big text `AUTO-PROCESS`.
 
 Arrows fly in from the left side showing examples (Amazon, Walmart, Spotify icons) landing in the LEFT mailbox. Then a single email is "forwarded" with a curved arrow from left to right — and on the right side, the AI brain pulls it apart into a clean receipt card.
 
@@ -62,11 +62,11 @@ Arrows fly in from the left side showing examples (Amazon, Walmart, Spotify icon
 
 (Beat 1s)
 
-"Forward only the receipts you want filed to your magic `+receipts` address. That's the only thing Guac-AI ever touches."
+"Forward only the receipts you want filed to your magic `+g` address. That's the only thing Guac-AI ever touches."
 
 **On-screen text:** appears progressively:
 - `PERSONAL ←  you@getguac.app  ·  Guac-AI never reads`
-- `OPT-IN  →  you+receipts@getguac.app  ·  Auto-parsed in 10 min`
+- `OPT-IN  →  you+g@getguac.app  ·  Auto-parsed in 10 min`
 
 ## SCENE 4 — Privacy promise (0:38–0:50)
 **Visual:** The mascot in `angel` expression (the brand/logo pose), wings out, halo glowing. Below it, three line items with checkmarks fade in.
@@ -127,7 +127,7 @@ All at 1200×630 (Twitter card size) plus 1080×1080 (Instagram square).
 >
 > Every account comes with two free email addresses. Use the first to sign up for Amazon, Walmart, your loyalty programs — and that mailbox stays private. We never read it.
 >
-> Forward only the receipts you want filed to your magic `+receipts` address. That's the only thing Guac-AI ever touches.
+> Forward only the receipts you want filed to your magic `+g` address. That's the only thing Guac-AI ever touches.
 >
 > Your personal mail is yours. We never poll it. We can't see other users' data — row-level encryption stops that at the database. And one tap wipes everything.
 >

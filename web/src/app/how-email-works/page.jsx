@@ -7,7 +7,7 @@ import { Mail, Inbox, Forward, Sparkles, ShieldOff, ShoppingBag, Clock, EyeOff, 
 
 export const metadata = {
   title: 'How GetGuac email works — your free @getguac.app inbox',
-  description: 'Use you@getguac.app for online shopping signups, you+receipts@getguac.app for auto-receipt processing. Personal mail stays untouched.',
+  description: 'Use you@getguac.app for online shopping signups, you+g@getguac.app for auto-receipt processing. Personal mail stays untouched.',
 }
 
 export default function HowEmailWorksPage() {
@@ -73,7 +73,7 @@ export default function HowEmailWorksPage() {
               <Sparkles size={24} className="text-amber-700" />
             </div>
             <p className="text-[10px] uppercase tracking-wider font-bold text-amber-700">Auto-process</p>
-            <p className="font-mono text-lg font-black text-amber-900 mt-1">you+receipts@getguac.app</p>
+            <p className="font-mono text-lg font-black text-amber-900 mt-1">you+g@getguac.app</p>
             <p className="text-sm text-gray-700 mt-3 leading-relaxed">
               The magic address. Any email landing here is read by Guac-AI, parsed for store + items + total,
               and filed into your <Link href="/receipts" className="font-semibold text-amber-800 hover:underline">Receipts</Link> within 10 minutes.
@@ -83,7 +83,7 @@ export default function HowEmailWorksPage() {
         </div>
 
         <p className="text-center text-sm text-gray-500 mt-4">
-          Both addresses land in the <strong>same</strong> mailbox — GetGuac Mail&apos;s plus-addressing routes <span className="font-mono">+receipts</span> through the same inbox.
+          Both addresses land in the <strong>same</strong> mailbox — GetGuac Mail&apos;s plus-addressing routes <span className="font-mono">+g</span> through the same inbox.
           GetGuac filters by the <span className="font-mono">Delivered-To</span> header so it only processes mail addressed to the receipts hook.
         </p>
       </section>
@@ -106,13 +106,13 @@ export default function HowEmailWorksPage() {
               ]}
             />
             <UseCase
-              header="Forward to you+receipts@getguac.app"
+              header="Forward to you+g@getguac.app"
               tone="amber"
               cases={[
                 { icon: Sparkles, label: 'Order confirmations from any merchant',     body: 'Amazon, Walmart, Best Buy, restaurants — forward and the AI files it.' },
                 { icon: Mail,     label: 'E-receipts that landed in your real Gmail', body: 'Forward old receipts you want tracked. One-time effort, lifetime stored.' },
                 { icon: Forward,  label: 'PDF bank statements via email',             body: 'Forward your card statement and Guac-AI extracts transactions + fees.' },
-                { icon: CheckCircle2, label: 'Auto-forward rules in Gmail/Outlook',  body: '"Subject contains: order confirmation → Forward to you+receipts@". Set once.' },
+                { icon: CheckCircle2, label: 'Auto-forward rules in Gmail/Outlook',  body: '"Subject contains: order confirmation → Forward to you+g@getguac.app". Set once.' },
               ]}
             />
           </div>
@@ -135,7 +135,7 @@ export default function HowEmailWorksPage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle2 size={18} className="text-emerald-600 mt-0.5 shrink-0" />
-                  <span><strong>Auto-parse is limited to <span className="font-mono">+receipts</span>.</strong> Only mail sent to your <span className="font-mono">+receipts</span> address is auto-filed as a receipt. Everything else just sits in your Inbox.</span>
+                  <span><strong>Auto-parse is limited to <span className="font-mono">+g</span>.</strong> Only mail sent to your <span className="font-mono">+g</span> address is auto-filed as a receipt. Everything else just sits in your Inbox.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle2 size={18} className="text-emerald-600 mt-0.5 shrink-0" />
@@ -157,11 +157,11 @@ export default function HowEmailWorksPage() {
         </h2>
         <ol className="space-y-3">
           {[
-            { n: '1', t: 'Claim your handle at signup', b: 'Pick a username (e.g. alex). You get alex@getguac.app + alex+receipts@getguac.app provisioned the moment you sign up — yours forever, no extra setup.' },
+            { n: '1', t: 'Claim your handle at signup', b: 'Pick a username (e.g. alex). You get alex@getguac.app + alex+g@getguac.app provisioned the moment you sign up — yours forever, no extra setup.' },
             { n: '2', t: 'Use the address everywhere',  b: 'Sign up for Amazon, Walmart, Target, loyalty programs — anywhere you don\'t want to give out your real Gmail. Order confirmations land in your @getguac.app inbox.' },
-            { n: '3', t: 'Forward to +receipts',        b: 'Set one auto-forward rule in Gmail/Outlook: "subject contains: order confirmation → forward to alex+receipts@getguac.app". Or hit Forward on individual emails as they come in.' },
-            { n: '4', t: 'Email arrives at your GetGuac Mail inbox', b: 'Mail sent to your address lands in your GetGuac mailbox — hosted in a privacy-first data centre in Europe. The Delivered-To header is preserved so we know whether it was the bare address or +receipts.' },
-            { n: '5', t: 'Guac-AI poller picks it up',  b: 'Every 10 minutes our cron job logs in via encrypted IMAP, fetches new messages, and filters for the +receipts tag. Personal mail is skipped.' },
+            { n: '3', t: 'Forward to +g',               b: 'Set one auto-forward rule in Gmail/Outlook: "subject contains: order confirmation → forward to alex+g@getguac.app". Or hit Forward on individual emails as they come in.' },
+            { n: '4', t: 'Email arrives at your GetGuac Mail inbox', b: 'Mail sent to your address lands in your GetGuac mailbox — hosted in a privacy-first data centre in Europe. The Delivered-To header is preserved so we know whether it was the bare address or +g.' },
+            { n: '5', t: 'Guac-AI poller picks it up',  b: 'Every 10 minutes our cron job logs in via encrypted IMAP, fetches new messages, and filters for the +g tag. Personal mail is skipped.' },
             { n: '6', t: 'AI extracts the receipt',     b: 'Store name, line items, total, taxes, payment method — all parsed and saved to your Receipts table. The original message stays in your mailbox.' },
             { n: '7', t: 'Shows up in your Receipts feed', b: 'You see the receipt within 10 minutes. Tap to edit, rate it, or assign a category. The AI gets sharper with every receipt you process.' },
           ].map(s => (

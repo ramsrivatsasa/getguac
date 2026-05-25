@@ -21,7 +21,7 @@ class ProfileScreen extends StatelessWidget {
     final hasAlias = alias != null && alias.toString().isNotEmpty;
     final aliasStr = hasAlias ? alias.toString() : '';
     final personal = hasAlias ? '$aliasStr@getguac.app' : '';
-    final receipts = hasAlias ? '$aliasStr+receipts@getguac.app' : '';
+    final receipts = hasAlias ? '$aliasStr+g@getguac.app' : '';
 
     return Scaffold(
       appBar: AppBar(

@@ -123,11 +123,11 @@ export default function EmailAliasPicker({ userId }) {
             </p>
             <div className="flex items-center gap-2 mt-1">
               <span className="font-mono text-sm font-bold text-emerald-900 truncate">
-                {profile.email_alias}+receipts@{EMAIL_DOMAIN}
+                {profile.email_alias}+g@{EMAIL_DOMAIN}
               </span>
               <button
                 type="button"
-                onClick={() => copyAlias(`${profile.email_alias}+receipts@${EMAIL_DOMAIN}`)}
+                onClick={() => copyAlias(`${profile.email_alias}+g@${EMAIL_DOMAIN}`)}
                 className="ml-auto text-emerald-700 hover:text-emerald-900 p-1 rounded-md hover:bg-emerald-100/60"
                 title="Copy"
               >

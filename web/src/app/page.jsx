@@ -163,7 +163,7 @@ export default async function Home() {
               <h3 className="text-xl sm:text-2xl font-extrabold text-emerald-900">Your guac. Your rules.</h3>
               <p className="text-sm sm:text-base text-emerald-950/80 mt-2 leading-relaxed">
                 Inbox sync is an opt-in service — toggle it off in Profile and we stop syncing your mail.
-                Receipt auto-parse is limited to your <span className="font-mono">+receipts</span> address. Everything else just sits in your in-app Inbox.
+                Receipt auto-parse is limited to your <span className="font-mono">+g</span> address. Everything else just sits in your in-app Inbox.
                 Row-level security at the database means even our own engineers can&apos;t snoop on other users. One-click account + data wipe any time.
               </p>
               <div className="flex flex-wrap gap-3 mt-4">

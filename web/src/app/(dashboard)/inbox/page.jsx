@@ -86,7 +86,7 @@ export default function InboxPage() {
           <GuacMascot expression="eating" size={64} />
           <div>
             <h1 className="page-title">Inbox</h1>
-            <p className="text-xs text-gray-500 mt-0.5">{total} message{total === 1 ? '' : 's'} · Guac-AI auto-files anything sent to +receipts</p>
+            <p className="text-xs text-gray-500 mt-0.5">{total} message{total === 1 ? '' : 's'} · Guac-AI auto-files anything sent to <span className="font-mono">+g</span></p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -237,7 +237,7 @@ function MessageRow({ m, selected, onClick, onToggleStar }) {
             {trimAddr(m.from_addr)}
           </span>
           {m.is_receipts_hook && (
-            <span className="text-[9px] font-bold uppercase bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-full">+receipts</span>
+            <span className="text-[9px] font-bold uppercase bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-full">+g</span>
           )}
           {m.processed && m.receipt_id && (
             <span className="text-[9px] font-bold uppercase bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-full">📜 Filed</span>
@@ -347,7 +347,7 @@ function EmptyState({ folder, filter }) {
       <GuacMascot expression="relaxing" size={84} />
       <p>
         {filter === 'unread'   ? 'All caught up. Nothing unread.' :
-         filter === 'receipts' ? 'No receipts forwarded yet. Try forwarding an order confirmation to your +receipts address.' :
+         filter === 'receipts' ? 'No receipts forwarded yet. Try forwarding an order confirmation to your +g address.' :
          filter === 'starred'  ? 'No starred messages.' :
          folder === 'trash'    ? 'Trash is empty.' :
          folder === 'sent'     ? "You haven't sent anything yet." :

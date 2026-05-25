@@ -98,6 +98,8 @@ export function fullEmail(localPart) {
   return `${localPart}@${domain()}`
 }
 
+// The short, brand-friendly default. '+receipts' is also accepted by the
+// poller for back-compat (see RECEIPT_TAGS in lib/imap-poll.js).
 export function receiptsAddress(localPart) {
-  return `${localPart}+receipts@${domain()}`
+  return `${localPart}+g@${domain()}`
 }

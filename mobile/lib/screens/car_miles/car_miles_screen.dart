@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/car_miles_model.dart';
 import '../../services/share_intent_service.dart';
+import '../../services/location_distance_service.dart';
 
 const _kBrand = Color(0xFF15803d);
 const _kTripCols = 'id, start_date, end_date, total_miles, description, category';
@@ -66,44 +67,109 @@ class _CarMilesScreenState extends State<CarMilesScreen> {
     // If we got a Google Maps share, drop the destination into the description
     // so the user just needs to add miles + category. Strip the noisy URL
     // boilerplate Maps appends.
-    final descCtrl = TextEditingController(
-      text: prefillDestination == null ? '' : _cleanSharedText(prefillDestination),
-    );
+    final cleanedDestination = prefillDestination == null ? '' : _cleanSharedText(prefillDestination);
+    final descCtrl = TextEditingController(text: cleanedDestination);
     final milesCtrl = TextEditingController();
     final today = DateTime.now().toIso8601String().substring(0, 10);
     String startDate = today;
     String endDate = today;
     String category = 'Business';
+    String? fromAddress;
+    bool calculating = prefillDestination != null;
+    String? calcError;
+
+    // For Maps-shared trips, kick off GPS → reverse-geocode → distance
+    // in the background and update the dialog when results arrive.
+    Future<void> autoDistance(void Function(VoidCallback) setSt) async {
+      try {
+        final pos = await LocationDistanceService.currentPosition();
+        if (pos == null) {
+          setSt(() { calculating = false; calcError = 'Location off — enter miles manually.'; });
+          return;
+        }
+        final addr = await LocationDistanceService.reverseGeocode(pos.latitude, pos.longitude);
+        setSt(() { fromAddress = addr ?? '${pos.latitude.toStringAsFixed(4)}, ${pos.longitude.toStringAsFixed(4)}'; });
+        final est = await LocationDistanceService.estimate(
+          fromLat: pos.latitude,
+          fromLng: pos.longitude,
+          fromLabel: fromAddress!,
+          to: cleanedDestination,
+        );
+        if (est == null) {
+          setSt(() { calculating = false; calcError = "Couldn't compute distance — enter manually."; });
+          return;
+        }
+        setSt(() {
+          calculating = false;
+          milesCtrl.text = est.miles.toStringAsFixed(1);
+        });
+      } catch (_) {
+        setSt(() { calculating = false; calcError = "Couldn't compute distance — enter manually."; });
+      }
+    }
 
     final ok = await showDialog<bool>(
       context: context,
-      builder: (ctx) => StatefulBuilder(builder: (ctx, setSt) => AlertDialog(
-        title: const Text('Log a trip'),
-        content: SingleChildScrollView(
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            TextField(controller: descCtrl, decoration: const InputDecoration(labelText: 'Description'), autofocus: true),
-            const SizedBox(height: 8),
-            TextField(controller: milesCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Miles*')),
-            const SizedBox(height: 12),
-            _DatePickRow(label: 'Start', value: startDate, onPicked: (d) => setSt(() => startDate = d)),
-            _DatePickRow(label: 'End',   value: endDate,   onPicked: (d) => setSt(() => endDate = d)),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              value: category,
-              items: const [
-                DropdownMenuItem(value: 'Business', child: Text('Business')),
-                DropdownMenuItem(value: 'Personal', child: Text('Personal')),
-              ],
-              onChanged: (v) => setSt(() => category = v ?? category),
-              decoration: const InputDecoration(labelText: 'Category'),
-            ),
-          ]),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Save')),
-        ],
-      )),
+      builder: (ctx) => StatefulBuilder(builder: (ctx, setSt) {
+        // Fire once when the dialog first builds.
+        if (prefillDestination != null && fromAddress == null && calculating && calcError == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) => autoDistance(setSt));
+        }
+        return AlertDialog(
+          title: const Text('Log a trip'),
+          content: SingleChildScrollView(
+            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              if (fromAddress != null)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: _kBrand.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: _kBrand.withValues(alpha: 0.25)),
+                  ),
+                  child: Row(children: [
+                    const Icon(Icons.my_location, size: 14, color: _kBrand),
+                    const SizedBox(width: 6),
+                    Expanded(child: Text('From: $fromAddress', style: const TextStyle(fontSize: 11, color: Colors.black87), maxLines: 2, overflow: TextOverflow.ellipsis)),
+                  ]),
+                ),
+              TextField(controller: descCtrl, decoration: const InputDecoration(labelText: 'Description'), autofocus: true),
+              const SizedBox(height: 8),
+              TextField(
+                controller: milesCtrl,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: 'Miles*',
+                  suffixIcon: calculating
+                    ? const Padding(padding: EdgeInsets.all(12), child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)))
+                    : null,
+                  helperText: calculating
+                    ? 'Calculating driving distance…'
+                    : (calcError ?? (prefillDestination != null && milesCtrl.text.isNotEmpty ? 'Auto-estimated — adjust if needed' : null)),
+                ),
+              ),
+              const SizedBox(height: 12),
+              _DatePickRow(label: 'Start', value: startDate, onPicked: (d) => setSt(() => startDate = d)),
+              _DatePickRow(label: 'End',   value: endDate,   onPicked: (d) => setSt(() => endDate = d)),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String>(
+                value: category,
+                items: const [
+                  DropdownMenuItem(value: 'Business', child: Text('Business')),
+                  DropdownMenuItem(value: 'Personal', child: Text('Personal')),
+                ],
+                onChanged: (v) => setSt(() => category = v ?? category),
+                decoration: const InputDecoration(labelText: 'Category'),
+              ),
+            ]),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
+            FilledButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Save')),
+          ],
+        );
+      }),
     );
     if (ok == true) {
       final miles = double.tryParse(milesCtrl.text) ?? 0;

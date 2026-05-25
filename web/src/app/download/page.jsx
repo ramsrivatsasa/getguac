@@ -7,13 +7,13 @@ import GuacMascot from '../../components/GuacMascot'
 // Latest Android release — bump these when you cut a new version on GitHub.
 // In a future iteration we can fetch /repos/ramsrivatsasa/getguac/releases/latest at build time.
 const ANDROID_RELEASE = {
-  version: 'v0.2.17',
+  version: 'v0.2.18',
   releasedAt: '2026-05-25',
-  base: 'https://github.com/ramsrivatsasa/getguac/releases/download/v0.2.17',
+  base: 'https://github.com/ramsrivatsasa/getguac/releases/download/v0.2.18',
   apks: [
-    { abi: 'arm64-v8a',   sizeMB: 20.0, label: 'Most modern Android phones (Samsung, Pixel, OnePlus, etc.)', file: 'app-arm64-v8a-release.apk',   primary: true  },
-    { abi: 'armeabi-v7a', sizeMB: 17.7, label: 'Older 32-bit Android phones',                                   file: 'app-armeabi-v7a-release.apk', primary: false },
-    { abi: 'x86_64',      sizeMB: 21.4, label: 'Android emulators + Chromebooks',                                file: 'app-x86_64-release.apk',      primary: false },
+    { abi: 'arm64-v8a',   sizeMB: 20.6, label: 'Most modern Android phones (Samsung, Pixel, OnePlus, etc.)', file: 'app-arm64-v8a-release.apk',   primary: true  },
+    { abi: 'armeabi-v7a', sizeMB: 18.4, label: 'Older 32-bit Android phones',                                   file: 'app-armeabi-v7a-release.apk', primary: false },
+    { abi: 'x86_64',      sizeMB: 22.1, label: 'Android emulators + Chromebooks',                                file: 'app-x86_64-release.apk',      primary: false },
   ],
 }
 

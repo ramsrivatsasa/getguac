@@ -14,6 +14,7 @@
 import { createApiClient } from '../../../../lib/supabase/server'
 import { rateLimit, userRateKey } from '../../../../lib/apiGuard'
 import { parseReceiptFromText } from '../../../../lib/parse-receipt-engine'
+import { draftReceiptFromEmail } from '../../../../lib/email-to-receipt'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -43,26 +44,71 @@ export async function POST(request) {
   const rl = rateLimit(userRateKey(user.id, 'email-reparse'), { limit: 4, windowMs: 60 * 60 * 1000 })
   if (!rl.ok) return Response.json({ error: `Rate limited. Try again in ${rl.retryAfter}s.` }, { status: 429 })
 
-  // Find unparsed receipts that originated from an email (have a linked email_messages
-  // row with a body we can re-feed to the AI). Order oldest-first so chained runs
-  // make consistent progress.
+  // Pull every receipt-hook email that either:
+  //   a) has no linked receipt (the user deleted the bad row) → recreate it
+  //   b) has a stub receipt (processed = false) → update it in place
+  // Order oldest-first so chained runs make consistent progress.
   const { data: rows, error } = await sb
     .from('email_messages')
-    .select(`id, body_text, body_html, subject, from_addr, received_at,
+    .select(`id, body_text, body_html, subject, from_addr, to_addr, delivered_to,
+             received_at, preview, has_attachments, receipt_id,
              receipt:receipt_id ( id, processed, store_name )`)
     .eq('user_id', user.id)
     .eq('is_receipts_hook', true)
-    .not('receipt_id', 'is', null)
     .order('received_at', { ascending: true })
-    .limit(MAX_PER_RUN)
+    .limit(MAX_PER_RUN * 2)   // 2x because some scanned rows will be already-parsed and filtered out
   if (error) return Response.json({ error: error.message }, { status: 500 })
 
-  // Filter to ones whose receipt is still a stub (processed = false)
-  const targets = (rows || []).filter(r => r.receipt && r.receipt.processed === false)
+  // Targets: missing-receipt OR stub-receipt
+  const targets = (rows || []).filter(r =>
+    r.receipt_id == null || (r.receipt && r.receipt.processed === false)
+  ).slice(0, MAX_PER_RUN)
 
-  const summary = { scanned: rows?.length || 0, candidates: targets.length, reparsed: 0, failed: 0, errors: [] }
+  const summary = {
+    scanned: rows?.length || 0,
+    candidates: targets.length,
+    reparsed: 0,
+    recreated: 0,
+    failed: 0,
+    errors: [],
+  }
 
   for (const row of targets) {
+    const isRecreate = row.receipt_id == null
+
+    // Branch A: missing receipt — recreate via the shared draft helper, which
+    // does AI parse + items + refund policies in one go and falls back to a
+    // smart stub if the AI fails. Then relink the email_messages row.
+    if (isRecreate) {
+      try {
+        const m = {
+          fromAddr: row.from_addr,
+          toAddr:   row.to_addr,
+          deliveredTo: row.delivered_to,
+          subject:  row.subject,
+          receivedAt: row.received_at,
+          preview:  row.preview,
+          bodyText: row.body_text,
+          bodyHtml: row.body_html,
+          hasAttachments: row.has_attachments,
+        }
+        const { receipt_id, processed } = await draftReceiptFromEmail(sb, user.id, m)
+        if (receipt_id) {
+          await sb.from('email_messages').update({ receipt_id, processed: true }).eq('id', row.id)
+          summary.recreated++
+          if (processed) summary.reparsed++
+        } else {
+          summary.failed++
+          summary.errors.push({ message_id: row.id, error: 'recreate returned no id' })
+        }
+      } catch (e) {
+        summary.failed++
+        summary.errors.push({ message_id: row.id, error: `recreate: ${e.message}` })
+      }
+      continue
+    }
+
+    // Branch B: stub receipt — update in place
     const body = stripEmailWrapper(row.body_text || row.body_html || '')
     if (!body || body.length < 60) {
       summary.failed++
@@ -77,7 +123,6 @@ export async function POST(request) {
         continue
       }
 
-      // Update the existing receipt row in place
       const { error: upErr } = await sb.from('receipts').update({
         store_name: parsed.store_name || 'Receipt by email',
         date: parsed.date || undefined,            // leave existing date if AI didn't find one

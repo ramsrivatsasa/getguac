@@ -1,3 +1,4 @@
+// Reward model — Postgres columns are snake_case, Dart fields camelCase.
 class Reward {
   final String id;
   final String rewardNo;
@@ -18,23 +19,23 @@ class Reward {
   });
 
   factory Reward.fromMap(String id, Map<String, dynamic> map) => Reward(
-    id: id,
-    rewardNo: map['rewardNo'] ?? '',
-    expiryDate: map['expiryDate'] ?? '',
-    rewardType: map['rewardType'] ?? '',
-    rewardTitle: map['rewardTitle'] ?? '',
-    description: map['description'] ?? '',
-    storeName: map['storeName'] ?? '',
-  );
+        id: id,
+        rewardNo: map['reward_no'] ?? '',
+        expiryDate: (map['expiry_date'] ?? '').toString(),
+        rewardType: map['reward_type'] ?? '',
+        rewardTitle: map['reward_title'] ?? '',
+        description: map['description'] ?? '',
+        storeName: map['store_name'] ?? '',
+      );
 
   Map<String, dynamic> toMap() => {
-    'rewardNo': rewardNo,
-    'expiryDate': expiryDate,
-    'rewardType': rewardType,
-    'rewardTitle': rewardTitle,
-    'description': description,
-    'storeName': storeName,
-  };
+        'reward_no': rewardNo,
+        'expiry_date': expiryDate,
+        'reward_type': rewardType,
+        'reward_title': rewardTitle,
+        'description': description,
+        'store_name': storeName,
+      };
 
   bool get isExpired => expiryDate.compareTo(DateTime.now().toIso8601String().substring(0, 10)) < 0;
 }

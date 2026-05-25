@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/receipt_provider.dart';
 import '../../providers/reward_provider.dart';
+import '../../services/update_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -14,6 +15,7 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   int _tabIdx = 0; // 0=Monthly, 1=Weekly, 2=Daily
+  AvailableUpdate? _update;
 
   @override
   void initState() {
@@ -21,6 +23,61 @@ class _DashboardScreenState extends State<DashboardScreen> {
     // Providers read the current user from Supabase auth internally.
     context.read<ReceiptProvider>().loadReceipts();
     context.read<RewardProvider>().loadRewards();
+    // Fire-and-forget update check (silent failure on offline / rate limit)
+    UpdateService.checkForUpdate().then((u) {
+      if (mounted && u != null) setState(() => _update = u);
+    });
+  }
+
+  Widget _updateBanner() {
+    if (_update == null) return const SizedBox.shrink();
+    final u = _update!;
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF15803d), Color(0xFF65a30d)],
+        ),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          const Text('🥑', style: TextStyle(fontSize: 28)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Update available: ${u.tag}',
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 14),
+                ),
+                const Text(
+                  'Tap to download the latest version',
+                  style: TextStyle(color: Colors.white70, fontSize: 11),
+                ),
+              ],
+            ),
+          ),
+          FilledButton(
+            onPressed: () => UpdateService.openDownload(u.downloadUrl),
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: const Color(0xFF15803d),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            ),
+            child: const Text('Update', style: TextStyle(fontWeight: FontWeight.w800)),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close, color: Colors.white70, size: 18),
+            onPressed: () => setState(() => _update = null),
+            visualDensity: VisualDensity.compact,
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -52,6 +109,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          // In-app update banner (only when a newer GitHub release exists)
+          _updateBanner(),
           // Stat cards
           Row(children: [
             _statCard('Total Spent', '\$${totalSpend.toStringAsFixed(2)}', Icons.attach_money, Colors.blue),

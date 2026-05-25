@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/biometric_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,15 +16,63 @@ class _LoginScreenState extends State<LoginScreen> {
   final _identifierCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   bool _loading = false;
+  bool _rememberWithBio = true;
+  bool _bioAvailable = false;
+  bool _bioEnabled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkBiometric();
+  }
+
+  Future<void> _checkBiometric() async {
+    final capable = await BiometricService.isDeviceCapable();
+    final enabled = await BiometricService.isEnabled();
+    if (!mounted) return;
+    setState(() {
+      _bioAvailable = capable;
+      _bioEnabled = enabled;
+    });
+    // Auto-prompt biometric on first frame if already enrolled — fast path.
+    if (capable && enabled) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _unlockWithBio());
+    }
+  }
+
+  Future<void> _unlockWithBio() async {
+    final creds = await BiometricService.authenticate();
+    if (creds == null || !mounted) return;
+    setState(() => _loading = true);
+    try {
+      await context.read<AppAuthProvider>().login(creds.email, creds.password);
+      if (mounted) context.go('/dashboard');
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Biometric sign-in failed: $e')),
+      );
+      // Bad creds = wipe so we don't keep retrying with stale data
+      await BiometricService.disable();
+      setState(() => _bioEnabled = false);
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
 
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
     try {
-      // Accepts either an email or a username (the email_alias).
-      // Username login server-side resolution happens on the web; for mobile
-      // v1 we just pass whatever they typed and Supabase tries email.
-      await context.read<AppAuthProvider>().login(_identifierCtrl.text.trim(), _passCtrl.text);
+      final identifier = _identifierCtrl.text.trim();
+      final password = _passCtrl.text;
+      await context.read<AppAuthProvider>().login(identifier, password);
+
+      // Stash credentials for next-time biometric login (only if the
+      // user opted in AND the device supports biometric).
+      if (_rememberWithBio && _bioAvailable && identifier.contains('@')) {
+        await BiometricService.enable(identifier, password);
+      }
+
       if (mounted) context.go('/dashboard');
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
@@ -107,7 +156,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               autocorrect: false,
                               decoration: InputDecoration(
                                 labelText: 'Username or email',
-                                hintText: 'ram   or   ram@gmail.com',
+                                hintText: 'john   or   john@email.com',
                                 prefixIcon: const Icon(Icons.person_outline, color: Color(0xFF15803d)),
                                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                                 focusedBorder: OutlineInputBorder(
@@ -133,6 +182,25 @@ class _LoginScreenState extends State<LoginScreen> {
                               validator: (v) => v == null || v.isEmpty ? 'Required' : null,
                             ),
                             const SizedBox(height: 20),
+                            // Remember-me / biometric opt-in toggle
+                            if (_bioAvailable) ...[
+                              Row(
+                                children: [
+                                  Checkbox(
+                                    value: _rememberWithBio,
+                                    activeColor: const Color(0xFF15803d),
+                                    onChanged: (v) => setState(() => _rememberWithBio = v ?? false),
+                                  ),
+                                  const Expanded(
+                                    child: Text(
+                                      'Remember me — unlock with fingerprint next time',
+                                      style: TextStyle(fontSize: 12, color: Color(0xFF4b5563)),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                            ],
                             FilledButton(
                               onPressed: _loading ? null : _login,
                               style: FilledButton.styleFrom(
@@ -145,6 +213,24 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
                                   : const Text('Sign In', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                             ),
+                            // Biometric quick-unlock button — only shows when
+                            // a previous sign-in saved credentials.
+                            if (_bioEnabled) ...[
+                              const SizedBox(height: 10),
+                              OutlinedButton.icon(
+                                onPressed: _loading ? null : _unlockWithBio,
+                                icon: const Icon(Icons.fingerprint, color: Color(0xFF15803d)),
+                                label: const Text(
+                                  'Unlock with fingerprint',
+                                  style: TextStyle(color: Color(0xFF15803d), fontWeight: FontWeight.w700),
+                                ),
+                                style: OutlinedButton.styleFrom(
+                                  side: const BorderSide(color: Color(0xFF15803d), width: 1.5),
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                ),
+                              ),
+                            ],
                             const SizedBox(height: 12),
                             TextButton(
                               onPressed: () => context.go('/register'),

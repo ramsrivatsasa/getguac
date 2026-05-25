@@ -1,3 +1,4 @@
+// CarTrip model — Postgres columns are snake_case, Dart fields camelCase.
 class CarTrip {
   final String id;
   final String startDate;
@@ -16,19 +17,19 @@ class CarTrip {
   });
 
   factory CarTrip.fromMap(String id, Map<String, dynamic> map) => CarTrip(
-    id: id,
-    startDate: map['startDate'] ?? '',
-    endDate: map['endDate'] ?? '',
-    totalMiles: double.tryParse(map['totalMiles']?.toString() ?? '0') ?? 0,
-    description: map['description'] ?? '',
-    category: map['category'] ?? 'Personal',
-  );
+        id: id,
+        startDate: (map['start_date'] ?? '').toString(),
+        endDate: (map['end_date'] ?? '').toString(),
+        totalMiles: double.tryParse(map['total_miles']?.toString() ?? '0') ?? 0,
+        description: map['description'] ?? '',
+        category: map['category'] ?? 'Personal',
+      );
 
   Map<String, dynamic> toMap() => {
-    'startDate': startDate,
-    'endDate': endDate,
-    'totalMiles': totalMiles,
-    'description': description,
-    'category': category,
-  };
+        'start_date': startDate,
+        'end_date': endDate,
+        'total_miles': totalMiles,
+        'description': description,
+        'category': category,
+      };
 }

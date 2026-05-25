@@ -1,3 +1,5 @@
+// Receipt + ReceiptItem models. Postgres column names are snake_case — these
+// `fromMap` / `toMap` mappings translate to/from the camelCase Dart fields.
 class Receipt {
   final String id;
   final String storeName;
@@ -8,6 +10,8 @@ class Receipt {
   final String receiptLink;
   final bool businessPurchase;
   final bool processed;
+  final String? category;
+  final int? rating;
 
   Receipt({
     required this.id,
@@ -19,30 +23,38 @@ class Receipt {
     this.receiptLink = '',
     this.businessPurchase = false,
     this.processed = false,
+    this.category,
+    this.rating,
   });
 
   factory Receipt.fromMap(String id, Map<String, dynamic> map) => Receipt(
-    id: id,
-    storeName: map['storeName'] ?? '',
-    date: map['date'] ?? '',
-    totalAmount: double.tryParse(map['totalAmount']?.toString() ?? '0') ?? 0,
-    taxPaid: double.tryParse(map['taxPaid']?.toString() ?? '0') ?? 0,
-    rewardNo: map['rewardNo'] ?? '',
-    receiptLink: map['receiptLink'] ?? '',
-    businessPurchase: map['businessPurchase'] ?? false,
-    processed: map['processed'] ?? false,
-  );
+        id: id,
+        storeName: map['store_name'] ?? '',
+        date: (map['date'] ?? '').toString(),
+        totalAmount: double.tryParse(map['total_amount']?.toString() ?? '0') ?? 0,
+        taxPaid: double.tryParse(map['tax_paid']?.toString() ?? '0') ?? 0,
+        rewardNo: map['reward_no'] ?? '',
+        receiptLink: map['receipt_link'] ?? '',
+        businessPurchase: map['business_purchase'] ?? false,
+        processed: map['processed'] ?? false,
+        category: map['category'],
+        rating: map['rating'],
+      );
 
+  // Build a payload for INSERT/UPDATE against the `receipts` table. Only
+  // includes columns the user explicitly set so server defaults still apply.
   Map<String, dynamic> toMap() => {
-    'storeName': storeName,
-    'date': date,
-    'totalAmount': totalAmount,
-    'taxPaid': taxPaid,
-    'rewardNo': rewardNo,
-    'receiptLink': receiptLink,
-    'businessPurchase': businessPurchase,
-    'processed': processed,
-  };
+        'store_name': storeName,
+        'date': date,
+        'total_amount': totalAmount,
+        'tax_paid': taxPaid,
+        'reward_no': rewardNo,
+        'receipt_link': receiptLink,
+        'business_purchase': businessPurchase,
+        'processed': processed,
+        if (category != null) 'category': category,
+        if (rating != null) 'rating': rating,
+      };
 }
 
 class ReceiptItem {
@@ -52,11 +64,12 @@ class ReceiptItem {
   final String purchaseDate;
   final int qty;
   final double price;
-  final String storeNameId;
   final String warrantyInfo;
   final String itemManual;
   final String returnDate;
   final bool returned;
+  final String? category;
+  final String? model;
 
   ReceiptItem({
     required this.id,
@@ -65,31 +78,40 @@ class ReceiptItem {
     this.purchaseDate = '',
     this.qty = 1,
     this.price = 0,
-    this.storeNameId = '',
     this.warrantyInfo = '',
     this.itemManual = '',
     this.returnDate = '',
     this.returned = false,
+    this.category,
+    this.model,
   });
 
   factory ReceiptItem.fromMap(String id, Map<String, dynamic> map) => ReceiptItem(
-    id: id,
-    sku: map['sku'] ?? '',
-    itemName: map['itemName'] ?? '',
-    purchaseDate: map['purchaseDate'] ?? '',
-    qty: map['qty'] ?? 1,
-    price: double.tryParse(map['price']?.toString() ?? '0') ?? 0,
-    storeNameId: map['storeNameId'] ?? '',
-    warrantyInfo: map['warrantyInfo'] ?? '',
-    itemManual: map['itemManual'] ?? '',
-    returnDate: map['returnDate'] ?? '',
-    returned: map['returned'] ?? false,
-  );
+        id: id,
+        sku: map['sku'] ?? '',
+        itemName: map['item_name'] ?? '',
+        purchaseDate: (map['purchase_date'] ?? '').toString(),
+        qty: (map['qty'] is int) ? map['qty'] : int.tryParse(map['qty']?.toString() ?? '1') ?? 1,
+        price: double.tryParse(map['price']?.toString() ?? '0') ?? 0,
+        warrantyInfo: map['warranty_info'] ?? '',
+        itemManual: map['item_manual'] ?? '',
+        returnDate: (map['return_date'] ?? '').toString(),
+        returned: map['returned'] ?? false,
+        category: map['category'],
+        model: map['model'],
+      );
 
   Map<String, dynamic> toMap() => {
-    'sku': sku, 'itemName': itemName, 'purchaseDate': purchaseDate,
-    'qty': qty, 'price': price, 'storeNameId': storeNameId,
-    'warrantyInfo': warrantyInfo, 'itemManual': itemManual,
-    'returnDate': returnDate, 'returned': returned,
-  };
+        'sku': sku,
+        'item_name': itemName,
+        if (purchaseDate.isNotEmpty) 'purchase_date': purchaseDate,
+        'qty': qty,
+        'price': price,
+        if (warrantyInfo.isNotEmpty) 'warranty_info': warrantyInfo,
+        if (itemManual.isNotEmpty) 'item_manual': itemManual,
+        if (returnDate.isNotEmpty) 'return_date': returnDate,
+        'returned': returned,
+        if (category != null) 'category': category,
+        if (model != null) 'model': model,
+      };
 }

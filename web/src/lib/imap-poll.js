@@ -17,23 +17,30 @@ import { ENDPOINTS, fullEmail } from './migadu'
 // per-folder lastUid cursor.
 const MAX_PER_RUN = 200
 
-// IMAP folders we never poll into email_messages. These are conventional names
-// across providers; Migadu uses the capitalised forms in their default folder
-// set. Match case-insensitively below since user mail clients may have created
-// alternate-case variants.
-const SKIP_FOLDERS = new Set(['sent', 'drafts', 'junk', 'spam', 'trash', 'archive'])
+// IMAP folders we never poll into email_messages. Match against the LEAF name
+// of a folder path (the last segment after the delimiter), case-insensitive,
+// so 'INBOX.Trash' / 'INBOX/Trash' / 'Trash' all get skipped uniformly.
+const SKIP_LEAF_NAMES = new Set(['sent', 'drafts', 'junk', 'spam', 'trash', 'archive'])
+
+// Extract the leaf name from an IMAP folder path. Dovecot/Migadu typically
+// uses '.' as the delimiter (so 'INBOX.g' has leaf 'g'); other servers use '/'.
+// We split on both so the same code handles every common shape.
+function leafName(path) {
+  if (!path) return ''
+  const m = path.split(/[./]/).filter(Boolean)
+  return m.length ? m[m.length - 1] : path
+}
 
 // Discover folders worth polling. Migadu's plus-addressing auto-files mail to
-// matching subfolders (ram+g@... -> folder `g`), so we have to poll all of
-// them, not just INBOX. Returns an array of folder paths (e.g. ['INBOX', 'g',
-// 'receipts']).
+// matching subfolders (ram+g@... -> folder `g` or `INBOX.g` depending on the
+// server's namespace), so we have to poll all of them, not just INBOX.
 async function listPollableFolders(client) {
   const list = await client.list()
   const out = []
   for (const f of list || []) {
     const path = f.path
     if (!path) continue
-    if (SKIP_FOLDERS.has(path.toLowerCase())) continue
+    if (SKIP_LEAF_NAMES.has(leafName(path).toLowerCase())) continue
     // imapflow includes a \Noselect flag on folder containers that can't hold
     // messages (Gmail's '[Gmail]' parent, etc.) — skip those defensively.
     if (Array.isArray(f.flags) && f.flags.includes('\\Noselect')) continue
@@ -174,10 +181,12 @@ const RECEIPT_FOLDERS = new Set(['g', 'receipts'])
 
 export function isReceiptsAddress(message, localPart) {
   // Folder-based detection works even when the user FORWARDS a receipt from
-  // their personal address — Delivered-To gets rewritten but the Migadu
-  // filter still files based on the original +tag.
-  const folder = (message.imapFolder || '').toLowerCase()
-  if (RECEIPT_FOLDERS.has(folder)) return true
+  // their personal address — Delivered-To gets rewritten, but the Migadu
+  // filter still files based on the original +tag. Check the LEAF segment of
+  // the folder path so nested forms like 'INBOX.g' and 'INBOX/receipts' work
+  // the same as bare 'g' / 'receipts'.
+  const folderLeaf = leafName(message.imapFolder || '').toLowerCase()
+  if (RECEIPT_FOLDERS.has(folderLeaf)) return true
 
   const dt = (message.deliveredTo || '').toLowerCase()
   const to = (message.toAddr || '').toLowerCase()

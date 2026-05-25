@@ -61,8 +61,10 @@ export async function POST(request) {
   // Empty lastUidByFolder = each folder starts at UID 1.
   const result = await pollMailbox({ localPart: prof.email_alias, password, lastUidByFolder: {} })
 
-  const summary = { fetched: 0, inserted: 0, drafted: 0, errors: [] }
+  const summary = { fetched: 0, inserted: 0, drafted: 0, errors: [], messages_per_folder: {} }
   for (const m of result.messages) {
+    const f = m.imapFolder || 'INBOX'
+    summary.messages_per_folder[f] = (summary.messages_per_folder[f] || 0) + 1
     const isHook = isReceiptsAddress(m, prof.email_alias)
     const TEXT_CAP = 256 * 1024, HTML_CAP = 512 * 1024
     const bodyText = m.bodyText.length > TEXT_CAP ? m.bodyText.slice(0, TEXT_CAP) + '\n\n[truncated]' : m.bodyText

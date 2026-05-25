@@ -57,8 +57,9 @@ export async function POST(request) {
   try { password = decryptSecret(prof.email_inbox_password_enc) }
   catch (e) { return Response.json({ error: 'Mailbox credentials unavailable.' }, { status: 500 }) }
 
-  // Force-poll from UID 1 — ignores the lastUid cursor entirely.
-  const result = await pollMailbox({ localPart: prof.email_alias, password, lastUid: null })
+  // Force-poll from UID 1 across every folder — ignores all cursors entirely.
+  // Empty lastUidByFolder = each folder starts at UID 1.
+  const result = await pollMailbox({ localPart: prof.email_alias, password, lastUidByFolder: {} })
 
   const summary = { fetched: 0, inserted: 0, drafted: 0, errors: [] }
   for (const m of result.messages) {
@@ -70,6 +71,7 @@ export async function POST(request) {
     const { data: insertedMsg, error: insertErr } = await admin.from('email_messages').insert({
       user_id: user.id,
       uid: m.uid,
+      imap_folder: m.imapFolder || 'INBOX',
       message_id: m.messageId,
       from_addr: m.fromAddr,
       to_addr: m.toAddr,

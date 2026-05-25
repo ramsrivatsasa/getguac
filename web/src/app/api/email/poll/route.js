@@ -56,18 +56,22 @@ export async function POST(request) {
     try {
       const password = decryptSecret(u.email_inbox_password_enc)
 
-      // Get the highest UID we've already stored for this user — the poller
-      // only fetches anything beyond it.
-      const { data: highRow } = await sb
+      // Get the highest UID per IMAP folder we've already stored. UIDs are
+      // unique only within a folder, so we keep one cursor per folder.
+      const { data: cursorRows } = await sb
         .from('email_messages')
-        .select('uid')
+        .select('imap_folder, uid')
         .eq('user_id', u.id)
         .order('uid', { ascending: false })
-        .limit(1)
-        .maybeSingle()
-      const lastUid = highRow?.uid || null
+      const lastUidByFolder = {}
+      for (const r of cursorRows || []) {
+        const f = r.imap_folder || 'INBOX'
+        if (lastUidByFolder[f] == null || r.uid > lastUidByFolder[f]) {
+          lastUidByFolder[f] = r.uid
+        }
+      }
 
-      const result = await pollMailbox({ localPart: u.email_alias, password, lastUid })
+      const result = await pollMailbox({ localPart: u.email_alias, password, lastUidByFolder })
 
       for (const m of result.messages) {
         const isHook = isReceiptsAddress(m, u.email_alias)
@@ -77,12 +81,16 @@ export async function POST(request) {
         const bodyText = m.bodyText.length > TEXT_CAP ? m.bodyText.slice(0, TEXT_CAP) + '\n\n[truncated]' : m.bodyText
         const bodyHtml = m.bodyHtml.length > HTML_CAP ? m.bodyHtml.slice(0, HTML_CAP) : m.bodyHtml
 
-        // Insert email_messages row with full body + folder=inbox
+        // Insert email_messages row. `imap_folder` is the source IMAP folder
+        // (INBOX, g, receipts, …) and is part of the dedupe key. `folder` is
+        // the UI bucket (inbox / sent / trash), which we always default to
+        // 'inbox' for fresh polls regardless of IMAP source.
         const { data: insertedMsg, error: insertErr } = await sb
           .from('email_messages')
           .insert({
             user_id: u.id,
             uid: m.uid,
+            imap_folder: m.imapFolder || 'INBOX',
             message_id: m.messageId,
             from_addr: m.fromAddr,
             to_addr: m.toAddr,

@@ -174,7 +174,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             inputFormatters: const [],
             textCapitalization: TextCapitalization.none,
             decoration: InputDecoration(
-              hintText: 'e.g. ram',
+              hintText: 'e.g. alex',
               filled: true,
               fillColor: Colors.white,
               isDense: true,
@@ -288,7 +288,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             Expanded(child: _field('lastName', 'Last Name')),
                           ]),
                           _field('email', 'Email', type: TextInputType.emailAddress, icon: Icons.email_outlined),
-                          _field('password', 'Password', obscure: true, hint: 'Min 6 chars', icon: Icons.lock_outline),
+                          _field('password', 'Password', obscure: true, hint: 'Min 10 chars', icon: Icons.lock_outline),
                           _field('birthDate', 'Birth Date', hint: 'YYYY-MM-DD', icon: Icons.calendar_today_outlined),
                           _field('age', 'Age', type: TextInputType.number, icon: Icons.cake_outlined),
                           _field('altEmail', 'Alternative Email (optional)', type: TextInputType.emailAddress, icon: Icons.alternate_email),

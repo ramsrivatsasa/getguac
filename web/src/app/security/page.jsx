@@ -73,7 +73,7 @@ export default function SecurityPage() {
             ok
             icon={KeyRound}
             title="Your mailbox passwords"
-            body="When you claim ram@getguac.app, we generate a random password and store it AES-256-GCM-encrypted with a key only our server knows. Even our database admins can't read it."
+            body="When you claim you@getguac.app, we generate a random password and store it AES-256-GCM-encrypted with a key only our server knows. Even our database admins can't read it."
           />
           <Layer
             ok

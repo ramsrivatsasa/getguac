@@ -36,6 +36,28 @@ export function rateKey(request, suffix = '') {
   return `${ip}|${auth}|${suffix}`
 }
 
+/**
+ * Rate-limit by user id (when the route already resolved one). Use this in
+ * addition to rateKey() so attackers can't rotate IPs to defeat the cap on
+ * expensive per-user endpoints (AI parse, email poll, etc.).
+ */
+export function userRateKey(userId, suffix = '') {
+  return `user:${userId || 'anon'}|${suffix}`
+}
+
+/**
+ * Composite check: trips if EITHER per-IP or per-user limit is exceeded.
+ * Both limits run independently so a single user on a botnet still hits
+ * the per-user wall, and an open lab IP hits the per-IP wall.
+ */
+export function rateLimitComposite({ ipKey, userKey, ipLimit, userLimit, windowMs = 60_000 }) {
+  const ip = rateLimit(ipKey, { limit: ipLimit, windowMs })
+  if (!ip.ok) return { ok: false, reason: 'ip', retryAfter: ip.retryAfter }
+  const user = rateLimit(userKey, { limit: userLimit, windowMs })
+  if (!user.ok) return { ok: false, reason: 'user', retryAfter: user.retryAfter }
+  return { ok: true, remaining: Math.min(ip.remaining, user.remaining), retryAfter: 0 }
+}
+
 // Garbage-collect expired buckets every 5 minutes
 if (typeof setInterval !== 'undefined') {
   setInterval(() => {

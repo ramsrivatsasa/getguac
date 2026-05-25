@@ -10,6 +10,7 @@ import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { rateLimit, rateKey } from '../../../../lib/apiGuard'
 import { createMailbox, mailboxExists } from '../../../../lib/migadu'
 import { encryptSecret, generateMailboxPassword } from '../../../../lib/crypto'
+import { validatePassword } from '../../../../lib/passwordStrength'
 export const runtime = 'nodejs'
 
 // Best-effort: provision the Migadu mailbox at signup so the user's
@@ -69,8 +70,9 @@ export async function POST(request) {
     if (!VALID_USERNAME_RE.test(username)) {
       return Response.json({ error: 'Username must be 3–32 chars, lowercase letters/numbers, optional . _ -', status: 'invalid' }, { status: 400 })
     }
-    if (password.length < 6) {
-      return Response.json({ error: 'Password must be at least 6 characters' }, { status: 400 })
+    const pwCheck = await validatePassword(password)
+    if (!pwCheck.ok) {
+      return Response.json({ error: pwCheck.error, status: 'weak_password' }, { status: 400 })
     }
 
     const sbAdmin = admin()

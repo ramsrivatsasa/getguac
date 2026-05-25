@@ -116,7 +116,7 @@ export default function RegisterPage() {
                   autoComplete="username"
                   maxLength={32}
                   className="flex-1 px-3 py-2 text-sm bg-transparent outline-none"
-                  placeholder="e.g. ram"
+                  placeholder="e.g. alex"
                   value={form.username}
                   onChange={s('username')}
                 />
@@ -142,8 +142,8 @@ export default function RegisterPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <div><label className="label">First Name</label><input required className="input" placeholder="John" value={form.firstName} onChange={s('firstName')} /></div>
-              <div><label className="label">Last Name</label><input required className="input" placeholder="Doe" value={form.lastName} onChange={s('lastName')} /></div>
+              <div><label className="label">First Name</label><input required className="input" placeholder="Alex" value={form.firstName} onChange={s('firstName')} /></div>
+              <div><label className="label">Last Name</label><input required className="input" placeholder="Smith" value={form.lastName} onChange={s('lastName')} /></div>
             </div>
             <div>
               <label className="label">Email Address</label>
@@ -151,7 +151,7 @@ export default function RegisterPage() {
               <p className="text-[11px] text-gray-400 mt-1">Used for password resets — never shown publicly.</p>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div><label className="label">Password</label><input type="password" required minLength={6} autoComplete="new-password" className="input" placeholder="Min 6 chars" value={form.password} onChange={s('password')} /></div>
+              <div><label className="label">Password</label><input type="password" required minLength={10} autoComplete="new-password" className="input" placeholder="Min 10 chars" value={form.password} onChange={s('password')} /></div>
               <div><label className="label">Confirm Password</label><input type="password" required autoComplete="new-password" className="input" value={form.confirmPassword} onChange={s('confirmPassword')} /></div>
             </div>
             <div className="grid grid-cols-2 gap-3">

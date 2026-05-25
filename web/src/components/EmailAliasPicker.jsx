@@ -169,7 +169,7 @@ export default function EmailAliasPicker({ userId }) {
               className="flex-1 px-3 py-2 text-sm bg-transparent outline-none"
               value={draft}
               onChange={e => setDraft(e.target.value)}
-              placeholder="e.g. ram"
+              placeholder="e.g. alex"
               autoComplete="off"
               spellCheck={false}
               maxLength={32}

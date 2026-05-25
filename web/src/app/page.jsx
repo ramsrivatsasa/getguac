@@ -123,33 +123,31 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* HOW IT WORKS */}
+      {/* HOW IT WORKS — original simple 3-step + link to email deep dive */}
       <section id="how" className="max-w-6xl mx-auto px-4 sm:px-6 pb-16">
         <div className="text-center mb-10">
-          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">From paper pile to power move</h2>
-          <p className="text-gray-500 mt-2">Five steps. Most happen automatically.</p>
+          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">How GetGuac works</h2>
+          <p className="text-gray-500 mt-2">Three taps from receipt to insight.</p>
         </div>
-        <div className="grid md:grid-cols-5 gap-3">
+        <div className="grid md:grid-cols-3 gap-5">
           {[
-            { n: '1', emoji: '🧑‍💼', title: 'Claim your handle',     body: 'Pick a username at signup. You get ram@getguac.app + ram+receipts@getguac.app for free, forever.' },
-            { n: '2', emoji: '🛍️', title: 'Use it everywhere',     body: 'Sign up for Amazon, Walmart, Target, loyalty programs — all using your @getguac.app address.' },
-            { n: '3', emoji: '📨', title: 'Forward to +receipts',  body: 'Set one auto-forward rule in Gmail/Outlook. Order confirmations go to your +receipts address.' },
-            { n: '4', emoji: '✨', title: 'Guac-AI parses it all',  body: 'Within 10 minutes the AI extracts store, items, total, tax, payment, even refund policies.' },
-            { n: '5', emoji: '🧠', title: 'Insights compound',       body: 'GuacScore, GuacWizard, Bank Bite tracker — the more you feed Guac-AI, the sharper it gets.' },
+            { n: '1', emoji: '📷', title: 'Drop or snap',   body: 'Drag a PDF, email forward, or snap a photo. Guac-AI handles the rest.' },
+            { n: '2', emoji: '🧾', title: 'Auto-organized', body: 'Items, categories, store locations, refund policies — all extracted and saved.' },
+            { n: '3', emoji: '💎', title: 'Rate & learn',   body: 'Worth It? rating + Guacanomics charts surface what you actually need.' },
           ].map(s => (
             <div key={s.n} className="card relative overflow-hidden">
               <span className="absolute -right-3 -top-3 text-7xl font-black text-emerald-50 select-none">{s.n}</span>
               <div className="relative">
                 <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-green-600 text-white shadow-md flex items-center justify-center text-2xl">{s.emoji}</div>
-                <h3 className="font-bold text-sm mt-3 text-gray-900 leading-tight">{s.title}</h3>
-                <p className="text-xs text-gray-600 mt-1 leading-relaxed">{s.body}</p>
+                <h3 className="font-bold text-lg mt-3 text-gray-900">{s.title}</h3>
+                <p className="text-sm text-gray-600 mt-1 leading-relaxed">{s.body}</p>
               </div>
             </div>
           ))}
         </div>
         <div className="text-center mt-6">
           <Link href="/how-email-works" className="inline-flex items-center gap-1 text-sm font-bold text-emerald-700 hover:text-emerald-900">
-            See the email flow in detail <ArrowRight size={14} />
+            Plus — every account gets a free @getguac.app email · See how it works <ArrowRight size={14} />
           </Link>
         </div>
       </section>

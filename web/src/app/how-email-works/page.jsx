@@ -7,7 +7,7 @@ import { Mail, Inbox, Forward, Sparkles, ShieldOff, ShoppingBag, Clock, EyeOff, 
 
 export const metadata = {
   title: 'How GetGuac email works — your free @getguac.app inbox',
-  description: 'Use ram@getguac.app for online shopping signups, ram+receipts@getguac.app for auto-receipt processing. Personal mail stays untouched.',
+  description: 'Use you@getguac.app for online shopping signups, you+receipts@getguac.app for auto-receipt processing. Personal mail stays untouched.',
 }
 
 export default function HowEmailWorksPage() {
@@ -59,7 +59,7 @@ export default function HowEmailWorksPage() {
               <Inbox size={24} className="text-emerald-700" />
             </div>
             <p className="text-[10px] uppercase tracking-wider font-bold text-emerald-700">Personal</p>
-            <p className="font-mono text-lg font-black text-emerald-900 mt-1">ram@getguac.app</p>
+            <p className="font-mono text-lg font-black text-emerald-900 mt-1">you@getguac.app</p>
             <p className="text-sm text-gray-700 mt-3 leading-relaxed">
               Your private inbox. Sign in via webmail, read &amp; reply like any email account.
               <strong className="text-emerald-700"> GetGuac never reads this mailbox.</strong>
@@ -73,7 +73,7 @@ export default function HowEmailWorksPage() {
               <Sparkles size={24} className="text-amber-700" />
             </div>
             <p className="text-[10px] uppercase tracking-wider font-bold text-amber-700">Auto-process</p>
-            <p className="font-mono text-lg font-black text-amber-900 mt-1">ram+receipts@getguac.app</p>
+            <p className="font-mono text-lg font-black text-amber-900 mt-1">you+receipts@getguac.app</p>
             <p className="text-sm text-gray-700 mt-3 leading-relaxed">
               The magic address. Any email landing here is read by Guac-AI, parsed for store + items + total,
               and filed into your <Link href="/receipts" className="font-semibold text-amber-800 hover:underline">Receipts</Link> within 10 minutes.
@@ -96,7 +96,7 @@ export default function HowEmailWorksPage() {
           </h2>
           <div className="grid md:grid-cols-2 gap-6">
             <UseCase
-              header="Use ram@getguac.app"
+              header="Use you@getguac.app"
               tone="emerald"
               cases={[
                 { icon: ShoppingBag, label: 'Merchant accounts (Amazon, Walmart, Target)', body: 'Sign up using your @getguac.app address — order confirmations land in your inbox.' },
@@ -106,13 +106,13 @@ export default function HowEmailWorksPage() {
               ]}
             />
             <UseCase
-              header="Forward to ram+receipts@getguac.app"
+              header="Forward to you+receipts@getguac.app"
               tone="amber"
               cases={[
                 { icon: Sparkles, label: 'Order confirmations from any merchant',     body: 'Amazon, Walmart, Best Buy, restaurants — forward and the AI files it.' },
                 { icon: Mail,     label: 'E-receipts that landed in your real Gmail', body: 'Forward old receipts you want tracked. One-time effort, lifetime stored.' },
                 { icon: Forward,  label: 'PDF bank statements via email',             body: 'Forward your card statement and Guac-AI extracts transactions + fees.' },
-                { icon: CheckCircle2, label: 'Auto-forward rules in Gmail/Outlook',  body: '"Subject contains: order confirmation → Forward to ram+receipts@". Set once.' },
+                { icon: CheckCircle2, label: 'Auto-forward rules in Gmail/Outlook',  body: '"Subject contains: order confirmation → Forward to you+receipts@". Set once.' },
               ]}
             />
           </div>
@@ -153,14 +153,17 @@ export default function HowEmailWorksPage() {
       {/* How it actually works */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 py-12">
         <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-center mb-8">
-          What happens after you forward
+          From signup to insights — the full email journey
         </h2>
         <ol className="space-y-3">
           {[
-            { n: '1', t: 'Email arrives at Migadu', b: 'Your receipts hook routes through Migadu (a privacy-first European mail host). The message sits in your mailbox with the Delivered-To header showing +receipts.' },
-            { n: '2', t: 'Guac-AI poller picks it up', b: 'Every 10 minutes our cron job logs in via encrypted IMAP, fetches new messages, and filters for the +receipts tag. Personal mail is skipped.' },
-            { n: '3', t: 'AI extracts the receipt', b: 'Store name, line items, total, taxes, payment method — all parsed and saved to your Receipts table. The original message stays in your mailbox.' },
-            { n: '4', t: 'It shows up in your Receipts feed', b: 'You see the receipt within 10 minutes. Tap to edit, rate it, or assign a category. The AI gets sharper with every receipt you process.' },
+            { n: '1', t: 'Claim your handle at signup', b: 'Pick a username (e.g. alex). You get alex@getguac.app + alex+receipts@getguac.app provisioned the moment you sign up — yours forever, no extra setup.' },
+            { n: '2', t: 'Use the address everywhere',  b: 'Sign up for Amazon, Walmart, Target, loyalty programs — anywhere you don\'t want to give out your real Gmail. Order confirmations land in your @getguac.app inbox.' },
+            { n: '3', t: 'Forward to +receipts',        b: 'Set one auto-forward rule in Gmail/Outlook: "subject contains: order confirmation → forward to alex+receipts@getguac.app". Or hit Forward on individual emails as they come in.' },
+            { n: '4', t: 'Email arrives at Migadu',     b: 'Your receipts hook routes through Migadu (a privacy-first European mail host). The message sits in your mailbox with the Delivered-To header showing +receipts.' },
+            { n: '5', t: 'Guac-AI poller picks it up',  b: 'Every 10 minutes our cron job logs in via encrypted IMAP, fetches new messages, and filters for the +receipts tag. Personal mail is skipped.' },
+            { n: '6', t: 'AI extracts the receipt',     b: 'Store name, line items, total, taxes, payment method — all parsed and saved to your Receipts table. The original message stays in your mailbox.' },
+            { n: '7', t: 'Shows up in your Receipts feed', b: 'You see the receipt within 10 minutes. Tap to edit, rate it, or assign a category. The AI gets sharper with every receipt you process.' },
           ].map(s => (
             <li key={s.n} className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm flex items-start gap-4">
               <span className="text-3xl font-black text-emerald-300 select-none w-10 shrink-0">{s.n}</span>

@@ -89,19 +89,22 @@ class _CarMilesScreenState extends State<CarMilesScreen> {
         }
         final addr = await LocationDistanceService.reverseGeocode(pos.latitude, pos.longitude);
         setSt(() { fromAddress = addr ?? '${pos.latitude.toStringAsFixed(4)}, ${pos.longitude.toStringAsFixed(4)}'; });
-        final est = await LocationDistanceService.estimate(
+        // Prefer the raw share text for geocoding (preserves the address line
+        // and the maps.app.goo.gl URL when that's all Maps gives us). The
+        // cleaned version stays in the description field for UX.
+        final result = await LocationDistanceService.estimate(
           fromLat: pos.latitude,
           fromLng: pos.longitude,
           fromLabel: fromAddress!,
-          to: cleanedDestination,
+          to: (prefillDestination ?? cleanedDestination).trim(),
         );
-        if (est == null) {
-          setSt(() { calculating = false; calcError = "Couldn't compute distance — enter manually."; });
+        if (result.estimate == null) {
+          setSt(() { calculating = false; calcError = result.error ?? "Couldn't compute distance — enter manually."; });
           return;
         }
         setSt(() {
           calculating = false;
-          milesCtrl.text = est.miles.toStringAsFixed(1);
+          milesCtrl.text = result.estimate!.miles.toStringAsFixed(1);
         });
       } catch (_) {
         setSt(() { calculating = false; calcError = "Couldn't compute distance — enter manually."; });

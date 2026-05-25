@@ -49,26 +49,89 @@ async function geocodeOnce(q) {
   return { lat: parseFloat(lat), lng: parseFloat(lon), display_name }
 }
 
+// Google Maps shares are often just a short link (maps.app.goo.gl/XXX) — no
+// address text. Follow the redirect to find the actual maps.google.com URL,
+// then pull coordinates or a place name out of it.
+async function resolveMapsUrl(url) {
+  try {
+    const res = await fetch(url, { redirect: 'follow', headers: { 'User-Agent': 'GetGuac/1.0' } })
+    const finalUrl = res.url || url
+    // /@lat,lng,zoom — most reliable when present
+    const at = finalUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/)
+    if (at) {
+      const placeName = decodeURIComponent((finalUrl.match(/\/maps\/place\/([^/@]+)/)?.[1] || '').replace(/\+/g, ' '))
+      return { lat: parseFloat(at[1]), lng: parseFloat(at[2]), display_name: placeName || 'Shared location' }
+    }
+    // ?q=lat,lng
+    const qCoords = finalUrl.match(/[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/)
+    if (qCoords) {
+      return { lat: parseFloat(qCoords[1]), lng: parseFloat(qCoords[2]), display_name: 'Shared location' }
+    }
+    // /maps/place/Some+Place+Name/ — feed to Nominatim
+    const placePath = finalUrl.match(/\/maps\/place\/([^/@?]+)/)
+    if (placePath) {
+      return geocode(decodeURIComponent(placePath[1].replace(/\+/g, ' ')))
+    }
+    // ?q=text
+    const qText = finalUrl.match(/[?&]q=([^&]+)/)
+    if (qText) {
+      return geocode(decodeURIComponent(qText[1].replace(/\+/g, ' ')))
+    }
+    return null
+  } catch (_) {
+    return null
+  }
+}
+
 // Tries a few normalized variants of the input string because Nominatim is finicky.
 // e.g. "13619 Beckingham Drive,Herndon,VA" works much better as
 // "13619 Beckingham Drive, Herndon, VA, USA"
 async function geocode(address) {
   if (!address || !address.trim()) return null
   const raw = address.trim()
-  const cleaned = raw.replace(/\s*,\s*/g, ', ').replace(/\s+/g, ' ').trim()
-  const withUsa = /\b(usa|united states)\b/i.test(cleaned) ? cleaned : `${cleaned}, USA`
+
+  // Short-circuit: Google Maps share URLs need redirect-following, not geocoding.
+  if (/^https?:\/\/(maps\.app\.goo\.gl|goo\.gl\/maps|(?:www\.)?google\.com\/maps)/i.test(raw)) {
+    return resolveMapsUrl(raw)
+  }
+
+  // If the input is multi-line and one of those lines is a Maps short link,
+  // resolve THAT first — it's almost always the most accurate signal.
+  const lines = raw.split(/[\r\n]+/).map(l => l.trim()).filter(Boolean)
+  const mapsLine = lines.find(l => /^https?:\/\/(maps\.app\.goo\.gl|goo\.gl\/maps|(?:www\.)?google\.com\/maps)/i.test(l))
+  if (mapsLine) {
+    const fromUrl = await resolveMapsUrl(mapsLine)
+    if (fromUrl) return fromUrl
+  }
+
+  // Treat ` · ` (the bullet our mobile share-cleaner inserts between place + address)
+  // and newlines as comma separators so Nominatim's parser has a chance.
+  // Drop any remaining URL fragments so they don't pollute the query.
+  const normalized = raw
+    .replace(/https?:\/\/\S+/gi, '')
+    .replace(/\s*[·•]\s*/g, ', ')
+    .replace(/[\r\n]+/g, ', ')
+    .replace(/\s*,\s*/g, ', ')
+    .replace(/^[,\s]+|[,\s]+$/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+  const withUsa = /\b(usa|united states)\b/i.test(normalized) ? normalized : `${normalized}, USA`
+  const parts = normalized.split(',').map(s => s.trim()).filter(Boolean)
+
+  // Pick out the line that looks like an address (starts with a number) — that's
+  // the strongest Nominatim signal in a multi-line "Place\nStreet\nCity" share.
+  const addressIdx = parts.findIndex(p => /^\d+\s+\S/.test(p))
+  const addressOnward = addressIdx >= 0
+    ? `${parts.slice(addressIdx).join(', ')}, USA`
+    : null
+  const cityState = parts.length >= 2 ? `${parts.slice(-2).join(', ')}, USA` : null
 
   const variants = [
-    cleaned,
+    addressOnward,
     withUsa,
-    // Drop the leading house number — Nominatim sometimes misses precise numbers
+    normalized,
     withUsa.replace(/^\d+\s+/, ''),
-    // Just the city + state (last 2 comma-separated tokens) + USA
-    (() => {
-      const parts = cleaned.split(',').map(s => s.trim()).filter(Boolean)
-      if (parts.length < 2) return null
-      return `${parts.slice(-2).join(', ')}, USA`
-    })(),
+    cityState,
   ].filter(Boolean)
 
   for (const q of variants) {

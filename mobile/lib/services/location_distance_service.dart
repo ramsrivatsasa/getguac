@@ -15,6 +15,12 @@ class TripEstimate {
   TripEstimate({required this.fromAddress, required this.miles, required this.straightLineMiles});
 }
 
+class TripEstimateResult {
+  final TripEstimate? estimate;
+  final String? error;
+  TripEstimateResult({this.estimate, this.error});
+}
+
 class LocationDistanceService {
   /// Request permission + return the device's current position, or null
   /// if denied / unavailable. Never throws — failure is the empty case.
@@ -53,8 +59,9 @@ class LocationDistanceService {
   }
 
   /// Calls /api/distance to compute approx driving miles between coords and
-  /// the shared destination string. Returns null on any failure.
-  static Future<TripEstimate?> estimate({
+  /// the shared destination string. Returns a result object that always
+  /// carries either an estimate or a human-readable error.
+  static Future<TripEstimateResult> estimate({
     required double fromLat,
     required double fromLng,
     required String fromLabel,
@@ -72,18 +79,20 @@ class LocationDistanceService {
             }),
           )
           .timeout(const Duration(seconds: 12));
-      if (res.statusCode != 200) return null;
       final body = jsonDecode(res.body) as Map<String, dynamic>;
+      if (res.statusCode != 200) {
+        return TripEstimateResult(error: (body['error'] as String?) ?? 'API ${res.statusCode}');
+      }
       final miles = (body['miles'] as num?)?.toDouble();
       final straight = (body['straight_line_miles'] as num?)?.toDouble() ?? 0;
-      if (miles == null) return null;
-      return TripEstimate(
+      if (miles == null) return TripEstimateResult(error: 'No miles in response');
+      return TripEstimateResult(estimate: TripEstimate(
         fromAddress: fromLabel,
         miles: miles,
         straightLineMiles: straight,
-      );
-    } catch (_) {
-      return null;
+      ));
+    } catch (e) {
+      return TripEstimateResult(error: 'Network: $e');
     }
   }
 }

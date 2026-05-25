@@ -60,14 +60,16 @@ export async function GET(request) {
   try {
     await client.connect()
     const list = await client.list()
-    const subscribed = await client.listSubscribed().catch(() => [])
-    const subscribedPaths = new Set(subscribed.map(f => f.path))
 
     const folders = (list || []).map(f => ({
       path: f.path,
       name: f.name,
+      // imapflow returns flags as a Set in some versions, array in others —
+      // normalise to plain array for JSON.
       flags: Array.isArray(f.flags) ? f.flags : [...(f.flags || [])],
-      subscribed: subscribedPaths.has(f.path),
+      // `subscribed` and `specialUse` may or may not be present depending on
+      // the imapflow version; null is fine for the diagnostic view.
+      subscribed: f.subscribed ?? null,
       specialUse: f.specialUse || null,
       delimiter: f.delimiter || null,
     }))

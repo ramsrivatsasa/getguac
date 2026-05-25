@@ -29,10 +29,16 @@ end $$;
 
 -- New uniqueness: same UID in different folders is legitimately a different
 -- message. The combination of user + folder + uid is what dedupes the poller.
+-- Catch both `duplicate_object` (constraint name reused) and
+-- `duplicate_table` (the underlying unique index name already exists) — the
+-- latter is what Postgres actually throws when this migration is re-run on a
+-- DB where the constraint already landed.
 do $$ begin
   alter table public.email_messages
     add constraint email_messages_user_folder_uid_key unique (user_id, imap_folder, uid);
-exception when duplicate_object then null;
+exception
+  when duplicate_object then null;
+  when duplicate_table  then null;
 end $$;
 
 -- Index for the per-folder "highest UID seen" lookup the poller does on every

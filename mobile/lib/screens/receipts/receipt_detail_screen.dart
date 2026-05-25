@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../providers/receipt_provider.dart';
 import '../../models/receipt_model.dart';
+import '../../widgets/worth_it_rating.dart';
 
 class ReceiptDetailScreen extends StatefulWidget {
   final String id;
@@ -157,7 +158,39 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
-                  child: Column(children: [
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    // Worth-It rating for the whole receipt
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFf0fdf4),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFa7f3d0)),
+                      ),
+                      child: Row(children: [
+                        const Icon(Icons.thumbs_up_down_outlined, size: 18, color: Color(0xFF15803d)),
+                        const SizedBox(width: 8),
+                        const Text('Worth it?',
+                          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: Color(0xFF064e3b))),
+                        const Spacer(),
+                        WorthItRating(
+                          value: r.rating,
+                          showLabel: true,
+                          size: 24,
+                          onChanged: (v) async {
+                            await context.read<ReceiptProvider>().updateReceipt(r.id, {'rating': v});
+                            if (mounted) setState(() => _receipt = Receipt(
+                              id: r.id, storeName: r.storeName, date: r.date,
+                              totalAmount: r.totalAmount, taxPaid: r.taxPaid,
+                              rewardNo: r.rewardNo, receiptLink: r.receiptLink,
+                              businessPurchase: r.businessPurchase, processed: r.processed,
+                              category: r.category, rating: v,
+                            ));
+                          },
+                        ),
+                      ]),
+                    ),
                     _row('Store', r.storeName),
                     _row('Date', r.date),
                     _row('Total Amount', '\$${r.totalAmount.toStringAsFixed(2)}'),
@@ -199,12 +232,37 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
                 const Text('No items. Tap Add Item to add.', style: TextStyle(color: Colors.grey))
               else
                 ..._items.map((item) => Card(
-                  child: ListTile(
-                    title: Text(item.itemName, style: const TextStyle(fontWeight: FontWeight.w500)),
-                    subtitle: Text('SKU: ${item.sku.isEmpty ? '—' : item.sku} • Qty: ${item.qty} • \$${item.price.toStringAsFixed(2)}'),
-                    trailing: item.returned
-                      ? const Text('Returned', style: TextStyle(color: Colors.red, fontSize: 11))
-                      : null,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 10, 10, 10),
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          Text(item.itemName, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+                          const SizedBox(height: 2),
+                          Text('SKU: ${item.sku.isEmpty ? '—' : item.sku} • Qty: ${item.qty} • \$${item.price.toStringAsFixed(2)}',
+                            style: const TextStyle(fontSize: 11, color: Colors.black54)),
+                        ])),
+                        if (item.returned)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFfee2e2),
+                              borderRadius: BorderRadius.circular(99),
+                            ),
+                            child: const Text('Returned', style: TextStyle(color: Color(0xFF991b1b), fontSize: 9, fontWeight: FontWeight.w800)),
+                          ),
+                      ]),
+                      const SizedBox(height: 4),
+                      WorthItRating(
+                        value: item.rating,
+                        size: 18,
+                        onChanged: (v) async {
+                          await context.read<ReceiptProvider>().updateItem(item.id, {'rating': v});
+                          final items = await context.read<ReceiptProvider>().getItems(widget.id);
+                          if (mounted) setState(() => _items = items);
+                        },
+                      ),
+                    ]),
                   ),
                 )),
               const SizedBox(height: 60),

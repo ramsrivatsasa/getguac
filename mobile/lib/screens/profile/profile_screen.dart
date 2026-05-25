@@ -82,74 +82,81 @@ class ProfileScreen extends StatelessWidget {
 
           const SizedBox(height: 20),
           _SectionHeader(label: 'Your Guac-AI'),
-          _MenuTile(
-            icon: Icons.mark_email_unread_rounded,
-            iconColor: const Color(0xFFca8a04),
-            iconBg: const Color(0xFFfef3c7),
-            title: 'Inbox',
-            subtitle: 'Read & reply to your @getguac.app mail',
-            onTap: () => context.go('/inbox'),
-          ),
-          _MenuTile(
-            icon: Icons.auto_awesome,
-            iconColor: const Color(0xFF15803d),
-            iconBg: const Color(0xFFd1fae5),
-            title: 'GuacScore',
-            subtitle: 'Your 0-100 spending grade',
-            onTap: () => context.go('/guacscore'),
-          ),
-          _MenuTile(
-            icon: Icons.auto_fix_high,
-            iconColor: const Color(0xFF7c3aed),
-            iconBg: const Color(0xFFede9fe),
-            title: 'GuacWizard',
-            subtitle: 'Bank Bite tracker + finance insights',
-            onTap: () => context.go('/guacwizard'),
-          ),
-          _MenuTile(
-            icon: Icons.inventory_2,
-            iconColor: const Color(0xFFca8a04),
-            iconBg: const Color(0xFFfef3c7),
-            title: 'Stash',
-            subtitle: 'Everything you own, searchable',
-            onTap: () => context.go('/stash'),
-          ),
-          _MenuTile(
-            icon: Icons.local_offer,
-            iconColor: const Color(0xFFdb2777),
-            iconBg: const Color(0xFFfce7f3),
-            title: 'Steals',
-            subtitle: 'AI price hunt + expiring rewards',
-            onTap: () => context.go('/steals'),
-          ),
-          _MenuTile(
-            icon: Icons.card_giftcard_rounded,
-            iconColor: const Color(0xFFdb2777),
-            iconBg: const Color(0xFFfce7f3),
-            title: 'Rewards',
-            subtitle: 'Loyalty + expiring offers',
-            onTap: () => context.go('/rewards'),
-          ),
+          const SizedBox(height: 6),
 
-          const SizedBox(height: 16),
+          // Colorful pill grid — matches the dashboard
+          Row(children: [
+            Expanded(child: _Pill(
+              gradient: const [Color(0xFFfbbf24), Color(0xFFf59e0b), Color(0xFFe11d48)],
+              emoji: '🥑', title: 'Worth It?', subtitle: 'Rate every purchase',
+              onTap: () => context.go('/receipts'),
+            )),
+            const SizedBox(width: 10),
+            Expanded(child: _Pill(
+              gradient: const [Color(0xFF22c55e), Color(0xFF15803d)],
+              icon: Icons.auto_awesome, title: 'GuacScore', subtitle: 'Spending grade',
+              onTap: () => context.go('/guacscore'),
+            )),
+          ]),
+          const SizedBox(height: 10),
+          Row(children: [
+            Expanded(child: _Pill(
+              gradient: const [Color(0xFFfcd34d), Color(0xFFca8a04)],
+              icon: Icons.mark_email_unread_rounded, title: 'Inbox', subtitle: 'Mail + auto-receipts',
+              onTap: () => context.go('/inbox'),
+            )),
+            const SizedBox(width: 10),
+            Expanded(child: _Pill(
+              gradient: const [Color(0xFFa78bfa), Color(0xFF7c3aed)],
+              icon: Icons.auto_fix_high, title: 'GuacWizard', subtitle: 'Bank Bite + insights',
+              onTap: () => context.go('/guacwizard'),
+            )),
+          ]),
+          const SizedBox(height: 10),
+          Row(children: [
+            Expanded(child: _Pill(
+              gradient: const [Color(0xFFf472b6), Color(0xFFdb2777)],
+              icon: Icons.card_giftcard_rounded, title: 'Rewards', subtitle: 'Loyalty + expiring',
+              onTap: () => context.go('/rewards'),
+            )),
+            const SizedBox(width: 10),
+            Expanded(child: _Pill(
+              gradient: const [Color(0xFFfde047), Color(0xFFca8a04)],
+              icon: Icons.inventory_2, title: 'Stash', subtitle: 'Everything you own',
+              onTap: () => context.go('/stash'),
+            )),
+          ]),
+          const SizedBox(height: 10),
+          Row(children: [
+            Expanded(child: _Pill(
+              gradient: const [Color(0xFFf9a8d4), Color(0xFFdb2777)],
+              icon: Icons.local_offer, title: 'Steals', subtitle: 'AI price hunt',
+              onTap: () => context.go('/steals'),
+            )),
+            const SizedBox(width: 10),
+            Expanded(child: _Pill(
+              gradient: const [Color(0xFF67e8f9), Color(0xFF0891b2)],
+              icon: Icons.directions_car_filled_rounded, title: 'Car Miles', subtitle: 'Trip log',
+              onTap: () => context.go('/car-miles'),
+            )),
+          ]),
+
+          const SizedBox(height: 18),
           _SectionHeader(label: 'More'),
-          _MenuTile(
-            icon: Icons.shield_outlined,
-            iconColor: const Color(0xFF15803d),
-            iconBg: const Color(0xFFd1fae5),
-            title: 'Security & Privacy',
-            subtitle: 'What we encrypt + what you control',
-            onTap: () => UpdateService.openDownload('https://getguac.app/security'),
-          ),
-          _MenuTile(
-            icon: Icons.privacy_tip,
-            iconColor: Colors.blueGrey,
-            iconBg: const Color(0xFFf1f5f9),
-            title: 'Privacy & data',
-            subtitle: 'Manage on getguac.app/profile',
-            trailing: const Icon(Icons.open_in_new, size: 16, color: Colors.black45),
-            onTap: () => UpdateService.openDownload('https://getguac.app/profile'),
-          ),
+          const SizedBox(height: 6),
+          Row(children: [
+            Expanded(child: _Pill(
+              gradient: const [Color(0xFFa7f3d0), Color(0xFF15803d)],
+              icon: Icons.shield_outlined, title: 'Security', subtitle: 'Encryption + privacy',
+              onTap: () => UpdateService.openDownload('https://getguac.app/security'),
+            )),
+            const SizedBox(width: 10),
+            Expanded(child: _Pill(
+              gradient: const [Color(0xFFcbd5e1), Color(0xFF64748b)],
+              icon: Icons.privacy_tip, title: 'Privacy', subtitle: 'Manage on web',
+              onTap: () => UpdateService.openDownload('https://getguac.app/profile'),
+            )),
+          ]),
 
           const SizedBox(height: 24),
           FilledButton.tonalIcon(
@@ -202,6 +209,46 @@ class _SectionHeader extends StatelessWidget {
       child: Text(label,
         style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800,
           color: Color(0xFF15803d), letterSpacing: 1.2)),
+    );
+  }
+}
+
+class _Pill extends StatelessWidget {
+  final List<Color> gradient;
+  final IconData? icon;
+  final String? emoji;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+  const _Pill({
+    required this.gradient, this.icon, this.emoji,
+    required this.title, required this.subtitle, required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(40),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: gradient),
+          borderRadius: BorderRadius.circular(40),
+          boxShadow: [BoxShadow(color: gradient.last.withValues(alpha: 0.35), blurRadius: 8, offset: const Offset(0, 3))],
+        ),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          if (emoji != null) Text(emoji!, style: const TextStyle(fontSize: 22)),
+          if (icon != null) Icon(icon, size: 22, color: Colors.white),
+          const SizedBox(width: 8),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+            Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 14, height: 1.0)),
+            const SizedBox(height: 2),
+            Text(subtitle, style: TextStyle(color: Colors.white.withValues(alpha: 0.92), fontSize: 10, height: 1.0), overflow: TextOverflow.ellipsis),
+          ])),
+          const Icon(Icons.arrow_forward, size: 16, color: Colors.white),
+        ]),
+      ),
     );
   }
 }

@@ -169,7 +169,14 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
                         leading: _selectionMode
                           ? Checkbox(value: isSelected, onChanged: (_) => _toggle(r.id))
                           : null,
-                        title: Text(r.storeName, style: const TextStyle(fontWeight: FontWeight.w500)),
+                        title: Row(children: [
+                          Expanded(child: Text(r.storeName, style: const TextStyle(fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)),
+                          if (r.rating != null) ...[
+                            Icon(Icons.star, size: 13, color: _ratingColor(r.rating!)),
+                            const SizedBox(width: 1),
+                            Text('${r.rating}', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: _ratingColor(r.rating!))),
+                          ],
+                        ]),
                         subtitle: Text('${r.date} • Tax: \$${r.taxPaid.toStringAsFixed(2)}'),
                         trailing: _selectionMode
                           ? Text('\$${r.totalAmount.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold))
@@ -200,6 +207,18 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
         ),
       ]),
     );
+  }
+
+  // Star colour scale 1→5 matches WorthItRating
+  Color _ratingColor(int r) {
+    switch (r) {
+      case 1: return const Color(0xFFdc2626);
+      case 2: return const Color(0xFFea580c);
+      case 3: return const Color(0xFFca8a04);
+      case 4: return const Color(0xFF65a30d);
+      case 5: return const Color(0xFF15803d);
+      default: return const Color(0xFF9ca3af);
+    }
   }
 }
 

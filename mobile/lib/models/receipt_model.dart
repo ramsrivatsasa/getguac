@@ -70,6 +70,7 @@ class ReceiptItem {
   final bool returned;
   final String? category;
   final String? model;
+  final int? rating;
 
   ReceiptItem({
     required this.id,
@@ -84,6 +85,7 @@ class ReceiptItem {
     this.returned = false,
     this.category,
     this.model,
+    this.rating,
   });
 
   factory ReceiptItem.fromMap(String id, Map<String, dynamic> map) => ReceiptItem(
@@ -99,6 +101,7 @@ class ReceiptItem {
         returned: map['returned'] ?? false,
         category: map['category'],
         model: map['model'],
+        rating: map['rating'] is int ? map['rating'] : null,
       );
 
   Map<String, dynamic> toMap() => {

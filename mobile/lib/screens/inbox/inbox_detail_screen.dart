@@ -2,7 +2,6 @@
 // Mirrors the right-hand pane on the web /inbox UI.
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter_html/flutter_html.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -212,33 +211,41 @@ class _InboxDetailScreenState extends State<InboxDetailScreen> {
                 ),
               ],
               const SizedBox(height: 16),
-              if (hasHtml)
-                Html(
-                  data: bodyHtml,
-                  style: {
-                    'body': Style(
-                      fontSize: FontSize(13.5),
-                      lineHeight: const LineHeight(1.45),
-                      margin: Margins.zero,
-                      padding: HtmlPaddings.zero,
-                    ),
-                    'img': Style(width: Width(100, Unit.percent), height: Height.auto()),
-                    'table': Style(width: Width(100, Unit.percent)),
-                    'a': Style(color: const Color(0xFF15803d)),
-                    'p': Style(margin: Margins.only(bottom: 8)),
-                  },
-                  onLinkTap: (url, _, __) {
-                    if (url == null) return;
-                    launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication).catchError((_) => false);
-                  },
-                )
-              else if (bodyText.isNotEmpty)
+              // For now we render plain text. Rich HTML email rendering needs
+              // a WebView wrapper which had startup issues — coming back as
+              // a follow-up. The plain text version still has all the
+              // info, just none of the styling/logos.
+              if (bodyText.isNotEmpty)
                 SelectableText(
                   bodyText,
                   style: const TextStyle(fontSize: 13.5, height: 1.5),
                 )
+              else if (hasHtml)
+                SelectableText(
+                  _htmlToText(bodyHtml),
+                  style: const TextStyle(fontSize: 13.5, height: 1.5),
+                )
               else
                 const Text('(Empty body)', style: TextStyle(color: Colors.black38)),
+              if (hasHtml) ...[
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: () {
+                    // Open the rich HTML version on the web app's /inbox/:id
+                    // (which renders inside a sandboxed iframe).
+                    launchUrl(
+                      Uri.parse('https://getguac.app/inbox?msg=${widget.id}'),
+                      mode: LaunchMode.externalApplication,
+                    ).catchError((_) => false);
+                  },
+                  icon: const Icon(Icons.open_in_browser, size: 16),
+                  label: const Text('Open rich version (logos, tables) in browser'),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: _kBrand),
+                    foregroundColor: _kBrand,
+                  ),
+                ),
+              ],
               const SizedBox(height: 24),
               Row(children: [
                 Expanded(child: OutlinedButton.icon(
@@ -275,4 +282,30 @@ class _InboxDetailScreenState extends State<InboxDetailScreen> {
     final local = d.toLocal();
     return '${local.toIso8601String().substring(0, 16).replaceFirst('T', ' ')}';
   }
+}
+
+/// Strip HTML tags into newline-friendly plain text. Not a full HTML renderer,
+/// but readable enough for receipts when the email only has an HTML body.
+String _htmlToText(String html) {
+  var s = html;
+  // Drop script/style blocks entirely
+  s = s.replaceAll(RegExp(r'<(script|style|head)[^>]*>.*?</\1>', dotAll: true, caseSensitive: false), '');
+  // Block tags -> newline
+  s = s.replaceAll(RegExp(r'</?(p|div|br|tr|li|h[1-6]|table)[^>]*>', caseSensitive: false), '\n');
+  // Drop remaining tags
+  s = s.replaceAll(RegExp(r'<[^>]+>'), '');
+  // Decode the most common entities
+  s = s
+    .replaceAll('&nbsp;', ' ')
+    .replaceAll('&amp;', '&')
+    .replaceAll('&lt;', '<')
+    .replaceAll('&gt;', '>')
+    .replaceAll('&quot;', '"')
+    .replaceAll('&#39;', "'")
+    .replaceAll(RegExp(r'&[a-z]+;', caseSensitive: false), '');
+  // Collapse whitespace
+  s = s.replaceAll(RegExp(r'[ \t]+'), ' ');
+  s = s.replaceAll(RegExp(r'\n[ \t]+'), '\n');
+  s = s.replaceAll(RegExp(r'\n{3,}'), '\n\n');
+  return s.trim();
 }

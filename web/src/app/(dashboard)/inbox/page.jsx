@@ -243,10 +243,10 @@ export default function InboxPage() {
                   {/* Folders accordion — collapsible to save vertical space */}
                   <button
                     onClick={toggleFolders}
-                    className="w-full flex items-center justify-between px-3 pt-1 pb-1 text-[10px] uppercase tracking-wider font-bold text-gray-400 hover:text-emerald-700 transition-colors"
+                    className="w-full flex items-center justify-between px-3 py-2 mb-1 rounded-lg text-xs font-bold text-emerald-900 bg-emerald-50/80 hover:bg-emerald-100 ring-1 ring-emerald-100 transition-colors"
                   >
-                    <span>Folders</span>
-                    <ChevronDown size={12} className={`transition-transform ${foldersOpen ? '' : '-rotate-90'}`} />
+                    <span className="flex items-center gap-1.5"><InboxIcon size={13} /> Folders</span>
+                    <ChevronDown size={14} className={`transition-transform ${foldersOpen ? '' : '-rotate-90'}`} />
                   </button>
                   {foldersOpen && (
                     <div className="space-y-0.5">
@@ -274,13 +274,13 @@ export default function InboxPage() {
                   {/* Filters accordion */}
                   <button
                     onClick={toggleFilters}
-                    className="w-full flex items-center justify-between px-3 pt-1 pb-1 text-[10px] uppercase tracking-wider font-bold text-gray-400 hover:text-amber-700 transition-colors"
+                    className="w-full flex items-center justify-between px-3 py-2 mb-1 rounded-lg text-xs font-bold text-amber-900 bg-amber-50/80 hover:bg-amber-100 ring-1 ring-amber-100 transition-colors"
                   >
                     <span className="flex items-center gap-1.5">
-                      Filters
+                      <Filter size={13} /> Filters
                       {filter && <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />}
                     </span>
-                    <ChevronDown size={12} className={`transition-transform ${filtersOpen ? '' : '-rotate-90'}`} />
+                    <ChevronDown size={14} className={`transition-transform ${filtersOpen ? '' : '-rotate-90'}`} />
                   </button>
                   {filtersOpen && (
                     <div className="space-y-0.5">

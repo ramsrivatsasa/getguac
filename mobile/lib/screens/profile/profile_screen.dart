@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/biometric_service.dart';
 import '../../services/update_service.dart';
@@ -393,6 +394,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _showDebugLog() async {
+    // Snapshot the live state into the log so there's always something useful
+    // to inspect even on a fresh install where no flow has fired yet.
+    final email = context.read<AppAuthProvider>().currentUser?.email;
+    final storedBio = await BiometricService.storedEmail();
+    DebugLog.event('diagnose', 'snapshot', meta: {
+      'signed_in_email_domain': email == null ? null : email.replaceAll(RegExp(r'^[^@]+'), '*'),
+      'stored_bio_email_domain': storedBio == null ? null : storedBio.replaceAll(RegExp(r'^[^@]+'), '*'),
+      'has_session': Supabase.instance.client.auth.currentSession != null,
+    });
     // Upload first so the displayed count reflects reality. Fire-and-forget
     // is fine; we always show the local buffer text either way.
     final upload = await DebugLog.uploadPending();

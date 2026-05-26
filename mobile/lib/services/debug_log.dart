@@ -107,20 +107,38 @@ class DebugLog {
       return UploadResult(uploaded: 0, skipped: 0);
     }
     try {
-      final rows = pending.map((e) => {
-        'session_id': e['session_id'],
-        'platform': e['platform'],
-        'app_version': e['app_version'],
-        'level': e['level'],
-        'tag': e['tag'],
-        'message': e['message'],
-        'meta': e['meta'],
-        'client_ts': e['ts'],
-      }).toList();
-      await Supabase.instance.client.from('client_logs').insert(rows);
-      for (final e in pending) { e['_uploaded'] = true; }
+      // Use the existing audit_log RPC (security definer) instead of a
+      // dedicated client_logs table — no migration needed. One RPC call per
+      // event; the rows show up in audit_log with action='debug_log'.
+      final sb = Supabase.instance.client;
+      int written = 0;
+      for (final e in pending) {
+        try {
+          await sb.rpc('log_audit', params: {
+            'p_action': 'debug_log',
+            'p_status': e['level'] ?? 'info',
+            'p_detail': {
+              'tag': e['tag'],
+              'message': e['message'],
+              'meta': e['meta'],
+              'session_id': e['session_id'],
+              'app_version': e['app_version'],
+              'platform': e['platform'],
+              'client_ts': e['ts'],
+            },
+          });
+          e['_uploaded'] = true;
+          written++;
+        } catch (_) {
+          // Best-effort per event — if one fails (network blip), keep going.
+        }
+      }
       await _persist();
-      return UploadResult(uploaded: pending.length, skipped: 0);
+      if (written == 0) {
+        return UploadResult(uploaded: 0, skipped: pending.length,
+          error: 'all ${pending.length} writes failed');
+      }
+      return UploadResult(uploaded: written, skipped: pending.length - written);
     } catch (e) {
       return UploadResult(uploaded: 0, skipped: pending.length, error: e.toString());
     }

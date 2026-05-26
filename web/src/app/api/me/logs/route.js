@@ -1,9 +1,10 @@
 // GET /api/me/logs?limit=200
 //
-// Returns the signed-in user's most recent client_logs rows, newest first.
-// Used to triage mobile bugs (biometric not firing, credential storage,
-// app-lock flow) by reading the diagnostic events the mobile app uploaded
-// after a failure. Authenticated only — RLS enforces per-user isolation.
+// Returns the signed-in user's most recent debug_log entries from
+// audit_log, newest first. The mobile app uploads via the existing
+// log_audit RPC with action='debug_log' (avoids a dedicated table +
+// migration). Each row's `detail` jsonb holds tag/message/meta/session_id/
+// app_version/platform/client_ts.
 
 import { createApiClient } from '../../../../lib/supabase/server'
 
@@ -18,24 +19,38 @@ export async function GET(request) {
   const limit = Math.min(Math.max(parseInt(url.searchParams.get('limit') || '200', 10), 1), 1000)
 
   const { data, error } = await sb
-    .from('client_logs')
-    .select('id, created_at, client_ts, session_id, platform, app_version, level, tag, message, meta')
+    .from('audit_log')
+    .select('id, created_at, status, detail')
     .eq('user_id', user.id)
+    .eq('action', 'debug_log')
     .order('created_at', { ascending: false })
     .limit(limit)
   if (error) return Response.json({ error: error.message }, { status: 500 })
 
-  // Group by session for readability when you're staring at the response in
-  // the browser. Newest session first.
+  // Flatten audit_log shape back into the mobile event shape and group by
+  // session so the response is easy to skim.
+  const events = (data || []).map(r => ({
+    id: r.id,
+    server_ts: r.created_at,
+    client_ts: r.detail?.client_ts ?? null,
+    session_id: r.detail?.session_id ?? null,
+    platform: r.detail?.platform ?? null,
+    app_version: r.detail?.app_version ?? null,
+    level: r.status ?? 'info',
+    tag: r.detail?.tag ?? null,
+    message: r.detail?.message ?? null,
+    meta: r.detail?.meta ?? null,
+  }))
+
   const bySession = {}
-  for (const row of data || []) {
-    const s = row.session_id || '(none)'
+  for (const ev of events) {
+    const s = ev.session_id || '(none)'
     if (!bySession[s]) bySession[s] = []
-    bySession[s].push(row)
+    bySession[s].push(ev)
   }
   return Response.json({
     ok: true,
-    count: data?.length || 0,
+    count: events.length,
     user_id: user.id,
     sessions: bySession,
   })

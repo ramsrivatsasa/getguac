@@ -8,12 +8,14 @@
 // "Session" here = process lifetime. Killing the app and reopening = locked
 // again. We don't yet auto-relock on background-resume; that's a future tweak.
 
+import 'package:shared_preferences/shared_preferences.dart';
 import 'biometric_service.dart';
 import 'debug_log.dart';
 
 class AppLockService {
   static bool _enabled = false;
   static bool _unlocked = false;
+  static bool _keepSignedIn = true; // default: bypass the lock screen
 
   /// Read whether biometric is set up. Called once from main() before
   /// runApp() so the router has the state ready when it builds.
@@ -22,10 +24,13 @@ class AppLockService {
       final enabled = await BiometricService.isEnabled();
       final capable = await BiometricService.isDeviceCapable();
       _enabled = enabled && capable;
+      final prefs = await SharedPreferences.getInstance();
+      _keepSignedIn = prefs.getBool('gg_keep_signed_in') ?? true;
       DebugLog.event('app-lock', 'init', meta: {
         'enabled_in_storage': enabled,
         'device_capable': capable,
         '_enabled': _enabled,
+        'keep_signed_in': _keepSignedIn,
       });
     } catch (e) {
       _enabled = false;
@@ -36,7 +41,11 @@ class AppLockService {
   }
 
   /// True when the router should bounce the user to the lock screen.
-  static bool get shouldLock => _enabled && !_unlocked;
+  /// When the user has "Keep me signed in" enabled, we skip the lock — the
+  /// Supabase session is already persisted, so there's nothing extra to gate.
+  static bool get shouldLock => _enabled && !_unlocked && !_keepSignedIn;
+
+  static bool get keepSignedIn => _keepSignedIn;
 
   /// True when biometric is configured (whether or not currently unlocked).
   static bool get isEnabled => _enabled;
@@ -62,10 +71,13 @@ class AppLockService {
       final enabled = await BiometricService.isEnabled();
       final capable = await BiometricService.isDeviceCapable();
       _enabled = enabled && capable;
+      final prefs = await SharedPreferences.getInstance();
+      _keepSignedIn = prefs.getBool('gg_keep_signed_in') ?? true;
       DebugLog.event('app-lock', 'refreshEnabled', meta: {
         'enabled_in_storage': enabled,
         'device_capable': capable,
         '_enabled': _enabled,
+        'keep_signed_in': _keepSignedIn,
       });
     } catch (e) {
       _enabled = false;

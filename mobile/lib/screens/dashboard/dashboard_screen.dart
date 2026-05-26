@@ -274,6 +274,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ]),
       actions: [
         IconButton(icon: const Icon(Icons.notifications_outlined), onPressed: () {}),
+        IconButton(
+          icon: const Icon(Icons.logout),
+          tooltip: 'Sign out',
+          onPressed: () => _confirmSignOut(),
+        ),
       ],
     );
   }
@@ -287,6 +292,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
       icon: const GuacMascot(size: 24),
       label: const Icon(Icons.camera_alt, size: 20),
     );
+  }
+
+  Future<void> _confirmSignOut() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Sign out?'),
+        content: const Text(
+          "You'll need to sign in again next time. Biometric stays saved — fingerprint unlock will still work.",
+          style: TextStyle(fontSize: 13),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: const Color(0xFFb91c1c)),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Sign out'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    await context.read<AppAuthProvider>().logout();
+    if (mounted) context.go('/login');
   }
 
   Widget _ctaPill({LinearGradient? gradient, IconData? icon, String? emoji, required String title, required String subtitle, required VoidCallback onTap}) {

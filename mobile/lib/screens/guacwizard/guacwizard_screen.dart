@@ -2,6 +2,7 @@
 // for the current period and surfaces interest, fees, and top regrets.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../providers/receipt_provider.dart';
@@ -107,7 +108,17 @@ class _GuacWizardScreenState extends State<GuacWizardScreen> {
                 border: Border.all(color: _kBrand.withValues(alpha: 0.25)),
               ),
               child: Row(children: [
-                const Text('🧙‍♂️', style: TextStyle(fontSize: 48)),
+                // Hosted wizard avocado mascot — fetched from getguac.app so
+                // the asset can be updated without shipping a new APK.
+                // Falls back to the wizard emoji if the network image fails.
+                SvgPicture.network(
+                  'https://getguac.app/guacwizard.svg',
+                  width: 60, height: 60,
+                  placeholderBuilder: (_) => const SizedBox(
+                    width: 60, height: 60,
+                    child: Center(child: Text('🧙‍♂️', style: TextStyle(fontSize: 40))),
+                  ),
+                ),
                 const SizedBox(width: 14),
                 Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   const Text('Bank Bite', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.black54)),

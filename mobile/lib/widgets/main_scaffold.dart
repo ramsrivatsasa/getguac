@@ -24,7 +24,7 @@ const _items = <_NavItem>[
   _NavItem('/receipts',  Icons.receipt_long_rounded,      'Receipts', Color(0xFF1d4ed8), [Color(0xFF60a5fa), Color(0xFF1d4ed8)]),
   _NavItem('/shopping',  Icons.shopping_cart_rounded,     'Smashlist',Color(0xFFca8a04), [Color(0xFFfcd34d), Color(0xFFca8a04)]),
   _NavItem('/car-miles', Icons.directions_car_filled_rounded,'Miles', Color(0xFF0891b2), [Color(0xFF67e8f9), Color(0xFF0891b2)]),
-  _NavItem('/profile',   Icons.person_rounded,            'Profile',  Color(0xFF7c3aed), [Color(0xFFa78bfa), Color(0xFF7c3aed)]),
+  _NavItem('/profile',   Icons.menu_rounded,              'Menu',     Color(0xFF7c3aed), [Color(0xFFa78bfa), Color(0xFF7c3aed)]),
 ];
 
 class _QuickAction {

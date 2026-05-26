@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/biometric_service.dart';
@@ -24,6 +25,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passCtrl = TextEditingController();
   bool _loading = false;
   bool _rememberWithBio = true;
+  bool _keepSignedIn = true;
   bool _bioAvailable = false;
   bool _bioEnabled = false;
   String _versionLabel = '';
@@ -34,6 +36,16 @@ class _LoginScreenState extends State<LoginScreen> {
     _loadVersion();
     _checkBiometric();
     _checkForUpdate();
+    _loadKeepSignedIn();
+  }
+
+  Future<void> _loadKeepSignedIn() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (mounted) setState(() {
+        _keepSignedIn = prefs.getBool('gg_keep_signed_in') ?? true;
+      });
+    } catch (_) {}
   }
 
   Future<void> _checkForUpdate() async {
@@ -173,10 +185,19 @@ class _LoginScreenState extends State<LoginScreen> {
       DebugLog.event('login-screen', 'manual login attempt', meta: {
         'identifier_has_at': identifier.contains('@'),
         'remember_with_bio': _rememberWithBio,
+        'keep_signed_in': _keepSignedIn,
         'bio_available': _bioAvailable,
       });
       await context.read<AppAuthProvider>().login(identifier, password);
       DebugLog.event('login-screen', 'manual login supabase OK');
+
+      // Persist the user's "keep me signed in" choice. AppLockService.init()
+      // reads this on next cold-start — if true, the lock screen / biometric
+      // gate is skipped entirely.
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('gg_keep_signed_in', _keepSignedIn);
+      } catch (_) {}
 
       // Stash credentials for next-time biometric login.
       // Two prior bugs we are guarding against:
@@ -309,6 +330,24 @@ class _LoginScreenState extends State<LoginScreen> {
                               validator: (v) => v == null || v.isEmpty ? 'Required' : null,
                             ),
                             const SizedBox(height: 20),
+                            // Keep me signed in — stops the app from asking
+                            // for password on cold-start. Stored as a pref
+                            // and read by AppLockService.shouldLock.
+                            Row(
+                              children: [
+                                Checkbox(
+                                  value: _keepSignedIn,
+                                  activeColor: const Color(0xFF15803d),
+                                  onChanged: (v) => setState(() => _keepSignedIn = v ?? false),
+                                ),
+                                const Expanded(
+                                  child: Text(
+                                    'Keep me signed in — stay logged in across app restarts',
+                                    style: TextStyle(fontSize: 12, color: Color(0xFF4b5563)),
+                                  ),
+                                ),
+                              ],
+                            ),
                             // Remember-me / biometric opt-in toggle
                             if (_bioAvailable) ...[
                               Row(
@@ -320,14 +359,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                   const Expanded(
                                     child: Text(
-                                      'Remember me — unlock with fingerprint next time',
+                                      'Use fingerprint / face on next open',
                                       style: TextStyle(fontSize: 12, color: Color(0xFF4b5563)),
                                     ),
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 8),
                             ],
+                            const SizedBox(height: 8),
                             FilledButton(
                               onPressed: _loading ? null : _login,
                               style: FilledButton.styleFrom(

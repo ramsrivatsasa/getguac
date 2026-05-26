@@ -51,7 +51,16 @@ class BiometricService {
       final enabled = await isEnabled();
       if (!enabled) return 'Biometric capable (${available.join(", ")}) but credentials are NOT stored. Sign in with password first — make sure "Remember me" is checked.';
       final email = await _storage.read(key: _kEmail);
-      return 'OK: enabled with email=${email?.replaceAll(RegExp(r"(.{2}).*@"), r"$1***@") ?? "?"}, biometrics=${available.join(", ")}.';
+      // Show the email in a recognizable but not-fully-exposed form so the
+      // user can confirm WHICH account is stored. Dart's String.replaceAll
+      // does not substitute regex capture groups — use replaceAllMapped.
+      final masked = (email == null || email.isEmpty)
+          ? '?'
+          : email.replaceAllMapped(
+              RegExp(r'^(.{2})(.*)@(.*)$'),
+              (m) => '${m[1]}${'*' * (m[2]!.length)}@${m[3]}',
+            );
+      return 'OK: enabled with email=$masked, biometrics=${available.join(", ")}.';
     } catch (e) {
       return 'Diagnostic failed: $e';
     }
@@ -62,6 +71,13 @@ class BiometricService {
   static Future<bool> isEnabled() async {
     return (await _storage.read(key: _kEnabled)) == '1'
         && (await _storage.read(key: _kEmail)) != null;
+  }
+
+  /// Raw email that's currently stored for biometric login (or null if none).
+  /// Lets the UI compare the stored account against the signed-in account
+  /// so the user can tell when biometric is stale.
+  static Future<String?> storedEmail() async {
+    return _storage.read(key: _kEmail);
   }
 
   /// Save credentials + mark biometric login as enabled. Called after a

@@ -274,18 +274,73 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ]),
             ),
 
-          // Diagnose button — useful when biometric isn't behaving as expected.
-          // Shows in a dialog WHY the system is in its current state.
+          // Diagnose button — shows the state PLUS a side-by-side of the
+          // currently signed-in email vs the email biometric has stored, so
+          // the user can confirm the right account is saved.
           TextButton.icon(
             onPressed: () async {
+              final current = context.read<AppAuthProvider>().currentUser?.email;
               final result = await BiometricService.diagnose();
+              final stored = await BiometricService.storedEmail();
               if (!context.mounted) return;
+              final matches = stored != null && current != null
+                  && stored.toLowerCase() == current.toLowerCase();
               showDialog(
                 context: context,
                 builder: (ctx) => AlertDialog(
                   title: const Text('Biometric diagnostic'),
-                  content: Text(result),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(result, style: const TextStyle(fontSize: 13, height: 1.4)),
+                      const SizedBox(height: 14),
+                      const Divider(height: 1),
+                      const SizedBox(height: 10),
+                      const Text('Account match',
+                        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: Color(0xFF065f46))),
+                      const SizedBox(height: 6),
+                      _kv('Signed in as', current ?? '(no session)'),
+                      _kv('Biometric stored for', stored ?? '(none stored)'),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: matches ? const Color(0xFFdcfce7) : const Color(0xFFfee2e2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          matches
+                            ? '✓ Same account — biometric will sign you in as the right user.'
+                            : (stored == null
+                                ? 'No biometric credentials stored. Sign out + sign back in with "Remember me" checked.'
+                                : '✗ Stored credentials are for a DIFFERENT account. Tap "Clear stored credentials" below, then sign in again to re-save.'),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: matches ? const Color(0xFF065f46) : const Color(0xFF991b1b),
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                   actions: [
+                    if (stored != null)
+                      TextButton(
+                        onPressed: () async {
+                          await BiometricService.disable();
+                          if (!ctx.mounted) return;
+                          Navigator.of(ctx).pop();
+                          if (mounted) {
+                            setState(() => _bioEnabled = false);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Stored biometric credentials cleared.')),
+                            );
+                          }
+                        },
+                        child: const Text('Clear stored credentials',
+                          style: TextStyle(color: Color(0xFF991b1b))),
+                      ),
                     TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('OK')),
                   ],
                 ),
@@ -326,6 +381,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
     // (We don't bounce to getguac.app/ on mobile — staying in the app feels
     //  more natural. The login screen is already the in-app welcome surface.)
   }
+
+  Widget _kv(String label, String value) => Padding(
+    padding: const EdgeInsets.only(bottom: 4),
+    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      SizedBox(
+        width: 110,
+        child: Text(label,
+          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.black54)),
+      ),
+      Expanded(
+        child: Text(value,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF064e3b))),
+      ),
+    ]),
+  );
 }
 
 class _Row extends StatelessWidget {

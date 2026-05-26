@@ -64,7 +64,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
-  Future<void> _captureReceipt() async {
+  /// Snap one receipt and run the full parse + dedup + save flow.
+  /// FAB tap calls this. After saving, asks if the user wants to snap another;
+  /// long-press of the FAB jumps straight into the multi-snap loop without
+  /// the prompt after each one.
+  Future<void> _captureReceipt({bool offerAnother = true}) async {
     final picker = ImagePicker();
     final img = await picker.pickImage(source: ImageSource.camera, imageQuality: 80);
     if (img == null || !mounted) return;
@@ -185,14 +189,146 @@ class _DashboardScreenState extends State<DashboardScreen> {
           label: 'View',
           onPressed: () => context.go('/receipts/$id'),
         ),
-        duration: const Duration(seconds: 5),
+        duration: const Duration(seconds: 4),
       ));
+
+      // After-save "snap another?" prompt. Only on a successful save, and
+      // only when the caller opted in (long-press multi-snap path skips
+      // this — it loops without asking).
+      if (offerAnother && mounted) {
+        final more = await _askSnapAnother();
+        if (more == true && mounted) {
+          // Tail-call recursion keeps the prompt for each subsequent snap.
+          await _captureReceipt(offerAnother: true);
+        }
+      }
     } catch (e) {
       if (mounted) {
         Navigator.of(context, rootNavigator: true).pop(); // dismiss loader
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Capture failed: $e')));
       }
     }
+  }
+
+  /// Long-press of the FAB: snap multiple receipts in a row without the
+  /// "Another?" prompt between them. Loops until the user cancels the
+  /// camera (returns null from pickImage).
+  Future<void> _captureMultiple() async {
+    int count = 0;
+    while (mounted) {
+      // Each iteration is just a single capture with the "Another?" prompt
+      // disabled — when the user backs out of the camera, the loop ends.
+      final picker = ImagePicker();
+      final img = await picker.pickImage(source: ImageSource.camera, imageQuality: 80);
+      if (img == null || !mounted) break;
+      // Reuse the single-capture flow by re-injecting the picked file. Pass
+      // offerAnother:false so the prompt doesn't double up.
+      await _processSingleCapture(File(img.path));
+      count++;
+    }
+    if (count > 0 && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Multi-snap done — saved $count receipt${count == 1 ? "" : "s"}.'),
+      ));
+    }
+  }
+
+  /// The save half of _captureReceipt extracted so _captureMultiple can call
+  /// it without re-opening the camera (which _captureReceipt does).
+  Future<void> _processSingleCapture(File file) async {
+    final uid = context.read<AppAuthProvider>().currentUser?.id;
+    if (uid == null || !mounted) return;
+    final provider = context.read<ReceiptProvider>();
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const AlertDialog(
+        content: Padding(
+          padding: EdgeInsets.symmetric(vertical: 8),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2)),
+            SizedBox(width: 14),
+            Flexible(child: Text('Guac-AI is reading your receipt…')),
+          ]),
+        ),
+      ),
+    );
+    try {
+      final parsed = await ReceiptParseService.parseImage(file);
+      if (!mounted) return;
+      Navigator.of(context, rootNavigator: true).pop(); // loader off
+      if (parsed == null) {
+        final placeholder = Receipt(
+          id: '', storeName: 'New Receipt',
+          date: DateTime.now().toIso8601String().substring(0, 10),
+          totalAmount: 0, taxPaid: 0,
+        );
+        await provider.addReceipt(placeholder, imageFile: file);
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text("Couldn't auto-read one. Saved as a placeholder — re-parse later."),
+        ));
+        return;
+      }
+      // Duplicate skip in multi-snap mode is silent (no dialog interruption).
+      // We DO check, but on hit we just skip the save and move on.
+      final today = DateTime.now().toIso8601String().substring(0, 10);
+      final dupDate = (parsed.date != null && parsed.date!.isNotEmpty) ? parsed.date! : today;
+      if (parsed.storeName.isNotEmpty && parsed.totalAmount > 0) {
+        final dup = await provider.findDuplicate(
+          storeName: parsed.storeName,
+          date: dupDate,
+          totalAmount: parsed.totalAmount,
+        );
+        if (dup != null) {
+          if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Skipped duplicate: ${parsed.storeName} · \$${parsed.totalAmount.toStringAsFixed(2)}'),
+            duration: const Duration(seconds: 2),
+          ));
+          return;
+        }
+      }
+      final asMap = <String, dynamic>{
+        'store_name': parsed.storeName,
+        'date': parsed.date,
+        'total_amount': parsed.totalAmount,
+        'tax_paid': parsed.taxPaid,
+        'payment_method': parsed.paymentMethod,
+        'payment_last4': parsed.paymentLast4,
+        'is_return': parsed.isReturn,
+        'category': parsed.category,
+        'items': parsed.items.map((it) => {
+          'sku': it.sku, 'model': it.model, 'item_name': it.itemName,
+          'qty': it.qty, 'price': it.price,
+          'returned': it.returned, 'category': it.category,
+        }).toList(),
+      };
+      await provider.addParsedReceipt(asMap, file);
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Capture failed: $e')));
+      }
+    }
+  }
+
+  Future<bool?> _askSnapAnother() async {
+    return showDialog<bool?>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Snap another?'),
+        content: const Text('Take another receipt photo right now, or finish.',
+          style: TextStyle(fontSize: 13)),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Done')),
+          FilledButton.icon(
+            style: FilledButton.styleFrom(backgroundColor: const Color(0xFF15803d)),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            icon: const Icon(Icons.camera_alt, size: 18),
+            label: const Text('Take another'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -390,13 +526,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildFab() {
-    return FloatingActionButton.extended(
-      onPressed: _captureReceipt,
-      backgroundColor: _kEmerald700,
-      foregroundColor: Colors.white,
-      elevation: 6,
-      icon: const GuacMascot(size: 24),
-      label: const Icon(Icons.camera_alt, size: 20),
+    // GestureDetector wraps the FAB so long-press triggers the multi-snap
+    // loop. Tap = single capture (with the "Snap another?" prompt after);
+    // long-press = camera stays open until the user backs out, duplicates
+    // are silently skipped.
+    return GestureDetector(
+      onLongPress: _captureMultiple,
+      child: FloatingActionButton.extended(
+        onPressed: () => _captureReceipt(),
+        backgroundColor: _kEmerald700,
+        foregroundColor: Colors.white,
+        elevation: 6,
+        icon: const GuacMascot(size: 24),
+        label: const Icon(Icons.camera_alt, size: 20),
+        tooltip: 'Tap: snap a receipt   ·   Long-press: multi-snap',
+      ),
     );
   }
 

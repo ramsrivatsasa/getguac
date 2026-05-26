@@ -105,15 +105,15 @@ export default function Sidebar({ isAdmin }) {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 py-3 overflow-y-auto">
+        <nav className="flex-1 py-1.5 overflow-y-auto">
           {sections.map(section => (
-            <div key={section.title} className={clsx('mb-2', collapsed && 'lg:mb-1')}>
+            <div key={section.title} className={clsx('mb-1', collapsed && 'lg:mb-0.5')}>
               {!collapsed && (
-                <div className="px-5 pb-1.5 pt-2 text-[10px] font-bold uppercase tracking-wider text-emerald-700/70">
+                <div className="px-5 pb-0.5 pt-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700/70">
                   {section.title}
                 </div>
               )}
-              <div className={clsx('space-y-0.5', collapsed ? 'lg:px-2 px-3' : 'px-3')}>
+              <div className={clsx('space-y-px', collapsed ? 'lg:px-2 px-3' : 'px-3')}>
                 {section.items.map(({ href, icon: Icon, label, emoji, hoverMascot }) => {
                   const active = isActive(href)
                   return (
@@ -124,7 +124,7 @@ export default function Sidebar({ isAdmin }) {
                       title={collapsed ? label : undefined}
                       className={clsx(
                         'group flex items-center rounded-2xl text-sm transition-all',
-                        collapsed ? 'lg:justify-center lg:px-2 lg:py-2 px-3 py-2.5 gap-3' : 'gap-3 px-3 py-2.5',
+                        collapsed ? 'lg:justify-center lg:px-2 lg:py-1.5 px-3 py-1.5 gap-2.5' : 'gap-2.5 px-3 py-1.5',
                         active
                           ? 'bg-gradient-to-r from-emerald-100 to-lime-100 text-emerald-900 font-semibold shadow-sm ring-1 ring-emerald-200/60'
                           : 'text-gray-600 hover:bg-emerald-50 hover:text-emerald-900'
@@ -132,7 +132,7 @@ export default function Sidebar({ isAdmin }) {
                     >
                       <span className={clsx(
                         'flex items-center justify-center text-base shrink-0 transition-all',
-                        collapsed ? 'w-9 h-9 lg:w-9 lg:h-9' : 'w-8 h-8',
+                        collapsed ? 'w-8 h-8 lg:w-8 lg:h-8' : 'w-7 h-7',
                         'rounded-xl',
                         active ? 'bg-white shadow-sm ring-1 ring-emerald-200/60' : 'group-hover:bg-white/70'
                       )}>{emoji}</span>
@@ -167,7 +167,7 @@ export default function Sidebar({ isAdmin }) {
                 title={collapsed ? 'Admin' : undefined}
                 className={clsx(
                   'group flex items-center rounded-2xl text-sm transition-all',
-                  collapsed ? 'lg:justify-center lg:px-2 lg:py-2 px-3 py-2.5 gap-3' : 'gap-3 px-3 py-2.5',
+                  collapsed ? 'lg:justify-center lg:px-2 lg:py-1.5 px-3 py-1.5 gap-2.5' : 'gap-2.5 px-3 py-1.5',
                   pathname === '/admin'
                     ? 'bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-900 font-semibold shadow-sm ring-1 ring-amber-200'
                     : 'text-gray-600 hover:bg-amber-50 hover:text-amber-900'
@@ -188,7 +188,7 @@ export default function Sidebar({ isAdmin }) {
             className={clsx(
               'flex items-center w-full rounded-2xl text-sm font-medium transition-all',
               'text-gray-600 hover:bg-rose-50 hover:text-rose-700',
-              collapsed ? 'lg:justify-center lg:px-2 lg:py-2 px-3 py-2.5 gap-3' : 'gap-3 px-3 py-2.5'
+              collapsed ? 'lg:justify-center lg:px-2 lg:py-1.5 px-3 py-1.5 gap-2.5' : 'gap-2.5 px-3 py-1.5'
             )}>
             <span className="w-8 h-8 rounded-xl flex items-center justify-center bg-white/70 text-base shrink-0">👋</span>
             {!collapsed && <span>Sign Out</span>}

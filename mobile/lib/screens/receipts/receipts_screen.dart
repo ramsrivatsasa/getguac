@@ -7,6 +7,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/receipt_provider.dart';
 import '../../models/receipt_model.dart';
 import '../../utils/date_format.dart';
+import '../../services/receipt_parse_service.dart';
 
 class ReceiptsScreen extends StatefulWidget {
   const ReceiptsScreen({super.key});
@@ -44,8 +45,33 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
     final uid = context.read<AppAuthProvider>().currentUser?.id;
     if (uid == null) return;
 
+    final file = File(img.path);
+    // Show a quick "Guac-AI is scanning" loader while we send the photo to
+    // /api/parse-receipt. The web flow does this too; mobile used to skip it
+    // entirely so the user had to type every field by hand.
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const AlertDialog(
+        content: Padding(
+          padding: EdgeInsets.symmetric(vertical: 8),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2)),
+            SizedBox(width: 14),
+            Flexible(child: Text('Guac-AI is reading your receipt…')),
+          ]),
+        ),
+      ),
+    );
+    final parsed = await ReceiptParseService.parseImage(file);
     if (!mounted) return;
-    showDialog(context: context, builder: (ctx) => _AddReceiptDialog(uid: uid, imageFile: File(img.path)));
+    Navigator.of(context, rootNavigator: true).pop();  // dismiss loader
+
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (ctx) => _AddReceiptDialog(uid: uid, imageFile: file, prefill: parsed),
+    );
   }
 
   void _addManual() {
@@ -287,7 +313,8 @@ class _AddReceiptDialog extends StatefulWidget {
   final String uid;
   final File? imageFile;
   final Receipt? existing;
-  const _AddReceiptDialog({required this.uid, this.imageFile, this.existing});
+  final ParsedReceipt? prefill;
+  const _AddReceiptDialog({required this.uid, this.imageFile, this.existing, this.prefill});
   @override
   State<_AddReceiptDialog> createState() => _AddReceiptDialogState();
 }
@@ -305,11 +332,13 @@ class _AddReceiptDialogState extends State<_AddReceiptDialog> {
   void initState() {
     super.initState();
     final e = widget.existing;
-    _store = TextEditingController(text: e?.storeName ?? '');
-    _amount = TextEditingController(text: e?.totalAmount.toString() ?? '');
-    _tax = TextEditingController(text: e?.taxPaid.toString() ?? '');
+    final p = widget.prefill;
+    // Initial values come from: edit-existing > AI-prefill > blank.
+    _store    = TextEditingController(text: e?.storeName ?? p?.storeName ?? '');
+    _amount   = TextEditingController(text: e?.totalAmount.toString() ?? (p?.totalAmount != null && p!.totalAmount > 0 ? p.totalAmount.toStringAsFixed(2) : ''));
+    _tax      = TextEditingController(text: e?.taxPaid.toString()     ?? (p?.taxPaid     != null && p!.taxPaid     > 0 ? p.taxPaid.toStringAsFixed(2)     : ''));
     _rewardNo = TextEditingController(text: e?.rewardNo ?? '');
-    _date = e?.date ?? DateTime.now().toIso8601String().substring(0, 10);
+    _date     = e?.date ?? p?.date ?? DateTime.now().toIso8601String().substring(0, 10);
     _business = e?.businessPurchase ?? false;
   }
 

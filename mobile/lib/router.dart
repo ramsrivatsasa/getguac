@@ -1,8 +1,10 @@
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
+import 'services/app_lock_service.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
+import 'screens/auth/app_lock_screen.dart';
 import 'screens/dashboard/dashboard_screen.dart';
 import 'screens/receipts/receipts_screen.dart';
 import 'screens/receipts/receipt_detail_screen.dart';
@@ -24,14 +26,26 @@ final appRouter = GoRouter(
   redirect: (context, state) {
     final auth = context.read<AppAuthProvider>();
     final isLoggedIn = auth.currentUser != null;
-    final isAuthRoute = state.matchedLocation == '/login' || state.matchedLocation == '/register';
+    final loc = state.matchedLocation;
+    final isAuthRoute = loc == '/login' || loc == '/register';
+    final isLockRoute = loc == '/lock';
     if (!isLoggedIn && !isAuthRoute) return '/login';
     if (isLoggedIn && isAuthRoute) return '/dashboard';
+    // Cold-start biometric gate: when biometric is enabled and we haven't
+    // unlocked this process yet, all authenticated routes funnel through
+    // /lock first. We carry the original target as ?to= so unlock can return.
+    if (isLoggedIn && AppLockService.shouldLock && !isLockRoute) {
+      return '/lock?to=${Uri.encodeQueryComponent(state.uri.toString())}';
+    }
     return null;
   },
   routes: [
     GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
     GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
+    GoRoute(
+      path: '/lock',
+      builder: (_, state) => AppLockScreen(returnTo: state.uri.queryParameters['to']),
+    ),
     ShellRoute(
       builder: (_, __, child) => MainScaffold(child: child),
       routes: [

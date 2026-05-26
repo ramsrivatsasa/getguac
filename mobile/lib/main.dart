@@ -6,6 +6,7 @@ import 'providers/receipt_provider.dart';
 import 'providers/reward_provider.dart';
 import 'router.dart';
 import 'services/share_intent_service.dart';
+import 'services/app_lock_service.dart';
 
 // Brand palette — matches the web app (emerald + lime).
 const kBrandPrimary    = Color(0xFF15803d); // emerald-700 — main brand
@@ -20,6 +21,11 @@ void main() async {
     url: 'https://qchkwojgvfhlbdtpzzig.supabase.co',
     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjaGt3b2pndmZobGJkdHB6emlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1NzE0ODUsImV4cCI6MjA5NTE0NzQ4NX0.0aDoZO4-p8XBfdJx8lpK8jmOy02hFG15gXFc7HpcwKs',
   );
+
+  // Cache the biometric "enabled" flag synchronously so the router's redirect
+  // can read it on the first frame. Without this, the lock-screen gate would
+  // race the initial route resolution.
+  await AppLockService.init();
 
   // Set up share-intent listener AFTER router is constructed so we can
   // navigate to /car-miles on incoming shares.

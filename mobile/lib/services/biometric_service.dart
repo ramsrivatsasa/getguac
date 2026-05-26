@@ -65,11 +65,25 @@ class BiometricService {
   }
 
   /// Save credentials + mark biometric login as enabled. Called after a
-  /// successful password sign-in.
-  static Future<void> enable(String email, String password) async {
-    await _storage.write(key: _kEmail, value: email);
-    await _storage.write(key: _kPass,  value: password);
-    await _storage.write(key: _kEnabled, value: '1');
+  /// successful password sign-in. Returns null on success, or a short
+  /// human-readable error string if the secure-storage write failed
+  /// (typically Android Keystore key invalidation after a reinstall).
+  /// We read each value back to make sure the write actually persisted —
+  /// silent write failures were the recurring symptom of the credentials-
+  /// not-stored bug.
+  static Future<String?> enable(String email, String password) async {
+    try {
+      await _storage.write(key: _kEmail, value: email);
+      await _storage.write(key: _kPass,  value: password);
+      await _storage.write(key: _kEnabled, value: '1');
+      final back = await _storage.read(key: _kEmail);
+      if (back != email) {
+        return 'Secure storage write didn\'t persist (read-back returned "${back ?? "null"}").';
+      }
+      return null;
+    } catch (e) {
+      return 'Secure storage error: $e';
+    }
   }
 
   /// Wipe stored credentials (call on sign-out or "disable biometric").

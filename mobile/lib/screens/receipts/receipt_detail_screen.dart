@@ -7,6 +7,7 @@ import '../../providers/receipt_provider.dart';
 import '../../models/receipt_model.dart';
 import '../../widgets/worth_it_rating.dart';
 import '../../utils/date_format.dart';
+import '../../services/receipt_reparse_service.dart';
 
 class ReceiptDetailScreen extends StatefulWidget {
   final String id;
@@ -78,6 +79,40 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
       builder: (_) => _ImageViewer(url: url),
       fullscreenDialog: true,
     ));
+  }
+
+  // Re-run the AI parse against this receipt's source (email body OR
+  // image at receipt_link). Used to fix camera uploads from pre-v0.2.25
+  // that landed with blank fields, or any receipt where the AI got it
+  // wrong the first time.
+  Future<void> _reparse() async {
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const AlertDialog(
+        content: Row(children: [
+          SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5)),
+          SizedBox(width: 16),
+          Expanded(child: Text('Re-parsing — Guac-AI is reading the receipt…')),
+        ]),
+      ),
+    );
+    final result = await ReceiptReparseService.reparse(widget.id);
+    if (!mounted) return;
+    Navigator.of(context, rootNavigator: true).pop(); // dismiss loader
+    if (result.ok) {
+      // Refresh provider data so the new fields land in the list AND on
+      // this detail screen.
+      await context.read<ReceiptProvider>().loadReceipts(force: true);
+      await _load();
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Re-parsed. ${result.itemsParsed} item${result.itemsParsed == 1 ? "" : "s"} found.')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Re-parse failed: ${result.error}'), duration: const Duration(seconds: 5)),
+      );
+    }
   }
 
   @override
@@ -238,6 +273,28 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
                             style: FilledButton.styleFrom(
                               backgroundColor: const Color(0xFF15803d),
                               padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                    // Re-parse — re-runs the AI on the source (email body or
+                    // image) and refills the receipt. Hidden for statement-
+                    // imported rows since there's no source to re-parse.
+                    if (!r.fromStatement)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 10),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: _reparse,
+                            icon: const Icon(Icons.auto_fix_high, size: 18, color: Color(0xFF15803d)),
+                            label: const Text('Re-parse with Guac-AI',
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF15803d))),
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: Color(0xFF15803d), width: 1.5),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
                           ),

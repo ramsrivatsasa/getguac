@@ -143,18 +143,29 @@ class _LoginScreenState extends State<LoginScreen> {
       final password = _passCtrl.text;
       await context.read<AppAuthProvider>().login(identifier, password);
 
-      // Stash credentials for next-time biometric login (only if the user
-      // opted in AND the device supports biometric). Bug fix: previously we
-      // only enabled biometric when `identifier.contains('@')`, meaning users
-      // who sign in with their USERNAME (the encouraged flow) never got
-      // biometric stored. Now we pull the real email from the authenticated
-      // Supabase session — works regardless of whether the user typed
-      // username or email at login.
-      if (_rememberWithBio && _bioAvailable) {
+      // Stash credentials for next-time biometric login.
+      // Two prior bugs we are guarding against:
+      //   1) Old gate `identifier.contains('@')` skipped username sign-ins.
+      //   2) Old gate `_bioAvailable` raced the async capability check; if the
+      //      user signed in before _checkBiometric returned, _bioAvailable was
+      //      still false and the write was skipped.
+      // New behaviour: as long as the user kept "Remember me" checked
+      // (default), we ALWAYS attempt the write. Capability is re-checked
+      // on the next app open anyway. We also surface any secure-storage
+      // failure so the bug can't hide silently.
+      if (_rememberWithBio) {
         final emailForBio = Supabase.instance.client.auth.currentUser?.email
           ?? (identifier.contains('@') ? identifier : null);
         if (emailForBio != null && emailForBio.isNotEmpty) {
-          await BiometricService.enable(emailForBio, password);
+          final err = await BiometricService.enable(emailForBio, password);
+          if (err != null && mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Saved sign-in for biometric failed: $err'),
+                duration: const Duration(seconds: 6),
+              ),
+            );
+          }
         }
       }
 

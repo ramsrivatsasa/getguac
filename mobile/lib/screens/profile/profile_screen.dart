@@ -88,12 +88,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (creds != null) {
       // Bio test passed but creds were null (none stored yet) — store them now anyway
     }
-    await BiometricService.enable(email, password);
+    final err = await BiometricService.enable(email, password);
     if (mounted) {
-      setState(() => _bioEnabled = true);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Biometric unlock enabled. Sign out + back in to test.')),
-      );
+      if (err == null) {
+        setState(() => _bioEnabled = true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Biometric unlock enabled. Sign out + back in to test.')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not store credentials: $err')),
+        );
+      }
     }
   }
 

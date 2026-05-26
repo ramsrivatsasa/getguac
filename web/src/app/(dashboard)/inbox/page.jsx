@@ -122,15 +122,30 @@ export default function InboxPage() {
           <GuacMascot expression="eating" size={64} />
           <div>
             <h1 className="page-title">Inbox</h1>
-            <p className="text-xs text-gray-500 mt-0.5">
-              <span className="font-semibold text-gray-700">{total}</span> message{total === 1 ? '' : 's'}
-              {messages.filter(m => m.receipt).length > 0 && (
-                <>
-                  {' · '}
-                  <span className="text-emerald-700">🥑 {messages.filter(m => m.receipt).length} filed as receipts</span>
-                </>
-              )}
-            </p>
+            {(() => {
+              const todayStr = new Date().toISOString().slice(0, 10)
+              const filed = messages.filter(m => m.receipt)
+              const filedToday = filed.filter(m => (m.received_at || '').slice(0, 10) === todayStr)
+              return (
+                <p className="text-xs text-gray-500 mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                  <span><span className="font-semibold text-gray-700">{total}</span> message{total === 1 ? '' : 's'}</span>
+                  {filed.length > 0 && (
+                    <>
+                      <span className="text-gray-300">·</span>
+                      <span className="text-emerald-700">🥑 <span className="font-semibold">{filed.length}</span> filed</span>
+                    </>
+                  )}
+                  {filedToday.length > 0 && (
+                    <>
+                      <span className="text-gray-300">·</span>
+                      <span className="font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
+                        {filedToday.length} today
+                      </span>
+                    </>
+                  )}
+                </p>
+              )
+            })()}
           </div>
         </div>
         <div className="flex items-center gap-2">

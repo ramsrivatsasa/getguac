@@ -1125,7 +1125,9 @@ function ReceiptLineItems({ receiptId }) {
                 </Link>
               </td>
               <td className="px-3 py-0.5">{it.qty}</td>
-              <td className="px-3 py-0.5">${parseFloat(it.price || 0).toFixed(2)}</td>
+              <td className="px-3 py-0.5">
+                {it.price == null ? <span className="text-gray-300">—</span> : `$${parseFloat(it.price).toFixed(2)}`}
+              </td>
               <td className="px-3 py-0.5">
                 {(() => {
                   // Render policy inline: ID + days, with expiry + eligible in

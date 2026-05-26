@@ -192,7 +192,7 @@ export async function POST(request) {
           model: it.model || null,
           item_name: it.item_name || '',
           qty: it.qty || 1,
-          price: it.price || 0,
+          price: it.price == null ? null : Number(it.price),
           returned: it.category === 'charity' ? false : Boolean(it.returned),
           category: it.category || null,
         }))

@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { PanelGroup, Panel, PanelResizeHandle } from 'react-resizable-panels'
 import toast from 'react-hot-toast'
 import {
-  Mail, Search, Inbox as InboxIcon, Star, Archive, Trash2, Reply, Send, Loader2, X, Sparkles, Filter, Edit3, RefreshCw, ChevronsLeft, ChevronsRight, DownloadCloud,
+  Mail, Search, Inbox as InboxIcon, Star, Archive, Trash2, Reply, Send, Loader2, X, Sparkles, Filter, Edit3, RefreshCw, ChevronsLeft, ChevronsRight, ChevronDown, DownloadCloud,
 } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
 
@@ -31,6 +31,32 @@ export default function InboxPage() {
   const [composePrefill, setComposePrefill] = useState(null)
   // Collapsed folder rail (icons-only). Persisted in localStorage.
   const [railCollapsed, setRailCollapsed] = useState(false)
+  // Accordion: each section (Folders / Filters) can collapse to save vertical
+  // space in the rail. Defaults: folders open (you need the inbox/sent/trash
+  // shortcut), filters closed (most users keep the default 'All' filter).
+  const [foldersOpen, setFoldersOpen] = useState(true)
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const fo = localStorage.getItem('inbox_folders_open')
+    const fi = localStorage.getItem('inbox_filters_open')
+    if (fo === '0') setFoldersOpen(false)
+    if (fi === '1') setFiltersOpen(true)
+  }, [])
+  function toggleFolders() {
+    setFoldersOpen(v => {
+      const next = !v
+      if (typeof window !== 'undefined') localStorage.setItem('inbox_folders_open', next ? '1' : '0')
+      return next
+    })
+  }
+  function toggleFilters() {
+    setFiltersOpen(v => {
+      const next = !v
+      if (typeof window !== 'undefined') localStorage.setItem('inbox_filters_open', next ? '1' : '0')
+      return next
+    })
+  }
   useEffect(() => {
     const stored = typeof window !== 'undefined' && localStorage.getItem('inbox_rail_collapsed')
     if (stored === '1') setRailCollapsed(true)
@@ -187,46 +213,91 @@ export default function InboxPage() {
               >
                 {railCollapsed ? <ChevronsRight size={14} /> : <ChevronsLeft size={14} />}
               </button>
-              <div className="space-y-0.5">
-                {FOLDERS.map(f => {
-                  const Icon = f.icon
-                  const active = folder === f.value
-                  return (
-                    <button
-                      key={f.value}
-                      onClick={() => { setFolder(f.value); setSelectedId(null) }}
-                      title={railCollapsed ? f.label : undefined}
-                      className={`w-full flex items-center ${railCollapsed ? 'justify-center px-1.5 py-2' : 'gap-2 px-3 py-2'} rounded-xl text-sm font-semibold transition ${
-                        active ? 'bg-emerald-100 text-emerald-900 ring-1 ring-emerald-200' : 'text-gray-600 hover:bg-emerald-50'
-                      }`}
-                    >
-                      <Icon size={railCollapsed ? 18 : 14} />
-                      {!railCollapsed && f.label}
-                    </button>
-                  )
-                })}
-              </div>
-              {!railCollapsed && <>
-                <div className="border-t border-gray-100 my-2" />
-                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 px-3 pt-2 pb-1">Filters</p>
+              {railCollapsed ? (
+                // Collapsed icon-only mode — folders only, no accordion needed
                 <div className="space-y-0.5">
-                  {FILTERS.map(f => (
-                    <button
-                      key={f.value}
-                      onClick={() => setFilter(f.value)}
-                      className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
-                        filter === f.value ? 'bg-amber-100 text-amber-900' : 'text-gray-600 hover:bg-gray-50'
-                      }`}
-                    >
-                      {f.label}
-                    </button>
-                  ))}
+                  {FOLDERS.map(f => {
+                    const Icon = f.icon
+                    const active = folder === f.value
+                    return (
+                      <button
+                        key={f.value}
+                        onClick={() => { setFolder(f.value); setSelectedId(null) }}
+                        title={f.label}
+                        className={`w-full flex items-center justify-center px-1.5 py-2 rounded-xl text-sm font-semibold transition ${
+                          active ? 'bg-emerald-100 text-emerald-900 ring-1 ring-emerald-200' : 'text-gray-600 hover:bg-emerald-50'
+                        }`}
+                      >
+                        <Icon size={18} />
+                      </button>
+                    )
+                  })}
+                  {filter && (
+                    <div className="mt-2 px-1.5">
+                      <div className="w-2 h-2 rounded-full bg-amber-500 mx-auto" title={`Filter: ${filter}`} />
+                    </div>
+                  )}
                 </div>
-              </>}
-              {railCollapsed && filter && (
-                <div className="mt-2 px-1.5">
-                  <div className="w-2 h-2 rounded-full bg-amber-500 mx-auto" title={`Filter: ${filter}`} />
-                </div>
+              ) : (
+                <>
+                  {/* Folders accordion — collapsible to save vertical space */}
+                  <button
+                    onClick={toggleFolders}
+                    className="w-full flex items-center justify-between px-3 pt-1 pb-1 text-[10px] uppercase tracking-wider font-bold text-gray-400 hover:text-emerald-700 transition-colors"
+                  >
+                    <span>Folders</span>
+                    <ChevronDown size={12} className={`transition-transform ${foldersOpen ? '' : '-rotate-90'}`} />
+                  </button>
+                  {foldersOpen && (
+                    <div className="space-y-0.5">
+                      {FOLDERS.map(f => {
+                        const Icon = f.icon
+                        const active = folder === f.value
+                        return (
+                          <button
+                            key={f.value}
+                            onClick={() => { setFolder(f.value); setSelectedId(null) }}
+                            className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold transition ${
+                              active ? 'bg-emerald-100 text-emerald-900 ring-1 ring-emerald-200' : 'text-gray-600 hover:bg-emerald-50'
+                            }`}
+                          >
+                            <Icon size={14} />
+                            {f.label}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  )}
+
+                  <div className="border-t border-gray-100 my-2" />
+
+                  {/* Filters accordion */}
+                  <button
+                    onClick={toggleFilters}
+                    className="w-full flex items-center justify-between px-3 pt-1 pb-1 text-[10px] uppercase tracking-wider font-bold text-gray-400 hover:text-amber-700 transition-colors"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      Filters
+                      {filter && <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />}
+                    </span>
+                    <ChevronDown size={12} className={`transition-transform ${filtersOpen ? '' : '-rotate-90'}`} />
+                  </button>
+                  {filtersOpen && (
+                    <div className="space-y-0.5">
+                      {FILTERS.map(f => (
+                        <button
+                          key={f.value}
+                          onClick={() => setFilter(f.value)}
+                          className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                            filter === f.value ? 'bg-amber-100 text-amber-900' : 'text-gray-600 hover:bg-gray-50'
+                          }`}
+                        >
+                          {f.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </>
               )}
             </aside>
           </Panel>

@@ -129,7 +129,12 @@ function normalizeResult(parsed, provider, model, usage) {
     category: parsed.category || null,
     items: Array.isArray(parsed.items) ? parsed.items.map(it => ({
       sku: it.sku || '', model: it.model || '', item_name: it.item_name || '',
-      qty: Number(it.qty || 1), price: Number(it.price || 0),
+      qty: Number(it.qty || 1),
+      // Distinguish "we don't know" (null) from "free" (0). Amazon "Ordered:"
+      // emails list items without per-line prices — we want the UI to show "—"
+      // instead of misleadingly displaying "$0.00".
+      price: it.price == null || it.price === '' ? null : Number(it.price),
+      category: it.category || null,
       refund_policy_id: it.refund_policy_id || '', returned: Boolean(it.returned),
     })) : [],
     refund_policies: Array.isArray(parsed.refund_policies) ? parsed.refund_policies.map(p => ({

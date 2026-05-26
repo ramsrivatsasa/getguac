@@ -323,7 +323,7 @@ async function insertParsedReceipt(sb, userId, parsed, bodyPreview) {
       model: it.model || null,
       item_name: it.item_name || '',
       qty: it.qty || 1,
-      price: it.price || 0,
+      price: it.price == null ? null : Number(it.price),
       // Charity items can never be "returned" — force false regardless of
       // what the AI returned.
       returned: it.category === 'charity' ? false : Boolean(it.returned),

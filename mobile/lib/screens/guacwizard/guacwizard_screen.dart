@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../providers/receipt_provider.dart';
+import '../../utils/date_format.dart';
 
 const _kBrand = Color(0xFF7c3aed);
 
@@ -139,7 +140,7 @@ class _GuacWizardScreenState extends State<GuacWizardScreen> {
                 child: ListTile(
                   leading: const Text('🙈', style: TextStyle(fontSize: 24)),
                   title: Text(r.storeName, style: const TextStyle(fontWeight: FontWeight.w700)),
-                  subtitle: Text('${r.date}  •  ${r.rating}★'),
+                  subtitle: Text('${formatDateShort(r.date)}  •  ${r.rating}★'),
                   trailing: Text('\$${r.totalAmount.toStringAsFixed(2)}',
                     style: const TextStyle(fontWeight: FontWeight.w800, color: Color(0xFFdc2626))),
                 ),

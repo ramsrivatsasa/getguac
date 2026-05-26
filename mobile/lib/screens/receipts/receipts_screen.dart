@@ -6,6 +6,7 @@ import 'dart:io';
 import '../../providers/auth_provider.dart';
 import '../../providers/receipt_provider.dart';
 import '../../models/receipt_model.dart';
+import '../../utils/date_format.dart';
 
 class ReceiptsScreen extends StatefulWidget {
   const ReceiptsScreen({super.key});
@@ -235,7 +236,7 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
                           ],
                         ]),
                         subtitle: Text(
-                          '${r.date} • Tax: \$${r.taxPaid.toStringAsFixed(2)}'
+                          '${formatDateShort(r.date)} • Tax: \$${r.taxPaid.toStringAsFixed(2)}'
                           '${r.itemCount > 0 ? " • ${r.itemCount} ${r.itemCount == 1 ? "item" : "items"}" : ""}',
                         ),
                         trailing: _selectionMode

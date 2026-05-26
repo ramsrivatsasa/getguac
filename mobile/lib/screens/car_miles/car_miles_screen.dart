@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/car_miles_model.dart';
 import '../../services/share_intent_service.dart';
 import '../../services/location_distance_service.dart';
+import '../../utils/date_format.dart';
 
 const _kBrand = Color(0xFF15803d);
 const _kTripCols = 'id, start_date, end_date, total_miles, description, category, from_address, to_address';
@@ -272,7 +273,9 @@ class _CarMilesScreenState extends State<CarMilesScreen> {
                               Text('${_short(t.fromAddress, fallback: '?')} → ${_short(t.toAddress, fallback: '?')}',
                                 style: const TextStyle(fontSize: 12, color: Colors.black54),
                                 maxLines: 1, overflow: TextOverflow.ellipsis),
-                            Text('${t.startDate}  →  ${t.endDate}'),
+                            Text(t.startDate == t.endDate
+                              ? formatDateShort(t.startDate)
+                              : '${formatDateShort(t.startDate)}  →  ${formatDateShort(t.endDate)}'),
                           ],
                         ),
                         trailing: Text('${t.totalMiles.toStringAsFixed(1)} mi',

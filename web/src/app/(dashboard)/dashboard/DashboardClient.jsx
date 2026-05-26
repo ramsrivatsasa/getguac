@@ -52,10 +52,31 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
   const totalTax = filtered.reduce((s, r) => s + parseFloat(r.tax_paid || 0), 0)
   const today = new Date().toISOString().split('T')[0]
 
-  const chartData = [...filtered].slice(0, 8).reverse().map(r => ({
-    name: (r.store_name || '').substring(0, 7),
-    amount: parseFloat(r.total_amount || 0)
-  }))
+  // True "Spending by Store" — sum every receipt's total per merchant, take
+  // the top 8 spenders, sort descending. Previously this chart plotted the
+  // last 8 receipts one-per-bar, which showed "Amazon" 4 times for someone
+  // with 4 recent Amazon purchases instead of one tall Amazon bar.
+  const chartData = (() => {
+    const byStore = new Map()
+    for (const r of filtered) {
+      const raw = (r.store_name || '').trim()
+      if (!raw) continue
+      // Group case-insensitively + ignore trailing punctuation so "Amazon"
+      // and "Amazon." don't split. Display the longest variant we see for
+      // the group (usually the most readable one).
+      const key = raw.toLowerCase().replace(/[.,\s]+$/, '')
+      const amount = parseFloat(r.total_amount || 0)
+      const entry = byStore.get(key) || { name: raw, amount: 0, count: 0 }
+      if (raw.length > entry.name.length) entry.name = raw
+      entry.amount += amount
+      entry.count += 1
+      byStore.set(key, entry)
+    }
+    return [...byStore.values()]
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 8)
+      .map(e => ({ name: e.name.length > 12 ? e.name.slice(0, 12) + '…' : e.name, amount: e.amount, count: e.count }))
+  })()
 
   return (
     <div className="space-y-6 max-w-7xl">

@@ -820,12 +820,12 @@ export default function ReceiptsPage() {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b text-xs text-gray-500 uppercase tracking-wide">
                 <tr>
-                  <th className="pl-4 pr-2 py-1.5 w-10">
+                  <th className="pl-4 pr-2 py-1 w-10">
                     <input type="checkbox" className="w-4 h-4 rounded cursor-pointer" checked={allSelected}
                       onChange={toggleAll} aria-label="Select all" />
                   </th>
                   {['Receipt ID','Store','Date','Amount','Tax','Reward No','Business','Receipt','Actions'].map(h =>
-                    <th key={h} className="px-4 py-1.5 text-left font-semibold">{h}</th>
+                    <th key={h} className="px-4 py-1 text-left font-semibold">{h}</th>
                   )}
                 </tr>
               </thead>
@@ -837,11 +837,11 @@ export default function ReceiptsPage() {
                       <tr
                         onClick={() => router.push(`/receipts/${r.id}`)}
                         className={`hover:bg-blue-50/40 cursor-pointer transition-colors ${selected.has(r.id) ? 'bg-blue-50/60' : ''}`}>
-                        <td className="pl-4 pr-2 py-1.5" onClick={e => e.stopPropagation()}>
+                        <td className="pl-4 pr-2 py-1" onClick={e => e.stopPropagation()}>
                           <input type="checkbox" className="w-4 h-4 rounded cursor-pointer" checked={selected.has(r.id)}
                             onChange={() => toggleOne(r.id)} aria-label={`Select ${r.store_name}`} />
                         </td>
-                        <td className="px-4 py-1.5" onClick={e => e.stopPropagation()}>
+                        <td className="px-4 py-1" onClick={e => e.stopPropagation()}>
                           {(() => {
                             // Item count comes back from Supabase as receipt_items: [{ count: N }]
                             const itemCount = Array.isArray(r.receipt_items) ? (r.receipt_items[0]?.count ?? 0) : 0
@@ -867,7 +867,7 @@ export default function ReceiptsPage() {
                             )
                           })()}
                         </td>
-                        <td className="px-4 py-1.5">
+                        <td className="px-4 py-1">
                           <div className="font-medium text-blue-700 hover:underline">{r.store_name}</div>
                           <div className="flex items-center gap-1 mt-0.5">
                             {r.from_statement && (
@@ -887,39 +887,39 @@ export default function ReceiptsPage() {
                             )}
                           </div>
                         </td>
-                        <td className="px-4 py-1.5 text-gray-500">{formatDateShort(r.date)}</td>
-                        <td className="px-4 py-1.5 font-semibold">${parseFloat(r.total_amount || 0).toFixed(2)}</td>
-                        <td className="px-4 py-1.5 text-gray-500">${parseFloat(r.tax_paid || 0).toFixed(2)}</td>
-                        <td className="px-4 py-1.5 text-gray-400 text-xs">{r.reward_no || '—'}</td>
-                        <td className="px-4 py-1.5">
+                        <td className="px-4 py-1 text-gray-500">{formatDateShort(r.date)}</td>
+                        <td className="px-4 py-1 font-semibold">${parseFloat(r.total_amount || 0).toFixed(2)}</td>
+                        <td className="px-4 py-1 text-gray-500">${parseFloat(r.tax_paid || 0).toFixed(2)}</td>
+                        <td className="px-4 py-1 text-gray-400 text-xs">{r.reward_no || '—'}</td>
+                        <td className="px-4 py-1">
                           <span className={r.business_purchase ? 'badge-blue' : 'badge-gray'}>
                             {r.business_purchase ? 'Yes' : 'No'}
                           </span>
                         </td>
-                        <td className="px-4 py-1.5" onClick={e => e.stopPropagation()}>
+                        <td className="px-4 py-1" onClick={e => e.stopPropagation()}>
                           {r.receipt_link ? (
                             <a href={r.receipt_link} target="_blank" rel="noreferrer" className="text-blue-500 hover:text-blue-700">
                               <Download size={15} />
                             </a>
                           ) : '—'}
                         </td>
-                        <td className="px-4 py-1.5" onClick={e => e.stopPropagation()}>
+                        <td className="px-4 py-1" onClick={e => e.stopPropagation()}>
                           <div className="flex gap-1.5">
                             <Link href={`/receipts/${r.id}`} aria-label="View"
-                              className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 hover:bg-emerald-200 hover:scale-110 active:scale-95 transition-all flex items-center justify-center shadow-sm">
-                              <Eye size={14} />
+                              className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 hover:bg-emerald-200 hover:scale-110 active:scale-95 transition-all flex items-center justify-center shadow-sm">
+                              <Eye size={12} />
                             </Link>
                             <button
                               onClick={() => handleReparse(r.id, r.store_name)}
                               aria-label="Re-parse from email"
                               title="Re-parse this receipt from the source email (only works for email-forwarded receipts)"
                               disabled={reparsing.has(r.id)}
-                              className="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 hover:bg-indigo-200 hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center shadow-sm">
-                              <RefreshCw size={13} className={reparsing.has(r.id) ? 'animate-spin' : ''} />
+                              className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 hover:bg-indigo-200 hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center shadow-sm">
+                              <RefreshCw size={11} className={reparsing.has(r.id) ? 'animate-spin' : ''} />
                             </button>
                             <button onClick={() => handleDelete(r.id)} aria-label="Delete"
-                              className="w-7 h-7 rounded-full bg-rose-100 text-rose-600 hover:bg-rose-200 hover:scale-110 active:scale-95 transition-all flex items-center justify-center shadow-sm">
-                              <Trash2 size={14} />
+                              className="w-6 h-6 rounded-full bg-rose-100 text-rose-600 hover:bg-rose-200 hover:scale-110 active:scale-95 transition-all flex items-center justify-center shadow-sm">
+                              <Trash2 size={12} />
                             </button>
                           </div>
                         </td>

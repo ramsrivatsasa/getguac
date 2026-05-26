@@ -234,6 +234,10 @@ export default function ReceiptsPage() {
       const items = body?.items_parsed || 0
       toast.success(`Re-parsed ${updatedStore} · ${items} items`, { id: t, duration: 4000 })
       qc.invalidateQueries({ queryKey: ['receipts'] })
+      // Re-parse changes the store_name / total / items, so any
+      // server-rendered aggregation (Spending by Store, top categories)
+      // needs a refresh too — same pattern as useDeleteReceipt.
+      router.refresh()
     } catch (e) {
       toast.error(e.message, { id: t })
     } finally {
@@ -465,6 +469,8 @@ export default function ReceiptsPage() {
       const fail = results.length - ok
       toast.success(`Categorized ${ok} receipt${ok === 1 ? '' : 's'}${fail ? ` · ${fail} failed` : ''} (rules: ${ruleHits.length}, AI: ${aiHits.length})`)
       qc.invalidateQueries({ queryKey: ['receipts'] })
+      qc.invalidateQueries({ queryKey: ['reports'] })
+      router.refresh()
     } catch (e) {
       toast.error(`Auto-categorize failed: ${e.message}`)
     } finally {
@@ -486,6 +492,8 @@ export default function ReceiptsPage() {
       if (data.paired > 0) toast.success(`Paired ${data.paired} statement row${data.paired === 1 ? '' : 's'} with receipts`)
       else toast('No new matches found', { icon: '🔍' })
       qc.invalidateQueries({ queryKey: ['receipts'] })
+      qc.invalidateQueries({ queryKey: ['reports'] })
+      router.refresh()
     } catch (err) {
       toast.error(err.message)
     } finally {
@@ -499,6 +507,8 @@ export default function ReceiptsPage() {
       if (!res.ok) throw new Error(data.error || 'Unlink failed')
       toast.success('Unlinked')
       qc.invalidateQueries({ queryKey: ['receipts'] })
+      qc.invalidateQueries({ queryKey: ['reports'] })
+      router.refresh()
     } catch (err) {
       toast.error(err.message)
     }

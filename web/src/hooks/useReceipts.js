@@ -1,5 +1,6 @@
 'use client'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useRouter } from 'next/navigation'
 import {
   getReceipts, getReceipt, upsertReceipt, deleteReceipt, upsertReceiptItem, updateReceiptItem, uploadReceipt, upsertStore, upsertStoreLocation, replaceRefundPolicies, ensureStoreReward, upsertStoreItem
 } from '../lib/db'
@@ -21,6 +22,7 @@ export function useReceipt(id) {
 
 export function useAddReceipt() {
   const qc = useQueryClient()
+  const router = useRouter()
   return useMutation({
     mutationFn: async ({
       receipt, file, userId, items = [], storeInfo = null,
@@ -105,27 +107,49 @@ export function useAddReceipt() {
 
       return saved
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['receipts'] }),
+    onSuccess: () => {
+      _invalidateAllReceiptQueries(qc)
+      router.refresh()
+    },
   })
 }
 
 export function useUpdateReceipt() {
   const qc = useQueryClient()
+  const router = useRouter()
   return useMutation({
     mutationFn: (receipt) => upsertReceipt(receipt),
     onSuccess: (data) => {
-      qc.invalidateQueries({ queryKey: ['receipts'] })
+      _invalidateAllReceiptQueries(qc)
       qc.invalidateQueries({ queryKey: ['receipts', data.id] })
+      router.refresh()
     },
   })
 }
 
 export function useDeleteReceipt() {
   const qc = useQueryClient()
+  const router = useRouter()
   return useMutation({
     mutationFn: deleteReceipt,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['receipts'] }),
+    onSuccess: () => {
+      _invalidateAllReceiptQueries(qc)
+      router.refresh()
+    },
   })
+}
+
+/// Invalidate every TanStack Query whose data is derived from the receipts
+/// table. Add a key here whenever a new page caches receipts under a
+/// different name — otherwise stale receipts hang around in that page until
+/// the user reloads. Currently:
+///   ['receipts', ...]   — useReceipts (receipts list, guacanomics)
+///   ['reports', ...]    — /reports page aggregates
+///   ['bank_fees']       — guacanomics also reads bank_fees but those don't
+///                          depend on receipts; left out intentionally.
+function _invalidateAllReceiptQueries(qc) {
+  qc.invalidateQueries({ queryKey: ['receipts'] })
+  qc.invalidateQueries({ queryKey: ['reports'] })
 }
 
 export function useAddReceiptItem() {
@@ -138,8 +162,12 @@ export function useAddReceiptItem() {
 
 export function useUpdateReceiptItem() {
   const qc = useQueryClient()
+  const router = useRouter()
   return useMutation({
     mutationFn: ({ id, ...patch }) => updateReceiptItem(id, patch),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['receipts'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['receipts'] })
+      router.refresh()
+    },
   })
 }

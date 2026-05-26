@@ -107,7 +107,21 @@ export async function getUserCategories() {
   const { data, error } = await sb.from('user_categories')
     .select('*')
     .order('label', { ascending: true })
-  if (error) throw error
+  if (error) {
+    // Schema cache miss / table missing = the user hasn't run
+    // migration_011 yet. The 12 built-in preset categories still work,
+    // so let the rest of the app keep functioning instead of throwing
+    // and breaking every page that uses useCategories().
+    const msg = (error.message || '').toLowerCase()
+    const code = String(error.code || '')
+    if (code === 'PGRST205' || code === '42P01' || msg.includes('schema cache') || msg.includes('does not exist')) {
+      if (typeof console !== 'undefined') {
+        console.warn('[getUserCategories] user_categories table missing — run migration_011_user_categories.sql in Supabase. Falling back to presets only.')
+      }
+      return []
+    }
+    throw error
+  }
   return data || []
 }
 

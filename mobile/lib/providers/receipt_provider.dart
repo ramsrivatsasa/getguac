@@ -96,6 +96,15 @@ class ReceiptProvider extends ChangeNotifier {
   /// total) tuple — same key the /api/receipts/dedup sweep uses. Returns
   /// the matching receipt row (or null). Lets the camera flow ask the user
   /// "this looks like a duplicate, save anyway?" before inserting.
+  ///
+  /// Matching tolerance:
+  ///   - store name is normalized (lowercased, punctuation/whitespace
+  ///     stripped, common suffixes like "Restaurant" / "Inc" / "LLC"
+  ///     dropped) before comparing. Catches cases where the AI parsed
+  ///     "GLORY DAYS GRILL" on one shot and "Glory Days Grill Restaurant"
+  ///     on a retake — both still resolve to the same key.
+  ///   - date must match exactly (single day).
+  ///   - total must match within 1¢ (rounding wobble).
   Future<Receipt?> findDuplicate({
     required String storeName,
     required String date,        // YYYY-MM-DD
@@ -104,24 +113,51 @@ class ReceiptProvider extends ChangeNotifier {
     final uid = _sb.auth.currentUser?.id;
     if (uid == null || storeName.trim().isEmpty || date.isEmpty) return null;
     try {
-      // Case-insensitive store match + same date + same total (rounded to 2dp).
-      final rounded = double.parse(totalAmount.toStringAsFixed(2));
+      // Pull every receipt for the user on this exact date with a total
+      // within 1 cent of the parsed total, then filter on normalized store
+      // name client-side. Keeps the SQL simple (no normalization functions
+      // in Postgres) and the result set is tiny (usually 0-1 rows).
+      final lo = totalAmount - 0.005;
+      final hi = totalAmount + 0.005;
       final rows = await _sb
           .from('receipts')
           .select(_kReceiptListCols)
           .eq('user_id', uid)
-          .ilike('store_name', storeName.trim())
           .eq('date', date)
-          .eq('total_amount', rounded)
-          .limit(1);
-      final list = (rows as List);
-      if (list.isEmpty) return null;
-      final m = list.first as Map<String, dynamic>;
-      return Receipt.fromMap(m['id'] as String, m);
+          .gte('total_amount', lo)
+          .lte('total_amount', hi)
+          .limit(10);
+      final target = _normalizeStoreName(storeName);
+      for (final r in (rows as List)) {
+        final m = r as Map<String, dynamic>;
+        final candidate = _normalizeStoreName((m['store_name'] as String?) ?? '');
+        if (candidate.isEmpty) continue;
+        if (candidate == target
+            || candidate.contains(target)
+            || target.contains(candidate)) {
+          return Receipt.fromMap(m['id'] as String, m);
+        }
+      }
+      return null;
     } catch (e) {
       if (kDebugMode) debugPrint('findDuplicate error: $e');
       return null;
     }
+  }
+
+  /// Same normalization the dedup sweep should use server-side. Lowercase,
+  /// strip punctuation/whitespace, drop common store-name suffixes that the
+  /// AI inconsistently includes.
+  static String _normalizeStoreName(String raw) {
+    var s = raw.toLowerCase().trim();
+    s = s.replaceAll(RegExp(r'[^a-z0-9]'), '');
+    // Drop common business-type suffixes the AI sometimes appends.
+    for (final suffix in const ['restaurant', 'grill', 'cafe', 'inc', 'llc', 'corp', 'co']) {
+      if (s.endsWith(suffix) && s.length > suffix.length + 2) {
+        s = s.substring(0, s.length - suffix.length);
+      }
+    }
+    return s;
   }
 
   Future<void> addReceipt(Receipt receipt, {File? imageFile}) async {
@@ -138,13 +174,19 @@ class ReceiptProvider extends ChangeNotifier {
 
   /// Upload + insert a receipt straight from AI-parsed JSON (the shape the
   /// /api/parse-receipt endpoint returns). Saves items in the same call.
-  /// Used by the dashboard camera-FAB so capture-to-saved is a single step.
-  /// Returns the new receipt id, or null on failure.
-  Future<String?> addParsedReceipt(Map<String, dynamic> parsed, File imageFile) async {
+  /// Returns a record with either an `id` (success) or an `error` string
+  /// explaining what failed. Used by the dashboard camera-FAB so the batch
+  /// summary can show the real reason instead of "insert failed".
+  Future<({String? id, String? error})> addParsedReceipt(Map<String, dynamic> parsed, File imageFile) async {
     final uid = _sb.auth.currentUser?.id;
-    if (uid == null) return null;
+    if (uid == null) return (id: null, error: 'Not signed in');
+    String? link;
     try {
-      final link = await uploadImage(imageFile);
+      link = await uploadImage(imageFile);
+    } catch (e) {
+      return (id: null, error: 'Image upload failed: $e');
+    }
+    try {
       final today = DateTime.now().toIso8601String().substring(0, 10);
       final dateField = (parsed['date'] is String &&
                         RegExp(r'^\d{4}-\d{2}-\d{2}').hasMatch(parsed['date'] as String))
@@ -187,10 +229,15 @@ class ReceiptProvider extends ChangeNotifier {
       }
       _lastLoaded = null;
       await loadReceipts(force: true);
-      return id;
+      return (id: id, error: null);
+    } on PostgrestException catch (e) {
+      if (kDebugMode) debugPrint('addParsedReceipt postgrest: ${e.message} (${e.code})');
+      // Surface the database's actual rejection reason. Most useful causes:
+      // 23505 = unique constraint, 42501 = RLS denied, 23502 = NOT NULL.
+      return (id: null, error: 'DB rejected: ${e.message}${e.code != null ? " (${e.code})" : ""}');
     } catch (e) {
       if (kDebugMode) debugPrint('addParsedReceipt error: $e');
-      return null;
+      return (id: null, error: e.toString());
     }
   }
 

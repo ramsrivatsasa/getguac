@@ -256,8 +256,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
         // receipt twice in the SAME batch would otherwise insert both
         // (the DB check above only sees rows already committed). Match
         // against rows we've inserted in THIS batch by storing the
-        // (store, date, total) tuple in a local set.
-        final batchKey = '${parsed.storeName.toLowerCase()}|$dupDate|${parsed.totalAmount.toStringAsFixed(2)}';
+        // (normalized store, date, total) tuple in a local set. Uses
+        // the SAME normalization as ReceiptProvider.findDuplicate so the
+        // two checks agree.
+        final normStore = parsed.storeName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+        final batchKey = '$normStore|$dupDate|${parsed.totalAmount.toStringAsFixed(2)}';
         if (parsed.storeName.isNotEmpty && parsed.totalAmount > 0
             && _batchKeysThisRun.contains(batchKey)) {
           duplicates.add(_DupHit(
@@ -289,14 +292,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
             'returned': it.returned, 'category': it.category,
           }).toList(),
         };
-        final id = await provider.addParsedReceipt(asMap, file);
-        if (id != null) {
+        final insert = await provider.addParsedReceipt(asMap, file);
+        if (insert.id != null) {
           saved++;
-          savedIds.add(id);
+          savedIds.add(insert.id!);
           _batchKeysThisRun.add(batchKey);
         } else {
           failed++;
-          failures.add('Photo ${i + 1}: insert failed');
+          failures.add('Photo ${i + 1}: ${insert.error ?? "insert failed"}');
         }
       } catch (e) {
         failed++;
@@ -441,6 +444,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ),
         actions: [
+          if (failures.isNotEmpty)
+            TextButton.icon(
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                // Pre-fill the report with the failure list and a structured
+                // context payload so we can correlate the report with the
+                // debug_log events that were uploaded alongside.
+                context.push(
+                  '/report-problem',
+                  extra: {
+                    'subject': 'Batch capture: $title',
+                    'description': 'Failures from this batch:\n\n${failures.join("\n")}',
+                    'context': {
+                      'flow': 'dashboard_batch_capture',
+                      'saved_ids': savedIds,
+                      'duplicates': duplicates.map((d) => {
+                        'photo': d.photoIndex,
+                        'store': d.storeName,
+                        'date': d.date,
+                        'total': d.totalAmount,
+                        'existing_id': d.existingId,
+                      }).toList(),
+                      'failures': failures,
+                    },
+                  },
+                );
+              },
+              icon: const Icon(Icons.report_problem_outlined, size: 16),
+              label: const Text('Report this'),
+            ),
           if (savedIds.length == 1)
             TextButton(
               onPressed: () { Navigator.of(ctx).pop(); context.go('/receipts/${savedIds.first}'); },
@@ -541,14 +574,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
           'returned': it.returned, 'category': it.category,
         }).toList(),
       };
-      final id = await provider.addParsedReceipt(asMap, file);
+      final insert = await provider.addParsedReceipt(asMap, file);
       if (!mounted) return;
-      if (id == null) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Saved the photo but failed to insert the receipt. Open Receipts to retry.'),
+      if (insert.id == null) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Insert failed: ${insert.error ?? "unknown reason"}'),
+          duration: const Duration(seconds: 5),
         ));
         return;
       }
+      final id = insert.id!;
       final storeBit = parsed.storeName.isNotEmpty ? parsed.storeName : 'Receipt';
       final totalBit = parsed.totalAmount > 0 ? ' · \$${parsed.totalAmount.toStringAsFixed(2)}' : '';
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(

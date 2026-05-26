@@ -361,6 +361,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
             label: const Text('View / upload debug log'),
           ),
 
+          // Report a problem — free-form subject + description that gets
+          // bundled with the recent debug log and uploaded to audit_log.
+          TextButton.icon(
+            onPressed: () => context.go('/report-problem'),
+            icon: const Icon(Icons.report_problem_outlined, size: 16),
+            label: const Text('Report a problem'),
+          ),
+
           Row(children: [
             Expanded(child: _Pill(
               gradient: const [Color(0xFFa7f3d0), Color(0xFF15803d)],

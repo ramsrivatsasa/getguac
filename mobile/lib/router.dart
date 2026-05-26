@@ -13,6 +13,7 @@ import 'screens/rewards/reward_detail_screen.dart';
 import 'screens/shopping/shopping_list_screen.dart';
 import 'screens/car_miles/car_miles_screen.dart';
 import 'screens/profile/profile_screen.dart';
+import 'screens/profile/report_problem_screen.dart';
 import 'screens/guacscore/guacscore_screen.dart';
 import 'screens/guacwizard/guacwizard_screen.dart';
 import 'screens/stash/stash_screen.dart';
@@ -57,6 +58,18 @@ final appRouter = GoRouter(
         GoRoute(path: '/shopping', builder: (_, __) => const ShoppingListScreen()),
         GoRoute(path: '/car-miles', builder: (_, __) => const CarMilesScreen()),
         GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
+        GoRoute(path: '/report-problem', builder: (_, state) {
+          // Batch failure dialog and other callers can push() with
+          // extra: {subject, description, context} to pre-fill.
+          final extra = state.extra is Map<String, dynamic>
+              ? state.extra as Map<String, dynamic>
+              : const <String, dynamic>{};
+          return ReportProblemScreen(
+            prefillSubject: extra['subject'] as String?,
+            prefillDescription: extra['description'] as String?,
+            context: extra['context'] as Map<String, dynamic>?,
+          );
+        }),
         GoRoute(path: '/guacscore', builder: (_, __) => const GuacScoreScreen()),
         GoRoute(path: '/guacwizard', builder: (_, __) => const GuacWizardScreen()),
         GoRoute(path: '/stash', builder: (_, __) => const StashScreen()),

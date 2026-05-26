@@ -14,7 +14,7 @@
 import { createApiClient } from '../../../../lib/supabase/server'
 import { rateLimit, userRateKey } from '../../../../lib/apiGuard'
 import { parseReceiptFromText } from '../../../../lib/parse-receipt-engine'
-import { draftReceiptFromEmail, resolveStoreAndLocation, writeRefundPolicies } from '../../../../lib/email-to-receipt'
+import { draftReceiptFromEmail, resolveStoreAndLocation, writeRefundPolicies, lookupStoreDefaultPolicies } from '../../../../lib/email-to-receipt'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -206,9 +206,18 @@ export async function POST(request) {
         await sb.from('receipt_items').insert(itemRows)
       }
 
-      // Persist refund policies (the AI extracts "A: 90 days", "B: 30 days"
-      // etc. from the receipt body).
-      await writeRefundPolicies(sb, row.receipt.id, parsed.refund_policies).catch(() => {})
+      // Persist refund policies: printed first, curated store-defaults as
+      // fallback (Amazon 30d, Costco lifetime, …).
+      if (Array.isArray(parsed.refund_policies) && parsed.refund_policies.length > 0) {
+        await writeRefundPolicies(sb, row.receipt.id, parsed.refund_policies, 'receipt').catch(() => {})
+      } else {
+        const cats = (parsed.items || []).map(i => i.category).filter(Boolean)
+        if (parsed.category) cats.push(parsed.category)
+        const defaults = await lookupStoreDefaultPolicies(sb, parsed.store_name, cats).catch(() => [])
+        if (defaults.length > 0) {
+          await writeRefundPolicies(sb, row.receipt.id, defaults, 'store-default').catch(() => {})
+        }
+      }
 
       summary.reparsed++
     } catch (e) {

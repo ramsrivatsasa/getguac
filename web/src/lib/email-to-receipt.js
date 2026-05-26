@@ -184,7 +184,13 @@ function guessStoreFromHeaders({ fromAddr, subject }) {
 // as a parameter so it works with either the user session or the admin client
 // (the IMAP poller runs as admin). Best-effort: a failure is logged but does
 // not undo the parent receipt insert.
-export async function writeRefundPolicies(sb, receiptId, policies) {
+//
+// `source` marks WHERE the policy data came from so the UI can show "From
+// receipt" vs "Costco.com default" badges. Values:
+//   'receipt'       — printed on the receipt body
+//   'store-default' — looked up from the curated store_return_policies table
+//   'manual'        — typed by the user in the UI
+export async function writeRefundPolicies(sb, receiptId, policies, source = 'receipt') {
   if (!receiptId) return
   // Wipe first so a re-parse drops stale rows. Safe when the array is empty
   // (we want zero policies on the receipt in that case).
@@ -197,9 +203,46 @@ export async function writeRefundPolicies(sb, receiptId, policies) {
     expiry_date: p.expiry_date || null,
     eligible: p.eligible !== false,
     details: p.details || null,
+    source,
   }))
   const { error } = await sb.from('receipt_refund_policies').insert(rows)
   if (error) console.warn('[email-to-receipt] refund_policies insert failed:', error.message)
+}
+
+// Curated-table lookup. Returns policies shaped like AI output so the caller
+// can hand them straight to writeRefundPolicies. Filters to:
+//   1. Default rules for the store (category IS NULL), AND
+//   2. Category-specific rules whose category matches any item category on
+//      the receipt.
+// Returns [] when the store isn't in the curated table — caller can decide
+// whether to fall back to "no policy" or an AI inference (we're skipping the
+// AI path for now per the user's "minimize AI usage" call).
+export async function lookupStoreDefaultPolicies(sb, storeName, itemCategories = []) {
+  if (!storeName) return []
+  const key = normalizeStoreName(storeName)
+  if (!key) return []
+  const { data: rows, error } = await sb
+    .from('store_return_policies')
+    .select('policy_id, category, days, eligible, details')
+    .eq('store_name_normalized', key)
+  if (error || !rows || rows.length === 0) return []
+  const cats = new Set(itemCategories.filter(Boolean))
+  const applicable = rows.filter(r => !r.category || cats.has(r.category))
+  // Dedup by policy_id — prefer the category-specific row over the default
+  // when both apply (e.g. Costco electronics 90d over Costco default lifetime).
+  const byPolicyId = new Map()
+  for (const r of applicable) {
+    const existing = byPolicyId.get(r.policy_id)
+    if (!existing || (r.category && !existing.category)) {
+      byPolicyId.set(r.policy_id, r)
+    }
+  }
+  return [...byPolicyId.values()].map(r => ({
+    policy_id: r.policy_id,
+    days: r.days,
+    eligible: r.eligible,
+    details: r.details,
+  }))
 }
 
 // Public helper: given a parsed AI result, find-or-create the matching
@@ -257,9 +300,22 @@ async function insertParsedReceipt(sb, userId, parsed, bodyPreview) {
     if (itemErr) console.warn('[email-to-receipt] item insert failed:', itemErr.message)
   }
 
-  // Refund policies — AI extracted policy labels (A / B / C) + days + expiry.
+  // Refund policies. Two-tier:
+  //   1. If the AI extracted policies from the receipt body, use those.
+  //   2. Otherwise fall back to the curated store_return_policies table
+  //      (Amazon 30d, Costco lifetime, etc.) so receipts without printed
+  //      policies still surface return rights in the UI.
   // Best-effort: a failure here doesn't undo the parent receipt.
-  await writeRefundPolicies(sb, rcpt.id, parsed.refund_policies).catch(() => {})
+  if (Array.isArray(parsed.refund_policies) && parsed.refund_policies.length > 0) {
+    await writeRefundPolicies(sb, rcpt.id, parsed.refund_policies, 'receipt').catch(() => {})
+  } else {
+    const cats = (parsed.items || []).map(i => i.category).filter(Boolean)
+    if (parsed.category) cats.push(parsed.category)
+    const defaults = await lookupStoreDefaultPolicies(sb, parsed.store_name, cats).catch(() => [])
+    if (defaults.length > 0) {
+      await writeRefundPolicies(sb, rcpt.id, defaults, 'store-default').catch(() => {})
+    }
+  }
 
   return { receipt_id: rcpt.id }
 }

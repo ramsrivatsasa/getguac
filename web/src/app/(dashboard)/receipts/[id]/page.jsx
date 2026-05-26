@@ -332,12 +332,21 @@ export default function ReceiptDetailPage() {
                   <th className="px-3 py-1 text-left">Days</th>
                   <th className="px-3 py-1 text-left">Expires</th>
                   <th className="px-3 py-1 text-left">Eligible</th>
+                  <th className="px-3 py-1 text-left">Source</th>
                   <th className="px-3 py-1 text-left">Details</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {refundPolicies.map(p => {
                   const expired = p.expiry_date && new Date(p.expiry_date) < new Date()
+                  // Source badge: where the policy data came from. Lets the user
+                  // see at a glance whether the policy was printed on their
+                  // receipt vs looked up from a store's published default.
+                  const sourceInfo = {
+                    'receipt':       { label: 'On receipt',      cls: 'bg-emerald-50 text-emerald-700 border-emerald-100', tip: 'Printed on the receipt body' },
+                    'store-default': { label: 'Store default',   cls: 'bg-sky-50 text-sky-700 border-sky-100',             tip: 'Looked up from the merchant’s published policy' },
+                    'manual':        { label: 'You set this',    cls: 'bg-amber-50 text-amber-800 border-amber-100',       tip: 'Manually entered' },
+                  }[p.source || 'receipt']
                   return (
                     <tr key={p.id}>
                       <td className="px-3 py-1 font-medium">{p.policy_id || '—'}</td>
@@ -348,6 +357,11 @@ export default function ReceiptDetailPage() {
                       <td className="px-3 py-1">
                         <span className={p.eligible && !expired ? 'badge-green' : 'badge-gray'}>
                           {p.eligible && !expired ? 'Yes' : 'No'}
+                        </span>
+                      </td>
+                      <td className="px-3 py-1">
+                        <span className={`inline-flex items-center text-[10px] font-semibold px-1.5 py-0.5 rounded-full border ${sourceInfo.cls}`} title={sourceInfo.tip}>
+                          {sourceInfo.label}
                         </span>
                       </td>
                       <td className="px-3 py-1 text-gray-500">{p.details || '—'}</td>

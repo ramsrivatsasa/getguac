@@ -161,23 +161,42 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
     try {
-      final parsed = await ReceiptParseService.parseImage(file);
+      // One automatic retry for transient errors — a single AI hiccup
+      // shouldn't end up as a useless placeholder.
+      ParseResult result = await ReceiptParseService.parseImage(file);
+      if (!result.ok) {
+        result = await ReceiptParseService.parseImage(file);
+      }
       if (!mounted) return;
       Navigator.of(context, rootNavigator: true).pop(); // loader off
-      if (parsed == null) {
-        final placeholder = Receipt(
-          id: '', storeName: 'New Receipt',
-          date: DateTime.now().toIso8601String().substring(0, 10),
-          totalAmount: 0, taxPaid: 0,
-        );
-        await provider.addReceipt(placeholder, imageFile: file);
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text("Couldn't auto-read one. Saved as a placeholder — re-parse later."),
-        ));
-        return;
+
+      if (!result.ok) {
+        // Real failure (network / server / unreadable). Don't silently dump
+        // a placeholder — ask the user what to do.
+        final action = await _showParseFailureDialog(result.error ?? 'Unknown error', file);
+        if (!mounted) return;
+        switch (action) {
+          case _FailAction.retry:
+            // Re-enter the same path with a fresh loader.
+            return _processSingleCapture(file);
+          case _FailAction.savePhoto:
+            final placeholder = Receipt(
+              id: '', storeName: 'Untitled receipt',
+              date: DateTime.now().toIso8601String().substring(0, 10),
+              totalAmount: 0, taxPaid: 0,
+            );
+            await provider.addReceipt(placeholder, imageFile: file);
+            if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text('Saved photo only. Open the receipt to fill in details or tap Re-parse.'),
+            ));
+            return;
+          case _FailAction.cancel:
+          case null:
+            return; // nothing saved
+        }
       }
-      // Duplicate skip in multi-snap mode is silent (no dialog interruption).
-      // We DO check, but on hit we just skip the save and move on.
+
+      final parsed = result.data!;
       final today = DateTime.now().toIso8601String().substring(0, 10);
       final dupDate = (parsed.date != null && parsed.date!.isNotEmpty) ? parsed.date! : today;
       if (parsed.storeName.isNotEmpty && parsed.totalAmount > 0) {
@@ -435,6 +454,55 @@ class _DashboardScreenState extends State<DashboardScreen> {
       icon: const GuacMascot(size: 24),
       label: const Icon(Icons.camera_alt, size: 20),
       tooltip: 'Add receipt (camera or gallery)',
+    );
+  }
+
+  /// Shown when the AI fails to read the receipt. Returns the user's
+  /// chosen recovery action (or null on dismiss).
+  Future<_FailAction?> _showParseFailureDialog(String reason, File file) async {
+    return showDialog<_FailAction>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Couldn't read this receipt"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(reason, style: const TextStyle(fontSize: 13, height: 1.4)),
+            const SizedBox(height: 12),
+            Container(
+              constraints: const BoxConstraints(maxHeight: 180),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFe5e7eb)),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Image.file(file, fit: BoxFit.contain),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'Tips: hold the phone steady, fit the whole receipt in frame, avoid glare.',
+              style: TextStyle(fontSize: 11, color: Colors.black54),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(_FailAction.cancel),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(_FailAction.savePhoto),
+            child: const Text('Save photo only'),
+          ),
+          FilledButton.icon(
+            style: FilledButton.styleFrom(backgroundColor: const Color(0xFF15803d)),
+            onPressed: () => Navigator.of(ctx).pop(_FailAction.retry),
+            icon: const Icon(Icons.refresh, size: 18),
+            label: const Text('Try again'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -800,6 +868,17 @@ enum _PreviewAction {
   ok,
   /// Save this one and immediately open the picker again.
   addMore,
+}
+
+/// Choice the user makes when the AI fails to read a receipt.
+enum _FailAction {
+  /// Re-run the parser against the same photo.
+  retry,
+  /// Save the photo with a blank "Untitled receipt" row so the user can
+  /// edit / re-parse later.
+  savePhoto,
+  /// Don't save anything.
+  cancel,
 }
 
 /// Full-screen preview shown right after a capture. The user sees the photo

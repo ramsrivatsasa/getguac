@@ -63,15 +63,34 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
         ),
       ),
     );
-    final parsed = await ReceiptParseService.parseImage(file);
+    // One automatic retry on transient errors so a single AI hiccup doesn't
+    // drop the user into an empty edit form.
+    ParseResult result = await ReceiptParseService.parseImage(file);
+    if (!result.ok) result = await ReceiptParseService.parseImage(file);
     if (!mounted) return;
     Navigator.of(context, rootNavigator: true).pop();  // dismiss loader
     if (!mounted) return;
 
+    if (!result.ok) {
+      // Surface the real reason, let the user edit manually instead of
+      // dropping a blank placeholder in the table.
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text("Couldn't auto-read: ${result.error}"),
+        duration: const Duration(seconds: 4),
+      ));
+      // Open the Add dialog with the photo attached but no prefill so the
+      // user can type the fields by hand.
+      showDialog(
+        context: context,
+        builder: (ctx) => _AddReceiptDialog(uid: uid, imageFile: file),
+      );
+      return;
+    }
+    final parsed = result.data!;
+
     // Duplicate check — same key as /api/receipts/dedup. If we already have
-    // this store+date+total, ask before opening the Add dialog. The user
-    // can View the existing receipt, Save Anyway, or Cancel.
-    if (parsed != null && parsed.storeName.isNotEmpty && parsed.totalAmount > 0) {
+    // this store+date+total, ask before opening the Add dialog.
+    if (parsed.storeName.isNotEmpty && parsed.totalAmount > 0) {
       final today = DateTime.now().toIso8601String().substring(0, 10);
       final dupDate = (parsed.date != null && parsed.date!.isNotEmpty) ? parsed.date! : today;
       final dup = await context.read<ReceiptProvider>().findDuplicate(

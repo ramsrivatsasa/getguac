@@ -74,27 +74,75 @@ class ParsedItem {
   );
 }
 
+/// Result of a parse attempt. Either [data] is set (successful parse) OR
+/// [error] is set (failed). When the AI returns 200 but the parsed receipt
+/// has no usable fields (no store, no total, no items), we treat that as
+/// `error: "AI couldn't read the receipt"` rather than silently succeeding
+/// with empty data — the caller can show a meaningful message instead of
+/// saving a blank row.
+class ParseResult {
+  final ParsedReceipt? data;
+  final String? error;
+  const ParseResult.ok(ParsedReceipt this.data) : error = null;
+  const ParseResult.fail(String this.error) : data = null;
+  bool get ok => error == null && data != null;
+}
+
 class ReceiptParseService {
-  /// Upload [file] to the web parse-receipt endpoint and return the parsed
-  /// receipt. Returns null on auth failure / timeout / AI error — caller
-  /// should fall back to a blank manual-entry form.
-  static Future<ParsedReceipt?> parseImage(File file) async {
+  /// Upload [file] to the web parse-receipt endpoint and return a ParseResult.
+  /// Distinguishes network failures, server errors, timeouts, and empty AI
+  /// reads so the caller can show the user a real explanation.
+  static Future<ParseResult> parseImage(File file) async {
     final session = Supabase.instance.client.auth.currentSession;
-    if (session == null) return null;
+    if (session == null) return const ParseResult.fail('Not signed in.');
     try {
       final uri = Uri.parse('$_kApiBase/api/parse-receipt');
       final req = http.MultipartRequest('POST', uri);
       req.headers['Authorization'] = 'Bearer ${session.accessToken}';
       req.files.add(await http.MultipartFile.fromPath('file', file.path));
-      // 45-sec timeout — Gemini Flash text-from-image takes 5-15s, give it room.
+      // 45-sec timeout — Gemini Flash text-from-image takes 5-15s, give it
+      // room. Most "couldn't read" failures we used to swallow as null were
+      // actually timeouts on bad cell connections — surface that now.
       final streamed = await req.send().timeout(const Duration(seconds: 45));
-      if (streamed.statusCode != 200) return null;
       final body = await streamed.stream.bytesToString();
-      final map = jsonDecode(body) as Map<String, dynamic>;
-      if (map['error'] != null) return null;
-      return ParsedReceipt.fromMap(map);
-    } catch (_) {
-      return null;
+      if (streamed.statusCode != 200) {
+        // Try to pull the server's error string. Fall back to status code.
+        try {
+          final m = jsonDecode(body) as Map<String, dynamic>;
+          if (m['error'] != null) return ParseResult.fail(m['error'].toString());
+        } catch (_) {}
+        return ParseResult.fail('Server error (${streamed.statusCode}).');
+      }
+      late final Map<String, dynamic> map;
+      try {
+        map = jsonDecode(body) as Map<String, dynamic>;
+      } catch (_) {
+        return const ParseResult.fail('Server returned non-JSON.');
+      }
+      if (map['error'] != null) return ParseResult.fail(map['error'].toString());
+
+      final parsed = ParsedReceipt.fromMap(map);
+      // Empty-read check: if the AI returned nothing usable, treat as a
+      // failure so the caller can offer Retry / manual entry rather than
+      // saving a row with no store + $0 total.
+      final hasAnything = parsed.storeName.isNotEmpty
+          || parsed.totalAmount > 0
+          || parsed.items.isNotEmpty;
+      if (!hasAnything) {
+        return const ParseResult.fail(
+          "Guac-AI couldn't read anything from this photo. Try a clearer, well-lit shot of the whole receipt."
+        );
+      }
+      return ParseResult.ok(parsed);
+    } on http.ClientException catch (e) {
+      return ParseResult.fail('Network error: ${e.message}');
+    } catch (e) {
+      // Most often a TimeoutException; show the user the timeout explicitly.
+      final m = e.toString();
+      if (m.contains('TimeoutException')) {
+        return const ParseResult.fail('Timed out waiting for Guac-AI (45s). The server or your connection is slow — try again.');
+      }
+      return ParseResult.fail('Parse failed: $m');
     }
   }
 }

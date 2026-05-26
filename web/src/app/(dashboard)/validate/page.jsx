@@ -3,6 +3,7 @@ import { useState, useMemo, Fragment } from 'react'
 import Link from 'next/link'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
+import { formatDateShort } from '../../../lib/dateFormat'
 import {
   Search, ChevronDown, ChevronRight as ChevRight
 } from 'lucide-react'
@@ -261,7 +262,7 @@ function ReceiptRow({ r, isExpanded, onToggle }) {
           {isExpanded ? <ChevronDown size={14} /> : <ChevRight size={14} />}
         </button>
       </td>
-      <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{r.date}</td>
+      <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{formatDateShort(r.date)}</td>
       <td className="px-4 py-3 font-medium">
         <Link href={`/receipts/${r.id}`} className="text-emerald-800 hover:underline">{r.store_name}</Link>
       </td>

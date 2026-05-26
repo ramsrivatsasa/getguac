@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getStore, updateStore, getReceipts } from '../../../../lib/db'
+import { formatDateShort } from '../../../../lib/dateFormat'
 import toast from 'react-hot-toast'
 import { ArrowLeft, Save, Store, Phone, Globe, MapPin, Receipt, ChevronRight, Hash, Navigation, Crosshair, Loader2 } from 'lucide-react'
 export default function StoreDetailPage() {
@@ -178,7 +179,7 @@ export default function StoreDetailPage() {
                   <Link key={r.id} href={`/receipts/${r.id}`}
                     className="flex items-center justify-between px-5 py-3 hover:bg-gray-50/70 transition-colors group">
                     <div className="flex items-center gap-4 min-w-0">
-                      <span className="text-sm text-gray-500 w-24 shrink-0">{r.date}</span>
+                      <span className="text-sm text-gray-500 w-24 shrink-0">{formatDateShort(r.date)}</span>
                       <span className={`text-sm font-semibold ${parseFloat(r.total_amount) < 0 ? 'text-rose-600' : 'text-gray-800'}`}>
                         ${parseFloat(r.total_amount || 0).toFixed(2)}
                       </span>

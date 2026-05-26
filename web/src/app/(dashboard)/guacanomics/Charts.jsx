@@ -1,4 +1,5 @@
 'use client'
+import { formatDateShort } from '../../../lib/dateFormat'
 import Link from 'next/link'
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
@@ -276,7 +277,7 @@ export default function Charts({ insights }) {
                   <td className="px-5 py-3 font-medium">
                     <Link href={`/receipts/${r.id}`} className="text-blue-700 hover:underline">{r.store_name}</Link>
                   </td>
-                  <td className="px-5 py-3 text-gray-500">{r.date}</td>
+                  <td className="px-5 py-3 text-gray-500">{formatDateShort(r.date)}</td>
                   <td className="px-5 py-3 font-semibold">${parseFloat(r.total_amount || 0).toFixed(2)}</td>
                   <td className="px-5 py-3 text-gray-500">${parseFloat(r.tax_paid || 0).toFixed(2)}</td>
                   <td className="px-5 py-3">

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useDropzone } from 'react-dropzone'
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
+import { formatDateShort } from '../../../lib/dateFormat'
 import { createClient } from '../../../lib/supabase/client'
 import { useStore } from '../../../store'
 import {
@@ -1042,7 +1043,7 @@ function StatementDetail({ statement, fees, transactions }) {
                   const k = KIND_STYLE[tx.kind] || KIND_STYLE.other
                   return (
                     <tr key={tx.id} className="hover:bg-gray-50/60">
-                      <td className="px-2 py-1.5 whitespace-nowrap text-gray-600">{tx.date}</td>
+                      <td className="px-2 py-1.5 whitespace-nowrap text-gray-600">{formatDateShort(tx.date)}</td>
                       <td className="px-2 py-1.5">
                         <span className={`inline-block px-1.5 py-0.5 rounded-full text-[10px] font-semibold border ${k.cls}`}>
                           {tx.fee_kind || k.label}
@@ -1093,7 +1094,7 @@ function StatementDetail({ statement, fees, transactions }) {
                   <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-semibold border ${FEE_KIND_TONE[f.kind] || FEE_KIND_TONE.fee}`}>
                     {f.fee_kind || f.kind}
                   </span>
-                  <span className="text-gray-600">{f.date}</span>
+                  <span className="text-gray-600">{formatDateShort(f.date)}</span>
                   {f.merchant && <span className="text-gray-500 truncate max-w-xs">{f.merchant}</span>}
                 </span>
                 <span className="font-mono font-semibold text-amber-700">${Number(f.amount).toFixed(2)}</span>
@@ -1156,7 +1157,7 @@ function CombinedTransactionTable({ transactions, statements }) {
               const stmt = stmtById.get(tx.statement_id)
               return (
                 <tr key={tx.id} className="hover:bg-gray-50/60">
-                  <td className="px-2 py-1.5 whitespace-nowrap text-gray-600">{tx.date}</td>
+                  <td className="px-2 py-1.5 whitespace-nowrap text-gray-600">{formatDateShort(tx.date)}</td>
                   <td className="px-2 py-1.5">
                     <span className={`inline-block px-1.5 py-0.5 rounded-full text-[10px] font-semibold border ${k.cls}`}>
                       {tx.fee_kind || k.label}

@@ -8,6 +8,7 @@ import { addToShoppingList } from '../../../lib/db'
 import { createClient } from '../../../lib/supabase/client'
 import { useQuery } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
+import { formatDateShort } from '../../../lib/dateFormat'
 import { Upload, Trash2, Eye, Search, Download, Loader2, Sparkles, X, Shield, Camera, ChevronDown, ChevronRight, Undo2, ShoppingCart, Monitor, Link2, Tag } from 'lucide-react'
 import { guessCategory } from '../../../lib/categorizeRules'
 import { createClient as createSbClient } from '../../../lib/supabase/client'
@@ -733,7 +734,7 @@ export default function ReceiptsPage() {
               <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 space-y-2">
                 <p className="text-sm font-semibold text-amber-800">Receipt already exists</p>
                 <p className="text-sm text-amber-700">
-                  A receipt from <strong>{duplicate.store_name}</strong> on <strong>{duplicate.date}</strong> (${parseFloat(duplicate.total_amount).toFixed(2)}) was found.
+                  A receipt from <strong>{duplicate.store_name}</strong> on <strong>{formatDateShort(duplicate.date)}</strong> (${parseFloat(duplicate.total_amount).toFixed(2)}) was found.
                   Do you want to update it?
                 </p>
                 <div className="flex gap-2 pt-1">
@@ -862,7 +863,7 @@ export default function ReceiptsPage() {
                             )}
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-gray-500">{r.date}</td>
+                        <td className="px-4 py-3 text-gray-500">{formatDateShort(r.date)}</td>
                         <td className="px-4 py-3 font-semibold">${parseFloat(r.total_amount || 0).toFixed(2)}</td>
                         <td className="px-4 py-3 text-gray-500">${parseFloat(r.tax_paid || 0).toFixed(2)}</td>
                         <td className="px-4 py-3 text-gray-400 text-xs">{r.reward_no || '—'}</td>

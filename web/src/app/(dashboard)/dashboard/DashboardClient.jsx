@@ -1,4 +1,5 @@
 'use client'
+import { formatDateShort } from '../../../lib/dateFormat'
 import { useState } from 'react'
 import { useStore } from '../../../store'
 import Link from 'next/link'
@@ -211,7 +212,7 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
                   <td className="px-5 py-3 font-medium">
                     <Link href={`/receipts/${r.id}`} className="hover:text-blue-700">{r.store_name}</Link>
                   </td>
-                  <td className="px-5 py-3 text-gray-500">{r.date}</td>
+                  <td className="px-5 py-3 text-gray-500">{formatDateShort(r.date)}</td>
                   <td className="px-5 py-3 font-semibold">${parseFloat(r.total_amount || 0).toFixed(2)}</td>
                   <td className="px-5 py-3 text-gray-500">${parseFloat(r.tax_paid || 0).toFixed(2)}</td>
                   <td className="px-5 py-3">

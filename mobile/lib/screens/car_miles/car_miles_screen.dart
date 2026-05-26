@@ -65,9 +65,11 @@ class _CarMilesScreenState extends State<CarMilesScreen> {
 
   Future<void> _add({String? prefillDestination}) async {
     // If we got a Google Maps share, drop the destination into the To field
-    // and use the cleaned text as the description. From auto-fills from GPS.
+    // only — keep Description empty so the user can fill in trip purpose
+    // ("client meeting", "doctor visit") rather than seeing the destination
+    // duplicated. From auto-fills from GPS.
     final cleanedDestination = prefillDestination == null ? '' : _cleanSharedText(prefillDestination);
-    final descCtrl  = TextEditingController(text: cleanedDestination);
+    final descCtrl  = TextEditingController();
     final fromCtrl  = TextEditingController();
     final toCtrl    = TextEditingController(text: cleanedDestination);
     final milesCtrl = TextEditingController();

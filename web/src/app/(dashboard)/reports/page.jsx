@@ -180,8 +180,12 @@ export default function ReportsPage() {
               </div>
               {/* Right column: a 3-col grid so the amount + % columns line up
                   vertically. The category chip lives in the first (auto) col
-                  and absorbs the variable label width. */}
+                  and absorbs the variable label width. First grid row is the
+                  column headers (Category / Amount / Share). */}
               <div className="text-xs grid gap-y-1" style={{ gridTemplateColumns: 'minmax(0,1fr) auto auto', columnGap: '12px' }}>
+                <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400 pb-1 border-b border-gray-100">Category</span>
+                <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400 pb-1 border-b border-gray-100 text-right">Amount</span>
+                <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400 pb-1 border-b border-gray-100 text-right w-10">Share</span>
                 {byCategory.slice(0, 10).map(c => (
                   <Fragment key={c.slug}>
                     <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border self-center ${categoryClass(c.slug)}`}>

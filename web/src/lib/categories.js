@@ -15,6 +15,7 @@ export const CATEGORIES = [
   { slug: 'gas-up',     label: 'Gas Up',    emoji: '⛽', desc: 'Fuel & auto service',                 color: 'red' },
   { slug: 'fun',        label: 'Fun',       emoji: '🎬', desc: 'Entertainment, concerts, gaming',      color: 'violet' },
   { slug: 'gifting',    label: 'Gifting',   emoji: '🎁', desc: 'Gifts for others',                    color: 'pink' },
+  { slug: 'charity',    label: 'Charity',   emoji: '❤️', desc: 'Donations, tithes, contributions',    color: 'rose' },
   { slug: 'misc',       label: 'Misc',      emoji: '📦', desc: 'Anything else',                       color: 'gray' },
 ]
 

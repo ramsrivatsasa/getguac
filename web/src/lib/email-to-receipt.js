@@ -225,7 +225,10 @@ async function insertParsedReceipt(sb, userId, parsed, bodyPreview) {
       item_name: it.item_name || '',
       qty: it.qty || 1,
       price: it.price || 0,
-      returned: Boolean(it.returned),
+      // Charity items can never be "returned" — force false regardless of
+      // what the AI returned.
+      returned: it.category === 'charity' ? false : Boolean(it.returned),
+      category: it.category || null,
     }))
     const { error: itemErr } = await sb.from('receipt_items').insert(itemRows)
     if (itemErr) console.warn('[email-to-receipt] item insert failed:', itemErr.message)
@@ -257,10 +260,11 @@ async function insertStubReceipt(sb, userId, { fromAddr, subject, receivedAt, pr
 // the user_id, returns { receipt_id, processed, source }.
 export async function draftReceiptFromEmail(sb, userId, m) {
   const body = stripEmailWrapper(m.bodyText || m.bodyHtml || '')
-  // Try AI parse first
+  // Try AI parse first. Pass the email's received_at as a "do not match" hint
+  // so the AI doesn't lazily return the forward date as the transaction date.
   if (body && body.length > 60) {
     try {
-      const parsed = await parseReceiptFromText(body)
+      const parsed = await parseReceiptFromText(body, { emailDate: m.receivedAt })
       if (parsed && (parsed.store_name || parsed.total_amount || parsed.items?.length)) {
         const { receipt_id } = await insertParsedReceipt(sb, userId, parsed, m.preview)
         return { receipt_id, processed: true, source: parsed._provider || 'ai' }

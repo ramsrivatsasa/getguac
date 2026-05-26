@@ -48,9 +48,9 @@ Return ONLY a single JSON object. No prose, no markdown fences. Schema:
   "payment_method": string|null,
   "payment_last4": string|null,
   "is_return": boolean,
-  "category": string|null,                 // ONE of: "grub", "eats", "tech", "big-stuff", "fix-it", "outdoors", "fits", "wellness", "gas-up", "fun", "gifting", "misc"
+  "category": string|null,                 // ONE of: "grub", "eats", "subs", "bills", "tech", "big-stuff", "fix-it", "outdoors", "supplies", "fits", "wellness", "gas-up", "fun", "gifting", "charity", "misc"
   "items": [
-    { "sku": string|null, "model": string|null, "item_name": string, "qty": number, "price": number, "refund_policy_id": string|null, "returned": boolean }
+    { "sku": string|null, "model": string|null, "item_name": string, "qty": number, "price": number, "category": string|null, "refund_policy_id": string|null, "returned": boolean }
   ],
   "refund_policies": [
     { "policy_id": string|null, "days": number|null, "expiry_date": string|null, "eligible": boolean, "details": string|null }
@@ -64,9 +64,29 @@ Rules:
 - Expand abbreviations: "BEGPLANT4" → "Burpee Eggplant #4", "75LM FLASHLI" → "Defiant 75LM Flashlight".
 - Home Depot "4@3.33 13.32" → qty: 4, price: 13.32 (the line total, not per-unit).
 - For returns, all money is negative AND is_return true AND each returned line has returned: true.
-- date = transaction date PRINTED on the receipt (NOT the email forward date or today's date).
-- If you can't determine the date from the receipt body, set date to null. Never default to today.
-- Output JSON only.`
+
+DATE EXTRACTION — critical. Many receipts get forwarded weeks or months AFTER the
+transaction; the email's "Date:" header is NOT the transaction date.
+- The transaction date is printed on the receipt body, typically next to one of:
+  "Date:", "Trans Date", "Sale Date", "Visit Date", "Order Date", "Date of Sale",
+  or stamped directly under the merchant name/address as MM/DD/YYYY, DD/MM/YYYY,
+  or "Mon DD, YYYY".
+- If two dates appear, the EARLIER one is almost always the transaction date and
+  a later date is when the email/receipt was sent or forwarded.
+- If a "forwardedAt" or "emailDate" hint is given below, REJECT any candidate date
+  that equals it; keep searching for an earlier transaction date in the receipt body.
+- Output format: strict YYYY-MM-DD (zero-padded).
+- If you genuinely cannot determine the transaction date from the receipt body,
+  set "date" to null. NEVER fall back to today, the email date, or any header date.
+
+CHARITY / DONATION ITEMS — set category to "charity" for any item that is a:
+- monetary donation, contribution, tithe, offering
+- charity entry fee or registration ("Run for X", race fee for a 501c3 event)
+- item line labeled DONATION, GIFT TO CHARITY, ROUND-UP DONATION, TIP TO CAUSE
+Charity items cannot be "returned" — leave returned=false even if the receipt
+indicates a refund of a different line.
+
+Output JSON only.`
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 function safeParseJson(raw) {
@@ -170,7 +190,11 @@ async function callGroq({ apiKey, model, messages, timeoutMs = 30_000 }) {
 // Parse a receipt from a text body (forwarded email, OCR result, anything textual).
 // Returns the normalized shape OR null on failure. Never throws — callers can
 // fall back to a stub draft if this returns null.
-export async function parseReceiptFromText(text, { maxChars = 32_000 } = {}) {
+//
+// Optional `emailDate` is an ISO YYYY-MM-DD or full date string for the email's
+// received_at. When provided, the AI is told to REJECT this date as a candidate
+// — useful when the forwarder's email date isn't the actual transaction date.
+export async function parseReceiptFromText(text, { maxChars = 32_000, emailDate = null } = {}) {
   if (!text || !text.trim()) return null
 
   const groqKey = process.env.GROQ_API_KEY
@@ -183,6 +207,18 @@ export async function parseReceiptFromText(text, { maxChars = 32_000 } = {}) {
   // Cap input so a 5 MB newsletter doesn't blow up the AI call cost.
   const body = text.length > maxChars ? text.slice(0, maxChars) + '\n[truncated]' : text
 
+  // Normalize hint to YYYY-MM-DD so the AI sees a consistent format.
+  let hint = ''
+  if (emailDate) {
+    try {
+      const d = emailDate instanceof Date ? emailDate : new Date(emailDate)
+      if (!Number.isNaN(d.getTime())) {
+        const iso = d.toISOString().slice(0, 10)
+        hint = `\n\nHINT (do NOT use this as the transaction date — it's when the email was forwarded): emailDate=${iso}\n`
+      }
+    } catch (_) { /* ignore bad hint */ }
+  }
+
   // Prefer Groq text model — fast, cheap, JSON-mode reliable. Fall back to
   // Gemini text-completion if Groq is unavailable.
   try {
@@ -192,7 +228,7 @@ export async function parseReceiptFromText(text, { maxChars = 32_000 } = {}) {
         model: GROQ_TEXT_MODEL,
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: `Extract the receipt from this email body. JSON only.\n\n${body}` },
+          { role: 'user', content: `Extract the receipt from this email body. JSON only.${hint}\n\n${body}` },
         ],
       })
       const parsed = safeParseJson(result.text)
@@ -211,7 +247,7 @@ export async function parseReceiptFromText(text, { maxChars = 32_000 } = {}) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
-          contents: [{ role: 'user', parts: [{ text: `Extract the receipt from this email body. JSON only.\n\n${body}` }] }],
+          contents: [{ role: 'user', parts: [{ text: `Extract the receipt from this email body. JSON only.${hint}\n\n${body}` }] }],
           generationConfig: { responseMimeType: 'application/json', temperature: 0.1, maxOutputTokens: 4096 },
         }),
         signal: AbortSignal.timeout(30_000),

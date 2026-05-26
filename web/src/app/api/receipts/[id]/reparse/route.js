@@ -62,7 +62,7 @@ export async function POST(_request, { params }) {
     return Response.json({ error: 'Email body is too short to parse.' }, { status: 400 })
   }
 
-  const parsed = await parseReceiptFromText(body)
+  const parsed = await parseReceiptFromText(body, { emailDate: em.received_at })
   if (!parsed || (!parsed.store_name && !parsed.total_amount && !parsed.items?.length)) {
     return Response.json({ error: 'AI returned no usable data from the email body.' }, { status: 502 })
   }
@@ -95,7 +95,8 @@ export async function POST(_request, { params }) {
       item_name: it.item_name || '',
       qty: it.qty || 1,
       price: it.price || 0,
-      returned: Boolean(it.returned),
+      returned: it.category === 'charity' ? false : Boolean(it.returned),
+      category: it.category || null,
     }))
     await sb.from('receipt_items').insert(itemRows)
   }

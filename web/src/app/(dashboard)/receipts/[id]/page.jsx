@@ -457,15 +457,26 @@ export default function ReceiptDetailPage() {
                         onBlur={e => updateItem.mutate({ id: item.id, warranty_info: e.target.value })} />
                     </td>
                     <td className="px-3 py-2">
-                      <input type="date" className="input py-0.5 text-xs" defaultValue={item.return_date}
-                        onBlur={e => updateItem.mutate({ id: item.id, return_date: e.target.value })} />
+                      {item.category === 'charity' ? (
+                        <span className="text-[10px] text-gray-400" title="Donations have no return window">—</span>
+                      ) : (
+                        <input type="date" className="input py-0.5 text-xs" defaultValue={item.return_date}
+                          onBlur={e => updateItem.mutate({ id: item.id, return_date: e.target.value })} />
+                      )}
                     </td>
                     <td className="px-3 py-2">
-                      <input type="checkbox" checked={item.returned || false}
-                        onChange={e => updateItem.mutate({ id: item.id, returned: e.target.checked })} />
+                      {item.category === 'charity' ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-rose-700 bg-rose-50 border border-rose-100 rounded-full px-1.5 py-0.5"
+                          title="Charitable contribution — no return">
+                          ❤️ Donation
+                        </span>
+                      ) : (
+                        <input type="checkbox" checked={item.returned || false}
+                          onChange={e => updateItem.mutate({ id: item.id, returned: e.target.checked })} />
+                      )}
                     </td>
                     <td className="px-3 py-2">
-                      {(item.returned || current.is_return || current.from_statement) ? (
+                      {(item.category === 'charity' || item.returned || current.is_return || current.from_statement) ? (
                         <span className="text-[10px] text-gray-400">—</span>
                       ) : (
                         <button

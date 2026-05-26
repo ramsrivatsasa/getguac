@@ -127,7 +127,7 @@ export async function POST(request) {
         continue
       }
       try {
-        const parsed = await parseReceiptFromText(bodyC)
+        const parsed = await parseReceiptFromText(bodyC, { emailDate: row.received_at })
         if (!parsed || !parsed.store_name) {
           summary.failed++
           summary.errors.push({ message_id: row.id, error: 'AI returned no store_name for store-link' })
@@ -159,7 +159,7 @@ export async function POST(request) {
       continue
     }
     try {
-      const parsed = await parseReceiptFromText(body)
+      const parsed = await parseReceiptFromText(body, { emailDate: row.received_at })
       if (!parsed || (!parsed.store_name && !parsed.total_amount && !parsed.items?.length)) {
         summary.failed++
         summary.errors.push({ message_id: row.id, error: 'AI returned empty parse' })
@@ -200,7 +200,8 @@ export async function POST(request) {
           item_name: it.item_name || '',
           qty: it.qty || 1,
           price: it.price || 0,
-          returned: Boolean(it.returned),
+          returned: it.category === 'charity' ? false : Boolean(it.returned),
+          category: it.category || null,
         }))
         await sb.from('receipt_items').insert(itemRows)
       }

@@ -872,7 +872,7 @@ export default function ReceiptsPage() {
                   <col key={c.id} style={{ width: colWidths[c.id] }} />
                 ))}
               </colgroup>
-              <thead className="bg-gray-50 border-b text-xs text-gray-500 uppercase tracking-wide">
+              <thead className="bg-gray-50 border-b text-xs text-gray-500">
                 <tr>
                   <th className="pl-4 pr-2 py-1">
                     <input type="checkbox" className="w-4 h-4 rounded cursor-pointer" checked={allSelected}
@@ -910,7 +910,7 @@ export default function ReceiptsPage() {
                             if (!canExpand) {
                               // No items → just show the ID as static text, no chevron / no click target
                               return (
-                                <span className="font-mono text-xs text-gray-400 px-2 py-1" title="No line items">
+                                <span className="text-xs text-gray-400 px-2 py-1" title="No line items">
                                   {r.id?.slice(0, 8) || '—'}
                                 </span>
                               )
@@ -919,7 +919,7 @@ export default function ReceiptsPage() {
                               <button
                                 type="button"
                                 onClick={() => toggleExpanded(r.id)}
-                                className="inline-flex items-center gap-1 font-mono text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
+                                className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
                                 title={`Click to show ${itemCount} line item${itemCount === 1 ? '' : 's'}`}>
                                 {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
                                 {r.id?.slice(0, 8) || '—'}
@@ -929,7 +929,7 @@ export default function ReceiptsPage() {
                           })()}
                         </td>
                         <td className="px-4 py-1">
-                          <div className="font-medium text-blue-700 hover:underline">{r.store_name}</div>
+                          <div className="text-blue-700 hover:underline">{r.store_name}</div>
                           <div className="flex items-center gap-1 mt-0.5">
                             {r.from_statement && (
                               <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100" title={r.statement_source || 'Imported from statement'}>
@@ -949,7 +949,7 @@ export default function ReceiptsPage() {
                           </div>
                         </td>
                         <td className="px-4 py-1 text-gray-500 whitespace-nowrap">{formatDateShort(r.date)}</td>
-                        <td className="px-4 py-1 font-semibold">${parseFloat(r.total_amount || 0).toFixed(2)}</td>
+                        <td className="px-4 py-1">${parseFloat(r.total_amount || 0).toFixed(2)}</td>
                         <td className="px-4 py-1 text-gray-500">${parseFloat(r.tax_paid || 0).toFixed(2)}</td>
                         <td className="px-4 py-1 text-gray-400 text-xs">{r.reward_no || '—'}</td>
                         <td className="px-4 py-1">

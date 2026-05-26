@@ -887,7 +887,7 @@ export default function ReceiptsPage() {
                             )}
                           </div>
                         </td>
-                        <td className="px-4 py-1 text-gray-500">{formatDateShort(r.date)}</td>
+                        <td className="px-4 py-1 text-gray-500 whitespace-nowrap">{formatDateShort(r.date)}</td>
                         <td className="px-4 py-1 font-semibold">${parseFloat(r.total_amount || 0).toFixed(2)}</td>
                         <td className="px-4 py-1 text-gray-500">${parseFloat(r.tax_paid || 0).toFixed(2)}</td>
                         <td className="px-4 py-1 text-gray-400 text-xs">{r.reward_no || '—'}</td>

@@ -15,7 +15,7 @@
 import { createApiClient } from '../../../../../lib/supabase/server'
 import { rateLimit, userRateKey } from '../../../../../lib/apiGuard'
 import { parseReceiptFromText } from '../../../../../lib/parse-receipt-engine'
-import { resolveStoreAndLocation } from '../../../../../lib/email-to-receipt'
+import { resolveStoreAndLocation, writeRefundPolicies } from '../../../../../lib/email-to-receipt'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
@@ -112,6 +112,9 @@ export async function POST(_request, { params }) {
     }))
     await sb.from('receipt_items').insert(itemRows)
   }
+
+  // Refund policies — wipe + replace to match the freshly parsed shape.
+  await writeRefundPolicies(sb, receiptId, parsed.refund_policies).catch(() => {})
 
   return Response.json({
     ok: true,

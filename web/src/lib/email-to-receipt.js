@@ -179,6 +179,29 @@ function guessStoreFromHeaders({ fromAddr, subject }) {
   return 'Receipt by email'
 }
 
+// Wipe-and-insert the receipt_refund_policies rows for a receipt. Server-side
+// counterpart to lib/db.js#replaceRefundPolicies — takes the supabase client
+// as a parameter so it works with either the user session or the admin client
+// (the IMAP poller runs as admin). Best-effort: a failure is logged but does
+// not undo the parent receipt insert.
+export async function writeRefundPolicies(sb, receiptId, policies) {
+  if (!receiptId) return
+  // Wipe first so a re-parse drops stale rows. Safe when the array is empty
+  // (we want zero policies on the receipt in that case).
+  await sb.from('receipt_refund_policies').delete().eq('receipt_id', receiptId)
+  if (!Array.isArray(policies) || policies.length === 0) return
+  const rows = policies.map(p => ({
+    receipt_id: receiptId,
+    policy_id: p.policy_id || null,
+    days: p.days ?? null,
+    expiry_date: p.expiry_date || null,
+    eligible: p.eligible !== false,
+    details: p.details || null,
+  }))
+  const { error } = await sb.from('receipt_refund_policies').insert(rows)
+  if (error) console.warn('[email-to-receipt] refund_policies insert failed:', error.message)
+}
+
 // Public helper: given a parsed AI result, find-or-create the matching
 // `stores` + `store_locations` rows and return their FKs. Best-effort —
 // returns nulls on any failure so the caller can still save the receipt
@@ -233,6 +256,10 @@ async function insertParsedReceipt(sb, userId, parsed, bodyPreview) {
     const { error: itemErr } = await sb.from('receipt_items').insert(itemRows)
     if (itemErr) console.warn('[email-to-receipt] item insert failed:', itemErr.message)
   }
+
+  // Refund policies — AI extracted policy labels (A / B / C) + days + expiry.
+  // Best-effort: a failure here doesn't undo the parent receipt.
+  await writeRefundPolicies(sb, rcpt.id, parsed.refund_policies).catch(() => {})
 
   return { receipt_id: rcpt.id }
 }

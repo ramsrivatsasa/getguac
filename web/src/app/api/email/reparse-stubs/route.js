@@ -14,7 +14,7 @@
 import { createApiClient } from '../../../../lib/supabase/server'
 import { rateLimit, userRateKey } from '../../../../lib/apiGuard'
 import { parseReceiptFromText } from '../../../../lib/parse-receipt-engine'
-import { draftReceiptFromEmail, resolveStoreAndLocation } from '../../../../lib/email-to-receipt'
+import { draftReceiptFromEmail, resolveStoreAndLocation, writeRefundPolicies } from '../../../../lib/email-to-receipt'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -205,6 +205,10 @@ export async function POST(request) {
         }))
         await sb.from('receipt_items').insert(itemRows)
       }
+
+      // Persist refund policies (the AI extracts "A: 90 days", "B: 30 days"
+      // etc. from the receipt body).
+      await writeRefundPolicies(sb, row.receipt.id, parsed.refund_policies).catch(() => {})
 
       summary.reparsed++
     } catch (e) {

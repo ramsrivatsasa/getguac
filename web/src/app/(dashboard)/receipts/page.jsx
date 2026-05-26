@@ -879,7 +879,7 @@ export default function ReceiptsPage() {
                       onChange={toggleAll} aria-label="Select all" />
                   </th>
                   {RECEIPT_COLUMNS.map(c => (
-                    <th key={c.id} className="px-4 py-1 text-left font-semibold relative select-none overflow-hidden whitespace-nowrap text-ellipsis">
+                    <th key={c.id} className="px-4 py-1 text-left relative select-none overflow-hidden whitespace-nowrap text-ellipsis">
                       {c.label}
                       <span
                         onMouseDown={(e) => startResize(e, c.id)}
@@ -904,13 +904,19 @@ export default function ReceiptsPage() {
                         </td>
                         <td className="px-4 py-1" onClick={e => e.stopPropagation()}>
                           {(() => {
-                            // Item count comes back from Supabase as receipt_items: [{ count: N }]
                             const itemCount = Array.isArray(r.receipt_items) ? (r.receipt_items[0]?.count ?? 0) : 0
                             const canExpand = itemCount > 0
+                            // Both branches use the SAME flex layout with a 12px chevron slot
+                            // so the receipt-id text starts at the same x-coordinate whether
+                            // the row has line items or not. Non-expandable rows render an
+                            // invisible spacer in place of the chevron.
+                            const slot = canExpand
+                              ? (isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />)
+                              : <span aria-hidden="true" style={{ display: 'inline-block', width: 12, height: 12 }} />
                             if (!canExpand) {
-                              // No items → just show the ID as static text, no chevron / no click target
                               return (
-                                <span className="text-xs text-gray-400 px-2 py-1" title="No line items">
+                                <span className="inline-flex items-center gap-1 text-xs text-gray-400 px-2 py-1" title="No line items">
+                                  {slot}
                                   {r.id?.slice(0, 8) || '—'}
                                 </span>
                               )
@@ -921,7 +927,7 @@ export default function ReceiptsPage() {
                                 onClick={() => toggleExpanded(r.id)}
                                 className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
                                 title={`Click to show ${itemCount} line item${itemCount === 1 ? '' : 's'}`}>
-                                {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                                {slot}
                                 {r.id?.slice(0, 8) || '—'}
                                 <span className="ml-1 text-[10px] text-gray-400">·{itemCount}</span>
                               </button>

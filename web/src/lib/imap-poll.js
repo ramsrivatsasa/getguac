@@ -179,6 +179,37 @@ async function pollOneFolder(client, folder, lastUid, results) {
 const RECEIPT_TAGS = ['+g', '+receipts']
 const RECEIPT_FOLDERS = new Set(['g', 'receipts'])
 
+// Delete a single message from Migadu IMAP by (folder, UID). Used when the
+// user permanently deletes an email from GetGuac — we want it gone from the
+// upstream mailbox too, not just our local mirror.
+//
+// Returns { ok: true, deleted: 1 } on success, throws otherwise. Connect →
+// open folder writable → addFlags \\Deleted → messageDelete → logout.
+export async function deleteImapMessage({ localPart, password, folder, uid }) {
+  if (!folder || !uid) throw new Error('folder + uid required')
+  const client = new ImapFlow({
+    host: ENDPOINTS.imap.host,
+    port: ENDPOINTS.imap.port,
+    secure: ENDPOINTS.imap.secure,
+    auth: { user: fullEmail(localPart), pass: password },
+    logger: false,
+  })
+  await client.connect()
+  try {
+    const lock = await client.getMailboxLock(folder)
+    try {
+      // messageDelete with { uid: true } expunges immediately on servers
+      // that support UIDPLUS (Dovecot does). Falls back to flag + expunge.
+      const ok = await client.messageDelete({ uid: String(uid) }, { uid: true })
+      return { ok: !!ok, deleted: ok ? 1 : 0 }
+    } finally {
+      lock.release()
+    }
+  } finally {
+    await client.logout().catch(() => {})
+  }
+}
+
 export function isReceiptsAddress(message, localPart) {
   // Folder-based detection works even when the user FORWARDS a receipt from
   // their personal address — Delivered-To gets rewritten, but the Migadu

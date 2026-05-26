@@ -70,6 +70,11 @@ export default function Sidebar({ isAdmin }) {
   const isActive = (href) => pathname === href || (href !== '/dashboard' && pathname.startsWith(href))
   const collapsed = sidebarCollapsed
 
+  // Inbox sub-nav visibility — clicking the Inbox item when you're already on
+  // /inbox toggles the sub-nav (Folders + Filters) closed. Persisted so the
+  // user's preference sticks across reloads.
+  const [inboxSubExpanded, setInboxSubExpanded] = useStateClient('inbox_sub_expanded', true)
+
   return (
     <>
       {sidebarOpen && (

@@ -154,43 +154,42 @@ export default function ReportsPage() {
               <PieIcon size={14} className="text-emerald-700" />
               <h2 className="font-semibold text-gray-800 text-sm">Spending by category</h2>
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center">
-              {/* Donut. Recharts needs an explicit pixel height on the wrapper
-                  (h-56 isn't enough when the grid cell collapses). 280px gives
-                  the chart room to render at its default radii. */}
-              <div style={{ width: '100%', height: 280 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
-                    <Pie
-                      data={byCategory.map(c => ({ name: categoryLabel(c.slug), value: c.amount, slug: c.slug }))}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={110}
-                      paddingAngle={2}
-                      isAnimationActive={false}
-                    >
-                      {byCategory.map(c => <Cell key={c.slug} fill={CATEGORY_COLORS[c.slug] || '#94a3b8'} />)}
-                    </Pie>
-                    <Tooltip formatter={(v) => `$${Number(v).toFixed(2)}`} contentStyle={{ borderRadius: 12, fontSize: 12 }} />
-                  </PieChart>
-                </ResponsiveContainer>
+            <div className="flex flex-col lg:flex-row gap-6 items-start">
+              {/* Donut. Using a FIXED-SIZE PieChart instead of ResponsiveContainer
+                  because the grid cell was collapsing to 0 width and recharts
+                  silently rendered nothing. Explicit 280x280 makes the chart
+                  predictable regardless of surrounding layout. */}
+              <div className="shrink-0">
+                <PieChart width={280} height={280}>
+                  <Pie
+                    data={byCategory.map(c => ({ name: categoryLabel(c.slug), value: c.amount, slug: c.slug }))}
+                    dataKey="value"
+                    nameKey="name"
+                    cx={140}
+                    cy={140}
+                    innerRadius={60}
+                    outerRadius={110}
+                    paddingAngle={2}
+                    isAnimationActive={false}
+                  >
+                    {byCategory.map(c => <Cell key={c.slug} fill={CATEGORY_COLORS[c.slug] || '#94a3b8'} />)}
+                  </Pie>
+                  <Tooltip formatter={(v) => `$${Number(v).toFixed(2)}`} contentStyle={{ borderRadius: 12, fontSize: 12 }} />
+                </PieChart>
               </div>
               {/* Right column: a 3-col grid so the amount + % columns line up
                   vertically. The category chip lives in the first (auto) col
                   and absorbs the variable label width. First grid row is the
                   column headers (Category / Amount / Share). */}
-              <div className="text-xs grid gap-y-1" style={{ gridTemplateColumns: 'minmax(0,1fr) auto auto', columnGap: '12px' }}>
+              <div className="flex-1 min-w-0 text-xs grid gap-y-1 w-full" style={{ gridTemplateColumns: 'minmax(0,1fr) auto auto', columnGap: '12px' }}>
                 <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400 pb-1 border-b border-gray-100">Category</span>
                 <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400 pb-1 border-b border-gray-100 text-right">Amount</span>
                 <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400 pb-1 border-b border-gray-100 text-right w-10">Share</span>
                 {byCategory.slice(0, 10).map(c => (
                   <Fragment key={c.slug}>
-                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border self-center ${categoryClass(c.slug)}`}>
+                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border self-center justify-self-start max-w-fit ${categoryClass(c.slug)}`}>
                       <span className="w-2 h-2 rounded-full shrink-0" style={{ background: CATEGORY_COLORS[c.slug] || '#94a3b8' }} />
-                      <span className="truncate">{categoryLabel(c.slug)}</span>
+                      <span>{categoryLabel(c.slug)}</span>
                     </span>
                     <span className="font-semibold text-gray-700 self-center text-right tabular-nums">${c.amount.toFixed(2)}</span>
                     <span className="text-gray-400 self-center text-right tabular-nums w-10">{((c.amount / totalSpent) * 100).toFixed(0)}%</span>

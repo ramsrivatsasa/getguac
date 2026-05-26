@@ -11,7 +11,7 @@ export const runtime = 'nodejs'
 
 export async function POST(request) {
   try {
-    const rl = rateLimit(rateKey(request, 'similar-items'), { limit: 30, windowMs: 60_000 })
+    const rl = await rateLimit(rateKey(request, 'similar-items'), { limit: 30, windowMs: 60_000 })
     if (!rl.ok) return Response.json({ error: 'rate limited' }, { status: 429 })
 
     const apiKey = process.env.GEMINI_API_KEY

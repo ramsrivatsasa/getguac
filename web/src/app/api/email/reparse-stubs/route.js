@@ -41,7 +41,7 @@ export async function POST(request) {
 
   // 4 reparse-sweeps per hour per user. Each can fix up to MAX_PER_RUN receipts,
   // so a user with hundreds of stubs can clean them in a handful of calls.
-  const rl = rateLimit(userRateKey(user.id, 'email-reparse'), { limit: 4, windowMs: 60 * 60 * 1000 })
+  const rl = await rateLimit(userRateKey(user.id, 'email-reparse'), { limit: 4, windowMs: 60 * 60 * 1000 })
   if (!rl.ok) return Response.json({ error: `Rate limited. Try again in ${rl.retryAfter}s.` }, { status: 429 })
 
   // Pull every receipt-hook email that either:

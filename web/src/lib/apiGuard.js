@@ -1,20 +1,98 @@
-// In-process API hardening — rate limit + input validation helpers for /api routes.
-// Lightweight by design: no Redis, no extra deps. Uses a Map for counts, scoped
-// to the dev server process; in prod (Vercel / Edge) each instance has its own
-// map, which is fine for the protection we're after (preventing burst abuse).
+// In-process / cross-instance API hardening — rate limit + input validation
+// helpers for /api routes.
+//
+// At any meaningful scale on Vercel, the rate limiter MUST be cross-instance:
+// each serverless function instance has its own memory, and Vercel auto-scales
+// instances under load. A pure in-process Map limiter is ineffective at scale
+// (verified empirically: at N=100 concurrent sign-ups from one IP, only 1 of
+// the 10 expected blocks fired — the other 32 blocks didn't appear until the
+// instance pool stopped growing).
+//
+// This file uses Upstash Redis (via @upstash/ratelimit's sliding-window algo)
+// when the env vars are present. When they aren't (local dev or a misconfigured
+// env), it transparently falls back to an in-process Map so nothing breaks —
+// you just lose the cross-instance guarantee.
+//
+// rateLimit() is ASYNC. All call sites must `await` it.
 
-// ── Rate limiter ──────────────────────────────────────────────────────────
-const buckets = new Map()  // key → { count, expiresAt }
+import { Ratelimit } from '@upstash/ratelimit'
+import { Redis } from '@upstash/redis'
 
-/**
- * Allow `limit` requests per `windowMs` per key (typically per-IP + per-route).
- * Returns { ok: boolean, remaining: number, retryAfter: number-of-seconds }.
- */
-export function rateLimit(key, { limit = 20, windowMs = 60_000 } = {}) {
+// ── Upstash client (lazy) ─────────────────────────────────────────────────
+let _redis = null            // null = not yet probed; false = not configured; Redis = ready
+let _limiterCache = new Map() // `${limit}|${windowMs}` -> Ratelimit instance
+
+function getRedis() {
+  if (_redis !== null) return _redis || null
+  const url   = process.env.UPSTASH_REDIS_REST_URL
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN
+  if (!url || !token) { _redis = false; return null }
+  try {
+    _redis = new Redis({ url, token })
+  } catch (e) {
+    console.warn('[apiGuard] Upstash init failed; falling back to in-process limiter:', e.message)
+    _redis = false
+    return null
+  }
+  return _redis
+}
+
+function getLimiter(limit, windowMs) {
+  const redis = getRedis()
+  if (!redis) return null
+  const cacheKey = `${limit}|${windowMs}`
+  if (_limiterCache.has(cacheKey)) return _limiterCache.get(cacheKey)
+  // Sliding-window: the most accurate algorithm (no burst at window boundaries).
+  // Window string format: "<n> s" / "<n> ms" — we always express in seconds.
+  const window = `${Math.max(1, Math.ceil(windowMs / 1000))} s`
+  const limiter = new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(limit, window),
+    prefix: 'guac:rl',
+    analytics: false,   // off — saves a Redis write per call
+  })
+  _limiterCache.set(cacheKey, limiter)
+  return limiter
+}
+
+// ── Distributed limit via Upstash, with a 200ms timeout ─────────────────
+// On Redis failure (network, throttle, outage) we return null so the caller
+// can fall back. Better to let some requests through than to block legit
+// users when our limiter is sick.
+async function tryRedisLimit(key, limit, windowMs) {
+  const limiter = getLimiter(limit, windowMs)
+  if (!limiter) return null
+  try {
+    const result = await Promise.race([
+      limiter.limit(key),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('rate-limit timeout')), 200)),
+    ])
+    return {
+      ok: result.success,
+      remaining: result.remaining,
+      retryAfter: Math.max(0, Math.ceil((result.reset - Date.now()) / 1000)),
+    }
+  } catch (e) {
+    // Surface in logs once per cold start so a misconfig is visible without
+    // spamming on every request.
+    if (!getRedis.warned) {
+      console.warn('[apiGuard] Redis rate-limit failed, using in-process fallback:', e.message)
+      getRedis.warned = true
+    }
+    return null
+  }
+}
+
+// ── In-process fallback (per Vercel function instance) ────────────────────
+// Used when Upstash isn't configured OR when a Redis call fails. Coarse but
+// non-zero protection.
+const inProcBuckets = new Map()
+
+function inProcLimit(key, limit, windowMs) {
   const now = Date.now()
-  const b = buckets.get(key)
+  const b = inProcBuckets.get(key)
   if (!b || b.expiresAt < now) {
-    buckets.set(key, { count: 1, expiresAt: now + windowMs })
+    inProcBuckets.set(key, { count: 1, expiresAt: now + windowMs })
     return { ok: true, remaining: limit - 1, retryAfter: 0 }
   }
   b.count++
@@ -22,6 +100,30 @@ export function rateLimit(key, { limit = 20, windowMs = 60_000 } = {}) {
     return { ok: false, remaining: 0, retryAfter: Math.ceil((b.expiresAt - now) / 1000) }
   }
   return { ok: true, remaining: limit - b.count, retryAfter: 0 }
+}
+
+// GC expired buckets every 5 min so the Map doesn't grow forever
+if (typeof setInterval !== 'undefined') {
+  setInterval(() => {
+    const now = Date.now()
+    for (const [k, v] of inProcBuckets) if (v.expiresAt < now) inProcBuckets.delete(k)
+  }, 5 * 60_000).unref?.()
+}
+
+// ── Public API ────────────────────────────────────────────────────────────
+
+/**
+ * Allow `limit` requests per `windowMs` for the given key. Cross-instance
+ * via Upstash when configured; falls back to per-instance in-process when not.
+ *
+ * Returns { ok: boolean, remaining: number, retryAfter: number-of-seconds }.
+ *
+ * ASYNC — must be awaited.
+ */
+export async function rateLimit(key, { limit = 20, windowMs = 60_000 } = {}) {
+  const distributed = await tryRedisLimit(key, limit, windowMs)
+  if (distributed) return distributed
+  return inProcLimit(key, limit, windowMs)
 }
 
 /**
@@ -49,21 +151,15 @@ export function userRateKey(userId, suffix = '') {
  * Composite check: trips if EITHER per-IP or per-user limit is exceeded.
  * Both limits run independently so a single user on a botnet still hits
  * the per-user wall, and an open lab IP hits the per-IP wall.
+ *
+ * ASYNC — must be awaited.
  */
-export function rateLimitComposite({ ipKey, userKey, ipLimit, userLimit, windowMs = 60_000 }) {
-  const ip = rateLimit(ipKey, { limit: ipLimit, windowMs })
+export async function rateLimitComposite({ ipKey, userKey, ipLimit, userLimit, windowMs = 60_000 }) {
+  const ip = await rateLimit(ipKey, { limit: ipLimit, windowMs })
   if (!ip.ok) return { ok: false, reason: 'ip', retryAfter: ip.retryAfter }
-  const user = rateLimit(userKey, { limit: userLimit, windowMs })
+  const user = await rateLimit(userKey, { limit: userLimit, windowMs })
   if (!user.ok) return { ok: false, reason: 'user', retryAfter: user.retryAfter }
   return { ok: true, remaining: Math.min(ip.remaining, user.remaining), retryAfter: 0 }
-}
-
-// Garbage-collect expired buckets every 5 minutes
-if (typeof setInterval !== 'undefined') {
-  setInterval(() => {
-    const now = Date.now()
-    for (const [k, v] of buckets) if (v.expiresAt < now) buckets.delete(k)
-  }, 5 * 60_000).unref?.()
 }
 
 // ── Input validation (no zod dep — hand-rolled, tiny) ─────────────────────

@@ -143,7 +143,7 @@ async function callGroqForFile({ apiKey, mimeType, buffer }) {
 export async function POST(request) {
   try {
     // Rate limit — 10 parses/min per IP+session
-    const rl = rateLimit(rateKey(request, 'parse-receipt'), { limit: 10, windowMs: 60_000 })
+    const rl = await rateLimit(rateKey(request, 'parse-receipt'), { limit: 10, windowMs: 60_000 })
     if (!rl.ok) {
       return Response.json(
         { error: `Too many parses. Try again in ${rl.retryAfter}s.` },

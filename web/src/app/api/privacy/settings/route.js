@@ -38,7 +38,7 @@ function sanitize(input) {
 
 export async function GET(request) {
   try {
-    const rl = rateLimit(rateKey(request, 'privacy-get'), { limit: 60, windowMs: 60_000 })
+    const rl = await rateLimit(rateKey(request, 'privacy-get'), { limit: 60, windowMs: 60_000 })
     if (!rl.ok) return Response.json({ error: 'rate limited' }, { status: 429 })
 
     const sb = createClient()
@@ -69,7 +69,7 @@ export async function GET(request) {
 
 export async function PATCH(request) {
   try {
-    const rl = rateLimit(rateKey(request, 'privacy-patch'), { limit: 30, windowMs: 60_000 })
+    const rl = await rateLimit(rateKey(request, 'privacy-patch'), { limit: 30, windowMs: 60_000 })
     if (!rl.ok) return Response.json({ error: 'rate limited' }, { status: 429 })
 
     const sb = createClient()

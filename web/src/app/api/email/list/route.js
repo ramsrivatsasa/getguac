@@ -16,7 +16,7 @@ const LIST_COLS =
   'receipt:receipt_id(store_name, total_amount, date, is_return, processed)'
 
 export async function GET(request) {
-  const rl = rateLimit(rateKey(request, 'email-list'), { limit: 60, windowMs: 60_000 })
+  const rl = await rateLimit(rateKey(request, 'email-list'), { limit: 60, windowMs: 60_000 })
   if (!rl.ok) return Response.json({ error: 'rate limited' }, { status: 429 })
 
   const sb = createApiClient()

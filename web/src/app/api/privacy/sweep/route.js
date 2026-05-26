@@ -85,7 +85,7 @@ export async function POST(request) {
     }
 
     // User mode — rate-limited so it can't be spammed
-    const rl = rateLimit(rateKey(request, 'privacy-sweep'), { limit: 4, windowMs: 60 * 60 * 1000 })
+    const rl = await rateLimit(rateKey(request, 'privacy-sweep'), { limit: 4, windowMs: 60 * 60 * 1000 })
     if (!rl.ok) return Response.json({ error: 'rate limited — 4 sweeps/hour max' }, { status: 429 })
 
     const sb = createClient()

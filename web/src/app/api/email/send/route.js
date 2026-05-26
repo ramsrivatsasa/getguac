@@ -25,7 +25,7 @@ function admin() {
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export async function POST(request) {
-  const rl = rateLimit(rateKey(request, 'email-send'), { limit: 10, windowMs: 60_000 })
+  const rl = await rateLimit(rateKey(request, 'email-send'), { limit: 10, windowMs: 60_000 })
   if (!rl.ok) return Response.json({ error: 'Too many sends. Try again shortly.' }, { status: 429 })
 
   const sb = createApiClient()

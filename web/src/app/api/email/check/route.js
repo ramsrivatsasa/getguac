@@ -66,7 +66,7 @@ async function suggestAlternatives(sb, base, profile) {
 
 export async function GET(request) {
   try {
-    const rl = rateLimit(rateKey(request, 'email-check'), { limit: 60, windowMs: 60_000 })
+    const rl = await rateLimit(rateKey(request, 'email-check'), { limit: 60, windowMs: 60_000 })
     if (!rl.ok) return Response.json({ error: 'rate limited' }, { status: 429 })
 
     const sb = createClient()

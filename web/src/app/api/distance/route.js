@@ -14,7 +14,7 @@ const ROAD_FACTOR = 1.3   // straight-line → typical road distance
 export async function GET(request) {
   try {
     // Nominatim usage policy: 1 req/sec. Rate-limit per-IP to honor it.
-    const rl = rateLimit(rateKey(request, 'distance-rev'), { limit: 30, windowMs: 60_000 })
+    const rl = await rateLimit(rateKey(request, 'distance-rev'), { limit: 30, windowMs: 60_000 })
     if (!rl.ok) {
       return Response.json({ error: `Slow down — ${rl.retryAfter}s` }, { status: 429 })
     }
@@ -162,7 +162,7 @@ async function resolve(addressOrLabel, coords) {
 
 export async function POST(request) {
   try {
-    const rl = rateLimit(rateKey(request, 'distance-fwd'), { limit: 30, windowMs: 60_000 })
+    const rl = await rateLimit(rateKey(request, 'distance-fwd'), { limit: 30, windowMs: 60_000 })
     if (!rl.ok) {
       return Response.json({ error: `Slow down — ${rl.retryAfter}s` }, { status: 429 })
     }

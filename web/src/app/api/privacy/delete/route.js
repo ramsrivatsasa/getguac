@@ -26,7 +26,7 @@ const CONFIRM_PHRASE = 'DELETE MY DATA'
 export async function POST(request) {
   try {
     // Hard rate limit — destructive endpoint
-    const rl = rateLimit(rateKey(request, 'privacy-delete'), { limit: 10, windowMs: 60 * 60 * 1000 })
+    const rl = await rateLimit(rateKey(request, 'privacy-delete'), { limit: 10, windowMs: 60 * 60 * 1000 })
     if (!rl.ok) return Response.json({ error: 'rate limited — 10 deletions/hour max' }, { status: 429 })
 
     const sb = createClient()

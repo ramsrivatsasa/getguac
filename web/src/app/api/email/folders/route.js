@@ -29,7 +29,7 @@ export async function GET(request) {
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return Response.json({ error: 'Not signed in' }, { status: 401 })
 
-  const rl = rateLimit(userRateKey(user.id, 'email-folders'), { limit: 12, windowMs: 60_000 })
+  const rl = await rateLimit(userRateKey(user.id, 'email-folders'), { limit: 12, windowMs: 60_000 })
   if (!rl.ok) return Response.json({ error: `Rate limited. Try again in ${rl.retryAfter}s.` }, { status: 429 })
 
   if (!process.env.MIGADU_API_KEY || !process.env.EMAIL_ENCRYPTION_KEY) {

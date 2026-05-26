@@ -23,7 +23,7 @@ function admin() {
 
 export async function GET(request) {
   try {
-    const rl = rateLimit(rateKey(request, 'check-username-public'), { limit: 30, windowMs: 60_000 })
+    const rl = await rateLimit(rateKey(request, 'check-username-public'), { limit: 30, windowMs: 60_000 })
     if (!rl.ok) return Response.json({ error: 'rate limited' }, { status: 429 })
 
     const url = new URL(request.url)

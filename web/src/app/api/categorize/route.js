@@ -89,7 +89,7 @@ async function callGroq({ apiKey, payload }) {
 
 export async function POST(request) {
   try {
-    const rl = rateLimit(rateKey(request, 'categorize'), { limit: 10, windowMs: 60_000 })
+    const rl = await rateLimit(rateKey(request, 'categorize'), { limit: 10, windowMs: 60_000 })
     if (!rl.ok) return Response.json({ error: 'rate limited' }, { status: 429 })
 
     const sb = createClient()

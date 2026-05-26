@@ -17,7 +17,7 @@ const BATCH_SIZE = 50
 export async function POST(request) {
   try {
     // Tighter rate limit — this is for admin/cron use, not user-driven
-    const rl = rateLimit(rateKey(request, 'embed-refresh'), { limit: 5, windowMs: 60_000 })
+    const rl = await rateLimit(rateKey(request, 'embed-refresh'), { limit: 5, windowMs: 60_000 })
     if (!rl.ok) return Response.json({ error: 'rate limited' }, { status: 429 })
 
     const apiKey = process.env.GEMINI_API_KEY

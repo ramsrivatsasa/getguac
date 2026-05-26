@@ -28,7 +28,7 @@ const GENERIC_INVALID = { error: 'Invalid username or password' }
 export async function POST(request) {
   try {
     // Tight rate limit — credential stuffing target
-    const rl = rateLimit(rateKey(request, 'sign-in'), { limit: 10, windowMs: 60_000 })
+    const rl = await rateLimit(rateKey(request, 'sign-in'), { limit: 10, windowMs: 60_000 })
     if (!rl.ok) return Response.json({ error: 'Too many sign-in attempts. Try again in a minute.' }, { status: 429 })
 
     const body = await request.json().catch(() => null)

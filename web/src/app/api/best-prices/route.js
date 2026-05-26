@@ -55,7 +55,7 @@ function safeParseJsonArray(raw) {
 export async function POST(request) {
   try {
     // Rate limit — 15 calls/min per IP+session. Each call costs Gemini tokens.
-    const rl = rateLimit(rateKey(request, 'best-prices'), { limit: 15, windowMs: 60_000 })
+    const rl = await rateLimit(rateKey(request, 'best-prices'), { limit: 15, windowMs: 60_000 })
     if (!rl.ok) {
       return Response.json(
         { error: `Too many searches. Try again in ${rl.retryAfter}s.` },

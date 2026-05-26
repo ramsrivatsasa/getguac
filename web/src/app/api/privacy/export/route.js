@@ -33,7 +33,7 @@ const CHILD_TABLES = [
 
 export async function POST(request) {
   try {
-    const rl = rateLimit(rateKey(request, 'privacy-export'), { limit: 3, windowMs: 60 * 60 * 1000 })
+    const rl = await rateLimit(rateKey(request, 'privacy-export'), { limit: 3, windowMs: 60 * 60 * 1000 })
     if (!rl.ok) return Response.json({ error: 'rate limited — export available 3x/hour' }, { status: 429 })
 
     const sb = createClient()

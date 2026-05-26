@@ -35,7 +35,7 @@ export async function POST(request) {
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return Response.json({ error: 'Not signed in' }, { status: 401 })
 
-  const rl = rateLimit(userRateKey(user.id, 'email-backfill'), { limit: 1, windowMs: 300_000 })
+  const rl = await rateLimit(userRateKey(user.id, 'email-backfill'), { limit: 1, windowMs: 300_000 })
   if (!rl.ok) return Response.json({ error: `Backfill rate-limited. Try again in ${rl.retryAfter}s.` }, { status: 429 })
 
   if (!process.env.MIGADU_API_KEY || !process.env.EMAIL_ENCRYPTION_KEY) {

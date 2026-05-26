@@ -219,7 +219,7 @@ async function callGroqForFile({ apiKey, mimeType, buffer }) {
 
 export async function POST(request) {
   try {
-    const rl = rateLimit(rateKey(request, 'parse-statement'), { limit: 5, windowMs: 60_000 })
+    const rl = await rateLimit(rateKey(request, 'parse-statement'), { limit: 5, windowMs: 60_000 })
     if (!rl.ok) return Response.json({ error: `Too many parses. Try again in ${rl.retryAfter}s.` }, { status: 429 })
 
     const geminiKey = process.env.GEMINI_API_KEY

@@ -52,7 +52,7 @@ function admin() {
 
 export async function POST(request) {
   try {
-    const rl = rateLimit(rateKey(request, 'sign-up'), { limit: 5, windowMs: 60_000 })
+    const rl = await rateLimit(rateKey(request, 'sign-up'), { limit: 5, windowMs: 60_000 })
     if (!rl.ok) return Response.json({ error: 'Too many sign-up attempts.' }, { status: 429 })
 
     const body = await request.json().catch(() => null)

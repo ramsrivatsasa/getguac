@@ -137,18 +137,51 @@ async function upsertStoreLocationServer(sb, storeId, parsed) {
   return data
 }
 
-// Strip the email wrapper so the AI sees just the receipt body. Removes
-// "Forwarded message" headers, "From:/To:/Subject:" lines at the top, and
-// trailing "Sent from my iPhone" / Gmail-style quote prefixes. Defensive —
-// if regex doesn't match, we hand the AI the raw text and let it cope.
-function stripEmailWrapper(text) {
+// Markers that signal the end of the actual receipt body in a typical
+// merchant e-receipt. Everything after these is promotional / recommendation
+// content (other items + prices) that the AI keeps mis-attributing as the
+// receipt's total. We truncate at the FIRST match.
+const PROMO_SECTION_MARKERS = [
+  /\bBuy it again\b/i,
+  /\bRecommended for you\b/i,
+  /\bRecommended (?:items|products)\b/i,
+  /\bYou (?:may|might) (?:also )?like\b/i,
+  /\bRecently viewed\b/i,
+  /\bTop picks\b/i,
+  /\bMore items to consider\b/i,
+  /\bCustomers (?:also|who).*?bought\b/i,
+  /\bSimilar items\b/i,
+  /\bRelated to items you('|')?ve viewed\b/i,
+  /\bInspired by your.*?(history|browsing)\b/i,
+  /\bRate (?:your|this) (?:purchase|order)\b/i,
+  /\bShare your (?:thoughts|feedback)\b/i,
+  /\bWrite a (?:product )?review\b/i,
+]
+
+// Strip the email wrapper so the AI sees JUST the receipt body. Removes:
+//   1. "---------- Forwarded message ----------" blocks
+//   2. From / To / Sent / Date / Subject header lines
+//   3. "Sent from my iPhone" mobile-client signatures
+//   4. The "Buy it again" / "Recommended" promotional section at the bottom
+//      — TRUNCATING at the first marker because everything below it is OTHER
+//      items at OTHER prices that the AI was mistakenly attributing to this
+//      receipt's total (Amazon $8 receipt was getting parsed as $846 because
+//      it summed promo prices).
+export function stripEmailWrapper(text) {
   if (!text) return ''
   let s = text
-  // Drop common Gmail/Outlook forwarding header block
   s = s.replace(/-{3,}\s*Forwarded message\s*-{3,}/i, '')
   s = s.replace(/^(From|To|Sent|Date|Subject|Cc|Bcc):.*$/gim, '')
   s = s.replace(/Sent from my (iPhone|iPad|Android|Samsung|Galaxy)[^\n]*/gi, '')
-  // Compact multiple blank lines
+
+  // Truncate at the first promo / recommendation marker. Earliest wins.
+  let cutoff = -1
+  for (const re of PROMO_SECTION_MARKERS) {
+    const m = s.match(re)
+    if (m && (cutoff === -1 || m.index < cutoff)) cutoff = m.index
+  }
+  if (cutoff > 0) s = s.slice(0, cutoff)
+
   s = s.replace(/\n{3,}/g, '\n\n').trim()
   return s
 }

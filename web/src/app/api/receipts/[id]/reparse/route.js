@@ -15,20 +15,12 @@
 import { createApiClient } from '../../../../../lib/supabase/server'
 import { rateLimit, userRateKey } from '../../../../../lib/apiGuard'
 import { parseReceiptFromText } from '../../../../../lib/parse-receipt-engine'
-import { resolveStoreAndLocation, writeRefundPolicies, lookupStoreDefaultPolicies } from '../../../../../lib/email-to-receipt'
+import { resolveStoreAndLocation, writeRefundPolicies, lookupStoreDefaultPolicies, stripEmailWrapper } from '../../../../../lib/email-to-receipt'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
 
-function stripEmailWrapper(text) {
-  if (!text) return ''
-  let s = text
-  s = s.replace(/-{3,}\s*Forwarded message\s*-{3,}/i, '')
-  s = s.replace(/^(From|To|Sent|Date|Subject|Cc|Bcc):.*$/gim, '')
-  s = s.replace(/Sent from my (iPhone|iPad|Android|Samsung|Galaxy)[^\n]*/gi, '')
-  s = s.replace(/\n{3,}/g, '\n\n').trim()
-  return s
-}
+// stripEmailWrapper centralised in lib/email-to-receipt.js
 
 export async function POST(_request, { params }) {
   const { id: receiptId } = await params

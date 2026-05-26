@@ -14,7 +14,7 @@
 import { createApiClient } from '../../../../lib/supabase/server'
 import { rateLimit, userRateKey } from '../../../../lib/apiGuard'
 import { parseReceiptFromText } from '../../../../lib/parse-receipt-engine'
-import { draftReceiptFromEmail, resolveStoreAndLocation, writeRefundPolicies, lookupStoreDefaultPolicies } from '../../../../lib/email-to-receipt'
+import { draftReceiptFromEmail, resolveStoreAndLocation, writeRefundPolicies, lookupStoreDefaultPolicies, stripEmailWrapper } from '../../../../lib/email-to-receipt'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -24,15 +24,8 @@ export const maxDuration = 60
 // batches; the cooldown below stops them from chaining infinitely.
 const MAX_PER_RUN = 20
 
-function stripEmailWrapper(text) {
-  if (!text) return ''
-  let s = text
-  s = s.replace(/-{3,}\s*Forwarded message\s*-{3,}/i, '')
-  s = s.replace(/^(From|To|Sent|Date|Subject|Cc|Bcc):.*$/gim, '')
-  s = s.replace(/Sent from my (iPhone|iPad|Android|Samsung|Galaxy)[^\n]*/gi, '')
-  s = s.replace(/\n{3,}/g, '\n\n').trim()
-  return s
-}
+// stripEmailWrapper is centralised in lib/email-to-receipt.js so the truncate
+// logic (promo-section markers) stays in one place.
 
 export async function POST(request) {
   const sb = createApiClient()

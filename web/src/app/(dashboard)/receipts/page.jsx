@@ -865,7 +865,7 @@ export default function ReceiptsPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm" style={{ tableLayout: 'fixed' }}>
+            <table className="w-full text-xs" style={{ tableLayout: 'fixed' }}>
               <colgroup>
                 <col style={{ width: 40 }} />
                 {RECEIPT_COLUMNS.map(c => (

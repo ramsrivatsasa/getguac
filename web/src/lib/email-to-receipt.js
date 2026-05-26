@@ -9,6 +9,116 @@
 
 import { parseReceiptFromText } from './parse-receipt-engine'
 
+function normalizePhone(s) {
+  return (s || '').replace(/\D+/g, '')
+}
+
+// Find-or-create a row in `stores` for a parsed AI result. Uses the same
+// match strategy as web/src/lib/db.js#findStoreMatch (phone → address → name)
+// but takes the Supabase client as a parameter so it works with either the
+// per-user client OR the admin/service-role client used by the poller.
+//
+// Returns the store row, or null when there's nothing usable to upsert.
+async function upsertStoreServer(sb, parsed) {
+  const storeName = (parsed.store_name || '').trim()
+  if (!storeName) return null
+
+  const address  = parsed.store_address || null
+  const phoneNo  = parsed.store_phone   || null
+  const website  = parsed.store_website || null
+
+  const phoneNorm = normalizePhone(phoneNo)
+  const addrNorm  = (address || '').trim().toLowerCase()
+  const nameNorm  = storeName.toLowerCase()
+
+  // Match against the global stores table. The scale issue with this full
+  // table-scan is logged in the audit — fine for now, costly later.
+  const { data: all } = await sb.from('stores').select('*')
+  const stores = all || []
+
+  let match = null
+  if (phoneNorm.length >= 7) {
+    match = stores.find(s => normalizePhone(s.phone_no) === phoneNorm) || null
+  }
+  if (!match && addrNorm) {
+    match = stores.find(s => (s.address || '').trim().toLowerCase() === addrNorm) || null
+  }
+  if (!match && nameNorm) {
+    match = stores.find(s => (s.store_name || '').trim().toLowerCase() === nameNorm) || null
+  }
+
+  if (match) {
+    // Backfill missing top-level fields when the parse picked them up.
+    const patch = {}
+    if (!match.address && address) patch.address = address
+    if (!match.phone_no && phoneNo) patch.phone_no = phoneNo
+    if (!match.website && website) patch.website = website
+    if (Object.keys(patch).length > 0) {
+      const { data: updated } = await sb.from('stores').update(patch).eq('id', match.id).select().single()
+      return updated || match
+    }
+    return match
+  }
+
+  const { data, error } = await sb
+    .from('stores')
+    .insert({ store_name: storeName, address, phone_no: phoneNo, website })
+    .select()
+    .single()
+  if (error) {
+    console.warn('[email-to-receipt] store insert failed:', error.message)
+    return null
+  }
+  return data
+}
+
+// Find-or-create the store_locations row for this parse. One location row per
+// distinct address within a store.
+async function upsertStoreLocationServer(sb, storeId, parsed) {
+  if (!storeId) return null
+  const address  = parsed.store_address || null
+  const city     = parsed.store_city    || null
+  const state    = parsed.store_state   || null
+  const zip      = parsed.store_zip     || null
+  const phoneNo  = parsed.store_phone   || null
+  const storeNo  = parsed.store_no      || null
+  const locName  = parsed.location_name || null
+
+  // Nothing distinct to identify a location — skip.
+  if (!address && !city && !zip && !storeNo) return null
+
+  let q = sb.from('store_locations').select('*').eq('store_id', storeId)
+  if (address) q = q.ilike('address', address)
+  else q = q.is('address', null)
+  const { data: existing } = await q.limit(1).maybeSingle()
+
+  if (existing) {
+    const patch = {}
+    if (!existing.location_name && locName) patch.location_name = locName
+    if (!existing.city && city) patch.city = city
+    if (!existing.state && state) patch.state = state
+    if (!existing.zip && zip) patch.zip = zip
+    if (!existing.phone_no && phoneNo) patch.phone_no = phoneNo
+    if (!existing.store_no && storeNo) patch.store_no = storeNo
+    if (Object.keys(patch).length > 0) {
+      const { data: updated } = await sb.from('store_locations').update(patch).eq('id', existing.id).select().single()
+      return updated || existing
+    }
+    return existing
+  }
+
+  const { data, error } = await sb
+    .from('store_locations')
+    .insert({ store_id: storeId, location_name: locName, address, city, state, zip, phone_no: phoneNo, store_no: storeNo })
+    .select()
+    .single()
+  if (error) {
+    console.warn('[email-to-receipt] store_location insert failed:', error.message)
+    return null
+  }
+  return data
+}
+
 // Strip the email wrapper so the AI sees just the receipt body. Removes
 // "Forwarded message" headers, "From:/To:/Subject:" lines at the top, and
 // trailing "Sent from my iPhone" / Gmail-style quote prefixes. Defensive —
@@ -51,12 +161,29 @@ function guessStoreFromHeaders({ fromAddr, subject }) {
   return 'Receipt by email'
 }
 
+// Public helper: given a parsed AI result, find-or-create the matching
+// `stores` + `store_locations` rows and return their FKs. Best-effort —
+// returns nulls on any failure so the caller can still save the receipt
+// with just the store_name string.
+export async function resolveStoreAndLocation(sb, parsed) {
+  const store    = await upsertStoreServer(sb, parsed).catch(() => null)
+  const location = store ? await upsertStoreLocationServer(sb, store.id, parsed).catch(() => null) : null
+  return { store_id: store?.id || null, store_location_id: location?.id || null }
+}
+
 // Insert a receipt row + its items + refund policies for an AI-parsed result.
+// Also find-or-creates the linked store + store_location so the receipt
+// joins into the per-store views (Stash, Worth It, store detail page).
 // Returns { receipt_id }.
 async function insertParsedReceipt(sb, userId, parsed, bodyPreview) {
+  // Resolve the store first so the receipt insert can carry the FK.
+  const { store_id, store_location_id } = await resolveStoreAndLocation(sb, parsed)
+
   const { data: rcpt, error } = await sb.from('receipts').insert({
     user_id: userId,
     store_name: parsed.store_name || 'Receipt by email',
+    store_id,
+    store_location_id,
     date: parsed.date || new Date().toISOString().slice(0, 10),
     total_amount: parsed.total_amount || 0,
     tax_paid: parsed.tax_paid || 0,

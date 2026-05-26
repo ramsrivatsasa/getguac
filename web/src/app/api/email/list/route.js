@@ -10,7 +10,10 @@ export const runtime = 'nodejs'
 const LIST_COLS =
   'id, uid, from_addr, to_addr, subject, received_at, preview, ' +
   'is_receipts_hook, has_attachments, processed, receipt_id, ' +
-  'read_at, starred, folder'
+  'read_at, starred, folder, ' +
+  // Embed the linked receipt so the inbox row can show "Lowe's · $42.99"
+  // instead of the forwarder's email — that's what users actually scan for.
+  'receipt:receipt_id(store_name, total_amount, date, is_return, processed)'
 
 export async function GET(request) {
   const rl = rateLimit(rateKey(request, 'email-list'), { limit: 60, windowMs: 60_000 })

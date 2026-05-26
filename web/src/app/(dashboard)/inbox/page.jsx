@@ -122,7 +122,15 @@ export default function InboxPage() {
           <GuacMascot expression="eating" size={64} />
           <div>
             <h1 className="page-title">Inbox</h1>
-            <p className="text-xs text-gray-500 mt-0.5">{total} message{total === 1 ? '' : 's'} · Guac-AI auto-files anything sent to <span className="font-mono">+g</span></p>
+            <p className="text-xs text-gray-500 mt-0.5">
+              <span className="font-semibold text-gray-700">{total}</span> message{total === 1 ? '' : 's'}
+              {messages.filter(m => m.receipt).length > 0 && (
+                <>
+                  {' · '}
+                  <span className="text-emerald-700">🥑 {messages.filter(m => m.receipt).length} filed as receipts</span>
+                </>
+              )}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -266,9 +274,14 @@ export default function InboxPage() {
                   }}
                 />
               ) : (
-                <div className="flex-1 flex items-center justify-center text-gray-300 text-sm flex-col gap-3 px-4 text-center">
-                  <Mail size={42} />
-                  <p>Pick a message to read.</p>
+                <div className="flex-1 flex items-center justify-center text-sm flex-col gap-4 px-6 text-center bg-gradient-to-br from-emerald-50/40 to-lime-50/30">
+                  <GuacMascot expression="relaxing" size={120} />
+                  <div className="space-y-1.5">
+                    <p className="font-bold text-emerald-900 text-base">Pick a message to read</p>
+                    <p className="text-gray-500 text-xs max-w-xs">
+                      Forward any receipt to your <span className="font-mono font-semibold text-emerald-700">+g</span> address and Guac-AI will file it as a receipt automatically.
+                    </p>
+                  </div>
                 </div>
               )}
             </section>
@@ -356,37 +369,88 @@ export default function InboxPage() {
   )
 }
 
+// Strip the email-wrapper boilerplate from a preview string so we show the
+// actual content of forwarded receipts instead of "----- Forwarded message -----"
+// on every row. Cheap, idempotent, runs in O(n) per row.
+function cleanPreview(s) {
+  if (!s) return ''
+  return s
+    .replace(/-{3,}\s*Forwarded message\s*-{3,}/gi, '')
+    .replace(/^(From|To|Sent|Date|Subject|Cc|Bcc):.*$/gim, '')
+    .replace(/Sent from my (iPhone|iPad|Android|Samsung|Galaxy)[^\n]*/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function formatMoney(n) {
+  if (n == null || isNaN(n)) return null
+  const abs = Math.abs(Number(n))
+  const sign = Number(n) < 0 ? '-' : ''
+  return `${sign}$${abs.toFixed(2)}`
+}
+
 function MessageRow({ m, selected, onClick, onToggleStar }) {
   const unread = !m.read_at
+  const rcpt = m.receipt  // embedded { store_name, total_amount, date, is_return, processed }
+  const isReceipt = !!rcpt
+  const isReturn = rcpt?.is_return
+  const amount = rcpt ? formatMoney(rcpt.total_amount) : null
+  const cleanedPreview = cleanPreview(m.preview)
   return (
     <button
       onClick={onClick}
-      className={`w-full text-left px-3 py-2.5 flex items-start gap-2 transition ${
+      className={`w-full text-left pl-2 pr-3 py-2.5 flex items-start gap-2 transition relative ${
         selected ? 'bg-emerald-50' : unread ? 'bg-white hover:bg-gray-50' : 'bg-gray-50/40 hover:bg-gray-50'
       }`}
     >
+      {/* Avocado-green accent stripe for receipt-hook rows — instant visual scan */}
+      {m.is_receipts_hook && (
+        <span className={`absolute left-0 top-0 bottom-0 w-1 rounded-r ${
+          isReturn ? 'bg-rose-400' : isReceipt && rcpt?.processed ? 'bg-emerald-500' : 'bg-emerald-300 animate-pulse'
+        }`} />
+      )}
       <span
         onClick={(e) => { e.stopPropagation(); onToggleStar() }}
-        className="mt-1 cursor-pointer"
+        className="mt-1 cursor-pointer ml-1"
         title={m.starred ? 'Unstar' : 'Star'}
       >
         <Star size={14} className={m.starred ? 'fill-amber-400 text-amber-500' : 'text-gray-300 hover:text-amber-400'} />
       </span>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
-          <span className={`text-xs truncate ${unread ? 'font-extrabold text-gray-900' : 'font-semibold text-gray-600'}`}>
-            {trimAddr(m.from_addr)}
-          </span>
-          {m.is_receipts_hook && (
-            <span className="text-[9px] font-bold uppercase bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-full">+g</span>
-          )}
-          {m.processed && m.receipt_id && (
-            <span className="text-[9px] font-bold uppercase bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-full">📜 Filed</span>
+          {isReceipt ? (
+            <>
+              <span className="text-base">{isReturn ? '↩️' : '🥑'}</span>
+              <span className={`text-sm truncate ${unread ? 'font-extrabold text-emerald-900' : 'font-bold text-emerald-800'}`}>
+                {rcpt.store_name || 'Receipt'}
+              </span>
+              {amount && (
+                <span className={`text-xs font-extrabold tabular-nums ${isReturn ? 'text-rose-600' : 'text-emerald-700'}`}>
+                  {amount}
+                </span>
+              )}
+              {!rcpt.processed && (
+                <span className="text-[9px] font-bold uppercase bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-full">Parsing…</span>
+              )}
+            </>
+          ) : (
+            <>
+              <span className={`text-xs truncate ${unread ? 'font-extrabold text-gray-900' : 'font-semibold text-gray-600'}`}>
+                {trimAddr(m.from_addr)}
+              </span>
+              {m.is_receipts_hook && (
+                <span className="text-[9px] font-bold uppercase bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-full">+g</span>
+              )}
+            </>
           )}
           <span className="text-[10px] text-gray-400 ml-auto shrink-0">{shortDate(m.received_at)}</span>
         </div>
-        <p className={`text-sm truncate ${unread ? 'font-bold text-gray-900' : 'text-gray-700'}`}>{m.subject || '(no subject)'}</p>
-        <p className="text-xs text-gray-500 truncate">{m.preview}</p>
+        <p className={`text-sm truncate ${unread ? 'font-bold text-gray-900' : 'text-gray-700'}`}>
+          {m.subject || '(no subject)'}
+        </p>
+        {cleanedPreview && (
+          <p className="text-xs text-gray-500 truncate">{cleanedPreview}</p>
+        )}
       </div>
     </button>
   )

@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useReceipt, useUpdateReceipt, useAddReceiptItem, useUpdateReceiptItem } from '../../../../hooks/useReceipts'
 import toast from 'react-hot-toast'
-import { ArrowLeft, Save, Plus, Shield, MapPin, Phone, Hash, Sparkles, MessageCircle, ImageIcon, ShoppingCart, Tag } from 'lucide-react'
+import { ArrowLeft, Save, Plus, Shield, MapPin, Phone, Hash, Sparkles, MessageCircle, ImageIcon, ShoppingCart, Tag, RefreshCw } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { addToShoppingList, setStashProductCategory } from '../../../../lib/db'
 import { CATEGORIES } from '../../../../lib/categories'
@@ -55,6 +55,28 @@ export default function ReceiptDetailPage() {
     onError: err => toast.error(err.message),
   })
 
+  // Re-parse this single receipt against its source email body. Only available
+  // for email-sourced receipts; the endpoint returns 400 with an explainer if
+  // the receipt wasn't created from a forwarded email.
+  const reparseFromEmail = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`/api/receipts/${id}/reparse`, { method: 'POST' })
+      const body = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(body?.error || `Re-parse failed (${res.status})`)
+      return body
+    },
+    onSuccess: (data) => {
+      toast.success(
+        `Re-parsed: ${data?.receipt?.store_name || 'updated'} · ${data?.items_parsed || 0} items`,
+        { duration: 5000 }
+      )
+      setLocalReceipt(null)
+      qc.invalidateQueries({ queryKey: ['receipts'] })
+      qc.invalidateQueries({ queryKey: ['receipts', id] })
+    },
+    onError: (e) => toast.error(e.message),
+  })
+
   function handleFieldChange(key, value) {
     setLocalReceipt(p => ({ ...(p ?? receipt), [key]: value }))
   }
@@ -102,9 +124,18 @@ export default function ReceiptDetailPage() {
 
   return (
     <div className="space-y-6 max-w-4xl">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
         <button onClick={() => router.back()} className="btn-ghost p-1.5"><ArrowLeft size={20} /></button>
-        <h1 className="page-title">Receipt — {current.store_name}</h1>
+        <h1 className="page-title flex-1 min-w-0 truncate">Receipt — {current.store_name}</h1>
+        <button
+          onClick={() => reparseFromEmail.mutate()}
+          disabled={reparseFromEmail.isPending}
+          className="btn-secondary flex items-center gap-2 text-sm"
+          title="Re-run the AI parser against this receipt's source email. Only works for email-forwarded receipts."
+        >
+          <RefreshCw size={14} className={reparseFromEmail.isPending ? 'animate-spin' : ''} />
+          {reparseFromEmail.isPending ? 'Re-parsing…' : 'Re-parse from email'}
+        </button>
       </div>
 
       {/* Receipt header */}

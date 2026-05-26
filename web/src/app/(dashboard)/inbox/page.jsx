@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState, useCallback, useRef } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { PanelGroup, Panel, PanelResizeHandle } from 'react-resizable-panels'
 import toast from 'react-hot-toast'
@@ -23,8 +24,22 @@ const FOLDERS = [
 
 export default function InboxPage() {
   const qc = useQueryClient()
-  const [folder, setFolder] = useState('inbox')
-  const [filter, setFilter] = useState('')
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  // Folder + filter live in URL search params now (sidebar sub-nav drives them).
+  // ?folder=sent  ?filter=unread, etc. Missing param = default ('inbox' / 'All').
+  const folder = searchParams.get('folder') || 'inbox'
+  const filter = searchParams.get('filter') || ''
+  function setFolder(next) {
+    const params = new URLSearchParams(searchParams.toString())
+    if (!next || next === 'inbox') params.delete('folder'); else params.set('folder', next)
+    router.replace(`/inbox${params.toString() ? `?${params.toString()}` : ''}`, { scroll: false })
+  }
+  function setFilter(next) {
+    const params = new URLSearchParams(searchParams.toString())
+    if (!next) params.delete('filter'); else params.set('filter', next)
+    router.replace(`/inbox${params.toString() ? `?${params.toString()}` : ''}`, { scroll: false })
+  }
   const [q, setQ] = useState('')
   const [selectedId, setSelectedId] = useState(null)
   const [composeOpen, setComposeOpen] = useState(false)

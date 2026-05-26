@@ -9,7 +9,7 @@
 // power users we'd swap to a server-side SQL aggregate.
 
 'use client'
-import { useMemo, useState } from 'react'
+import { useMemo, useState, Fragment } from 'react'
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '../../../lib/supabase/client'
@@ -155,29 +155,44 @@ export default function ReportsPage() {
               <h2 className="font-semibold text-gray-800 text-sm">Spending by category</h2>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center">
-              <div className="h-56">
+              {/* Donut. Recharts needs an explicit pixel height on the wrapper
+                  (h-56 isn't enough when the grid cell collapses). 280px gives
+                  the chart room to render at its default radii. */}
+              <div style={{ width: '100%', height: 280 }}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={byCategory.map(c => ({ name: categoryLabel(c.slug), value: c.amount, slug: c.slug }))}
-                      dataKey="value" innerRadius={50} outerRadius={90} paddingAngle={2}>
+                  <PieChart margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+                    <Pie
+                      data={byCategory.map(c => ({ name: categoryLabel(c.slug), value: c.amount, slug: c.slug }))}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={110}
+                      paddingAngle={2}
+                      isAnimationActive={false}
+                    >
                       {byCategory.map(c => <Cell key={c.slug} fill={CATEGORY_COLORS[c.slug] || '#94a3b8'} />)}
                     </Pie>
                     <Tooltip formatter={(v) => `$${Number(v).toFixed(2)}`} contentStyle={{ borderRadius: 12, fontSize: 12 }} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
-              <ul className="space-y-1">
+              {/* Right column: a 3-col grid so the amount + % columns line up
+                  vertically. The category chip lives in the first (auto) col
+                  and absorbs the variable label width. */}
+              <div className="text-xs grid gap-y-1" style={{ gridTemplateColumns: 'minmax(0,1fr) auto auto', columnGap: '12px' }}>
                 {byCategory.slice(0, 10).map(c => (
-                  <li key={c.slug} className="flex items-center justify-between text-xs">
-                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border ${categoryClass(c.slug)}`}>
-                      <span className="w-2 h-2 rounded-full" style={{ background: CATEGORY_COLORS[c.slug] || '#94a3b8' }} />
-                      {categoryLabel(c.slug)}
+                  <Fragment key={c.slug}>
+                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border self-center ${categoryClass(c.slug)}`}>
+                      <span className="w-2 h-2 rounded-full shrink-0" style={{ background: CATEGORY_COLORS[c.slug] || '#94a3b8' }} />
+                      <span className="truncate">{categoryLabel(c.slug)}</span>
                     </span>
-                    <span className="font-semibold text-gray-700">${c.amount.toFixed(2)}</span>
-                    <span className="text-gray-400 w-14 text-right">{((c.amount / totalSpent) * 100).toFixed(0)}%</span>
-                  </li>
+                    <span className="font-semibold text-gray-700 self-center text-right tabular-nums">${c.amount.toFixed(2)}</span>
+                    <span className="text-gray-400 self-center text-right tabular-nums w-10">{((c.amount / totalSpent) * 100).toFixed(0)}%</span>
+                  </Fragment>
                 ))}
-              </ul>
+              </div>
             </div>
           </div>
 

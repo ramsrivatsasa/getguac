@@ -1,10 +1,12 @@
 'use client'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '../lib/supabase/client'
 import { useStore } from '../store'
 import {
-  LayoutDashboard, Receipt, Gift, ShoppingCart, Car, User, X, Store, Undo2, Sparkles, ChevronsLeft, ChevronsRight, Package, Utensils, BadgeDollarSign, Banknote, Wand2, Mail, BarChart3
+  LayoutDashboard, Receipt, Gift, ShoppingCart, Car, User, X, Store, Undo2, Sparkles, ChevronsLeft, ChevronsRight, Package, Utensils, BadgeDollarSign, Banknote, Wand2, Mail, BarChart3,
+  Inbox as InboxIcon, Send, Trash2, Filter, ChevronDown,
 } from 'lucide-react'
 import clsx from 'clsx'
 import GuacMascot from './GuacMascot'
@@ -118,42 +120,46 @@ export default function Sidebar({ isAdmin }) {
                 {section.items.map(({ href, icon: Icon, label, emoji, hoverMascot }) => {
                   const active = isActive(href)
                   return (
-                    <Link
-                      key={href}
-                      href={href}
-                      onClick={() => setSidebarOpen(false)}
-                      title={collapsed ? label : undefined}
-                      className={clsx(
-                        'group flex items-center rounded-2xl text-sm transition-all',
-                        collapsed ? 'lg:justify-center lg:px-2 lg:py-1.5 px-3 py-1.5 gap-2.5' : 'gap-2.5 px-3 py-1.5',
-                        active
-                          ? 'bg-gradient-to-r from-emerald-100 to-lime-100 text-emerald-900 font-semibold shadow-sm ring-1 ring-emerald-200/60'
-                          : 'text-gray-600 hover:bg-emerald-50 hover:text-emerald-900'
+                    <div key={href}>
+                      <Link
+                        href={href}
+                        onClick={() => setSidebarOpen(false)}
+                        title={collapsed ? label : undefined}
+                        className={clsx(
+                          'group flex items-center rounded-2xl text-sm transition-all',
+                          collapsed ? 'lg:justify-center lg:px-2 lg:py-1.5 px-3 py-1.5 gap-2.5' : 'gap-2.5 px-3 py-1.5',
+                          active
+                            ? 'bg-gradient-to-r from-emerald-100 to-lime-100 text-emerald-900 font-semibold shadow-sm ring-1 ring-emerald-200/60'
+                            : 'text-gray-600 hover:bg-emerald-50 hover:text-emerald-900'
+                        )}
+                      >
+                        <span className={clsx(
+                          'flex items-center justify-center text-base shrink-0 transition-all',
+                          collapsed ? 'w-8 h-8 lg:w-8 lg:h-8' : 'w-7 h-7',
+                          'rounded-xl',
+                          active ? 'bg-white shadow-sm ring-1 ring-emerald-200/60' : 'group-hover:bg-white/70'
+                        )}>{emoji}</span>
+                        {!collapsed && (
+                          <>
+                            <span className="flex-1">{label}</span>
+                            {hoverMascot && (
+                              <span
+                                className="shrink-0 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200"
+                                aria-hidden="true"
+                              >
+                                <GuacMascot expression={hoverMascot} size={22} />
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </Link>
+                      {/* Inbox: render the Folders + Filters accordion inline when the
+                          user is on the inbox page. Keeps inbox sub-nav next to the
+                          main nav rather than in a separate left-rail panel. */}
+                      {href === '/inbox' && active && !collapsed && (
+                        <InboxSubNav onNavigate={() => setSidebarOpen(false)} />
                       )}
-                    >
-                      <span className={clsx(
-                        'flex items-center justify-center text-base shrink-0 transition-all',
-                        collapsed ? 'w-8 h-8 lg:w-8 lg:h-8' : 'w-7 h-7',
-                        'rounded-xl',
-                        active ? 'bg-white shadow-sm ring-1 ring-emerald-200/60' : 'group-hover:bg-white/70'
-                      )}>{emoji}</span>
-                      {!collapsed && (
-                        <>
-                          <span className="flex-1">{label}</span>
-                          {/* Hover-reveal mascot — fades in when the cursor enters the row.
-                              The active row's gradient background + tile around the emoji
-                              already mark the current page, so no extra sparkle is needed. */}
-                          {hoverMascot && (
-                            <span
-                              className="shrink-0 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200"
-                              aria-hidden="true"
-                            >
-                              <GuacMascot expression={hoverMascot} size={22} />
-                            </span>
-                          )}
-                        </>
-                      )}
-                    </Link>
+                    </div>
                   )
                 })}
               </div>
@@ -210,4 +216,131 @@ export default function Sidebar({ isAdmin }) {
       </aside>
     </>
   )
+}
+
+// ── Inbox sub-nav ────────────────────────────────────────────────────────
+// Folders (Inbox / Sent / Trash) + Filters (All / Unread / Receipts / Starred)
+// rendered as accordion sections under the main "Inbox" item. State lives in
+// URL search params so:
+//   1. Sidebar links drive the inbox page directly (no shared component state)
+//   2. The selected folder / filter is bookmarkable
+//   3. Re-visits restore the last view
+const INBOX_FOLDERS = [
+  { value: 'inbox', label: 'Inbox', icon: InboxIcon },
+  { value: 'sent',  label: 'Sent',  icon: Send },
+  { value: 'trash', label: 'Trash', icon: Trash2 },
+]
+const INBOX_FILTERS = [
+  { value: '',         label: 'All' },
+  { value: 'unread',   label: 'Unread' },
+  { value: 'receipts', label: 'Receipts' },
+  { value: 'starred',  label: 'Starred' },
+]
+
+function InboxSubNav({ onNavigate }) {
+  const sp = useSearchParams()
+  const folder = sp?.get('folder') || 'inbox'
+  const filter = sp?.get('filter') || ''
+
+  const [foldersOpen, setFoldersOpen] = useStateClient('inbox_sub_folders_open', true)
+  const [filtersOpen, setFiltersOpen] = useStateClient('inbox_sub_filters_open', false)
+
+  // Build a URL preserving other params (compose state, etc.) but updating folder/filter.
+  function buildHref({ nextFolder, nextFilter }) {
+    const params = new URLSearchParams(sp?.toString() || '')
+    if (nextFolder !== undefined) {
+      if (nextFolder && nextFolder !== 'inbox') params.set('folder', nextFolder)
+      else params.delete('folder')
+    }
+    if (nextFilter !== undefined) {
+      if (nextFilter) params.set('filter', nextFilter)
+      else params.delete('filter')
+    }
+    const qs = params.toString()
+    return qs ? `/inbox?${qs}` : '/inbox'
+  }
+
+  return (
+    <div className="mt-1 ml-2 pl-3 border-l-2 border-emerald-100 space-y-1">
+      {/* Folders */}
+      <button
+        type="button"
+        onClick={() => setFoldersOpen(v => !v)}
+        className="w-full flex items-center justify-between text-[10px] uppercase tracking-wider font-bold text-emerald-700 hover:text-emerald-900 py-0.5"
+      >
+        <span>Folders</span>
+        <ChevronDown size={11} className={`transition-transform ${foldersOpen ? '' : '-rotate-90'}`} />
+      </button>
+      {foldersOpen && (
+        <div className="space-y-px">
+          {INBOX_FOLDERS.map(f => {
+            const Icon = f.icon
+            const active = folder === f.value
+            return (
+              <Link
+                key={f.value}
+                href={buildHref({ nextFolder: f.value })}
+                onClick={onNavigate}
+                className={`flex items-center gap-2 px-2 py-1 rounded-lg text-xs transition-colors ${
+                  active ? 'bg-emerald-100 text-emerald-900 font-semibold' : 'text-gray-600 hover:bg-emerald-50'
+                }`}
+              >
+                <Icon size={12} /> {f.label}
+              </Link>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Filters */}
+      <button
+        type="button"
+        onClick={() => setFiltersOpen(v => !v)}
+        className="w-full flex items-center justify-between text-[10px] uppercase tracking-wider font-bold text-amber-700 hover:text-amber-900 pt-1 pb-0.5"
+      >
+        <span className="flex items-center gap-1.5">
+          <Filter size={10} /> Filters
+          {filter && <span className="w-1 h-1 rounded-full bg-amber-500" />}
+        </span>
+        <ChevronDown size={11} className={`transition-transform ${filtersOpen ? '' : '-rotate-90'}`} />
+      </button>
+      {filtersOpen && (
+        <div className="space-y-px">
+          {INBOX_FILTERS.map(f => {
+            const active = filter === f.value
+            return (
+              <Link
+                key={f.value || 'all'}
+                href={buildHref({ nextFilter: f.value })}
+                onClick={onNavigate}
+                className={`block px-2 py-1 rounded-lg text-xs transition-colors ${
+                  active ? 'bg-amber-100 text-amber-900 font-semibold' : 'text-gray-600 hover:bg-amber-50'
+                }`}
+              >
+                {f.label}
+              </Link>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Tiny useState that persists to localStorage. Used by InboxSubNav's section
+// expand/collapse so the user's preference sticks across reloads.
+function useStateClient(key, initial) {
+  const [v, setV] = useState(initial)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const raw = localStorage.getItem(key)
+    if (raw === '1' || raw === 'true') setV(true)
+    else if (raw === '0' || raw === 'false') setV(false)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try { localStorage.setItem(key, v ? '1' : '0') } catch {}
+  }, [key, v])
+  return [v, setV]
 }

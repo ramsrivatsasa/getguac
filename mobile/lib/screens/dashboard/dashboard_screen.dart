@@ -64,177 +64,84 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
-  /// Snap one receipt and run the full parse + dedup + save flow.
-  /// FAB tap calls this. After saving, asks if the user wants to snap another;
-  /// long-press of the FAB jumps straight into the multi-snap loop without
-  /// the prompt after each one.
-  Future<void> _captureReceipt({bool offerAnother = true}) async {
+  /// Pre-camera entry: ask the user whether to use the camera or pick from
+  /// the gallery. Some users find the camera UI fiddly with paper receipts
+  /// — letting them snap with the system camera app first and then pick
+  /// the result from gallery is more reliable on certain devices.
+  Future<void> _captureReceipt() async {
+    final source = await _askImageSource();
+    if (source == null || !mounted) return;
     final picker = ImagePicker();
-    final img = await picker.pickImage(source: ImageSource.camera, imageQuality: 80);
-    if (img == null || !mounted) return;
-    final uid = context.read<AppAuthProvider>().currentUser?.id;
-    if (uid == null) return;
+    int saved = 0;
+    while (mounted) {
+      final img = await picker.pickImage(source: source, imageQuality: 80);
+      if (img == null || !mounted) break;
+      final file = File(img.path);
 
-    final file = File(img.path);
-    final provider = context.read<ReceiptProvider>();
+      // Preview screen — OK / Add more / Retry.
+      final action = await _showCapturePreview(file);
+      if (!mounted) break;
+      if (action == _PreviewAction.retry) continue;     // back to picker
+      await _processSingleCapture(file);
+      if (!mounted) break;
+      saved++;
+      if (action == _PreviewAction.ok) break;
+      // _PreviewAction.addMore → loop continues, picker opens again
+    }
+    if (saved > 1 && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Saved $saved receipts.'),
+        duration: const Duration(seconds: 2),
+      ));
+    }
+  }
 
-    // "Guac-AI is reading your receipt…" loader. Was missing on the
-    // dashboard FAB — image was uploaded as a blank placeholder receipt
-    // and the user had to Re-parse manually.
-    showDialog(
+  Future<ImageSource?> _askImageSource() async {
+    return showModalBottomSheet<ImageSource>(
       context: context,
-      barrierDismissible: false,
-      builder: (_) => const AlertDialog(
-        content: Padding(
-          padding: EdgeInsets.symmetric(vertical: 8),
-          child: Row(mainAxisSize: MainAxisSize.min, children: [
-            SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2)),
-            SizedBox(width: 14),
-            Flexible(child: Text('Guac-AI is reading your receipt…')),
-          ]),
-        ),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Text('Add receipt',
+              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Color(0xFF064e3b))),
+          ),
+          ListTile(
+            leading: const Icon(Icons.camera_alt, color: _kEmerald700),
+            title: const Text('Take a photo'),
+            subtitle: const Text('Snap one or more receipts with the camera'),
+            onTap: () => Navigator.of(ctx).pop(ImageSource.camera),
+          ),
+          ListTile(
+            leading: const Icon(Icons.photo_library_outlined, color: _kEmerald700),
+            title: const Text('Choose from gallery'),
+            subtitle: const Text('Pick an existing photo'),
+            onTap: () => Navigator.of(ctx).pop(ImageSource.gallery),
+          ),
+          const SizedBox(height: 8),
+        ]),
       ),
     );
-
-    try {
-      final parsed = await ReceiptParseService.parseImage(file);
-      if (!mounted) return;
-      if (parsed == null) {
-        // Couldn't parse — fall back to the old placeholder so the photo
-        // still lands somewhere the user can edit/re-parse later.
-        Navigator.of(context, rootNavigator: true).pop();
-        final placeholder = Receipt(
-          id: '', storeName: 'New Receipt',
-          date: DateTime.now().toIso8601String().substring(0, 10),
-          totalAmount: 0, taxPaid: 0,
-        );
-        await provider.addReceipt(placeholder, imageFile: file);
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(
-            "Couldn't auto-read this one. Open it from Receipts to edit or tap Re-parse.")),
-        );
-        return;
-      }
-
-      // Duplicate check — same key the server-side dedup sweep uses
-      // (store_name + date + total). Catches "snapped a receipt that's
-      // already in the DB from the email path" and "double-tapped the
-      // shutter" before we insert a second row.
-      final today = DateTime.now().toIso8601String().substring(0, 10);
-      final dupDate = (parsed.date != null && parsed.date!.isNotEmpty) ? parsed.date! : today;
-      if (parsed.storeName.isNotEmpty && parsed.totalAmount > 0) {
-        final dup = await provider.findDuplicate(
-          storeName: parsed.storeName,
-          date: dupDate,
-          totalAmount: parsed.totalAmount,
-        );
-        if (!mounted) return;
-        if (dup != null) {
-          Navigator.of(context, rootNavigator: true).pop(); // dismiss loader
-          final saveAnyway = await _askDuplicateAction(dup);
-          if (!mounted) return;
-          if (saveAnyway != true) {
-            // User chose View existing → navigate there. Or Cancel → nothing.
-            if (saveAnyway == false) context.go('/receipts/${dup.id}');
-            return;
-          }
-          // Re-show the loader for the save-anyway path.
-          showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (_) => const AlertDialog(
-              content: Padding(
-                padding: EdgeInsets.symmetric(vertical: 8),
-                child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2)),
-                  SizedBox(width: 14),
-                  Flexible(child: Text('Saving the duplicate…')),
-                ]),
-              ),
-            ),
-          );
-        }
-      }
-
-      // Convert ParsedReceipt -> plain map (provider expects the parse-receipt
-      // JSON shape with item_name etc.).
-      final asMap = <String, dynamic>{
-        'store_name': parsed.storeName,
-        'date': parsed.date,
-        'total_amount': parsed.totalAmount,
-        'tax_paid': parsed.taxPaid,
-        'payment_method': parsed.paymentMethod,
-        'payment_last4': parsed.paymentLast4,
-        'is_return': parsed.isReturn,
-        'category': parsed.category,
-        'items': parsed.items.map((it) => {
-          'sku': it.sku, 'model': it.model, 'item_name': it.itemName,
-          'qty': it.qty, 'price': it.price,
-          'returned': it.returned, 'category': it.category,
-        }).toList(),
-      };
-      final id = await provider.addParsedReceipt(asMap, file);
-      if (!mounted) return;
-      Navigator.of(context, rootNavigator: true).pop(); // dismiss loader
-      if (id == null) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Saved the photo but failed to insert the receipt. Open Receipts to retry.')));
-        return;
-      }
-      final storeBit = parsed.storeName.isNotEmpty ? parsed.storeName : 'Receipt';
-      final totalBit = parsed.totalAmount > 0 ? ' · \$${parsed.totalAmount.toStringAsFixed(2)}' : '';
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('$storeBit$totalBit — ${parsed.items.length} item${parsed.items.length == 1 ? "" : "s"}'),
-        action: SnackBarAction(
-          label: 'View',
-          onPressed: () => context.go('/receipts/$id'),
-        ),
-        duration: const Duration(seconds: 4),
-      ));
-
-      // After-save "snap another?" prompt. Only on a successful save, and
-      // only when the caller opted in (long-press multi-snap path skips
-      // this — it loops without asking).
-      if (offerAnother && mounted) {
-        final more = await _askSnapAnother();
-        if (more == true && mounted) {
-          // Tail-call recursion keeps the prompt for each subsequent snap.
-          await _captureReceipt(offerAnother: true);
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        Navigator.of(context, rootNavigator: true).pop(); // dismiss loader
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Capture failed: $e')));
-      }
-    }
   }
 
-  /// Long-press of the FAB: snap multiple receipts in a row without the
-  /// "Another?" prompt between them. Loops until the user cancels the
-  /// camera (returns null from pickImage).
-  Future<void> _captureMultiple() async {
-    int count = 0;
-    while (mounted) {
-      // Each iteration is just a single capture with the "Another?" prompt
-      // disabled — when the user backs out of the camera, the loop ends.
-      final picker = ImagePicker();
-      final img = await picker.pickImage(source: ImageSource.camera, imageQuality: 80);
-      if (img == null || !mounted) break;
-      // Reuse the single-capture flow by re-injecting the picked file. Pass
-      // offerAnother:false so the prompt doesn't double up.
-      await _processSingleCapture(File(img.path));
-      count++;
-    }
-    if (count > 0 && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Multi-snap done — saved $count receipt${count == 1 ? "" : "s"}.'),
-      ));
-    }
+  /// Full-screen preview after a capture. Returns the user's chosen action.
+  Future<_PreviewAction> _showCapturePreview(File file) async {
+    final result = await Navigator.of(context).push<_PreviewAction>(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => _CapturePreviewScreen(file: file),
+      ),
+    );
+    return result ?? _PreviewAction.retry;
   }
 
-  /// The save half of _captureReceipt extracted so _captureMultiple can call
-  /// it without re-opening the camera (which _captureReceipt does).
+  /// Parse + dedup + save a single captured photo. The preview screen has
+  /// already shown the user the image and confirmed they want to keep it;
+  /// any duplicate-found case is handled silently with a snackbar (no
+  /// dialog interrupts the multi-capture loop).
   Future<void> _processSingleCapture(File file) async {
     final uid = context.read<AppAuthProvider>().currentUser?.id;
     if (uid == null || !mounted) return;
@@ -302,33 +209,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
           'returned': it.returned, 'category': it.category,
         }).toList(),
       };
-      await provider.addParsedReceipt(asMap, file);
+      final id = await provider.addParsedReceipt(asMap, file);
+      if (!mounted) return;
+      if (id == null) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Saved the photo but failed to insert the receipt. Open Receipts to retry.'),
+        ));
+        return;
+      }
+      final storeBit = parsed.storeName.isNotEmpty ? parsed.storeName : 'Receipt';
+      final totalBit = parsed.totalAmount > 0 ? ' · \$${parsed.totalAmount.toStringAsFixed(2)}' : '';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('$storeBit$totalBit — ${parsed.items.length} item${parsed.items.length == 1 ? "" : "s"}'),
+        action: SnackBarAction(label: 'View', onPressed: () => context.go('/receipts/$id')),
+        duration: const Duration(seconds: 3),
+      ));
     } catch (e) {
       if (mounted) {
         Navigator.of(context, rootNavigator: true).pop();
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Capture failed: $e')));
       }
     }
-  }
-
-  Future<bool?> _askSnapAnother() async {
-    return showDialog<bool?>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Snap another?'),
-        content: const Text('Take another receipt photo right now, or finish.',
-          style: TextStyle(fontSize: 13)),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Done')),
-          FilledButton.icon(
-            style: FilledButton.styleFrom(backgroundColor: const Color(0xFF15803d)),
-            onPressed: () => Navigator.of(ctx).pop(true),
-            icon: const Icon(Icons.camera_alt, size: 18),
-            label: const Text('Take another'),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -526,68 +427,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildFab() {
-    // GestureDetector wraps the FAB so long-press triggers the multi-snap
-    // loop. Tap = single capture (with the "Snap another?" prompt after);
-    // long-press = camera stays open until the user backs out, duplicates
-    // are silently skipped.
-    return GestureDetector(
-      onLongPress: _captureMultiple,
-      child: FloatingActionButton.extended(
-        onPressed: () => _captureReceipt(),
-        backgroundColor: _kEmerald700,
-        foregroundColor: Colors.white,
-        elevation: 6,
-        icon: const GuacMascot(size: 24),
-        label: const Icon(Icons.camera_alt, size: 20),
-        tooltip: 'Tap: snap a receipt   ·   Long-press: multi-snap',
-      ),
-    );
-  }
-
-  /// Returns:
-  ///   null  -> cancel (do nothing, don't save)
-  ///   true  -> save anyway (insert a second row)
-  ///   false -> view existing (navigate to the existing receipt)
-  Future<bool?> _askDuplicateAction(Receipt existing) async {
-    return showDialog<bool?>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Looks like a duplicate'),
-        content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text(
-            'We already have a receipt from the same store, date, and total. Save another copy?',
-            style: TextStyle(fontSize: 13, height: 1.4),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: const Color(0xFFf0fdf4),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFa7f3d0)),
-            ),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(existing.storeName,
-                style: const TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF064e3b))),
-              const SizedBox(height: 2),
-              Text('${existing.date}  ·  \$${existing.totalAmount.toStringAsFixed(2)}',
-                style: const TextStyle(fontSize: 12, color: Color(0xFF065f46))),
-            ]),
-          ),
-        ]),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(null), child: const Text('Cancel')),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('View existing'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: const Color(0xFF15803d)),
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Save anyway'),
-          ),
-        ],
-      ),
+    return FloatingActionButton.extended(
+      onPressed: _captureReceipt,
+      backgroundColor: _kEmerald700,
+      foregroundColor: Colors.white,
+      elevation: 6,
+      icon: const GuacMascot(size: 24),
+      label: const Icon(Icons.camera_alt, size: 20),
+      tooltip: 'Add receipt (camera or gallery)',
     );
   }
 
@@ -940,6 +787,98 @@ class _StatTile extends StatelessWidget {
             ),
           ])),
         ]),
+      ),
+    );
+  }
+}
+
+/// Choice the user makes on the preview screen after a capture.
+enum _PreviewAction {
+  /// Discard this photo, reopen the camera/gallery picker.
+  retry,
+  /// Save this one and finish.
+  ok,
+  /// Save this one and immediately open the picker again.
+  addMore,
+}
+
+/// Full-screen preview shown right after a capture. The user sees the photo
+/// they just took and picks Retry / OK / Add more. Pure UI — no parsing or
+/// upload happens here, the dashboard does that based on the returned action.
+class _CapturePreviewScreen extends StatelessWidget {
+  final File file;
+  const _CapturePreviewScreen({required this.file});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        title: const Text('Preview'),
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          tooltip: 'Cancel',
+          onPressed: () => Navigator.of(context).pop(_PreviewAction.retry),
+        ),
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: InteractiveViewer(
+              child: Center(child: Image.file(file)),
+            ),
+          ),
+          SafeArea(
+            top: false,
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+              color: Colors.black,
+              child: Row(
+                children: [
+                  Expanded(child: OutlinedButton.icon(
+                    onPressed: () => Navigator.of(context).pop(_PreviewAction.retry),
+                    icon: const Icon(Icons.refresh, color: Colors.white),
+                    label: const Text('Retry',
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Colors.white54),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  )),
+                  const SizedBox(width: 8),
+                  Expanded(child: FilledButton.icon(
+                    onPressed: () => Navigator.of(context).pop(_PreviewAction.ok),
+                    icon: const Icon(Icons.check),
+                    label: const Text('OK',
+                      style: TextStyle(fontWeight: FontWeight.w800)),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF15803d),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  )),
+                  const SizedBox(width: 8),
+                  Expanded(child: FilledButton.icon(
+                    onPressed: () => Navigator.of(context).pop(_PreviewAction.addMore),
+                    icon: const Icon(Icons.add_a_photo),
+                    label: const Text('Add more',
+                      style: TextStyle(fontWeight: FontWeight.w800)),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF1d4ed8),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  )),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

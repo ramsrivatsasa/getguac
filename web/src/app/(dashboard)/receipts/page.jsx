@@ -1152,7 +1152,11 @@ function ReceiptLineItems({ receiptId }) {
             <tr key={it.id} className={it.returned ? 'bg-rose-50/40' : ''}>
               <td className="px-3 py-0.5 text-gray-400 text-[11px]">{it.sku || '—'}</td>
               <td className="px-3 py-0.5 text-gray-400 text-[11px]">{it.model || '—'}</td>
-              <td className="px-3 py-0.5">{it.item_name}</td>
+              <td className="px-3 py-0.5">
+                <Link href={`/items/${it.id}`} className="text-blue-700 hover:underline" title="Item details + purchase history">
+                  {it.item_name}
+                </Link>
+              </td>
               <td className="px-3 py-0.5">{it.qty}</td>
               <td className="px-3 py-0.5">${parseFloat(it.price || 0).toFixed(2)}</td>
               <td className="px-3 py-0.5">

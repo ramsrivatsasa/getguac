@@ -201,9 +201,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
         currentLabel: 'Parsing photo ${i + 1}…',
       );
       try {
+        // Two automatic retries for transient errors. The first failure is
+        // common when image_picker hands us a file with no MIME (now fixed
+        // client-side) OR when the cell connection blips during upload.
         ParseResult result = await ReceiptParseService.parseImage(file);
-        if (!result.ok) {
-          // Single auto-retry on transient errors.
+        if (!result.ok && _looksTransient(result.error)) {
+          progress.value = _BatchProgress(
+            done: i, total: files.length,
+            currentLabel: 'Retrying photo ${i + 1}…',
+          );
+          result = await ReceiptParseService.parseImage(file);
+        }
+        if (!result.ok && _looksTransient(result.error)) {
+          // One more attempt with a short pause so the network has time to
+          // settle if the radio just dropped.
+          await Future.delayed(const Duration(seconds: 2));
           result = await ReceiptParseService.parseImage(file);
         }
         if (!result.ok) {
@@ -335,6 +347,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
   /// user snapped the same receipt twice in a row). Cleared at the end of
   /// every batch.
   final Set<String> _batchKeysThisRun = {};
+
+  /// Heuristic: should we retry this parse failure? AI-empty-read and
+  /// unsupported-file are NOT transient — retrying buys nothing. Network
+  /// blips, timeouts, and 5xx errors usually clear up on a second try.
+  bool _looksTransient(String? error) {
+    if (error == null) return true;
+    final e = error.toLowerCase();
+    if (e.contains("couldn't read anything")) return false;
+    if (e.contains('unsupported file type')) return false;
+    if (e.contains('not signed in')) return false;
+    return e.contains('timed out')
+        || e.contains('timeout')
+        || e.contains('network')
+        || e.contains('connection')
+        || e.contains('socket')
+        || e.contains('server error')
+        || e.contains('502')
+        || e.contains('503')
+        || e.contains('504');
+  }
 
   /// Detailed batch summary — duplicates listed with their parsed
   /// store/date/total + a View link to the existing receipt, failures

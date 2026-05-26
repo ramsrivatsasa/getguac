@@ -6,6 +6,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'debug_log.dart';
 
@@ -89,6 +90,27 @@ class ParseResult {
   bool get ok => error == null && data != null;
 }
 
+/// File extension → MIME mapping. Used to set the multipart Content-Type
+/// when image_picker returns a file with no registered type (which makes
+/// the upload default to application/octet-stream and the server reject it).
+String _mimeFromExtension(String path) {
+  final dot = path.lastIndexOf('.');
+  if (dot < 0) return 'image/jpeg';
+  final ext = path.substring(dot + 1).toLowerCase();
+  switch (ext) {
+    case 'jpg':
+    case 'jpeg':
+      return 'image/jpeg';
+    case 'png':  return 'image/png';
+    case 'webp': return 'image/webp';
+    case 'heic': return 'image/heic';
+    case 'heif': return 'image/heif';
+    case 'gif':  return 'image/gif';
+    case 'pdf':  return 'application/pdf';
+    default:     return 'image/jpeg'; // safe default — receipts are images
+  }
+}
+
 class ReceiptParseService {
   /// Upload [file] to the web parse-receipt endpoint and return a ParseResult.
   /// Distinguishes network failures, server errors, timeouts, and empty AI
@@ -99,13 +121,27 @@ class ReceiptParseService {
       DebugLog.event('parse-receipt', 'no session', level: 'warn');
       return const ParseResult.fail('Not signed in.');
     }
+    final detectedMime = _mimeFromExtension(file.path);
     DebugLog.event('parse-receipt', 'POST /api/parse-receipt start',
-      meta: {'size': await file.length(), 'path': file.path.split('/').last});
+      meta: {
+        'size': await file.length(),
+        'path': file.path.split('/').last,
+        'mime': detectedMime,
+      });
     try {
       final uri = Uri.parse('$_kApiBase/api/parse-receipt');
       final req = http.MultipartRequest('POST', uri);
       req.headers['Authorization'] = 'Bearer ${session.accessToken}';
-      req.files.add(await http.MultipartFile.fromPath('file', file.path));
+      // Explicit content-type. image_picker on Android sometimes returns
+      // files without a registered MIME, which made the multipart upload
+      // default to application/octet-stream — the server then rejected the
+      // upload with "Unsupported file type". Detect from the path extension
+      // so the server sees a real image/* type.
+      final parts = detectedMime.split('/');
+      req.files.add(await http.MultipartFile.fromPath(
+        'file', file.path,
+        contentType: MediaType(parts[0], parts.length > 1 ? parts[1] : 'jpeg'),
+      ));
       final streamed = await req.send().timeout(const Duration(seconds: 45));
       final body = await streamed.stream.bytesToString();
       if (streamed.statusCode != 200) {

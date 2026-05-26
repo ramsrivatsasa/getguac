@@ -8,17 +8,21 @@
 // strategy actually produced the row — useful for diagnostics.
 
 import { parseReceiptFromText } from './parse-receipt-engine'
+import { normalizeStoreName, canonicalStoreName } from './store-name-normalize'
 
 function normalizePhone(s) {
   return (s || '').replace(/\D+/g, '')
 }
 
-// Find-or-create a row in `stores` for a parsed AI result. Uses the same
-// match strategy as web/src/lib/db.js#findStoreMatch (phone → address → name)
-// but takes the Supabase client as a parameter so it works with either the
-// per-user client OR the admin/service-role client used by the poller.
+// Find-or-create a row in `stores` for a parsed AI result. Match strategy:
+//   1. phone (most reliable — same digits = same location)
+//   2. address (string match)
+//   3. NORMALIZED name (Amazon === Amazon.com === AMAZON.COM, Inc.)
+// Falls through to insert when no match. New rows get a canonical display
+// name ("Amazon" not "AMAZON.COM, Inc.") when one is known in the alias map.
 //
-// Returns the store row, or null when there's nothing usable to upsert.
+// Takes the Supabase client as a parameter so it works with either the
+// per-user client OR the admin/service-role client used by the poller.
 async function upsertStoreServer(sb, parsed) {
   const storeName = (parsed.store_name || '').trim()
   if (!storeName) return null
@@ -29,7 +33,7 @@ async function upsertStoreServer(sb, parsed) {
 
   const phoneNorm = normalizePhone(phoneNo)
   const addrNorm  = (address || '').trim().toLowerCase()
-  const nameNorm  = storeName.toLowerCase()
+  const nameNorm  = normalizeStoreName(storeName)
 
   // Match against the global stores table. The scale issue with this full
   // table-scan is logged in the audit — fine for now, costly later.
@@ -44,15 +48,22 @@ async function upsertStoreServer(sb, parsed) {
     match = stores.find(s => (s.address || '').trim().toLowerCase() === addrNorm) || null
   }
   if (!match && nameNorm) {
-    match = stores.find(s => (s.store_name || '').trim().toLowerCase() === nameNorm) || null
+    // Normalised-name match: "amazon" === "amazon.com" === "amazon mktp"
+    match = stores.find(s => normalizeStoreName(s.store_name) === nameNorm) || null
   }
 
   if (match) {
     // Backfill missing top-level fields when the parse picked them up.
+    // Also upgrade the stored name to the canonical alias if we know one
+    // and the current value is messier (e.g. fix "AMAZON.COM, INC." -> "Amazon").
     const patch = {}
     if (!match.address && address) patch.address = address
     if (!match.phone_no && phoneNo) patch.phone_no = phoneNo
     if (!match.website && website) patch.website = website
+    const canonical = canonicalStoreName(storeName)
+    if (canonical && canonical !== match.store_name && normalizeStoreName(canonical) === normalizeStoreName(match.store_name)) {
+      patch.store_name = canonical
+    }
     if (Object.keys(patch).length > 0) {
       const { data: updated } = await sb.from('stores').update(patch).eq('id', match.id).select().single()
       return updated || match
@@ -60,9 +71,16 @@ async function upsertStoreServer(sb, parsed) {
     return match
   }
 
+  // No match — insert with the canonical display name so the chart never
+  // shows "AMAZON.COM, Inc." in the first place.
   const { data, error } = await sb
     .from('stores')
-    .insert({ store_name: storeName, address, phone_no: phoneNo, website })
+    .insert({
+      store_name: canonicalStoreName(storeName),
+      address,
+      phone_no: phoneNo,
+      website,
+    })
     .select()
     .single()
   if (error) {

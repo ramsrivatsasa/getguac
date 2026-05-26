@@ -215,110 +215,12 @@ export default function InboxPage() {
         </div>
       </div>
 
-      {/* Resizable 3-pane layout. Sizes persist in localStorage via autoSaveId. */}
+      {/* Resizable 2-pane layout: message list + preview. The Folders /
+          Filters sub-nav now lives in the main left sidebar (under the Inbox
+          item) instead of a separate panel here. Sizes persist in
+          localStorage via autoSaveId. */}
       <div className="h-[calc(100vh-200px)] hidden lg:block">
-        <PanelGroup direction="horizontal" autoSaveId="inbox-layout-v1" className="rounded-2xl border border-gray-100 bg-white overflow-hidden shadow-sm">
-          {/* Folder rail panel */}
-          <Panel defaultSize={18} minSize={4} maxSize={28} collapsible collapsedSize={4}>
-            <aside className={`h-full bg-gray-50/40 border-r border-gray-100 flex flex-col ${railCollapsed ? 'px-1.5 py-2' : 'p-2'}`}>
-              <button
-                onClick={toggleRail}
-                title={railCollapsed ? 'Expand' : 'Collapse'}
-                className="self-end p-1.5 rounded-md hover:bg-emerald-100/60 text-gray-500 hover:text-emerald-700 mb-1"
-              >
-                {railCollapsed ? <ChevronsRight size={14} /> : <ChevronsLeft size={14} />}
-              </button>
-              {railCollapsed ? (
-                // Collapsed icon-only mode — folders only, no accordion needed
-                <div className="space-y-0.5">
-                  {FOLDERS.map(f => {
-                    const Icon = f.icon
-                    const active = folder === f.value
-                    return (
-                      <button
-                        key={f.value}
-                        onClick={() => { setFolder(f.value); setSelectedId(null) }}
-                        title={f.label}
-                        className={`w-full flex items-center justify-center px-1.5 py-2 rounded-xl text-sm font-semibold transition ${
-                          active ? 'bg-emerald-100 text-emerald-900 ring-1 ring-emerald-200' : 'text-gray-600 hover:bg-emerald-50'
-                        }`}
-                      >
-                        <Icon size={18} />
-                      </button>
-                    )
-                  })}
-                  {filter && (
-                    <div className="mt-2 px-1.5">
-                      <div className="w-2 h-2 rounded-full bg-amber-500 mx-auto" title={`Filter: ${filter}`} />
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <>
-                  {/* Folders accordion — collapsible to save vertical space */}
-                  <button
-                    onClick={toggleFolders}
-                    className="w-full flex items-center justify-between px-3 py-2 mb-1 rounded-lg text-xs font-bold text-emerald-900 bg-emerald-50/80 hover:bg-emerald-100 ring-1 ring-emerald-100 transition-colors"
-                  >
-                    <span className="flex items-center gap-1.5"><InboxIcon size={13} /> Folders</span>
-                    <ChevronDown size={14} className={`transition-transform ${foldersOpen ? '' : '-rotate-90'}`} />
-                  </button>
-                  {foldersOpen && (
-                    <div className="space-y-0.5">
-                      {FOLDERS.map(f => {
-                        const Icon = f.icon
-                        const active = folder === f.value
-                        return (
-                          <button
-                            key={f.value}
-                            onClick={() => { setFolder(f.value); setSelectedId(null) }}
-                            className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold transition ${
-                              active ? 'bg-emerald-100 text-emerald-900 ring-1 ring-emerald-200' : 'text-gray-600 hover:bg-emerald-50'
-                            }`}
-                          >
-                            <Icon size={14} />
-                            {f.label}
-                          </button>
-                        )
-                      })}
-                    </div>
-                  )}
-
-                  <div className="border-t border-gray-100 my-2" />
-
-                  {/* Filters accordion */}
-                  <button
-                    onClick={toggleFilters}
-                    className="w-full flex items-center justify-between px-3 py-2 mb-1 rounded-lg text-xs font-bold text-amber-900 bg-amber-50/80 hover:bg-amber-100 ring-1 ring-amber-100 transition-colors"
-                  >
-                    <span className="flex items-center gap-1.5">
-                      <Filter size={13} /> Filters
-                      {filter && <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />}
-                    </span>
-                    <ChevronDown size={14} className={`transition-transform ${filtersOpen ? '' : '-rotate-90'}`} />
-                  </button>
-                  {filtersOpen && (
-                    <div className="space-y-0.5">
-                      {FILTERS.map(f => (
-                        <button
-                          key={f.value}
-                          onClick={() => setFilter(f.value)}
-                          className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
-                            filter === f.value ? 'bg-amber-100 text-amber-900' : 'text-gray-600 hover:bg-gray-50'
-                          }`}
-                        >
-                          {f.label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </>
-              )}
-            </aside>
-          </Panel>
-
-          <PanelResizeHandle className="w-1 bg-gray-100 hover:bg-emerald-300 transition-colors data-[resize-handle-active]:bg-emerald-400" />
-
+        <PanelGroup direction="horizontal" autoSaveId="inbox-layout-v2" className="rounded-2xl border border-gray-100 bg-white overflow-hidden shadow-sm">
           {/* List panel */}
           <Panel defaultSize={35} minSize={20}>
             <section className="h-full bg-white flex flex-col">

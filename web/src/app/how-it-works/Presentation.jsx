@@ -138,24 +138,73 @@ export default function HowItWorksPage() {
   const [playing, setPlaying] = useState(false)
   const [muted, setMuted] = useState(false)
   const [current, setCurrent] = useState(0)
+  const [voices, setVoices] = useState([])
+  const [selectedVoiceURI, setSelectedVoiceURI] = useState(null)
+  const [voicePickerOpen, setVoicePickerOpen] = useState(false)
   const slideRefs = useRef([])
   const advanceTimer = useRef(null)
 
+  // ─── Load voices + pick the most natural-sounding one available ─────────
+  // SpeechSynthesis on most platforms ships both "robotic" baseline voices
+  // and high-quality "Neural" / "Online" / "Natural" / "Enhanced" voices.
+  // Score each candidate, pick the best, expose a dropdown so the user can
+  // override.
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return
+    const load = () => {
+      const all = window.speechSynthesis.getVoices()
+      const en = all.filter(v => /^en[-_]?/i.test(v.lang))
+      // Sort: highest quality + female + en-US first (heuristic — most demo
+      // narrations sound best with a clear female voice).
+      const scored = en.map(v => {
+        const n = v.name
+        let s = 0
+        if (/natural|neural|online|premium|enhanced|wavenet|studio/i.test(n)) s += 50
+        if (/aria|jenny|samantha|karen|joanna|emma|libby|amber|sarah|nova|shimmer/i.test(n)) s += 20
+        if (/google/i.test(n)) s += 10
+        if (/en-US/i.test(v.lang)) s += 5
+        if (/microsoft.*online/i.test(n)) s += 20
+        if (/female/i.test(n)) s += 8
+        return { v, s }
+      }).sort((a, b) => b.s - a.s)
+      setVoices(scored.map(x => x.v))
+      // Pick the top one if user hasn't chosen yet (or stored choice is gone).
+      setSelectedVoiceURI(prev => {
+        if (prev && scored.find(x => x.v.voiceURI === prev)) return prev
+        return scored[0]?.v?.voiceURI ?? all[0]?.voiceURI ?? null
+      })
+    }
+    load()
+    window.speechSynthesis.addEventListener?.('voiceschanged', load)
+    return () => window.speechSynthesis.removeEventListener?.('voiceschanged', load)
+  }, [])
+
   // ─── Narration via Web Speech API ───────────────────────────────────────
+  // Break the narration into sentences and queue them as separate utterances.
+  // Most TTS engines apply better intonation at sentence boundaries, and
+  // the small inter-utterance gap sounds like a natural breath.
   const speak = useCallback((text) => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) return
     if (muted) return
     window.speechSynthesis.cancel()
-    const utter = new SpeechSynthesisUtterance(text)
-    // Prefer a friendly English voice if available — Chrome ships with several.
-    const voices = window.speechSynthesis.getVoices()
-    const friendly = voices.find(v => /en/i.test(v.lang) && /female|samantha|google|aria|jenny|english/i.test(v.name))
-        ?? voices.find(v => /en/i.test(v.lang))
-    if (friendly) utter.voice = friendly
-    utter.rate = 1.0
-    utter.pitch = 1.05
-    window.speechSynthesis.speak(utter)
-  }, [muted])
+    const voice = voices.find(v => v.voiceURI === selectedVoiceURI)
+        ?? voices[0]
+    // Split on sentence terminators while keeping the punctuation. Falls back
+    // to a single chunk if there are no sentence breaks (short text).
+    const sentences = text
+      .split(/(?<=[.!?…])\s+/)
+      .map(s => s.trim())
+      .filter(Boolean)
+    const chunks = sentences.length > 0 ? sentences : [text]
+    chunks.forEach((chunk) => {
+      const utter = new SpeechSynthesisUtterance(chunk)
+      if (voice) utter.voice = voice
+      utter.rate = 0.95       // slightly slower than default for clarity
+      utter.pitch = 1.0
+      utter.volume = 1.0
+      window.speechSynthesis.speak(utter)
+    })
+  }, [muted, voices, selectedVoiceURI])
 
   const stopSpeaking = useCallback(() => {
     if (typeof window === 'undefined') return
@@ -274,33 +323,80 @@ export default function HowItWorksPage() {
 
       {/* Floating presentation controls (hidden on print) */}
       <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 print:hidden">
-        <div className="flex items-center gap-2 bg-emerald-900/95 text-white px-3 py-2 rounded-full shadow-2xl ring-1 ring-emerald-800">
-          <button
-            onClick={() => skip(-1)}
-            disabled={current === 0}
-            aria-label="Previous slide"
-            className="w-9 h-9 rounded-full hover:bg-white/10 disabled:opacity-40 flex items-center justify-center transition"
-          ><ChevronLeft size={18} /></button>
-          <button
-            onClick={togglePlay}
-            aria-label={playing ? 'Pause' : 'Play'}
-            className="w-11 h-11 rounded-full bg-lime-400 text-emerald-900 hover:bg-lime-300 flex items-center justify-center shadow-md transition"
-          >{playing ? <Pause size={20} /> : <Play size={20} className="ml-0.5" />}</button>
-          <button
-            onClick={() => skip(1)}
-            disabled={current === SLIDES.length - 1}
-            aria-label="Next slide"
-            className="w-9 h-9 rounded-full hover:bg-white/10 disabled:opacity-40 flex items-center justify-center transition"
-          ><ChevronRight size={18} /></button>
-          <div className="w-px h-6 bg-white/20 mx-1" />
-          <button
-            onClick={toggleMute}
-            aria-label={muted ? 'Unmute narration' : 'Mute narration'}
-            className="w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center transition"
-          >{muted ? <VolumeX size={18} /> : <Volume2 size={18} />}</button>
-          <span className="text-xs font-mono tabular-nums pr-1 pl-1 opacity-80">
-            {current + 1}/{SLIDES.length}
-          </span>
+        <div className="flex flex-col items-center gap-2">
+          {/* Voice picker — opens above the control bar */}
+          {voicePickerOpen && voices.length > 0 && (
+            <div className="bg-white rounded-2xl shadow-2xl ring-1 ring-emerald-200 p-3 max-h-72 overflow-y-auto w-72">
+              <div className="text-xs font-bold uppercase tracking-wider text-emerald-700 mb-2 px-1">
+                Narration voice
+              </div>
+              <ul className="space-y-1">
+                {voices.slice(0, 20).map(v => (
+                  <li key={v.voiceURI}>
+                    <button
+                      onClick={() => {
+                        setSelectedVoiceURI(v.voiceURI)
+                        // Preview the new voice on a short phrase.
+                        const utter = new SpeechSynthesisUtterance('Hi, this is how I sound.')
+                        utter.voice = v
+                        utter.rate = 0.95
+                        window.speechSynthesis.cancel()
+                        window.speechSynthesis.speak(utter)
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition ${
+                        v.voiceURI === selectedVoiceURI
+                          ? 'bg-emerald-100 text-emerald-900 font-bold'
+                          : 'hover:bg-gray-50 text-gray-700'
+                      }`}
+                    >
+                      <div className="font-semibold">{v.name}</div>
+                      <div className="text-[10px] text-gray-500">{v.lang}{v.localService ? '' : ' · online'}</div>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <button
+                onClick={() => setVoicePickerOpen(false)}
+                className="mt-2 w-full text-xs text-emerald-700 hover:text-emerald-900 font-semibold py-1"
+              >Close</button>
+            </div>
+          )}
+
+          {/* Main control pill */}
+          <div className="flex items-center gap-2 bg-emerald-900/95 text-white px-3 py-2 rounded-full shadow-2xl ring-1 ring-emerald-800">
+            <button
+              onClick={() => skip(-1)}
+              disabled={current === 0}
+              aria-label="Previous slide"
+              className="w-9 h-9 rounded-full hover:bg-white/10 disabled:opacity-40 flex items-center justify-center transition"
+            ><ChevronLeft size={18} /></button>
+            <button
+              onClick={togglePlay}
+              aria-label={playing ? 'Pause' : 'Play'}
+              className="w-11 h-11 rounded-full bg-lime-400 text-emerald-900 hover:bg-lime-300 flex items-center justify-center shadow-md transition"
+            >{playing ? <Pause size={20} /> : <Play size={20} className="ml-0.5" />}</button>
+            <button
+              onClick={() => skip(1)}
+              disabled={current === SLIDES.length - 1}
+              aria-label="Next slide"
+              className="w-9 h-9 rounded-full hover:bg-white/10 disabled:opacity-40 flex items-center justify-center transition"
+            ><ChevronRight size={18} /></button>
+            <div className="w-px h-6 bg-white/20 mx-1" />
+            <button
+              onClick={toggleMute}
+              aria-label={muted ? 'Unmute narration' : 'Mute narration'}
+              className="w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center transition"
+            >{muted ? <VolumeX size={18} /> : <Volume2 size={18} />}</button>
+            <button
+              onClick={() => setVoicePickerOpen(v => !v)}
+              aria-label="Choose narration voice"
+              title="Choose narration voice"
+              className="px-2 h-9 rounded-full hover:bg-white/10 flex items-center justify-center transition text-xs font-bold"
+            >Voice ▾</button>
+            <span className="text-xs font-mono tabular-nums pr-1 pl-1 opacity-80">
+              {current + 1}/{SLIDES.length}
+            </span>
+          </div>
         </div>
       </div>
     </div>

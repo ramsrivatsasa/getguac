@@ -131,10 +131,10 @@ export default function ReceiptDetailPage() {
           onClick={() => reparseFromEmail.mutate()}
           disabled={reparseFromEmail.isPending}
           className="btn-secondary flex items-center gap-2 text-sm"
-          title="Re-run the AI parser against this receipt's source email. Only works for email-forwarded receipts."
+          title="Re-run the AI parser against this receipt's source — the email body for forwarded receipts, or the photo for camera-captured ones."
         >
           <RefreshCw size={14} className={reparseFromEmail.isPending ? 'animate-spin' : ''} />
-          {reparseFromEmail.isPending ? 'Re-parsing…' : 'Re-parse from email'}
+          {reparseFromEmail.isPending ? 'Re-parsing…' : 'Re-parse'}
         </button>
       </div>
 

@@ -978,7 +978,7 @@ export default function ReceiptsPage() {
                             </Link>
                             <button
                               onClick={() => handleReparse(r.id, r.store_name)}
-                              aria-label="Re-parse from email"
+                              aria-label="Re-parse this receipt"
                               title="Re-parse this receipt from the source email (only works for email-forwarded receipts)"
                               disabled={reparsing.has(r.id)}
                               className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 hover:bg-indigo-200 hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center shadow-sm">

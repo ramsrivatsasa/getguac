@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../providers/auth_provider.dart';
@@ -22,10 +23,12 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _rememberWithBio = true;
   bool _bioAvailable = false;
   bool _bioEnabled = false;
+  String _versionLabel = '';
 
   @override
   void initState() {
     super.initState();
+    _loadVersion();
     _checkBiometric();
     _checkForUpdate();
   }
@@ -89,6 +92,14 @@ class _LoginScreenState extends State<LoginScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _loadVersion() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      if (!mounted) return;
+      setState(() => _versionLabel = 'v${info.version} (${info.buildNumber})');
+    } catch (_) { /* version is decorative — silent failure is fine */ }
   }
 
   Future<void> _checkBiometric() async {
@@ -301,9 +312,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  const Text(
-                    'getguac.app',
-                    style: TextStyle(color: Colors.white54, fontSize: 11, letterSpacing: 0.5),
+                  Text(
+                    'getguac.app${_versionLabel.isEmpty ? '' : ' · $_versionLabel'}',
+                    style: const TextStyle(color: Colors.white54, fontSize: 11, letterSpacing: 0.5),
                   ),
                 ],
               ),

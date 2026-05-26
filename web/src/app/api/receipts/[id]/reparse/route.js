@@ -14,7 +14,7 @@
 
 import { createApiClient } from '../../../../../lib/supabase/server'
 import { rateLimit, userRateKey } from '../../../../../lib/apiGuard'
-import { parseReceiptFromText } from '../../../../../lib/parse-receipt-engine'
+import { parseReceiptFromText, parseReceiptFromFile } from '../../../../../lib/parse-receipt-engine'
 import { resolveStoreAndLocation, writeRefundPolicies, lookupStoreDefaultPolicies, stripEmailWrapper } from '../../../../../lib/email-to-receipt'
 
 export const runtime = 'nodejs'
@@ -33,8 +33,22 @@ export async function POST(_request, { params }) {
   const rl = await rateLimit(userRateKey(user.id, 'receipt-reparse'), { limit: 10, windowMs: 60 * 60 * 1000 })
   if (!rl.ok) return Response.json({ error: `Rate limited. Try again in ${rl.retryAfter}s.` }, { status: 429 })
 
-  // Find the linked email_messages row. Multiple emails could point at this
-  // receipt (rare — only if dedup ran); we just use the newest one.
+  // Source detection. Two re-parse paths supported:
+  //   (A) Email-linked  → re-feed the original email body through Gemini text
+  //   (B) Image-linked  → fetch the photo from receipt_link, run Gemini vision
+  //
+  // (B) covers receipts captured via the mobile camera before v0.2.25 — those
+  // got uploaded as raw images with blank fields, so this is how we backfill.
+
+  const { data: rcpt } = await sb
+    .from('receipts')
+    .select('id, receipt_link, store_name')
+    .eq('id', receiptId)
+    .eq('user_id', user.id)
+    .maybeSingle()
+  if (!rcpt) return Response.json({ error: 'Receipt not found.' }, { status: 404 })
+
+  // Path A: email-linked receipt
   const { data: emRows } = await sb
     .from('email_messages')
     .select('id, body_text, body_html, received_at')
@@ -43,36 +57,61 @@ export async function POST(_request, { params }) {
     .order('received_at', { ascending: false })
     .limit(1)
   const em = emRows?.[0]
-  if (!em) {
+
+  let parsed = null
+  let safeDate = undefined           // used to skip date update when AI returned the email date
+
+  if (em) {
+    const body = stripEmailWrapper(em.body_text || em.body_html || '')
+    if (!body || body.length < 60) {
+      return Response.json({ error: 'Email body is too short to parse.' }, { status: 400 })
+    }
+    parsed = await parseReceiptFromText(body, { emailDate: em.received_at })
+    if (!parsed || (!parsed.store_name && !parsed.total_amount && !parsed.items?.length)) {
+      return Response.json({ error: 'AI returned no usable data from the email body.' }, { status: 502 })
+    }
+    // Date safety: if the AI returned the email forward date verbatim, that's
+    // probably wrong — refuse to overwrite the existing date with it.
+    const emailDateIso = em.received_at ? new Date(em.received_at).toISOString().slice(0, 10) : null
+    const parsedDateIso = parsed.date && /^\d{4}-\d{2}-\d{2}/.test(parsed.date) ? parsed.date.slice(0, 10) : null
+    const dateMatchesEmail = !!(parsedDateIso && emailDateIso && parsedDateIso === emailDateIso)
+    safeDate = parsedDateIso && !dateMatchesEmail ? parsedDateIso : undefined
+  } else if (rcpt.receipt_link) {
+    // Path B: image-linked receipt — fetch the image and run vision parse.
+    let buffer, mimeType
+    try {
+      const imgRes = await fetch(rcpt.receipt_link)
+      if (!imgRes.ok) throw new Error(`Image fetch failed (${imgRes.status})`)
+      mimeType = imgRes.headers.get('content-type') || 'image/jpeg'
+      // Sanity: only accept image / PDF
+      if (!mimeType.startsWith('image/') && mimeType !== 'application/pdf') {
+        return Response.json({ error: `Unsupported file type: ${mimeType}` }, { status: 415 })
+      }
+      const ab = await imgRes.arrayBuffer()
+      buffer = Buffer.from(ab)
+    } catch (e) {
+      return Response.json({ error: `Couldn't fetch receipt image: ${e.message}` }, { status: 502 })
+    }
+    try {
+      parsed = await parseReceiptFromFile({ buffer, mimeType })
+    } catch (e) {
+      return Response.json({ error: `AI failed to parse the image: ${e.message}` }, { status: 502 })
+    }
+    if (!parsed || (!parsed.store_name && !parsed.total_amount && !parsed.items?.length)) {
+      return Response.json({ error: 'AI returned no usable data from the image.' }, { status: 502 })
+    }
+    // For image-source receipts the printed date IS the transaction date —
+    // no email-date trap to defend against.
+    const parsedDateIso = parsed.date && /^\d{4}-\d{2}-\d{2}/.test(parsed.date) ? parsed.date.slice(0, 10) : null
+    safeDate = parsedDateIso || undefined
+  } else {
     return Response.json({
-      error: "This receipt isn't linked to an email — re-parse only works for receipts that were created from a forwarded email.",
+      error: "This receipt isn't linked to an email or image — nothing to re-parse against.",
     }, { status: 400 })
-  }
-
-  const body = stripEmailWrapper(em.body_text || em.body_html || '')
-  if (!body || body.length < 60) {
-    return Response.json({ error: 'Email body is too short to parse.' }, { status: 400 })
-  }
-
-  const parsed = await parseReceiptFromText(body, { emailDate: em.received_at })
-  if (!parsed || (!parsed.store_name && !parsed.total_amount && !parsed.items?.length)) {
-    return Response.json({ error: 'AI returned no usable data from the email body.' }, { status: 502 })
   }
 
   // Resolve store + location FKs (best-effort)
   const { store_id, store_location_id } = await resolveStoreAndLocation(sb, parsed)
-
-  // Date diagnostics. The AI is supposed to extract the transaction date from
-  // the receipt body and reject the email forward date — surface what we
-  // actually got so the UI can warn when the AI cheated (returned the email
-  // date) or punted (returned null, leaving the old wrong date in place).
-  const emailDateIso = em.received_at ? new Date(em.received_at).toISOString().slice(0, 10) : null
-  const parsedDateIso = parsed.date && /^\d{4}-\d{2}-\d{2}/.test(parsed.date) ? parsed.date.slice(0, 10) : null
-  const dateMatchesEmail = !!(parsedDateIso && emailDateIso && parsedDateIso === emailDateIso)
-  // If the AI returned the email date verbatim, treat it as untrustworthy and
-  // refuse to apply it — keep the existing value rather than silently
-  // replacing it with the same bogus value.
-  const safeDate = parsedDateIso && !dateMatchesEmail ? parsedDateIso : undefined
 
   const { data: updated, error: upErr } = await sb.from('receipts').update({
     store_name: parsed.store_name || 'Receipt by email',

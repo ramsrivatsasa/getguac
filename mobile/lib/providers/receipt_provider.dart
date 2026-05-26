@@ -104,6 +104,64 @@ class ReceiptProvider extends ChangeNotifier {
     await loadReceipts(force: true);
   }
 
+  /// Upload + insert a receipt straight from AI-parsed JSON (the shape the
+  /// /api/parse-receipt endpoint returns). Saves items in the same call.
+  /// Used by the dashboard camera-FAB so capture-to-saved is a single step.
+  /// Returns the new receipt id, or null on failure.
+  Future<String?> addParsedReceipt(Map<String, dynamic> parsed, File imageFile) async {
+    final uid = _sb.auth.currentUser?.id;
+    if (uid == null) return null;
+    try {
+      final link = await uploadImage(imageFile);
+      final today = DateTime.now().toIso8601String().substring(0, 10);
+      final dateField = (parsed['date'] is String &&
+                        RegExp(r'^\d{4}-\d{2}-\d{2}').hasMatch(parsed['date'] as String))
+          ? (parsed['date'] as String).substring(0, 10)
+          : today;
+      final row = await _sb.from('receipts').insert({
+        'user_id': uid,
+        'store_name': (parsed['store_name'] as String?)?.trim().isNotEmpty == true
+            ? parsed['store_name']
+            : 'Camera receipt',
+        'date': dateField,
+        'total_amount': (parsed['total_amount'] as num?)?.toDouble() ?? 0,
+        'tax_paid':     (parsed['tax_paid']     as num?)?.toDouble() ?? 0,
+        'payment_method': parsed['payment_method'],
+        'payment_last4':  parsed['payment_last4'],
+        'is_return':     parsed['is_return'] == true,
+        'category':      parsed['category'],
+        'receipt_link': link,
+        'processed': true,
+      }).select('id').single();
+      final id = row['id'] as String;
+
+      // Items, if the AI returned any.
+      final items = (parsed['items'] as List?) ?? const [];
+      if (items.isNotEmpty) {
+        final rows = items.map((it) {
+          final m = it as Map<String, dynamic>;
+          return {
+            'receipt_id': id,
+            'sku': m['sku'],
+            'model': m['model'],
+            'item_name': (m['item_name'] as String?) ?? '',
+            'qty': (m['qty'] as num?)?.toDouble() ?? 1,
+            'price': m['price'] == null ? null : (m['price'] as num).toDouble(),
+            'returned': m['returned'] == true,
+            'category': m['category'],
+          };
+        }).toList();
+        await _sb.from('receipt_items').insert(rows);
+      }
+      _lastLoaded = null;
+      await loadReceipts(force: true);
+      return id;
+    } catch (e) {
+      if (kDebugMode) debugPrint('addParsedReceipt error: $e');
+      return null;
+    }
+  }
+
   Future<void> updateReceipt(String id, Map<String, dynamic> data) async {
     await _sb.from('receipts').update(data).eq('id', id);
     _lastLoaded = null;

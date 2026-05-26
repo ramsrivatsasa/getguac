@@ -9,6 +9,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/receipt_provider.dart';
 import '../../providers/reward_provider.dart';
 import '../../models/receipt_model.dart';
+import '../../services/receipt_parse_service.dart';
 import '../../widgets/guac_mascot.dart';
 import '../../utils/date_format.dart';
 
@@ -69,23 +70,88 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (img == null || !mounted) return;
     final uid = context.read<AppAuthProvider>().currentUser?.id;
     if (uid == null) return;
-    if (!mounted) return;
-    // Quick stub — for full add flow, send users to the receipts screen.
+
+    final file = File(img.path);
     final provider = context.read<ReceiptProvider>();
+
+    // "Guac-AI is reading your receipt…" loader. Was missing on the
+    // dashboard FAB — image was uploaded as a blank placeholder receipt
+    // and the user had to Re-parse manually.
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const AlertDialog(
+        content: Padding(
+          padding: EdgeInsets.symmetric(vertical: 8),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2)),
+            SizedBox(width: 14),
+            Flexible(child: Text('Guac-AI is reading your receipt…')),
+          ]),
+        ),
+      ),
+    );
+
     try {
-      final placeholder = Receipt(
-        id: '', storeName: 'New Receipt',
-        date: DateTime.now().toIso8601String().substring(0, 10),
-        totalAmount: 0, taxPaid: 0,
-      );
-      await provider.addReceipt(placeholder, imageFile: File(img.path));
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Receipt added. Open it from Receipts to fill details.')),
+      final parsed = await ReceiptParseService.parseImage(file);
+      if (!mounted) return;
+      if (parsed == null) {
+        // Couldn't parse — fall back to the old placeholder so the photo
+        // still lands somewhere the user can edit/re-parse later.
+        Navigator.of(context, rootNavigator: true).pop();
+        final placeholder = Receipt(
+          id: '', storeName: 'New Receipt',
+          date: DateTime.now().toIso8601String().substring(0, 10),
+          totalAmount: 0, taxPaid: 0,
         );
+        await provider.addReceipt(placeholder, imageFile: file);
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text(
+            "Couldn't auto-read this one. Open it from Receipts to edit or tap Re-parse.")),
+        );
+        return;
       }
+
+      // Convert ParsedReceipt -> plain map (provider expects the parse-receipt
+      // JSON shape with item_name etc.).
+      final asMap = <String, dynamic>{
+        'store_name': parsed.storeName,
+        'date': parsed.date,
+        'total_amount': parsed.totalAmount,
+        'tax_paid': parsed.taxPaid,
+        'payment_method': parsed.paymentMethod,
+        'payment_last4': parsed.paymentLast4,
+        'is_return': parsed.isReturn,
+        'category': parsed.category,
+        'items': parsed.items.map((it) => {
+          'sku': it.sku, 'model': it.model, 'item_name': it.itemName,
+          'qty': it.qty, 'price': it.price,
+          'returned': it.returned, 'category': it.category,
+        }).toList(),
+      };
+      final id = await provider.addParsedReceipt(asMap, file);
+      if (!mounted) return;
+      Navigator.of(context, rootNavigator: true).pop(); // dismiss loader
+      if (id == null) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Saved the photo but failed to insert the receipt. Open Receipts to retry.')));
+        return;
+      }
+      final storeBit = parsed.storeName.isNotEmpty ? parsed.storeName : 'Receipt';
+      final totalBit = parsed.totalAmount > 0 ? ' · \$${parsed.totalAmount.toStringAsFixed(2)}' : '';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('$storeBit$totalBit — ${parsed.items.length} item${parsed.items.length == 1 ? "" : "s"}'),
+        action: SnackBarAction(
+          label: 'View',
+          onPressed: () => context.go('/receipts/$id'),
+        ),
+        duration: const Duration(seconds: 5),
+      ));
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Capture failed: $e')));
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop(); // dismiss loader
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Capture failed: $e')));
+      }
     }
   }
 

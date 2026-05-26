@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { PanelGroup, Panel, PanelResizeHandle } from 'react-resizable-panels'
 import toast from 'react-hot-toast'
@@ -516,6 +516,32 @@ function MessageBody({ m }) {
   const [view, setView] = useState(m.body_html ? 'html' : 'text')
   const hasHtml = !!m.body_html
   const hasText = !!m.body_text
+  const iframeRef = useRef(null)
+  const [iframeHeight, setIframeHeight] = useState(null)
+
+  // Auto-resize iframe to the email body's actual content height. Without this
+  // the iframe takes the panel's full height and leaves a huge whitespace gap
+  // below short emails (Amazon "Ordered:" emails are particularly bad — three
+  // items, then 1000px of nothing).
+  //
+  // The iframe reports its scrollHeight to us via postMessage; we set the
+  // iframe's `style.height` to match. Re-fires on image load + window resize.
+  useEffect(() => {
+    function handler(e) {
+      if (!iframeRef.current) return
+      if (e.source !== iframeRef.current.contentWindow) return
+      if (typeof e.data?.guacEmailHeight === 'number') {
+        // Cap at 5000px so a truly massive marketing email still has a scroll
+        // ceiling rather than overflowing the page indefinitely.
+        setIframeHeight(Math.min(5000, Math.max(120, e.data.guacEmailHeight)))
+      }
+    }
+    window.addEventListener('message', handler)
+    return () => window.removeEventListener('message', handler)
+  }, [])
+
+  // Reset the height when switching messages so we re-measure
+  useEffect(() => { setIframeHeight(null) }, [m.id, view])
 
   if (!hasHtml && !hasText) {
     return <div className="p-5 text-sm text-gray-400">(Empty body)</div>
@@ -537,14 +563,23 @@ function MessageBody({ m }) {
         </div>
       )}
       {view === 'html' && hasHtml ? (
-        <iframe
-          // Sandboxed: allow popups (for clicking links), block scripts + same-origin
-          // so email JS / cookies can't touch our app. Images and styles work fine.
-          sandbox="allow-popups allow-popups-to-escape-sandbox"
-          srcDoc={buildEmailSrcDoc(m.body_html)}
-          title={`email-${m.id}`}
-          className="flex-1 w-full bg-white border-0"
-        />
+        // Wrap the iframe in a scroll container so the iframe itself can size
+        // to content (no internal scrollbar, no trailing whitespace) while the
+        // parent still scrolls when the email is taller than the panel.
+        <div className="flex-1 overflow-y-auto bg-white">
+          <iframe
+            ref={iframeRef}
+            // allow-scripts is required for the height-reporting postMessage to fire
+            // from inside the sandboxed iframe. Without allow-same-origin the script
+            // can't read cookies or the parent DOM, which is enough isolation for
+            // arbitrary marketing HTML.
+            sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
+            srcDoc={buildEmailSrcDoc(m.body_html)}
+            title={`email-${m.id}`}
+            style={iframeHeight ? { height: iframeHeight + 'px' } : { height: '120px' }}
+            className="w-full bg-white border-0 block"
+          />
+        </div>
       ) : (
         <div className="flex-1 p-5 text-sm text-gray-800 whitespace-pre-wrap leading-relaxed font-sans overflow-y-auto">
           {m.body_text || (m.preview ? m.preview + '…' : '(Empty body)')}
@@ -568,7 +603,32 @@ function buildEmailSrcDoc(html) {
   table { max-width: 100%; }
   a { color: #15803d; }
 </style>
-</head><body>${html}</body></html>`
+</head><body>${html}
+<script>
+  // Report our document height to the parent so it can size the iframe to fit
+  // the actual content (avoids huge whitespace below short emails).
+  (function () {
+    function report() {
+      try {
+        var h = Math.max(
+          document.documentElement.scrollHeight,
+          document.body ? document.body.scrollHeight : 0
+        );
+        parent.postMessage({ guacEmailHeight: h }, '*');
+      } catch (_) {}
+    }
+    window.addEventListener('load', report);
+    window.addEventListener('resize', report);
+    // Re-fire after lazy-loaded images settle
+    setTimeout(report, 200);
+    setTimeout(report, 800);
+    setTimeout(report, 2000);
+    // Re-fire whenever an image finishes loading
+    var imgs = document.images || [];
+    for (var i = 0; i < imgs.length; i++) imgs[i].addEventListener('load', report);
+  })();
+</script>
+</body></html>`
 }
 
 function ComposeModal({ prefill, onClose, onSent }) {

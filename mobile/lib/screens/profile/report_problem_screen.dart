@@ -61,12 +61,34 @@ class _ReportProblemScreenState extends State<ReportProblemScreen> {
       context: widget.context,
     );
     if (!mounted) return;
+    if (res.ok) {
+      // Success: surface a confirmation as a snackbar on the destination
+      // route, then pop back to whatever the user was doing. Pop wins over
+      // a forced go('/dashboard') so the back stack stays sensible when
+      // the screen was opened from the batch-failure dialog vs Profile.
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        backgroundColor: const Color(0xFF15803d),
+        content: const Row(children: [
+          Icon(Icons.check_circle_outline, color: Colors.white),
+          SizedBox(width: 10),
+          Expanded(child: Text(
+            'Report sent — thanks. We have the recent log and will dig in.',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+          )),
+        ]),
+        duration: const Duration(seconds: 4),
+      ));
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        context.go('/dashboard');
+      }
+      return;
+    }
     setState(() {
       _sending = false;
-      _ok = res.ok;
-      _result = res.ok
-          ? 'Thanks — report sent. We\'ll dig in on our side.'
-          : 'Send failed: ${res.error}';
+      _ok = false;
+      _result = 'Send failed: ${res.error}';
     });
   }
 

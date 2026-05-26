@@ -11,6 +11,7 @@
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -20,7 +21,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class DebugLog {
   static const _kPrefsKey = 'gg_debug_log_v1';
   static const _maxBuf = 500;
-  static const String platform = 'android'; // mobile is Android-only today
+  // Runtime-detected so the same APK/IPA labels itself correctly across
+  // platforms. Cached at class init to avoid the Platform call on every event.
+  static final String platform =
+      Platform.isIOS ? 'ios' : Platform.isAndroid ? 'android' : 'other';
 
   static final List<Map<String, dynamic>> _buffer = [];
   static String? _sessionId;
@@ -55,7 +59,9 @@ class DebugLog {
   }
 
   /// Append an event. Safe to call before init() — the buffer will accumulate
-  /// in memory and get persisted on the next persist().
+  /// in memory and get persisted on the next persist(). Error-level events
+  /// kick off an immediate upload (no debounce) so the trace lands on the
+  /// server before the app potentially crashes.
   static void event(String tag, String message,
       {Map<String, dynamic>? meta, String level = 'info'}) {
     final ev = <String, dynamic>{
@@ -73,8 +79,15 @@ class DebugLog {
     if (kDebugMode) {
       debugPrint('[$tag/$level] $message ${meta ?? ""}');
     }
-    _scheduleAutoUpload();
-    // Persist asynchronously — best effort.
+    if (level == 'error' || level == 'warn') {
+      // No debounce — error/warn events upload right away. We still keep
+      // them in the buffer until the upload returns successfully, so a
+      // crash between event() and upload still surfaces them on the next
+      // app start.
+      unawaited(uploadPending());
+    } else {
+      _scheduleAutoUpload();
+    }
     unawaited(_persist());
   }
 
@@ -102,46 +115,43 @@ class DebugLog {
     if (session == null) {
       return UploadResult(uploaded: 0, skipped: _buffer.length, error: 'no session');
     }
-    final pending = _buffer.where((e) => e['_uploaded'] != true).toList();
-    if (pending.isEmpty) {
-      return UploadResult(uploaded: 0, skipped: 0);
-    }
-    try {
-      // Use the existing audit_log RPC (security definer) instead of a
-      // dedicated client_logs table — no migration needed. One RPC call per
-      // event; the rows show up in audit_log with action='debug_log'.
-      final sb = Supabase.instance.client;
-      int written = 0;
-      for (final e in pending) {
-        try {
-          await sb.rpc('log_audit', params: {
-            'p_action': 'debug_log',
-            'p_status': e['level'] ?? 'info',
-            'p_detail': {
-              'tag': e['tag'],
-              'message': e['message'],
-              'meta': e['meta'],
-              'session_id': e['session_id'],
-              'app_version': e['app_version'],
-              'platform': e['platform'],
-              'client_ts': e['ts'],
-            },
-          });
-          e['_uploaded'] = true;
-          written++;
-        } catch (_) {
-          // Best-effort per event — if one fails (network blip), keep going.
-        }
+    if (_buffer.isEmpty) return UploadResult(uploaded: 0, skipped: 0);
+    // Snapshot what we're trying to send. We evict successful ones from the
+    // live buffer as we go, so a concurrent event() during upload still
+    // lands in the buffer and gets picked up on the next call.
+    final pending = List<Map<String, dynamic>>.from(_buffer);
+    final sb = Supabase.instance.client;
+    int written = 0;
+    String? lastErr;
+    for (final e in pending) {
+      try {
+        await sb.rpc('log_audit', params: {
+          'p_action': 'debug_log',
+          'p_status': e['level'] ?? 'info',
+          'p_detail': {
+            'tag': e['tag'],
+            'message': e['message'],
+            'meta': e['meta'],
+            'session_id': e['session_id'],
+            'app_version': e['app_version'],
+            'platform': e['platform'],
+            'client_ts': e['ts'],
+          },
+        });
+        _buffer.remove(e); // user requested: delete locally after upload + persist
+        written++;
+      } catch (err) {
+        lastErr = err.toString();
+        // Best-effort per event — keep going so a single bad row doesn't
+        // block the rest of the batch.
       }
-      await _persist();
-      if (written == 0) {
-        return UploadResult(uploaded: 0, skipped: pending.length,
-          error: 'all ${pending.length} writes failed');
-      }
-      return UploadResult(uploaded: written, skipped: pending.length - written);
-    } catch (e) {
-      return UploadResult(uploaded: 0, skipped: pending.length, error: e.toString());
     }
+    await _persist();
+    if (written == 0) {
+      return UploadResult(uploaded: 0, skipped: pending.length,
+        error: lastErr ?? 'no events uploaded');
+    }
+    return UploadResult(uploaded: written, skipped: pending.length - written);
   }
 
   /// All buffered events, newest last.
@@ -154,8 +164,7 @@ class DebugLog {
         : _buffer.sublist(_buffer.length - lastN);
     return list.map((e) {
       final meta = e['meta'] != null ? ' ' + jsonEncode(e['meta']) : '';
-      final up = e['_uploaded'] == true ? '' : ' [local]';
-      return '${e['ts']} [${e['level']}] [${e['tag']}] ${e['message']}$meta$up';
+      return '${e['ts']} [${e['level']}] [${e['tag']}] ${e['message']}$meta';
     }).join('\n');
   }
 

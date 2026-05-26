@@ -2,7 +2,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { Toaster } from 'react-hot-toast'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { initClientDebugLog } from '../lib/client-debug-log'
+
 export function Providers({ children }) {
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: {
@@ -12,6 +14,12 @@ export function Providers({ children }) {
       },
     },
   }))
+
+  useEffect(() => {
+    // Capture window errors + unhandled promise rejections and forward them
+    // to /api/client-logs so they land in audit_log alongside mobile events.
+    initClientDebugLog()
+  }, [])
 
   return (
     <QueryClientProvider client={queryClient}>

@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
@@ -17,6 +18,29 @@ const kBrandSurface    = Color(0xFFf0fdf4); // emerald-50 — soft background
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Global error capture — FlutterError.onError for framework errors,
+  // PlatformDispatcher.onError for uncaught async errors. Both feed the
+  // DebugLog so we get the full trace next time it crashes / parser
+  // fails / a connection blows up.
+  FlutterError.onError = (FlutterErrorDetails details) {
+    DebugLog.event('flutter-error', details.exceptionAsString(),
+      level: 'error',
+      meta: {
+        'library': details.library,
+        'context': details.context?.toString(),
+        'stack': details.stack?.toString().split('\n').take(20).join('\n'),
+      });
+    FlutterError.presentError(details); // keep the default behaviour
+  };
+  PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
+    DebugLog.event('zone-error', error.toString(),
+      level: 'error',
+      meta: {
+        'stack': stack.toString().split('\n').take(20).join('\n'),
+      });
+    return true; // mark as handled — we don't want the platform to crash us
+  };
 
   await Supabase.initialize(
     url: 'https://qchkwojgvfhlbdtpzzig.supabase.co',

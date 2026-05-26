@@ -7,6 +7,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'debug_log.dart';
 
 const _kApiBase = 'https://getguac.app';
 
@@ -94,51 +95,68 @@ class ReceiptParseService {
   /// reads so the caller can show the user a real explanation.
   static Future<ParseResult> parseImage(File file) async {
     final session = Supabase.instance.client.auth.currentSession;
-    if (session == null) return const ParseResult.fail('Not signed in.');
+    if (session == null) {
+      DebugLog.event('parse-receipt', 'no session', level: 'warn');
+      return const ParseResult.fail('Not signed in.');
+    }
+    DebugLog.event('parse-receipt', 'POST /api/parse-receipt start',
+      meta: {'size': await file.length(), 'path': file.path.split('/').last});
     try {
       final uri = Uri.parse('$_kApiBase/api/parse-receipt');
       final req = http.MultipartRequest('POST', uri);
       req.headers['Authorization'] = 'Bearer ${session.accessToken}';
       req.files.add(await http.MultipartFile.fromPath('file', file.path));
-      // 45-sec timeout — Gemini Flash text-from-image takes 5-15s, give it
-      // room. Most "couldn't read" failures we used to swallow as null were
-      // actually timeouts on bad cell connections — surface that now.
       final streamed = await req.send().timeout(const Duration(seconds: 45));
       final body = await streamed.stream.bytesToString();
       if (streamed.statusCode != 200) {
-        // Try to pull the server's error string. Fall back to status code.
+        String reason = 'Server error (${streamed.statusCode}).';
         try {
           final m = jsonDecode(body) as Map<String, dynamic>;
-          if (m['error'] != null) return ParseResult.fail(m['error'].toString());
+          if (m['error'] != null) reason = m['error'].toString();
         } catch (_) {}
-        return ParseResult.fail('Server error (${streamed.statusCode}).');
+        DebugLog.event('parse-receipt', 'http $reason', level: 'error',
+          meta: {'status': streamed.statusCode});
+        return ParseResult.fail(reason);
       }
       late final Map<String, dynamic> map;
       try {
         map = jsonDecode(body) as Map<String, dynamic>;
-      } catch (_) {
+      } catch (e) {
+        DebugLog.event('parse-receipt', 'non-JSON response', level: 'error',
+          meta: {'snippet': body.length > 200 ? body.substring(0, 200) : body});
         return const ParseResult.fail('Server returned non-JSON.');
       }
-      if (map['error'] != null) return ParseResult.fail(map['error'].toString());
+      if (map['error'] != null) {
+        DebugLog.event('parse-receipt', 'api error: ${map['error']}', level: 'error');
+        return ParseResult.fail(map['error'].toString());
+      }
 
       final parsed = ParsedReceipt.fromMap(map);
-      // Empty-read check: if the AI returned nothing usable, treat as a
-      // failure so the caller can offer Retry / manual entry rather than
-      // saving a row with no store + $0 total.
       final hasAnything = parsed.storeName.isNotEmpty
           || parsed.totalAmount > 0
           || parsed.items.isNotEmpty;
       if (!hasAnything) {
+        DebugLog.event('parse-receipt', 'empty AI parse', level: 'warn',
+          meta: {'provider': parsed.provider});
         return const ParseResult.fail(
           "Guac-AI couldn't read anything from this photo. Try a clearer, well-lit shot of the whole receipt."
         );
       }
+      DebugLog.event('parse-receipt', 'ok', meta: {
+        'store': parsed.storeName,
+        'total': parsed.totalAmount,
+        'items': parsed.items.length,
+        'provider': parsed.provider,
+      });
       return ParseResult.ok(parsed);
     } on http.ClientException catch (e) {
+      DebugLog.event('parse-receipt', 'ClientException', level: 'error',
+        meta: {'message': e.message});
       return ParseResult.fail('Network error: ${e.message}');
     } catch (e) {
-      // Most often a TimeoutException; show the user the timeout explicitly.
       final m = e.toString();
+      DebugLog.event('parse-receipt', 'exception', level: 'error',
+        meta: {'error': m});
       if (m.contains('TimeoutException')) {
         return const ParseResult.fail('Timed out waiting for Guac-AI (45s). The server or your connection is slow — try again.');
       }

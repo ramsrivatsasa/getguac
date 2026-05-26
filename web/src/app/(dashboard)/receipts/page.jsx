@@ -1080,50 +1080,17 @@ function ReceiptLineItems({ receiptId }) {
     } catch (e) { toast.error(e.message) }
   }
 
+  // Build a lookup of refund policies by their policy_id so each item row
+  // can render the matching policy inline (days + expiry + eligible) without
+  // requiring a separate panel above. Keeps the layout uniform across
+  // receipts that do and don't have policies.
+  const policyById = {}
+  for (const p of policies) {
+    if (p.policy_id) policyById[p.policy_id] = p
+  }
+
   return (
     <div className="space-y-3">
-      {/* Refund policy summary */}
-      {policies.length > 0 && (
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50/40 overflow-hidden">
-          <div className="px-3 py-0.5 flex items-center gap-2 bg-emerald-100/70 text-xs">
-            <Shield size={12} className="text-emerald-700" />
-            <span className="font-semibold text-emerald-900 uppercase tracking-wide">Refund Policy</span>
-            <span className="text-emerald-700">({policies.length})</span>
-          </div>
-          <table className="w-full text-xs">
-            <thead className="text-gray-500 uppercase bg-emerald-50/40">
-              <tr>
-                <th className="px-3 py-0.5 text-left w-16">Policy</th>
-                <th className="px-3 py-0.5 text-left w-16">Days</th>
-                <th className="px-3 py-0.5 text-left w-32">Expires</th>
-                <th className="px-3 py-0.5 text-left w-20">Eligible</th>
-                <th className="px-3 py-0.5 text-left">Details</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-emerald-100">
-              {policies.map(p => {
-                const expired = p.expiry_date && new Date(p.expiry_date) < new Date()
-                return (
-                  <tr key={p.id}>
-                    <td className="px-3 py-0.5 font-medium">{p.policy_id || '—'}</td>
-                    <td className="px-3 py-0.5">{p.days ?? '—'}</td>
-                    <td className={`px-3 py-0.5 ${expired ? 'text-rose-600 font-medium' : 'text-gray-600'}`}>
-                      {p.expiry_date || '—'}{expired && ' (expired)'}
-                    </td>
-                    <td className="px-3 py-0.5">
-                      <span className={p.eligible && !expired ? 'badge-green text-[10px]' : 'badge-gray text-[10px]'}>
-                        {p.eligible && !expired ? 'Yes' : 'No'}
-                      </span>
-                    </td>
-                    <td className="px-3 py-0.5 text-gray-600">{p.details || '—'}</td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-
       {items.length === 0 ? null : (() => {
       const isNonReturnable = data?.category === 'eats' || data?.category === 'gas-up'
       return (
@@ -1160,7 +1127,34 @@ function ReceiptLineItems({ receiptId }) {
               <td className="px-3 py-0.5">{it.qty}</td>
               <td className="px-3 py-0.5">${parseFloat(it.price || 0).toFixed(2)}</td>
               <td className="px-3 py-0.5">
-                {it.refund_policy_id ? <span className="badge-purple text-[10px]">{it.refund_policy_id}</span> : <span className="text-gray-300">—</span>}
+                {(() => {
+                  // Render policy inline: ID + days, with expiry + eligible in
+                  // the hover tooltip. Used to be a separate panel above the
+                  // items table — folded here for uniform UI across receipts.
+                  const pid = it.refund_policy_id
+                  if (!pid) return <span className="text-gray-300">—</span>
+                  const p = policyById[pid]
+                  if (!p) return <span className="badge-purple text-[10px]">{pid}</span>
+                  const expired = p.expiry_date && new Date(p.expiry_date) < new Date()
+                  const tip = [
+                    p.policy_id && `Policy ${p.policy_id}`,
+                    p.days != null && `${p.days} days`,
+                    p.expiry_date && `expires ${p.expiry_date}${expired ? ' (expired)' : ''}`,
+                    p.eligible === false ? 'NOT eligible' : null,
+                    p.details && p.details,
+                  ].filter(Boolean).join(' · ')
+                  const cls = expired
+                    ? 'inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-100'
+                    : (p.eligible === false
+                      ? 'inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200'
+                      : 'inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100')
+                  return (
+                    <span className={cls} title={tip}>
+                      {p.policy_id || pid}
+                      {p.days != null && <span className="opacity-70">·{p.days}d</span>}
+                    </span>
+                  )
+                })()}
               </td>
               {!isNonReturnable && (
                 <td className="px-3 py-0.5 text-gray-500">{it.return_date || '—'}</td>

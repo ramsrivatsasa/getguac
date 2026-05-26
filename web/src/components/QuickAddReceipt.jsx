@@ -6,6 +6,7 @@ import toast from 'react-hot-toast'
 import { Camera, Upload, Loader2 } from 'lucide-react'
 import { createClient } from '../lib/supabase/client'
 import { useAddReceipt } from '../hooks/useReceipts'
+import { uploadReceiptForParse } from '../lib/parse-receipt-upload'
 import CameraCapture from './CameraCapture'
 
 // Floating "Add Receipt" widget. Lives in the dashboard layout, visible on every
@@ -31,13 +32,10 @@ export default function QuickAddReceipt() {
   const addReceipt = useAddReceipt()
 
   const processFile = useCallback(async (f) => {
-    const fd = new FormData()
-    fd.append('file', f)
-    const res = await fetch('/api/parse-receipt', { method: 'POST', body: fd })
-    const text = await res.text()
-    let data
-    try { data = JSON.parse(text) } catch { throw new Error('Server returned non-JSON') }
-    if (!res.ok) throw new Error(data.error || 'Parse failed')
+    // Same shared helper used by the /receipts page — handles MIME fix-up
+    // for octet-stream uploads + retries transient network failures up to
+    // twice before giving up. Mirrors mobile v0.2.40 behavior.
+    const data = await uploadReceiptForParse(f)
     if (!data.store_name || !data.date) throw new Error('Missing store or date')
 
     const saved = await addReceipt.mutateAsync({

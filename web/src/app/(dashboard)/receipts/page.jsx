@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useDropzone } from 'react-dropzone'
 import { useReceipts, useReceipt, useAddReceipt, useDeleteReceipt, useUpdateReceiptItem } from '../../../hooks/useReceipts'
 import { addToShoppingList } from '../../../lib/db'
+import { uploadReceiptForParse } from '../../../lib/parse-receipt-upload'
 import { createClient } from '../../../lib/supabase/client'
 import { useQuery } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
@@ -102,13 +103,11 @@ export default function ReceiptsPage() {
     setRefundPolicies([])
     setLocationInfo(null)
     try {
-      const fd = new FormData()
-      fd.append('file', f)
-      const res = await fetch('/api/parse-receipt', { method: 'POST', body: fd })
-      const text = await res.text()
-      let data
-      try { data = JSON.parse(text) } catch { throw new Error('Server error — open DevTools console for details') }
-      if (!res.ok) throw new Error(data.error || 'Parse failed')
+      // Shared helper handles MIME-from-extension fallback + retry on
+      // transient errors. Was inline fetch — duplicated in quickProcess
+      // and didn't recover from network blips or wrong content-type from
+      // mobile-browser camera captures.
+      const data = await uploadReceiptForParse(f)
       console.log('[parse-receipt] result', data)
       setForm(prev => ({
         ...prev,
@@ -252,13 +251,11 @@ export default function ReceiptsPage() {
   const [quickBusy, setQuickBusy] = useState(0)
 
   const quickProcess = useCallback(async (f) => {
-    const fd = new FormData()
-    fd.append('file', f)
-    const res = await fetch('/api/parse-receipt', { method: 'POST', body: fd })
-    const text = await res.text()
-    let data
-    try { data = JSON.parse(text) } catch { throw new Error('Server returned non-JSON') }
-    if (!res.ok) throw new Error(data.error || 'Parse failed')
+    // Same helper as the manual-review path so the bulk-drop quickProcess
+    // also gets MIME fix-up + transient retry. The previous inline fetch
+    // had no recovery for application/octet-stream uploads or flaky
+    // connections — now matches the mobile v0.2.40 retry policy.
+    const data = await uploadReceiptForParse(f)
     if (!data.store_name || !data.date) throw new Error('Missing store or date')
 
     const receiptData = {

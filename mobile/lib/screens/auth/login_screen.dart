@@ -98,9 +98,34 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: const Color(0xFF15803d)),
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(ctx);
-              UpdateService.openDownload(update.downloadUrl);
+              // Show a quick download spinner while the APK pulls in
+              // (~20MB — usually under 10 seconds on cell data).
+              showDialog<void>(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) => const AlertDialog(
+                  content: Row(mainAxisSize: MainAxisSize.min, children: [
+                    SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2)),
+                    SizedBox(width: 14),
+                    Flexible(child: Text('Downloading update…')),
+                  ]),
+                ),
+              );
+              final ok = await UpdateService.downloadAndInstall(update.downloadUrl);
+              if (!mounted) return;
+              Navigator.of(context, rootNavigator: true).pop(); // dismiss spinner
+              if (!ok && mounted) {
+                // In-app download failed — fall back to the old browser
+                // path so the user can still install. Comes with the old
+                // Downloads-folder-clutter caveat but at least it works.
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text("Couldn't auto-download. Opening browser instead — install via the notification."),
+                  duration: Duration(seconds: 4),
+                ));
+                await UpdateService.openDownload(update.downloadUrl);
+              }
             },
             child: const Text('Update now'),
           ),

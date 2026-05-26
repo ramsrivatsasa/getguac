@@ -9,9 +9,13 @@
 // downloads it, the user taps the download notification → installs.
 
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:open_filex/open_filex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'debug_log.dart';
 
 class AvailableUpdate {
   final String tag;          // e.g. "v0.1.4"
@@ -67,9 +71,67 @@ class UpdateService {
     }
   }
 
-  /// Opens the APK URL in the device's browser. Android downloads + offers
-  /// to install with one tap. (Real install requires user confirmation —
-  /// Play Store is the only path to fully-silent installs.)
+  /// Filename we always write the downloaded APK to inside the app's cache
+  /// directory. Stable name so the next-launch cleanup can find and delete
+  /// it without scanning.
+  static const _kCachedApkName = 'getguac-update.apk';
+
+  /// Download the APK into the app's cache directory and trigger the
+  /// system's package installer. Android cleans the cache automatically
+  /// when storage gets tight, AND we also delete the file explicitly on
+  /// the next app launch via cleanupOldApk(). Result is no leftover APK
+  /// in Downloads after the install.
+  ///
+  /// Returns true if the install intent fired. False on download failure;
+  /// caller may want to fall back to openInBrowser().
+  static Future<bool> downloadAndInstall(String url) async {
+    DebugLog.event('update', 'downloadAndInstall start', meta: {'url': url});
+    try {
+      final res = await http.get(Uri.parse(url)).timeout(const Duration(minutes: 2));
+      if (res.statusCode != 200) {
+        DebugLog.event('update', 'download non-200', level: 'error',
+          meta: {'status': res.statusCode});
+        return false;
+      }
+      final dir = await getApplicationCacheDirectory();
+      final file = File('${dir.path}/$_kCachedApkName');
+      await file.writeAsBytes(res.bodyBytes, flush: true);
+      DebugLog.event('update', 'apk written', meta: {
+        'bytes': res.bodyBytes.length,
+        'path': file.path,
+      });
+      final opened = await OpenFilex.open(file.path);
+      DebugLog.event('update', 'OpenFilex result',
+        meta: {'type': opened.type.toString(), 'message': opened.message});
+      return opened.type == ResultType.done;
+    } catch (e) {
+      DebugLog.event('update', 'downloadAndInstall threw', level: 'error',
+        meta: {'error': e.toString()});
+      return false;
+    }
+  }
+
+  /// Delete the cached APK from the previous update (if any). Called from
+  /// main() on every app start — by the time the new build is running, the
+  /// previous APK is no longer needed.
+  static Future<void> cleanupOldApk() async {
+    try {
+      final dir = await getApplicationCacheDirectory();
+      final file = File('${dir.path}/$_kCachedApkName');
+      if (await file.exists()) {
+        await file.delete();
+        DebugLog.event('update', 'old apk deleted', meta: {'path': file.path});
+      }
+    } catch (e) {
+      DebugLog.event('update', 'cleanupOldApk threw', level: 'warn',
+        meta: {'error': e.toString()});
+    }
+  }
+
+  /// Legacy browser-based path — kept as a fallback in case the in-app
+  /// download fails (network or permission issue). Browser saves to
+  /// Downloads, which is what we're trying to avoid, but at least the
+  /// user can still install.
   static Future<bool> openDownload(String url) {
     return launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
   }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -9,6 +10,7 @@ import 'router.dart';
 import 'services/share_intent_service.dart';
 import 'services/app_lock_service.dart';
 import 'services/debug_log.dart';
+import 'services/update_service.dart';
 
 // Brand palette — matches the web app (emerald + lime).
 const kBrandPrimary    = Color(0xFF15803d); // emerald-700 — main brand
@@ -60,6 +62,11 @@ void main() async {
   // can read it on the first frame. Without this, the lock-screen gate would
   // race the initial route resolution.
   await AppLockService.init();
+
+  // Best-effort cleanup of the previous version's downloaded APK. If we got
+  // here, the new build is running, so the old APK in the app cache is
+  // useless. Fire-and-forget so app start isn't blocked.
+  unawaited(UpdateService.cleanupOldApk());
 
   // Set up share-intent listener AFTER router is constructed so we can
   // navigate to /car-miles on incoming shares.

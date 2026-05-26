@@ -14,6 +14,12 @@
          driving miles. No background tracking. -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <!-- Install APKs from inside the app (in-app updates). Without this,
+         OpenFilex would have to fall back to launching the browser, leaving
+         the APK in Downloads forever. With it, we download to the app's
+         cache dir and trigger the system package installer directly. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <application
         android:label="GetGuac"
         android:name="${applicationName}"

@@ -1,7 +1,7 @@
 name: getguac
 description: GetGuac — Smart receipt & rewards management
 publish_to: 'none'
-version: 0.2.42+52
+version: 0.2.43+53
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -49,6 +49,10 @@ dependencies:
   url_launcher: ^6.3.0
   shared_preferences: ^2.2.3
   geolocator: ^12.0.0
+  # In-app APK download + install. Lets us drop the new build into the
+  # app's cache dir (auto-cleaned by Android) instead of leaving it in
+  # the user's Downloads folder forever.
+  open_filex: ^4.5.0
 
 dev_dependencies:
   flutter_test:

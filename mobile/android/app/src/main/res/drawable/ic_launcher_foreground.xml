@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Adaptive-icon FOREGROUND layer. Mirrors mobile/assets/mascot/happy.svg —
+  the same avocado we render inside the app, so the launcher icon and
+  in-app brand look identical. The square viewport is 280x280 (mascot
+  body is 220x280 in the SVG; we shift it right by 30 to center it). The
+  inner 66dp safe-zone of the 108dp adaptive foreground keeps the
+  avocado on-screen across every Android launcher shape.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="280"
+    android:viewportHeight="280">
+
+    <group android:translateX="30">
+
+        <!-- Leaf + stem -->
+        <group android:translateX="120" android:translateY="14" android:rotation="-22">
+            <path android:fillColor="#65a30d"
+                  android:pathData="M 0 -20 a 9 20 0 1 0 0 40 a 9 20 0 1 0 0 -40 Z" />
+            <path android:strokeColor="#3f6212" android:strokeWidth="1.4"
+                  android:pathData="M 0 -16 Q 4 0 0 16" />
+        </group>
+        <path android:fillColor="#3f6212"
+              android:pathData="M 106 22 L 109 22 L 109 36 L 106 36 Z" />
+
+        <!-- Body (single solid green; vector drawables can't do radial gradients
+             below API 24 — solid is fine for a launcher icon) -->
+        <path android:fillColor="#10b981"
+              android:pathData="M 110 32 C 92 34, 82 48, 80 72 C 80 92, 70 108, 60 130 C 46 162, 44 200, 70 226 C 88 244, 132 244, 150 226 C 176 200, 174 162, 160 130 C 150 108, 140 92, 140 72 C 138 48, 128 34, 110 32 Z" />
+
+        <!-- Flesh (inner light green) -->
+        <path android:fillColor="#a3e635"
+              android:pathData="M 110 50 C 96 52, 89 62, 88 80 C 88 96, 80 110, 72 130 C 60 158, 60 192, 82 214 C 96 226, 124 226, 138 214 C 160 192, 160 158, 148 130 C 140 110, 132 96, 132 80 C 131 62, 124 52, 110 50 Z" />
+
+        <!-- Pit (warm brown) -->
+        <path android:fillColor="#a16207"
+              android:pathData="M 110 132 a 38 40 0 1 0 0 80 a 38 40 0 1 0 0 -80 Z" />
+
+        <!-- Pit highlight -->
+        <path android:fillColor="#fef3c7" android:fillAlpha="0.55"
+              android:pathData="M 96 152 a 11 6 0 1 0 0 12 a 11 6 0 1 0 0 -12 Z" />
+
+        <!-- Cheeks -->
+        <path android:fillColor="#fb7185" android:fillAlpha="0.55"
+              android:pathData="M 80 184 a 6 6 0 1 0 0 12 a 6 6 0 1 0 0 -12 Z" />
+        <path android:fillColor="#fb7185" android:fillAlpha="0.55"
+              android:pathData="M 140 184 a 6 6 0 1 0 0 12 a 6 6 0 1 0 0 -12 Z" />
+
+        <!-- Eyes (whites + pupils) -->
+        <path android:fillColor="#ffffff" android:strokeColor="#1f2937" android:strokeWidth="1"
+              android:pathData="M 94 160 a 8 8 0 1 0 0 16 a 8 8 0 1 0 0 -16 Z" />
+        <path android:fillColor="#ffffff" android:strokeColor="#1f2937" android:strokeWidth="1"
+              android:pathData="M 126 160 a 8 8 0 1 0 0 16 a 8 8 0 1 0 0 -16 Z" />
+        <path android:fillColor="#1f2937"
+              android:pathData="M 95 165 a 4 4 0 1 0 0 8 a 4 4 0 1 0 0 -8 Z" />
+        <path android:fillColor="#1f2937"
+              android:pathData="M 127 165 a 4 4 0 1 0 0 8 a 4 4 0 1 0 0 -8 Z" />
+        <path android:fillColor="#ffffff"
+              android:pathData="M 93 164.9 a 1.6 1.6 0 1 0 0 3.2 a 1.6 1.6 0 1 0 0 -3.2 Z" />
+        <path android:fillColor="#ffffff"
+              android:pathData="M 125 164.9 a 1.6 1.6 0 1 0 0 3.2 a 1.6 1.6 0 1 0 0 -3.2 Z" />
+
+        <!-- Smile -->
+        <path android:strokeColor="#1f2937" android:strokeWidth="3.5" android:strokeLineCap="round"
+              android:pathData="M 100 194 Q 110 204, 120 194" />
+
+    </group>
+</vector>

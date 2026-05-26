@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Adaptive-icon BACKGROUND layer. Matches the web's brand gradient
+  (emerald-700 -> lime-600) so the launcher icon reads the same as the
+  in-app login background.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+       android:shape="rectangle">
+    <gradient
+        android:startColor="#15803d"
+        android:endColor="#65a30d"
+        android:angle="135" />
+</shape>

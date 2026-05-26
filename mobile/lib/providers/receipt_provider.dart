@@ -1,6 +1,7 @@
+import 'dart:async';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'dart:io';
 import '../models/receipt_model.dart';
 
 const _kReceiptListCols =
@@ -250,7 +251,17 @@ class ReceiptProvider extends ChangeNotifier {
   Future<void> deleteReceipt(String id) async {
     await _sb.from('receipts').delete().eq('id', id);
     receipts.removeWhere((r) => r.id == id);
+    // Force a refetch on the next consumer pull so the dashboard's
+    // "Spending by Store" / category aggregates can't show stale rows
+    // (user report: deleted Glory Days but the bar kept showing). Bumping
+    // _lastLoaded to null guarantees the cached-period guard misses on the
+    // next loadReceipts() call.
+    _lastLoaded = null;
     notifyListeners();
+    // Also issue a force-load so the receipts list itself reflects the
+    // delete the moment the next screen rebuilds — fire-and-forget to
+    // keep deletion fast.
+    unawaited(loadReceipts(force: true));
   }
 
   Future<List<ReceiptItem>> getItems(String receiptId) async {

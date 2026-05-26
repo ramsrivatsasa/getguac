@@ -7,6 +7,7 @@ import 'providers/reward_provider.dart';
 import 'router.dart';
 import 'services/share_intent_service.dart';
 import 'services/app_lock_service.dart';
+import 'services/debug_log.dart';
 
 // Brand palette — matches the web app (emerald + lime).
 const kBrandPrimary    = Color(0xFF15803d); // emerald-700 — main brand
@@ -21,6 +22,15 @@ void main() async {
     url: 'https://qchkwojgvfhlbdtpzzig.supabase.co',
     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjaGt3b2pndmZobGJkdHB6emlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1NzE0ODUsImV4cCI6MjA5NTE0NzQ4NX0.0aDoZO4-p8XBfdJx8lpK8jmOy02hFG15gXFc7HpcwKs',
   );
+
+  // Diagnostic event log — hydrates the persistent buffer from
+  // SharedPreferences before any biometric / app-lock event runs, so we
+  // capture the cold-start flow.
+  await DebugLog.init();
+  final hasSession = Supabase.instance.client.auth.currentSession != null;
+  DebugLog.event('main', 'app start', meta: {
+    'has_supabase_session': hasSession,
+  });
 
   // Cache the biometric "enabled" flag synchronously so the router's redirect
   // can read it on the first frame. Without this, the lock-screen gate would

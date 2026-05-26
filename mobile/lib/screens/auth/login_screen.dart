@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -6,6 +7,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/biometric_service.dart';
 import '../../services/update_service.dart';
+import '../../services/debug_log.dart';
+import '../../services/app_lock_service.dart';
 import '../../widgets/guac_mascot.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -110,26 +113,52 @@ class _LoginScreenState extends State<LoginScreen> {
       _bioAvailable = capable;
       _bioEnabled = enabled;
     });
+    DebugLog.event('login-screen', 'checkBiometric', meta: {
+      'capable': capable, 'enabled': enabled,
+    });
     // Auto-prompt biometric on first frame if already enrolled — fast path.
     if (capable && enabled) {
+      DebugLog.event('login-screen', 'auto-prompt biometric on post-frame');
       WidgetsBinding.instance.addPostFrameCallback((_) => _unlockWithBio());
     }
   }
 
   Future<void> _unlockWithBio() async {
+    DebugLog.event('login-screen', 'unlockWithBio start');
     final creds = await BiometricService.authenticate();
-    if (creds == null || !mounted) return;
+    if (creds == null || !mounted) {
+      DebugLog.event('login-screen', 'unlockWithBio: creds null or unmounted',
+        meta: {'creds_null': creds == null, 'mounted': mounted});
+      return;
+    }
     setState(() => _loading = true);
     try {
       await context.read<AppAuthProvider>().login(creds.email, creds.password);
+      DebugLog.event('login-screen', 'unlockWithBio: supabase login OK');
       if (mounted) context.go('/dashboard');
     } catch (e) {
+      final msg = e.toString();
+      // Only wipe credentials when the failure is unambiguously "bad
+      // credentials". Network / transient errors must NOT delete stored
+      // creds — that was the bug where users kept losing biometric after
+      // every cold start. Supabase AuthException for wrong password
+      // contains "Invalid login credentials" (or status 400 + invalid_grant).
+      final looksLikeBadCreds = msg.toLowerCase().contains('invalid login')
+          || msg.toLowerCase().contains('invalid_grant')
+          || msg.toLowerCase().contains('invalid credentials');
+      DebugLog.event('login-screen', 'unlockWithBio failed',
+        level: 'error', meta: {
+          'error': msg,
+          'wipe_creds': looksLikeBadCreds,
+        });
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Biometric sign-in failed: $e')),
       );
-      // Bad creds = wipe so we don't keep retrying with stale data
-      await BiometricService.disable();
-      setState(() => _bioEnabled = false);
+      if (looksLikeBadCreds) {
+        await BiometricService.disable();
+        await AppLockService.refreshEnabled();
+        setState(() => _bioEnabled = false);
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -141,7 +170,13 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final identifier = _identifierCtrl.text.trim();
       final password = _passCtrl.text;
+      DebugLog.event('login-screen', 'manual login attempt', meta: {
+        'identifier_has_at': identifier.contains('@'),
+        'remember_with_bio': _rememberWithBio,
+        'bio_available': _bioAvailable,
+      });
       await context.read<AppAuthProvider>().login(identifier, password);
+      DebugLog.event('login-screen', 'manual login supabase OK');
 
       // Stash credentials for next-time biometric login.
       // Two prior bugs we are guarding against:
@@ -156,6 +191,12 @@ class _LoginScreenState extends State<LoginScreen> {
       if (_rememberWithBio) {
         final emailForBio = Supabase.instance.client.auth.currentUser?.email
           ?? (identifier.contains('@') ? identifier : null);
+        DebugLog.event('login-screen', 'biometric enable decision', meta: {
+          'has_email_for_bio': emailForBio != null && emailForBio.isNotEmpty,
+          'source': Supabase.instance.client.auth.currentUser?.email != null
+              ? 'supabase_session'
+              : (identifier.contains('@') ? 'identifier' : 'none'),
+        });
         if (emailForBio != null && emailForBio.isNotEmpty) {
           final err = await BiometricService.enable(emailForBio, password);
           if (err != null && mounted) {
@@ -165,9 +206,17 @@ class _LoginScreenState extends State<LoginScreen> {
                 duration: const Duration(seconds: 6),
               ),
             );
+          } else {
+            // Refresh AppLockService so the next cold-start sees the new
+            // credentials and routes through /lock for the biometric gate.
+            await AppLockService.refreshEnabled();
           }
         }
       }
+
+      // Best-effort: get any buffered events up to the server now that we
+      // definitely have a Supabase session.
+      unawaited(DebugLog.uploadPending());
 
       if (mounted) context.go('/dashboard');
     } catch (e) {

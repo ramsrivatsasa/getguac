@@ -9,6 +9,7 @@
 // again. We don't yet auto-relock on background-resume; that's a future tweak.
 
 import 'biometric_service.dart';
+import 'debug_log.dart';
 
 class AppLockService {
   static bool _enabled = false;
@@ -18,9 +19,18 @@ class AppLockService {
   /// runApp() so the router has the state ready when it builds.
   static Future<void> init() async {
     try {
-      _enabled = await BiometricService.isEnabled() && await BiometricService.isDeviceCapable();
-    } catch (_) {
+      final enabled = await BiometricService.isEnabled();
+      final capable = await BiometricService.isDeviceCapable();
+      _enabled = enabled && capable;
+      DebugLog.event('app-lock', 'init', meta: {
+        'enabled_in_storage': enabled,
+        'device_capable': capable,
+        '_enabled': _enabled,
+      });
+    } catch (e) {
       _enabled = false;
+      DebugLog.event('app-lock', 'init threw',
+        level: 'error', meta: {'error': e.toString()});
     }
     _unlocked = false; // fresh process = locked
   }
@@ -46,12 +56,21 @@ class AppLockService {
   }
 
   /// Re-read the enabled flag (e.g., after the user toggles biometric in
-  /// Profile). Cheap — just two storage reads.
+  /// Profile, or after a fresh sign-in that just stored credentials). Cheap.
   static Future<void> refreshEnabled() async {
     try {
-      _enabled = await BiometricService.isEnabled() && await BiometricService.isDeviceCapable();
-    } catch (_) {
+      final enabled = await BiometricService.isEnabled();
+      final capable = await BiometricService.isDeviceCapable();
+      _enabled = enabled && capable;
+      DebugLog.event('app-lock', 'refreshEnabled', meta: {
+        'enabled_in_storage': enabled,
+        'device_capable': capable,
+        '_enabled': _enabled,
+      });
+    } catch (e) {
       _enabled = false;
+      DebugLog.event('app-lock', 'refreshEnabled threw',
+        level: 'error', meta: {'error': e.toString()});
     }
   }
 }

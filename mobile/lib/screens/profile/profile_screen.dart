@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/biometric_service.dart';
 import '../../services/update_service.dart';
+import '../../services/debug_log.dart';
 import '../../widgets/guac_mascot.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -350,6 +351,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
             label: const Text('Diagnose biometric'),
           ),
 
+          // Debug log — surfaces the in-app event log AND uploads it to the
+          // server so we can triage failures without the user having to read
+          // anything out loud.
+          TextButton.icon(
+            onPressed: () => _showDebugLog(),
+            icon: const Icon(Icons.bug_report_outlined, size: 16),
+            label: const Text('View / upload debug log'),
+          ),
+
           Row(children: [
             Expanded(child: _Pill(
               gradient: const [Color(0xFFa7f3d0), Color(0xFF15803d)],
@@ -380,6 +390,82 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (context.mounted) context.go('/login');
     // (We don't bounce to getguac.app/ on mobile — staying in the app feels
     //  more natural. The login screen is already the in-app welcome surface.)
+  }
+
+  Future<void> _showDebugLog() async {
+    // Upload first so the displayed count reflects reality. Fire-and-forget
+    // is fine; we always show the local buffer text either way.
+    final upload = await DebugLog.uploadPending();
+    if (!mounted) return;
+    final text = DebugLog.formatText(lastN: 200);
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Debug log'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: upload.ok ? const Color(0xFFdcfce7) : const Color(0xFFfee2e2),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                upload.ok
+                  ? 'Uploaded ${upload.uploaded} new event${upload.uploaded == 1 ? "" : "s"} to server. Total in buffer: ${DebugLog.events().length}.'
+                  : 'Upload failed (${upload.error}). ${DebugLog.events().length} events buffered locally.',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: upload.ok ? const Color(0xFF065f46) : const Color(0xFF991b1b),
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Flexible(
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFf3f4f6),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: SingleChildScrollView(
+                  child: SelectableText(
+                    text.isEmpty ? '(no events recorded yet)' : text,
+                    style: const TextStyle(fontFamily: 'monospace', fontSize: 10, height: 1.35),
+                  ),
+                ),
+              ),
+            ),
+          ]),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              await Clipboard.setData(ClipboardData(text: text));
+              if (ctx.mounted) ScaffoldMessenger.of(ctx).showSnackBar(
+                const SnackBar(content: Text('Log copied to clipboard.')),
+              );
+            },
+            child: const Text('Copy'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final r = await DebugLog.uploadPending();
+              if (!ctx.mounted) return;
+              ScaffoldMessenger.of(ctx).showSnackBar(
+                SnackBar(content: Text(r.ok
+                  ? 'Uploaded ${r.uploaded} more event${r.uploaded == 1 ? "" : "s"}.'
+                  : 'Upload failed: ${r.error}')),
+              );
+            },
+            child: const Text('Upload again'),
+          ),
+          TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Close')),
+        ],
+      ),
+    );
   }
 
   Widget _kv(String label, String value) => Padding(

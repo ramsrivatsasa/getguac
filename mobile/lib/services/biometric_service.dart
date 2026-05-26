@@ -12,6 +12,7 @@
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
+import 'debug_log.dart';
 
 class BiometricService {
   static const _kEmail = 'gg_bio_email';
@@ -27,12 +28,20 @@ class BiometricService {
   static Future<bool> isDeviceCapable() async {
     try {
       final isSupported = await _auth.isDeviceSupported();
-      if (!isSupported) return false;
       final canCheck = await _auth.canCheckBiometrics;
-      if (!canCheck) return false;
-      final available = await _auth.getAvailableBiometrics();
-      return available.isNotEmpty;
-    } catch (_) {
+      final available = isSupported && canCheck
+          ? await _auth.getAvailableBiometrics()
+          : <BiometricType>[];
+      final ok = isSupported && canCheck && available.isNotEmpty;
+      DebugLog.event('biometric', 'isDeviceCapable=$ok', meta: {
+        'isSupported': isSupported,
+        'canCheck': canCheck,
+        'available': available.map((b) => b.toString()).toList(),
+      });
+      return ok;
+    } catch (e) {
+      DebugLog.event('biometric', 'isDeviceCapable threw',
+        level: 'error', meta: {'error': e.toString()});
       return false;
     }
   }
@@ -69,8 +78,20 @@ class BiometricService {
   /// Whether the user has enabled biometric login (they did the password
   /// login once and we stashed credentials).
   static Future<bool> isEnabled() async {
-    return (await _storage.read(key: _kEnabled)) == '1'
-        && (await _storage.read(key: _kEmail)) != null;
+    try {
+      final flag = await _storage.read(key: _kEnabled);
+      final email = await _storage.read(key: _kEmail);
+      final ok = flag == '1' && email != null;
+      DebugLog.event('biometric', 'isEnabled=$ok', meta: {
+        'flag': flag,
+        'email_present': email != null,
+      });
+      return ok;
+    } catch (e) {
+      DebugLog.event('biometric', 'isEnabled threw',
+        level: 'error', meta: {'error': e.toString()});
+      return false;
+    }
   }
 
   /// Raw email that's currently stored for biometric login (or null if none).
@@ -88,18 +109,33 @@ class BiometricService {
   /// silent write failures were the recurring symptom of the credentials-
   /// not-stored bug.
   static Future<String?> enable(String email, String password) async {
+    DebugLog.event('biometric', 'enable start', meta: {'email_domain': _domainOf(email)});
     try {
       await _storage.write(key: _kEmail, value: email);
       await _storage.write(key: _kPass,  value: password);
       await _storage.write(key: _kEnabled, value: '1');
       final back = await _storage.read(key: _kEmail);
+      final pwBack = await _storage.read(key: _kPass);
+      final flagBack = await _storage.read(key: _kEnabled);
+      DebugLog.event('biometric', 'enable wrote', meta: {
+        'email_read_back_ok': back == email,
+        'password_read_back_ok': pwBack == password,
+        'flag_read_back': flagBack,
+      });
       if (back != email) {
         return 'Secure storage write didn\'t persist (read-back returned "${back ?? "null"}").';
       }
       return null;
     } catch (e) {
+      DebugLog.event('biometric', 'enable threw',
+        level: 'error', meta: {'error': e.toString()});
       return 'Secure storage error: $e';
     }
+  }
+
+  static String _domainOf(String email) {
+    final i = email.indexOf('@');
+    return i >= 0 ? email.substring(i) : '?';
   }
 
   /// Wipe stored credentials (call on sign-out or "disable biometric").
@@ -112,6 +148,7 @@ class BiometricService {
   /// Prompt biometric. Returns the stored email+password if user authenticated,
   /// null otherwise.
   static Future<({String email, String password})?> authenticate() async {
+    DebugLog.event('biometric', 'authenticate start');
     try {
       final ok = await _auth.authenticate(
         localizedReason: 'Unlock GetGuac',
@@ -121,12 +158,19 @@ class BiometricService {
           useErrorDialogs: true,
         ),
       );
+      DebugLog.event('biometric', 'authenticate prompt result', meta: {'ok': ok});
       if (!ok) return null;
       final email = await _storage.read(key: _kEmail);
       final pass  = await _storage.read(key: _kPass);
+      DebugLog.event('biometric', 'authenticate read-back', meta: {
+        'email_present': email != null,
+        'password_present': pass != null,
+      });
       if (email == null || pass == null) return null;
       return (email: email, password: pass);
-    } catch (_) {
+    } catch (e) {
+      DebugLog.event('biometric', 'authenticate threw',
+        level: 'error', meta: {'error': e.toString()});
       return null;
     }
   }

@@ -7,6 +7,7 @@
 // login screen — covers the case where the user changed devices or genuinely
 // can't biometric-auth right now.
 
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -14,6 +15,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/app_lock_service.dart';
 import '../../services/biometric_service.dart';
+import '../../services/debug_log.dart';
 import '../../widgets/guac_mascot.dart';
 
 class AppLockScreen extends StatefulWidget {
@@ -31,16 +33,20 @@ class _AppLockScreenState extends State<AppLockScreen> {
   @override
   void initState() {
     super.initState();
+    DebugLog.event('app-lock-screen', 'initState');
     // Auto-fire the prompt as soon as the screen paints — no extra tap needed.
     WidgetsBinding.instance.addPostFrameCallback((_) => _tryUnlock());
   }
 
   Future<void> _tryUnlock() async {
     if (_unlocking) return;
+    DebugLog.event('app-lock-screen', 'tryUnlock start',
+      meta: {'returnTo': widget.returnTo});
     setState(() { _unlocking = true; _error = null; });
     try {
       final creds = await BiometricService.authenticate();
       if (creds == null) {
+        DebugLog.event('app-lock-screen', 'tryUnlock: creds null (cancelled or no storage)');
         if (mounted) setState(() { _unlocking = false; _error = 'Biometric cancelled.'; });
         return;
       }
@@ -51,16 +57,23 @@ class _AppLockScreenState extends State<AppLockScreen> {
           email: creds.email,
           password: creds.password,
         );
-      } catch (_) {
-        // Session might already be valid — that's fine, push through.
+        DebugLog.event('app-lock-screen', 'supabase re-login OK');
+      } catch (e) {
+        // Session might already be valid — log but push through.
+        DebugLog.event('app-lock-screen', 'supabase re-login failed (push through)',
+          level: 'warn', meta: {'error': e.toString()});
       }
       AppLockService.markUnlocked();
+      unawaited(DebugLog.uploadPending());
       if (!mounted) return;
       final target = widget.returnTo == null || widget.returnTo!.isEmpty || widget.returnTo == '/lock'
         ? '/dashboard'
         : widget.returnTo!;
+      DebugLog.event('app-lock-screen', 'unlocked, navigating', meta: {'target': target});
       context.go(target);
     } catch (e) {
+      DebugLog.event('app-lock-screen', 'tryUnlock threw',
+        level: 'error', meta: {'error': e.toString()});
       if (mounted) setState(() { _unlocking = false; _error = 'Unlock failed: $e'; });
     }
   }

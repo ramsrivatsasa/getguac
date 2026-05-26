@@ -155,28 +155,7 @@ export default function ReportsPage() {
               <h2 className="font-semibold text-gray-800 text-sm">Spending by category</h2>
             </div>
             <div className="flex flex-col lg:flex-row gap-6 items-start">
-              {/* Donut. Using a FIXED-SIZE PieChart instead of ResponsiveContainer
-                  because the grid cell was collapsing to 0 width and recharts
-                  silently rendered nothing. Explicit 280x280 makes the chart
-                  predictable regardless of surrounding layout. */}
-              <div className="shrink-0">
-                <PieChart width={280} height={280}>
-                  <Pie
-                    data={byCategory.map(c => ({ name: categoryLabel(c.slug), value: c.amount, slug: c.slug }))}
-                    dataKey="value"
-                    nameKey="name"
-                    cx={140}
-                    cy={140}
-                    innerRadius={60}
-                    outerRadius={110}
-                    paddingAngle={2}
-                    isAnimationActive={false}
-                  >
-                    {byCategory.map(c => <Cell key={c.slug} fill={CATEGORY_COLORS[c.slug] || '#94a3b8'} />)}
-                  </Pie>
-                  <Tooltip formatter={(v) => `$${Number(v).toFixed(2)}`} contentStyle={{ borderRadius: 12, fontSize: 12 }} />
-                </PieChart>
-              </div>
+              <CategoryDonut data={byCategory} total={totalSpent} colors={CATEGORY_COLORS} />
               {/* Right column: a 3-col grid so the amount + % columns line up
                   vertically. The category chip lives in the first (auto) col
                   and absorbs the variable label width. First grid row is the
@@ -316,6 +295,61 @@ export default function ReportsPage() {
           </div>
         </>
       )}
+    </div>
+  )
+}
+
+// Native SVG donut. Reliable across layouts — recharts silently fails to
+// render when its parent has computed-zero width. Each segment is a circle
+// with strokeDasharray sized to its fraction of the total.
+function CategoryDonut({ data, total, colors, size = 240 }) {
+  if (!data || data.length === 0 || !total) {
+    return (
+      <div className="shrink-0 flex items-center justify-center text-gray-300 text-xs" style={{ width: size, height: size }}>
+        No data
+      </div>
+    )
+  }
+  const radius = 90
+  const stroke = 50
+  const circumference = 2 * Math.PI * radius
+  let cursor = 0
+  const cx = size / 2
+  const cy = size / 2
+  const center = `$${total.toFixed(0)}`
+  return (
+    <div className="shrink-0 relative" style={{ width: size, height: size }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
+        <circle cx={cx} cy={cy} r={radius} fill="none" stroke="#f3f4f6" strokeWidth={stroke} />
+        {data.map(d => {
+          const frac = total > 0 ? d.amount / total : 0
+          const arcLen = circumference * frac
+          // Small gap between slices: shorten each arc by 2px, leave a 2px gap.
+          const visible = Math.max(0, arcLen - 2)
+          const segment = (
+            <circle
+              key={d.slug}
+              cx={cx}
+              cy={cy}
+              r={radius}
+              fill="none"
+              stroke={colors[d.slug] || '#94a3b8'}
+              strokeWidth={stroke}
+              strokeDasharray={`${visible} ${circumference - visible}`}
+              strokeDashoffset={-cursor}
+            >
+              <title>{`${d.slug}: $${d.amount.toFixed(2)} (${((d.amount / total) * 100).toFixed(0)}%)`}</title>
+            </circle>
+          )
+          cursor += arcLen
+          return segment
+        })}
+      </svg>
+      {/* Center label — total spend so the donut isn't just a colour wheel. */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+        <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Total</span>
+        <span className="text-lg font-extrabold text-gray-800">{center}</span>
+      </div>
     </div>
   )
 }

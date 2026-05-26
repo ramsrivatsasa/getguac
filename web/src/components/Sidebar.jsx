@@ -281,14 +281,15 @@ function InboxSubNav({ onNavigate }) {
 
   return (
     <div className="mt-1 ml-2 pl-3 border-l-2 border-emerald-100 space-y-1">
-      {/* Folders */}
+      {/* Folders. Chevron sits to the LEFT of the label so it aligns vertically
+          with the Inbox mascot icon column above. */}
       <button
         type="button"
         onClick={() => setFoldersOpen(v => !v)}
-        className="w-full flex items-center justify-between text-[10px] uppercase tracking-wider font-bold text-emerald-700 hover:text-emerald-900 py-0.5"
+        className="w-full flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-bold text-emerald-700 hover:text-emerald-900 py-0.5"
       >
+        <ChevronDown size={11} className={`shrink-0 transition-transform ${foldersOpen ? '' : '-rotate-90'}`} />
         <span>Folders</span>
-        <ChevronDown size={11} className={`transition-transform ${foldersOpen ? '' : '-rotate-90'}`} />
       </button>
       {foldersOpen && (
         <div className="space-y-px">
@@ -311,17 +312,16 @@ function InboxSubNav({ onNavigate }) {
         </div>
       )}
 
-      {/* Filters */}
+      {/* Filters. Chevron on the LEFT so it aligns vertically with the Folders
+          chevron and the Inbox mascot column above. */}
       <button
         type="button"
         onClick={() => setFiltersOpen(v => !v)}
-        className="w-full flex items-center justify-between text-[10px] uppercase tracking-wider font-bold text-amber-700 hover:text-amber-900 pt-1 pb-0.5"
+        className="w-full flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-bold text-amber-700 hover:text-amber-900 pt-1 pb-0.5"
       >
-        <span className="flex items-center gap-1.5">
-          <Filter size={10} /> Filters
-          {filter && <span className="w-1 h-1 rounded-full bg-amber-500" />}
-        </span>
-        <ChevronDown size={11} className={`transition-transform ${filtersOpen ? '' : '-rotate-90'}`} />
+        <ChevronDown size={11} className={`shrink-0 transition-transform ${filtersOpen ? '' : '-rotate-90'}`} />
+        <span>Filters</span>
+        {filter && <span className="w-1 h-1 rounded-full bg-amber-500" />}
       </button>
       {filtersOpen && (
         <div className="space-y-px">

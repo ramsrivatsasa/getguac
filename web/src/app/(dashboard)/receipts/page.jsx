@@ -724,19 +724,19 @@ export default function ReceiptsPage() {
                     <tbody className="divide-y">
                       {parsedItems.map((item, i) => (
                         <tr key={i} className="hover:bg-gray-50/50">
-                          <td className="px-3 py-1.5">
+                          <td className="px-3 py-1">
                             <input className="input py-1 text-sm" value={item.item_name} onChange={e => updateItem(i, 'item_name', e.target.value)} />
                           </td>
-                          <td className="px-3 py-1.5">
+                          <td className="px-3 py-1">
                             <input type="number" min="1" className="input py-1 text-sm w-16" value={item.qty} onChange={e => updateItem(i, 'qty', +e.target.value)} />
                           </td>
-                          <td className="px-3 py-1.5">
+                          <td className="px-3 py-1">
                             <input type="number" step="0.01" className="input py-1 text-sm w-24" value={item.price} onChange={e => updateItem(i, 'price', +e.target.value)} />
                           </td>
-                          <td className="px-3 py-1.5">
+                          <td className="px-3 py-1">
                             <input className="input py-1 text-sm w-28" value={item.sku || ''} onChange={e => updateItem(i, 'sku', e.target.value)} />
                           </td>
-                          <td className="px-3 py-1.5">
+                          <td className="px-3 py-1">
                             <input className="input py-1 text-sm w-28" value={item.model || ''} onChange={e => updateItem(i, 'model', e.target.value)} />
                           </td>
                           <td className="px-2 py-1.5">
@@ -774,19 +774,19 @@ export default function ReceiptsPage() {
                     <tbody className="divide-y">
                       {refundPolicies.map((p, i) => (
                         <tr key={i} className="hover:bg-gray-50/50">
-                          <td className="px-3 py-1.5">
+                          <td className="px-3 py-1">
                             <input className="input py-1 text-sm w-14" value={p.policy_id || ''} onChange={e => updatePolicy(i, 'policy_id', e.target.value)} />
                           </td>
-                          <td className="px-3 py-1.5">
+                          <td className="px-3 py-1">
                             <input type="number" className="input py-1 text-sm w-14" value={p.days ?? ''} onChange={e => updatePolicy(i, 'days', e.target.value ? +e.target.value : null)} />
                           </td>
-                          <td className="px-3 py-1.5">
+                          <td className="px-3 py-1">
                             <input type="date" className="input py-1 text-sm" value={p.expiry_date || ''} onChange={e => updatePolicy(i, 'expiry_date', e.target.value)} />
                           </td>
-                          <td className="px-3 py-1.5 text-center">
+                          <td className="px-3 py-1 text-center">
                             <input type="checkbox" checked={p.eligible !== false} onChange={e => updatePolicy(i, 'eligible', e.target.checked)} />
                           </td>
-                          <td className="px-3 py-1.5">
+                          <td className="px-3 py-1">
                             <input className="input py-1 text-sm" value={p.details || ''} onChange={e => updatePolicy(i, 'details', e.target.value)} />
                           </td>
                           <td className="px-2 py-1.5">
@@ -1085,7 +1085,7 @@ function ReceiptLineItems({ receiptId }) {
       {/* Refund policy summary */}
       {policies.length > 0 && (
         <div className="rounded-lg border border-emerald-200 bg-emerald-50/40 overflow-hidden">
-          <div className="px-3 py-1.5 flex items-center gap-2 bg-emerald-100/70 text-xs">
+          <div className="px-3 py-1 flex items-center gap-2 bg-emerald-100/70 text-xs">
             <Shield size={12} className="text-emerald-700" />
             <span className="font-semibold text-emerald-900 uppercase tracking-wide">Refund Policy</span>
             <span className="text-emerald-700">({policies.length})</span>
@@ -1093,11 +1093,11 @@ function ReceiptLineItems({ receiptId }) {
           <table className="w-full text-xs">
             <thead className="text-gray-500 uppercase bg-emerald-50/40">
               <tr>
-                <th className="px-3 py-1.5 text-left w-16">Policy</th>
-                <th className="px-3 py-1.5 text-left w-16">Days</th>
-                <th className="px-3 py-1.5 text-left w-32">Expires</th>
-                <th className="px-3 py-1.5 text-left w-20">Eligible</th>
-                <th className="px-3 py-1.5 text-left">Details</th>
+                <th className="px-3 py-1 text-left w-16">Policy</th>
+                <th className="px-3 py-1 text-left w-16">Days</th>
+                <th className="px-3 py-1 text-left w-32">Expires</th>
+                <th className="px-3 py-1 text-left w-20">Eligible</th>
+                <th className="px-3 py-1 text-left">Details</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-emerald-100">
@@ -1105,17 +1105,17 @@ function ReceiptLineItems({ receiptId }) {
                 const expired = p.expiry_date && new Date(p.expiry_date) < new Date()
                 return (
                   <tr key={p.id}>
-                    <td className="px-3 py-1.5 font-medium">{p.policy_id || '—'}</td>
-                    <td className="px-3 py-1.5">{p.days ?? '—'}</td>
-                    <td className={`px-3 py-1.5 ${expired ? 'text-rose-600 font-medium' : 'text-gray-600'}`}>
+                    <td className="px-3 py-1 font-medium">{p.policy_id || '—'}</td>
+                    <td className="px-3 py-1">{p.days ?? '—'}</td>
+                    <td className={`px-3 py-1 ${expired ? 'text-rose-600 font-medium' : 'text-gray-600'}`}>
                       {p.expiry_date || '—'}{expired && ' (expired)'}
                     </td>
-                    <td className="px-3 py-1.5">
+                    <td className="px-3 py-1">
                       <span className={p.eligible && !expired ? 'badge-green text-[10px]' : 'badge-gray text-[10px]'}>
                         {p.eligible && !expired ? 'Yes' : 'No'}
                       </span>
                     </td>
-                    <td className="px-3 py-1.5 text-gray-600">{p.details || '—'}</td>
+                    <td className="px-3 py-1 text-gray-600">{p.details || '—'}</td>
                   </tr>
                 )
               })}
@@ -1129,53 +1129,53 @@ function ReceiptLineItems({ receiptId }) {
       return (
       <div className="rounded-lg border bg-white overflow-hidden">
       {isNonReturnable && (
-        <div className="px-3 py-1.5 bg-amber-50 text-amber-800 text-[11px] font-semibold border-b border-amber-100">
+        <div className="px-3 py-1 bg-amber-50 text-amber-800 text-[11px] font-semibold border-b border-amber-100">
           Non-returnable category — return option hidden
         </div>
       )}
       <table className="w-full text-xs">
         <thead className="bg-gray-100/70 text-gray-500 uppercase">
           <tr>
-            <th className="px-3 py-1.5 text-left">SKU</th>
-            <th className="px-3 py-1.5 text-left">Model</th>
-            <th className="px-3 py-1.5 text-left">Item</th>
-            <th className="px-3 py-1.5 text-left">Qty</th>
-            <th className="px-3 py-1.5 text-left">Price</th>
-            <th className="px-3 py-1.5 text-left">Policy</th>
-            {!isNonReturnable && <th className="px-3 py-1.5 text-left">Return Date</th>}
-            {!isNonReturnable && <th className="px-3 py-1.5 text-left w-24">Action</th>}
-            <th className="px-3 py-1.5 text-left w-12">Cart</th>
+            <th className="px-3 py-1 text-left">SKU</th>
+            <th className="px-3 py-1 text-left">Model</th>
+            <th className="px-3 py-1 text-left">Item</th>
+            <th className="px-3 py-1 text-left">Qty</th>
+            <th className="px-3 py-1 text-left">Price</th>
+            <th className="px-3 py-1 text-left">Policy</th>
+            {!isNonReturnable && <th className="px-3 py-1 text-left">Return Date</th>}
+            {!isNonReturnable && <th className="px-3 py-1 text-left w-24">Action</th>}
+            <th className="px-3 py-1 text-left w-12">Cart</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-50">
           {items.map(it => (
             <tr key={it.id} className={it.returned ? 'bg-rose-50/40' : ''}>
-              <td className="px-3 py-1.5 text-gray-400 font-mono text-[11px]">{it.sku || '—'}</td>
-              <td className="px-3 py-1.5 text-gray-400 font-mono text-[11px]">{it.model || '—'}</td>
-              <td className="px-3 py-1.5 font-medium">{it.item_name}</td>
-              <td className="px-3 py-1.5">{it.qty}</td>
-              <td className="px-3 py-1.5">${parseFloat(it.price || 0).toFixed(2)}</td>
-              <td className="px-3 py-1.5">
+              <td className="px-3 py-1 text-gray-400 text-[11px]">{it.sku || '—'}</td>
+              <td className="px-3 py-1 text-gray-400 text-[11px]">{it.model || '—'}</td>
+              <td className="px-3 py-1">{it.item_name}</td>
+              <td className="px-3 py-1">{it.qty}</td>
+              <td className="px-3 py-1">${parseFloat(it.price || 0).toFixed(2)}</td>
+              <td className="px-3 py-1">
                 {it.refund_policy_id ? <span className="badge-purple text-[10px]">{it.refund_policy_id}</span> : <span className="text-gray-300">—</span>}
               </td>
               {!isNonReturnable && (
-                <td className="px-3 py-1.5 text-gray-500">{it.return_date || '—'}</td>
+                <td className="px-3 py-1 text-gray-500">{it.return_date || '—'}</td>
               )}
               {!isNonReturnable && (
-                <td className="px-3 py-1.5">
+                <td className="px-3 py-1">
                   <button
                     type="button"
                     onClick={() => handleToggleReturn(it)}
                     disabled={updateItem.isPending}
                     className={it.returned
-                      ? 'inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      : 'inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-md bg-rose-600 text-white hover:bg-rose-700'}>
+                      ? 'inline-flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      : 'inline-flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded-md bg-rose-600 text-white hover:bg-rose-700'}>
                     <Undo2 size={11} />
                     {it.returned ? 'Undo' : 'Return'}
                   </button>
                 </td>
               )}
-              <td className="px-3 py-1.5">
+              <td className="px-3 py-1">
                 {(it.returned || data?.is_return || data?.from_statement) ? (
                   <span className="text-[10px] text-gray-300">—</span>
                 ) : (
@@ -1184,9 +1184,9 @@ function ReceiptLineItems({ receiptId }) {
                     onClick={() => handleAddToSmashlist(it)}
                     title="Add to Smashlist"
                     aria-label="Add to Smashlist"
-                    className="relative w-9 h-9 rounded-full bg-gradient-to-br from-amber-300 via-rose-500 to-fuchsia-600 text-white shadow-md hover:shadow-xl hover:scale-110 active:scale-95 transition-all flex items-center justify-center ring-2 ring-white hover:ring-amber-200">
-                    <span className="absolute -top-1 -right-1 text-[9px] drop-shadow-sm">🥑</span>
-                    <ShoppingCart size={13} className="drop-shadow-sm" />
+                    className="relative w-6 h-6 rounded-full bg-gradient-to-br from-amber-400 to-rose-500 text-white shadow-sm hover:shadow-md hover:scale-110 active:scale-95 transition-all flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 text-[8px]">🥑</span>
+                    <ShoppingCart size={11} />
                   </button>
                 )}
               </td>

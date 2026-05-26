@@ -65,6 +65,16 @@ Rules:
 - Home Depot "4@3.33 13.32" → qty: 4, price: 13.32 (the line total, not per-unit).
 - For returns, all money is negative AND is_return true AND each returned line has returned: true.
 
+TOTAL AMOUNT — critical. Extract the FINAL grand total the customer paid, AFTER tax and shipping. NOT the items subtotal. Look for labels in this order:
+  1. "Grand Total:"
+  2. "Order Total:" / "Total:"  (the LAST one on the receipt, not the items-only subtotal at the top)
+  3. "Amount Charged:" / "You Paid:" / "Total Charged:"
+  4. "Total Due:"
+Amazon order emails specifically list: Items / Shipping & handling / Total before tax / Estimated tax / GRAND TOTAL. Pick GRAND TOTAL, never "Total before tax" or "Items subtotal".
+
+TAX — extract the explicit "Sales Tax:", "Tax:", or "Estimated tax:" line ONLY. Don't compute or guess.
+SANITY CHECK after extraction: if total_amount > 30 AND tax_paid / total_amount < 0.02, you likely picked the wrong total (probably grabbed Items subtotal + a small fee labelled "tax"). Re-scan the receipt and find the higher GRAND TOTAL number that pairs with this tax. Typical US sales tax is 4-10% of the post-tax total.
+
 DATE EXTRACTION — critical. Many receipts get forwarded weeks or months AFTER the
 transaction; the email's "Date:" header is NOT the transaction date.
 - The transaction date is printed on the receipt body, typically next to one of:
@@ -145,7 +155,7 @@ async function callGeminiInline({ apiKey, mimeType, base64, timeoutMs = 30_000 }
         { text: 'Extract per the schema. JSON only.' },
       ],
     }],
-    generationConfig: { responseMimeType: 'application/json', temperature: 0.1, maxOutputTokens: 4096 },
+    generationConfig: { responseMimeType: 'application/json', temperature: 0, maxOutputTokens: 4096 },
   }
   const res = await fetch(url, {
     method: 'POST',
@@ -170,7 +180,7 @@ async function callGroq({ apiKey, model, messages, timeoutMs = 30_000 }) {
     body: JSON.stringify({
       model,
       messages,
-      temperature: 0.1,
+      temperature: 0,
       response_format: { type: 'json_object' },
     }),
     signal: AbortSignal.timeout(timeoutMs),
@@ -219,8 +229,37 @@ export async function parseReceiptFromText(text, { maxChars = 32_000, emailDate 
     } catch (_) { /* ignore bad hint */ }
   }
 
-  // Prefer Groq text model — fast, cheap, JSON-mode reliable. Fall back to
-  // Gemini text-completion if Groq is unavailable.
+  // Prefer Gemini for text — it's noticeably more accurate than Groq on
+  // multi-section receipts (Amazon order emails with multiple subtotals,
+  // shipping, tax, and grand total lines). temperature: 0 keeps re-parses
+  // deterministic so the user sees the same value every time they re-parse.
+  if (geminiKey) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(geminiKey)}`
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+          contents: [{ role: 'user', parts: [{ text: `Extract the receipt from this email body. JSON only.${hint}\n\n${body}` }] }],
+          generationConfig: { responseMimeType: 'application/json', temperature: 0, maxOutputTokens: 4096 },
+        }),
+        signal: AbortSignal.timeout(30_000),
+      })
+      const json = await res.json()
+      if (res.ok) {
+        const text = json?.candidates?.[0]?.content?.parts?.map(p => p.text).filter(Boolean).join('') || ''
+        const parsed = safeParseJson(text)
+        if (parsed) return normalizeResult(parsed, 'gemini', GEMINI_MODEL, json?.usageMetadata)
+      } else {
+        console.warn('[parse-receipt-engine] Gemini text failed:', json?.error?.message || res.status)
+      }
+    } catch (e) {
+      console.warn('[parse-receipt-engine] Gemini text failed:', e.message)
+    }
+  }
+
+  // Groq fallback — used only if Gemini is unavailable or returns malformed JSON.
   try {
     if (groqKey) {
       const result = await callGroq({
@@ -235,32 +274,7 @@ export async function parseReceiptFromText(text, { maxChars = 32_000, emailDate 
       if (parsed) return normalizeResult(parsed, result.provider, result.model, result.usage)
     }
   } catch (e) {
-    console.warn('[parse-receipt-engine] Groq text failed:', e.message)
-  }
-
-  // Gemini text fallback — use generateContent with text-only parts
-  if (geminiKey) {
-    try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(geminiKey)}`
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
-          contents: [{ role: 'user', parts: [{ text: `Extract the receipt from this email body. JSON only.${hint}\n\n${body}` }] }],
-          generationConfig: { responseMimeType: 'application/json', temperature: 0.1, maxOutputTokens: 4096 },
-        }),
-        signal: AbortSignal.timeout(30_000),
-      })
-      const json = await res.json()
-      if (res.ok) {
-        const text = json?.candidates?.[0]?.content?.parts?.map(p => p.text).filter(Boolean).join('') || ''
-        const parsed = safeParseJson(text)
-        if (parsed) return normalizeResult(parsed, 'gemini', GEMINI_MODEL, json?.usageMetadata)
-      }
-    } catch (e) {
-      console.warn('[parse-receipt-engine] Gemini text fallback failed:', e.message)
-    }
+    console.warn('[parse-receipt-engine] Groq text fallback failed:', e.message)
   }
 
   return null

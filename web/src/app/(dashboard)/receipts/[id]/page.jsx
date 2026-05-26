@@ -308,7 +308,7 @@ export default function ReceiptDetailPage() {
             rel="noreferrer"
             title="View receipt image"
             aria-label="View receipt image"
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 active:scale-95 transition-all shadow-sm font-bold text-sm">
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 active:scale-95 transition-all shadow-sm font-bold text-sm">
             <ImageIcon size={16} /> View image
           </a>
         )}
@@ -328,11 +328,11 @@ export default function ReceiptDetailPage() {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b text-xs text-gray-500 uppercase tracking-wide">
                 <tr>
-                  <th className="px-3 py-2 text-left">Policy</th>
-                  <th className="px-3 py-2 text-left">Days</th>
-                  <th className="px-3 py-2 text-left">Expires</th>
-                  <th className="px-3 py-2 text-left">Eligible</th>
-                  <th className="px-3 py-2 text-left">Details</th>
+                  <th className="px-3 py-1 text-left">Policy</th>
+                  <th className="px-3 py-1 text-left">Days</th>
+                  <th className="px-3 py-1 text-left">Expires</th>
+                  <th className="px-3 py-1 text-left">Eligible</th>
+                  <th className="px-3 py-1 text-left">Details</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -340,17 +340,17 @@ export default function ReceiptDetailPage() {
                   const expired = p.expiry_date && new Date(p.expiry_date) < new Date()
                   return (
                     <tr key={p.id}>
-                      <td className="px-3 py-2 font-medium">{p.policy_id || '—'}</td>
-                      <td className="px-3 py-2 text-gray-500">{p.days ?? '—'}</td>
-                      <td className={`px-3 py-2 ${expired ? 'text-rose-600 font-medium' : 'text-gray-600'}`}>
+                      <td className="px-3 py-1 font-medium">{p.policy_id || '—'}</td>
+                      <td className="px-3 py-1 text-gray-500">{p.days ?? '—'}</td>
+                      <td className={`px-3 py-1 ${expired ? 'text-rose-600 font-medium' : 'text-gray-600'}`}>
                         {p.expiry_date || '—'}{expired && ' (expired)'}
                       </td>
-                      <td className="px-3 py-2">
+                      <td className="px-3 py-1">
                         <span className={p.eligible && !expired ? 'badge-green' : 'badge-gray'}>
                           {p.eligible && !expired ? 'Yes' : 'No'}
                         </span>
                       </td>
-                      <td className="px-3 py-2 text-gray-500">{p.details || '—'}</td>
+                      <td className="px-3 py-1 text-gray-500">{p.details || '—'}</td>
                     </tr>
                   )
                 })}
@@ -399,26 +399,26 @@ export default function ReceiptDetailPage() {
             <table className="w-full text-xs">
               <thead className="bg-gray-50 border-b">
                 <tr>{['SKU','Model','Name','Category','Date','Qty','Price','Worth It?','Policy','Warranty','Return Date','Returned','Smashlist'].map(h =>
-                  <th key={h} className="px-3 py-2 text-left font-semibold text-gray-500 uppercase tracking-wide">{h}</th>
+                  <th key={h} className="px-3 py-1 text-left font-semibold text-gray-500 uppercase tracking-wide">{h}</th>
                 )}</tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {items.map(item => (
                   <tr key={item.id}>
-                    <td className="px-3 py-2 text-gray-400">{item.sku || '—'}</td>
-                    <td className="px-3 py-2 text-gray-400">{item.model || '—'}</td>
-                    <td className="px-3 py-2 font-medium">{item.item_name}</td>
-                    <td className="px-3 py-2">
+                    <td className="px-3 py-1 text-gray-400">{item.sku || '—'}</td>
+                    <td className="px-3 py-1 text-gray-400">{item.model || '—'}</td>
+                    <td className="px-3 py-1 font-medium">{item.item_name}</td>
+                    <td className="px-3 py-1">
                       <CategoryPicker
                         value={item.category}
                         onChange={(slug) => recat.mutate({ slug, item })}
                         disabled={recat.isPending}
                       />
                     </td>
-                    <td className="px-3 py-2 text-gray-400">{item.purchase_date || '—'}</td>
-                    <td className="px-3 py-2">{item.qty}</td>
-                    <td className="px-3 py-2">${item.price}</td>
-                    <td className="px-3 py-2">
+                    <td className="px-3 py-1 text-gray-400">{item.purchase_date || '—'}</td>
+                    <td className="px-3 py-1">{item.qty}</td>
+                    <td className="px-3 py-1">${item.price}</td>
+                    <td className="px-3 py-1">
                       {(item.returned || current.from_statement || current.is_return) ? (
                         <span className="text-[10px] text-gray-400">—</span>
                       ) : (
@@ -447,16 +447,16 @@ export default function ReceiptDetailPage() {
                       </div>
                       )}
                     </td>
-                    <td className="px-3 py-2">
+                    <td className="px-3 py-1">
                       {item.refund_policy_id
                         ? <span className="badge-purple text-xs">{item.refund_policy_id}</span>
                         : <span className="text-gray-300">—</span>}
                     </td>
-                    <td className="px-3 py-2">
+                    <td className="px-3 py-1">
                       <input className="input py-0.5 text-xs w-32" defaultValue={item.warranty_info}
                         onBlur={e => updateItem.mutate({ id: item.id, warranty_info: e.target.value })} />
                     </td>
-                    <td className="px-3 py-2">
+                    <td className="px-3 py-1">
                       {item.category === 'charity' ? (
                         <span className="text-[10px] text-gray-400" title="Donations have no return window">—</span>
                       ) : (
@@ -464,7 +464,7 @@ export default function ReceiptDetailPage() {
                           onBlur={e => updateItem.mutate({ id: item.id, return_date: e.target.value })} />
                       )}
                     </td>
-                    <td className="px-3 py-2">
+                    <td className="px-3 py-1">
                       {item.category === 'charity' ? (
                         <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-rose-700 bg-rose-50 border border-rose-100 rounded-full px-1.5 py-0.5"
                           title="Charitable contribution — no return">
@@ -475,7 +475,7 @@ export default function ReceiptDetailPage() {
                           onChange={e => updateItem.mutate({ id: item.id, returned: e.target.checked })} />
                       )}
                     </td>
-                    <td className="px-3 py-2">
+                    <td className="px-3 py-1">
                       {(item.category === 'charity' || item.returned || current.is_return || current.from_statement) ? (
                         <span className="text-[10px] text-gray-400">—</span>
                       ) : (

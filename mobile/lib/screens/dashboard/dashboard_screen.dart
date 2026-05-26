@@ -64,36 +64,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
-  /// Pre-camera entry: ask the user whether to use the camera or pick from
-  /// the gallery. Some users find the camera UI fiddly with paper receipts
-  /// — letting them snap with the system camera app first and then pick
-  /// the result from gallery is more reliable on certain devices.
+  /// Capture flow: collect photos first, parse the whole batch once at the
+  /// end. Used to parse between each shot, which made the camera reopen feel
+  /// slow (5–15s wait per receipt). Now the loop just grabs photos; the AI
+  /// only runs after the user is Done.
   Future<void> _captureReceipt() async {
     final source = await _askImageSource();
     if (source == null || !mounted) return;
     final picker = ImagePicker();
-    int saved = 0;
+    final List<File> queue = [];
+
     while (mounted) {
       final img = await picker.pickImage(source: source, imageQuality: 80);
       if (img == null || !mounted) break;
       final file = File(img.path);
 
-      // Preview screen — OK / Add more / Retry.
-      final action = await _showCapturePreview(file);
+      // Preview screen — Retry / Add another / Done.
+      final action = await _showCapturePreview(file, queue.length);
       if (!mounted) break;
-      if (action == _PreviewAction.retry) continue;     // back to picker
-      await _processSingleCapture(file);
-      if (!mounted) break;
-      saved++;
-      if (action == _PreviewAction.ok) break;
-      // _PreviewAction.addMore → loop continues, picker opens again
+      switch (action) {
+        case _PreviewAction.retry:
+          continue; // discard, reopen picker
+        case _PreviewAction.addAnother:
+          queue.add(file);
+          continue; // queue and reopen picker
+        case _PreviewAction.done:
+          queue.add(file);
+          break;
+      }
+      break; // done was picked
     }
-    if (saved > 1 && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Saved $saved receipts.'),
-        duration: const Duration(seconds: 2),
-      ));
-    }
+
+    if (queue.isEmpty || !mounted) return;
+    await _processBatch(queue);
   }
 
   Future<ImageSource?> _askImageSource() async {
@@ -127,21 +130,299 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  /// Full-screen preview after a capture. Returns the user's chosen action.
-  Future<_PreviewAction> _showCapturePreview(File file) async {
+  /// Full-screen preview after a capture. [queued] is how many photos are
+  /// already in the batch — used to label the "Done" button so the user knows
+  /// what's about to be parsed.
+  Future<_PreviewAction> _showCapturePreview(File file, int queued) async {
     final result = await Navigator.of(context).push<_PreviewAction>(
       MaterialPageRoute(
         fullscreenDialog: true,
-        builder: (_) => _CapturePreviewScreen(file: file),
+        builder: (_) => _CapturePreviewScreen(file: file, queued: queued),
       ),
     );
     return result ?? _PreviewAction.retry;
   }
 
-  /// Parse + dedup + save a single captured photo. The preview screen has
-  /// already shown the user the image and confirmed they want to keep it;
-  /// any duplicate-found case is handled silently with a snackbar (no
-  /// dialog interrupts the multi-capture loop).
+  /// Parse + dedup + save every photo in the batch sequentially, with a
+  /// single progress dialog that updates as we go. Auto-retries each photo
+  /// once on transient failure. Failures are tracked and surfaced in a
+  /// summary dialog at the end so the user can see exactly which photos
+  /// didn't make it.
+  Future<void> _processBatch(List<File> files) async {
+    final uid = context.read<AppAuthProvider>().currentUser?.id;
+    if (uid == null || !mounted) return;
+    final provider = context.read<ReceiptProvider>();
+
+    final progress = ValueNotifier<_BatchProgress>(
+      _BatchProgress(done: 0, total: files.length, currentLabel: 'Starting…'),
+    );
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        content: ValueListenableBuilder<_BatchProgress>(
+          valueListenable: progress,
+          builder: (_, p, __) => Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(children: [
+                const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2)),
+                const SizedBox(width: 14),
+                Expanded(child: Text(
+                  'Reading receipt ${p.done + 1} of ${p.total}…',
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                )),
+              ]),
+              const SizedBox(height: 10),
+              LinearProgressIndicator(
+                value: p.total == 0 ? 0 : p.done / p.total,
+                color: const Color(0xFF15803d),
+                backgroundColor: const Color(0xFFf0fdf4),
+              ),
+              const SizedBox(height: 8),
+              Text(p.currentLabel,
+                style: const TextStyle(fontSize: 11, color: Colors.black54)),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    int saved = 0, failed = 0;
+    final failures = <String>[];
+    final List<String> savedIds = [];
+    final List<_DupHit> duplicates = [];
+
+    for (int i = 0; i < files.length; i++) {
+      final file = files[i];
+      progress.value = _BatchProgress(
+        done: i, total: files.length,
+        currentLabel: 'Parsing photo ${i + 1}…',
+      );
+      try {
+        ParseResult result = await ReceiptParseService.parseImage(file);
+        if (!result.ok) {
+          // Single auto-retry on transient errors.
+          result = await ReceiptParseService.parseImage(file);
+        }
+        if (!result.ok) {
+          failed++;
+          failures.add('Photo ${i + 1}: ${result.error}');
+          continue;
+        }
+        final parsed = result.data!;
+
+        // Duplicate check against the DB. The match key (store + date +
+        // total) mirrors /api/receipts/dedup so capture-time detection is
+        // consistent with the after-the-fact sweep.
+        final today = DateTime.now().toIso8601String().substring(0, 10);
+        final dupDate = (parsed.date != null && parsed.date!.isNotEmpty) ? parsed.date! : today;
+        if (parsed.storeName.isNotEmpty && parsed.totalAmount > 0) {
+          final dup = await provider.findDuplicate(
+            storeName: parsed.storeName,
+            date: dupDate,
+            totalAmount: parsed.totalAmount,
+          );
+          if (dup != null) {
+            duplicates.add(_DupHit(
+              photoIndex: i + 1,
+              storeName: parsed.storeName,
+              date: dupDate,
+              totalAmount: parsed.totalAmount,
+              existingId: dup.id,
+            ));
+            progress.value = _BatchProgress(
+              done: i + 1, total: files.length,
+              currentLabel: 'Duplicate: ${parsed.storeName} · \$${parsed.totalAmount.toStringAsFixed(2)}',
+            );
+            continue;
+          }
+        }
+
+        // Also catch intra-batch duplicates: a user who snaps the same
+        // receipt twice in the SAME batch would otherwise insert both
+        // (the DB check above only sees rows already committed). Match
+        // against rows we've inserted in THIS batch by storing the
+        // (store, date, total) tuple in a local set.
+        final batchKey = '${parsed.storeName.toLowerCase()}|$dupDate|${parsed.totalAmount.toStringAsFixed(2)}';
+        if (parsed.storeName.isNotEmpty && parsed.totalAmount > 0
+            && _batchKeysThisRun.contains(batchKey)) {
+          duplicates.add(_DupHit(
+            photoIndex: i + 1,
+            storeName: parsed.storeName,
+            date: dupDate,
+            totalAmount: parsed.totalAmount,
+            existingId: null, // points at an in-batch sibling, not a DB row
+          ));
+          progress.value = _BatchProgress(
+            done: i + 1, total: files.length,
+            currentLabel: 'Duplicate within this batch: ${parsed.storeName}',
+          );
+          continue;
+        }
+
+        final asMap = <String, dynamic>{
+          'store_name': parsed.storeName,
+          'date': parsed.date,
+          'total_amount': parsed.totalAmount,
+          'tax_paid': parsed.taxPaid,
+          'payment_method': parsed.paymentMethod,
+          'payment_last4': parsed.paymentLast4,
+          'is_return': parsed.isReturn,
+          'category': parsed.category,
+          'items': parsed.items.map((it) => {
+            'sku': it.sku, 'model': it.model, 'item_name': it.itemName,
+            'qty': it.qty, 'price': it.price,
+            'returned': it.returned, 'category': it.category,
+          }).toList(),
+        };
+        final id = await provider.addParsedReceipt(asMap, file);
+        if (id != null) {
+          saved++;
+          savedIds.add(id);
+          _batchKeysThisRun.add(batchKey);
+        } else {
+          failed++;
+          failures.add('Photo ${i + 1}: insert failed');
+        }
+      } catch (e) {
+        failed++;
+        failures.add('Photo ${i + 1}: $e');
+      }
+      progress.value = _BatchProgress(
+        done: i + 1, total: files.length,
+        currentLabel: 'Saved ${i + 1} of ${files.length}',
+      );
+    }
+    _batchKeysThisRun.clear();
+
+    if (!mounted) return;
+    Navigator.of(context, rootNavigator: true).pop(); // dismiss progress dialog
+    progress.dispose();
+
+    // Summary
+    final summary = StringBuffer();
+    summary.write('Saved $saved');
+    if (duplicates.isNotEmpty) summary.write(', ${duplicates.length} duplicate${duplicates.length == 1 ? '' : 's'} skipped');
+    if (failed > 0) summary.write(', $failed failed');
+
+    // Show a detail dialog whenever there's anything to call out beyond a
+    // clean all-saved batch.
+    final needsDialog = duplicates.isNotEmpty || failed > 0;
+    if (needsDialog) {
+      await _showBatchSummaryDialog(
+        title: summary.toString(),
+        savedIds: savedIds,
+        duplicates: duplicates,
+        failures: failures,
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(summary.toString()),
+        action: saved == 1 && savedIds.isNotEmpty
+            ? SnackBarAction(
+                label: 'View',
+                onPressed: () => context.go('/receipts/${savedIds.first}'),
+              )
+            : null,
+        duration: const Duration(seconds: 4),
+      ));
+    }
+  }
+
+  /// Per-process set used to catch duplicates WITHIN a single batch (e.g. the
+  /// user snapped the same receipt twice in a row). Cleared at the end of
+  /// every batch.
+  final Set<String> _batchKeysThisRun = {};
+
+  /// Detailed batch summary — duplicates listed with their parsed
+  /// store/date/total + a View link to the existing receipt, failures
+  /// listed verbatim.
+  Future<void> _showBatchSummaryDialog({
+    required String title,
+    required List<String> savedIds,
+    required List<_DupHit> duplicates,
+    required List<String> failures,
+  }) async {
+    return showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(title),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView(
+            shrinkWrap: true,
+            children: [
+              if (duplicates.isNotEmpty) ...[
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 6),
+                  child: Text('Duplicates skipped',
+                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: Color(0xFF92400e))),
+                ),
+                ...duplicates.map((d) => Container(
+                  margin: const EdgeInsets.symmetric(vertical: 4),
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFfef3c7),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFfde68a)),
+                  ),
+                  child: Row(children: [
+                    Expanded(child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('Photo ${d.photoIndex} — ${d.storeName}',
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF78350f))),
+                        Text('${d.date}  ·  \$${d.totalAmount.toStringAsFixed(2)}',
+                          style: const TextStyle(fontSize: 11, color: Color(0xFF92400e))),
+                        if (d.existingId == null)
+                          const Text('(also in this batch)',
+                            style: TextStyle(fontSize: 10, color: Color(0xFF92400e), fontStyle: FontStyle.italic)),
+                      ],
+                    )),
+                    if (d.existingId != null)
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(ctx).pop();
+                          context.go('/receipts/${d.existingId}');
+                        },
+                        child: const Text('View'),
+                      ),
+                  ]),
+                )),
+                if (failures.isNotEmpty) const SizedBox(height: 12),
+              ],
+              if (failures.isNotEmpty) ...[
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 6),
+                  child: Text('Failed to read',
+                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: Color(0xFF991b1b))),
+                ),
+                ...failures.map((f) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Text(f, style: const TextStyle(fontSize: 12, color: Color(0xFF991b1b))),
+                )),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          if (savedIds.length == 1)
+            TextButton(
+              onPressed: () { Navigator.of(ctx).pop(); context.go('/receipts/${savedIds.first}'); },
+              child: const Text('View saved'),
+            ),
+          TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('OK')),
+        ],
+      ),
+    );
+  }
+
+  /// Legacy single-capture path — kept as a fallback for callers that haven't
+  /// migrated to batch (currently none, but useful as a reference).
+  // ignore: unused_element
   Future<void> _processSingleCapture(File file) async {
     final uid = context.read<AppAuthProvider>().currentUser?.id;
     if (uid == null || !mounted) return;
@@ -864,10 +1145,39 @@ class _StatTile extends StatelessWidget {
 enum _PreviewAction {
   /// Discard this photo, reopen the camera/gallery picker.
   retry,
-  /// Save this one and finish.
-  ok,
-  /// Save this one and immediately open the picker again.
-  addMore,
+  /// Add this photo to the batch, then finish — kick off the AI parse for
+  /// all queued photos at once.
+  done,
+  /// Add this photo to the batch and immediately reopen the picker for the
+  /// next one. No parsing happens between shots.
+  addAnother,
+}
+
+/// Progress snapshot the batch processor publishes to its dialog.
+class _BatchProgress {
+  final int done;
+  final int total;
+  final String currentLabel;
+  _BatchProgress({required this.done, required this.total, required this.currentLabel});
+}
+
+/// A duplicate the batch processor identified — either against the DB
+/// (existingId is non-null) or against another photo in the same batch
+/// (existingId is null). Surfaced in the batch summary dialog with a View
+/// button so the user can jump to the existing receipt.
+class _DupHit {
+  final int photoIndex;
+  final String storeName;
+  final String date;
+  final double totalAmount;
+  final String? existingId;
+  _DupHit({
+    required this.photoIndex,
+    required this.storeName,
+    required this.date,
+    required this.totalAmount,
+    required this.existingId,
+  });
 }
 
 /// Choice the user makes when the AI fails to read a receipt.
@@ -881,24 +1191,28 @@ enum _FailAction {
   cancel,
 }
 
-/// Full-screen preview shown right after a capture. The user sees the photo
-/// they just took and picks Retry / OK / Add more. Pure UI — no parsing or
-/// upload happens here, the dashboard does that based on the returned action.
+/// Full-screen preview shown right after a capture. Pure UI — no parsing
+/// happens here. The dashboard queues the photo and runs the AI in a single
+/// batch once the user is Done. [queued] is how many photos are already in
+/// the batch (so the Done button can say "Done · 3" etc).
 class _CapturePreviewScreen extends StatelessWidget {
   final File file;
-  const _CapturePreviewScreen({required this.file});
+  final int queued;
+  const _CapturePreviewScreen({required this.file, required this.queued});
 
   @override
   Widget build(BuildContext context) {
+    // "Done" parses queued + this one = queued + 1 receipts.
+    final doneCount = queued + 1;
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
-        title: const Text('Preview'),
+        title: Text(queued == 0 ? 'Preview' : 'Preview · ${queued + 1} queued'),
         leading: IconButton(
           icon: const Icon(Icons.close),
-          tooltip: 'Cancel',
+          tooltip: 'Discard this photo',
           onPressed: () => Navigator.of(context).pop(_PreviewAction.retry),
         ),
       ),
@@ -914,45 +1228,59 @@ class _CapturePreviewScreen extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
               color: Colors.black,
-              child: Row(
+              child: Column(
                 children: [
-                  Expanded(child: OutlinedButton.icon(
-                    onPressed: () => Navigator.of(context).pop(_PreviewAction.retry),
-                    icon: const Icon(Icons.refresh, color: Colors.white),
-                    label: const Text('Retry',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Colors.white54),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  if (queued > 0)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Text(
+                        '$queued photo${queued == 1 ? '' : 's'} queued. Done parses all $doneCount.',
+                        style: const TextStyle(color: Colors.white70, fontSize: 11),
+                      ),
                     ),
-                  )),
-                  const SizedBox(width: 8),
-                  Expanded(child: FilledButton.icon(
-                    onPressed: () => Navigator.of(context).pop(_PreviewAction.ok),
-                    icon: const Icon(Icons.check),
-                    label: const Text('OK',
-                      style: TextStyle(fontWeight: FontWeight.w800)),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFF15803d),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                  )),
-                  const SizedBox(width: 8),
-                  Expanded(child: FilledButton.icon(
-                    onPressed: () => Navigator.of(context).pop(_PreviewAction.addMore),
-                    icon: const Icon(Icons.add_a_photo),
-                    label: const Text('Add more',
-                      style: TextStyle(fontWeight: FontWeight.w800)),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFF1d4ed8),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                  )),
+                  Row(
+                    children: [
+                      Expanded(child: OutlinedButton.icon(
+                        onPressed: () => Navigator.of(context).pop(_PreviewAction.retry),
+                        icon: const Icon(Icons.refresh, color: Colors.white, size: 18),
+                        label: const Text('Retake',
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Colors.white54),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                      )),
+                      const SizedBox(width: 8),
+                      Expanded(child: FilledButton.icon(
+                        onPressed: () => Navigator.of(context).pop(_PreviewAction.addAnother),
+                        icon: const Icon(Icons.add_a_photo, size: 18),
+                        label: const Text('Add another',
+                          style: TextStyle(fontWeight: FontWeight.w800)),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: const Color(0xFF1d4ed8),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                      )),
+                      const SizedBox(width: 8),
+                      Expanded(child: FilledButton.icon(
+                        onPressed: () => Navigator.of(context).pop(_PreviewAction.done),
+                        icon: const Icon(Icons.check, size: 18),
+                        label: Text(
+                          queued == 0 ? 'Done' : 'Done · $doneCount',
+                          style: const TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: const Color(0xFF15803d),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                      )),
+                    ],
+                  ),
                 ],
               ),
             ),

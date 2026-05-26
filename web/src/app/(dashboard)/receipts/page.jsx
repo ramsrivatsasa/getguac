@@ -19,6 +19,21 @@ import GuacMascot from '../../../components/GuacMascot'
 
 const EMPTY = { store_name: '', date: '', total_amount: '', tax_paid: '', reward_no: '', business_purchase: false }
 
+// Column definitions for the receipts table. `default` is the initial pixel
+// width; users can drag the right edge of any header to override, and the
+// override is persisted to localStorage under 'receipts_col_widths_v1'.
+const RECEIPT_COLUMNS = [
+  { id: 'id',       label: 'Receipt ID', default: 140 },
+  { id: 'store',    label: 'Store',      default: 220 },
+  { id: 'date',     label: 'Date',       default: 120 },
+  { id: 'amount',   label: 'Amount',     default: 110 },
+  { id: 'tax',      label: 'Tax',        default: 90  },
+  { id: 'reward',   label: 'Reward No',  default: 130 },
+  { id: 'business', label: 'Business',   default: 90  },
+  { id: 'receipt',  label: 'Receipt',    default: 90  },
+  { id: 'actions',  label: 'Actions',    default: 130 },
+]
+
 export default function ReceiptsPage() {
   const router = useRouter()
   const [search, setSearch] = useState('')
@@ -47,6 +62,39 @@ export default function ReceiptsPage() {
   const { data: receipts = [], isLoading } = useReceipts()
   const addReceipt = useAddReceipt()
   const deleteReceipt = useDeleteReceipt()
+
+  // Resizable column state — widths persist in localStorage so a user's
+  // preferred layout survives reloads. Drag the 1px handle on the right edge
+  // of any header cell to resize.
+  const [colWidths, setColWidths] = useState(() => {
+    const defaults = Object.fromEntries(RECEIPT_COLUMNS.map(c => [c.id, c.default]))
+    if (typeof window === 'undefined') return defaults
+    try {
+      const saved = JSON.parse(localStorage.getItem('receipts_col_widths_v1') || '{}')
+      return { ...defaults, ...saved }
+    } catch { return defaults }
+  })
+  useEffect(() => {
+    try { localStorage.setItem('receipts_col_widths_v1', JSON.stringify(colWidths)) } catch {}
+  }, [colWidths])
+  const startResize = useCallback((e, colId) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const startX = e.clientX
+    const startW = colWidths[colId] || RECEIPT_COLUMNS.find(c => c.id === colId)?.default || 100
+    const onMove = (ev) => {
+      const newW = Math.max(50, Math.min(700, startW + (ev.clientX - startX)))
+      setColWidths(prev => ({ ...prev, [colId]: newW }))
+    }
+    const onUp = () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+      document.body.style.cursor = ''
+    }
+    document.body.style.cursor = 'col-resize'
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+  }, [colWidths])
 
   const parseReceipt = useCallback(async (f) => {
     setParsing(true)
@@ -817,16 +865,29 @@ export default function ReceiptsPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm" style={{ tableLayout: 'fixed' }}>
+              <colgroup>
+                <col style={{ width: 40 }} />
+                {RECEIPT_COLUMNS.map(c => (
+                  <col key={c.id} style={{ width: colWidths[c.id] }} />
+                ))}
+              </colgroup>
               <thead className="bg-gray-50 border-b text-xs text-gray-500 uppercase tracking-wide">
                 <tr>
-                  <th className="pl-4 pr-2 py-1 w-10">
+                  <th className="pl-4 pr-2 py-1">
                     <input type="checkbox" className="w-4 h-4 rounded cursor-pointer" checked={allSelected}
                       onChange={toggleAll} aria-label="Select all" />
                   </th>
-                  {['Receipt ID','Store','Date','Amount','Tax','Reward No','Business','Receipt','Actions'].map(h =>
-                    <th key={h} className="px-4 py-1 text-left font-semibold">{h}</th>
-                  )}
+                  {RECEIPT_COLUMNS.map(c => (
+                    <th key={c.id} className="px-4 py-1 text-left font-semibold relative select-none overflow-hidden whitespace-nowrap text-ellipsis">
+                      {c.label}
+                      <span
+                        onMouseDown={(e) => startResize(e, c.id)}
+                        className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-emerald-400 active:bg-emerald-500 transition-colors"
+                        title="Drag to resize"
+                      />
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">

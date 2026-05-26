@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Adaptive icon — matches the web brand. Background is a green gradient
-  drawable (drawable/ic_launcher_background.xml); foreground is a vector
-  drawable of the same avocado mascot used inside the app
-  (drawable/ic_launcher_foreground.xml).
+  Adaptive icon — matches the web brand.
+  Background: drawable/ic_launcher_background.xml (green gradient
+  emerald-700 -> lime-600, mirroring the web login page) instead of
+  the solid @color/ic_launcher_background that flutter_launcher_icons
+  writes by default.
+  Foreground: drawable-{density}/ic_launcher_foreground.png — generated
+  by `dart run flutter_launcher_icons` from assets/icon/icon-fg.png so
+  it's pixel-for-pixel the brand mascot.
+  Monochrome: same foreground, so Android 13+ themed icons stay on-brand.
 -->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
   <background android:drawable="@drawable/ic_launcher_background"/>

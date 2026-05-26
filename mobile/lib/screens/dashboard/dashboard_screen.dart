@@ -64,10 +64,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
-  /// Capture flow: collect photos first, parse the whole batch once at the
-  /// end. Used to parse between each shot, which made the camera reopen feel
-  /// slow (5–15s wait per receipt). Now the loop just grabs photos; the AI
-  /// only runs after the user is Done.
+  /// Maximum photos per batch capture. Three keeps each batch under the
+  /// 60-second Vercel function ceiling (Gemini parse ~5-15s per photo with
+  /// retries) and prevents users from accidentally queueing 20 shots that
+  /// then time out on the server. After three, the preview only offers
+  /// Retake / Done — Add another is hidden.
+  static const _kMaxBatchSize = 3;
+
+  /// Capture flow: collect photos first (capped at _kMaxBatchSize), parse
+  /// the whole batch once at the end. Used to parse between each shot,
+  /// which made the camera reopen feel slow (5-15s per receipt). Now the
+  /// loop just grabs photos; the AI only runs after the user is Done.
   Future<void> _captureReceipt() async {
     final source = await _askImageSource();
     if (source == null || !mounted) return;
@@ -79,20 +86,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (img == null || !mounted) break;
       final file = File(img.path);
 
-      // Preview screen — Retry / Add another / Done.
-      final action = await _showCapturePreview(file, queue.length);
+      // Preview screen — Retry / Add another / Done. "Add another" is
+      // hidden on the LAST allowed photo (queued.length + 1 == max) so
+      // the user can't push the queue past _kMaxBatchSize.
+      final action = await _showCapturePreview(file, queue.length, _kMaxBatchSize);
       if (!mounted) break;
       switch (action) {
         case _PreviewAction.retry:
           continue; // discard, reopen picker
         case _PreviewAction.addAnother:
           queue.add(file);
+          // Hard guard in case the preview screen lets Add-another through
+          // when it shouldn't have (defense in depth — also avoids a future
+          // refactor accidentally bypassing the cap).
+          if (queue.length >= _kMaxBatchSize) {
+            if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text('Batch is full ($_kMaxBatchSize photos). Tap Done to parse them.'),
+              duration: const Duration(seconds: 2),
+            ));
+            break;
+          }
           continue; // queue and reopen picker
         case _PreviewAction.done:
           queue.add(file);
           break;
       }
-      break; // done was picked
+      break; // done OR cap reached
     }
 
     if (queue.isEmpty || !mounted) return;
@@ -131,13 +150,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   /// Full-screen preview after a capture. [queued] is how many photos are
-  /// already in the batch — used to label the "Done" button so the user knows
-  /// what's about to be parsed.
-  Future<_PreviewAction> _showCapturePreview(File file, int queued) async {
+  /// already in the batch (the one being previewed is NOT in queue yet);
+  /// [maxBatchSize] is the hard cap. The preview hides Add-another on the
+  /// last allowed photo so the user can't blow past the cap.
+  Future<_PreviewAction> _showCapturePreview(File file, int queued, int maxBatchSize) async {
     final result = await Navigator.of(context).push<_PreviewAction>(
       MaterialPageRoute(
         fullscreenDialog: true,
-        builder: (_) => _CapturePreviewScreen(file: file, queued: queued),
+        builder: (_) => _CapturePreviewScreen(
+          file: file,
+          queued: queued,
+          maxBatchSize: maxBatchSize,
+        ),
       ),
     );
     return result ?? _PreviewAction.retry;
@@ -1261,22 +1285,34 @@ enum _FailAction {
 /// Full-screen preview shown right after a capture. Pure UI — no parsing
 /// happens here. The dashboard queues the photo and runs the AI in a single
 /// batch once the user is Done. [queued] is how many photos are already in
-/// the batch (so the Done button can say "Done · 3" etc).
+/// the batch; [maxBatchSize] caps the queue. Once accepting this photo
+/// would saturate the batch, the Add-another button is hidden so the user
+/// must finish.
 class _CapturePreviewScreen extends StatelessWidget {
   final File file;
   final int queued;
-  const _CapturePreviewScreen({required this.file, required this.queued});
+  final int maxBatchSize;
+  const _CapturePreviewScreen({
+    required this.file,
+    required this.queued,
+    required this.maxBatchSize,
+  });
 
   @override
   Widget build(BuildContext context) {
     // "Done" parses queued + this one = queued + 1 receipts.
     final doneCount = queued + 1;
+    // Adding this one + then adding ANOTHER would exceed the cap. So we
+    // only show "Add another" while doneCount < maxBatchSize.
+    final canAddAnother = doneCount < maxBatchSize;
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
-        title: Text(queued == 0 ? 'Preview' : 'Preview · ${queued + 1} queued'),
+        title: Text(queued == 0
+            ? 'Preview'
+            : 'Preview · ${queued + 1}/$maxBatchSize'),
         leading: IconButton(
           icon: const Icon(Icons.close),
           tooltip: 'Discard this photo',
@@ -1297,11 +1333,13 @@ class _CapturePreviewScreen extends StatelessWidget {
               color: Colors.black,
               child: Column(
                 children: [
-                  if (queued > 0)
+                  if (queued > 0 || !canAddAnother)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 8),
                       child: Text(
-                        '$queued photo${queued == 1 ? '' : 's'} queued. Done parses all $doneCount.',
+                        canAddAnother
+                            ? '$queued photo${queued == 1 ? '' : 's'} queued. Done parses all $doneCount.'
+                            : 'Batch limit ($maxBatchSize). Tap Done to parse all $doneCount.',
                         style: const TextStyle(color: Colors.white70, fontSize: 11),
                       ),
                     ),
@@ -1318,19 +1356,21 @@ class _CapturePreviewScreen extends StatelessWidget {
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                       )),
-                      const SizedBox(width: 8),
-                      Expanded(child: FilledButton.icon(
-                        onPressed: () => Navigator.of(context).pop(_PreviewAction.addAnother),
-                        icon: const Icon(Icons.add_a_photo, size: 18),
-                        label: const Text('Add another',
-                          style: TextStyle(fontWeight: FontWeight.w800)),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFF1d4ed8),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                      )),
+                      if (canAddAnother) ...[
+                        const SizedBox(width: 8),
+                        Expanded(child: FilledButton.icon(
+                          onPressed: () => Navigator.of(context).pop(_PreviewAction.addAnother),
+                          icon: const Icon(Icons.add_a_photo, size: 18),
+                          label: const Text('Add another',
+                            style: TextStyle(fontWeight: FontWeight.w800)),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: const Color(0xFF1d4ed8),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                        )),
+                      ],
                       const SizedBox(width: 8),
                       Expanded(child: FilledButton.icon(
                         onPressed: () => Navigator.of(context).pop(_PreviewAction.done),

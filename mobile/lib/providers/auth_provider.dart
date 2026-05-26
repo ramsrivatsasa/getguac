@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../services/biometric_service.dart';
 
 class AppAuthProvider extends ChangeNotifier {
   final _sb = Supabase.instance.client;
@@ -73,10 +72,12 @@ class AppAuthProvider extends ChangeNotifier {
   }
 
   Future<void> logout() async {
-    // Wipe stored biometric credentials too — signing out should clear
-    // the "remembered" state, otherwise next biometric unlock pulls
-    // stale creds and silently fails.
-    await BiometricService.disable();
+    // We intentionally keep biometric credentials across sign-outs — the
+    // whole point of biometric is to come back the next day and unlock
+    // without re-typing the password. Old behaviour wiped them here,
+    // which meant every sign-out cost the user their saved unlock.
+    // If a user really wants to clear biometric, Profile -> Diagnose
+    // biometric -> "Clear stored credentials" wipes them explicitly.
     await _sb.auth.signOut();
     userProfile = null;
     notifyListeners();

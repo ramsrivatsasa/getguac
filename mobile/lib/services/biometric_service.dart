@@ -138,8 +138,13 @@ class BiometricService {
     return i >= 0 ? email.substring(i) : '?';
   }
 
-  /// Wipe stored credentials (call on sign-out or "disable biometric").
+  /// Wipe stored credentials (call only when the user EXPLICITLY clears
+  /// them — Diagnose dialog button, or login_screen wipes on confirmed
+  /// bad-password). Sign-out no longer calls this; biometric is meant to
+  /// survive sign-out so the user can unlock with fingerprint next time.
   static Future<void> disable() async {
+    DebugLog.event('biometric', 'disable called (CREDENTIALS BEING WIPED)',
+      level: 'warn');
     await _storage.delete(key: _kEmail);
     await _storage.delete(key: _kPass);
     await _storage.delete(key: _kEnabled);

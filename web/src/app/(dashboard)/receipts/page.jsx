@@ -9,7 +9,7 @@ import { createClient } from '../../../lib/supabase/client'
 import { useQuery } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { formatDateShort } from '../../../lib/dateFormat'
-import { Upload, Trash2, Eye, Search, Download, Loader2, Sparkles, X, Shield, Camera, ChevronDown, ChevronRight, Undo2, ShoppingCart, Monitor, Link2, Tag } from 'lucide-react'
+import { Upload, Trash2, Eye, Search, Download, Loader2, Sparkles, X, Shield, Camera, ChevronDown, ChevronRight, Undo2, ShoppingCart, Monitor, Link2, Tag, RefreshCw } from 'lucide-react'
 import { guessCategory } from '../../../lib/categorizeRules'
 import { createClient as createSbClient } from '../../../lib/supabase/client'
 import { useQueryClient } from '@tanstack/react-query'
@@ -169,6 +169,30 @@ export default function ReceiptsPage() {
       onSuccess: () => toast.success('Deleted'),
       onError: err => toast.error(err.message),
     })
+  }
+
+  // Track which receipts are mid-reparse so we can spin the icon. Set, not
+  // bool, so multiple rows can spin in parallel if the user hammers it.
+  const [reparsing, setReparsing] = useState(() => new Set())
+  async function handleReparse(id, storeName) {
+    if (reparsing.has(id)) return
+    setReparsing(prev => new Set(prev).add(id))
+    const t = toast.loading(`Re-parsing ${storeName || 'receipt'}…`)
+    try {
+      const res = await fetch(`/api/receipts/${id}/reparse`, { method: 'POST' })
+      const body = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(body?.error || `Re-parse failed (${res.status})`)
+      const updatedStore = body?.receipt?.store_name || storeName || 'Receipt'
+      const items = body?.items_parsed || 0
+      toast.success(`Re-parsed ${updatedStore} · ${items} items`, { id: t, duration: 4000 })
+      qc.invalidateQueries({ queryKey: ['receipts'] })
+    } catch (e) {
+      toast.error(e.message, { id: t })
+    } finally {
+      setReparsing(prev => {
+        const next = new Set(prev); next.delete(id); return next
+      })
+    }
   }
 
   // Top-level drag-drop: parse + save in one shot, no manual review.
@@ -885,6 +909,14 @@ export default function ReceiptsPage() {
                               className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 hover:bg-emerald-200 hover:scale-110 active:scale-95 transition-all flex items-center justify-center shadow-sm">
                               <Eye size={14} />
                             </Link>
+                            <button
+                              onClick={() => handleReparse(r.id, r.store_name)}
+                              aria-label="Re-parse from email"
+                              title="Re-parse this receipt from the source email (only works for email-forwarded receipts)"
+                              disabled={reparsing.has(r.id)}
+                              className="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 hover:bg-indigo-200 hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center shadow-sm">
+                              <RefreshCw size={13} className={reparsing.has(r.id) ? 'animate-spin' : ''} />
+                            </button>
                             <button onClick={() => handleDelete(r.id)} aria-label="Delete"
                               className="w-7 h-7 rounded-full bg-rose-100 text-rose-600 hover:bg-rose-200 hover:scale-110 active:scale-95 transition-all flex items-center justify-center shadow-sm">
                               <Trash2 size={14} />

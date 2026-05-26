@@ -70,11 +70,23 @@ export async function POST(_request, { params }) {
   // Resolve store + location FKs (best-effort)
   const { store_id, store_location_id } = await resolveStoreAndLocation(sb, parsed)
 
+  // Date diagnostics. The AI is supposed to extract the transaction date from
+  // the receipt body and reject the email forward date — surface what we
+  // actually got so the UI can warn when the AI cheated (returned the email
+  // date) or punted (returned null, leaving the old wrong date in place).
+  const emailDateIso = em.received_at ? new Date(em.received_at).toISOString().slice(0, 10) : null
+  const parsedDateIso = parsed.date && /^\d{4}-\d{2}-\d{2}/.test(parsed.date) ? parsed.date.slice(0, 10) : null
+  const dateMatchesEmail = !!(parsedDateIso && emailDateIso && parsedDateIso === emailDateIso)
+  // If the AI returned the email date verbatim, treat it as untrustworthy and
+  // refuse to apply it — keep the existing value rather than silently
+  // replacing it with the same bogus value.
+  const safeDate = parsedDateIso && !dateMatchesEmail ? parsedDateIso : undefined
+
   const { data: updated, error: upErr } = await sb.from('receipts').update({
     store_name: parsed.store_name || 'Receipt by email',
     store_id,
     store_location_id,
-    date: parsed.date || undefined,
+    date: safeDate,
     total_amount: parsed.total_amount || 0,
     tax_paid: parsed.tax_paid || 0,
     payment_method: parsed.payment_method || null,

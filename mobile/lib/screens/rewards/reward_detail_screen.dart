@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/reward_provider.dart';
+import '../../utils/date_format.dart';
 
 class RewardDetailScreen extends StatelessWidget {
   final String id;
@@ -24,7 +25,7 @@ class RewardDetailScreen extends StatelessWidget {
               _row('Reward No', reward.rewardNo),
               _row('Type', reward.rewardType),
               _row('Store', reward.storeName),
-              _row('Expiry Date', reward.expiryDate),
+              _row('Expiry Date', formatDateShort(reward.expiryDate)),
               _row('Status', reward.isExpired ? 'Expired' : 'Active'),
               const Divider(height: 24),
               const Text('Description', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey)),

@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../../providers/reward_provider.dart';
 import '../../services/update_service.dart';
 import '../../widgets/guac_mascot.dart';
+import '../../utils/date_format.dart';
 
 const _kBrand = Color(0xFFdb2777);
 
@@ -105,7 +106,7 @@ class _StealsScreenState extends State<StealsScreen> {
               child: ListTile(
                 leading: const Text('🎁', style: TextStyle(fontSize: 24)),
                 title: Text(r.rewardTitle, style: const TextStyle(fontWeight: FontWeight.w700)),
-                subtitle: Text('${r.storeName}  •  expires ${r.expiryDate}',
+                subtitle: Text('${r.storeName}  •  expires ${formatDateShort(r.expiryDate)}',
                   style: const TextStyle(fontSize: 11)),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => context.go('/rewards/${r.id}'),

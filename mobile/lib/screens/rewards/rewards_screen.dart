@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/reward_provider.dart';
 import '../../models/reward_model.dart';
+import '../../utils/date_format.dart';
 
 class RewardsScreen extends StatefulWidget {
   const RewardsScreen({super.key});
@@ -186,7 +187,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
                           child: Icon(Icons.card_giftcard, color: r.isExpired ? Colors.red : Colors.purple, size: 20),
                         ),
                     title: Text(r.rewardTitle, style: const TextStyle(fontWeight: FontWeight.w500)),
-                    subtitle: Text('${r.storeName} • ${r.rewardType}\nExpires ${r.expiryDate}'),
+                    subtitle: Text('${r.storeName} • ${r.rewardType}\nExpires ${formatDateShort(r.expiryDate)}'),
                     isThreeLine: true,
                     trailing: _selectionMode
                       ? null

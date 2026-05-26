@@ -10,6 +10,7 @@ import '../../providers/receipt_provider.dart';
 import '../../providers/reward_provider.dart';
 import '../../models/receipt_model.dart';
 import '../../widgets/guac_mascot.dart';
+import '../../utils/date_format.dart';
 
 const _kEmerald700 = Color(0xFF15803d);
 const _kEmerald800 = Color(0xFF166534);
@@ -512,7 +513,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           contentPadding: EdgeInsets.zero,
           dense: true,
           title: Text(r.storeName, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-          subtitle: Text(r.date, style: const TextStyle(fontSize: 11, color: Colors.black45)),
+          subtitle: Text(formatDateShort(r.date), style: const TextStyle(fontSize: 11, color: Colors.black45)),
           trailing: Text('\$${r.totalAmount.toStringAsFixed(2)}',
             style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
           onTap: () => context.go('/receipts/${r.id}'),
@@ -549,7 +550,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               color: r.isExpired ? const Color(0xFFfee2e2) : const Color(0xFFd1fae5),
               borderRadius: BorderRadius.circular(99),
             ),
-            child: Text(r.isExpired ? 'Expired' : r.expiryDate,
+            child: Text(r.isExpired ? 'Expired' : formatDateShort(r.expiryDate),
               style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800,
                 color: r.isExpired ? const Color(0xFF991b1b) : _kEmerald800)),
           ),

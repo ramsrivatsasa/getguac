@@ -1,6 +1,7 @@
 // Car Miles — lightweight trip log with monthly totals.
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../models/car_miles_model.dart';
 import '../../services/share_intent_service.dart';
 import '../../services/location_distance_service.dart';
@@ -253,7 +254,10 @@ class _CarMilesScreenState extends State<CarMilesScreen> {
                   )
                 else
                   ..._trips.map((t) {
-                    final hasRoute = t.fromAddress.isNotEmpty || t.toAddress.isNotEmpty;
+                    final hasFrom  = t.fromAddress.trim().isNotEmpty;
+                    final hasTo    = t.toAddress.trim().isNotEmpty;
+                    final hasRoute = hasFrom || hasTo;
+                    final canNavigate = hasFrom && hasTo;
                     final title = t.description.isNotEmpty
                       ? t.description
                       : (hasRoute
@@ -278,8 +282,26 @@ class _CarMilesScreenState extends State<CarMilesScreen> {
                               : '${formatDateShort(t.startDate)}  →  ${formatDateShort(t.endDate)}'),
                           ],
                         ),
-                        trailing: Text('${t.totalMiles.toStringAsFixed(1)} mi',
-                          style: const TextStyle(fontWeight: FontWeight.w800)),
+                        // Mileage + (when we have both from + to) a small nav-icon
+                        // that opens Google Maps with the route. Tap-target is the
+                        // icon itself so the row keeps its main tap behavior.
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text('${t.totalMiles.toStringAsFixed(1)} mi',
+                              style: const TextStyle(fontWeight: FontWeight.w800)),
+                            if (canNavigate)
+                              IconButton(
+                                onPressed: () => _openDirections(t.fromAddress, t.toAddress),
+                                icon: const Icon(Icons.navigation_outlined, size: 18),
+                                color: _kBrand,
+                                tooltip: 'Open directions in Maps',
+                                visualDensity: VisualDensity.compact,
+                                padding: const EdgeInsets.only(left: 4),
+                                constraints: const BoxConstraints(),
+                              ),
+                          ],
+                        ),
                       ),
                     );
                   }),
@@ -302,6 +324,31 @@ class _CarMilesScreenState extends State<CarMilesScreen> {
       Text('${miles.toStringAsFixed(1)} mi', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: _kBrand)),
     ]),
   ));
+
+  /// Open Google Maps with driving directions from `from` to `to`. Universal
+  /// URL — works on both Android (opens the Maps app via deep-link) and iOS
+  /// (opens Maps app or browser). url_launcher handles platform routing.
+  Future<void> _openDirections(String from, String to) async {
+    final origin      = Uri.encodeQueryComponent(from.trim());
+    final destination = Uri.encodeQueryComponent(to.trim());
+    final url = Uri.parse(
+      'https://www.google.com/maps/dir/?api=1&travelmode=driving&origin=$origin&destination=$destination',
+    );
+    try {
+      final ok = await launchUrl(url, mode: LaunchMode.externalApplication);
+      if (!ok && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Couldn't open Maps")),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Maps error: $e')),
+        );
+      }
+    }
+  }
 
   /// Truncate a long address to its first comma-separated chunk for list display.
   /// "13619 Beckingham Drive, Herndon, VA 20171, USA" -> "13619 Beckingham Drive"

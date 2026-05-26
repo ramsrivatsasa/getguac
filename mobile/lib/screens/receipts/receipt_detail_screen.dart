@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../providers/receipt_provider.dart';
 import '../../models/receipt_model.dart';
 import '../../widgets/worth_it_rating.dart';
+import '../../utils/date_format.dart';
 
 class ReceiptDetailScreen extends StatefulWidget {
   final String id;
@@ -216,7 +217,7 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
                         ]),
                       ),
                     _row('Store', r.storeName),
-                    _row('Date', r.date),
+                    _row('Date', formatDateShort(r.date)),
                     _row('Total Amount', '\$${r.totalAmount.toStringAsFixed(2)}'),
                     _row('Tax Paid', '\$${r.taxPaid.toStringAsFixed(2)}'),
                     _row('Reward No', r.rewardNo.isEmpty ? '—' : r.rewardNo),

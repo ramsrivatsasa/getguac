@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/biometric_service.dart';
 import '../../services/update_service.dart';
@@ -131,10 +132,19 @@ class _LoginScreenState extends State<LoginScreen> {
       final password = _passCtrl.text;
       await context.read<AppAuthProvider>().login(identifier, password);
 
-      // Stash credentials for next-time biometric login (only if the
-      // user opted in AND the device supports biometric).
-      if (_rememberWithBio && _bioAvailable && identifier.contains('@')) {
-        await BiometricService.enable(identifier, password);
+      // Stash credentials for next-time biometric login (only if the user
+      // opted in AND the device supports biometric). Bug fix: previously we
+      // only enabled biometric when `identifier.contains('@')`, meaning users
+      // who sign in with their USERNAME (the encouraged flow) never got
+      // biometric stored. Now we pull the real email from the authenticated
+      // Supabase session — works regardless of whether the user typed
+      // username or email at login.
+      if (_rememberWithBio && _bioAvailable) {
+        final emailForBio = Supabase.instance.client.auth.currentUser?.email
+          ?? (identifier.contains('@') ? identifier : null);
+        if (emailForBio != null && emailForBio.isNotEmpty) {
+          await BiometricService.enable(emailForBio, password);
+        }
       }
 
       if (mounted) context.go('/dashboard');

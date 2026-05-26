@@ -268,6 +268,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ]),
             ),
 
+          // Diagnose button — useful when biometric isn't behaving as expected.
+          // Shows in a dialog WHY the system is in its current state.
+          TextButton.icon(
+            onPressed: () async {
+              final result = await BiometricService.diagnose();
+              if (!context.mounted) return;
+              showDialog(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Biometric diagnostic'),
+                  content: Text(result),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('OK')),
+                  ],
+                ),
+              );
+            },
+            icon: const Icon(Icons.health_and_safety_outlined, size: 16),
+            label: const Text('Diagnose biometric'),
+          ),
+
           Row(children: [
             Expanded(child: _Pill(
               gradient: const [Color(0xFFa7f3d0), Color(0xFF15803d)],

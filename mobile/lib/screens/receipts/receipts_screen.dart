@@ -66,11 +66,77 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
     final parsed = await ReceiptParseService.parseImage(file);
     if (!mounted) return;
     Navigator.of(context, rootNavigator: true).pop();  // dismiss loader
+    if (!mounted) return;
+
+    // Duplicate check — same key as /api/receipts/dedup. If we already have
+    // this store+date+total, ask before opening the Add dialog. The user
+    // can View the existing receipt, Save Anyway, or Cancel.
+    if (parsed != null && parsed.storeName.isNotEmpty && parsed.totalAmount > 0) {
+      final today = DateTime.now().toIso8601String().substring(0, 10);
+      final dupDate = (parsed.date != null && parsed.date!.isNotEmpty) ? parsed.date! : today;
+      final dup = await context.read<ReceiptProvider>().findDuplicate(
+        storeName: parsed.storeName,
+        date: dupDate,
+        totalAmount: parsed.totalAmount,
+      );
+      if (!mounted) return;
+      if (dup != null) {
+        final action = await _askDuplicateAction(dup);
+        if (!mounted || action == null) return;
+        if (action == false) { context.go('/receipts/${dup.id}'); return; }
+        // action == true → fall through and open the Add dialog
+      }
+    }
 
     if (!mounted) return;
     showDialog(
       context: context,
       builder: (ctx) => _AddReceiptDialog(uid: uid, imageFile: file, prefill: parsed),
+    );
+  }
+
+  /// Same dialog shape as the dashboard FAB's duplicate prompt.
+  /// Returns: null=cancel, true=save anyway, false=view existing.
+  Future<bool?> _askDuplicateAction(Receipt existing) async {
+    return showDialog<bool?>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Looks like a duplicate'),
+        content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Text(
+            'We already have a receipt from the same store, date, and total. Save another copy?',
+            style: TextStyle(fontSize: 13, height: 1.4),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: const Color(0xFFf0fdf4),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFFa7f3d0)),
+            ),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(existing.storeName,
+                style: const TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF064e3b))),
+              const SizedBox(height: 2),
+              Text('${existing.date}  ·  \$${existing.totalAmount.toStringAsFixed(2)}',
+                style: const TextStyle(fontSize: 12, color: Color(0xFF065f46))),
+            ]),
+          ),
+        ]),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(null), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('View existing'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: const Color(0xFF15803d)),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Save anyway'),
+          ),
+        ],
+      ),
     );
   }
 

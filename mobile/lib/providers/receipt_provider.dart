@@ -92,6 +92,38 @@ class ReceiptProvider extends ChangeNotifier {
     return _sb.storage.from('receipts').getPublicUrl(path);
   }
 
+  /// Look for an existing receipt that matches the supplied (store, date,
+  /// total) tuple — same key the /api/receipts/dedup sweep uses. Returns
+  /// the matching receipt row (or null). Lets the camera flow ask the user
+  /// "this looks like a duplicate, save anyway?" before inserting.
+  Future<Receipt?> findDuplicate({
+    required String storeName,
+    required String date,        // YYYY-MM-DD
+    required double totalAmount,
+  }) async {
+    final uid = _sb.auth.currentUser?.id;
+    if (uid == null || storeName.trim().isEmpty || date.isEmpty) return null;
+    try {
+      // Case-insensitive store match + same date + same total (rounded to 2dp).
+      final rounded = double.parse(totalAmount.toStringAsFixed(2));
+      final rows = await _sb
+          .from('receipts')
+          .select(_kReceiptListCols)
+          .eq('user_id', uid)
+          .ilike('store_name', storeName.trim())
+          .eq('date', date)
+          .eq('total_amount', rounded)
+          .limit(1);
+      final list = (rows as List);
+      if (list.isEmpty) return null;
+      final m = list.first as Map<String, dynamic>;
+      return Receipt.fromMap(m['id'] as String, m);
+    } catch (e) {
+      if (kDebugMode) debugPrint('findDuplicate error: $e');
+      return null;
+    }
+  }
+
   Future<void> addReceipt(Receipt receipt, {File? imageFile}) async {
     String link = receipt.receiptLink;
     if (imageFile != null) link = await uploadImage(imageFile);

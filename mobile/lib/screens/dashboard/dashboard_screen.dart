@@ -112,6 +112,46 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return;
       }
 
+      // Duplicate check — same key the server-side dedup sweep uses
+      // (store_name + date + total). Catches "snapped a receipt that's
+      // already in the DB from the email path" and "double-tapped the
+      // shutter" before we insert a second row.
+      final today = DateTime.now().toIso8601String().substring(0, 10);
+      final dupDate = (parsed.date != null && parsed.date!.isNotEmpty) ? parsed.date! : today;
+      if (parsed.storeName.isNotEmpty && parsed.totalAmount > 0) {
+        final dup = await provider.findDuplicate(
+          storeName: parsed.storeName,
+          date: dupDate,
+          totalAmount: parsed.totalAmount,
+        );
+        if (!mounted) return;
+        if (dup != null) {
+          Navigator.of(context, rootNavigator: true).pop(); // dismiss loader
+          final saveAnyway = await _askDuplicateAction(dup);
+          if (!mounted) return;
+          if (saveAnyway != true) {
+            // User chose View existing → navigate there. Or Cancel → nothing.
+            if (saveAnyway == false) context.go('/receipts/${dup.id}');
+            return;
+          }
+          // Re-show the loader for the save-anyway path.
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (_) => const AlertDialog(
+              content: Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2)),
+                  SizedBox(width: 14),
+                  Flexible(child: Text('Saving the duplicate…')),
+                ]),
+              ),
+            ),
+          );
+        }
+      }
+
       // Convert ParsedReceipt -> plain map (provider expects the parse-receipt
       // JSON shape with item_name etc.).
       final asMap = <String, dynamic>{
@@ -357,6 +397,53 @@ class _DashboardScreenState extends State<DashboardScreen> {
       elevation: 6,
       icon: const GuacMascot(size: 24),
       label: const Icon(Icons.camera_alt, size: 20),
+    );
+  }
+
+  /// Returns:
+  ///   null  -> cancel (do nothing, don't save)
+  ///   true  -> save anyway (insert a second row)
+  ///   false -> view existing (navigate to the existing receipt)
+  Future<bool?> _askDuplicateAction(Receipt existing) async {
+    return showDialog<bool?>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Looks like a duplicate'),
+        content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Text(
+            'We already have a receipt from the same store, date, and total. Save another copy?',
+            style: TextStyle(fontSize: 13, height: 1.4),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: const Color(0xFFf0fdf4),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFFa7f3d0)),
+            ),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(existing.storeName,
+                style: const TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF064e3b))),
+              const SizedBox(height: 2),
+              Text('${existing.date}  ·  \$${existing.totalAmount.toStringAsFixed(2)}',
+                style: const TextStyle(fontSize: 12, color: Color(0xFF065f46))),
+            ]),
+          ),
+        ]),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(null), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('View existing'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: const Color(0xFF15803d)),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Save anyway'),
+          ),
+        ],
+      ),
     );
   }
 

@@ -128,7 +128,17 @@ export default function Sidebar({ isAdmin }) {
                     <div key={href}>
                       <Link
                         href={href}
-                        onClick={() => setSidebarOpen(false)}
+                        onClick={(e) => {
+                          // Special case: clicking the Inbox item while you're
+                          // already on /inbox doesn't navigate — it toggles the
+                          // sub-nav (Folders + Filters) closed/open. Otherwise
+                          // navigate normally.
+                          if (href === '/inbox' && active && !collapsed) {
+                            e.preventDefault()
+                            setInboxSubExpanded(v => !v)
+                          }
+                          setSidebarOpen(false)
+                        }}
                         title={collapsed ? label : undefined}
                         className={clsx(
                           'group flex items-center rounded-2xl text-sm transition-all',
@@ -147,6 +157,11 @@ export default function Sidebar({ isAdmin }) {
                         {!collapsed && (
                           <>
                             <span className="flex-1">{label}</span>
+                            {/* Show chevron on the Inbox row when active so users
+                                know it's a toggle as well as a link. */}
+                            {href === '/inbox' && active && (
+                              <ChevronDown size={14} className={`shrink-0 text-emerald-700 transition-transform ${inboxSubExpanded ? '' : '-rotate-90'}`} />
+                            )}
                             {hoverMascot && (
                               <span
                                 className="shrink-0 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200"
@@ -158,10 +173,9 @@ export default function Sidebar({ isAdmin }) {
                           </>
                         )}
                       </Link>
-                      {/* Inbox: render the Folders + Filters accordion inline when the
-                          user is on the inbox page. Keeps inbox sub-nav next to the
-                          main nav rather than in a separate left-rail panel. */}
-                      {href === '/inbox' && active && !collapsed && (
+                      {/* Inbox: render the Folders + Filters accordion inline when
+                          the user is on the inbox page AND the sub-nav is expanded. */}
+                      {href === '/inbox' && active && !collapsed && inboxSubExpanded && (
                         <InboxSubNav onNavigate={() => setSidebarOpen(false)} />
                       )}
                     </div>

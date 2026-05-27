@@ -13,6 +13,9 @@
 // — keyword precedence handles the disambiguation.
 const RULES = [
   { slug: 'tea',           re: /\b(tea|matcha|chai|oolong|earl ?grey|chamomile|green ?tea|black ?tea)\b/i },
+  // Snacks — packaged dry goods, sweet/salty treats. Matched BEFORE 'grub'
+  // and 'eats' so chips/popcorn/granola don't end up in generic grub.
+  { slug: 'snacks',        re: /\b(chips|tortilla chips|pretzel|pretzels|crackers|cracker box|popcorn|pop[- ]?corn|granola bar|protein bar|trail mix|nuts mix|cashews|almonds|peanuts|pistachios|walnuts|jerky|beef jerky|fruit snacks?|gummy bears|gummies|candy|chocolate bar|kit ?kat|snickers|m&m|reese'?s|hershey|cookies|oreo|chips ahoy|goldfish crackers|cheez[- ]?its?|doritos|cheetos|fritos|lay'?s|ruffles|takis|pringles|sun chips)\b/i },
   { slug: 'drinks',        re: /\b(coffee|latte|espresso|mocha|cappuccino|americano|cold ?brew|frappuccino|starbucks|dunkin|peet'?s|nespresso|keurig|coca[- ]?cola|coke(?! ?zero)?|cherry coke|coke ?\d?l|pepsi|mountain ?dew|mtn ?dew|mtn-?dew|sprite|fanta|7[- ]?up|dr ?pepper|root ?beer|ginger ?ale|milk ?shake|frosty|smoothie king|juice|\boj\b|minute maid|tropicana|simply orange|naked juice|pomegranate juice|gatorade|powerade|vitamin ?water|red bull|monster|rockstar|celsius)\b/i },
   { slug: 'bars',          re: /\b(beer|ipa|lager|ale|stout|pilsner|porter|budweiser|coors|miller|heineken|guinness|wine|cabernet|merlot|chardonnay|sauvignon|pinot|tequila|vodka|whiskey|whisky|bourbon|scotch|gin|rum|cocktail|margarita|martini|mojito|champagne|prosecco|sake)\b/i },
   // Bank fees — anything the cardholder paid the bank itself for. Match

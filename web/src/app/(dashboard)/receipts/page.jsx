@@ -1663,7 +1663,12 @@ function ReceiptLineItems({ receiptId }) {
                 </td>
               )}
               <td className="px-3 py-0.5">
-                {(it.returned || data?.is_return || data?.from_statement) ? (
+                {(it.returned || data?.is_return || data?.from_statement || perishable) ? (
+                  // Services / subscriptions / cloud / bills / bank-fees /
+                  // perishables / pharmacy — none belong on a re-order list.
+                  // perishable now ALSO covers serviceBlock from
+                  // isItemNonReturnable, so a cloud / hosting / domain row
+                  // hides this cart too.
                   <span className="text-[10px] text-gray-300">—</span>
                 ) : (
                   <button

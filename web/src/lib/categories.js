@@ -9,6 +9,7 @@ export const HEALTH_TIERS = ['healthy', 'neutral', 'treat', 'harmful']
 export const CATEGORIES = [
   { slug: 'grub',          label: 'Grub',          emoji: '🥑', desc: 'Groceries & food shopping',                color: 'emerald', health_tier: 'neutral' },
   { slug: 'eats',          label: 'Eats',          emoji: '🍽️', desc: 'Restaurants & dining',                      color: 'orange',  health_tier: 'neutral' },
+  { slug: 'snacks',        label: 'Snacks',        emoji: '🍿', desc: 'Chips, crackers, granola bars, popcorn, trail mix', color: 'amber', health_tier: 'treat' },
   { slug: 'bars',          label: 'Bars',          emoji: '🍻', desc: 'Bars, beer, wine & spirits',                color: 'fuchsia', health_tier: 'treat'   },
   { slug: 'tea',           label: 'Tea',           emoji: '🍵', desc: 'Tea & matcha',                              color: 'emerald', health_tier: 'healthy' },
   { slug: 'drinks',        label: 'Drinks',        emoji: '🥤', desc: 'Coffee, sodas, juice, shakes — non-tea, non-alcohol beverages', color: 'red',  health_tier: 'treat' },

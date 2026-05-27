@@ -335,15 +335,30 @@ export async function addToShoppingList({
 // Restaurant items — for the Bites page. All receipt_items from receipts whose
 // category is 'eats'.
 export async function getBites() {
+  // Bites = "dishes you've tried." Catches eats two ways:
+  //   1. The PARENT receipt is categorized 'eats' (restaurants, dining out).
+  //   2. The individual ITEM is categorized 'eats' even if the parent
+  //      receipt isn't — e.g. Costco rotisserie chicken on a grub run,
+  //      Whole Foods prepared deli on a grocery receipt. Without this,
+  //      those items were invisible to the rate-and-reorder UI.
+  // Two queries (instead of one .or() across a join, which PostgREST
+  // doesn't handle cleanly) and dedupe by item id. Cap each at 2000.
   const sb = createClient()
-  const { data, error } = await sb
-    .from('receipt_items')
-    .select('id, item_name, qty, price, rating, validation_comment, receipt_id, receipts!inner(id, store_name, store_id, date, category)')
-    .eq('receipts.category', 'eats')
-    .order('id', { ascending: false })
-    .limit(2000)
-  if (error) throw error
-  return data || []
+  const COLS = 'id, item_name, qty, price, rating, validation_comment, receipt_id, category, receipts!inner(id, store_name, store_id, date, category)'
+  const [a, b] = await Promise.all([
+    sb.from('receipt_items').select(COLS).eq('receipts.category', 'eats').order('id', { ascending: false }).limit(2000),
+    sb.from('receipt_items').select(COLS).eq('category', 'eats').neq('receipts.category', 'eats').order('id', { ascending: false }).limit(2000),
+  ])
+  if (a.error) throw a.error
+  if (b.error) throw b.error
+  const seen = new Set()
+  const out = []
+  for (const row of [...(a.data || []), ...(b.data || [])]) {
+    if (seen.has(row.id)) continue
+    seen.add(row.id)
+    out.push(row)
+  }
+  return out
 }
 
 export async function deleteShoppingItem(id) {

@@ -27,7 +27,8 @@ const BUCKET_MAP = {
   tea:             'Cravings',
   drinks:          'Cravings',  // coffee + coke + pepsi + juice + milkshake merged 2026-05-27
   bars:            'Cravings',
-  eats:            'Grub & Grab',
+  eats:            'Cravings',   // restaurant dishes — treats/wants. Aligned with Bites' default reorder destination 2026-05-27
+  snacks:          'Snack Stack',// chips, crackers, granola bars, popcorn
 }
 
 const CADENCE_TRIGGER = 0.80

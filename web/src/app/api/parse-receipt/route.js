@@ -42,7 +42,7 @@ Return ONLY a single JSON object. No prose, no markdown fences. Schema:
   "is_return": boolean,
   "is_receipt": boolean,                 // TRUE for any receipt / invoice / order confirmation. FALSE for non-receipt photos (selfie, cat, landscape, blank paper, screenshot of something else).
   "non_receipt_subject": string|null,    // When is_receipt=false: short 2-3 word description of what you DID see, lowercase ("a person", "a cat", "a sunset", "a blank page", "a screenshot of a chat"). When is_receipt=true: null.
-  "category": string|null,               // ONE of: "grub", "eats", "bars", "tea", "drinks", "subs", "bills", "bank-fees", "cloud", "tech", "big-stuff", "fix-it", "outdoors", "supplies", "fits", "pharmacy", "health", "personal-care", "household", "gas-up", "fun", "gifting", "charity", "misc"
+  "category": string|null,               // ONE of: "grub", "eats", "snacks", "bars", "tea", "drinks", "subs", "bills", "bank-fees", "cloud", "tech", "big-stuff", "fix-it", "outdoors", "supplies", "fits", "pharmacy", "health", "personal-care", "household", "gas-up", "fun", "gifting", "charity", "misc"
   "items": [
     { "sku": string|null, "model": string|null, "item_name": string, "qty": number, "price": number, "category": string|null, "health_tier": "healthy"|"neutral"|"treat"|"harmful"|null, "refund_policy_id": string|null, "returned": boolean }
   ],
@@ -68,6 +68,11 @@ BEVERAGE ITEMS — when an item line names a beverage brand or kind, set the per
   "COKE 12PK" / "PEPSI 2L" / "MTN DEW" / "STARBUCKS LATTE" / "COLD BREW" / "ESPRESSO" / "TROPICANA" / "MINUTE MAID OJ" / "OREO MILKSHAKE" / "FROSTY" / "GATORADE" → "drinks"
   "EARL GREY" / "MATCHA" / "CHAMOMILE" → "tea"
   "BUDWEISER 6PK" / "RED WINE" / "MARGARITA" → "bars"
+
+SNACK ITEMS — packaged dry treats route to "snacks", not generic "grub". Use even on grocery receipts so the snack-shopping pattern is tracked separately:
+  "DORITOS NACHO" / "LAY'S CLASSIC" / "PRINGLES" / "RUFFLES" / "CHEETOS" / "FRITOS" / "TAKIS" / "POPCORN" / "PRETZELS" / "GOLDFISH CRACKERS" → "snacks"
+  "TRAIL MIX" / "CASHEWS" / "ALMONDS" / "PROTEIN BAR" / "GRANOLA BAR" / "KIND BAR" / "CLIF BAR" / "BEEF JERKY" → "snacks"
+  "OREO" / "CHIPS AHOY" / "M&M" / "REESE'S" / "KIT KAT" / "SNICKERS" / "HERSHEY BAR" / "GUMMY BEARS" → "snacks"
 A Starbucks receipt's RECEIPT-LEVEL category is "drinks"; a bar tab is "bars". A grocery run with mixed items has receipt-level "grub" but a Coke line still gets per-item "drinks".
 
 HEALTH & HOUSEHOLD ITEMS — split between four specific slugs (do not lump into "misc"):

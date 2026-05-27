@@ -35,6 +35,7 @@ const String kHealthTierDefault = 'neutral';
 const List<Category> kPresetCategories = [
   Category(slug: 'grub',          label: 'Grub',          emoji: '🥑', desc: 'Groceries & food shopping',                color: 'emerald', healthTier: 'neutral'),
   Category(slug: 'eats',          label: 'Eats',          emoji: '🍽️', desc: 'Restaurants & dining',                      color: 'orange',  healthTier: 'neutral'),
+  Category(slug: 'snacks',        label: 'Snacks',        emoji: '🍿', desc: 'Chips, crackers, granola, popcorn',         color: 'amber',   healthTier: 'treat'),
   Category(slug: 'bars',          label: 'Bars',          emoji: '🍻', desc: 'Bars, beer, wine & spirits',                color: 'fuchsia', healthTier: 'treat'),
   Category(slug: 'tea',           label: 'Tea',           emoji: '🍵', desc: 'Tea & matcha',                              color: 'emerald', healthTier: 'healthy'),
   Category(slug: 'drinks',        label: 'Drinks',        emoji: '🥤', desc: 'Coffee, sodas, juice, shakes',              color: 'red',     healthTier: 'treat'),

@@ -29,7 +29,7 @@ const DEFAULT_PERIOD = '1y'
 
 // Recharts donut colors — matches CATEGORIES palette as closely as Tailwind lets.
 const CATEGORY_COLORS = {
-  grub: '#10b981', eats: '#f97316', bars: '#d946ef', tea: '#10b981',
+  grub: '#10b981', eats: '#f97316', snacks: '#fbbf24', bars: '#d946ef', tea: '#10b981',
   drinks: '#ef4444',
   subs: '#8b5cf6', bills: '#0ea5e9', 'bank-fees': '#dc2626', cloud: '#38bdf8', tech: '#0ea5e9',
   'big-stuff': '#6366f1', 'fix-it': '#f59e0b', outdoors: '#84cc16',

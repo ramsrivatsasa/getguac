@@ -131,6 +131,18 @@ function compilePattern(keywords) {
 const PATTERN = compilePattern(ALL)
 const PHARMACY_PATTERN = compilePattern(PHARMACY)
 
+// Only food-adjacent receipt-item categories get the perishable check.
+// Hardware ('fix-it'), electronics ('tech'), services ('cloud'/'subs'/
+// 'bills'/'bank-fees'), clothing ('fits'), supplies, etc. NEVER trigger
+// the perishable rule — that's how false positives happen, e.g.
+// "Host 5 Gal Homer Lid (Orange)" categorized 'fix-it' was matching
+// PRODUCE on the word "orange". The pharmacy check still runs regardless
+// of category, because pharmacy items are sometimes mis-categorized.
+const PERISHABLE_ELIGIBLE_CATEGORIES = new Set([
+  'grub', 'eats', 'bars', 'misc',
+  // null / undefined categories also flow through (handled below)
+])
+
 /**
  * Why an item can't be returned. Null when it CAN be returned.
  *
@@ -141,11 +153,19 @@ export function getNonReturnableReason(item) {
   if (!item) return null
   const name = String(item.item_name || '').toLowerCase()
   if (!name) return null
-  // Pharmacy first — some pharmacy-counter items might also match a
-  // perishable keyword (e.g. a refrigerated insulin pen could match
-  // "insulin" first); pharmacy is the more specific label.
+  // Pharmacy first — refrigerated insulin / sterile-seal items can also
+  // hit a perishable keyword, and pharmacy is the more specific label.
   if (PHARMACY_PATTERN.test(name)) return 'pharmacy'
-  if (PATTERN.test(name)) return 'perishable'
+  // Category gate — only food-adjacent items (or unclassified ones) are
+  // candidates for perishable. A hardware lid with "(Orange)" in its name
+  // is NOT a fruit.
+  const cat = item.category
+  if (cat != null && !PERISHABLE_ELIGIBLE_CATEGORIES.has(cat)) return null
+  // Paren-strip: color/scent qualifiers like "(Orange)" / "(Lemon Scent)"
+  // / "(Mint Green)" are NOT food references. Drop everything inside
+  // parentheses before testing the keyword pattern.
+  const stripped = name.replace(/\([^)]*\)/g, ' ')
+  if (PATTERN.test(stripped)) return 'perishable'
   return null
 }
 

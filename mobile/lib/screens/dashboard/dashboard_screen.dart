@@ -255,24 +255,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
 
       final parsed = result.data!;
-      // Duplicate check — same key as single-shot.
-      final today = DateTime.now().toIso8601String().substring(0, 10);
-      final dupDate = (parsed.date != null && parsed.date!.isNotEmpty) ? parsed.date! : today;
-      if (parsed.storeName.isNotEmpty && parsed.totalAmount > 0) {
-        final dup = await provider.findDuplicate(
-          storeName: parsed.storeName,
-          date: dupDate,
-          totalAmount: parsed.totalAmount,
-        );
-        if (dup != null) {
-          if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('Duplicate of an existing receipt: ${parsed.storeName} · \$${parsed.totalAmount.toStringAsFixed(2)}'),
-            duration: const Duration(seconds: 4),
-          ));
-          return;
-        }
-      }
-
+      // Duplicate auto-skip removed (user-requested) — see _processSingleCapture.
       final asMap = <String, dynamic>{
         'store_name': parsed.storeName,
         'date': parsed.date,
@@ -417,59 +400,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           continue;
         }
         final parsed = result.data!;
-
-        // Duplicate check against the DB. The match key (store + date +
-        // total) mirrors /api/receipts/dedup so capture-time detection is
-        // consistent with the after-the-fact sweep.
-        final today = DateTime.now().toIso8601String().substring(0, 10);
-        final dupDate = (parsed.date != null && parsed.date!.isNotEmpty) ? parsed.date! : today;
-        if (parsed.storeName.isNotEmpty && parsed.totalAmount > 0) {
-          final dup = await provider.findDuplicate(
-            storeName: parsed.storeName,
-            date: dupDate,
-            totalAmount: parsed.totalAmount,
-          );
-          if (dup != null) {
-            duplicates.add(_DupHit(
-              photoIndex: i + 1,
-              storeName: parsed.storeName,
-              date: dupDate,
-              totalAmount: parsed.totalAmount,
-              existingId: dup.id,
-            ));
-            progress.value = _BatchProgress(
-              done: i + 1, total: files.length,
-              currentLabel: 'Duplicate: ${parsed.storeName} · \$${parsed.totalAmount.toStringAsFixed(2)}',
-            );
-            continue;
-          }
-        }
-
-        // Also catch intra-batch duplicates: a user who snaps the same
-        // receipt twice in the SAME batch would otherwise insert both
-        // (the DB check above only sees rows already committed). Match
-        // against rows we've inserted in THIS batch by storing the
-        // (normalized store, date, total) tuple in a local set. Uses
-        // the SAME normalization as ReceiptProvider.findDuplicate so the
-        // two checks agree.
-        final normStore = parsed.storeName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
-        final batchKey = '$normStore|$dupDate|${parsed.totalAmount.toStringAsFixed(2)}';
-        if (parsed.storeName.isNotEmpty && parsed.totalAmount > 0
-            && _batchKeysThisRun.contains(batchKey)) {
-          duplicates.add(_DupHit(
-            photoIndex: i + 1,
-            storeName: parsed.storeName,
-            date: dupDate,
-            totalAmount: parsed.totalAmount,
-            existingId: null, // points at an in-batch sibling, not a DB row
-          ));
-          progress.value = _BatchProgress(
-            done: i + 1, total: files.length,
-            currentLabel: 'Duplicate within this batch: ${parsed.storeName}',
-          );
-          continue;
-        }
-
+        // Duplicate auto-skip removed (user-requested): see _processSingleCapture.
+        // Every picked photo now becomes its own receipt; users clean up
+        // real dupes via the /receipts Find duplicates button on web.
         final asMap = <String, dynamic>{
           'store_name': parsed.storeName,
           'date': parsed.date,
@@ -489,7 +422,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         if (insert.id != null) {
           saved++;
           savedIds.add(insert.id!);
-          _batchKeysThisRun.add(batchKey);
         } else {
           failed++;
           failures.add('Photo ${i + 1}: ${insert.error ?? "insert failed"}');
@@ -503,7 +435,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         currentLabel: 'Saved ${i + 1} of ${files.length}',
       );
     }
-    _batchKeysThisRun.clear();
 
     if (!mounted) return;
     Navigator.of(context, rootNavigator: true).pop(); // dismiss progress dialog
@@ -538,11 +469,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ));
     }
   }
-
-  /// Per-process set used to catch duplicates WITHIN a single batch (e.g. the
-  /// user snapped the same receipt twice in a row). Cleared at the end of
-  /// every batch.
-  final Set<String> _batchKeysThisRun = {};
 
   /// Heuristic: should we retry this parse failure? AI-empty-read and
   /// unsupported-file are NOT transient — retrying buys nothing. Network
@@ -746,22 +672,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
 
       final parsed = result.data!;
-      final today = DateTime.now().toIso8601String().substring(0, 10);
-      final dupDate = (parsed.date != null && parsed.date!.isNotEmpty) ? parsed.date! : today;
-      if (parsed.storeName.isNotEmpty && parsed.totalAmount > 0) {
-        final dup = await provider.findDuplicate(
-          storeName: parsed.storeName,
-          date: dupDate,
-          totalAmount: parsed.totalAmount,
-        );
-        if (dup != null) {
-          if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('Skipped duplicate: ${parsed.storeName} · \$${parsed.totalAmount.toStringAsFixed(2)}'),
-            duration: const Duration(seconds: 2),
-          ));
-          return;
-        }
-      }
+      // Duplicate auto-skip removed (user-requested): the batch flow used
+      // to silently drop receipts that matched an existing one, but the
+      // matcher's substring fallback caused false positives (e.g. WALMART
+      // matching WALMART NEIGHBORHOOD). Every capture now becomes a
+      // receipt; users clean up real dupes via the /receipts Find
+      // duplicates button on web, which does the strict match.
       final asMap = <String, dynamic>{
         'store_name': parsed.storeName,
         'date': parsed.date,

@@ -13,7 +13,7 @@ import { formatDateShort } from '../../../lib/dateFormat'
 import { Upload, Trash2, Eye, Search, Download, Loader2, Sparkles, X, Shield, Camera, ChevronDown, ChevronRight, Undo2, ShoppingCart, Monitor, Link2, Tag, RefreshCw } from 'lucide-react'
 import { guessCategory } from '../../../lib/categorizeRules'
 import { normalizeStoreName } from '../../../lib/store-name-normalize'
-import { isItemPerishable } from '../../../lib/perishable'
+import { isItemPerishable, getNonReturnableReason } from '../../../lib/perishable'
 import { createClient as createSbClient } from '../../../lib/supabase/client'
 import { useQueryClient } from '@tanstack/react-query'
 import CameraCapture from '../../../components/CameraCapture'
@@ -1153,11 +1153,18 @@ function ReceiptLineItems({ receiptId }) {
         </thead>
         <tbody className="divide-y divide-gray-50">
           {items.map(it => {
-            // Per-item perishable check — fresh produce, dairy, eggs, raw meat,
-            // ice, prepared deli. These over-ride any receipt-level return
-            // policy because no merchant takes back a half-eaten salad even
+            // Per-item non-returnable check.
+            //   'perishable' = fresh produce / dairy / raw meat / eggs /
+            //                  prepared deli / ice / bakery / cut flowers
+            //   'pharmacy'   = dispensed prescriptions, CGM sensors, test
+            //                  strips, insulin, hearing aids, contact lenses,
+            //                  syringes, etc. — regulatory restrictions
+            //                  prevent merchants from accepting returns.
+            // These over-ride any receipt-level return policy because no
+            // merchant takes back a half-eaten salad or a dispensed Rx even
             // when the store's general window is generous.
-            const perishable = isItemPerishable(it)
+            const nrReason = getNonReturnableReason(it)
+            const perishable = nrReason !== null
             return (
             <tr key={it.id} className={it.returned ? 'bg-rose-50/40' : ''}>
               <td className="px-3 py-0.5 text-gray-400 text-[11px]">{it.sku || '—'}</td>
@@ -1175,9 +1182,11 @@ function ReceiptLineItems({ receiptId }) {
                 {perishable ? (
                   <span
                     className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200"
-                    title="Fresh produce / dairy / meat / eggs / prepared food — merchants don't accept returns on perishables."
+                    title={nrReason === 'pharmacy'
+                      ? "Pharmacy item — dispensed prescriptions, CGM sensors, test strips, hearing aids etc. can't be returned for resale (FDA / state regs)."
+                      : "Fresh produce / dairy / meat / eggs / prepared food — merchants don't accept returns on perishables."}
                   >
-                    Perishable · final sale
+                    {nrReason === 'pharmacy' ? 'Pharmacy · final sale' : 'Perishable · final sale'}
                   </span>
                 ) : (() => {
                   // Render policy inline: ID + days, with expiry + eligible in

@@ -75,35 +75,86 @@ const ICE_AND_FLOWERS = [
   'flowers','roses','bouquet','plant','potted plant',
 ]
 
+// Pharmacy items that can't be returned for re-sale once dispensed or once
+// the sterile/safety seal is broken. Federal + state pharmacy regulations
+// generally prohibit reselling prescription medications — the merchant
+// won't take them back even if unopened. Same for diabetes test strips,
+// CGM sensors, hearing aids, contact lenses, etc.
+const PHARMACY = [
+  // Generic markers
+  'rx','prescription','prescription medicine','prescription drug',
+  'pharmacy item','controlled substance',
+  // Diabetes care — the user specifically called these out
+  'one touch','onetouch','accu-chek','accuchek','contour next','truetest',
+  'test strip','test strips','glucose strip','glucose strips',
+  'lancet','lancets','lancing device',
+  'glucose meter','glucometer',
+  'dexcom','dexcom g6','dexcom g7','freestyle libre','libre sensor',
+  'libre 2','libre 3','cgm sensor','continuous glucose monitor',
+  // Insulin + injectable rx
+  'insulin','insulin pen','insulin vial','insulin syringe',
+  'humalog','novolog','lantus','tresiba','levemir','toujeo',
+  'epipen','epinephrine auto injector','epinephrine auto-injector',
+  'naloxone','narcan',
+  // Inhalers + respiratory
+  'inhaler','rescue inhaler','albuterol inhaler','nebulizer','spacer chamber',
+  // Sensors + custom-fit medical devices
+  'hearing aid','hearing aids','pulse oximeter','medical sensor',
+  'cgm patch','heart rate sensor','sleep apnea','cpap mask','cpap supplies',
+  // Vision (often non-returnable once opened)
+  'contact lens','contact lenses','prescription glasses','prescription lenses',
+  // Sterile single-use
+  'syringe','syringes','needle','needles','insulin needle','catheter',
+  'ostomy','colostomy bag','urinary catheter',
+  'wound dressing','sterile gauze','sterile pad',
+  // Personal use / intimate health (typically final sale once opened)
+  'thermometer probe','rectal thermometer','enema','suppositor',
+]
+
 const ALL = [
   ...PRODUCE, ...DAIRY, ...MEAT_SEAFOOD, ...EGGS,
   ...BAKERY_FRESH, ...PREPARED, ...ICE_AND_FLOWERS,
 ]
 
-// Build a single regex with word boundaries for fast matching. Sorted
-// longest-first so multi-word phrases hit before single-word substrings.
-const PATTERN = new RegExp(
-  '\\b(?:' +
-    ALL
-      .map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
-      .sort((a, b) => b.length - a.length)
-      .join('|') +
-  ')\\b',
-  'i'
-)
+function compilePattern(keywords) {
+  return new RegExp(
+    '\\b(?:' +
+      keywords
+        .map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+        .sort((a, b) => b.length - a.length)
+        .join('|') +
+    ')\\b',
+    'i'
+  )
+}
+
+const PATTERN = compilePattern(ALL)
+const PHARMACY_PATTERN = compilePattern(PHARMACY)
+
+/**
+ * Why an item can't be returned. Null when it CAN be returned.
+ *
+ * @param {{ item_name?: string, category?: string }} item
+ * @returns {'perishable' | 'pharmacy' | null}
+ */
+export function getNonReturnableReason(item) {
+  if (!item) return null
+  const name = String(item.item_name || '').toLowerCase()
+  if (!name) return null
+  // Pharmacy first — some pharmacy-counter items might also match a
+  // perishable keyword (e.g. a refrigerated insulin pen could match
+  // "insulin" first); pharmacy is the more specific label.
+  if (PHARMACY_PATTERN.test(name)) return 'pharmacy'
+  if (PATTERN.test(name)) return 'perishable'
+  return null
+}
 
 /**
  * @param {{ item_name?: string, category?: string }} item
  * @returns {boolean}
  */
 export function isItemPerishable(item) {
-  if (!item) return false
-  const name = String(item.item_name || '').toLowerCase()
-  if (!name) return false
-  // Categories that are inherently non-returnable on the receipt itself
-  // (prepared food, fuel) — already handled at the receipt level. We only
-  // need to flag the grocery-aisle perishables here.
-  return PATTERN.test(name)
+  return getNonReturnableReason(item) !== null
 }
 
-export const _internals = { PRODUCE, DAIRY, MEAT_SEAFOOD, EGGS, BAKERY_FRESH, PREPARED, ICE_AND_FLOWERS, PATTERN }
+export const _internals = { PRODUCE, DAIRY, MEAT_SEAFOOD, EGGS, BAKERY_FRESH, PREPARED, ICE_AND_FLOWERS, PHARMACY, PATTERN, PHARMACY_PATTERN }

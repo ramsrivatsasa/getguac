@@ -11,6 +11,11 @@ const VALID_USERNAME_RE = /^[a-z0-9]([a-z0-9._-]{1,30}[a-z0-9])?$/
 export default function RegisterPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  // When the server returns needs_email_confirmation we render an in-place
+  // "Check your inbox" panel instead of redirecting away — the user is more
+  // likely to actually go look for the email if we hold them on this page.
+  const [confirmation, setConfirmation] = useState(null) // { email, username }
+  const [resending, setResending] = useState(false)
   const [form, setForm] = useState({
     username: '', firstName: '', lastName: '', email: '', password: '', confirmPassword: '',
     birthDate: '', age: '', alternativeEmail: '', mobileNo: ''
@@ -71,11 +76,12 @@ export default function RegisterPage() {
         return
       }
       if (data.needs_email_confirmation) {
-        toast.success('Account created — check your email to confirm.')
+        // Hold the user on this page and show the confirmation panel.
+        setConfirmation({ email: data.email || form.email, username: data.pending_username || form.username })
       } else {
         toast.success(`Welcome, @${data.username || form.username} — your GetGuac account is live.`)
+        router.push('/login')
       }
-      router.push('/login')
     } catch (err) {
       toast.error(err.message || 'Sign-up failed')
     } finally {
@@ -96,7 +102,51 @@ export default function RegisterPage() {
           <p className="text-emerald-100 text-sm mt-1">Create your account — money's wingman</p>
         </div>
 
-        <div className="card shadow-2xl">
+        {confirmation && (
+          <div className="card shadow-2xl space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-2xl">📬</div>
+              <div>
+                <h2 className="text-lg font-bold text-emerald-800">Check your email</h2>
+                <p className="text-xs text-gray-500">We need to verify it's really you before unlocking the account.</p>
+              </div>
+            </div>
+            <p className="text-sm text-gray-700">
+              We sent a confirmation link to <strong className="text-emerald-700">{confirmation.email}</strong>. Click it and you'll land on your dashboard with the handle <strong className="font-mono text-emerald-700">@{confirmation.username}</strong> reserved.
+            </p>
+            <p className="text-xs text-gray-500">
+              Not in your inbox in a minute? Check spam, or hit Resend below.
+            </p>
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                disabled={resending}
+                onClick={async () => {
+                  setResending(true)
+                  try {
+                    const res = await fetch('/api/auth/resend-confirmation', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ email: confirmation.email }),
+                    })
+                    const data = await res.json()
+                    toast.success(data.message || `Sent — check ${confirmation.email}`)
+                  } catch (e) {
+                    toast.error(e.message || 'Resend failed')
+                  } finally {
+                    setResending(false)
+                  }
+                }}
+                className="btn-primary"
+              >
+                {resending ? 'Sending…' : 'Resend email'}
+              </button>
+              <Link href="/login" className="btn-secondary">Go to sign in</Link>
+            </div>
+          </div>
+        )}
+
+        <div className={`card shadow-2xl ${confirmation ? 'opacity-60 pointer-events-none' : ''}`}>
           <h2 className="text-xl font-bold mb-4">Create Account</h2>
           <PrivacyNote className="mb-5" showDelete={false} />
           <form onSubmit={handleSubmit} className="space-y-4">

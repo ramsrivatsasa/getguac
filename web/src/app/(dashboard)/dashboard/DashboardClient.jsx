@@ -8,6 +8,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { DollarSign, Receipt, Gift, TrendingUp, ArrowRight, Sparkles } from 'lucide-react'
 import GuacoScoreCard from '../../../components/GuacoScoreCard'
 import { subDays, subWeeks, subMonths, subYears } from 'date-fns'
+import { normalizeStoreName, canonicalStoreName } from '../../../lib/store-name-normalize'
 const PERIODS = ['daily', 'weekly', 'monthly', 'yearly']
 
 // Dropdown options for "how many <period>s back to include"
@@ -58,18 +59,25 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
   // the top 8 spenders, sort descending. Previously this chart plotted the
   // last 8 receipts one-per-bar, which showed "Amazon" 4 times for someone
   // with 4 recent Amazon purchases instead of one tall Amazon bar.
+  //
+  // Grouping uses the SHARED normalizeStoreName helper so "COSTCO WHOLESALE",
+  // "Costco", "Costco #123", "amazon.com" and "AMAZON.COM, INC." all roll up
+  // into a single bar — the same dedup logic the stores table uses, so this
+  // chart can't disagree with the per-store drilldown.
   const chartData = (() => {
     const byStore = new Map()
     for (const r of filtered) {
       const raw = (r.store_name || '').trim()
       if (!raw) continue
-      // Group case-insensitively + ignore trailing punctuation so "Amazon"
-      // and "Amazon." don't split. Display the longest variant we see for
-      // the group (usually the most readable one).
-      const key = raw.toLowerCase().replace(/[.,\s]+$/, '')
+      const key = normalizeStoreName(raw)
+      if (!key) continue
       const amount = parseFloat(r.total_amount || 0)
-      const entry = byStore.get(key) || { name: raw, amount: 0, count: 0 }
-      if (raw.length > entry.name.length) entry.name = raw
+      const entry = byStore.get(key) || { name: canonicalStoreName(raw), amount: 0, count: 0, samples: [] }
+      // Track every raw variant we saw so the click-through can filter on
+      // "store_name in (...)" instead of an arbitrary one — otherwise the
+      // bar showing "Costco" $234 navigates to receipts page filtered on
+      // exactly "Costco" and misses the "COSTCO WHOLESALE #218" rows.
+      if (!entry.samples.includes(raw)) entry.samples.push(raw)
       entry.amount += amount
       entry.count += 1
       byStore.set(key, entry)
@@ -85,6 +93,10 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
         // do a substring match against the parsed store_name without the
         // ellipsis breaking the filter.
         fullName: e.name,
+        // All raw variants that rolled into this bar (e.g. "Costco",
+        // "COSTCO WHOLESALE", "Costco #218"). The receipts page filter
+        // needs the variants list to show every grouped receipt.
+        sourceNames: e.samples,
         amount: e.amount,
         count: e.count,
       }))

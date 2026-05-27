@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
@@ -277,7 +279,46 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (mounted) context.go('/dashboard');
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (!mounted) return;
+      final msg = e.toString().toLowerCase();
+      // Supabase raises AuthException with code 'email_not_confirmed' or a
+      // message containing 'not confirmed' when the user hasn't clicked the
+      // signup link yet. Surface a SnackBar with a Resend action.
+      if (msg.contains('email not confirmed') || msg.contains('not confirmed') || msg.contains('email_not_confirmed')) {
+        final email = _identifierCtrl.text.trim();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          duration: const Duration(seconds: 8),
+          content: Text(email.contains('@')
+              ? 'Please confirm your email ($email) before signing in.'
+              : 'Please confirm your email before signing in.'),
+          action: !email.contains('@')
+              ? null
+              : SnackBarAction(
+                  label: 'Resend',
+                  onPressed: () async {
+                    try {
+                      final res = await http.post(
+                        Uri.parse('https://getguac.app/api/auth/resend-confirmation'),
+                        headers: {'Content-Type': 'application/json'},
+                        body: json.encode({'email': email}),
+                      );
+                      final body = json.decode(res.body) as Map<String, dynamic>;
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(body['message']?.toString() ?? 'Sent to $email')),
+                      );
+                    } catch (_) {
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Resend failed — try again in a minute.')),
+                      );
+                    }
+                  },
+                ),
+        ));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }

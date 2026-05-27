@@ -14,6 +14,7 @@ import '../../services/receipt_parse_service.dart';
 import '../../services/document_scanner_service.dart';
 import '../../widgets/guac_mascot.dart';
 import '../../utils/date_format.dart';
+import '../../store_name_normalize.dart';
 
 const _kEmerald700 = Color(0xFF15803d);
 const _kEmerald800 = Color(0xFF166534);
@@ -1359,18 +1360,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _spendingChart(List<Receipt> filtered) {
-    // Aggregate by normalized store name so Amazon doesn't split into five
-    // bars (matches the web /dashboard chart's grouping). Take the top 8
-    // merchants by total spend, sorted descending.
+    // Aggregate by SHARED-normalized store name so "COSTCO WHOLESALE",
+    // "Costco", "Costco #218", "amazon.com" and "AMAZON.COM, INC." all roll
+    // into a single bar. Uses store_name_normalize.dart which mirrors the
+    // web normalizer character-for-character so the mobile chart can't
+    // disagree with the web /dashboard chart for the same user.
     final byStore = <String, _StoreSpend>{};
     for (final r in filtered) {
       final raw = r.storeName.trim();
       if (raw.isEmpty) continue;
-      final key = raw.toLowerCase().replaceAll(RegExp(r'[.,\s]+$'), '');
-      final entry = byStore[key] ?? _StoreSpend(name: raw, amount: 0, count: 0);
-      // Keep the longest seen variant as the display name (usually the
-      // most readable; matches web behaviour).
-      if (raw.length > entry.name.length) entry.name = raw;
+      final key = normalizeStoreName(raw);
+      if (key.isEmpty) continue;
+      final entry = byStore[key] ?? _StoreSpend(name: canonicalStoreName(raw), amount: 0, count: 0);
       entry.amount += r.totalAmount;
       entry.count += 1;
       byStore[key] = entry;

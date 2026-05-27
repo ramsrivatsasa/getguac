@@ -63,7 +63,21 @@ export async function POST(request) {
     // the response so the user is signed in on subsequent requests.
     const sb = createClient()
     const { error } = await sb.auth.signInWithPassword({ email, password })
-    if (error) return Response.json(GENERIC_INVALID, { status: 401 })
+    if (error) {
+      // "Email not confirmed" is a security-meaningful case — show it.
+      // Supabase returns code: 'email_not_confirmed' (post-2024 SDK) or
+      // message contains that phrase. Surface the email so the client can
+      // offer a Resend button.
+      const msg = (error.message || '').toLowerCase()
+      if (error.code === 'email_not_confirmed' || msg.includes('email not confirmed') || msg.includes('not confirmed')) {
+        return Response.json({
+          error: `Please confirm your email (${email}) before signing in. Check your inbox for the GetGuac confirmation link.`,
+          email_not_confirmed: true,
+          email,
+        }, { status: 403 })
+      }
+      return Response.json(GENERIC_INVALID, { status: 401 })
+    }
 
     return Response.json({ ok: true })
   } catch (err) {

@@ -22,6 +22,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   };
   bool _loading = false;
 
+  // When the server returns needs_email_confirmation we show an in-place
+  // "Check your email" panel with a Resend button — sticking on this screen
+  // is more likely to get the user to actually go look for the email than
+  // dumping them at the login screen.
+  String? _confirmEmail;
+  String? _confirmUsername;
+  bool _resending = false;
+
   // Live username availability check (debounced ~350ms)
   Timer? _debounce;
   String? _usernameStatus;  // available | taken | reserved | invalid | null
@@ -94,17 +102,123 @@ class _RegisterScreenState extends State<RegisterScreen> {
         throw Exception(body['error'] ?? 'Sign-up failed');
       }
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(body['needs_email_confirmation'] == true
-          ? 'Account created — check your email to confirm. 🥑'
-          : 'Welcome to GetGuac, @${body['username'] ?? _ctrls['username']!.text}! Sign in to continue. 🥑')),
-      );
-      context.go('/login');
+      if (body['needs_email_confirmation'] == true) {
+        setState(() {
+          _confirmEmail = (body['email'] ?? _ctrls['email']!.text.trim()).toString();
+          _confirmUsername = (body['pending_username'] ?? _ctrls['username']!.text.toLowerCase().trim()).toString();
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Welcome to GetGuac, @${body['username'] ?? _ctrls['username']!.text}! Sign in to continue. 🥑')),
+        );
+        context.go('/login');
+      }
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  Future<void> _resendConfirmation() async {
+    final email = _confirmEmail;
+    if (email == null || _resending) return;
+    setState(() => _resending = true);
+    try {
+      final res = await http.post(
+        Uri.parse('https://getguac.app/api/auth/resend-confirmation'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'email': email}),
+      );
+      final body = json.decode(res.body) as Map<String, dynamic>;
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(body['message'] ?? 'Sent — check $email')),
+      );
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Resend failed: $e')));
+    } finally {
+      if (mounted) setState(() => _resending = false);
+    }
+  }
+
+  Widget _confirmEmailPanel() {
+    final email = _confirmEmail ?? '';
+    final username = _confirmUsername ?? '';
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Card(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          elevation: 10,
+          shadowColor: Colors.black54,
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(children: [
+                  const Text('📬', style: TextStyle(fontSize: 28)),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        Text('Check your email', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: _kBrandDk)),
+                        Text("Verify it's really you before we activate the account.", style: TextStyle(fontSize: 11, color: Colors.black54)),
+                      ],
+                    ),
+                  ),
+                ]),
+                const SizedBox(height: 12),
+                Text.rich(TextSpan(
+                  style: const TextStyle(fontSize: 13.5, height: 1.45, color: Colors.black87),
+                  children: [
+                    const TextSpan(text: 'We sent a confirmation link to '),
+                    TextSpan(text: email, style: const TextStyle(fontWeight: FontWeight.w800, color: _kBrand)),
+                    const TextSpan(text: '. Tap it on this device and your handle '),
+                    TextSpan(text: '@$username', style: const TextStyle(fontFamily: 'monospace', fontWeight: FontWeight.w800, color: _kBrand)),
+                    const TextSpan(text: ' will be reserved.'),
+                  ],
+                )),
+                const SizedBox(height: 8),
+                const Text("Not in your inbox in a minute? Check spam, or hit Resend below.",
+                  style: TextStyle(fontSize: 11, color: Colors.black54)),
+                const SizedBox(height: 14),
+                Row(children: [
+                  Expanded(
+                    child: FilledButton.icon(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: _kBrand,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      onPressed: _resending ? null : _resendConfirmation,
+                      icon: _resending
+                          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                          : const Icon(Icons.send_outlined, size: 16),
+                      label: const Text('Resend email'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: _kBrand, width: 1.2),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: () => context.go('/login'),
+                    child: const Text('Sign in', style: TextStyle(color: _kBrand, fontWeight: FontWeight.w700)),
+                  ),
+                ]),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _field(String key, String label, {TextInputType? type, bool obscure = false, String? hint, IconData? icon}) {
@@ -247,7 +361,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
         ),
         child: SafeArea(
-          child: SingleChildScrollView(
+          child: _confirmEmail != null
+            ? _confirmEmailPanel()
+            : SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Column(
               children: [

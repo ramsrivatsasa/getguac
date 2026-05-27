@@ -85,15 +85,30 @@ export async function POST(request) {
     if (reserved) return Response.json({ error: 'That username is reserved', status: 'reserved' }, { status: 409 })
     if (taken)    return Response.json({ error: 'That username is already taken', status: 'taken' },  { status: 409 })
 
-    // ── Create the auth user (cookie-bound so session is set immediately) ──
+    // ── Create the auth user ──
+    // Required: Supabase Auth project setting "Confirm email" must be ENABLED
+    // (Dashboard → Authentication → Email → Enable email confirmations). When
+    // enabled, signUp() returns a user with id but session=null, AND Supabase
+    // sends the confirmation email automatically. We rely on that signal to
+    // decide whether to claim the username now or stash it for post-confirm.
+    //
+    // For security, we ALWAYS stash the username in user_metadata so a
+    // logged-in unverified user can't claim a different one mid-flight. The
+    // actual claim happens after email confirmation, in /auth/confirm.
     const sb = createClient()
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://getguac.app'
     const { data, error } = await sb.auth.signUp({
       email,
       password,
       options: {
+        // Where Supabase sends the user after they click the confirm link.
+        // Our /auth/confirm page claims the username + provisions the mailbox
+        // once the session is real.
+        emailRedirectTo: `${baseUrl}/auth/confirm`,
         data: {
           first_name,
           last_name,
+          pending_username:  username,
           birth_date:        body.birth_date        || null,
           age:               body.age               || null,
           alternative_email: body.alternative_email || null,
@@ -109,17 +124,27 @@ export async function POST(request) {
 
     const userId = data?.user?.id
     if (!userId) {
-      // Email confirmation flow — user must verify before we can claim username
+      // Should not normally happen — signUp without error always returns a user.
+      return Response.json({ error: 'Sign-up returned no user id' }, { status: 500 })
+    }
+
+    // ── Confirmation required? (Supabase returns session=null when "Confirm
+    //    email" is enabled in the project's Auth settings.) ──
+    if (!data.session) {
       return Response.json({
         ok: true,
         needs_email_confirmation: true,
-        message: 'Account created — check your email to confirm. Your username will be reserved when you sign in for the first time.',
+        email,
         pending_username: username,
+        message: `We've sent a confirmation email to ${email}. Click the link to activate your account — your @getguac.app handle "${username}" is reserved while you confirm.`,
       })
     }
 
-    // ── Claim the username on the profile row (which the auth trigger creates) ──
-    // Use admin so we don't depend on RLS having a profiles INSERT policy that matches.
+    // ── Auto-confirmed by Supabase (only happens if "Confirm email" is OFF
+    //    in the Auth settings — INSECURE for production). We still go ahead
+    //    and claim the username + provision the mailbox so the user lands
+    //    fully set up. Log a warning so an operator notices the unsafe config.
+    console.warn('[auth/sign-up] User auto-confirmed without email verification. ENABLE "Confirm email" in Supabase Auth settings for production security.')
     const { error: upErr } = await sbAdmin
       .from('profiles')
       .upsert({ id: userId, email_alias: username, alias_set_at: new Date().toISOString(), first_name, last_name }, { onConflict: 'id' })

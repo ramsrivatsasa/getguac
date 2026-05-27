@@ -12,6 +12,7 @@ import toast from 'react-hot-toast'
 import { formatDateShort } from '../../../lib/dateFormat'
 import { Upload, Trash2, Eye, Search, Download, Loader2, Sparkles, X, Shield, Camera, ChevronDown, ChevronRight, Undo2, ShoppingCart, Monitor, Link2, Tag, RefreshCw } from 'lucide-react'
 import { guessCategory } from '../../../lib/categorizeRules'
+import { normalizeStoreName } from '../../../lib/store-name-normalize'
 import { createClient as createSbClient } from '../../../lib/supabase/client'
 import { useQueryClient } from '@tanstack/react-query'
 import CameraCapture from '../../../components/CameraCapture'
@@ -555,9 +556,18 @@ export default function ReceiptsPage() {
     return () => window.removeEventListener('paste', onPaste)
   }, [onQuickDrop])
 
-  const filtered = receipts.filter(r =>
-    r.store_name?.toLowerCase().includes(search.toLowerCase()) || r.id?.includes(search)
-  )
+  // When the search term itself normalizes to a canonical key (e.g. "Costco"
+  // → "costco"), match by normalized key too — that catches every variant
+  // ("COSTCO WHOLESALE", "Costco #218", etc.) the Spending-by-Store bar
+  // grouped together. Falls back to substring matching for free-text search.
+  const searchKey = normalizeStoreName(search)
+  const filtered = receipts.filter(r => {
+    if (r.id?.includes(search)) return true
+    const name = r.store_name?.toLowerCase() || ''
+    if (name.includes(search.toLowerCase())) return true
+    if (searchKey && normalizeStoreName(r.store_name || '') === searchKey) return true
+    return false
+  })
 
   const allSelected = filtered.length > 0 && filtered.every(r => selected.has(r.id))
   function toggleOne(id) {

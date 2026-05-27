@@ -26,7 +26,41 @@ export default function LoginPage() {
       })
       const data = await res.json()
       if (!res.ok) {
-        toast.error(data.error || 'Invalid username or password')
+        // Email-not-confirmed gets its own UX: clear toast + offer Resend.
+        if (data.email_not_confirmed && data.email) {
+          toast(
+            (t) => (
+              <div className="space-y-2">
+                <p className="font-semibold text-rose-700">Please confirm your email first</p>
+                <p className="text-xs text-gray-600">We sent a link to {data.email}.</p>
+                <div className="flex gap-2">
+                  <button
+                    className="px-3 py-1 rounded bg-emerald-600 text-white text-xs font-semibold"
+                    onClick={async () => {
+                      toast.dismiss(t.id)
+                      try {
+                        const r = await fetch('/api/auth/resend-confirmation', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ email: data.email }),
+                        })
+                        const j = await r.json()
+                        toast.success(j.message || `Sent to ${data.email}`)
+                      } catch (e) {
+                        toast.error(e.message || 'Resend failed')
+                      }
+                    }}>
+                    Resend email
+                  </button>
+                  <button className="px-3 py-1 rounded bg-gray-100 text-xs" onClick={() => toast.dismiss(t.id)}>Dismiss</button>
+                </div>
+              </div>
+            ),
+            { duration: 12000 }
+          )
+        } else {
+          toast.error(data.error || 'Invalid username or password')
+        }
         setLoading(false)
         return
       }

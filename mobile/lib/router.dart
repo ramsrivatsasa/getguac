@@ -51,7 +51,12 @@ final appRouter = GoRouter(
       builder: (_, __, child) => MainScaffold(child: child),
       routes: [
         GoRoute(path: '/dashboard', builder: (_, __) => const DashboardScreen()),
-        GoRoute(path: '/receipts', builder: (_, __) => const ReceiptsScreen()),
+        GoRoute(
+          path: '/receipts',
+          builder: (_, state) => ReceiptsScreen(
+            initialStoreFilter: state.uri.queryParameters['store'],
+          ),
+        ),
         GoRoute(path: '/receipts/:id', builder: (_, state) => ReceiptDetailScreen(id: state.pathParameters['id']!)),
         GoRoute(path: '/rewards', builder: (_, __) => const RewardsScreen()),
         GoRoute(path: '/rewards/:id', builder: (_, state) => RewardDetailScreen(id: state.pathParameters['id']!)),

@@ -10,7 +10,12 @@ import '../../utils/date_format.dart';
 import '../../services/receipt_parse_service.dart';
 
 class ReceiptsScreen extends StatefulWidget {
-  const ReceiptsScreen({super.key});
+  /// Optional initial store filter from a deep-link like
+  /// /receipts?store=Glory%20Days%20Grill. Pre-populates the search box so
+  /// tapping a bar on the dashboard's Spending-by-Store chart lands the
+  /// user on a pre-filtered list.
+  final String? initialStoreFilter;
+  const ReceiptsScreen({super.key, this.initialStoreFilter});
   @override
   State<ReceiptsScreen> createState() => _ReceiptsScreenState();
 }
@@ -28,6 +33,13 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
       // Honour the 60s cache so re-entering the tab doesn't network-spam.
       // Pull-to-refresh forces a fresh fetch when the user actually wants one.
       context.read<ReceiptProvider>().loadReceipts();
+    }
+    // Apply the deep-link store filter (if any) by pre-filling both the
+    // visible search text and the filter state used by the list query.
+    final initial = widget.initialStoreFilter;
+    if (initial != null && initial.isNotEmpty) {
+      _filter = initial;
+      _search.text = initial;
     }
   }
 

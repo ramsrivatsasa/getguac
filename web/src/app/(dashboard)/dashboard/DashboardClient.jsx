@@ -1,6 +1,7 @@
 'use client'
 import { formatDateShort } from '../../../lib/dateFormat'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useStore } from '../../../store'
 import Link from 'next/link'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
@@ -30,6 +31,7 @@ function periodStart(period, count) {
 
 export default function DashboardClient({ initialReceipts, initialRewards, firstName }) {
   const { spendingPeriod, setSpendingPeriod } = useStore()
+  const router = useRouter()
   const period = PERIODS.includes(spendingPeriod) ? spendingPeriod : 'monthly'
   const [periodCount, setPeriodCount] = useState(() => DEFAULT_COUNT[period] || 1)
 
@@ -75,7 +77,17 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
     return [...byStore.values()]
       .sort((a, b) => b.amount - a.amount)
       .slice(0, 8)
-      .map(e => ({ name: e.name.length > 12 ? e.name.slice(0, 12) + '…' : e.name, amount: e.amount, count: e.count }))
+      .map(e => ({
+        // Truncated label for the X axis so long names don't overflow.
+        name: e.name.length > 12 ? e.name.slice(0, 12) + '…' : e.name,
+        // Untruncated original — passed through so the bar's onClick handler
+        // can navigate /receipts?store=<fullName> and the receipts page can
+        // do a substring match against the parsed store_name without the
+        // ellipsis breaking the filter.
+        fullName: e.name,
+        amount: e.amount,
+        count: e.count,
+      }))
   })()
 
   return (
@@ -156,14 +168,28 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Spending chart */}
         <div className="card lg:col-span-2">
-          <h3 className="font-semibold text-gray-900 mb-4">Spending by Store</h3>
+          <h3 className="font-semibold text-gray-900 mb-1">Spending by Store</h3>
+          <p className="text-xs text-gray-500 mb-3">Tap a bar to see that store&apos;s receipts.</p>
           {chartData.length === 0 ? (
             <div className="h-48 flex items-center justify-center text-gray-400 text-sm">
               No transactions for this period
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={chartData} margin={{ top: 12, right: 12, left: -12, bottom: 0 }} barCategoryGap="25%">
+              <BarChart
+                data={chartData}
+                margin={{ top: 12, right: 12, left: -12, bottom: 0 }}
+                barCategoryGap="25%"
+                // Recharts surfaces the clicked datum on chart-level onClick.
+                // Bar-level onClick fires twice on some versions; chart-level
+                // is the reliable path.
+                onClick={(state) => {
+                  const datum = state?.activePayload?.[0]?.payload
+                  if (datum?.fullName) {
+                    router.push(`/receipts?store=${encodeURIComponent(datum.fullName)}`)
+                  }
+                }}
+              >
                 <CartesianGrid strokeDasharray="2 4" stroke="#f1f5f9" vertical={false} />
                 <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
@@ -171,8 +197,15 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
                   cursor={{ fill: '#f8fafc' }}
                   contentStyle={{ borderRadius: 12, border: '1px solid #d1fae5', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', fontSize: 12 }}
                   formatter={v => [`$${v.toFixed(2)}`, 'Amount']}
+                  labelFormatter={(label, payload) => payload?.[0]?.payload?.fullName || label}
                 />
-                <Bar dataKey="amount" fill="#e11d48" radius={[8, 8, 0, 0]} maxBarSize={56} />
+                <Bar
+                  dataKey="amount"
+                  fill="#e11d48"
+                  radius={[8, 8, 0, 0]}
+                  maxBarSize={56}
+                  cursor="pointer"
+                />
               </BarChart>
             </ResponsiveContainer>
           )}

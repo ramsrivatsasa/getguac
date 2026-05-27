@@ -791,15 +791,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
       systemOverlayStyle: SystemUiOverlayStyle.light,
       iconTheme: const IconThemeData(color: Colors.white),
       title: Row(children: [
+        // App-bar logo — branded rounded-square with the 🥑 emoji so the
+        // top bar reads identical to the launcher icon. Replaced the
+        // detailed GuacMascot SVG here per design direction.
         Container(
           width: 36, height: 36,
           margin: const EdgeInsets.only(right: 8),
           decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.white.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(10),
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft, end: Alignment.bottomRight,
+              colors: [Color(0xFFa3e635), Color(0xFF15803d)],
+            ),
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.18), blurRadius: 4, offset: const Offset(0, 1))],
           ),
-          padding: const EdgeInsets.all(4),
-          child: const GuacMascot(size: 28),
+          alignment: Alignment.center,
+          child: const Text('🥑', style: TextStyle(fontSize: 22)),
         ),
         const Text('GetGuac', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 18)),
         const SizedBox(width: 12),
@@ -1050,7 +1057,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _spendingChart(List<Receipt> filtered) {
-    final data = filtered.take(8).toList().reversed.toList();
+    // Aggregate by normalized store name so Amazon doesn't split into five
+    // bars (matches the web /dashboard chart's grouping). Take the top 8
+    // merchants by total spend, sorted descending.
+    final byStore = <String, _StoreSpend>{};
+    for (final r in filtered) {
+      final raw = r.storeName.trim();
+      if (raw.isEmpty) continue;
+      final key = raw.toLowerCase().replaceAll(RegExp(r'[.,\s]+$'), '');
+      final entry = byStore[key] ?? _StoreSpend(name: raw, amount: 0, count: 0);
+      // Keep the longest seen variant as the display name (usually the
+      // most readable; matches web behaviour).
+      if (raw.length > entry.name.length) entry.name = raw;
+      entry.amount += r.totalAmount;
+      entry.count += 1;
+      byStore[key] = entry;
+    }
+    final data = byStore.values.toList()
+      ..sort((a, b) => b.amount.compareTo(a.amount));
+    final topData = data.take(8).toList();
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1060,21 +1085,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const Text('Spending by Store', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: Color(0xFF111827))),
+        const Text('Tap a bar to see that store’s receipts.',
+          style: TextStyle(fontSize: 11, color: Colors.black54)),
         const SizedBox(height: 12),
-        if (data.isEmpty)
+        if (topData.isEmpty)
           const SizedBox(height: 160, child: Center(child: Text('No transactions for this period', style: TextStyle(color: Colors.black38, fontSize: 13))))
         else
           SizedBox(
             height: 200,
             child: BarChart(BarChartData(
               alignment: BarChartAlignment.spaceAround,
-              maxY: (data.map((r) => r.totalAmount).reduce((a, b) => a > b ? a : b)) * 1.2,
+              maxY: (topData.map((s) => s.amount).reduce((a, b) => a > b ? a : b)) * 1.2,
               gridData: const FlGridData(show: false),
               borderData: FlBorderData(show: false),
-              barGroups: data.asMap().entries.map((e) => BarChartGroupData(
+              // Tap handling: when the user taps a bar, fl_chart fires
+              // touchCallback with the bar index. Navigate to /receipts
+              // with the aggregated store name as the filter so the user
+              // sees every receipt that contributed to the bar.
+              barTouchData: BarTouchData(
+                enabled: true,
+                handleBuiltInTouches: true,
+                touchCallback: (event, response) {
+                  if (!event.isInterestedForInteractions) return;
+                  if (response?.spot == null) return;
+                  final idx = response!.spot!.touchedBarGroupIndex;
+                  if (idx < 0 || idx >= topData.length) return;
+                  final store = topData[idx].name;
+                  if (store.isEmpty) return;
+                  context.go('/receipts?store=${Uri.encodeQueryComponent(store)}');
+                },
+              ),
+              barGroups: topData.asMap().entries.map((e) => BarChartGroupData(
                 x: e.key,
                 barRods: [BarChartRodData(
-                  toY: e.value.totalAmount,
+                  toY: e.value.amount,
                   color: const Color(0xFFe11d48),
                   width: 18,
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
@@ -1089,8 +1133,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   reservedSize: 28,
                   getTitlesWidget: (v, _) {
                     final idx = v.toInt();
-                    if (idx < 0 || idx >= data.length) return const SizedBox();
-                    final name = data[idx].storeName;
+                    if (idx < 0 || idx >= topData.length) return const SizedBox();
+                    final name = topData[idx].name;
                     return Padding(
                       padding: const EdgeInsets.only(top: 6),
                       child: Text(name.length > 6 ? name.substring(0, 6) : name,
@@ -1230,6 +1274,16 @@ class _StatTile extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Per-store aggregation row for the dashboard's Spending-by-Store chart.
+/// Mirrors the web's chartData entries — keep them in sync if the web
+/// aggregation logic changes (lib/src/app/(dashboard)/dashboard/DashboardClient.jsx).
+class _StoreSpend {
+  String name;
+  double amount;
+  int count;
+  _StoreSpend({required this.name, required this.amount, required this.count});
 }
 
 /// Choice the user makes on the preview screen after a capture.

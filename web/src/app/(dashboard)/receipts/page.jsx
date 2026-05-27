@@ -1,7 +1,7 @@
 'use client'
 import { useState, useCallback, useRef, useEffect, Fragment } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useDropzone } from 'react-dropzone'
 import { useReceipts, useReceipt, useAddReceipt, useDeleteReceipt, useUpdateReceiptItem } from '../../../hooks/useReceipts'
 import { addToShoppingList } from '../../../lib/db'
@@ -37,7 +37,11 @@ const RECEIPT_COLUMNS = [
 
 export default function ReceiptsPage() {
   const router = useRouter()
-  const [search, setSearch] = useState('')
+  const searchParams = useSearchParams()
+  // Initialize the search box from ?store=<name> so the Spending-by-Store
+  // bars on the dashboard can deep-link into a pre-filtered receipts list.
+  const initialSearch = searchParams.get('store') || ''
+  const [search, setSearch] = useState(initialSearch)
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState(EMPTY)
   const [file, setFile] = useState(null)
@@ -78,6 +82,15 @@ export default function ReceiptsPage() {
   useEffect(() => {
     try { localStorage.setItem('receipts_col_widths_v1', JSON.stringify(colWidths)) } catch {}
   }, [colWidths])
+
+  // Keep the search box in sync with ?store=... so coming back from the
+  // dashboard with a fresh store filter updates the visible filter even
+  // when this component was already mounted.
+  useEffect(() => {
+    const fromUrl = searchParams.get('store') || ''
+    if (fromUrl && fromUrl !== search) setSearch(fromUrl)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
   const startResize = useCallback((e, colId) => {
     e.preventDefault()
     e.stopPropagation()

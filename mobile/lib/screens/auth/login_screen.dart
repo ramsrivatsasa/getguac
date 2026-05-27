@@ -430,6 +430,34 @@ class _LoginScreenState extends State<LoginScreen> {
                                 style: TextStyle(color: Color(0xFF15803d), fontWeight: FontWeight.w600),
                               ),
                             ),
+                            // "How it works" — opens the auto-narrated
+                            // 13-slide presentation in the device browser.
+                            // Separator + outlined button so it reads as a
+                            // distinct action from "Create an account".
+                            const SizedBox(height: 4),
+                            Row(children: const [
+                              Expanded(child: Divider(color: Color(0xFFe5e7eb))),
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 10),
+                                child: Text('or',
+                                  style: TextStyle(fontSize: 11, color: Color(0xFF9ca3af), fontWeight: FontWeight.w600)),
+                              ),
+                              Expanded(child: Divider(color: Color(0xFFe5e7eb))),
+                            ]),
+                            const SizedBox(height: 6),
+                            OutlinedButton.icon(
+                              onPressed: () => UpdateService.openDownload('https://getguac.app/how-it-works'),
+                              icon: const Icon(Icons.play_circle_outline, color: Color(0xFF15803d), size: 18),
+                              label: const Text(
+                                "See how it works  ·  7-min tour",
+                                style: TextStyle(color: Color(0xFF15803d), fontWeight: FontWeight.w700),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: Color(0xFFa7f3d0), width: 1.2),
+                                padding: const EdgeInsets.symmetric(vertical: 10),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                            ),
                           ],
                         ),
                       ),

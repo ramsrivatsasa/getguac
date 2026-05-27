@@ -95,16 +95,17 @@ export async function DELETE(request, { params }) {
   }
 
   // Step 2: permanent delete. By default also remove the Migadu copy. The
-  // user can pass ?keepMigadu=1 to leave the mailbox untouched.
+  // user can pass ?keepMailbox=1 to leave the upstream mailbox untouched.
+  // Old query param ?keepMigadu=1 still accepted for backwards compatibility
+  // — the provider name is an internal detail and shouldn't leak to clients.
   const url = new URL(request.url)
-  const keepMigadu = url.searchParams.get('keepMigadu') === '1'
+  const keepMailbox = url.searchParams.get('keepMailbox') === '1'
+                   || url.searchParams.get('keepMigadu') === '1'
 
-  let migaduResult = { attempted: false }
-  if (!keepMigadu && row.uid && row.imap_folder) {
+  let mailboxResult = { attempted: false }
+  if (!keepMailbox && row.uid && row.imap_folder) {
     if (!process.env.MIGADU_API_KEY || !process.env.EMAIL_ENCRYPTION_KEY) {
-      // Mail infra not configured — skip silently, the user can still drop
-      // the local row. Don't fail the delete on infra-missing in dev envs.
-      migaduResult = { attempted: false, reason: 'email-infra-not-configured' }
+      mailboxResult = { attempted: false, reason: 'email-infra-not-configured' }
     } else {
       // Need service role to read the encrypted mailbox password (RLS hides
       // it from the user's own session).
@@ -123,25 +124,23 @@ export async function DELETE(request, { params }) {
             folder: row.imap_folder,
             uid: row.uid,
           })
-          migaduResult = { attempted: true, ok: r.ok }
+          mailboxResult = { attempted: true, ok: r.ok }
         } catch (e) {
-          // Don't block the local row delete just because IMAP failed —
-          // surface the error so the UI can warn the user.
-          migaduResult = { attempted: true, ok: false, error: e.message }
+          mailboxResult = { attempted: true, ok: false, error: e.message }
         }
       } else {
-        migaduResult = { attempted: false, reason: 'mailbox-not-provisioned' }
+        mailboxResult = { attempted: false, reason: 'mailbox-not-provisioned' }
       }
     }
-  } else if (keepMigadu) {
-    migaduResult = { attempted: false, reason: 'keepMigadu=1' }
+  } else if (keepMailbox) {
+    mailboxResult = { attempted: false, reason: 'keepMailbox=1' }
   } else {
-    migaduResult = { attempted: false, reason: 'no-uid-or-folder' }
+    mailboxResult = { attempted: false, reason: 'no-uid-or-folder' }
   }
 
   // Always remove the local row last — if IMAP fails we still want the
   // local UI to reflect the user's delete intent.
   const { error } = await sb.from('email_messages').delete().eq('id', params.id)
-  if (error) return Response.json({ error: error.message, migadu: migaduResult }, { status: 500 })
-  return Response.json({ ok: true, removed: true, migadu: migaduResult })
+  if (error) return Response.json({ error: error.message, mailbox: mailboxResult }, { status: 500 })
+  return Response.json({ ok: true, removed: true, mailbox: mailboxResult })
 }

@@ -52,7 +52,7 @@ const SLIDES = [
     subtitle: 'Built for online shopping',
     bullets: [
       ['Your own address', 'Pick any handle: you@getguac.app. Yours forever, free with every account.'],
-      ['Plus-tagging', 'Use you+g@getguac.app for receipts, you+amazon@getguac.app for Amazon — Migadu auto-files them into folders we poll.'],
+      ['Plus-tagging', 'Use you+g@getguac.app for receipts, you+amazon@getguac.app for Amazon — our mail server auto-files them into folders we poll.'],
       ['Real two-way mail', 'It is a full mailbox: open, read, reply, send. Not just a parsing trick.'],
       ['Shopping shield', 'Hand it out to merchants instead of your real email. Promos, spam, breaches stay outside your personal inbox.'],
     ],

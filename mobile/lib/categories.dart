@@ -40,6 +40,7 @@ const List<Category> kPresetCategories = [
   Category(slug: 'drinks',        label: 'Drinks',        emoji: '🥤', desc: 'Coffee, sodas, juice, shakes',              color: 'red',     healthTier: 'treat'),
   Category(slug: 'subs',          label: 'Subs',          emoji: '🔁', desc: 'Streaming + subscriptions',                 color: 'violet',  healthTier: 'neutral'),
   Category(slug: 'bills',         label: 'Bills',         emoji: '💡', desc: 'Utilities',                                 color: 'sky',     healthTier: 'neutral'),
+  Category(slug: 'bank-fees',     label: 'Bank Fees',     emoji: '💸', desc: 'Interest, finance charges, fees',           color: 'red',     healthTier: 'neutral'),
   Category(slug: 'tech',          label: 'Tech',          emoji: '📱', desc: 'Electronics & gadgets',                     color: 'sky',     healthTier: 'neutral'),
   Category(slug: 'big-stuff',     label: 'Big Stuff',     emoji: '🔌', desc: 'Appliances & large purchases',              color: 'indigo',  healthTier: 'neutral'),
   Category(slug: 'fix-it',        label: 'Fix-It',        emoji: '🛠️', desc: 'Home maintenance & tools',                  color: 'amber',   healthTier: 'neutral'),

@@ -15,6 +15,10 @@ const RULES = [
   { slug: 'tea',           re: /\b(tea|matcha|chai|oolong|earl ?grey|chamomile|green ?tea|black ?tea)\b/i },
   { slug: 'drinks',        re: /\b(coffee|latte|espresso|mocha|cappuccino|americano|cold ?brew|frappuccino|starbucks|dunkin|peet'?s|nespresso|keurig|coca[- ]?cola|coke(?! ?zero)?|cherry coke|coke ?\d?l|pepsi|mountain ?dew|mtn ?dew|mtn-?dew|sprite|fanta|7[- ]?up|dr ?pepper|root ?beer|ginger ?ale|milk ?shake|frosty|smoothie king|juice|\boj\b|minute maid|tropicana|simply orange|naked juice|pomegranate juice|gatorade|powerade|vitamin ?water|red bull|monster|rockstar|celsius)\b/i },
   { slug: 'bars',          re: /\b(beer|ipa|lager|ale|stout|pilsner|porter|budweiser|coors|miller|heineken|guinness|wine|cabernet|merlot|chardonnay|sauvignon|pinot|tequila|vodka|whiskey|whisky|bourbon|scotch|gin|rum|cocktail|margarita|martini|mojito|champagne|prosecco|sake)\b/i },
+  // Bank fees — anything the cardholder paid the bank itself for. Match
+  // before generic "fee" so a "service fee" at a restaurant doesn't get
+  // misrouted — the bank-fee keywords are specific to issuer statements.
+  { slug: 'bank-fees',     re: /\b(balance ?transfer( fee)?|purchase interest|interest charge|finance charge|annual fee|late fee|overdraft( fee)?|atm fee|foreign transaction fee|cash advance fee|returned payment( fee)?|monthly (service|maintenance) fee|wire (transfer )?fee|nsf fee|over[- ]?limit fee)\b/i },
   { slug: 'gas-up',        re: /\b(unleaded|regular gas|premium gas|diesel|fuel|gasoline|gallons?)\b/i },
   { slug: 'health',        re: /\b(vitamin|multivitamin|protein ?(powder|bar|shake)?|whey|creatine|bcaa|electrolyte|supplement|fish ?oil|omega[- ]?3|magnesium|biotin|collagen|melatonin|probiotic|elderberry|ashwagandha)\b/i },
   { slug: 'pharmacy',      re: /\b(advil|tylenol|aspirin|ibuprofen|acetaminophen|naproxen|aleve|benadryl|claritin|zyrtec|allegra|prescription|rx |pharmacy|band[- ]?aid|bandages?|antiseptic|hydrogen peroxide|cough drops?|nyquil|dayquil|sudafed|mucinex|robitussin)\b/i },

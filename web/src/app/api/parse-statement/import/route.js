@@ -119,7 +119,14 @@ export async function POST(request) {
         date:              t.date,
         total_amount:      amount,
         tax_paid:          0,
-        category:          (t.is_fee || t.is_interest || t.is_payment) ? 'misc' : (t.category || 'misc'),
+        // Bank-issued charges (interest, finance fees, late fees, balance
+        // transfer fees, etc.) all route to the dedicated 'bank-fees' slug
+        // so the donut + reports don't dump them into Misc. Card-payment
+        // rows stay in 'misc' — they're audit-only ledger entries, not
+        // expenses.
+        category:          (t.is_fee || t.is_interest) ? 'bank-fees'
+                          : t.is_payment ? 'misc'
+                          : (t.category || 'misc'),
         business_purchase: isBusiness,
         payment_method:    issuer ? `${issuer} card` : 'Card',
         payment_last4:     last4,

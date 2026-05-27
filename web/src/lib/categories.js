@@ -14,6 +14,7 @@ export const CATEGORIES = [
   { slug: 'drinks',        label: 'Drinks',        emoji: '🥤', desc: 'Coffee, sodas, juice, shakes — non-tea, non-alcohol beverages', color: 'red',  health_tier: 'treat' },
   { slug: 'subs',          label: 'Subs',          emoji: '🔁', desc: 'Streaming + recurring subscriptions',       color: 'violet',  health_tier: 'neutral' },
   { slug: 'bills',         label: 'Bills',         emoji: '💡', desc: 'Utilities — mobile, internet, power',       color: 'sky',     health_tier: 'neutral' },
+  { slug: 'bank-fees',     label: 'Bank Fees',     emoji: '💸', desc: 'Interest, finance charges, balance-transfer fees, annual/late/ATM/foreign-transaction fees', color: 'red', health_tier: 'neutral' },
   { slug: 'tech',          label: 'Tech',          emoji: '📱', desc: 'Electronics, gadgets, computers',           color: 'sky',     health_tier: 'neutral' },
   { slug: 'big-stuff',     label: 'Big Stuff',     emoji: '🔌', desc: 'Appliances & large purchases',              color: 'indigo',  health_tier: 'neutral' },
   { slug: 'fix-it',        label: 'Fix-It',        emoji: '🛠️', desc: 'Home maintenance, hardware, tools',         color: 'amber',   health_tier: 'neutral' },

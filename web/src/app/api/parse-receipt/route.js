@@ -42,7 +42,7 @@ Return ONLY a single JSON object. No prose, no markdown fences. Schema:
   "is_return": boolean,
   "is_receipt": boolean,                 // TRUE for any receipt / invoice / order confirmation. FALSE for non-receipt photos (selfie, cat, landscape, blank paper, screenshot of something else).
   "non_receipt_subject": string|null,    // When is_receipt=false: short 2-3 word description of what you DID see, lowercase ("a person", "a cat", "a sunset", "a blank page", "a screenshot of a chat"). When is_receipt=true: null.
-  "category": string|null,               // ONE of: "grub", "eats", "bars", "tea", "drinks", "subs", "bills", "tech", "big-stuff", "fix-it", "outdoors", "supplies", "fits", "pharmacy", "health", "personal-care", "household", "gas-up", "fun", "gifting", "charity", "misc"
+  "category": string|null,               // ONE of: "grub", "eats", "bars", "tea", "drinks", "subs", "bills", "bank-fees", "tech", "big-stuff", "fix-it", "outdoors", "supplies", "fits", "pharmacy", "health", "personal-care", "household", "gas-up", "fun", "gifting", "charity", "misc"
   "items": [
     { "sku": string|null, "model": string|null, "item_name": string, "qty": number, "price": number, "category": string|null, "health_tier": "healthy"|"neutral"|"treat"|"harmful"|null, "refund_policy_id": string|null, "returned": boolean }
   ],

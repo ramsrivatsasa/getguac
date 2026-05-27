@@ -352,23 +352,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
             label: const Text('Diagnose biometric'),
           ),
 
-          // Debug log — surfaces the in-app event log AND uploads it to the
-          // server so we can triage failures without the user having to read
-          // anything out loud.
-          TextButton.icon(
-            onPressed: () => _showDebugLog(),
-            icon: const Icon(Icons.bug_report_outlined, size: 16),
-            label: const Text('View / upload debug log'),
-          ),
+          // Diagnostic + support actions, styled as _Pill tiles to match
+          // the Security / Privacy / dashboard quick-action row. Two per
+          // line so they fit on a narrow phone without horizontal scroll.
+          const SizedBox(height: 6),
+          Row(children: [
+            Expanded(child: _Pill(
+              gradient: const [Color(0xFFfde68a), Color(0xFFd97706)],
+              icon: Icons.bug_report_outlined, title: 'Debug log', subtitle: 'View / upload',
+              onTap: () => _showDebugLog(),
+            )),
+            const SizedBox(width: 10),
+            Expanded(child: _Pill(
+              gradient: const [Color(0xFFfecdd3), Color(0xFFbe123c)],
+              icon: Icons.report_problem_outlined, title: 'Report a problem', subtitle: 'Tell us what broke',
+              onTap: () => context.go('/report-problem'),
+            )),
+          ]),
 
-          // Report a problem — free-form subject + description that gets
-          // bundled with the recent debug log and uploaded to audit_log.
-          TextButton.icon(
-            onPressed: () => context.go('/report-problem'),
-            icon: const Icon(Icons.report_problem_outlined, size: 16),
-            label: const Text('Report a problem'),
-          ),
-
+          const SizedBox(height: 10),
           Row(children: [
             Expanded(child: _Pill(
               gradient: const [Color(0xFFa7f3d0), Color(0xFF15803d)],

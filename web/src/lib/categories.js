@@ -1,22 +1,35 @@
 // Spending categories with catchy short names + emojis + colors.
 // These live in one place so the picker, badge, parser, and analytics agree.
+//
+// health_tier on each preset is the default healthiness signal that flows into
+// the future Guac Health Score. Per-item override lives on receipt_items.health_tier.
+// Tiers: 'healthy' | 'neutral' | 'treat' | 'harmful'.
+export const HEALTH_TIERS = ['healthy', 'neutral', 'treat', 'harmful']
+
 export const CATEGORIES = [
-  { slug: 'grub',       label: 'Grub',      emoji: '🥑', desc: 'Groceries & food shopping',           color: 'emerald' },
-  { slug: 'eats',       label: 'Eats',      emoji: '🍽️', desc: 'Restaurants & dining',                color: 'orange' },
-  { slug: 'subs',       label: 'Subs',      emoji: '🔁', desc: 'Streaming + recurring subscriptions', color: 'violet' },
-  { slug: 'bills',      label: 'Bills',     emoji: '💡', desc: 'Utilities — mobile, internet, power', color: 'sky' },
-  { slug: 'tech',       label: 'Tech',      emoji: '📱', desc: 'Electronics, gadgets, computers',     color: 'sky' },
-  { slug: 'big-stuff',  label: 'Big Stuff', emoji: '🔌', desc: 'Appliances & large purchases',        color: 'indigo' },
-  { slug: 'fix-it',     label: 'Fix-It',    emoji: '🛠️', desc: 'Home maintenance, hardware, tools',   color: 'amber' },
-  { slug: 'outdoors',   label: 'Outdoors',  emoji: '🌳', desc: 'Garden, yard, plants',                color: 'lime' },
-  { slug: 'supplies',   label: 'Supplies',  emoji: '📎', desc: 'Stationery, office & school supplies', color: 'indigo' },
-  { slug: 'fits',       label: 'Fits',      emoji: '👔', desc: 'Clothing & shoes',                    color: 'fuchsia' },
-  { slug: 'wellness',   label: 'Wellness',  emoji: '💊', desc: 'Pharmacy, health, fitness',           color: 'rose' },
-  { slug: 'gas-up',     label: 'Gas Up',    emoji: '⛽', desc: 'Fuel & auto service',                 color: 'red' },
-  { slug: 'fun',        label: 'Fun',       emoji: '🎬', desc: 'Entertainment, concerts, gaming',      color: 'violet' },
-  { slug: 'gifting',    label: 'Gifting',   emoji: '🎁', desc: 'Gifts for others',                    color: 'pink' },
-  { slug: 'charity',    label: 'Charity',   emoji: '❤️', desc: 'Donations, tithes, contributions',    color: 'rose' },
-  { slug: 'misc',       label: 'Misc',      emoji: '📦', desc: 'Anything else',                       color: 'gray' },
+  { slug: 'grub',       label: 'Grub',      emoji: '🥑', desc: 'Groceries & food shopping',                color: 'emerald', health_tier: 'neutral' },
+  { slug: 'eats',       label: 'Eats',      emoji: '🍽️', desc: 'Restaurants & dining',                      color: 'orange',  health_tier: 'neutral' },
+  { slug: 'bars',       label: 'Bars',      emoji: '🍻', desc: 'Bars, beer, wine & spirits',                color: 'fuchsia', health_tier: 'treat'   },
+  { slug: 'coffee',     label: 'Coffee',    emoji: '☕', desc: 'Coffee shops & beans',                      color: 'amber',   health_tier: 'neutral' },
+  { slug: 'tea',        label: 'Tea',       emoji: '🍵', desc: 'Tea & matcha',                              color: 'emerald', health_tier: 'healthy' },
+  { slug: 'coke',       label: 'Coke',      emoji: '🥤', desc: 'Coca-Cola & sugary cola',                   color: 'red',     health_tier: 'harmful' },
+  { slug: 'pepsi',      label: 'Pepsi',     emoji: '🥤', desc: 'Pepsi & sugary cola',                       color: 'sky',     health_tier: 'harmful' },
+  { slug: 'juice',      label: 'Juice',     emoji: '🧃', desc: 'Fruit & vegetable juices',                  color: 'orange',  health_tier: 'treat'   },
+  { slug: 'milkshake',  label: 'Milkshake', emoji: '🥛', desc: 'Milkshakes & sweet dairy drinks',           color: 'pink',    health_tier: 'harmful' },
+  { slug: 'subs',       label: 'Subs',      emoji: '🔁', desc: 'Streaming + recurring subscriptions',       color: 'violet',  health_tier: 'neutral' },
+  { slug: 'bills',      label: 'Bills',     emoji: '💡', desc: 'Utilities — mobile, internet, power',       color: 'sky',     health_tier: 'neutral' },
+  { slug: 'tech',       label: 'Tech',      emoji: '📱', desc: 'Electronics, gadgets, computers',           color: 'sky',     health_tier: 'neutral' },
+  { slug: 'big-stuff',  label: 'Big Stuff', emoji: '🔌', desc: 'Appliances & large purchases',              color: 'indigo',  health_tier: 'neutral' },
+  { slug: 'fix-it',     label: 'Fix-It',    emoji: '🛠️', desc: 'Home maintenance, hardware, tools',         color: 'amber',   health_tier: 'neutral' },
+  { slug: 'outdoors',   label: 'Outdoors',  emoji: '🌳', desc: 'Garden, yard, plants',                      color: 'lime',    health_tier: 'healthy' },
+  { slug: 'supplies',   label: 'Supplies',  emoji: '📎', desc: 'Stationery, office & school supplies',      color: 'indigo',  health_tier: 'neutral' },
+  { slug: 'fits',       label: 'Fits',      emoji: '👔', desc: 'Clothing & shoes',                          color: 'fuchsia', health_tier: 'neutral' },
+  { slug: 'wellness',   label: 'Wellness',  emoji: '💊', desc: 'Pharmacy, health, fitness',                 color: 'rose',    health_tier: 'healthy' },
+  { slug: 'gas-up',     label: 'Gas Up',    emoji: '⛽', desc: 'Fuel & auto service',                       color: 'red',     health_tier: 'neutral' },
+  { slug: 'fun',        label: 'Fun',       emoji: '🎬', desc: 'Entertainment, concerts, gaming',           color: 'violet',  health_tier: 'neutral' },
+  { slug: 'gifting',    label: 'Gifting',   emoji: '🎁', desc: 'Gifts for others',                          color: 'pink',    health_tier: 'neutral' },
+  { slug: 'charity',    label: 'Charity',   emoji: '❤️', desc: 'Donations, tithes, contributions',          color: 'rose',    health_tier: 'neutral' },
+  { slug: 'misc',       label: 'Misc',      emoji: '📦', desc: 'Anything else',                             color: 'gray',    health_tier: 'neutral' },
 ]
 
 // Optional fine-grained tags per category. These live alongside the
@@ -37,6 +50,12 @@ export const SUB_TAGS_BY_CATEGORY = {
     { slug: 'frozen',     emoji: '🧊', label: 'Frozen' },
     { slug: 'beverages',  emoji: '🥤', label: 'Beverages' },
     { slug: 'household',  emoji: '🧻', label: 'Household' },
+  ],
+  bars: [
+    { slug: 'beer',       emoji: '🍺', label: 'Beer' },
+    { slug: 'wine',       emoji: '🍷', label: 'Wine' },
+    { slug: 'cocktail',   emoji: '🍸', label: 'Cocktail' },
+    { slug: 'spirits',    emoji: '🥃', label: 'Spirits' },
   ],
   bills: [
     { slug: 'mobile',      emoji: '📱', label: 'Mobile' },
@@ -107,4 +126,10 @@ export function categoryClass(slug) {
 export function categoryLabel(slug) {
   const c = CATEGORY_BY_SLUG[slug]
   return c ? `${c.emoji} ${c.label}` : '— Uncategorized'
+}
+
+// Health tier of a preset slug. Returns 'neutral' as a safe default.
+// Per-item overrides (receipt_items.health_tier) take precedence at the analytics layer.
+export function healthTierFor(slug) {
+  return CATEGORY_BY_SLUG[slug]?.health_tier || 'neutral'
 }

@@ -2,12 +2,19 @@
 import { useState } from 'react'
 import toast from 'react-hot-toast'
 import { useCategories, useCreateCategory, categoryClass } from '../hooks/useCategories'
+import { HEALTH_TIERS } from '../lib/categories'
+import EmojiCatalog from './EmojiCatalog'
+
 // Drop-in category dropdown. Shows presets + user custom categories, plus a
 // "+ New category" option that pops a quick-create modal. Calls onChange(slug).
 //
+// Default `size` is now comfortably tappable (≥32 px). Use size="xs" only when
+// the chip lives in a dense table cell (e.g. receipt line items).
+//
 // Usage:
 //   <CategoryPicker value={item.category} onChange={(slug) => save(slug)} />
-export default function CategoryPicker({ value, onChange, className = '', size = 'sm', disabled = false, allowClear = true }) {
+//   <CategoryCreatePill onCreated={(slug) => save(slug)} />   // separate "+ New" affordance
+export default function CategoryPicker({ value, onChange, className = '', size = 'md', disabled = false, allowClear = true }) {
   const { categories } = useCategories()
   const [modalOpen, setModalOpen] = useState(false)
 
@@ -17,9 +24,13 @@ export default function CategoryPicker({ value, onChange, className = '', size =
     onChange(v || null)
   }
 
-  const cls = `font-semibold rounded-full border focus:outline-none cursor-pointer font-sans ${categoryClass(value)} ${
-    size === 'sm' ? 'text-[10px] px-2 py-0.5' : 'text-xs px-3 py-1'
-  } ${className}`
+  const sizeCls = size === 'xs'
+    ? 'text-[10px] px-2 py-0.5'
+    : size === 'sm'
+      ? 'text-xs px-2.5 py-1'
+      : 'text-xs px-3 py-1.5'
+
+  const cls = `font-semibold rounded-full border focus:outline-none cursor-pointer font-sans ${categoryClass(value)} ${sizeCls} ${className}`
 
   return (
     <>
@@ -44,6 +55,27 @@ export default function CategoryPicker({ value, onChange, className = '', size =
   )
 }
 
+// Standalone "+ New" pill — shown alongside CategoryPicker on roomy surfaces
+// (Stash cards, receipt details) so users don't have to open the dropdown
+// just to discover the create-category flow.
+export function CategoryCreatePill({ onCreated, className = '' }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        title="Create a new category"
+        className={`inline-flex items-center gap-1 rounded-full border border-dashed border-emerald-400 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 ${className}`}
+      >
+        <span className="text-base leading-none">＋</span>
+        <span>New</span>
+      </button>
+      <CategoryCreateModal open={open} onClose={() => setOpen(false)} onCreated={onCreated} />
+    </>
+  )
+}
+
 const COLOR_OPTIONS = [
   { key: 'emerald', dot: 'bg-emerald-500' },
   { key: 'sky',     dot: 'bg-sky-500' },
@@ -59,13 +91,19 @@ const COLOR_OPTIONS = [
   { key: 'gray',    dot: 'bg-gray-500' },
 ]
 
-const EMOJI_SUGGESTIONS = ['📦','🥑','🍕','📱','🛠️','🚗','👕','💊','🎁','🐶','✈️','🏠','📚','🎵','💡','🌱','🛏️','💄','💼','🎮']
+const TIER_LABELS = {
+  healthy: 'Healthy 🥦',
+  neutral: 'Neutral 🥖',
+  treat:   'Treat 🍰',
+  harmful: 'Unhealthy 🍩',
+}
 
 export function CategoryCreateModal({ open, onClose, onCreated }) {
   const create = useCreateCategory()
   const [label, setLabel] = useState('')
   const [emoji, setEmoji] = useState('📦')
   const [color, setColor] = useState('emerald')
+  const [healthTier, setHealthTier] = useState('neutral')
 
   if (!open) return null
 
@@ -73,10 +111,10 @@ export function CategoryCreateModal({ open, onClose, onCreated }) {
     e.preventDefault()
     if (!label.trim()) return
     try {
-      const cat = await create.mutateAsync({ label, emoji, color })
+      const cat = await create.mutateAsync({ label, emoji, color, health_tier: healthTier })
       toast.success(`Category "${cat.label}" created`)
       onCreated?.(cat.slug)
-      setLabel(''); setEmoji('📦'); setColor('emerald')
+      setLabel(''); setEmoji('📦'); setColor('emerald'); setHealthTier('neutral')
       onClose()
     } catch (err) {
       toast.error(err.message)
@@ -88,7 +126,7 @@ export function CategoryCreateModal({ open, onClose, onCreated }) {
       <form
         onSubmit={handleSave}
         onClick={e => e.stopPropagation()}
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-5 space-y-4">
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-5 space-y-4 max-h-[92vh] overflow-y-auto">
         <div className="flex items-center gap-2">
           <span className="text-2xl">{emoji}</span>
           <h3 className="font-bold text-lg">New category</h3>
@@ -96,23 +134,13 @@ export function CategoryCreateModal({ open, onClose, onCreated }) {
 
         <div>
           <label className="label">Name</label>
-          <input autoFocus className="input" placeholder="e.g. Pet supplies"
+          <input autoFocus className="input text-base py-2.5" placeholder="e.g. Pet supplies"
             value={label} onChange={e => setLabel(e.target.value)} maxLength={40} />
         </div>
 
         <div>
           <label className="label">Emoji</label>
-          <div className="flex flex-wrap gap-1.5">
-            {EMOJI_SUGGESTIONS.map(e => (
-              <button
-                key={e} type="button" onClick={() => setEmoji(e)}
-                className={`w-9 h-9 rounded-xl text-lg flex items-center justify-center transition-all ${
-                  emoji === e ? 'bg-emerald-100 ring-2 ring-emerald-500 scale-110' : 'bg-gray-50 hover:bg-emerald-50'
-                }`}>{e}</button>
-            ))}
-          </div>
-          <input className="input mt-2 text-sm" placeholder="Or type any emoji"
-            value={emoji} onChange={e => setEmoji(e.target.value.slice(0, 4))} />
+          <EmojiCatalog value={emoji} onPick={setEmoji} />
         </div>
 
         <div>
@@ -126,6 +154,15 @@ export function CategoryCreateModal({ open, onClose, onCreated }) {
                 }`} />
             ))}
           </div>
+        </div>
+
+        <div>
+          <label className="label">Health tier <span className="text-gray-400 font-normal">(for the future Guac Health Score)</span></label>
+          <select className="input" value={healthTier} onChange={e => setHealthTier(e.target.value)}>
+            {HEALTH_TIERS.map(t => (
+              <option key={t} value={t}>{TIER_LABELS[t]}</option>
+            ))}
+          </select>
         </div>
 
         <div className="flex gap-2 pt-2">

@@ -12,7 +12,7 @@ export function useCategories() {
 
   const all = [
     ...PRESETS.map(c => ({ ...c, custom: false })),
-    ...custom.map(c => ({ slug: c.slug, label: c.label, emoji: c.emoji, color: c.color, custom: true, id: c.id })),
+    ...custom.map(c => ({ slug: c.slug, label: c.label, emoji: c.emoji, color: c.color, health_tier: c.health_tier || 'neutral', custom: true, id: c.id })),
   ]
   const bySlug = Object.fromEntries(all.map(c => [c.slug, c]))
   return { categories: all, bySlug, custom }

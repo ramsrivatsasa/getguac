@@ -424,6 +424,7 @@ export default function ReceiptDetailPage() {
                     <td className="px-3 py-1 font-medium">{item.item_name}</td>
                     <td className="px-3 py-1">
                       <CategoryPicker
+                        size="xs"
                         value={item.category}
                         onChange={(slug) => recat.mutate({ slug, item })}
                         disabled={recat.isPending}

@@ -9,7 +9,7 @@ import {
 import { useQueryClient, useMutation } from '@tanstack/react-query'
 import { getStashItems, addToShoppingList, setStashProductCategory } from '../../../lib/db'
 import { CATEGORIES, CATEGORY_BY_SLUG, categoryClass } from '../../../lib/categories'
-import CategoryPicker from '../../../components/CategoryPicker'
+import CategoryPicker, { CategoryCreatePill } from '../../../components/CategoryPicker'
 import GuacMascot from '../../../components/GuacMascot'
 import BestPricesModal from '../../../components/BestPricesModal'
 
@@ -387,11 +387,14 @@ const ProductCard = memo(function ProductCard({ item, expanded, onToggle, onAddT
             </div>
           </div>
           <div className="flex flex-col items-end gap-1 shrink-0">
-            <CategoryPicker
-              value={item.category}
-              onChange={(slug) => recategorize.mutate(slug)}
-              disabled={recategorize.isPending}
-            />
+            <div className="flex items-center gap-1">
+              <CategoryPicker
+                value={item.category}
+                onChange={(slug) => recategorize.mutate(slug)}
+                disabled={recategorize.isPending}
+              />
+              <CategoryCreatePill onCreated={(slug) => recategorize.mutate(slug)} />
+            </div>
             {isMulti && (
               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-white/80 text-amber-800 border border-amber-200 shadow-sm">
                 🏬 {item.store_count}

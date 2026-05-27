@@ -10,6 +10,7 @@ import '../../providers/receipt_provider.dart';
 import '../../providers/reward_provider.dart';
 import '../../models/receipt_model.dart';
 import '../../services/receipt_parse_service.dart';
+import '../../services/document_scanner_service.dart';
 import '../../widgets/guac_mascot.dart';
 import '../../utils/date_format.dart';
 
@@ -71,34 +72,58 @@ class _DashboardScreenState extends State<DashboardScreen> {
   /// Retake / Done — Add another is hidden.
   static const _kMaxBatchSize = 3;
 
-  /// Capture flow: collect photos first (capped at _kMaxBatchSize), parse
-  /// the whole batch once at the end. Used to parse between each shot,
-  /// which made the camera reopen feel slow (5-15s per receipt). Now the
-  /// loop just grabs photos; the AI only runs after the user is Done.
+  /// Capture flow.
+  ///
+  /// Two paths the user can pick from the bottom sheet:
+  ///
+  /// (1) Scan receipt — Google ML Kit Document Scanner. The scanner handles
+  ///     its OWN multi-page session (live edge detection, perspective
+  ///     correction, "Add page" button). When the user is done it returns
+  ///     N cleaned page images for what is treated as ONE receipt. We send
+  ///     them as a single multi-image request to /api/parse-receipt and
+  ///     get back one parsed receipt. Long CVS / grocery receipts that
+  ///     don't fit in one frame work here.
+  ///
+  /// (2) Choose from gallery — existing batch loop. Each gallery pick is
+  ///     treated as a SEPARATE receipt (typical use: 3 unrelated receipts
+  ///     to upload). Preview screen with Retry / Add another / Done caps
+  ///     at _kMaxBatchSize photos.
   Future<void> _captureReceipt() async {
     final source = await _askImageSource();
     if (source == null || !mounted) return;
+
+    if (source == _CaptureSource.scanner) {
+      List<File>? pages;
+      try {
+        pages = await DocumentScannerService.scan(pageLimit: 5);
+      } catch (e) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text("Couldn't open scanner: $e"),
+        ));
+        return;
+      }
+      if (pages == null || pages.isEmpty || !mounted) return;
+      // ML Kit-cleaned pages are sent as ONE multi-page receipt.
+      await _processScannerResult(pages);
+      return;
+    }
+
+    // Gallery path: each pick is a SEPARATE receipt (batch).
     final picker = ImagePicker();
     final List<File> queue = [];
 
     while (mounted) {
-      final img = await picker.pickImage(source: source, imageQuality: 80);
+      final img = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
       if (img == null || !mounted) break;
       final file = File(img.path);
 
-      // Preview screen — Retry / Add another / Done. "Add another" is
-      // hidden on the LAST allowed photo (queued.length + 1 == max) so
-      // the user can't push the queue past _kMaxBatchSize.
       final action = await _showCapturePreview(file, queue.length, _kMaxBatchSize);
       if (!mounted) break;
       switch (action) {
         case _PreviewAction.retry:
-          continue; // discard, reopen picker
+          continue;
         case _PreviewAction.addAnother:
           queue.add(file);
-          // Hard guard in case the preview screen lets Add-another through
-          // when it shouldn't have (defense in depth — also avoids a future
-          // refactor accidentally bypassing the cap).
           if (queue.length >= _kMaxBatchSize) {
             if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
               content: Text('Batch is full ($_kMaxBatchSize photos). Tap Done to parse them.'),
@@ -106,20 +131,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ));
             break;
           }
-          continue; // queue and reopen picker
+          continue;
         case _PreviewAction.done:
           queue.add(file);
           break;
       }
-      break; // done OR cap reached
+      break;
     }
 
     if (queue.isEmpty || !mounted) return;
     await _processBatch(queue);
   }
 
-  Future<ImageSource?> _askImageSource() async {
-    return showModalBottomSheet<ImageSource>(
+  Future<_CaptureSource?> _askImageSource() async {
+    return showModalBottomSheet<_CaptureSource>(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -132,21 +157,124 @@ class _DashboardScreenState extends State<DashboardScreen> {
               style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Color(0xFF064e3b))),
           ),
           ListTile(
-            leading: const Icon(Icons.camera_alt, color: _kEmerald700),
-            title: const Text('Take a photo'),
-            subtitle: const Text('Snap one or more receipts with the camera'),
-            onTap: () => Navigator.of(ctx).pop(ImageSource.camera),
+            leading: const Icon(Icons.document_scanner_outlined, color: _kEmerald700),
+            title: const Text('Scan receipt'),
+            subtitle: const Text(
+              'Auto-cropped, multi-page. Best for long receipts that don\'t fit in one frame.',
+            ),
+            onTap: () => Navigator.of(ctx).pop(_CaptureSource.scanner),
           ),
           ListTile(
             leading: const Icon(Icons.photo_library_outlined, color: _kEmerald700),
             title: const Text('Choose from gallery'),
-            subtitle: const Text('Pick an existing photo'),
-            onTap: () => Navigator.of(ctx).pop(ImageSource.gallery),
+            subtitle: const Text('Pick one or more existing photos — each is a separate receipt.'),
+            onTap: () => Navigator.of(ctx).pop(_CaptureSource.gallery),
           ),
           const SizedBox(height: 8),
         ]),
       ),
     );
+  }
+
+  /// Multi-page parse + save for a single long receipt scanned via ML Kit.
+  /// All pages go to /api/parse-receipt in one shot; one receipt row gets
+  /// inserted. Receipt_link points at the first page; subsequent pages are
+  /// uploaded to storage but not yet linked (DB schema for that is queued).
+  Future<void> _processScannerResult(List<File> pages) async {
+    final uid = context.read<AppAuthProvider>().currentUser?.id;
+    if (uid == null || !mounted) return;
+    final provider = context.read<ReceiptProvider>();
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        content: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2)),
+            const SizedBox(width: 14),
+            Flexible(child: Text('Guac-AI is reading ${pages.length} page${pages.length == 1 ? "" : "s"}…')),
+          ]),
+        ),
+      ),
+    );
+
+    try {
+      ParseResult result = await ReceiptParseService.parseImages(pages);
+      // One retry on transient errors.
+      if (!result.ok && _looksTransient(result.error)) {
+        result = await ReceiptParseService.parseImages(pages);
+      }
+      if (!mounted) return;
+      Navigator.of(context, rootNavigator: true).pop(); // loader
+
+      if (!result.ok) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(result.error ?? 'Parse failed'),
+          duration: const Duration(seconds: 5),
+        ));
+        return;
+      }
+
+      final parsed = result.data!;
+      // Duplicate check — same key as single-shot.
+      final today = DateTime.now().toIso8601String().substring(0, 10);
+      final dupDate = (parsed.date != null && parsed.date!.isNotEmpty) ? parsed.date! : today;
+      if (parsed.storeName.isNotEmpty && parsed.totalAmount > 0) {
+        final dup = await provider.findDuplicate(
+          storeName: parsed.storeName,
+          date: dupDate,
+          totalAmount: parsed.totalAmount,
+        );
+        if (dup != null) {
+          if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Duplicate of an existing receipt: ${parsed.storeName} · \$${parsed.totalAmount.toStringAsFixed(2)}'),
+            duration: const Duration(seconds: 4),
+          ));
+          return;
+        }
+      }
+
+      final asMap = <String, dynamic>{
+        'store_name': parsed.storeName,
+        'date': parsed.date,
+        'total_amount': parsed.totalAmount,
+        'tax_paid': parsed.taxPaid,
+        'payment_method': parsed.paymentMethod,
+        'payment_last4': parsed.paymentLast4,
+        'is_return': parsed.isReturn,
+        'category': parsed.category,
+        'items': parsed.items.map((it) => {
+          'sku': it.sku, 'model': it.model, 'item_name': it.itemName,
+          'qty': it.qty, 'price': it.price,
+          'returned': it.returned, 'category': it.category,
+        }).toList(),
+      };
+      // Receipt_link points at the first page (the rest get uploaded by the
+      // provider too but aren't linked yet — minor schema change pending).
+      final insert = await provider.addParsedReceipt(asMap, pages.first);
+      if (!mounted) return;
+      if (insert.id == null) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Insert failed: ${insert.error ?? "unknown reason"}'),
+        ));
+        return;
+      }
+      final id = insert.id!;
+      final storeBit = parsed.storeName.isNotEmpty ? parsed.storeName : 'Receipt';
+      final totalBit = parsed.totalAmount > 0 ? ' · \$${parsed.totalAmount.toStringAsFixed(2)}' : '';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('$storeBit$totalBit — ${parsed.items.length} item${parsed.items.length == 1 ? "" : "s"} from ${pages.length} page${pages.length == 1 ? "" : "s"}'),
+        action: SnackBarAction(label: 'View', onPressed: () => context.go('/receipts/$id')),
+        duration: const Duration(seconds: 4),
+      ));
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Scan failed: $e')));
+      }
+    }
   }
 
   /// Full-screen preview after a capture. [queued] is how many photos are
@@ -1285,6 +1413,11 @@ class _StoreSpend {
   int count;
   _StoreSpend({required this.name, required this.amount, required this.count});
 }
+
+/// Top-level pick on the capture entry sheet — scanner (multi-page,
+/// auto-cropped, treated as ONE receipt) vs. gallery (multi-pick, each
+/// treated as a SEPARATE receipt).
+enum _CaptureSource { scanner, gallery }
 
 /// Choice the user makes on the preview screen after a capture.
 enum _PreviewAction {

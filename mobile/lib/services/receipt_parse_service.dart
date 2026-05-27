@@ -115,6 +115,96 @@ class ReceiptParseService {
   /// Upload [file] to the web parse-receipt endpoint and return a ParseResult.
   /// Distinguishes network failures, server errors, timeouts, and empty AI
   /// reads so the caller can show the user a real explanation.
+  /// Multi-page parse — sends every page as `file_1`, `file_2`, … on a
+  /// single multipart request to /api/parse-receipt. The server bundles
+  /// them into one Gemini Vision call and returns a single parsed
+  /// receipt. Used by the ML Kit Document Scanner flow where one long
+  /// CVS-style receipt becomes 2-5 page images.
+  ///
+  /// Falls back to single-page if only one file is supplied.
+  static Future<ParseResult> parseImages(List<File> files) async {
+    if (files.isEmpty) return const ParseResult.fail('No pages supplied.');
+    if (files.length == 1) return parseImage(files.first);
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session == null) {
+      DebugLog.event('parse-receipt', 'no session (multi)', level: 'warn');
+      return const ParseResult.fail('Not signed in.');
+    }
+    DebugLog.event('parse-receipt', 'POST multi-page start', meta: {
+      'pages': files.length,
+    });
+    try {
+      final uri = Uri.parse('$_kApiBase/api/parse-receipt');
+      final req = http.MultipartRequest('POST', uri);
+      req.headers['Authorization'] = 'Bearer ${session.accessToken}';
+      for (int i = 0; i < files.length; i++) {
+        final f = files[i];
+        final mime = _mimeFromExtension(f.path);
+        final parts = mime.split('/');
+        req.files.add(await http.MultipartFile.fromPath(
+          'file_${i + 1}', f.path,
+          contentType: MediaType(parts[0], parts.length > 1 ? parts[1] : 'jpeg'),
+        ));
+      }
+      // Multi-page receipts can have a lot of items + long Gemini text;
+      // give the server a generous timeout (Vercel maxDuration is 60s).
+      final streamed = await req.send().timeout(const Duration(seconds: 55));
+      final body = await streamed.stream.bytesToString();
+      if (streamed.statusCode != 200) {
+        String reason = 'Server error (${streamed.statusCode}).';
+        try {
+          final m = jsonDecode(body) as Map<String, dynamic>;
+          if (m['error'] != null) reason = m['error'].toString();
+        } catch (_) {}
+        DebugLog.event('parse-receipt', 'multi-page http $reason',
+          level: 'error', meta: {'status': streamed.statusCode, 'pages': files.length});
+        return ParseResult.fail(reason);
+      }
+      late final Map<String, dynamic> map;
+      try {
+        map = jsonDecode(body) as Map<String, dynamic>;
+      } catch (e) {
+        DebugLog.event('parse-receipt', 'multi-page non-JSON response',
+          level: 'error', meta: {'snippet': body.length > 200 ? body.substring(0, 200) : body});
+        return const ParseResult.fail('Server returned non-JSON.');
+      }
+      if (map['error'] != null) {
+        DebugLog.event('parse-receipt', 'multi-page api error: ${map['error']}', level: 'error');
+        return ParseResult.fail(map['error'].toString());
+      }
+      final parsed = ParsedReceipt.fromMap(map);
+      final hasAnything = parsed.storeName.isNotEmpty
+          || parsed.totalAmount > 0
+          || parsed.items.isNotEmpty;
+      if (!hasAnything) {
+        DebugLog.event('parse-receipt', 'multi-page empty AI parse', level: 'warn');
+        return const ParseResult.fail(
+          "Guac-AI couldn't read anything from these photos. Try a clearer scan in better light."
+        );
+      }
+      DebugLog.event('parse-receipt', 'multi-page ok', meta: {
+        'pages': files.length,
+        'store': parsed.storeName,
+        'total': parsed.totalAmount,
+        'items': parsed.items.length,
+        'provider': parsed.provider,
+      });
+      return ParseResult.ok(parsed);
+    } on http.ClientException catch (e) {
+      DebugLog.event('parse-receipt', 'multi-page ClientException', level: 'error',
+        meta: {'message': e.message});
+      return ParseResult.fail('Network error: ${e.message}');
+    } catch (e) {
+      final m = e.toString();
+      DebugLog.event('parse-receipt', 'multi-page exception', level: 'error',
+        meta: {'error': m});
+      if (m.contains('TimeoutException')) {
+        return const ParseResult.fail('Timed out waiting for Guac-AI (55s). Try fewer pages or a clearer scan.');
+      }
+      return ParseResult.fail('Multi-page parse failed: $m');
+    }
+  }
+
   static Future<ParseResult> parseImage(File file) async {
     final session = Supabase.instance.client.auth.currentSession;
     if (session == null) {

@@ -101,6 +101,7 @@ export async function updateReceiptItem(id, patch) {
 
 // User-defined categories ─────────────────────────────────────────
 const USER_CAT_COLORS = ['emerald','orange','sky','indigo','amber','lime','fuchsia','rose','red','violet','pink','gray']
+const HEALTH_TIERS    = ['healthy','neutral','treat','harmful']
 
 export async function getUserCategories() {
   const sb = createClient()
@@ -125,7 +126,7 @@ export async function getUserCategories() {
   return data || []
 }
 
-export async function createUserCategory({ label, emoji, color }) {
+export async function createUserCategory({ label, emoji, color, health_tier }) {
   if (!label || !label.trim()) throw new Error('label required')
   const sb = createClient()
   const { data: { user } } = await sb.auth.getUser()
@@ -136,9 +137,18 @@ export async function createUserCategory({ label, emoji, color }) {
     .replace(/^-+|-+$/g, '')
     .slice(0, 32) || 'custom'
   const safeColor = USER_CAT_COLORS.includes(color) ? color : 'gray'
-  const { data, error } = await sb.from('user_categories')
-    .insert({ user_id: user.id, slug, label: label.trim(), emoji: emoji || '📦', color: safeColor })
-    .select().single()
+  const safeTier  = HEALTH_TIERS.includes(health_tier) ? health_tier : 'neutral'
+  const row = { user_id: user.id, slug, label: label.trim(), emoji: emoji || '📦', color: safeColor, health_tier: safeTier }
+  let { data, error } = await sb.from('user_categories').insert(row).select().single()
+  // Graceful fallback if migration_031 hasn't been applied — drop the new
+  // column and retry. Keeps the picker working on older DBs.
+  if (error) {
+    const msg = (error.message || '').toLowerCase()
+    if (msg.includes('health_tier')) {
+      const { health_tier: _drop, ...legacy } = row
+      ;({ data, error } = await sb.from('user_categories').insert(legacy).select().single())
+    }
+  }
   if (error) throw error
   return data
 }

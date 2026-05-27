@@ -1,7 +1,7 @@
 name: getguac
 description: GetGuac — Smart receipt & rewards management
 publish_to: 'none'
-version: 0.2.50+60
+version: 0.2.51+61
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -53,6 +53,11 @@ dependencies:
   # app's cache dir (auto-cleaned by Android) instead of leaving it in
   # the user's Downloads folder forever.
   open_filex: ^4.5.0
+  # ML Kit Document Scanner — Google's on-device scanner UI: edge
+  # detection, perspective correction, multi-page session. Replaces the
+  # raw image_picker for receipts so long CVS / grocery receipts can be
+  # captured page-by-page and parsed as a single receipt by Gemini.
+  google_mlkit_document_scanner: ^0.4.0
 
 dev_dependencies:
   flutter_test:

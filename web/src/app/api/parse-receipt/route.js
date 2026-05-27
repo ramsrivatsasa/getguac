@@ -4,6 +4,8 @@
 
 import pdfParse from 'pdf-parse'
 import { rateLimit, rateKey } from '../../../lib/apiGuard'
+import { parseReceiptFromImages } from '../../../lib/parse-receipt-engine'
+import { autoCategorize } from '../../../lib/auto-categorize'
 export const runtime = 'nodejs'
 export const maxDuration = 60
 
@@ -37,9 +39,9 @@ Return ONLY a single JSON object. No prose, no markdown fences. Schema:
   "payment_method": string|null,
   "payment_last4": string|null,
   "is_return": boolean,
-  "category": string|null,               // ONE of: "grub", "eats", "tech", "big-stuff", "fix-it", "outdoors", "fits", "wellness", "gas-up", "fun", "gifting", "misc"
+  "category": string|null,               // ONE of: "grub", "eats", "bars", "coffee", "tea", "coke", "pepsi", "juice", "milkshake", "subs", "bills", "tech", "big-stuff", "fix-it", "outdoors", "supplies", "fits", "wellness", "gas-up", "fun", "gifting", "charity", "misc"
   "items": [
-    { "sku": string|null, "model": string|null, "item_name": string, "qty": number, "price": number, "refund_policy_id": string|null, "returned": boolean }
+    { "sku": string|null, "model": string|null, "item_name": string, "qty": number, "price": number, "category": string|null, "health_tier": "healthy"|"neutral"|"treat"|"harmful"|null, "refund_policy_id": string|null, "returned": boolean }
   ],
   "refund_policies": [
     { "policy_id": string|null, "days": number|null, "expiry_date": string|null, "eligible": boolean, "details": string|null }
@@ -52,6 +54,18 @@ Rules:
 - Home Depot "4@3.33 13.32" → qty: 4, price: 13.32 (the line total, not per-unit).
 - For returns, all money is negative AND is_return true AND each returned line has returned: true.
 - date = transaction date printed on the receipt (NOT email forward date).
+
+BEVERAGE ITEMS — when an item line names a beverage brand or kind, set the per-item category to the matching beverage slug, not the receipt-level slug:
+  "COKE 12PK" → "coke" · "PEPSI 2L" / "MTN DEW" → "pepsi" · "STARBUCKS LATTE" / "COLD BREW" / "ESPRESSO" → "coffee" · "EARL GREY" / "MATCHA" → "tea" · "TROPICANA" / "MINUTE MAID OJ" → "juice" · "OREO MILKSHAKE" / "FROSTY" → "milkshake" · "BUDWEISER 6PK" / "RED WINE" / "MARGARITA" → "bars".
+A Starbucks receipt's RECEIPT-LEVEL category is "coffee"; a bar tab is "bars". A grocery run with mixed items has receipt-level "grub" but the Coke line still gets per-item "coke".
+
+HEALTH TIER — for each item, set health_tier to:
+- "healthy" : vegetables, fruit, lean protein, water, tea, plain yogurt, eggs, oats, legumes
+- "neutral" : grains, dairy, coffee, lean meats, bread, most prepared foods, non-food items
+- "treat"   : juice, dessert, alcohol, sweetened pastries, chips, fast food
+- "harmful" : sugary soda (coke, pepsi, mountain dew), milkshakes, candy, deep-fried fast food
+Leave null when the item isn't food or drink (electronics, clothing, supplies) — analytics will fall back to the category default.
+
 - Output JSON only.`
 
 function safeParseJson(raw) {
@@ -158,6 +172,78 @@ export async function POST(request) {
     }
 
     const formData = await request.formData()
+
+    // Multi-page path: client sends `file_1`, `file_2`, ... `file_N` AND/OR
+    // a single `files` array. ML Kit Document Scanner returns N cleaned
+    // page images for a single long receipt; we pass them all to Gemini
+    // Vision as one multi-image request and get back a single receipt.
+    const multiFiles = []
+    for (let i = 1; i <= 10; i++) {
+      const f = formData.get(`file_${i}`)
+      if (f) multiFiles.push(f)
+    }
+    if (multiFiles.length === 0) {
+      const arr = formData.getAll('files')
+      if (Array.isArray(arr) && arr.length > 0) multiFiles.push(...arr)
+    }
+    if (multiFiles.length > 1) {
+      // Validate every page is an image (multi-page only supports images;
+      // multi-PDF would be a weird mix, so we just reject).
+      const totalBytes = multiFiles.reduce((n, f) => n + (f.size || 0), 0)
+      if (totalBytes > MAX_UPLOAD_BYTES * 3) {
+        return Response.json({
+          error: `Total upload too large (${(totalBytes/1024/1024).toFixed(1)} MB). Max ${(MAX_UPLOAD_BYTES * 3)/1024/1024} MB across all pages.`,
+        }, { status: 413 })
+      }
+      const images = []
+      for (const f of multiFiles) {
+        const t = f.type || 'image/jpeg'
+        if (!t.startsWith('image/')) {
+          return Response.json({ error: `Page rejected — multi-page requires images only, got ${t}` }, { status: 415 })
+        }
+        const buf = Buffer.from(await f.arrayBuffer())
+        images.push({ mimeType: t, base64: buf.toString('base64') })
+      }
+      let multiParsed
+      try {
+        multiParsed = await parseReceiptFromImages({ images })
+      } catch (e) {
+        return Response.json({ error: e.message || 'Multi-page parse failed' }, { status: 502 })
+      }
+      if (!multiParsed) {
+        return Response.json({ error: 'Multi-page parse returned no data' }, { status: 502 })
+      }
+      console.log('[parse-receipt multi]', {
+        pages: images.length, store: multiParsed.store_name,
+        total: multiParsed.total_amount, items: multiParsed.items?.length || 0,
+      })
+      // Flatten back into the same response shape the single-image path
+      // returns so the mobile client doesn't have to branch on it.
+      return Response.json({
+        store_name: multiParsed.store_name || '',
+        store_address: multiParsed.store?.address || '',
+        store_city: multiParsed.store?.city || '',
+        store_state: multiParsed.store?.state || '',
+        store_zip: multiParsed.store?.zip || '',
+        store_phone: multiParsed.store?.phone_no || '',
+        store_website: multiParsed.store?.website || '',
+        store_no: multiParsed.store?.store_no || '',
+        location_name: multiParsed.store?.location_name || '',
+        date: multiParsed.date || null,
+        total_amount: multiParsed.total_amount,
+        tax_paid: multiParsed.tax_paid,
+        payment_method: multiParsed.payment_method,
+        payment_last4: multiParsed.payment_last4,
+        is_return: multiParsed.is_return,
+        category: multiParsed.category,
+        items: autoCategorize(multiParsed.items || []),
+        refund_policies: multiParsed.refund_policies || [],
+        _provider: multiParsed._provider,
+        _pages: images.length,
+      })
+    }
+
+    // Single-file path (existing behavior).
     const file = formData.get('file')
     if (!file) return Response.json({ error: 'No file provided' }, { status: 400 })
 
@@ -224,11 +310,13 @@ export async function POST(request) {
       payment_last4: parsed.payment_last4 || '',
       is_return: Boolean(parsed.is_return),
       category: parsed.category || null,
-      items: Array.isArray(parsed.items) ? parsed.items.map(it => ({
+      items: autoCategorize(Array.isArray(parsed.items) ? parsed.items.map(it => ({
         sku: it.sku || '', model: it.model || '', item_name: it.item_name || '',
         qty: Number(it.qty || 1), price: Number(it.price || 0),
+        category: it.category || null,
+        health_tier: it.health_tier || null,
         refund_policy_id: it.refund_policy_id || '', returned: Boolean(it.returned),
-      })) : [],
+      })) : []),
       refund_policies: Array.isArray(parsed.refund_policies) ? parsed.refund_policies.map(p => ({
         policy_id: p.policy_id || '', days: p.days != null ? Number(p.days) : null,
         expiry_date: p.expiry_date || null, eligible: p.eligible !== false,

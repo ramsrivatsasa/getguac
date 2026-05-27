@@ -1,10 +1,20 @@
 // Stash — your owned items aggregated from receipt_items. Group by item name,
 // sum qty, show last-bought date + a peek at the originating receipt.
+//
+// Each row is tappable to change its category — opens CategoryPickerSheet
+// with the same preset list as web and the user's custom categories. New
+// categories can be created inline.
+//
+// Rendering uses CustomScrollView + SliverList.builder so rows are built only
+// as they scroll into view (the previous `...filtered.map()` spread built every
+// Card upfront and bogged down long stashes).
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../widgets/guac_mascot.dart';
+import '../../widgets/category_picker_sheet.dart';
+import '../../categories.dart';
 
 const _kBrand = Color(0xFFca8a04);
 
@@ -81,6 +91,38 @@ class _StashScreenState extends State<StashScreen> {
     }
   }
 
+  // Updates the category for every receipt_item that shares the same name
+  // (mirrors web/src/lib/db.js::setStashProductCategory). RLS scopes the update
+  // to the signed-in user's rows.
+  Future<void> _setItemCategory(_StashItem item, String? slug) async {
+    final prev = item.category;
+    setState(() => item.category = slug);
+    try {
+      final sb = Supabase.instance.client;
+      // Find receipt ids the user owns (RLS already filters).
+      final receiptRows = await sb.from('receipts').select('id');
+      final ids = (receiptRows as List).map((r) => r['id']).toList();
+      if (ids.isEmpty) return;
+      await sb
+          .from('receipt_items')
+          .update({'category': slug})
+          .ilike('item_name', item.name)
+          .inFilter('receipt_id', ids);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => item.category = prev);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not save category: $e')),
+      );
+    }
+  }
+
+  Future<void> _openPicker(_StashItem item) async {
+    final picked = await showCategoryPickerSheet(context, currentSlug: item.category);
+    if (picked == null) return; // dismissed without a pick
+    await _setItemCategory(item, picked.isEmpty ? null : picked);
+  }
+
   @override
   Widget build(BuildContext context) {
     final filtered = _query.isEmpty
@@ -97,53 +139,92 @@ class _StashScreenState extends State<StashScreen> {
             onRefresh: _load,
             child: _items.isEmpty
               ? _emptyState()
-              : ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    // Summary card
-                    Container(
+              : CustomScrollView(
+                  slivers: [
+                    SliverPadding(
                       padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(colors: [_kBrand.withValues(alpha: 0.12), _kBrand.withValues(alpha: 0.04)]),
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: _kBrand.withValues(alpha: 0.25)),
-                      ),
-                      child: Row(children: [
-                        const Text('📦', style: TextStyle(fontSize: 40)),
-                        const SizedBox(width: 12),
-                        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          Text('${filtered.length} unique items', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: _kBrand)),
-                          Text('$totalItems units  •  \$${totalSpent.toStringAsFixed(2)} total', style: const TextStyle(fontSize: 12, color: Colors.black54)),
-                        ])),
-                      ]),
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      decoration: InputDecoration(
-                        hintText: 'Search your stash',
-                        prefixIcon: const Icon(Icons.search),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        isDense: true,
-                      ),
-                      onChanged: (v) => setState(() => _query = v),
-                    ),
-                    const SizedBox(height: 12),
-                    ...filtered.map((i) => Card(
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: _kBrand.withValues(alpha: 0.15),
-                          child: Text('×${i.qty}', style: const TextStyle(color: _kBrand, fontWeight: FontWeight.w800, fontSize: 12)),
+                      sliver: SliverToBoxAdapter(
+                        child: Column(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(colors: [_kBrand.withValues(alpha: 0.12), _kBrand.withValues(alpha: 0.04)]),
+                                borderRadius: BorderRadius.circular(18),
+                                border: Border.all(color: _kBrand.withValues(alpha: 0.25)),
+                              ),
+                              child: Row(children: [
+                                const Text('📦', style: TextStyle(fontSize: 40)),
+                                const SizedBox(width: 12),
+                                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                  Text('${filtered.length} unique items', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: _kBrand)),
+                                  Text('$totalItems units  •  \$${totalSpent.toStringAsFixed(2)} total', style: const TextStyle(fontSize: 12, color: Colors.black54)),
+                                ])),
+                              ]),
+                            ),
+                            const SizedBox(height: 16),
+                            TextField(
+                              decoration: InputDecoration(
+                                hintText: 'Search your stash',
+                                prefixIcon: const Icon(Icons.search),
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                isDense: true,
+                              ),
+                              onChanged: (v) => setState(() => _query = v),
+                            ),
+                            const SizedBox(height: 12),
+                          ],
                         ),
-                        title: Text(i.name, style: const TextStyle(fontWeight: FontWeight.w700)),
-                        subtitle: Text([
-                          if (i.category != null) i.category!,
-                          if (i.lastDate.isNotEmpty) 'last ${i.lastDate}',
-                        ].join(' • '), style: const TextStyle(fontSize: 11)),
-                        trailing: Text('\$${i.totalSpent.toStringAsFixed(2)}',
-                          style: const TextStyle(fontWeight: FontWeight.w800)),
-                        onTap: i.lastReceiptId.isEmpty ? null : () => context.go('/receipts/${i.lastReceiptId}'),
                       ),
-                    )),
+                    ),
+                    SliverPadding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      sliver: SliverList.builder(
+                        itemCount: filtered.length,
+                        itemBuilder: (ctx, idx) {
+                          final i = filtered[idx];
+                          final preset = i.category == null ? null : presetBySlug(i.category!);
+                          return Card(
+                            child: ListTile(
+                              leading: CircleAvatar(
+                                backgroundColor: _kBrand.withValues(alpha: 0.15),
+                                child: Text('×${i.qty}', style: const TextStyle(color: _kBrand, fontWeight: FontWeight.w800, fontSize: 12)),
+                              ),
+                              title: Text(i.name, style: const TextStyle(fontWeight: FontWeight.w700)),
+                              subtitle: Row(
+                                children: [
+                                  GestureDetector(
+                                    onTap: () => _openPicker(i),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                      decoration: BoxDecoration(
+                                        color: tintFor(preset?.color).withValues(alpha: 0.15),
+                                        border: Border.all(color: tintFor(preset?.color).withValues(alpha: 0.35)),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Text(
+                                        preset != null
+                                            ? '${preset.emoji} ${preset.label}'
+                                            : (i.category ?? '＋ Categorize'),
+                                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+                                      ),
+                                    ),
+                                  ),
+                                  if (i.lastDate.isNotEmpty) ...[
+                                    const SizedBox(width: 8),
+                                    Text('last ${i.lastDate}', style: const TextStyle(fontSize: 11, color: Colors.black54)),
+                                  ],
+                                ],
+                              ),
+                              trailing: Text('\$${i.totalSpent.toStringAsFixed(2)}',
+                                style: const TextStyle(fontWeight: FontWeight.w800)),
+                              onTap: i.lastReceiptId.isEmpty ? null : () => context.go('/receipts/${i.lastReceiptId}'),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SliverToBoxAdapter(child: SizedBox(height: 24)),
                   ],
                 ),
           ),

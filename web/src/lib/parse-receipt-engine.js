@@ -48,9 +48,9 @@ Return ONLY a single JSON object. No prose, no markdown fences. Schema:
   "payment_method": string|null,
   "payment_last4": string|null,
   "is_return": boolean,
-  "category": string|null,                 // ONE of: "grub", "eats", "subs", "bills", "tech", "big-stuff", "fix-it", "outdoors", "supplies", "fits", "wellness", "gas-up", "fun", "gifting", "charity", "misc"
+  "category": string|null,                 // ONE of: "grub", "eats", "bars", "coffee", "tea", "coke", "pepsi", "juice", "milkshake", "subs", "bills", "tech", "big-stuff", "fix-it", "outdoors", "supplies", "fits", "wellness", "gas-up", "fun", "gifting", "charity", "misc"
   "items": [
-    { "sku": string|null, "model": string|null, "item_name": string, "qty": number, "price": number, "category": string|null, "refund_policy_id": string|null, "returned": boolean }
+    { "sku": string|null, "model": string|null, "item_name": string, "qty": number, "price": number, "category": string|null, "health_tier": "healthy"|"neutral"|"treat"|"harmful"|null, "refund_policy_id": string|null, "returned": boolean }
   ],
   "refund_policies": [
     { "policy_id": string|null, "days": number|null, "expiry_date": string|null, "eligible": boolean, "details": string|null }
@@ -88,6 +88,23 @@ transaction; the email's "Date:" header is NOT the transaction date.
 - Output format: strict YYYY-MM-DD (zero-padded).
 - If you genuinely cannot determine the transaction date from the receipt body,
   set "date" to null. NEVER fall back to today, the email date, or any header date.
+
+BEVERAGE ITEMS — when an item line names a beverage brand or kind, set the item's category to the matching beverage slug, not the receipt-level slug:
+- "COKE 12PK" / "COCA-COLA 2L" / "CHERRY COKE" → "coke"
+- "PEPSI 2L" / "MTN DEW" / "MOUNTAIN DEW" → "pepsi"
+- "STARBUCKS VENTI LATTE" / "ESPRESSO" / "COLD BREW" / "DUNKIN COFFEE" → "coffee"
+- "EARL GREY TEA" / "MATCHA" / "CHAI LATTE" → "tea"
+- "MINUTE MAID OJ" / "TROPICANA" / "APPLE JUICE" → "juice"
+- "OREO MILKSHAKE" / "STRAWBERRY SHAKE" / "FROSTY" → "milkshake"
+- "BUDWEISER 6PK" / "IPA" / "RED WINE" / "MARGARITA" / "TEQUILA" → "bars"
+A Starbucks receipt's RECEIPT-LEVEL category is "coffee". A bar-tab receipt's RECEIPT-LEVEL category is "bars". A grocery run with mixed items has receipt-level "grub" but the Coke line still gets per-item "coke".
+
+HEALTH TIER — for each item, set health_tier to:
+- "healthy": vegetables, fruit, lean protein, water, tea, plain yogurt, eggs, oats, legumes
+- "neutral": grains, dairy, coffee, lean meats, bread, most prepared foods, non-food items
+- "treat": juice, dessert, alcohol, sweetened pastries, chips, fast food
+- "harmful": sugary soda (coke, pepsi, mountain dew), milkshakes, candy, deep-fried fast food
+Leave null when the item isn't food or drink (electronics, clothing, supplies) — analytics will fall back to the category default.
 
 CHARITY / DONATION ITEMS — set category to "charity" for any item that is a:
 - monetary donation, contribution, tithe, offering
@@ -283,6 +300,106 @@ export async function parseReceiptFromText(text, { maxChars = 32_000, emailDate 
   }
 
   return null
+}
+
+// Multi-image Gemini Vision call. Sends every image in `images` as a
+// separate inline_data part in a SINGLE generateContent request, with a
+// prompt telling the model they are sequential photos of one long receipt
+// (top to bottom). Used for ML Kit Document Scanner output where the user
+// captured a multi-page CVS-style receipt.
+//
+// Returns the same shape as callGeminiInline: { text, usage, provider, model }.
+async function callGeminiMultiImage({ apiKey, images, timeoutMs = 45_000 }) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`
+  const parts = []
+  // Each image as its own inline_data, in capture order.
+  for (const img of images) {
+    parts.push({ inline_data: { mime_type: img.mimeType, data: img.base64 } })
+  }
+  // Trailing text part frames the images.
+  parts.push({
+    text: `The ${images.length} image${images.length === 1 ? '' : 's'} above ${images.length === 1 ? 'is' : 'are'} sequential photos of ONE long receipt, taken top to bottom. Treat them as a single receipt. Extract every line item from every image. Use the grand total / final total printed somewhere in the images (usually the last one). JSON only per the schema.`,
+  })
+  const body = {
+    systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+    contents: [{ role: 'user', parts }],
+    generationConfig: { responseMimeType: 'application/json', temperature: 0, maxOutputTokens: 8192 },
+  }
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(timeoutMs),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json?.error?.message || `Gemini ${res.status}`)
+  return {
+    text: json?.candidates?.[0]?.content?.parts?.map(p => p.text).filter(Boolean).join('') || '',
+    usage: json?.usageMetadata,
+    provider: 'gemini',
+    model: GEMINI_MODEL,
+  }
+}
+
+// Parse a multi-page receipt from N images (the ML Kit Document Scanner
+// flow). Falls back to parsing only the first image with Groq if Gemini
+// fails — Groq Vision can't accept multiple images in one call, and a
+// best-effort parse of page 1 is still better than nothing.
+export async function parseReceiptFromImages({ images }) {
+  const geminiKey = process.env.GEMINI_API_KEY
+  const groqKey   = process.env.GROQ_API_KEY
+  if (!geminiKey && !groqKey) return null
+  if (!Array.isArray(images) || images.length === 0) return null
+
+  // Normalise input: accept either { buffer, mimeType } or { base64, mimeType }.
+  const prepared = images.map(img => ({
+    mimeType: img.mimeType || 'image/jpeg',
+    base64: img.base64 || (img.buffer ? img.buffer.toString('base64') : null),
+  })).filter(i => i.base64)
+
+  if (prepared.length === 0) return null
+
+  let result
+  let firstErr = null
+
+  if (geminiKey) {
+    try {
+      result = await callGeminiMultiImage({ apiKey: geminiKey, images: prepared })
+    } catch (err) {
+      firstErr = err.message
+      console.warn('[parse-receipt-engine] Gemini multi-image failed, falling back to Groq on first page:', err.message)
+    }
+  }
+
+  if (!result && groqKey) {
+    // Best-effort: Groq Vision is single-image only, so parse the FIRST page
+    // (usually has store name + date + start of items). Tag is_truncated so
+    // the caller knows we couldn't read the rest.
+    try {
+      const dataUrl = `data:${prepared[0].mimeType};base64,${prepared[0].base64}`
+      result = await callGroq({
+        apiKey: groqKey, model: GROQ_VISION_MODEL,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'text', text: SYSTEM_PROMPT + '\n\nExtract this receipt (page 1 of multi-page):' },
+            { type: 'image_url', image_url: { url: dataUrl } },
+          ],
+        }],
+      })
+    } catch (e) {
+      console.warn('[parse-receipt-engine] Groq single-page fallback failed:', e.message)
+    }
+  }
+
+  if (!result) {
+    const err = new Error(firstErr || 'All AI providers failed')
+    err.code = 'ALL_PROVIDERS_FAILED'
+    throw err
+  }
+
+  const parsed = safeParseJson(result.text)
+  return normalizeResult(parsed, result.provider, result.model, result.usage)
 }
 
 // Parse a receipt from a file (PDF or image). Returns normalized shape OR null.

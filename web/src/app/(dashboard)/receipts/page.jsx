@@ -1118,6 +1118,12 @@ function ReceiptLineItems({ receiptId }) {
   for (const p of policies) {
     if (p.policy_id) policyById[p.policy_id] = p
   }
+  // Catch-all fallback for items without a specific refund_policy_id. The
+  // first eligible "default" policy is the right default — covers the case
+  // where Gemini returned one policy at the receipt level but didn't tag
+  // each item, or the row came from the migration_034 store-default backfill.
+  const fallbackPolicy = policies.find(p => p.eligible !== false &&
+    (!p.policy_id || p.policy_id === 'default' || policies.length === 1)) || null
 
   return (
     <div className="space-y-3">
@@ -1163,10 +1169,13 @@ function ReceiptLineItems({ receiptId }) {
                   // Render policy inline: ID + days, with expiry + eligible in
                   // the hover tooltip. Used to be a separate panel above the
                   // items table — folded here for uniform UI across receipts.
+                  // If the item doesn't carry its own refund_policy_id we fall
+                  // back to the receipt-level default so Lowe's items (90d at
+                  // the receipt level, untagged per-line) still surface the
+                  // policy badge instead of an unhelpful "—".
                   const pid = it.refund_policy_id
-                  if (!pid) return <span className="text-gray-300">—</span>
-                  const p = policyById[pid]
-                  if (!p) return <span className="badge-purple text-[10px]">{pid}</span>
+                  const p = (pid && policyById[pid]) || fallbackPolicy
+                  if (!p) return <span className="text-gray-300">—</span>
                   const expired = p.expiry_date && new Date(p.expiry_date) < new Date()
                   const tip = [
                     p.policy_id && `Policy ${p.policy_id}`,
@@ -1174,6 +1183,7 @@ function ReceiptLineItems({ receiptId }) {
                     p.expiry_date && `expires ${p.expiry_date}${expired ? ' (expired)' : ''}`,
                     p.eligible === false ? 'NOT eligible' : null,
                     p.details && p.details,
+                    !pid && p && 'Inherited from receipt-level policy',
                   ].filter(Boolean).join(' · ')
                   const cls = expired
                     ? 'inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-100'
@@ -1182,14 +1192,40 @@ function ReceiptLineItems({ receiptId }) {
                       : 'inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100')
                   return (
                     <span className={cls} title={tip}>
-                      {p.policy_id || pid}
+                      {p.policy_id || 'default'}
                       {p.days != null && <span className="opacity-70">·{p.days}d</span>}
+                      {p.source_url && (
+                        <a
+                          href={p.source_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={e => e.stopPropagation()}
+                          className="ml-0.5 opacity-70 hover:opacity-100"
+                          title="View merchant's published policy"
+                        >↗</a>
+                      )}
                     </span>
                   )
                 })()}
               </td>
               {!isNonReturnable && (
-                <td className="px-3 py-0.5 text-gray-500">{it.return_date || '—'}</td>
+                <td className="px-3 py-0.5 text-gray-500">
+                  {(() => {
+                    // If the item was actually returned, that date wins.
+                    if (it.return_date) return it.return_date
+                    // Otherwise show "by <expiry_date>" so the column tells the
+                    // user how long they still have to return — same source
+                    // as the policy badge fallback above.
+                    const p = (it.refund_policy_id && policyById[it.refund_policy_id]) || fallbackPolicy
+                    if (!p || !p.expiry_date) return '—'
+                    const expired = new Date(p.expiry_date) < new Date()
+                    return (
+                      <span className={expired ? 'text-rose-600' : ''} title={expired ? 'Return window has passed' : `${p.days || 'lifetime'} window`}>
+                        by {p.expiry_date}{expired && ' (expired)'}
+                      </span>
+                    )
+                  })()}
+                </td>
               )}
               {!isNonReturnable && (
                 <td className="px-3 py-0.5">

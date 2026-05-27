@@ -691,6 +691,25 @@ async function fetchStoreDefaultPolicy(sb, storeName, category) {
   return null
 }
 
+// Curated default return policies for ALL stores at once. Returns a map
+// keyed by the normalized store name with just the catch-all (category=null)
+// row per store — enough for the /stores list to render a "90d" chip per
+// row without N round-trips. Per-category overrides only matter on the
+// store detail page, where getStoreReturnPolicies(storeName) is fine.
+export async function getAllStoreDefaultPolicies() {
+  const sb = createClient()
+  const { data, error } = await sb
+    .from('store_return_policies')
+    .select('store_name_normalized, store_display_name, days, eligible, source_url, details')
+    .is('category', null)
+  if (error) return new Map()
+  const out = new Map()
+  for (const r of (data || [])) {
+    out.set(r.store_name_normalized, r)
+  }
+  return out
+}
+
 // Curated return policies for a store, fetched by normalized store name.
 // Returns ALL rows (the catch-all + any category-specific overrides) so the
 // /stores/[id] page can render the full picture, sorted by category.

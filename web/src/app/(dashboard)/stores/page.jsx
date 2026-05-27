@@ -3,8 +3,9 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
-import { Store, Phone, Globe, MapPin, ChevronRight, ChevronDown, Search, Trash2, AlertTriangle } from 'lucide-react'
-import { getStores, deleteStore } from '../../../lib/db'
+import { Store, Phone, Globe, MapPin, ChevronRight, ChevronDown, Search, Trash2, AlertTriangle, Shield, ExternalLink } from 'lucide-react'
+import { getStores, deleteStore, getAllStoreDefaultPolicies } from '../../../lib/db'
+import { normalizeStoreName } from '../../../lib/store-name-normalize'
 function normalizePhone(p) {
   if (!p) return ''
   return String(p).replace(/\D+/g, '')
@@ -64,6 +65,21 @@ export default function StoresPage() {
     queryFn: getStores,
     staleTime: 1000 * 60 * 5,
   })
+
+  // One bulk fetch of every curated default policy (catch-all rows only).
+  // Lookups by normalized store name happen client-side so the per-row chip
+  // doesn't need a round-trip per store.
+  const { data: policyMap } = useQuery({
+    queryKey: ['store-default-policies'],
+    queryFn: getAllStoreDefaultPolicies,
+    staleTime: 1000 * 60 * 60, // 1 hour — these rarely change
+  })
+
+  function policyFor(store) {
+    if (!policyMap || !store?.store_name) return null
+    const key = normalizeStoreName(store.store_name)
+    return key ? policyMap.get(key) || null : null
+  }
 
   const del = useMutation({
     mutationFn: deleteStore,
@@ -225,6 +241,11 @@ export default function StoresPage() {
                         {store.website && <span className="flex items-center gap-1"><Globe size={11} />{store.website}</span>}
                       </div>
                     </div>
+                    {/* Return-policy chip — pulled from store_return_policies
+                        by normalized name. Click bubbles up to the row's Link
+                        so it lands on the detail page, where the full policy
+                        card lives. */}
+                    <PolicyChip policy={policyFor(store)} className="mr-3" />
                     <ChevronRight size={16} className="text-gray-300 group-hover:text-blue-500 shrink-0 ml-4" />
                   </Link>
                 </div>
@@ -259,6 +280,9 @@ export default function StoresPage() {
                     <p className="font-semibold text-gray-800">{g.display}</p>
                     <p className="text-xs text-gray-400">{g.stores.length} locations</p>
                   </div>
+                  {/* Same chip on the merchant-group header; all locations
+                      share the chain's curated policy. */}
+                  <PolicyChip policy={policyFor(g.stores[0])} className="mr-3" />
                   {isOpen
                     ? <ChevronDown size={16} className="text-gray-400 shrink-0" />
                     : <ChevronRight size={16} className="text-gray-400 shrink-0" />}
@@ -295,5 +319,37 @@ export default function StoresPage() {
         </div>
       )}
     </div>
+  )
+}
+
+// Compact return-policy chip rendered on each row of the stores list.
+// Tone reflects friendliness of the policy:
+//   emerald = generous (lifetime / 90d+)
+//   sky     = standard (30-89d)
+//   amber   = tight (<30d, still eligible)
+//   gray    = non-returnable (e.g. restaurants, prepared food)
+function PolicyChip({ policy, className = '' }) {
+  if (!policy) return null
+  const days = policy.days
+  const eligible = policy.eligible !== false
+  const label = !eligible
+    ? 'Final sale'
+    : days == null
+      ? 'Lifetime ∞'
+      : `${days}d return`
+  const tone = !eligible
+    ? 'bg-gray-100 text-gray-600 border-gray-200'
+    : days == null || days >= 90
+      ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+      : days >= 30
+        ? 'bg-sky-50 text-sky-700 border-sky-100'
+        : 'bg-amber-50 text-amber-700 border-amber-100'
+  return (
+    <span
+      className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${tone} ${className}`}
+      title={policy.details ? `${policy.details} — click row for full policy + citation` : 'Tap row for full policy + citation'}
+    >
+      <Shield size={10} /> {label}
+    </span>
   )
 }

@@ -1,21 +1,26 @@
 // GuacWizard predictive engine for the Smashlist.
 //
 // Reads a user's `receipt_items` (with `purchase_date`, `store_id`,
-// `category`, `health_tier`) and emits suggestions for items that are
-// likely running out: "you've bought toilet paper every 14 days for the
-// last 4 months and the last buy was 16 days ago — add to Pantry."
+// `category`, `health_tier`, `embedding`) and emits suggestions for items
+// that are likely running out.
 //
-// Pure function — accepts already-fetched rows, returns plain JS objects.
-// The cron-callable route in /api/smashlist/predict/route.js handles the
-// I/O around it. Keeping the engine pure means we can write deterministic
-// tests by feeding fixture data.
+// Two-pass grouping:
+//   1. Normalize item names → string-key buckets (cheap, deterministic).
+//   2. Embedding-centroid merge: for small buckets (count < MIN_PRIORS),
+//      compute centroid of member embeddings and merge into the most
+//      similar large bucket if cosine ≥ MERGE_THRESHOLD. This is what
+//      catches "Coke 12pk" / "Coca-Cola 12 Pack" / "Coke 12-Pack".
+//
+// Persisted aliases (passed in via opts.aliases) are applied BEFORE pass 1,
+// so confirmed-by-the-user merges are deterministic. Rejected aliases
+// (opts.rejectedPairs) are excluded from auto-merge in pass 2.
+//
+// Pure function — accepts already-fetched rows + options, returns
+// { predictions, newAliases }. The cron-callable route handles I/O.
 
-// Receipt-item category → Smashlist bucket. Items in categories that
-// aren't here don't auto-predict — that's how we keep one-off purchases
-// (TVs, clothes) from showing up in the list.
 const BUCKET_MAP = {
   grub:      'Pantry',
-  wellness:  'Pantry',  // pharmacy + medicines until we add a dedicated bucket
+  wellness:  'Pantry',
   coffee:    'Cravings',
   tea:       'Cravings',
   coke:      'Cravings',
@@ -26,13 +31,16 @@ const BUCKET_MAP = {
   eats:      'Grub & Grab',
 }
 
-// How aggressive to be. 0.80 = predict when 80% of the average cadence
-// has elapsed. Tunable per future user-preference.
 const CADENCE_TRIGGER = 0.80
-
-// Minimum past purchases before we trust a cadence pattern. 3 = bought
-// at least three times → two real gaps to average.
 const MIN_PRIORS = 3
+
+// Cosine threshold for auto-merging a small group into a large one.
+// 0.88 is conservative — text-embedding-004 puts close-but-distinct products
+// (Coke vs Diet Coke) around 0.82-0.86, true synonyms around 0.90+.
+// Tunable via MERGE_THRESHOLD env var so it can be dialed without redeploy.
+const MERGE_THRESHOLD = Number(
+  (typeof process !== 'undefined' && process.env?.MERGE_THRESHOLD) || 0.88
+)
 
 function normalizeKey(name) {
   return String(name || '').toLowerCase().trim().replace(/\s+/g, ' ').replace(/[.,'"`]/g, '')
@@ -65,21 +73,64 @@ function daysBetween(aIso, bIso) {
   return (b - a) / (1000 * 60 * 60 * 24)
 }
 
+function cosineSim(a, b) {
+  if (!a || !b || a.length !== b.length) return 0
+  let dot = 0, na = 0, nb = 0
+  for (let i = 0; i < a.length; i++) {
+    dot += a[i] * b[i]
+    na += a[i] * a[i]
+    nb += b[i] * b[i]
+  }
+  if (na === 0 || nb === 0) return 0
+  return dot / (Math.sqrt(na) * Math.sqrt(nb))
+}
+
+function meanVector(vecs) {
+  if (!vecs || vecs.length === 0) return null
+  const dim = vecs[0].length
+  const out = new Array(dim).fill(0)
+  for (const v of vecs) {
+    if (!v || v.length !== dim) continue
+    for (let i = 0; i < dim; i++) out[i] += v[i]
+  }
+  for (let i = 0; i < dim; i++) out[i] /= vecs.length
+  return out
+}
+
+// Recompute derived stats after a group's row-arrays change (used by merge).
+function refreshDerived(g) {
+  g.dates.sort()
+  const gaps = []
+  for (let i = 1; i < g.dates.length; i++) {
+    gaps.push(daysBetween(g.dates[i - 1], g.dates[i]))
+  }
+  const valid = gaps.filter(d => d > 0 && d < 365)
+  g.avgCadence = valid.length ? (valid.reduce((a, b) => a + b, 0) / valid.length) : null
+  g.lastDate = g.dates[g.dates.length - 1]
+  g.medianPrice = median(g.prices)
+  g.medianQty = median(g.qtys) || 1
+  g.topStore = mode(g.stores)
+  g.topCategory = mode(g.categories)
+  g.topHealthTier = mode(g.healthTiers)
+  if (g.embeddings.length) g.centroid = meanVector(g.embeddings)
+}
+
 /**
- * Group items by normalized name and compute purchase cadence stats.
+ * Group items by normalized name, applying confirmed aliases first.
  *
- * @param {Array<{item_name: string, purchase_date: string, qty: number,
- *                price: number, category: string|null,
- *                health_tier: string|null, store_id: string|null}>} rows
- * @returns {Map<string, {key, displayName, count, dates, stores, prices,
- *                       category, healthTier, avgCadence, lastDate}>}
+ * @param {Array} rows
+ * @param {Map<string,string>} aliases — alias_key → canonical_key (any status
+ *        except 'rejected' counts as a binding redirect, since 'auto' came
+ *        from our own merge pass and 'confirmed' is user-approved).
  */
-function aggregate(rows) {
+function aggregate(rows, aliases = new Map()) {
   const groups = new Map()
   for (const r of rows) {
     if (!r.item_name || !r.purchase_date) continue
-    const key = normalizeKey(r.item_name)
-    if (!key) continue
+    const rawKey = normalizeKey(r.item_name)
+    if (!rawKey) continue
+    // Apply alias redirect — if rawKey has been merged before, route to canonical.
+    const key = aliases.get(rawKey) || rawKey
     const g = groups.get(key) || {
       key,
       displayName: r.item_name.trim(),
@@ -90,7 +141,10 @@ function aggregate(rows) {
       qtys: [],
       categories: [],
       healthTiers: [],
+      embeddings: [],
+      memberKeys: new Set([key]),  // tracks which raw keys folded into this group
     }
+    g.memberKeys.add(rawKey)
     g.count += 1
     g.dates.push(r.purchase_date)
     if (r.store_id) g.stores.push(r.store_id)
@@ -98,45 +152,93 @@ function aggregate(rows) {
     if (r.qty != null) g.qtys.push(Number(r.qty))
     if (r.category) g.categories.push(r.category)
     if (r.health_tier) g.healthTiers.push(r.health_tier)
-    // Prefer the longer / better-cased display variant.
+    if (Array.isArray(r.embedding) && r.embedding.length) g.embeddings.push(r.embedding)
     if (r.item_name.length > g.displayName.length) g.displayName = r.item_name.trim()
     groups.set(key, g)
   }
 
-  for (const g of groups.values()) {
-    g.dates.sort()
-    const gaps = []
-    for (let i = 1; i < g.dates.length; i++) {
-      gaps.push(daysBetween(g.dates[i - 1], g.dates[i]))
-    }
-    const valid = gaps.filter(d => d > 0 && d < 365)
-    g.avgCadence = valid.length ? (valid.reduce((a, b) => a + b, 0) / valid.length) : null
-    g.lastDate = g.dates[g.dates.length - 1]
-    g.medianPrice = median(g.prices)
-    g.medianQty = median(g.qtys) || 1
-    g.topStore = mode(g.stores)
-    g.topCategory = mode(g.categories)
-    g.topHealthTier = mode(g.healthTiers)
-  }
-
+  for (const g of groups.values()) refreshDerived(g)
   return groups
+}
+
+/**
+ * Centroid-based merge pass. Small groups (< MIN_PRIORS) absorb into the
+ * most-similar large group (≥ MIN_PRIORS) if cosine sim ≥ MERGE_THRESHOLD
+ * and the pair isn't in the rejected set.
+ *
+ * Mutates `groups` and returns the list of merge decisions made this run,
+ * so the caller can persist them as new product_aliases rows.
+ *
+ * @param {Map} groups — output of aggregate()
+ * @param {{rejectedPairs?: Set<string>}} opts — rejected pairs as "alias|canonical"
+ */
+function mergeBySimilarity(groups, opts = {}) {
+  const rejected = opts.rejectedPairs || new Set()
+  const newAliases = []
+
+  const large = []
+  const small = []
+  for (const g of groups.values()) {
+    if (g.count >= MIN_PRIORS && g.centroid) large.push(g)
+    else if (g.centroid) small.push(g)
+  }
+  if (!large.length || !small.length) return newAliases
+
+  for (const sg of small) {
+    let bestSim = 0
+    let bestLarge = null
+    for (const lg of large) {
+      if (rejected.has(`${sg.key}|${lg.key}`)) continue
+      const sim = cosineSim(sg.centroid, lg.centroid)
+      if (sim > bestSim) { bestSim = sim; bestLarge = lg }
+    }
+    if (!bestLarge || bestSim < MERGE_THRESHOLD) continue
+
+    // Fold sg into bestLarge
+    bestLarge.count += sg.count
+    bestLarge.dates.push(...sg.dates)
+    bestLarge.stores.push(...sg.stores)
+    bestLarge.prices.push(...sg.prices)
+    bestLarge.qtys.push(...sg.qtys)
+    bestLarge.categories.push(...sg.categories)
+    bestLarge.healthTiers.push(...sg.healthTiers)
+    bestLarge.embeddings.push(...sg.embeddings)
+    for (const k of sg.memberKeys) bestLarge.memberKeys.add(k)
+    if (sg.displayName.length > bestLarge.displayName.length) {
+      bestLarge.displayName = sg.displayName
+    }
+    refreshDerived(bestLarge)
+    groups.delete(sg.key)
+
+    newAliases.push({
+      alias_key: sg.key,
+      canonical_key: bestLarge.key,
+      canonical_display_name: bestLarge.displayName,
+      similarity: Number(bestSim.toFixed(4)),
+    })
+  }
+  return newAliases
 }
 
 /**
  * Decide which groups deserve a prediction right now.
  *
- * @param {Map} groups — output of aggregate()
- * @param {{today?: string, dismissedKeys?: Set<string>}} opts
- * @returns {Array<{key, item_name, qty, price, store_id, list_name,
- *                  category, health_tier, predicted_reason,
- *                  predicted_avg_cadence_days, predicted_last_purchase_date}>}
+ * @param {Array} rows
+ * @param {{
+ *   today?: string,
+ *   dismissedKeys?: Set<string>,
+ *   aliases?: Map<string,string>,        // alias_key → canonical_key (auto + confirmed)
+ *   rejectedPairs?: Set<string>,         // "alias|canonical" pairs to skip
+ * }} opts
+ * @returns {{ predictions: Array, newAliases: Array }}
  */
 export function predict(rows, opts = {}) {
   const today = opts.today || new Date().toISOString().slice(0, 10)
   const dismissed = opts.dismissedKeys || new Set()
-  const groups = aggregate(rows)
-  const out = []
+  const groups = aggregate(rows, opts.aliases || new Map())
+  const newAliases = mergeBySimilarity(groups, { rejectedPairs: opts.rejectedPairs })
 
+  const predictions = []
   for (const g of groups.values()) {
     if (g.count < MIN_PRIORS) continue
     if (!g.avgCadence || g.avgCadence <= 0) continue
@@ -144,12 +246,12 @@ export function predict(rows, opts = {}) {
 
     const daysSince = daysBetween(g.lastDate, today)
     if (daysSince < g.avgCadence * CADENCE_TRIGGER) continue
-    if (daysSince > g.avgCadence * 3) continue   // user clearly stopped buying — don't resurrect
+    if (daysSince > g.avgCadence * 3) continue
 
     const bucket = BUCKET_MAP[g.topCategory]
-    if (!bucket) continue   // category not auto-predictable (subs, bills, tech, …)
+    if (!bucket) continue
 
-    out.push({
+    predictions.push({
       key: g.key,
       item_name: g.displayName,
       qty: g.medianQty,
@@ -163,7 +265,10 @@ export function predict(rows, opts = {}) {
       predicted_last_purchase_date: g.lastDate,
     })
   }
-  return out
+  return { predictions, newAliases }
 }
 
-export const _internals = { BUCKET_MAP, CADENCE_TRIGGER, MIN_PRIORS, normalizeKey, aggregate }
+export const _internals = {
+  BUCKET_MAP, CADENCE_TRIGGER, MIN_PRIORS, MERGE_THRESHOLD,
+  normalizeKey, cosineSim, meanVector, aggregate, mergeBySimilarity,
+}

@@ -3,7 +3,7 @@ import { useState, useMemo } from 'react'
 import { useShoppingList, useUpsertShoppingItem, useDeleteShoppingItem } from '../../../hooks/useShopping'
 import { SHOPPING_LISTS, SHOPPING_LIST_META } from '../../../lib/db'
 import toast from 'react-hot-toast'
-import { Trash2, CheckCircle, Circle } from 'lucide-react'
+import { Trash2, CheckCircle, Circle, X, Sparkles, Wand2, Zap } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
 
 const EMPTY = { sku: '', item_name: '', order_date: '', qty: '1', price: '', store_name_id: '', comments: '', frequency: 'Monthly', list_name: 'Pantry', approved: false, sent_to_store: false }
@@ -19,8 +19,10 @@ export default function ShoppingPage() {
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState(EMPTY)
   const [activeList, setActiveList] = useState('all')
+  const [predicting, setPredicting] = useState(false)
+  const [embedding, setEmbedding] = useState(false)
 
-  const { data: items = [], isLoading } = useShoppingList()
+  const { data: items = [], isLoading, refetch } = useShoppingList()
   const upsert = useUpsertShoppingItem()
   const del = useDeleteShoppingItem()
   const s = k => e => setForm(p => ({ ...p, [k]: e.target.value }))
@@ -40,20 +42,95 @@ export default function ShoppingPage() {
     })
   }
 
-  const filtered = useMemo(() => {
-    if (activeList === 'all') return items
-    return items.filter(i => (i.list_name || 'Pantry') === activeList)
-  }, [items, activeList])
+  async function dismissPredicted(item) {
+    try {
+      const res = await fetch('/api/smashlist/dismiss', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: item.id }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Dismiss failed')
+      toast.success(`Won't suggest "${item.item_name}" again`)
+      refetch()
+    } catch (e) {
+      toast.error(e.message)
+    }
+  }
+
+  async function predictNow() {
+    setPredicting(true)
+    try {
+      const res = await fetch('/api/smashlist/predict', { method: 'POST' })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Predict failed')
+      const { inserted = 0, predictions = 0, aliases_added = 0 } = json
+      toast.success(
+        inserted > 0
+          ? `${inserted} new suggestion${inserted === 1 ? '' : 's'} added 🪄`
+          : predictions > 0
+            ? `${predictions} ready — already in your list`
+            : 'No suggestions right now'
+      )
+      if (aliases_added > 0) toast.success(`${aliases_added} item${aliases_added === 1 ? '' : 's'} grouped together`)
+      refetch()
+    } catch (e) {
+      toast.error(e.message)
+    } finally {
+      setPredicting(false)
+    }
+  }
+
+  async function embedNow() {
+    setEmbedding(true)
+    try {
+      const res = await fetch('/api/embeddings/backfill', { method: 'POST' })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Embed failed')
+      const { embedded = 0, remaining = 0, done = false } = json
+      toast.success(
+        done
+          ? `All caught up — ${embedded} embedded`
+          : `Embedded ${embedded}, ${remaining} remaining. Click again to continue.`
+      )
+    } catch (e) {
+      toast.error(e.message)
+    } finally {
+      setEmbedding(false)
+    }
+  }
+
+  // Split into suggestions (predicted + not approved) vs the user's list.
+  // Predicted items the user has approved get treated as regular list items.
+  const { suggestions, ownList } = useMemo(() => {
+    const sug = []
+    const own = []
+    for (const it of items) {
+      if (it.predicted && !it.approved) sug.push(it)
+      else own.push(it)
+    }
+    return { suggestions: sug, ownList: own }
+  }, [items])
+
+  const filteredOwn = useMemo(() => {
+    if (activeList === 'all') return ownList
+    return ownList.filter(i => (i.list_name || 'Pantry') === activeList)
+  }, [ownList, activeList])
+
+  const filteredSuggestions = useMemo(() => {
+    if (activeList === 'all') return suggestions
+    return suggestions.filter(i => (i.list_name || 'Pantry') === activeList)
+  }, [suggestions, activeList])
 
   const counts = useMemo(() => {
-    const m = { all: items.length }
+    const m = { all: ownList.length }
     for (const n of SHOPPING_LISTS) m[n] = 0
-    for (const i of items) {
+    for (const i of ownList) {
       const n = i.list_name || 'Pantry'
       m[n] = (m[n] || 0) + 1
     }
     return m
-  }, [items])
+  }, [ownList])
 
   return (
     <div className="space-y-5 max-w-7xl font-sans">
@@ -62,9 +139,27 @@ export default function ShoppingPage() {
           <h1 className="page-title">Smashlist</h1>
           <p className="text-sm text-gray-500">Stocked, themed, ready to grab</p>
         </div>
-        <button onClick={() => setShowForm(v => !v)} className="btn-primary">
-          <GuacMascot expression="happy" size={22} /> Add Item
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={predictNow}
+            disabled={predicting}
+            className="btn-secondary inline-flex items-center gap-1.5 text-sm disabled:opacity-50"
+            title="Refresh suggestions from your purchase history"
+          >
+            <Wand2 size={16} /> {predicting ? 'Predicting…' : 'Predict now'}
+          </button>
+          <button
+            onClick={embedNow}
+            disabled={embedding}
+            className="btn-secondary inline-flex items-center gap-1.5 text-sm disabled:opacity-50"
+            title="Embed historical items so similar names get grouped"
+          >
+            <Zap size={16} /> {embedding ? 'Embedding…' : 'Embed now'}
+          </button>
+          <button onClick={() => setShowForm(v => !v)} className="btn-primary">
+            <GuacMascot expression="happy" size={22} /> Add Item
+          </button>
+        </div>
       </div>
 
       {/* List-name tabs */}
@@ -123,62 +218,151 @@ export default function ShoppingPage() {
         </div>
       )}
 
-      <div className="card p-0 overflow-hidden">
-        {isLoading ? (
-          <div className="py-12 text-center text-gray-400">Loading…</div>
-        ) : filtered.length === 0 ? (
-          <div className="py-10 text-center flex flex-col items-center gap-3">
-            <GuacMascot expression="relaxing" size={140} />
-            <p className="text-gray-500 max-w-sm">
-              {activeList === 'all' ? 'Smashlist is empty. Drop items from receipts or pick from your Stash.' : `${activeList} list is empty.`}
-            </p>
+      {/* Suggestions section — only renders when there are predicted items */}
+      {filteredSuggestions.length > 0 && (
+        <section className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Sparkles size={16} className="text-violet-500" />
+            <h2 className="font-semibold text-gray-800">Suggestions for you</h2>
+            <span className="text-xs text-gray-500">Based on your purchase history. Approve to add, dismiss to hide forever.</span>
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b text-xs text-gray-500 uppercase tracking-wide">
-                <tr>{['List','Item','SKU','Store','Qty','Price','Frequency','Status','Actions'].map(h =>
-                  <th key={h} className="px-4 py-3 text-left font-semibold">{h}</th>
-                )}</tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {filtered.map(item => {
-                  const meta = SHOPPING_LIST_META[item.list_name || 'Pantry'] || {}
-                  return (
-                    <tr key={item.id} className="hover:bg-gray-50/50">
-                      <td className="px-4 py-3">
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 border border-emerald-200 text-emerald-800">
-                          {meta.emoji} {item.list_name || 'Pantry'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 font-medium">{item.item_name}</td>
-                      <td className="px-4 py-3 text-gray-400 text-xs">{item.sku || '—'}</td>
-                      <td className="px-4 py-3 text-gray-500">{item.store_name_id || '—'}</td>
-                      <td className="px-4 py-3">{item.qty}</td>
-                      <td className="px-4 py-3">{item.price ? `$${item.price}` : '—'}</td>
-                      <td className="px-4 py-3"><span className="badge-gray">{item.frequency}</span></td>
-                      <td className="px-4 py-3">
-                        <button onClick={() => toggleApproved(item)} className="flex items-center gap-1 text-xs font-medium">
-                          {item.approved
-                            ? <><CheckCircle size={14} className="text-green-500" /> <span className="text-green-600">Approved</span></>
-                            : <><Circle size={14} className="text-yellow-400" /> <span className="text-yellow-600">Pending</span></>
-                          }
-                        </button>
-                      </td>
-                      <td className="px-4 py-3">
-                        <button onClick={() => del.mutate(item.id, { onSuccess: () => toast.success('Removed') })}
-                          className="w-8 h-8 rounded-full bg-rose-100 text-rose-600 hover:bg-rose-200 hover:scale-110 active:scale-95 transition-all flex items-center justify-center shadow-sm">
-                          <Trash2 size={14} />
-                        </button>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+          <div className="card p-0 overflow-hidden border-violet-200">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-violet-50/50 border-b text-xs text-violet-700 uppercase tracking-wide">
+                  <tr>{['List','Item','Why','Store','Qty','Price','Actions'].map(h =>
+                    <th key={h} className="px-4 py-3 text-left font-semibold">{h}</th>
+                  )}</tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {filteredSuggestions.map(item => {
+                    const meta = SHOPPING_LIST_META[item.list_name || 'Pantry'] || {}
+                    return (
+                      <tr key={item.id} className="hover:bg-violet-50/30">
+                        <td className="px-4 py-3">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 border border-emerald-200 text-emerald-800">
+                            {meta.emoji} {item.list_name || 'Pantry'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-violet-100 text-violet-700">
+                              <Sparkles size={10} /> Suggested
+                            </span>
+                            <span className="font-medium">{item.item_name}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-xs text-gray-500 max-w-xs">{item.predicted_reason || '—'}</td>
+                        <td className="px-4 py-3 text-gray-500">{item.store_name_id || '—'}</td>
+                        <td className="px-4 py-3">{item.qty}</td>
+                        <td className="px-4 py-3">{item.price ? `$${item.price}` : '—'}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => toggleApproved(item)}
+                              className="px-2 py-1 rounded bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-medium inline-flex items-center gap-1"
+                              title="Add to my list"
+                            >
+                              <CheckCircle size={12} /> Approve
+                            </button>
+                            <button
+                              onClick={() => dismissPredicted(item)}
+                              className="px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium inline-flex items-center gap-1"
+                              title="Never suggest this again"
+                            >
+                              <X size={12} /> Dismiss
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
+        </section>
+      )}
+
+      {/* Main list */}
+      <section className="space-y-2">
+        {filteredSuggestions.length > 0 && (
+          <h2 className="font-semibold text-gray-800">Your list</h2>
         )}
-      </div>
+        <div className="card p-0 overflow-hidden">
+          {isLoading ? (
+            <div className="py-12 text-center text-gray-400">Loading…</div>
+          ) : filteredOwn.length === 0 ? (
+            <div className="py-10 text-center flex flex-col items-center gap-3">
+              <GuacMascot expression="relaxing" size={140} />
+              <p className="text-gray-500 max-w-sm">
+                {activeList === 'all'
+                  ? (filteredSuggestions.length > 0
+                      ? 'No items in your list yet — approve a suggestion above to start.'
+                      : 'Smashlist is empty. Drop items from receipts or pick from your Stash.')
+                  : `${activeList} list is empty.`}
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 border-b text-xs text-gray-500 uppercase tracking-wide">
+                  <tr>{['List','Item','SKU','Store','Qty','Price','Frequency','Status','Actions'].map(h =>
+                    <th key={h} className="px-4 py-3 text-left font-semibold">{h}</th>
+                  )}</tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {filteredOwn.map(item => {
+                    const meta = SHOPPING_LIST_META[item.list_name || 'Pantry'] || {}
+                    return (
+                      <tr key={item.id} className="hover:bg-gray-50/50">
+                        <td className="px-4 py-3">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 border border-emerald-200 text-emerald-800">
+                            {meta.emoji} {item.list_name || 'Pantry'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{item.item_name}</span>
+                            {item.predicted && (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-violet-100 text-violet-700"
+                                title={item.predicted_reason || 'Predicted from purchase history'}>
+                                <Sparkles size={10} /> Predicted
+                              </span>
+                            )}
+                          </div>
+                          {item.predicted && item.predicted_reason && (
+                            <div className="text-[11px] text-gray-400 mt-0.5">{item.predicted_reason}</div>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-gray-400 text-xs">{item.sku || '—'}</td>
+                        <td className="px-4 py-3 text-gray-500">{item.store_name_id || '—'}</td>
+                        <td className="px-4 py-3">{item.qty}</td>
+                        <td className="px-4 py-3">{item.price ? `$${item.price}` : '—'}</td>
+                        <td className="px-4 py-3"><span className="badge-gray">{item.frequency}</span></td>
+                        <td className="px-4 py-3">
+                          <button onClick={() => toggleApproved(item)} className="flex items-center gap-1 text-xs font-medium">
+                            {item.approved
+                              ? <><CheckCircle size={14} className="text-green-500" /> <span className="text-green-600">Approved</span></>
+                              : <><Circle size={14} className="text-yellow-400" /> <span className="text-yellow-600">Pending</span></>
+                            }
+                          </button>
+                        </td>
+                        <td className="px-4 py-3">
+                          <button onClick={() => del.mutate(item.id, { onSuccess: () => toast.success('Removed') })}
+                            className="w-8 h-8 rounded-full bg-rose-100 text-rose-600 hover:bg-rose-200 hover:scale-110 active:scale-95 transition-all flex items-center justify-center shadow-sm">
+                            <Trash2 size={14} />
+                          </button>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   )
 }

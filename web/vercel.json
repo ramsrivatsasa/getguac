@@ -2,6 +2,10 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "crons": [
     {
+      "path": "/api/embeddings/refresh",
+      "schedule": "0 */6 * * *"
+    },
+    {
       "path": "/api/smashlist/predict",
       "schedule": "0 6 * * *"
     }

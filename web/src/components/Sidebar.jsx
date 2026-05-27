@@ -40,8 +40,9 @@ const sections = [
     items: [
       { href: '/stash',    icon: Package,        label: 'Stash',     emoji: '📦', hoverMascot: 'sitting' },
       { href: '/bites',    icon: Utensils,       label: 'Bites',     emoji: '🍽️', hoverMascot: 'eating' },
-      { href: '/shopping', icon: ShoppingCart,   label: 'Smashlist', emoji: '🛒', hoverMascot: 'thumbsup' },
-      { href: '/steals',   icon: BadgeDollarSign, label: 'Steals',   emoji: '💎', hoverMascot: 'rich' },
+      { href: '/shopping',    icon: ShoppingCart,   label: 'Smashlist',   emoji: '🛒', hoverMascot: 'thumbsup' },
+      { href: '/predictions', icon: Sparkles,       label: 'Predictions', emoji: '🪄', hoverMascot: 'celebrating' },
+      { href: '/steals',      icon: BadgeDollarSign, label: 'Steals',     emoji: '💎', hoverMascot: 'rich' },
     ],
   },
   {

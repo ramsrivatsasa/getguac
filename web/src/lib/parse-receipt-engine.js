@@ -408,7 +408,26 @@ export async function parseReceiptFromImages({ images }) {
     throw err
   }
 
-  const parsed = safeParseJson(result.text)
+  // One-shot retry on garbled output. Gemini occasionally wraps the JSON
+  // in markdown fences mid-stream or truncates the response; reissuing
+  // the same request usually returns clean JSON. Cheap insurance — one
+  // extra API call only when the first attempt failed.
+  let parsed = safeParseJson(result.text)
+  if (!parsed && geminiKey) {
+    try {
+      const retry = await callGeminiMultiImage({ apiKey: geminiKey, images: prepared })
+      if (retry?.text) {
+        const retryParsed = safeParseJson(retry.text)
+        if (retryParsed) {
+          result = retry
+          parsed = retryParsed
+          console.log('[parse-receipt-engine] multi-page succeeded on retry')
+        }
+      }
+    } catch (e) {
+      console.warn('[parse-receipt-engine] multi-page retry threw:', e.message)
+    }
+  }
   return normalizeResult(parsed, result.provider, result.model, result.usage)
 }
 

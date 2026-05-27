@@ -331,9 +331,27 @@ export async function POST(request) {
       return Response.json({ error: geminiError || 'Both providers failed' }, { status: 502 })
     }
 
-    const parsed = safeParseJson(result.text)
+    let parsed = safeParseJson(result.text)
+    // One retry — Gemini occasionally returns markdown-wrapped or
+    // truncated output on the first call. Re-issuing the same request
+    // usually returns clean JSON. Saves the user from having to retake
+    // the photo, and bumps the multi-photo batch success rate.
+    if (!parsed && geminiKey) {
+      try {
+        const retry = await callGemini({ apiKey: geminiKey, mimeType, base64 })
+        if (retry?.text) {
+          parsed = safeParseJson(retry.text)
+          if (parsed) {
+            result = retry
+            console.log('[parse-receipt] succeeded on retry')
+          }
+        }
+      } catch (err) {
+        console.warn('[parse-receipt] retry threw:', err.message)
+      }
+    }
     if (!parsed) {
-      console.error('[parse-receipt] non-JSON response:', result.text?.slice(0, 500))
+      console.error('[parse-receipt] non-JSON response (after retry):', result.text?.slice(0, 500))
       return Response.json({ error: 'AI returned malformed JSON' }, { status: 502 })
     }
 

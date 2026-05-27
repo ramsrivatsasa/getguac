@@ -183,11 +183,57 @@ class ReceiptProvider extends ChangeNotifier {
     await loadReceipts(force: true);
   }
 
+  /// Pre-insert duplicate check. Mirrors web's lib/findExistingReceipt.js.
+  /// Returns the id of an existing receipt that matches (same user,
+  /// normalized store name, same date, total within 1¢, same sign) or
+  /// null. Falls through on any error so a Supabase blip can't block
+  /// new saves.
+  Future<String?> _findExistingReceiptId({
+    required String userId,
+    required String storeName,
+    required String date,
+    required double totalAmount,
+  }) async {
+    try {
+      final norm = _normalizeStoreName(storeName);
+      if (norm.isEmpty) return null;
+      final sign = totalAmount < 0 ? -1 : 1;
+      final absCents = (totalAmount.abs() * 100).round();
+      final rows = await _sb
+          .from('receipts')
+          .select('id, store_name, total_amount')
+          .eq('user_id', userId)
+          .eq('date', date)
+          .limit(50);
+      for (final r in (rows as List)) {
+        final m = r as Map<String, dynamic>;
+        final candidate = _normalizeStoreName((m['store_name'] as String?) ?? '');
+        if (candidate.isEmpty) continue;
+        if (candidate != norm) continue;
+        final rTotal = (m['total_amount'] as num?)?.toDouble() ?? 0;
+        final rSign = rTotal < 0 ? -1 : 1;
+        if (rSign != sign) continue;
+        final rCents = (rTotal.abs() * 100).round();
+        if ((rCents - absCents).abs() <= 1) return m['id'] as String;
+      }
+      return null;
+    } catch (e) {
+      if (kDebugMode) debugPrint('_findExistingReceiptId failed: $e');
+      return null;
+    }
+  }
+
   /// Upload + insert a receipt straight from AI-parsed JSON (the shape the
   /// /api/parse-receipt endpoint returns). Saves items in the same call.
   /// Returns a record with either an `id` (success) or an `error` string
   /// explaining what failed. Used by the dashboard camera-FAB so the batch
   /// summary can show the real reason instead of "insert failed".
+  ///
+  /// Pre-insert dedup: if a matching receipt already exists for the user
+  /// at the same store+date+total, the new parse MERGES into the existing
+  /// row instead of creating a duplicate. Items get appended only when
+  /// the existing row has zero items, so we don't pile on dup line items
+  /// every time the user re-uploads the same photo.
   Future<({String? id, String? error})> addParsedReceipt(Map<String, dynamic> parsed, File imageFile) async {
     final uid = _sb.auth.currentUser?.id;
     if (uid == null) return (id: null, error: 'Not signed in');
@@ -203,13 +249,63 @@ class ReceiptProvider extends ChangeNotifier {
                         RegExp(r'^\d{4}-\d{2}-\d{2}').hasMatch(parsed['date'] as String))
           ? (parsed['date'] as String).substring(0, 10)
           : today;
+
+      // Pre-insert dedup. Skip if Gemini didn't return enough to identify
+      // the receipt (no store_name + 0 total = can't tell).
+      final storeName = (parsed['store_name'] as String?)?.trim().isNotEmpty == true
+          ? parsed['store_name'] as String
+          : 'Camera receipt';
+      final totalAmount = (parsed['total_amount'] as num?)?.toDouble() ?? 0;
+      String? existingId;
+      if (totalAmount.abs() > 0.01) {
+        existingId = await _findExistingReceiptId(
+          userId: uid,
+          storeName: storeName,
+          date: dateField,
+          totalAmount: totalAmount,
+        );
+      }
+      if (existingId != null) {
+        // Patch the existing row with any richer fields from the new parse.
+        final patch = <String, dynamic>{};
+        if (parsed['tax_paid'] != null) patch['tax_paid'] = (parsed['tax_paid'] as num).toDouble();
+        if (parsed['payment_method'] != null) patch['payment_method'] = parsed['payment_method'];
+        if (parsed['payment_last4'] != null) patch['payment_last4'] = parsed['payment_last4'];
+        if (parsed['category'] != null) patch['category'] = parsed['category'];
+        if ((link ?? '').isNotEmpty) patch['receipt_link'] = link;
+        if (patch.isNotEmpty) {
+          await _sb.from('receipts').update(patch).eq('id', existingId);
+        }
+        // Append items only if the existing row had none — otherwise we'd
+        // be doubling line items every time the user re-uploads.
+        final hadItems = await _sb.from('receipt_items').select('id').eq('receipt_id', existingId).limit(1);
+        final items = (parsed['items'] as List?) ?? const [];
+        if ((hadItems as List).isEmpty && items.isNotEmpty) {
+          final rows = items.map((it) {
+            final m = it as Map<String, dynamic>;
+            return {
+              'receipt_id': existingId,
+              'sku': m['sku'],
+              'model': m['model'],
+              'item_name': (m['item_name'] as String?) ?? '',
+              'qty': ((m['qty'] as num?) ?? 1).round(),
+              'price': m['price'] == null ? null : (m['price'] as num).toDouble(),
+              'returned': m['returned'] == true,
+              'category': m['category'],
+            };
+          }).toList();
+          await _sb.from('receipt_items').insert(rows);
+        }
+        _lastLoaded = null;
+        await loadReceipts(force: true);
+        return (id: existingId, error: null);
+      }
+
       final row = await _sb.from('receipts').insert({
         'user_id': uid,
-        'store_name': (parsed['store_name'] as String?)?.trim().isNotEmpty == true
-            ? parsed['store_name']
-            : 'Camera receipt',
+        'store_name': storeName,
         'date': dateField,
-        'total_amount': (parsed['total_amount'] as num?)?.toDouble() ?? 0,
+        'total_amount': totalAmount,
         'tax_paid':     (parsed['tax_paid']     as num?)?.toDouble() ?? 0,
         'payment_method': parsed['payment_method'],
         'payment_last4':  parsed['payment_last4'],

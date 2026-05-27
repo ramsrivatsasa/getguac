@@ -35,7 +35,17 @@ extension ReceiptPeriodX on ReceiptPeriod {
     ReceiptPeriod.year       => const Duration(days: 365),
     ReceiptPeriod.all        => null,
   };
-  int get limit => this == ReceiptPeriod.all ? 1000 : 500;
+  // Per-period row caps. Default (1M) is intentionally tiny so the
+  // receipts screen opens INSTANTLY on first paint — most users scroll
+  // recent activity, not full history. Tapping 3M / 6M / 1Y / All loads
+  // progressively more.
+  int get limit => switch (this) {
+    ReceiptPeriod.month      => 10,
+    ReceiptPeriod.threeMonth => 200,
+    ReceiptPeriod.sixMonth   => 400,
+    ReceiptPeriod.year       => 800,
+    ReceiptPeriod.all        => 1500,
+  };
 }
 
 class ReceiptProvider extends ChangeNotifier {

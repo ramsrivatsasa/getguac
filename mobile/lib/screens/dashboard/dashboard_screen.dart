@@ -147,6 +147,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return;
     }
 
+    // Camera path (long receipts via raw camera, no ML Kit dependency).
+    // User takes one photo per page; after each shot we ask "Add another?"
+    // until they say done. All pages get bundled as ONE receipt the same
+    // way the ML Kit scanner output is processed.
+    //
+    // This is the guaranteed-working capture path — uses system camera
+    // only, no Play Services / ML Kit module download required. Right
+    // path when the document scanner fails to launch on a device.
+    if (source == _CaptureSource.camera) {
+      final picker = ImagePicker();
+      final pages = <File>[];
+      while (mounted) {
+        final img = await picker.pickImage(
+          source: ImageSource.camera,
+          imageQuality: 85,
+          maxWidth: 2400,
+          maxHeight: 4000,
+        );
+        if (img == null) break; // user cancelled / hit back
+        pages.add(File(img.path));
+        if (!mounted) return;
+        final more = await _confirmAnotherPage(pages.length);
+        if (more != true) break;
+      }
+      if (pages.isEmpty || !mounted) return;
+      await _processScannerResult(pages);
+      return;
+    }
+
     // Gallery path: each pick is a SEPARATE receipt (batch).
     final picker = ImagePicker();
     final List<File> queue = [];
@@ -199,9 +228,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
             leading: const Icon(Icons.document_scanner_outlined, color: _kEmerald700),
             title: const Text('Scan receipt'),
             subtitle: const Text(
-              'Auto-cropped, multi-page. Best for long receipts that don\'t fit in one frame.',
+              'Auto-cropped multi-page. Best when it works — falls back to camera if the scanner module isn\'t ready.',
             ),
             onTap: () => Navigator.of(ctx).pop(_CaptureSource.scanner),
+          ),
+          ListTile(
+            leading: const Icon(Icons.camera_alt_outlined, color: _kEmerald700),
+            title: const Text('Camera (long receipt)'),
+            subtitle: const Text(
+              'Take ONE photo per page of a long receipt. Tap "Add another page" to capture each frame; all pages become a single receipt.',
+            ),
+            onTap: () => Navigator.of(ctx).pop(_CaptureSource.camera),
           ),
           ListTile(
             leading: const Icon(Icons.photo_library_outlined, color: _kEmerald700),
@@ -955,6 +992,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
   /// in the background.
   ///
   /// Returns true if the user picked the "Use camera" fallback.
+  /// Asks the user after each camera shot whether they want to capture
+  /// another page of the SAME receipt. Used by the long-receipt
+  /// multi-photo flow. Returns true to take another shot, false / null
+  /// to finalize the receipt with what we have so far.
+  Future<bool?> _confirmAnotherPage(int pagesSoFar) async {
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(children: [
+          const Icon(Icons.photo_camera_outlined, color: _kEmerald700, size: 22),
+          const SizedBox(width: 8),
+          Expanded(child: Text('$pagesSoFar page${pagesSoFar == 1 ? '' : 's'} captured')),
+        ]),
+        content: Text(
+          pagesSoFar == 1
+            ? 'For a long receipt that doesn\'t fit one frame, take another shot of the next section. Otherwise tap Done to save.'
+            : 'Add another page of this receipt, or tap Done to save all $pagesSoFar pages as one receipt.',
+          style: const TextStyle(fontSize: 13.5, height: 1.45),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Done'),
+          ),
+          FilledButton.icon(
+            style: FilledButton.styleFrom(backgroundColor: const Color(0xFF15803d)),
+            icon: const Icon(Icons.add_a_photo, size: 16),
+            label: const Text('Add another page'),
+            onPressed: () => Navigator.of(ctx).pop(true),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<bool?> _showScannerErrorDialog({required bool isModuleNotReady, required String rawError}) async {
     return showDialog<bool>(
       context: context,
@@ -1521,7 +1595,7 @@ class _StoreSpend {
 /// Top-level pick on the capture entry sheet — scanner (multi-page,
 /// auto-cropped, treated as ONE receipt) vs. gallery (multi-pick, each
 /// treated as a SEPARATE receipt).
-enum _CaptureSource { scanner, gallery }
+enum _CaptureSource { scanner, camera, gallery }
 
 /// Choice the user makes on the preview screen after a capture.
 enum _PreviewAction {

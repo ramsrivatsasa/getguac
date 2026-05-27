@@ -1045,11 +1045,45 @@ export default function ReceiptsPage() {
 function ReceiptLineItems({ receiptId }) {
   const { data, isLoading, error } = useReceipt(receiptId)
   const updateItem = useUpdateReceiptItem()
+  // Pull every receipt for the user once — only used by the
+  // statement-line matcher below. Cached by react-query so it's free
+  // when multiple statement rows expand.
+  const { data: allReceipts = [] } = useReceipts()
 
   if (isLoading) return <div className="text-xs text-gray-400 py-2">Loading items…</div>
   if (error) return <div className="text-xs text-rose-500 py-2">Failed to load: {error.message}</div>
   const items = data?.receipt_items || []
   const policies = data?.receipt_refund_policies || []
+
+  // For statement-imported receipts, each "item" is actually a separate
+  // bank transaction. Try to match each transaction against a real receipt
+  // the user already imported (camera / email). Match key: amount within
+  // $0.01 + date within ±5 days + the candidate is NOT itself a statement.
+  // When matched, the action cell shows a "View receipt" deep-link or a
+  // "Reconciled" badge instead of the meaningless Return button.
+  const isFromStatement = !!data?.from_statement
+  function findReceiptMatchForStatementItem(it) {
+    if (!isFromStatement) return null
+    const amount = Math.abs(parseFloat(it.price || 0))
+    if (!Number.isFinite(amount) || amount === 0) return null
+    const stmtDate = data?.date ? new Date(data.date) : null
+    if (!stmtDate || isNaN(stmtDate.getTime())) return null
+    const candidates = allReceipts.filter(r =>
+      !r.from_statement &&
+      r.id !== data.id &&
+      Math.abs(parseFloat(r.total_amount || 0) - amount) < 0.011 &&
+      r.date
+    )
+    if (candidates.length === 0) return null
+    // Pick the candidate with the closest date.
+    let best = null
+    let bestDelta = Infinity
+    for (const c of candidates) {
+      const delta = Math.abs((new Date(c.date) - stmtDate) / 86400000)
+      if (delta <= 5 && delta < bestDelta) { best = c; bestDelta = delta }
+    }
+    return best
+  }
   if (items.length === 0 && policies.length === 0) {
     // Statement-imported receipts never have line items — your card issuer
     // only gives a total. Show a friendly note instead of the bare "no items".
@@ -1279,7 +1313,41 @@ function ReceiptLineItems({ receiptId }) {
               )}
               {!isNonReturnable && (
                 <td className="px-3 py-0.5">
-                  {perishable && !it.returned ? (
+                  {isFromStatement ? (() => {
+                    // Bank-statement rows aren't user-returnable items.
+                    // Refunds (negative amounts) get returned=true at import,
+                    // but Undo doesn't make sense either — the bank's
+                    // transaction is authoritative, not ours. Replace the
+                    // Return/Undo button with a "View receipt" deep-link if
+                    // we matched the transaction to a real receipt, or with
+                    // a "Reconciled" badge when the match's receipt already
+                    // points back at this statement (per migration_016).
+                    const match = findReceiptMatchForStatementItem(it)
+                    if (!match) {
+                      return <span className="text-[10px] text-gray-400 italic">unmatched</span>
+                    }
+                    const reconciled = match.reconciled && match.reconciled_with === data.id
+                    if (reconciled) {
+                      return (
+                        <Link
+                          href={`/receipts/${match.id}`}
+                          className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100"
+                          title={`Reconciled with ${match.store_name || 'receipt'} on ${match.date}`}
+                        >
+                          ✓ Reconciled
+                        </Link>
+                      )
+                    }
+                    return (
+                      <Link
+                        href={`/receipts/${match.id}`}
+                        className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-100 hover:bg-blue-100"
+                        title={`Open the matching receipt — ${match.store_name || ''} on ${match.date}`}
+                      >
+                        <Eye size={11} /> View receipt
+                      </Link>
+                    )
+                  })() : (perishable && !it.returned) ? (
                     // Don't offer the Return button on a perishable item the
                     // user hasn't already marked returned — clicking it would
                     // never have a real-world payoff. Keep Undo available

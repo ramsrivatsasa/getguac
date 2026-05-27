@@ -76,6 +76,18 @@ HEALTH & HOUSEHOLD ITEMS — split between four specific slugs (do not lump into
   "TOOTHPASTE" / "SHAMPOO" / "DEODORANT" / "RAZOR" / "LOTION" → "personal-care"
   "TOILET PAPER" / "PAPER TOWELS" / "DISH SOAP" / "LAUNDRY DETERGENT" / "TRASH BAGS" → "household"
 
+SERVICES & SUBSCRIPTIONS — receipts from hosting, domains, SaaS, streaming, cloud, and other recurring online services use "subs", NOT "tech":
+  Hosting / domains: IONOS, GoDaddy, Namecheap, Cloudflare, Vercel, Netlify, DigitalOcean, Linode, Hostinger, Bluehost, SiteGround → "subs"
+  Cloud / infra: AWS, Amazon Web Services, Google Cloud, Microsoft Azure → "subs"
+  SaaS: Adobe Creative Cloud, Microsoft 365, GitHub, Notion, Figma, Slack, Zoom, Canva → "subs"
+  Streaming / media: Netflix, Hulu, Disney+, HBO Max, Spotify, Apple Music, YouTube Premium → "subs"
+  AI tools: ChatGPT Plus, Claude Pro, GitHub Copilot, Cursor, Midjourney → "subs"
+"tech" is for PHYSICAL electronics (laptops, phones, cables, chargers) — not for software services. A subscription renewal at $26.40 from IONOS is "subs", not "tech".
+
+BANK FEES — anything the cardholder pays the issuer/bank for (NOT for a merchant purchase) uses "bank-fees":
+  Interest charges, finance charges, balance-transfer fees, annual fees, late fees, overdraft fees, ATM fees, foreign-transaction fees, cash-advance fees → "bank-fees"
+  Statement rows tagged "[Fee]", "[Interest]", "[Annual Fee]" → "bank-fees"
+
 HEALTH TIER — for each item, set health_tier to:
 - "healthy" : vegetables, fruit, lean protein, water, tea, plain yogurt, eggs, oats, legumes
 - "neutral" : grains, dairy, coffee, lean meats, bread, most prepared foods, non-food items

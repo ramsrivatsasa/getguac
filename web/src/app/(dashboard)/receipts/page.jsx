@@ -1445,25 +1445,26 @@ function ReceiptLineItems({ receiptId }) {
       // any money-back-guarantee window for these (e.g. IONOS hosting's 30d
       // refund), so users haven't lost the policy info — they just can't
       // ask GuacWizard to "mark this hosting plan returned".
+      // Categories that never offer a meaningful "Return" affordance.
+      // Consumables, recurring services, donations, and bank charges all
+      // bypass the merchant return-policy flow — refunds/cancellations
+      // happen via the issuer or merchant directly, not by marking a
+      // line item returned in our app.
       const NON_RETURNABLE_CATEGORIES = new Set([
-        'eats', 'gas-up', 'bars',
-        'coffee', 'tea', 'coke', 'pepsi', 'juice', 'milkshake',
-        'subs', 'bills', 'charity',
+        'eats', 'gas-up', 'bars', 'tea', 'drinks',
+        'subs', 'bills', 'bank-fees', 'charity',
       ])
       const isNonReturnable = NON_RETURNABLE_CATEGORIES.has(data?.category)
       const nonReturnableLabel = {
-        'eats':      'Prepared food — already consumed, no returns',
-        'gas-up':    'Fuel pumped — no returns',
-        'bars':      'Bar tab — alcohol consumed, no returns',
-        'coffee':    'Beverage consumed — no returns',
-        'tea':       'Beverage consumed — no returns',
-        'coke':      'Beverage consumed — no returns',
-        'pepsi':     'Beverage consumed — no returns',
-        'juice':     'Beverage consumed — no returns',
-        'milkshake': 'Beverage consumed — no returns',
-        'subs':      'Subscription — cancel/refund via the merchant, not via a return',
-        'bills':     'Utility bill — non-returnable; disputes go to the provider',
-        'charity':   'Donation — non-refundable',
+        'eats':       'Prepared food — already consumed, no returns',
+        'gas-up':     'Fuel pumped — no returns',
+        'bars':       'Bar tab — alcohol consumed, no returns',
+        'tea':        'Beverage consumed — no returns',
+        'drinks':     'Beverage consumed — no returns',
+        'subs':       'Subscription — cancel/refund via the merchant, not via a return',
+        'bills':      'Utility bill — non-returnable; disputes go to the provider',
+        'bank-fees':  'Bank fee — dispute with the issuer, not via return',
+        'charity':    'Donation — non-refundable',
       }[data?.category] || 'Non-returnable category'
       return (
       <div className="rounded-lg border bg-white overflow-hidden">

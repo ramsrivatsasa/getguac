@@ -59,6 +59,20 @@
                 <data android:mimeType="text/*" />
             </intent-filter>
         </activity>
+        <!-- ML Kit Document Scanner — pre-fetch the docscanner module from
+             Play Services at install time so the first scan doesn't crash
+             with NPE when the module isn't loaded yet. Required because the
+             plugin (google_mlkit_document_scanner 0.4.1) doesn't wrap the
+             sync NPE from getStartScanIntent() — it propagates as a raw
+             PlatformException with no helpful message. Pre-fetching avoids
+             the cold-start gap entirely for Play Store users; sideloaded
+             users still depend on Play Services downloading the module on
+             first launch, but the manifest hint helps Play Services
+             prioritise it. -->
+        <meta-data
+            android:name="com.google.mlkit.vision.DEPENDENCIES"
+            android:value="docscanner" />
+
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

@@ -97,9 +97,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
       try {
         pages = await DocumentScannerService.scan(pageLimit: 5);
       } catch (e) {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text("Couldn't open scanner: $e"),
-        ));
+        if (!mounted) return;
+        final msg = e.toString();
+        // The Play Services Doc Scanner module is downloaded on demand.
+        // On first invocation (especially on sideloaded builds without Play
+        // Store pre-fetch), `getStartScanIntent` can throw a raw NPE
+        // synchronously before the module arrives. Detect that signature
+        // and offer the camera as a fallback so the user can still capture
+        // a receipt right now.
+        final looksLikeModuleNotReady =
+            msg.contains('NullPointerException') ||
+            msg.contains('UNAVAILABLE') ||
+            msg.contains('MlKitException') ||
+            msg.contains('not yet available');
+        final retryWithCamera = await _showScannerErrorDialog(
+          isModuleNotReady: looksLikeModuleNotReady,
+          rawError: msg,
+        );
+        if (!mounted) return;
+        if (retryWithCamera == true) {
+          // Fall back to the system camera via image_picker — the user still
+          // gets to capture a receipt, just without the edge-detection UI.
+          final picker = ImagePicker();
+          final img = await picker.pickImage(source: ImageSource.camera, imageQuality: 80);
+          if (img == null || !mounted) return;
+          await _processSingleCapture(File(img.path));
+        }
         return;
       }
       if (pages == null || pages.isEmpty || !mounted) return;
@@ -972,6 +995,75 @@ class _DashboardScreenState extends State<DashboardScreen> {
       icon: const GuacMascot(size: 24),
       label: const Icon(Icons.camera_alt, size: 20),
       tooltip: 'Add receipt (camera or gallery)',
+    );
+  }
+
+  /// Shown when the ML Kit document scanner fails to start. Most common
+  /// cause is the Play Services Doc Scanner module not yet downloaded —
+  /// surfaces as a raw NullPointerException because the plugin doesn't
+  /// wrap the sync error. We offer a one-tap fallback to the regular
+  /// camera so capture still works while the module finishes downloading
+  /// in the background.
+  ///
+  /// Returns true if the user picked the "Use camera" fallback.
+  Future<bool?> _showScannerErrorDialog({required bool isModuleNotReady, required String rawError}) async {
+    return showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(children: [
+          GuacMascot(size: 36),
+          SizedBox(width: 12),
+          Expanded(child: Text('Scanner is warming up')),
+        ]),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              isModuleNotReady
+                  ? "GuacWizard's scanner module is still downloading from Play Services — usually finishes within a minute on Wi-Fi. While you wait, use the camera and we'll parse it the same way."
+                  : "GuacWizard couldn't open the scanner. Use the camera instead — we'll parse the photo with the same AI.",
+              style: const TextStyle(fontSize: 13.5, height: 1.45),
+            ),
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFf3f4f6),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                rawError.length > 220 ? '${rawError.substring(0, 220)}…' : rawError,
+                style: const TextStyle(fontSize: 9.5, color: Color(0xFF6b7280), fontFamily: 'monospace', height: 1.3),
+              ),
+            ),
+          ],
+        ),
+        actionsPadding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+        actions: [
+          TextButton(
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              minimumSize: const Size(0, 32),
+            ),
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton.icon(
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFF15803d),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              minimumSize: const Size(0, 32),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+              textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+            ),
+            icon: const Icon(Icons.camera_alt, size: 16),
+            label: const Text('Use camera'),
+            onPressed: () => Navigator.of(ctx).pop(true),
+          ),
+        ],
+      ),
     );
   }
 

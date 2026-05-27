@@ -234,14 +234,14 @@ class ReceiptProvider extends ChangeNotifier {
   /// row instead of creating a duplicate. Items get appended only when
   /// the existing row has zero items, so we don't pile on dup line items
   /// every time the user re-uploads the same photo.
-  Future<({String? id, String? error})> addParsedReceipt(Map<String, dynamic> parsed, File imageFile) async {
+  Future<({String? id, String? error, bool merged})> addParsedReceipt(Map<String, dynamic> parsed, File imageFile) async {
     final uid = _sb.auth.currentUser?.id;
-    if (uid == null) return (id: null, error: 'Not signed in');
+    if (uid == null) return (id: null, error: 'Not signed in', merged: false);
     String? link;
     try {
       link = await uploadImage(imageFile);
     } catch (e) {
-      return (id: null, error: 'Image upload failed: $e');
+      return (id: null, error: 'Image upload failed: $e', merged: false);
     }
     try {
       final today = DateTime.now().toIso8601String().substring(0, 10);
@@ -298,7 +298,7 @@ class ReceiptProvider extends ChangeNotifier {
         }
         _lastLoaded = null;
         await loadReceipts(force: true);
-        return (id: existingId, error: null);
+        return (id: existingId, error: null, merged: true);
       }
 
       final row = await _sb.from('receipts').insert({
@@ -340,15 +340,15 @@ class ReceiptProvider extends ChangeNotifier {
       }
       _lastLoaded = null;
       await loadReceipts(force: true);
-      return (id: id, error: null);
+      return (id: id, error: null, merged: false);
     } on PostgrestException catch (e) {
       if (kDebugMode) debugPrint('addParsedReceipt postgrest: ${e.message} (${e.code})');
       // Surface the database's actual rejection reason. Most useful causes:
       // 23505 = unique constraint, 42501 = RLS denied, 23502 = NOT NULL.
-      return (id: null, error: 'DB rejected: ${e.message}${e.code != null ? " (${e.code})" : ""}');
+      return (id: null, error: 'DB rejected: ${e.message}${e.code != null ? " (${e.code})" : ""}', merged: false);
     } catch (e) {
       if (kDebugMode) debugPrint('addParsedReceipt error: $e');
-      return (id: null, error: e.toString());
+      return (id: null, error: e.toString(), merged: false);
     }
   }
 

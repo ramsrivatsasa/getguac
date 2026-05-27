@@ -347,10 +347,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final id = insert.id!;
       final storeBit = parsed.storeName.isNotEmpty ? parsed.storeName : 'Receipt';
       final totalBit = parsed.totalAmount > 0 ? ' · \$${parsed.totalAmount.toStringAsFixed(2)}' : '';
+      // When dedup merged into an existing row, say so explicitly so the
+      // user isn't searching for a "new" receipt that was rolled up into
+      // an existing one. The View action still opens the (now-enriched)
+      // existing receipt.
+      final msg = insert.merged
+        ? 'Already had this receipt — merged $storeBit$totalBit into the existing row.'
+        : '$storeBit$totalBit — ${parsed.items.length} item${parsed.items.length == 1 ? "" : "s"} from ${pages.length} page${pages.length == 1 ? "" : "s"}';
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('$storeBit$totalBit — ${parsed.items.length} item${parsed.items.length == 1 ? "" : "s"} from ${pages.length} page${pages.length == 1 ? "" : "s"}'),
+        content: Text(msg),
         action: SnackBarAction(label: 'View', onPressed: () => context.go('/receipts/$id')),
-        duration: const Duration(seconds: 4),
+        duration: const Duration(seconds: 5),
       ));
     } catch (e) {
       if (mounted) {
@@ -428,9 +435,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
 
-    int saved = 0, failed = 0;
+    int saved = 0, failed = 0, merged = 0;
     final failures = <String>[];
     final List<String> savedIds = [];
+    final List<String> mergedIds = [];
     final List<_DupHit> duplicates = [];
 
     for (int i = 0; i < files.length; i++) {
@@ -483,8 +491,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         };
         final insert = await provider.addParsedReceipt(asMap, file);
         if (insert.id != null) {
-          saved++;
-          savedIds.add(insert.id!);
+          if (insert.merged) {
+            merged++;
+            mergedIds.add(insert.id!);
+          } else {
+            saved++;
+            savedIds.add(insert.id!);
+          }
         } else {
           failed++;
           failures.add('Photo ${i + 1}: ${insert.error ?? "insert failed"}');
@@ -506,6 +519,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     // Summary
     final summary = StringBuffer();
     summary.write('Saved $saved');
+    if (merged > 0) summary.write(', $merged merged into existing');
     if (duplicates.isNotEmpty) summary.write(', ${duplicates.length} duplicate${duplicates.length == 1 ? '' : 's'} skipped');
     if (failed > 0) summary.write(', $failed failed');
 
@@ -768,10 +782,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final id = insert.id!;
       final storeBit = parsed.storeName.isNotEmpty ? parsed.storeName : 'Receipt';
       final totalBit = parsed.totalAmount > 0 ? ' · \$${parsed.totalAmount.toStringAsFixed(2)}' : '';
+      final msg = insert.merged
+        ? 'Already had this receipt — merged $storeBit$totalBit into the existing row.'
+        : '$storeBit$totalBit — ${parsed.items.length} item${parsed.items.length == 1 ? "" : "s"}';
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('$storeBit$totalBit — ${parsed.items.length} item${parsed.items.length == 1 ? "" : "s"}'),
+        content: Text(msg),
         action: SnackBarAction(label: 'View', onPressed: () => context.go('/receipts/$id')),
-        duration: const Duration(seconds: 3),
+        duration: const Duration(seconds: 4),
       ));
     } catch (e) {
       if (mounted) {

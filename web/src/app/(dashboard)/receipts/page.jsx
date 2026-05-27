@@ -1129,12 +1129,39 @@ function ReceiptLineItems({ receiptId }) {
   return (
     <div className="space-y-3">
       {items.length === 0 ? null : (() => {
-      const isNonReturnable = data?.category === 'eats' || data?.category === 'gas-up'
+      // Receipt-level non-returnable categories. There's nothing physical to
+      // return — they're either consumed at point-of-sale (eats, gas-up,
+      // bars + the soft drinks / coffee / tea / juice / milkshake one-time
+      // purchases) or non-physical (subs, bills = utilities, charity =
+      // donations). The receipt-level Refund Policy card above still shows
+      // any money-back-guarantee window for these (e.g. IONOS hosting's 30d
+      // refund), so users haven't lost the policy info — they just can't
+      // ask GuacWizard to "mark this hosting plan returned".
+      const NON_RETURNABLE_CATEGORIES = new Set([
+        'eats', 'gas-up', 'bars',
+        'coffee', 'tea', 'coke', 'pepsi', 'juice', 'milkshake',
+        'subs', 'bills', 'charity',
+      ])
+      const isNonReturnable = NON_RETURNABLE_CATEGORIES.has(data?.category)
+      const nonReturnableLabel = {
+        'eats':      'Prepared food — already consumed, no returns',
+        'gas-up':    'Fuel pumped — no returns',
+        'bars':      'Bar tab — alcohol consumed, no returns',
+        'coffee':    'Beverage consumed — no returns',
+        'tea':       'Beverage consumed — no returns',
+        'coke':      'Beverage consumed — no returns',
+        'pepsi':     'Beverage consumed — no returns',
+        'juice':     'Beverage consumed — no returns',
+        'milkshake': 'Beverage consumed — no returns',
+        'subs':      'Subscription — cancel/refund via the merchant, not via a return',
+        'bills':     'Utility bill — non-returnable; disputes go to the provider',
+        'charity':   'Donation — non-refundable',
+      }[data?.category] || 'Non-returnable category'
       return (
       <div className="rounded-lg border bg-white overflow-hidden">
       {isNonReturnable && (
         <div className="px-3 py-0.5 bg-amber-50 text-amber-800 text-[11px] font-semibold border-b border-amber-100">
-          Non-returnable category — return option hidden
+          {nonReturnableLabel} — return option hidden
         </div>
       )}
       <table className="w-full text-xs">

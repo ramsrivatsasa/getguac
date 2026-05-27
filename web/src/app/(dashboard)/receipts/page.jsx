@@ -13,6 +13,7 @@ import { formatDateShort } from '../../../lib/dateFormat'
 import { Upload, Trash2, Eye, Search, Download, Loader2, Sparkles, X, Shield, Camera, ChevronDown, ChevronRight, Undo2, ShoppingCart, Monitor, Link2, Tag, RefreshCw } from 'lucide-react'
 import { guessCategory } from '../../../lib/categorizeRules'
 import { normalizeStoreName } from '../../../lib/store-name-normalize'
+import { isItemPerishable } from '../../../lib/perishable'
 import { createClient as createSbClient } from '../../../lib/supabase/client'
 import { useQueryClient } from '@tanstack/react-query'
 import CameraCapture from '../../../components/CameraCapture'
@@ -1151,7 +1152,13 @@ function ReceiptLineItems({ receiptId }) {
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-50">
-          {items.map(it => (
+          {items.map(it => {
+            // Per-item perishable check — fresh produce, dairy, eggs, raw meat,
+            // ice, prepared deli. These over-ride any receipt-level return
+            // policy because no merchant takes back a half-eaten salad even
+            // when the store's general window is generous.
+            const perishable = isItemPerishable(it)
+            return (
             <tr key={it.id} className={it.returned ? 'bg-rose-50/40' : ''}>
               <td className="px-3 py-0.5 text-gray-400 text-[11px]">{it.sku || '—'}</td>
               <td className="px-3 py-0.5 text-gray-400 text-[11px]">{it.model || '—'}</td>
@@ -1165,7 +1172,14 @@ function ReceiptLineItems({ receiptId }) {
                 {it.price == null ? <span className="text-gray-300">—</span> : `$${parseFloat(it.price).toFixed(2)}`}
               </td>
               <td className="px-3 py-0.5">
-                {(() => {
+                {perishable ? (
+                  <span
+                    className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200"
+                    title="Fresh produce / dairy / meat / eggs / prepared food — merchants don't accept returns on perishables."
+                  >
+                    Perishable · final sale
+                  </span>
+                ) : (() => {
                   // Render policy inline: ID + days, with expiry + eligible in
                   // the hover tooltip. Used to be a separate panel above the
                   // items table — folded here for uniform UI across receipts.
@@ -1210,7 +1224,7 @@ function ReceiptLineItems({ receiptId }) {
               </td>
               {!isNonReturnable && (
                 <td className="px-3 py-0.5 text-gray-500">
-                  {(() => {
+                  {perishable ? <span className="text-gray-300">—</span> : (() => {
                     // If the item was actually returned, that date wins.
                     if (it.return_date) return it.return_date
                     // Otherwise show "by <expiry_date>" so the column tells the
@@ -1229,16 +1243,25 @@ function ReceiptLineItems({ receiptId }) {
               )}
               {!isNonReturnable && (
                 <td className="px-3 py-0.5">
-                  <button
-                    type="button"
-                    onClick={() => handleToggleReturn(it)}
-                    disabled={updateItem.isPending}
-                    className={it.returned
-                      ? 'inline-flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      : 'inline-flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded-md bg-rose-600 text-white hover:bg-rose-700'}>
-                    <Undo2 size={11} />
-                    {it.returned ? 'Undo' : 'Return'}
-                  </button>
+                  {perishable && !it.returned ? (
+                    // Don't offer the Return button on a perishable item the
+                    // user hasn't already marked returned — clicking it would
+                    // never have a real-world payoff. Keep Undo available
+                    // when it WAS marked returned (the rare case of refund
+                    // for spoiled-on-arrival produce, etc.).
+                    <span className="text-[10px] text-gray-400 italic">N/A</span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleToggleReturn(it)}
+                      disabled={updateItem.isPending}
+                      className={it.returned
+                        ? 'inline-flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        : 'inline-flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded-md bg-rose-600 text-white hover:bg-rose-700'}>
+                      <Undo2 size={11} />
+                      {it.returned ? 'Undo' : 'Return'}
+                    </button>
+                  )}
                 </td>
               )}
               <td className="px-3 py-0.5">
@@ -1257,7 +1280,8 @@ function ReceiptLineItems({ receiptId }) {
                 )}
               </td>
             </tr>
-          ))}
+            )
+          })}
         </tbody>
       </table>
       </div>

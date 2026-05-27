@@ -19,6 +19,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import CameraCapture from '../../../components/CameraCapture'
 import ScreenshotCapture from '../../../components/ScreenshotCapture'
 import GuacMascot from '../../../components/GuacMascot'
+import CategoryPicker from '../../../components/CategoryPicker'
 
 const EMPTY = { store_name: '', date: '', total_amount: '', tax_paid: '', reward_no: '', business_purchase: false }
 
@@ -28,6 +29,7 @@ const EMPTY = { store_name: '', date: '', total_amount: '', tax_paid: '', reward
 const RECEIPT_COLUMNS = [
   { id: 'id',       label: 'Receipt ID', default: 140 },
   { id: 'store',    label: 'Store',      default: 220 },
+  { id: 'category', label: 'Category',   default: 140 },
   { id: 'date',     label: 'Date',       default: 120 },
   { id: 'amount',   label: 'Amount',     default: 110 },
   { id: 'tax',      label: 'Tax',        default: 90  },
@@ -517,6 +519,21 @@ export default function ReceiptsPage() {
   const unreconciledStatementCount = receipts.filter(r => r.from_statement && !r.reconciled).length
   const [dedupBusy, setDedupBusy] = useState(false)
   const [dedupPreview, setDedupPreview] = useState(null)  // null | { groups, receipts_to_delete }
+  // Inline per-row category update from the receipts table. Optimistic
+  // refetch via TanStack invalidation so the chip reflects the new state
+  // immediately. Toast on save / error.
+  async function handleRowCategoryChange(receiptId, slug) {
+    try {
+      const sb = createSbClient()
+      const { error } = await sb.from('receipts').update({ category: slug || null }).eq('id', receiptId)
+      if (error) throw new Error(error.message)
+      toast.success(slug ? `Categorized as ${slug}` : 'Category cleared')
+      qc.invalidateQueries({ queryKey: ['receipts'] })
+      qc.invalidateQueries({ queryKey: ['reports'] })
+    } catch (e) {
+      toast.error(e.message)
+    }
+  }
   async function handleFindDuplicates() {
     setDedupBusy(true)
     try {
@@ -1061,6 +1078,13 @@ export default function ReceiptsPage() {
                               </>
                             })()}
                           </div>
+                        </td>
+                        <td className="px-4 py-1" onClick={e => e.stopPropagation()}>
+                          <CategoryPicker
+                            size="xs"
+                            value={r.category || ''}
+                            onChange={slug => handleRowCategoryChange(r.id, slug)}
+                          />
                         </td>
                         <td className="px-4 py-1 text-gray-500 whitespace-nowrap">{formatDateShort(r.date)}</td>
                         <td className="px-4 py-1">${parseFloat(r.total_amount || 0).toFixed(2)}</td>

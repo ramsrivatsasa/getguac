@@ -8,6 +8,7 @@ import '../../providers/receipt_provider.dart';
 import '../../models/receipt_model.dart';
 import '../../utils/date_format.dart';
 import '../../services/receipt_parse_service.dart';
+import '../../categories.dart' as cat;
 
 class ReceiptsScreen extends StatefulWidget {
   /// Optional initial store filter from a deep-link like
@@ -99,26 +100,9 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
       return;
     }
     final parsed = result.data!;
-
-    // Duplicate check — same key as /api/receipts/dedup. If we already have
-    // this store+date+total, ask before opening the Add dialog.
-    if (parsed.storeName.isNotEmpty && parsed.totalAmount > 0) {
-      final today = DateTime.now().toIso8601String().substring(0, 10);
-      final dupDate = (parsed.date != null && parsed.date!.isNotEmpty) ? parsed.date! : today;
-      final dup = await context.read<ReceiptProvider>().findDuplicate(
-        storeName: parsed.storeName,
-        date: dupDate,
-        totalAmount: parsed.totalAmount,
-      );
-      if (!mounted) return;
-      if (dup != null) {
-        final action = await _askDuplicateAction(dup);
-        if (!mounted || action == null) return;
-        if (action == false) { context.go('/receipts/${dup.id}'); return; }
-        // action == true → fall through and open the Add dialog
-      }
-    }
-
+    // Duplicate dialog removed (user-requested) — the substring matcher
+    // caused too many false positives. Real dupes are cleaned up via the
+    // web Find duplicates button which uses the strict server-side matcher.
     if (!mounted) return;
     showDialog(
       context: context,
@@ -126,49 +110,57 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
     );
   }
 
-  /// Same dialog shape as the dashboard FAB's duplicate prompt.
-  /// Returns: null=cancel, true=save anyway, false=view existing.
-  Future<bool?> _askDuplicateAction(Receipt existing) async {
-    return showDialog<bool?>(
+  /// Bottom-sheet category picker. Tapping a row's category chip opens
+  /// this — pick a preset → updates receipts.category via the provider.
+  /// Preset categories only; users edit custom categories on web.
+  Future<void> _pickCategoryFor(Receipt r) async {
+    final picked = await showModalBottomSheet<String?>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Looks like a duplicate'),
-        content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text(
-            'We already have a receipt from the same store, date, and total. Save another copy?',
-            style: TextStyle(fontSize: 13, height: 1.4),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: const Color(0xFFf0fdf4),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFa7f3d0)),
-            ),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(existing.storeName,
-                style: const TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF064e3b))),
-              const SizedBox(height: 2),
-              Text('${existing.date}  ·  \$${existing.totalAmount.toStringAsFixed(2)}',
-                style: const TextStyle(fontSize: 12, color: Color(0xFF065f46))),
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => SafeArea(
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              const Expanded(child: Text('Categorize receipt',
+                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: Color(0xFF064e3b)))),
+              IconButton(icon: const Icon(Icons.close, size: 20), onPressed: () => Navigator.of(ctx).pop()),
             ]),
-          ),
-        ]),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(null), child: const Text('Cancel')),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('View existing'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: const Color(0xFF15803d)),
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Save anyway'),
-          ),
-        ],
+            const SizedBox(height: 4),
+            Text(r.storeName, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.black87)),
+            const SizedBox(height: 12),
+            Wrap(spacing: 6, runSpacing: 6, children: [
+              ActionChip(
+                avatar: const Icon(Icons.clear, size: 14, color: Colors.black54),
+                label: const Text('Uncategorized', style: TextStyle(fontSize: 12)),
+                onPressed: () => Navigator.of(ctx).pop(''),
+              ),
+              for (final c in cat.kPresetCategories)
+                ActionChip(
+                  avatar: Text(c.emoji, style: const TextStyle(fontSize: 14)),
+                  label: Text(c.label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                  backgroundColor: r.category == c.slug ? cat.tintFor(c.color).withValues(alpha: 0.18) : null,
+                  onPressed: () => Navigator.of(ctx).pop(c.slug),
+                ),
+            ]),
+            const SizedBox(height: 8),
+          ]),
+        ),
       ),
     );
+    if (picked == null || !mounted) return;
+    try {
+      await context.read<ReceiptProvider>().updateReceipt(r.id, {'category': picked.isEmpty ? null : picked});
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(picked.isEmpty ? 'Category cleared' : 'Categorized as $picked'),
+        duration: const Duration(seconds: 2),
+      ));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Update failed: $e')));
+    }
   }
 
   void _addManual() {
@@ -358,10 +350,17 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
                             Text('${r.rating}', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: _ratingColor(r.rating!))),
                           ],
                         ]),
-                        subtitle: Text(
-                          '${formatDateShort(r.date)} • Tax: \$${r.taxPaid.toStringAsFixed(2)}'
-                          '${r.itemCount > 0 ? " • ${r.itemCount} ${r.itemCount == 1 ? "item" : "items"}" : ""}',
-                        ),
+                        subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+                          Text(
+                            '${formatDateShort(r.date)} • Tax: \$${r.taxPaid.toStringAsFixed(2)}'
+                            '${r.itemCount > 0 ? " • ${r.itemCount} ${r.itemCount == 1 ? "item" : "items"}" : ""}',
+                          ),
+                          const SizedBox(height: 4),
+                          GestureDetector(
+                            onTap: () => _pickCategoryFor(r),
+                            child: _CategoryChip(slug: r.category),
+                          ),
+                        ]),
                         trailing: _selectionMode
                           ? Text('\$${r.totalAmount.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold))
                           : Row(mainAxisSize: MainAxisSize.min, children: [
@@ -514,6 +513,49 @@ class _AddReceiptDialogState extends State<_AddReceiptDialog> {
             : Text(widget.existing != null ? 'Update' : 'Save'),
         ),
       ],
+    );
+  }
+}
+
+/// Small pill showing the receipt's current category, tappable to change it.
+/// Uncategorized rows render a dashed "+ Category" affordance so the action
+/// is discoverable without explaining it.
+class _CategoryChip extends StatelessWidget {
+  final String? slug;
+  const _CategoryChip({required this.slug});
+
+  @override
+  Widget build(BuildContext context) {
+    final preset = (slug != null && slug!.isNotEmpty) ? cat.presetBySlug(slug!) : null;
+    if (preset == null) {
+      // Uncategorized state
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(99),
+          border: Border.all(color: const Color(0xFFcbd5e1), width: 1, style: BorderStyle.solid),
+        ),
+        child: const Row(mainAxisSize: MainAxisSize.min, children: [
+          Icon(Icons.add, size: 11, color: Color(0xFF64748b)),
+          SizedBox(width: 3),
+          Text('Category', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: Color(0xFF64748b))),
+        ]),
+      );
+    }
+    final tint = cat.tintFor(preset.color);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: tint.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(99),
+        border: Border.all(color: tint.withValues(alpha: 0.4)),
+      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Text(preset.emoji, style: const TextStyle(fontSize: 11)),
+        const SizedBox(width: 4),
+        Text(preset.label, style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: tint)),
+      ]),
     );
   }
 }

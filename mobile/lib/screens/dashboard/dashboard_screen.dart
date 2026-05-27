@@ -128,7 +128,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
         }
         return;
       }
-      if (pages == null || pages.isEmpty || !mounted) return;
+      if (pages == null || pages.isEmpty) {
+        // Scanner returned without an error AND without pages. Most common
+        // cause: user cancelled inside the ML Kit camera UI. Surface a
+        // small toast so they aren't left wondering whether anything
+        // happened — silent returns were confusing in user testing.
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Scanner closed without saving any pages.'),
+            duration: Duration(seconds: 2),
+          ));
+        }
+        return;
+      }
+      if (!mounted) return;
       // ML Kit-cleaned pages are sent as ONE multi-page receipt.
       await _processScannerResult(pages);
       return;

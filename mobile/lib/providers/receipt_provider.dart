@@ -43,13 +43,13 @@ class ReceiptProvider extends ChangeNotifier {
   List<Receipt> receipts = [];
   bool loading = false;
   DateTime? _lastLoaded;
-  ReceiptPeriod _lastPeriod = ReceiptPeriod.threeMonth;
+  ReceiptPeriod _lastPeriod = ReceiptPeriod.month;
   ReceiptPeriod get currentPeriod => _lastPeriod;
 
   /// Loads receipts scoped to [period]. Cached if the same period was loaded
   /// in the last [maxAge]. Pass `force: true` to refetch.
   Future<void> loadReceipts({
-    ReceiptPeriod period = ReceiptPeriod.threeMonth,
+    ReceiptPeriod period = ReceiptPeriod.month,
     bool force = false,
     Duration maxAge = const Duration(seconds: 60),
   }) async {

@@ -76,7 +76,8 @@ export default function ReportsPage() {
     for (const r of receipts) {
       if (r.is_return) continue                      // refunds don't count as spend
       const amt = parseFloat(r.total_amount || 0)
-      if (amt > 0) sum += amt
+      if (amt <= 0) continue                         // skip $0 / negative-but-not-marked-return rows so they don't drag category totals negative (was producing "Misc -169%" on the donut)
+      sum += amt
       const ck = r.category || 'misc'
       cat.set(ck, (cat.get(ck) || 0) + amt)
       const sk = r.store_id || `name:${r.store_name || '—'}`

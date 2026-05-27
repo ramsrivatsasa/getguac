@@ -223,7 +223,7 @@ function guessStoreFromHeaders({ fromAddr, subject }) {
 //   'receipt'       — printed on the receipt body
 //   'store-default' — looked up from the curated store_return_policies table
 //   'manual'        — typed by the user in the UI
-export async function writeRefundPolicies(sb, receiptId, policies, source = 'receipt') {
+export async function writeRefundPolicies(sb, receiptId, policies, source = 'receipt', receiptDate = null) {
   if (!receiptId) return
   // Wipe first so a re-parse drops stale rows. Safe when the array is empty
   // (we want zero policies on the receipt in that case).
@@ -233,13 +233,25 @@ export async function writeRefundPolicies(sb, receiptId, policies, source = 'rec
     receipt_id: receiptId,
     policy_id: p.policy_id || null,
     days: p.days ?? null,
-    expiry_date: p.expiry_date || null,
+    // Derive expiry from receipt date + days when the receipt didn't print
+    // a specific expiry date (e.g. it said "30 days from purchase" without
+    // the date). Matches the lib/db.js#replaceRefundPolicies behaviour.
+    expiry_date: p.expiry_date || deriveExpiry(receiptDate, p.days),
     eligible: p.eligible !== false,
     details: p.details || null,
-    source,
+    source: p.source || source,
+    source_url: p.source_url || null,
   }))
   const { error } = await sb.from('receipt_refund_policies').insert(rows)
   if (error) console.warn('[email-to-receipt] refund_policies insert failed:', error.message)
+}
+
+function deriveExpiry(receiptDate, days) {
+  if (!receiptDate || days == null) return null
+  const d = new Date(receiptDate)
+  if (isNaN(d.getTime())) return null
+  d.setDate(d.getDate() + Number(days))
+  return d.toISOString().slice(0, 10)
 }
 
 // Curated-table lookup. Returns policies shaped like AI output so the caller
@@ -256,7 +268,7 @@ export async function lookupStoreDefaultPolicies(sb, storeName, itemCategories =
   if (!key) return []
   const { data: rows, error } = await sb
     .from('store_return_policies')
-    .select('policy_id, category, days, eligible, details')
+    .select('policy_id, category, days, eligible, details, source_url')
     .eq('store_name_normalized', key)
   if (error || !rows || rows.length === 0) return []
   const cats = new Set(itemCategories.filter(Boolean))
@@ -275,6 +287,7 @@ export async function lookupStoreDefaultPolicies(sb, storeName, itemCategories =
     days: r.days,
     eligible: r.eligible,
     details: r.details,
+    source_url: r.source_url || null,
   }))
 }
 
@@ -340,13 +353,13 @@ async function insertParsedReceipt(sb, userId, parsed, bodyPreview) {
   //      policies still surface return rights in the UI.
   // Best-effort: a failure here doesn't undo the parent receipt.
   if (Array.isArray(parsed.refund_policies) && parsed.refund_policies.length > 0) {
-    await writeRefundPolicies(sb, rcpt.id, parsed.refund_policies, 'receipt').catch(() => {})
+    await writeRefundPolicies(sb, rcpt.id, parsed.refund_policies, 'receipt', parsed.date).catch(() => {})
   } else {
     const cats = (parsed.items || []).map(i => i.category).filter(Boolean)
     if (parsed.category) cats.push(parsed.category)
     const defaults = await lookupStoreDefaultPolicies(sb, parsed.store_name, cats).catch(() => [])
     if (defaults.length > 0) {
-      await writeRefundPolicies(sb, rcpt.id, defaults, 'store-default').catch(() => {})
+      await writeRefundPolicies(sb, rcpt.id, defaults, 'store-default', parsed.date).catch(() => {})
     }
   }
 

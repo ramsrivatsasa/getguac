@@ -614,23 +614,81 @@ export async function upsertStoreLocation({
   return data
 }
 
-// Receipt refund policies
-export async function replaceRefundPolicies(receiptId, policies) {
+// Receipt refund policies.
+//
+// Two pre-insert enhancements run here (instead of duplicating across every
+// caller — server route, email-to-receipt importer, manual edit):
+//   1. If the policy carries `days` but no `expiry_date`, compute the expiry
+//      from `receipt.date + days`. The AI sometimes returns only the window
+//      length when the receipt printed "30 days from purchase" without the
+//      actual date. We now have both `receiptDate` + `days`, so we can fill
+//      it in for the UI.
+//   2. If `policies` is empty AND `storeName` is known, look up the store's
+//      seeded default in store_return_policies and use that. Amazon e-receipts
+//      never print the policy on the receipt body, but the user is still
+//      protected by Amazon's published 30-day rule — surface it.
+export async function replaceRefundPolicies(receiptId, policies, opts = {}) {
   const sb = createClient()
-  // Wipe + insert: simpler than diffing for a small list
   await sb.from('receipt_refund_policies').delete().eq('receipt_id', receiptId)
-  if (!policies?.length) return []
-  const rows = policies.map(p => ({
+
+  const { receiptDate, storeName, category } = opts
+  let working = Array.isArray(policies) ? [...policies] : []
+
+  // Fallback to store default when the receipt didn't print one.
+  if (working.length === 0 && storeName) {
+    const def = await fetchStoreDefaultPolicy(sb, storeName, category)
+    if (def) working = [def]
+  }
+
+  if (working.length === 0) return []
+
+  const rows = working.map(p => ({
     receipt_id: receiptId,
     policy_id: p.policy_id || null,
     days: p.days ?? null,
-    expiry_date: p.expiry_date || null,
+    expiry_date: p.expiry_date || deriveExpiry(receiptDate, p.days),
     eligible: p.eligible !== false,
     details: p.details || null,
+    source: p.source || 'receipt',
+    source_url: p.source_url || null,
   }))
   const { data, error } = await sb.from('receipt_refund_policies').insert(rows).select()
   if (error) throw error
   return data
+}
+
+function deriveExpiry(receiptDate, days) {
+  if (!receiptDate || days == null) return null
+  const d = new Date(receiptDate)
+  if (isNaN(d.getTime())) return null
+  d.setDate(d.getDate() + Number(days))
+  return d.toISOString().slice(0, 10)
+}
+
+async function fetchStoreDefaultPolicy(sb, storeName, category) {
+  try {
+    const { normalizeStoreName } = await import('./store-name-normalize')
+    const key = normalizeStoreName(storeName)
+    if (!key) return null
+    // Prefer a category-specific row, fall back to the catch-all (category IS NULL).
+    let q = sb.from('store_return_policies')
+      .select('policy_id, days, eligible, details, source_url, category')
+      .eq('store_name_normalized', key)
+    if (category) {
+      const { data: catMatch } = await q.eq('category', category).limit(1).maybeSingle()
+      if (catMatch) return { ...catMatch, source: 'store-default' }
+    }
+    const { data: anyMatch } = await sb.from('store_return_policies')
+      .select('policy_id, days, eligible, details, source_url')
+      .eq('store_name_normalized', key)
+      .is('category', null)
+      .limit(1)
+      .maybeSingle()
+    if (anyMatch) return { ...anyMatch, source: 'store-default' }
+  } catch (e) {
+    console.warn('[replaceRefundPolicies] store-default lookup failed:', e.message)
+  }
+  return null
 }
 
 // Auto-generate a placeholder reward number for a store the user can replace later.

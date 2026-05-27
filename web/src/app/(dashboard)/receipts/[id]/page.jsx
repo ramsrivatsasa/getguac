@@ -360,9 +360,23 @@ export default function ReceiptDetailPage() {
                         </span>
                       </td>
                       <td className="px-3 py-1">
-                        <span className={`inline-flex items-center text-[10px] font-semibold px-1.5 py-0.5 rounded-full border ${sourceInfo.cls}`} title={sourceInfo.tip}>
-                          {sourceInfo.label}
-                        </span>
+                        <div className="inline-flex items-center gap-1.5">
+                          <span className={`inline-flex items-center text-[10px] font-semibold px-1.5 py-0.5 rounded-full border ${sourceInfo.cls}`} title={sourceInfo.tip}>
+                            {sourceInfo.label}
+                          </span>
+                          {/* Clickable citation — opens the merchant's published return-policy page (Costco, Amazon, etc.) so the user can verify what we stored. Only renders when we have a URL. */}
+                          {p.source_url && (
+                            <a
+                              href={p.source_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-700 hover:text-emerald-800 underline-offset-2 hover:underline"
+                              title={`Read ${current.store_name || 'the store'}'s full return policy`}
+                            >
+                              View policy ↗
+                            </a>
+                          )}
+                        </div>
                       </td>
                       <td className="px-3 py-1 text-gray-500">{p.details || '—'}</td>
                     </tr>

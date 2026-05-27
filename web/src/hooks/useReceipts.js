@@ -99,11 +99,18 @@ export function useAddReceipt() {
         }
       }
 
-      // 6. Save refund policies (replace-all on update)
-      if (refundPolicies?.length > 0) {
-        try { await replaceRefundPolicies(saved.id, refundPolicies) }
-        catch (e) { console.warn('Refund policies skipped:', e.message) }
-      }
+      // 6. Save refund policies (replace-all on update).
+      // Call unconditionally — replaceRefundPolicies now falls back to the
+      // seeded store_return_policies row when the AI returned no policy
+      // (Amazon e-receipts never print one). Pass receipt date so days-only
+      // policies get a real expiry date derived.
+      try {
+        await replaceRefundPolicies(saved.id, refundPolicies || [], {
+          receiptDate: receipt?.date || saved.date,
+          storeName: receipt?.store_name || saved.store_name || storeInfo?.store_name,
+          category: receipt?.category || saved.category,
+        })
+      } catch (e) { console.warn('Refund policies skipped:', e.message) }
 
       return saved
     },

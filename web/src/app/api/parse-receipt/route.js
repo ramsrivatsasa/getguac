@@ -187,7 +187,7 @@ export async function POST(request) {
     // page images for a single long receipt; we pass them all to Gemini
     // Vision as one multi-image request and get back a single receipt.
     const multiFiles = []
-    for (let i = 1; i <= 10; i++) {
+    for (let i = 1; i <= 50; i++) {
       const f = formData.get(`file_${i}`)
       if (f) multiFiles.push(f)
     }
@@ -199,9 +199,12 @@ export async function POST(request) {
       // Validate every page is an image (multi-page only supports images;
       // multi-PDF would be a weird mix, so we just reject).
       const totalBytes = multiFiles.reduce((n, f) => n + (f.size || 0), 0)
-      if (totalBytes > MAX_UPLOAD_BYTES * 3) {
+      // Aggregate cap of 50 MB across all pages (was 15 MB / 3 pages-worth
+      // in v0.2.51-0.2.53). A 50-page scan at ~1 MB/page lives comfortably
+      // inside this. Per-page size still bounded by MAX_UPLOAD_BYTES.
+      if (totalBytes > MAX_UPLOAD_BYTES * 10) {
         return Response.json({
-          error: `Total upload too large (${(totalBytes/1024/1024).toFixed(1)} MB). Max ${(MAX_UPLOAD_BYTES * 3)/1024/1024} MB across all pages.`,
+          error: `Total upload too large (${(totalBytes/1024/1024).toFixed(1)} MB). Max ${(MAX_UPLOAD_BYTES * 10)/1024/1024} MB across all pages.`,
         }, { status: 413 })
       }
       const images = []

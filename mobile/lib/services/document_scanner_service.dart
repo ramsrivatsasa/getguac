@@ -30,7 +30,7 @@ class DocumentScannerService {
   ///     finishes).
   ///   - Missing/old Google Play Services entirely → device too old.
   ///   - Permission errors → camera permission denied.
-  static Future<List<File>?> scan({int pageLimit = 5}) async {
+  static Future<List<File>?> scan({int pageLimit = 50}) async {
     DebugLog.event('scanner', 'scan() called', meta: {'pageLimit': pageLimit});
     DocumentScanner? scanner;
     try {

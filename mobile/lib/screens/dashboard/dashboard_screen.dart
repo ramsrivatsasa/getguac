@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 import 'dart:io';
 import '../../providers/auth_provider.dart';
 import '../../providers/receipt_provider.dart';
@@ -65,12 +66,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
-  /// Maximum photos per batch capture. Three keeps each batch under the
-  /// 60-second Vercel function ceiling (Gemini parse ~5-15s per photo with
-  /// retries) and prevents users from accidentally queueing 20 shots that
-  /// then time out on the server. After three, the preview only offers
-  /// Retake / Done — Add another is hidden.
-  static const _kMaxBatchSize = 3;
+  /// Maximum photos per batch capture. Set very high so users capturing
+  /// many distinct receipts in one session aren't artificially throttled.
+  /// Each photo is its own /api/parse-receipt call (one Gemini invocation
+  /// per receipt), so the only real cost is per-image — there's no single
+  /// long server call to blow the Vercel function ceiling. The picker is
+  /// still bounded so a runaway tap doesn't queue thousands of photos.
+  static const _kMaxBatchSize = 50;
 
   /// Capture flow.
   ///
@@ -208,6 +210,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (uid == null || !mounted) return;
     final provider = context.read<ReceiptProvider>();
 
+    // Keep the screen awake across the upload + Gemini parse + save. A
+    // 10-page receipt can take 20-60s; if the screen sleeps, Android
+    // may suspend the network and kill the parse. We acquire the wakelock
+    // here and release it unconditionally in `finally` below.
+    await WakelockPlus.enable();
+    if (!mounted) { await WakelockPlus.disable(); return; }
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -301,6 +310,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         Navigator.of(context, rootNavigator: true).pop();
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Scan failed: $e')));
       }
+    } finally {
+      // Always release — even if a caller above re-throws or the user
+      // cancels mid-parse, we don't want the screen pinned awake forever.
+      await WakelockPlus.disable();
     }
   }
 
@@ -671,6 +684,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final uid = context.read<AppAuthProvider>().currentUser?.id;
     if (uid == null || !mounted) return;
     final provider = context.read<ReceiptProvider>();
+    // See note on the scanner path — hold a wakelock across parse + save.
+    await WakelockPlus.enable();
+    if (!mounted) { await WakelockPlus.disable(); return; }
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -782,6 +798,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         Navigator.of(context, rootNavigator: true).pop();
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Capture failed: $e')));
       }
+    } finally {
+      // Mirror _processScannerResult — wakelock is per-parse, not per-app.
+      await WakelockPlus.disable();
     }
   }
 

@@ -1,7 +1,7 @@
 name: getguac
 description: GetGuac — Smart receipt & rewards management
 publish_to: 'none'
-version: 0.2.53+63
+version: 0.2.54+64
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -58,6 +58,12 @@ dependencies:
   # raw image_picker for receipts so long CVS / grocery receipts can be
   # captured page-by-page and parsed as a single receipt by Gemini.
   google_mlkit_document_scanner: ^0.4.0
+  # Keep the screen on during the upload + AI parse window. A 10-page
+  # scanner result + Gemini multi-image call can sit at 20-60 seconds; if
+  # the screen sleeps Android can kill the in-flight HTTP request, losing
+  # the parse. We hold the wakelock only across _processScannerResult /
+  # _processSingleCapture and release in `finally`.
+  wakelock_plus: ^1.2.0
 
 dev_dependencies:
   flutter_test:

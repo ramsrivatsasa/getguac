@@ -97,6 +97,7 @@ export default function ItemDetailPage() {
   const recat = useMutation({
     mutationFn: ({ slug }) => setStashProductCategory({
       storeId: item?.receipt?.store_id,
+      storeName: item?.receipt?.store_name,
       sku: item?.sku,
       item_name: item?.item_name,
       category: slug || null,

@@ -43,6 +43,7 @@ export default function ReceiptDetailPage() {
     mutationFn: ({ slug, item }) =>
       setStashProductCategory({
         storeId: current?.store_id,
+        storeName: current?.store_name,
         sku: item.sku,
         item_name: item.item_name,
         category: slug || null,

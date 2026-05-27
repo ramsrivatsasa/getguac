@@ -181,15 +181,30 @@ export async function deleteUserCategory(id) {
 // Bulk-update category for every receipt_item that shares the same product
 // (same store_id + sku-or-name). Used by the Stash page so changing the category
 // once propagates to every past purchase of that item.
-export async function setStashProductCategory({ storeId, sku, item_name, category }) {
+export async function setStashProductCategory({ storeId, storeName, sku, item_name, category }) {
   const sb = createClient()
   let q = sb.from('receipt_items')
     .update({ category: category || null })
     .select('id')
   if (sku) q = q.ilike('sku', sku)
   else     q = q.ilike('item_name', item_name)
-  // Limit to the user's receipts at this store (the RLS already enforces ownership)
-  const { data: receiptIds } = await sb.from('receipts').select('id').eq('store_id', storeId)
+  // Scope the cross-receipt update to ONE store.
+  //   - Prefer store_id (precise — survives store renames).
+  //   - Fall back to store_name when the receipt has no store_id (mobile
+  //     direct-insert doesn't populate the stores table). Without this
+  //     fallback the lookup matches zero receipts → zero items updated
+  //     → silent no-op even though the success toast fires.
+  //   - If neither is available, bail out instead of updating across
+  //     the user's entire history.
+  let receiptQuery = sb.from('receipts').select('id')
+  if (storeId) {
+    receiptQuery = receiptQuery.eq('store_id', storeId)
+  } else if (storeName) {
+    receiptQuery = receiptQuery.eq('store_name', storeName)
+  } else {
+    return []
+  }
+  const { data: receiptIds } = await receiptQuery
   const ids = (receiptIds || []).map(r => r.id)
   if (ids.length === 0) return []
   q = q.in('receipt_id', ids)

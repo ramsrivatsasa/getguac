@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useRewards, useUpsertReward } from '../../../../hooks/useRewards'
 import toast from 'react-hot-toast'
-import { ArrowLeft, Save } from 'lucide-react'
+import { ArrowLeft, Save, X } from 'lucide-react'
 export default function RewardDetailPage() {
   const { id } = useParams()
   const router = useRouter()
@@ -22,6 +22,14 @@ export default function RewardDetailPage() {
       <div className="flex items-center gap-3">
         <button onClick={() => router.back()} className="btn-ghost p-1.5"><ArrowLeft size={20} /></button>
         <h1 className="page-title">Reward Details</h1>
+        <button
+          onClick={() => router.back()}
+          className="ml-auto w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center transition-colors shrink-0"
+          title="Close"
+          aria-label="Close"
+        >
+          <X size={18} />
+        </button>
       </div>
       <div className="card space-y-4">
         <div className="grid grid-cols-2 gap-4">

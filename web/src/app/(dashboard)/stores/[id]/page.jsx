@@ -6,7 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getStore, updateStore, getReceipts, getStoreReturnPolicies } from '../../../../lib/db'
 import { formatDateShort } from '../../../../lib/dateFormat'
 import toast from 'react-hot-toast'
-import { ArrowLeft, Save, Store, Phone, Globe, MapPin, Receipt, ChevronRight, Hash, Navigation, Crosshair, Loader2, Shield, ExternalLink } from 'lucide-react'
+import { ArrowLeft, Save, Store, Phone, Globe, MapPin, Receipt, ChevronRight, Hash, Navigation, Crosshair, Loader2, Shield, ExternalLink, X } from 'lucide-react'
 export default function StoreDetailPage() {
   const { id } = useParams()
   const router = useRouter()
@@ -90,6 +90,14 @@ export default function StoreDetailPage() {
           <div className="p-2 bg-blue-100 rounded-xl"><Store className="text-blue-800" size={18} /></div>
           <h1 className="page-title">{store.store_name}</h1>
         </div>
+        <button
+          onClick={() => router.back()}
+          className="ml-auto w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center transition-colors shrink-0"
+          title="Close"
+          aria-label="Close"
+        >
+          <X size={18} />
+        </button>
       </div>
 
       <div className="grid grid-cols-3 gap-3">

@@ -83,11 +83,40 @@ class MainScaffold extends StatelessWidget {
     );
   }
 
+  // Horizontal-swipe navigation between top-level tabs.
+  //
+  // Per UX request: swipe LEFT = previous tab, swipe RIGHT = next tab.
+  // (This is the opposite of the iOS Stories/Instagram convention, where
+  // swipe-left advances; we follow the user's stated preference.)
+  //
+  // Only fires on top-level routes (one of `_items`) so that swiping on
+  // a detail page like /receipts/abc-123 doesn't surprise-jump away.
+  // Velocity threshold of 300 px/s keeps tiny incidental drags from
+  // triggering nav.
+  void _handleHorizontalSwipe(BuildContext context, int idx, DragEndDetails details) {
+    final loc = GoRouterState.of(context).matchedLocation;
+    final onTopLevel = _items.any((it) => loc == it.route);
+    if (!onTopLevel) return;
+    final v = details.primaryVelocity ?? 0;
+    if (v.abs() < 300) return;
+    if (v > 0) {
+      // Right swipe → next tab
+      if (idx < _items.length - 1) context.go(_items[idx + 1].route);
+    } else {
+      // Left swipe → previous tab
+      if (idx > 0) context.go(_items[idx - 1].route);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final idx = _selectedIndex(context);
     return Scaffold(
-      body: child,
+      body: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onHorizontalDragEnd: (d) => _handleHorizontalSwipe(context, idx, d),
+        child: child,
+      ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,

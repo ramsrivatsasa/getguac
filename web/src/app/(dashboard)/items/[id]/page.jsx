@@ -12,7 +12,7 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { ArrowLeft, ShoppingCart, MapPin, Receipt, ExternalLink } from 'lucide-react'
+import { ArrowLeft, ShoppingCart, MapPin, Receipt, ExternalLink, X } from 'lucide-react'
 import { createClient } from '../../../../lib/supabase/client'
 import { updateReceiptItem, setStashProductCategory, addToShoppingList } from '../../../../lib/db'
 import { formatDateShort } from '../../../../lib/dateFormat'
@@ -161,6 +161,14 @@ export default function ItemDetailPage() {
             <ShoppingCart size={14} /> Add to Smashlist
           </button>
         )}
+        <button
+          onClick={() => router.back()}
+          className="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center transition-colors shrink-0"
+          title="Close"
+          aria-label="Close"
+        >
+          <X size={18} />
+        </button>
       </div>
 
       {/* Core fields */}

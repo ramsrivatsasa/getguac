@@ -54,7 +54,9 @@ class _StealsScreenState extends State<StealsScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Steals')),
-      body: ListView(
+      body: RefreshIndicator(
+        onRefresh: () => context.read<RewardProvider>().loadRewards(force: true),
+        child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           // Hero
@@ -133,6 +135,7 @@ class _StealsScreenState extends State<StealsScreen> {
             ]),
           ),
         ],
+      ),
       ),
     );
   }

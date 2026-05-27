@@ -15,7 +15,7 @@ import { useQuery } from '@tanstack/react-query'
 import { createClient } from '../../../lib/supabase/client'
 import { CATEGORIES, categoryLabel, categoryClass } from '../../../lib/categories'
 import { formatDateShort } from '../../../lib/dateFormat'
-import { BarChart3, PieChart as PieIcon, Repeat, Award, Store as StoreIcon } from 'lucide-react'
+import { BarChart3, PieChart as PieIcon, Repeat, Award, Store as StoreIcon, X } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
 
@@ -55,6 +55,7 @@ async function getReportsData({ dateFrom }) {
 
 export default function ReportsPage() {
   const [periodId, setPeriodId] = useState(DEFAULT_PERIOD)
+  const [selectedCategory, setSelectedCategory] = useState(null)
   const period = PERIODS.find(p => p.id === periodId) || PERIODS[0]
   const dateFrom = period.days
     ? new Date(Date.now() - period.days * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
@@ -114,6 +115,21 @@ export default function ReportsPage() {
   const oneTime = useMemo(() => itemHistory.filter(it => it.count === 1).sort((a, b) => b.spent - a.spent), [itemHistory])
   const repeats = useMemo(() => itemHistory.filter(it => it.count >= 2).sort((a, b) => b.count - a.count || b.spent - a.spent), [itemHistory])
 
+  // Receipts in the user-selected category. Tagging is on the receipt itself
+  // (r.category) — receipt_items have their own category but the donut groups
+  // by receipt-level, so we keep this consistent. Returns are excluded to match
+  // the donut totals.
+  const categoryReceipts = useMemo(() => {
+    if (!selectedCategory) return []
+    return receipts
+      .filter(r => !r.is_return && (r.category || 'misc') === selectedCategory)
+      .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+  }, [receipts, selectedCategory])
+
+  function toggleCategory(slug) {
+    setSelectedCategory(prev => prev === slug ? null : slug)
+  }
+
   return (
     <div className="space-y-6 max-w-6xl">
       <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -164,19 +180,101 @@ export default function ReportsPage() {
                 <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400 pb-1 border-b border-gray-100">Category</span>
                 <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400 pb-1 border-b border-gray-100 text-right">Amount</span>
                 <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400 pb-1 border-b border-gray-100 text-right w-10">Share</span>
-                {byCategory.slice(0, 10).map(c => (
-                  <Fragment key={c.slug}>
-                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border self-center justify-self-start max-w-fit ${categoryClass(c.slug)}`}>
-                      <span className="w-2 h-2 rounded-full shrink-0" style={{ background: CATEGORY_COLORS[c.slug] || '#94a3b8' }} />
-                      <span>{categoryLabel(c.slug)}</span>
-                    </span>
-                    <span className="font-semibold text-gray-700 self-center text-right tabular-nums">${c.amount.toFixed(2)}</span>
-                    <span className="text-gray-400 self-center text-right tabular-nums w-10">{((c.amount / totalSpent) * 100).toFixed(0)}%</span>
-                  </Fragment>
-                ))}
+                {byCategory.slice(0, 10).map(c => {
+                  const isSelected = selectedCategory === c.slug
+                  return (
+                    <Fragment key={c.slug}>
+                      <button
+                        type="button"
+                        onClick={() => toggleCategory(c.slug)}
+                        title={isSelected ? 'Hide records' : 'Show records'}
+                        className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border self-center justify-self-start max-w-fit transition-all hover:scale-105 ${categoryClass(c.slug)} ${isSelected ? 'ring-2 ring-emerald-400 shadow-sm' : ''}`}
+                      >
+                        <span className="w-2 h-2 rounded-full shrink-0" style={{ background: CATEGORY_COLORS[c.slug] || '#94a3b8' }} />
+                        <span>{categoryLabel(c.slug)}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => toggleCategory(c.slug)}
+                        className={`font-semibold self-center text-right tabular-nums hover:text-emerald-700 ${isSelected ? 'text-emerald-700' : 'text-gray-700'}`}
+                      >${c.amount.toFixed(2)}</button>
+                      <button
+                        type="button"
+                        onClick={() => toggleCategory(c.slug)}
+                        className={`self-center text-right tabular-nums w-10 hover:text-emerald-600 ${isSelected ? 'text-emerald-600' : 'text-gray-400'}`}
+                      >{((c.amount / totalSpent) * 100).toFixed(0)}%</button>
+                    </Fragment>
+                  )
+                })}
               </div>
             </div>
           </div>
+
+          {/* 1b. Drill-down: receipts in the selected category */}
+          {selectedCategory && (
+            <div className="card">
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <div className="flex items-center gap-2">
+                  <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-xs ${categoryClass(selectedCategory)}`}>
+                    <span className="w-2 h-2 rounded-full" style={{ background: CATEGORY_COLORS[selectedCategory] || '#94a3b8' }} />
+                    <span>{categoryLabel(selectedCategory)}</span>
+                  </span>
+                  <h2 className="font-semibold text-gray-800 text-sm">
+                    {categoryReceipts.length} receipt{categoryReceipts.length === 1 ? '' : 's'} in {period.label.toLowerCase()}
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedCategory(null)}
+                  className="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center transition-colors"
+                  title="Close drill-down"
+                  aria-label="Close"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+              {categoryReceipts.length === 0 ? (
+                <p className="text-xs text-gray-400 py-4 text-center">No receipts tagged with this category in the selected period.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead className="bg-gray-50 border-b text-gray-500">
+                      <tr>
+                        <th className="px-3 py-1 text-left">Date</th>
+                        <th className="px-3 py-1 text-left">Store</th>
+                        <th className="px-3 py-1 text-left">Items</th>
+                        <th className="px-3 py-1 text-right">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {categoryReceipts.map(r => {
+                        const itemCount = (r.receipt_items || []).filter(i => !i.returned).length
+                        const preview = (r.receipt_items || []).filter(i => !i.returned).slice(0, 3).map(i => i.item_name).filter(Boolean).join(', ')
+                        return (
+                          <tr key={r.id} className="hover:bg-emerald-50/30">
+                            <td className="px-3 py-1.5 text-gray-500 whitespace-nowrap">{formatDateShort(r.date)}</td>
+                            <td className="px-3 py-1.5">
+                              {r.store_id ? (
+                                <Link href={`/stores/${r.store_id}`} className="text-blue-700 hover:underline">{r.store_name || '—'}</Link>
+                              ) : <span>{r.store_name || '—'}</span>}
+                            </td>
+                            <td className="px-3 py-1.5 text-gray-500 max-w-md truncate" title={preview}>
+                              {itemCount > 0
+                                ? <><span className="text-gray-700 font-medium">{itemCount}</span> {preview && <span className="text-gray-400">· {preview}{itemCount > 3 ? '…' : ''}</span>}</>
+                                : <span className="text-gray-300">—</span>}
+                            </td>
+                            <td className="px-3 py-1.5 text-right font-semibold tabular-nums">
+                              <Link href={`/receipts/${r.id}`} className="hover:text-emerald-700">${parseFloat(r.total_amount || 0).toFixed(2)}</Link>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* 2. Top stores by spend */}
           <div className="card">

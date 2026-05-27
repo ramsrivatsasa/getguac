@@ -167,10 +167,12 @@ class _RewardsScreenState extends State<RewardsScreen> {
           : null,
       ),
       floatingActionButton: _selectionMode ? null : FloatingActionButton(onPressed: _addReward, child: const Icon(Icons.add)),
-      body: loading
+      body: RefreshIndicator(
+        onRefresh: () => context.read<RewardProvider>().loadRewards(force: true),
+        child: loading
         ? const Center(child: CircularProgressIndicator())
         : rewards.isEmpty
-          ? const Center(child: Text('No rewards yet. Tap + to add.', style: TextStyle(color: Colors.grey)))
+          ? ListView(children: const [SizedBox(height: 200), Center(child: Text('No rewards yet. Tap + to add.', style: TextStyle(color: Colors.grey)))])
           : ListView.builder(
               padding: const EdgeInsets.all(12),
               itemCount: rewards.length,
@@ -207,6 +209,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
                 );
               },
             ),
+      ),
     );
   }
 }

@@ -177,34 +177,47 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
 
     // Gallery path: each pick is a SEPARATE receipt (batch).
+    //
+    // First attempt: pickMultiImage opens a single gallery view where the
+    // user can select up to _kMaxBatchSize photos in one shot. This is
+    // dramatically better than the previous one-photo-then-reopen-gallery
+    // loop. Trims the selection to the batch cap if the user picked more.
     final picker = ImagePicker();
     final List<File> queue = [];
-
-    while (mounted) {
-      final img = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
-      if (img == null || !mounted) break;
-      final file = File(img.path);
-
-      final action = await _showCapturePreview(file, queue.length, _kMaxBatchSize);
-      if (!mounted) break;
-      switch (action) {
-        case _PreviewAction.retry:
-          continue;
-        case _PreviewAction.addAnother:
-          queue.add(file);
-          if (queue.length >= _kMaxBatchSize) {
-            if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text('Batch is full ($_kMaxBatchSize photos). Tap Done to parse them.'),
-              duration: const Duration(seconds: 2),
-            ));
-            break;
-          }
-          continue;
-        case _PreviewAction.done:
-          queue.add(file);
-          break;
+    try {
+      final picks = await picker.pickMultiImage(imageQuality: 80, limit: _kMaxBatchSize);
+      if (!mounted) return;
+      for (final p in picks) {
+        queue.add(File(p.path));
+        if (queue.length >= _kMaxBatchSize) break;
       }
-      break;
+      if (picks.length > _kMaxBatchSize) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Trimmed to first $_kMaxBatchSize photos.'),
+          duration: const Duration(seconds: 2),
+        ));
+      }
+    } catch (e) {
+      // pickMultiImage is available on iOS 14+ and Android with native gallery
+      // support. Older devices fall through to the legacy one-at-a-time loop
+      // so the feature degrades gracefully instead of failing outright.
+      if (!mounted) return;
+      while (mounted) {
+        final img = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+        if (img == null || !mounted) break;
+        final file = File(img.path);
+        final action = await _showCapturePreview(file, queue.length, _kMaxBatchSize);
+        if (!mounted) break;
+        switch (action) {
+          case _PreviewAction.retry: continue;
+          case _PreviewAction.addAnother:
+            queue.add(file);
+            if (queue.length >= _kMaxBatchSize) break;
+            continue;
+          case _PreviewAction.done: queue.add(file); break;
+        }
+        break;
+      }
     }
 
     if (queue.isEmpty || !mounted) return;

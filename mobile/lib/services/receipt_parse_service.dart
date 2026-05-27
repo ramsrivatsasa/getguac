@@ -85,8 +85,19 @@ class ParsedItem {
 class ParseResult {
   final ParsedReceipt? data;
   final String? error;
-  const ParseResult.ok(ParsedReceipt this.data) : error = null;
-  const ParseResult.fail(String this.error) : data = null;
+  // True when the server's 422 response carried { non_receipt: true } —
+  // i.e. the user uploaded a selfie / cat / blank page. The dashboard
+  // surfaces this with a friendlier GuacWizard dialog instead of the
+  // generic "Couldn't read this receipt" failure UI.
+  final bool nonReceipt;
+  final String? nonReceiptSubject;
+  final String? tip;
+  const ParseResult.ok(ParsedReceipt this.data)
+      : error = null, nonReceipt = false, nonReceiptSubject = null, tip = null;
+  const ParseResult.fail(String this.error)
+      : data = null, nonReceipt = false, nonReceiptSubject = null, tip = null;
+  const ParseResult.notReceipt({required String this.error, required this.nonReceiptSubject, required this.tip})
+      : data = null, nonReceipt = true;
   bool get ok => error == null && data != null;
 }
 
@@ -152,10 +163,23 @@ class ReceiptParseService {
       final body = await streamed.stream.bytesToString();
       if (streamed.statusCode != 200) {
         String reason = 'Server error (${streamed.statusCode}).';
+        Map<String, dynamic>? m;
         try {
-          final m = jsonDecode(body) as Map<String, dynamic>;
+          m = jsonDecode(body) as Map<String, dynamic>;
           if (m['error'] != null) reason = m['error'].toString();
         } catch (_) {}
+        // 422 + non_receipt = GuacWizard non-receipt detection. Surface as a
+        // friendly result so the dashboard can show a witty dialog instead
+        // of the generic parse-failure UI.
+        if (streamed.statusCode == 422 && m != null && m['non_receipt'] == true) {
+          DebugLog.event('parse-receipt', 'multi-page non_receipt',
+            meta: {'subject': m['subject'], 'pages': files.length});
+          return ParseResult.notReceipt(
+            error: reason,
+            nonReceiptSubject: m['subject']?.toString(),
+            tip: m['tip']?.toString(),
+          );
+        }
         DebugLog.event('parse-receipt', 'multi-page http $reason',
           level: 'error', meta: {'status': streamed.statusCode, 'pages': files.length});
         return ParseResult.fail(reason);
@@ -236,10 +260,20 @@ class ReceiptParseService {
       final body = await streamed.stream.bytesToString();
       if (streamed.statusCode != 200) {
         String reason = 'Server error (${streamed.statusCode}).';
+        Map<String, dynamic>? m;
         try {
-          final m = jsonDecode(body) as Map<String, dynamic>;
+          m = jsonDecode(body) as Map<String, dynamic>;
           if (m['error'] != null) reason = m['error'].toString();
         } catch (_) {}
+        if (streamed.statusCode == 422 && m != null && m['non_receipt'] == true) {
+          DebugLog.event('parse-receipt', 'non_receipt',
+            meta: {'subject': m['subject']});
+          return ParseResult.notReceipt(
+            error: reason,
+            nonReceiptSubject: m['subject']?.toString(),
+            tip: m['tip']?.toString(),
+          );
+        }
         DebugLog.event('parse-receipt', 'http $reason', level: 'error',
           meta: {'status': streamed.statusCode});
         return ParseResult.fail(reason);

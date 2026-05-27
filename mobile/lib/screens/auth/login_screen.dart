@@ -91,13 +91,24 @@ class _LoginScreenState extends State<LoginScreen> {
             ],
           ],
         ),
+        actionsPadding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
         actions: [
           TextButton(
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              minimumSize: const Size(0, 32),
+            ),
             onPressed: () => Navigator.pop(ctx),
             child: const Text('Later'),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: const Color(0xFF15803d)),
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFF15803d),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              minimumSize: const Size(0, 32),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+              textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+            ),
             onPressed: () async {
               Navigator.pop(ctx);
               // Show a quick download spinner while the APK pulls in
@@ -286,33 +297,33 @@ class _LoginScreenState extends State<LoginScreen> {
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               child: Column(
                 children: [
                   // Avocado mascot — SVG matches the web brand
-                  const GuacMascot(size: 140),
-                  const SizedBox(height: 16),
+                  const GuacMascot(size: 96),
+                  const SizedBox(height: 8),
                   const Text(
                     'GetGuac',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 36,
+                      fontSize: 28,
                       fontWeight: FontWeight.w900,
                       letterSpacing: -0.5,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2),
                   const Text(
                     'Your Guac-AI personal finance sidekick.',
-                    style: TextStyle(color: Colors.white70, fontSize: 13),
+                    style: TextStyle(color: Colors.white70, fontSize: 12),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 16),
                   Card(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                    elevation: 12,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                    elevation: 10,
                     shadowColor: Colors.black54,
                     child: Padding(
-                      padding: const EdgeInsets.all(24),
+                      padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
                       child: Form(
                         key: _formKey,
                         child: Column(
@@ -320,9 +331,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           children: [
                             const Text(
                               'Sign In',
-                              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF064e3b)),
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF064e3b)),
                             ),
-                            const SizedBox(height: 20),
+                            const SizedBox(height: 12),
                             TextFormField(
                               controller: _identifierCtrl,
                               keyboardType: TextInputType.emailAddress,
@@ -330,7 +341,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               decoration: InputDecoration(
                                 labelText: 'Username or email',
                                 hintText: 'john   or   john@email.com',
-                                prefixIcon: const Icon(Icons.person_outline, color: Color(0xFF15803d)),
+                                prefixIcon: const Icon(Icons.person_outline, color: Color(0xFF15803d), size: 20),
+                                isDense: true,
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
@@ -339,13 +352,15 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               validator: (v) => v == null || v.isEmpty ? 'Required' : null,
                             ),
-                            const SizedBox(height: 14),
+                            const SizedBox(height: 10),
                             TextFormField(
                               controller: _passCtrl,
                               obscureText: true,
                               decoration: InputDecoration(
                                 labelText: 'Password',
-                                prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF15803d)),
+                                prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF15803d), size: 20),
+                                isDense: true,
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
@@ -354,34 +369,38 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               validator: (v) => v == null || v.isEmpty ? 'Required' : null,
                             ),
-                            const SizedBox(height: 20),
+                            const SizedBox(height: 8),
                             // Keep me signed in — stops the app from asking
-                            // for password on cold-start. Stored as a pref
-                            // and read by AppLockService.shouldLock.
+                            // for password on cold-start.
                             Row(
                               children: [
                                 Checkbox(
                                   value: _keepSignedIn,
                                   activeColor: const Color(0xFF15803d),
+                                  visualDensity: VisualDensity.compact,
+                                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                   onChanged: (v) => setState(() => _keepSignedIn = v ?? false),
                                 ),
+                                const SizedBox(width: 4),
                                 const Expanded(
                                   child: Text(
-                                    'Keep me signed in — stay logged in across app restarts',
+                                    'Keep me signed in',
                                     style: TextStyle(fontSize: 12, color: Color(0xFF4b5563)),
                                   ),
                                 ),
                               ],
                             ),
-                            // Remember-me / biometric opt-in toggle
-                            if (_bioAvailable) ...[
+                            if (_bioAvailable)
                               Row(
                                 children: [
                                   Checkbox(
                                     value: _rememberWithBio,
                                     activeColor: const Color(0xFF15803d),
+                                    visualDensity: VisualDensity.compact,
+                                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                     onChanged: (v) => setState(() => _rememberWithBio = v ?? false),
                                   ),
+                                  const SizedBox(width: 4),
                                   const Expanded(
                                     child: Text(
                                       'Use fingerprint / face on next open',
@@ -390,72 +409,71 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                 ],
                               ),
-                            ],
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 6),
                             FilledButton(
                               onPressed: _loading ? null : _login,
                               style: FilledButton.styleFrom(
                                 backgroundColor: const Color(0xFF15803d),
                                 foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                padding: const EdgeInsets.symmetric(vertical: 11),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               ),
                               child: _loading
-                                  ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
-                                  : const Text('Sign In', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+                                  : const Text('Sign In', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
                             ),
-                            // Biometric quick-unlock button — only shows when
-                            // a previous sign-in saved credentials.
                             if (_bioEnabled) ...[
-                              const SizedBox(height: 10),
+                              const SizedBox(height: 6),
                               OutlinedButton.icon(
                                 onPressed: _loading ? null : _unlockWithBio,
-                                icon: const Icon(Icons.fingerprint, color: Color(0xFF15803d)),
+                                icon: const Icon(Icons.fingerprint, color: Color(0xFF15803d), size: 18),
                                 label: const Text(
                                   'Unlock with fingerprint',
-                                  style: TextStyle(color: Color(0xFF15803d), fontWeight: FontWeight.w700),
+                                  style: TextStyle(color: Color(0xFF15803d), fontWeight: FontWeight.w700, fontSize: 13),
                                 ),
                                 style: OutlinedButton.styleFrom(
                                   side: const BorderSide(color: Color(0xFF15803d), width: 1.5),
-                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  padding: const EdgeInsets.symmetric(vertical: 8),
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  minimumSize: const Size(0, 36),
                                 ),
                               ),
                             ],
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 4),
                             TextButton(
                               onPressed: () => context.go('/register'),
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 4),
+                                minimumSize: const Size(0, 30),
+                              ),
                               child: const Text(
                                 "New here? Create an account 🥑",
-                                style: TextStyle(color: Color(0xFF15803d), fontWeight: FontWeight.w600),
+                                style: TextStyle(color: Color(0xFF15803d), fontWeight: FontWeight.w600, fontSize: 13),
                               ),
                             ),
-                            // "How it works" — opens the auto-narrated
-                            // 13-slide presentation in the device browser.
-                            // Separator + outlined button so it reads as a
-                            // distinct action from "Create an account".
-                            const SizedBox(height: 4),
+                            const SizedBox(height: 2),
                             Row(children: const [
                               Expanded(child: Divider(color: Color(0xFFe5e7eb))),
                               Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 10),
+                                padding: EdgeInsets.symmetric(horizontal: 8),
                                 child: Text('or',
-                                  style: TextStyle(fontSize: 11, color: Color(0xFF9ca3af), fontWeight: FontWeight.w600)),
+                                  style: TextStyle(fontSize: 10, color: Color(0xFF9ca3af), fontWeight: FontWeight.w600)),
                               ),
                               Expanded(child: Divider(color: Color(0xFFe5e7eb))),
                             ]),
-                            const SizedBox(height: 6),
+                            const SizedBox(height: 4),
                             OutlinedButton.icon(
                               onPressed: () => UpdateService.openDownload('https://getguac.app/how-it-works'),
-                              icon: const Icon(Icons.play_circle_outline, color: Color(0xFF15803d), size: 18),
+                              icon: const Icon(Icons.play_circle_outline, color: Color(0xFF15803d), size: 16),
                               label: const Text(
-                                "See how it works  ·  7-min tour",
-                                style: TextStyle(color: Color(0xFF15803d), fontWeight: FontWeight.w700),
+                                "See how it works · 7-min tour",
+                                style: TextStyle(color: Color(0xFF15803d), fontWeight: FontWeight.w700, fontSize: 12),
                               ),
                               style: OutlinedButton.styleFrom(
                                 side: const BorderSide(color: Color(0xFFa7f3d0), width: 1.2),
-                                padding: const EdgeInsets.symmetric(vertical: 10),
+                                padding: const EdgeInsets.symmetric(vertical: 6),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                minimumSize: const Size(0, 32),
                               ),
                             ),
                           ],
@@ -463,10 +481,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 8),
                   Text(
                     'getguac.app${_versionLabel.isEmpty ? '' : ' · $_versionLabel'}',
-                    style: const TextStyle(color: Colors.white54, fontSize: 11, letterSpacing: 0.5),
+                    style: const TextStyle(color: Colors.white54, fontSize: 10, letterSpacing: 0.5),
                   ),
                 ],
               ),

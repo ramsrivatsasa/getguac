@@ -48,6 +48,8 @@ Return ONLY a single JSON object. No prose, no markdown fences. Schema:
   "payment_method": string|null,
   "payment_last4": string|null,
   "is_return": boolean,
+  "is_receipt": boolean,                   // TRUE for any receipt / invoice / order confirmation. FALSE for non-receipt images (selfie, pet, landscape, blank paper, screenshot of unrelated content).
+  "non_receipt_subject": string|null,      // When is_receipt=false: short 2-3 word lowercase description of what you DID see ("a person", "a cat", "a sunset", "a blank page", "a screenshot"). When is_receipt=true: null.
   "category": string|null,                 // ONE of: "grub", "eats", "bars", "coffee", "tea", "coke", "pepsi", "juice", "milkshake", "subs", "bills", "tech", "big-stuff", "fix-it", "outdoors", "supplies", "fits", "wellness", "gas-up", "fun", "gifting", "charity", "misc"
   "items": [
     { "sku": string|null, "model": string|null, "item_name": string, "qty": number, "price": number, "category": string|null, "health_tier": "healthy"|"neutral"|"treat"|"harmful"|null, "refund_policy_id": string|null, "returned": boolean }
@@ -88,6 +90,12 @@ transaction; the email's "Date:" header is NOT the transaction date.
 - Output format: strict YYYY-MM-DD (zero-padded).
 - If you genuinely cannot determine the transaction date from the receipt body,
   set "date" to null. NEVER fall back to today, the email date, or any header date.
+
+NOT-A-RECEIPT — if the input is clearly NOT a receipt (a selfie / portrait, a pet, a landscape, a screenshot of a chat, a blank piece of paper, an unrelated product photo, an unrelated email body, etc.), set:
+  is_receipt: false
+  non_receipt_subject: a short 2-3 word lowercase description of WHAT you saw ("a person", "a cat", "a sunset", "a blank page", "a screenshot", "a dog", "a meme", "a whiteboard")
+  store_name: ""    date: null    total_amount: 0    tax_paid: 0    items: []    refund_policies: []
+Set is_receipt: true for any receipt, invoice, e-receipt email, or order confirmation — even if some fields are unreadable or smudged. Only set false when the image is unmistakably NOT a receipt.
 
 BEVERAGE ITEMS — when an item line names a beverage brand or kind, set the item's category to the matching beverage slug, not the receipt-level slug:
 - "COKE 12PK" / "COCA-COLA 2L" / "CHERRY COKE" → "coke"
@@ -143,6 +151,8 @@ function normalizeResult(parsed, provider, model, usage) {
     payment_method: parsed.payment_method || '',
     payment_last4: parsed.payment_last4 || '',
     is_return: Boolean(parsed.is_return),
+    is_receipt: parsed.is_receipt === false ? false : true,
+    non_receipt_subject: parsed.non_receipt_subject || null,
     category: parsed.category || null,
     items: Array.isArray(parsed.items) ? parsed.items.map(it => ({
       sku: it.sku || '', model: it.model || '', item_name: it.item_name || '',

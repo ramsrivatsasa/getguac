@@ -210,6 +210,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       Navigator.of(context, rootNavigator: true).pop(); // loader
 
       if (!result.ok) {
+        if (result.nonReceipt) {
+          await _showNonReceiptDialog(result.error!, result.tip);
+          return;
+        }
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(result.error ?? 'Parse failed'),
           duration: const Duration(seconds: 5),
@@ -669,6 +673,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       Navigator.of(context, rootNavigator: true).pop(); // loader off
 
       if (!result.ok) {
+        // Non-receipt (selfie / cat / blank page) → guacky dialog,
+        // not the failure recovery UI (no point offering "Try again"
+        // with the same image).
+        if (result.nonReceipt) {
+          await _showNonReceiptDialog(result.error!, result.tip);
+          return;
+        }
         // Real failure (network / server / unreadable). Don't silently dump
         // a placeholder — ask the user what to do.
         final action = await _showParseFailureDialog(result.error ?? 'Unknown error', file);
@@ -961,6 +972,58 @@ class _DashboardScreenState extends State<DashboardScreen> {
       icon: const GuacMascot(size: 24),
       label: const Icon(Icons.camera_alt, size: 20),
       tooltip: 'Add receipt (camera or gallery)',
+    );
+  }
+
+  /// Shown when the server flagged the upload as "not a receipt" (selfie,
+  /// pet, landscape, etc.). GuacWizard-themed dialog with the witty server
+  /// message — no retry-with-same-image affordance, since the image isn't
+  /// going to magically become a receipt.
+  Future<void> _showNonReceiptDialog(String message, String? tip) async {
+    if (!mounted) return;
+    return showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(children: [
+          GuacMascot(size: 40),
+          SizedBox(width: 12),
+          Expanded(child: Text('Not a receipt')),
+        ]),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(message, style: const TextStyle(fontSize: 14, height: 1.45)),
+            if (tip != null && tip.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFf0fdf4),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(tip,
+                  style: const TextStyle(fontSize: 11.5, color: Color(0xFF065f46), height: 1.4)),
+              ),
+            ],
+          ],
+        ),
+        actionsPadding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+        actions: [
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFF15803d),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              minimumSize: const Size(0, 32),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+              textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+            ),
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Got it'),
+          ),
+        ],
+      ),
     );
   }
 

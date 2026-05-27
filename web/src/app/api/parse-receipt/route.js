@@ -6,6 +6,7 @@ import pdfParse from 'pdf-parse'
 import { rateLimit, rateKey } from '../../../lib/apiGuard'
 import { parseReceiptFromImages } from '../../../lib/parse-receipt-engine'
 import { autoCategorize } from '../../../lib/auto-categorize'
+import { guackyNonReceiptResponse } from '../../../lib/guacky-responses'
 export const runtime = 'nodejs'
 export const maxDuration = 60
 
@@ -39,6 +40,8 @@ Return ONLY a single JSON object. No prose, no markdown fences. Schema:
   "payment_method": string|null,
   "payment_last4": string|null,
   "is_return": boolean,
+  "is_receipt": boolean,                 // TRUE for any receipt / invoice / order confirmation. FALSE for non-receipt photos (selfie, cat, landscape, blank paper, screenshot of something else).
+  "non_receipt_subject": string|null,    // When is_receipt=false: short 2-3 word description of what you DID see, lowercase ("a person", "a cat", "a sunset", "a blank page", "a screenshot of a chat"). When is_receipt=true: null.
   "category": string|null,               // ONE of: "grub", "eats", "bars", "coffee", "tea", "coke", "pepsi", "juice", "milkshake", "subs", "bills", "tech", "big-stuff", "fix-it", "outdoors", "supplies", "fits", "wellness", "gas-up", "fun", "gifting", "charity", "misc"
   "items": [
     { "sku": string|null, "model": string|null, "item_name": string, "qty": number, "price": number, "category": string|null, "health_tier": "healthy"|"neutral"|"treat"|"harmful"|null, "refund_policy_id": string|null, "returned": boolean }
@@ -54,6 +57,12 @@ Rules:
 - Home Depot "4@3.33 13.32" → qty: 4, price: 13.32 (the line total, not per-unit).
 - For returns, all money is negative AND is_return true AND each returned line has returned: true.
 - date = transaction date printed on the receipt (NOT email forward date).
+
+NOT-A-RECEIPT — if the input is clearly NOT a receipt (a selfie / portrait, a pet, a landscape, a screenshot of a chat, a blank piece of paper, an unrelated product photo, etc.), set:
+  is_receipt: false
+  non_receipt_subject: a short 2-3 word lowercase description of WHAT you saw ("a person", "a cat", "a sunset", "a blank page", "a screenshot", "a dog", "a meme", "a whiteboard")
+  store_name: ""    date: null    total_amount: 0    tax_paid: 0    items: []    refund_policies: []
+Set is_receipt: true for any receipt, invoice, e-receipt email, or order confirmation — even if some fields are unreadable or smudged. Only set false when the image is unmistakably NOT a receipt.
 
 BEVERAGE ITEMS — when an item line names a beverage brand or kind, set the per-item category to the matching beverage slug, not the receipt-level slug:
   "COKE 12PK" → "coke" · "PEPSI 2L" / "MTN DEW" → "pepsi" · "STARBUCKS LATTE" / "COLD BREW" / "ESPRESSO" → "coffee" · "EARL GREY" / "MATCHA" → "tea" · "TROPICANA" / "MINUTE MAID OJ" → "juice" · "OREO MILKSHAKE" / "FROSTY" → "milkshake" · "BUDWEISER 6PK" / "RED WINE" / "MARGARITA" → "bars".
@@ -216,7 +225,15 @@ export async function POST(request) {
       console.log('[parse-receipt multi]', {
         pages: images.length, store: multiParsed.store_name,
         total: multiParsed.total_amount, items: multiParsed.items?.length || 0,
+        is_receipt: multiParsed.is_receipt,
       })
+      // Non-receipt detection: Gemini told us this isn't a receipt — bail
+      // with a guacky response so the UI shows a playful nudge instead of
+      // the dry "Missing store or date" error.
+      if (multiParsed.is_receipt === false) {
+        const guac = guackyNonReceiptResponse(multiParsed.non_receipt_subject)
+        return Response.json({ error: guac.message, non_receipt: true, subject: guac.subject, tip: guac.tip }, { status: 422 })
+      }
       // Flatten back into the same response shape the single-image path
       // returns so the mobile client doesn't have to branch on it.
       return Response.json({
@@ -291,7 +308,16 @@ export async function POST(request) {
       provider: result.provider, model: result.model,
       store: parsed.store_name, date: parsed.date,
       total: parsed.total_amount, items: parsed.items?.length || 0,
+      is_receipt: parsed.is_receipt,
     })
+
+    // Non-receipt detection: Gemini told us this isn't a receipt — bail with
+    // a guacky response so the UI shows a playful nudge instead of the dry
+    // "Missing store or date" client-side error.
+    if (parsed.is_receipt === false) {
+      const guac = guackyNonReceiptResponse(parsed.non_receipt_subject)
+      return Response.json({ error: guac.message, non_receipt: true, subject: guac.subject, tip: guac.tip }, { status: 422 })
+    }
 
     return Response.json({
       store_name: parsed.store_name || '',

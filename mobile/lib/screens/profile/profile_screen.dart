@@ -447,20 +447,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ]),
               const SizedBox(height: 6),
               const Text(
-                'Imports land in a "Guacked" folder on your mail server so your inbox stays clean — but you can still read them in webmail any time.',
+                'Imports land in a "Guacked" folder on your mail server so your inbox stays clean.',
                 style: TextStyle(fontSize: 11, color: Color(0xFF065f46), height: 1.4),
-              ),
-              const SizedBox(height: 10),
-              OutlinedButton.icon(
-                onPressed: () => UpdateService.openDownload('https://webmail.getguac.app'),
-                icon: const Icon(Icons.open_in_new, size: 16, color: Color(0xFF15803d)),
-                label: const Text('Open my webmail',
-                  style: TextStyle(color: Color(0xFF15803d), fontWeight: FontWeight.w700)),
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Color(0xFF15803d), width: 1.2),
-                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
               ),
               const SizedBox(height: 10),
               IgnorePointer(
@@ -478,7 +466,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     subtitle: Text(
                       _autoDelete
                           ? 'Imports are permanently removed from your mailbox after we save them.'
-                          : 'Imports stay readable in webmail under "Guacked".',
+                          : 'Imports are filed under "Guacked" on your mail server.',
                       style: const TextStyle(fontSize: 10, color: Color(0xFF065f46)),
                     ),
                   ),
@@ -521,10 +509,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ]),
 
           const SizedBox(height: 24),
-          FilledButton.tonalIcon(
-            onPressed: () => _signOut(context),
-            icon: const Icon(Icons.logout),
-            label: const Text('Sign out'),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: OutlinedButton.icon(
+              onPressed: () => _signOut(context),
+              icon: const Icon(Icons.logout, size: 16),
+              label: const Text('Sign out', style: TextStyle(fontWeight: FontWeight.w700)),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF991b1b),
+                side: const BorderSide(color: Color(0xFFFCA5A5), width: 1.2),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                minimumSize: const Size(0, 36),
+              ),
+            ),
           ),
         ],
       ),

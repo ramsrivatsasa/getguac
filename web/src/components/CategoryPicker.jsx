@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import toast from 'react-hot-toast'
 import { useCategories, useCreateCategory, categoryClass } from '../hooks/useCategories'
 import { HEALTH_TIERS } from '../lib/categories'
@@ -106,6 +107,7 @@ export function CategoryCreateModal({ open, onClose, onCreated }) {
   const [healthTier, setHealthTier] = useState('neutral')
 
   if (!open) return null
+  if (typeof document === 'undefined') return null
 
   async function handleSave(e) {
     e.preventDefault()
@@ -121,7 +123,7 @@ export function CategoryCreateModal({ open, onClose, onCreated }) {
     }
   }
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[60] bg-black/40 flex items-center justify-center p-4" onClick={onClose}>
       <form
         onSubmit={handleSave}
@@ -172,6 +174,7 @@ export function CategoryCreateModal({ open, onClose, onCreated }) {
           <button type="button" onClick={onClose} className="btn-secondary">Cancel</button>
         </div>
       </form>
-    </div>
+    </div>,
+    document.body
   )
 }

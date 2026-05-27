@@ -9,6 +9,7 @@
 
 import { parseReceiptFromText } from './parse-receipt-engine'
 import { normalizeStoreName, canonicalStoreName } from './store-name-normalize'
+import { findExistingReceipt } from './findExistingReceipt'
 
 function normalizePhone(s) {
   return (s || '').replace(/\D+/g, '')
@@ -304,10 +305,40 @@ export async function resolveStoreAndLocation(sb, parsed) {
 // Insert a receipt row + its items + refund policies for an AI-parsed result.
 // Also find-or-creates the linked store + store_location so the receipt
 // joins into the per-store views (Stash, Worth It, store detail page).
-// Returns { receipt_id }.
+// Returns { receipt_id, deduped } — deduped:true means we merged into an
+// existing row instead of inserting a new one (caller can skip its own
+// post-processing in that case if it wants to).
 async function insertParsedReceipt(sb, userId, parsed, bodyPreview) {
   // Resolve the store first so the receipt insert can carry the FK.
   const { store_id, store_location_id } = await resolveStoreAndLocation(sb, parsed)
+
+  const candidate = {
+    store_name: parsed.store_name || 'Receipt by email',
+    date: parsed.date || new Date().toISOString().slice(0, 10),
+    total_amount: parsed.total_amount || 0,
+  }
+
+  // Pre-insert dedup: if we already have a receipt for the same user/store/
+  // date/total, skip the insert. Without this, two emails about the same
+  // purchase (confirmation + receipt, or a forwarded duplicate) each create
+  // their own row.
+  const existingId = await findExistingReceipt(sb, userId, candidate).catch(() => null)
+  if (existingId) {
+    // Best-effort patch the existing row with anything richer the new parse
+    // produced — store FKs, tax, payment details — without overwriting
+    // anything the user has already curated.
+    const patch = {}
+    if (store_id)          patch.store_id          = store_id
+    if (store_location_id) patch.store_location_id = store_location_id
+    if (parsed.tax_paid)        patch.tax_paid        = parsed.tax_paid
+    if (parsed.payment_method)  patch.payment_method  = parsed.payment_method
+    if (parsed.payment_last4)   patch.payment_last4   = parsed.payment_last4
+    if (parsed.category)        patch.category        = parsed.category
+    if (Object.keys(patch).length) {
+      await sb.from('receipts').update(patch).eq('id', existingId).eq('user_id', userId).catch(() => {})
+    }
+    return { receipt_id: existingId, deduped: true }
+  }
 
   const { data: rcpt, error } = await sb.from('receipts').insert({
     user_id: userId,

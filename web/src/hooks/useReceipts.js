@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation'
 import {
   getReceipts, getReceipt, upsertReceipt, deleteReceipt, upsertReceiptItem, updateReceiptItem, uploadReceipt, upsertStore, upsertStoreLocation, replaceRefundPolicies, ensureStoreReward, upsertStoreItem
 } from '../lib/db'
+import { createClient } from '../lib/supabase/client'
+import { findExistingReceipt } from '../lib/findExistingReceipt'
 export function useReceipts(filters = {}) {
   return useQuery({
     queryKey: ['receipts', filters],
@@ -60,17 +62,45 @@ export function useAddReceipt() {
         catch (e) { console.warn('ensureStoreReward skipped:', e.message) }
       }
 
-      // 4. Save the receipt
-      const saved = await upsertReceipt({
-        ...receipt,
-        receipt_link,
-        processed: items.length > 0,
-        user_id: userId,
-        store_id,
-        store_location_id,
-        reward_no,
-        category: receipt.category || undefined,
-      })
+      // 4. Save the receipt. Pre-insert dedup: if this is a NEW receipt
+      //    (no id) and a matching one already exists for the same user /
+      //    store / date / total, merge into the existing row instead of
+      //    creating a duplicate. Editing an existing receipt (receipt.id
+      //    set) always goes through as-is — that's an update, not a create.
+      let saved
+      if (!receipt.id) {
+        const sb = createClient()
+        const existingId = await findExistingReceipt(sb, userId, {
+          store_name: receipt.store_name,
+          date: receipt.date,
+          total_amount: receipt.total_amount,
+        }).catch(() => null)
+        if (existingId) {
+          saved = await upsertReceipt({
+            ...receipt,
+            id: existingId,
+            receipt_link: receipt_link || receipt.receipt_link || undefined,
+            processed: items.length > 0,
+            user_id: userId,
+            store_id: store_id || undefined,
+            store_location_id: store_location_id || undefined,
+            reward_no: reward_no || undefined,
+            category: receipt.category || undefined,
+          })
+        }
+      }
+      if (!saved) {
+        saved = await upsertReceipt({
+          ...receipt,
+          receipt_link,
+          processed: items.length > 0,
+          user_id: userId,
+          store_id,
+          store_location_id,
+          reward_no,
+          category: receipt.category || undefined,
+        })
+      }
 
       // 5. Save line items, AND upsert each into the store's catalog (store_items).
       //    Each line gets a store_item_id FK pointing at the catalog row so we can

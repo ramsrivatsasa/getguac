@@ -10,7 +10,7 @@ import { createClient } from '../../../lib/supabase/client'
 import { useQuery } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { formatDateShort } from '../../../lib/dateFormat'
-import { Upload, Trash2, Eye, Search, Download, Loader2, Sparkles, X, Shield, Camera, ChevronDown, ChevronRight, Undo2, ShoppingCart, Monitor, Link2, Tag, RefreshCw } from 'lucide-react'
+import { Upload, Trash2, Eye, Search, Download, Loader2, Sparkles, X, Shield, Camera, ChevronDown, ChevronRight, Undo2, ShoppingCart, Monitor, Link2, Tag, RefreshCw, Copy } from 'lucide-react'
 import { guessCategory } from '../../../lib/categorizeRules'
 import { normalizeStoreName } from '../../../lib/store-name-normalize'
 import { isItemPerishable, getNonReturnableReason } from '../../../lib/perishable'
@@ -495,6 +495,44 @@ export default function ReceiptsPage() {
   const qc = useQueryClient()
   const [reconciling, setReconciling] = useState(false)
   const unreconciledStatementCount = receipts.filter(r => r.from_statement && !r.reconciled).length
+  const [dedupBusy, setDedupBusy] = useState(false)
+  const [dedupPreview, setDedupPreview] = useState(null)  // null | { groups, receipts_to_delete }
+  async function handleFindDuplicates() {
+    setDedupBusy(true)
+    try {
+      // Dry-run first so the user can see what'll be merged before anything is deleted.
+      const res = await fetch('/api/receipts/dedup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Dedup scan failed')
+      if (!data.groups || data.groups.length === 0) {
+        toast.success('No duplicate receipts found 🎉')
+        setDedupPreview(null)
+      } else {
+        setDedupPreview({ groups: data.groups, receipts_to_delete: data.receipts_to_delete })
+      }
+    } catch (err) {
+      toast.error(err.message)
+    } finally {
+      setDedupBusy(false)
+    }
+  }
+  async function handleConfirmDedup() {
+    setDedupBusy(true)
+    try {
+      const res = await fetch('/api/receipts/dedup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ confirm: true }) })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Dedup failed')
+      toast.success(`Removed ${data.receipts_deleted} duplicate receipt${data.receipts_deleted === 1 ? '' : 's'}`)
+      setDedupPreview(null)
+      qc.invalidateQueries({ queryKey: ['receipts'] })
+      qc.invalidateQueries({ queryKey: ['reports'] })
+      router.refresh()
+    } catch (err) {
+      toast.error(err.message)
+    } finally {
+      setDedupBusy(false)
+    }
+  }
   async function handleReconcileAll() {
     setReconciling(true)
     try {
@@ -652,6 +690,16 @@ export default function ReceiptsPage() {
               Reconcile <span className="ml-1 text-[10px] font-bold bg-blue-100 text-blue-800 rounded-full px-1.5">{unreconciledStatementCount}</span>
             </button>
           )}
+          <button
+            type="button"
+            onClick={handleFindDuplicates}
+            disabled={dedupBusy}
+            className="btn-secondary"
+            title="Scan for duplicate receipts (same store, date, total) and merge them"
+          >
+            {dedupBusy ? <Loader2 size={14} className="animate-spin" /> : <Copy size={16} />}
+            Find duplicates
+          </button>
           {uncategorizedCount > 0 && (
             <button
               type="button"
@@ -1037,6 +1085,56 @@ export default function ReceiptsPage() {
           </div>
         )}
       </div>
+
+      {/* Find-duplicates preview modal. Opens after a dry-run scan returns groups;
+          user confirms to actually delete the dups, or cancels to dismiss. */}
+      {dedupPreview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b">
+              <div className="flex items-center gap-2">
+                <Copy size={18} className="text-amber-600" />
+                <h3 className="font-semibold text-gray-800">
+                  {dedupPreview.groups.length} duplicate group{dedupPreview.groups.length === 1 ? '' : 's'} found
+                </h3>
+              </div>
+              <button onClick={() => setDedupPreview(null)} className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center" aria-label="Close">
+                <X size={16} />
+              </button>
+            </div>
+            <div className="p-4 overflow-y-auto flex-1">
+              <p className="text-sm text-gray-600 mb-3">
+                Confirming will <strong>delete {dedupPreview.receipts_to_delete}</strong> duplicate receipt{dedupPreview.receipts_to_delete === 1 ? '' : 's'} and keep the best one in each group. Items and refund policies are preserved on the kept row; email-message links are re-pointed automatically.
+              </p>
+              <div className="space-y-2 text-xs">
+                {dedupPreview.groups.map(g => (
+                  <div key={g.key} className="border rounded-lg p-3 bg-gray-50">
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <span className="font-semibold text-gray-800">{g.store_name}</span>
+                      <span className="text-gray-500">{g.date} · ${Math.abs(g.total_amount).toFixed(2)}{g.sign === '-' ? ' refund' : ''}</span>
+                    </div>
+                    <div className="text-gray-500">
+                      Will delete <strong className="text-rose-600">{g.delete_count}</strong> · keeping <strong className="text-emerald-600">1</strong> ({g.keeper_reason})
+                    </div>
+                    {g.variants && g.variants.length > 1 && (
+                      <div className="text-[10px] text-gray-400 mt-1">
+                        Matched name variants: {g.variants.join(' · ')}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="p-4 border-t flex items-center justify-end gap-2">
+              <button onClick={() => setDedupPreview(null)} className="btn-secondary text-sm">Cancel</button>
+              <button onClick={handleConfirmDedup} disabled={dedupBusy} className="btn-primary text-sm">
+                {dedupBusy && <Loader2 size={14} className="animate-spin" />}
+                Delete {dedupPreview.receipts_to_delete} duplicate{dedupPreview.receipts_to_delete === 1 ? '' : 's'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

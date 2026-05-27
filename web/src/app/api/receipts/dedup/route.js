@@ -75,10 +75,17 @@ export async function POST(request) {
 
   // Bucket by (normalized store, date, sign, cents). Sign separates refunds
   // from purchases; cents is the exact bucket; the ±1¢ merge happens next.
+  //
+  // For the dedup key we ALSO strip whitespace + punctuation off the
+  // canonical normalized name. The base normalizeStoreName keeps spaces so
+  // the alias map ("home depot" → "The Home Depot") works, but for dedup
+  // matching we want "LOTTEmarket" and "LOTTE Market" to bucket together.
+  // Stripping non-alphanumeric is the same trick the mobile dedup does.
+  const dedupKey = (raw) => normalizeStoreName(raw).replace(/[^a-z0-9]/g, '')
   const buckets = new Map()
   for (const r of receipts || []) {
     if (!r.store_name || !r.date || r.total_amount == null) continue
-    const norm = normalizeStoreName(r.store_name)
+    const norm = dedupKey(r.store_name)
     if (!norm) continue
     const total = Number(r.total_amount)
     const sign = total < 0 ? '-' : '+'

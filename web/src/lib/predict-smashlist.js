@@ -19,16 +19,15 @@
 // { predictions, newAliases }. The cron-callable route handles I/O.
 
 const BUCKET_MAP = {
-  grub:      'Pantry',
-  wellness:  'Pantry',
-  coffee:    'Cravings',
-  tea:       'Cravings',
-  coke:      'Cravings',
-  pepsi:     'Cravings',
-  juice:     'Cravings',
-  milkshake: 'Cravings',
-  bars:      'Cravings',
-  eats:      'Grub & Grab',
+  grub:            'Pantry',
+  pharmacy:        'Pantry',  // was 'wellness'
+  health:          'Pantry',  // vitamins, supplements
+  'personal-care': 'Pantry',  // toothpaste, shampoo, soap
+  household:       'Pantry',  // bath tissue, paper towels, detergent
+  tea:             'Cravings',
+  drinks:          'Cravings',  // coffee + coke + pepsi + juice + milkshake merged 2026-05-27
+  bars:            'Cravings',
+  eats:            'Grub & Grab',
 }
 
 const CADENCE_TRIGGER = 0.80

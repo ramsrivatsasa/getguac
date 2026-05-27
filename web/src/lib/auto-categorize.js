@@ -6,16 +6,20 @@
 // Order matters: more specific rules first (coke before generic soda, milkshake
 // before milk, etc.). The first match wins.
 
+// Order matters: more-specific rules first. The first match wins. Health
+// (vitamins, protein) must come BEFORE pharmacy because "vitamin" used to
+// route to wellness. Personal-care must come BEFORE household because
+// "soap" matches both dish soap (household) and hand soap (personal-care)
+// — keyword precedence handles the disambiguation.
 const RULES = [
-  { slug: 'coffee',    re: /\b(coffee|latte|espresso|mocha|cappuccino|americano|cold ?brew|frappuccino|starbucks|dunkin|peet'?s|nespresso|keurig)\b/i },
-  { slug: 'tea',       re: /\b(tea|matcha|chai|oolong|earl ?grey|chamomile|green ?tea|black ?tea)\b/i },
-  { slug: 'coke',      re: /\b(coca[- ]?cola|coke(?! ?zero)?|cherry coke|coke ?\d?l|coca cola)\b/i },
-  { slug: 'pepsi',     re: /\b(pepsi|mountain ?dew|mtn ?dew|mtn-?dew)\b/i },
-  { slug: 'milkshake', re: /\b(milk ?shake|frosty|smoothie king)\b/i },
-  { slug: 'juice',     re: /\b(juice|orange juice|\boj\b|apple juice|cranberry juice|minute maid|tropicana|simply orange|naked juice|pomegranate juice)\b/i },
-  { slug: 'bars',      re: /\b(beer|ipa|lager|ale|stout|pilsner|porter|budweiser|coors|miller|heineken|guinness|wine|cabernet|merlot|chardonnay|sauvignon|pinot|tequila|vodka|whiskey|whisky|bourbon|scotch|gin|rum|cocktail|margarita|martini|mojito|champagne|prosecco|sake)\b/i },
-  { slug: 'gas-up',    re: /\b(unleaded|regular gas|premium gas|diesel|fuel|gasoline|gallons?)\b/i },
-  { slug: 'wellness',  re: /\b(advil|tylenol|aspirin|ibuprofen|acetaminophen|vitamin|multivitamin|prescription|rx |pharmacy)\b/i },
+  { slug: 'tea',           re: /\b(tea|matcha|chai|oolong|earl ?grey|chamomile|green ?tea|black ?tea)\b/i },
+  { slug: 'drinks',        re: /\b(coffee|latte|espresso|mocha|cappuccino|americano|cold ?brew|frappuccino|starbucks|dunkin|peet'?s|nespresso|keurig|coca[- ]?cola|coke(?! ?zero)?|cherry coke|coke ?\d?l|pepsi|mountain ?dew|mtn ?dew|mtn-?dew|sprite|fanta|7[- ]?up|dr ?pepper|root ?beer|ginger ?ale|milk ?shake|frosty|smoothie king|juice|\boj\b|minute maid|tropicana|simply orange|naked juice|pomegranate juice|gatorade|powerade|vitamin ?water|red bull|monster|rockstar|celsius)\b/i },
+  { slug: 'bars',          re: /\b(beer|ipa|lager|ale|stout|pilsner|porter|budweiser|coors|miller|heineken|guinness|wine|cabernet|merlot|chardonnay|sauvignon|pinot|tequila|vodka|whiskey|whisky|bourbon|scotch|gin|rum|cocktail|margarita|martini|mojito|champagne|prosecco|sake)\b/i },
+  { slug: 'gas-up',        re: /\b(unleaded|regular gas|premium gas|diesel|fuel|gasoline|gallons?)\b/i },
+  { slug: 'health',        re: /\b(vitamin|multivitamin|protein ?(powder|bar|shake)?|whey|creatine|bcaa|electrolyte|supplement|fish ?oil|omega[- ]?3|magnesium|biotin|collagen|melatonin|probiotic|elderberry|ashwagandha)\b/i },
+  { slug: 'pharmacy',      re: /\b(advil|tylenol|aspirin|ibuprofen|acetaminophen|naproxen|aleve|benadryl|claritin|zyrtec|allegra|prescription|rx |pharmacy|band[- ]?aid|bandages?|antiseptic|hydrogen peroxide|cough drops?|nyquil|dayquil|sudafed|mucinex|robitussin)\b/i },
+  { slug: 'personal-care', re: /\b(toothpaste|toothbrush|mouthwash|floss|dental floss|shampoo|conditioner|hair (gel|spray|wax)|body ?wash|hand ?soap|bar ?soap|dove|olay|cetaphil|cerave|moisturizer|lotion|sunscreen|deodorant|antiperspirant|razor|shaving|aftershave|tampon|pad |sanitary|makeup|lipstick|mascara|foundation|eyeliner|perfume|cologne|nail polish)\b/i },
+  { slug: 'household',     re: /\b(toilet ?paper|bath ?tissue|paper ?towel|napkin|tissue paper|kleenex|aluminum foil|cling ?wrap|plastic wrap|ziploc|trash bag|garbage bag|laundry detergent|fabric softener|dryer sheet|dish ?soap|dishwashing|cascade|finish|all[- ]?purpose cleaner|windex|lysol|clorox|bleach|swiffer|mop|broom|sponge|paper plates?|paper cups?|aluminum can|light bulb|battery|batteries|aaa|aa battery)\b/i },
 ]
 
 // Returns a shallow-cloned items array with `category` filled in where Gemini

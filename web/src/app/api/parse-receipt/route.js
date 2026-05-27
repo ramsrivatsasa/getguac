@@ -42,7 +42,7 @@ Return ONLY a single JSON object. No prose, no markdown fences. Schema:
   "is_return": boolean,
   "is_receipt": boolean,                 // TRUE for any receipt / invoice / order confirmation. FALSE for non-receipt photos (selfie, cat, landscape, blank paper, screenshot of something else).
   "non_receipt_subject": string|null,    // When is_receipt=false: short 2-3 word description of what you DID see, lowercase ("a person", "a cat", "a sunset", "a blank page", "a screenshot of a chat"). When is_receipt=true: null.
-  "category": string|null,               // ONE of: "grub", "eats", "bars", "coffee", "tea", "coke", "pepsi", "juice", "milkshake", "subs", "bills", "tech", "big-stuff", "fix-it", "outdoors", "supplies", "fits", "wellness", "gas-up", "fun", "gifting", "charity", "misc"
+  "category": string|null,               // ONE of: "grub", "eats", "bars", "tea", "drinks", "subs", "bills", "tech", "big-stuff", "fix-it", "outdoors", "supplies", "fits", "pharmacy", "health", "personal-care", "household", "gas-up", "fun", "gifting", "charity", "misc"
   "items": [
     { "sku": string|null, "model": string|null, "item_name": string, "qty": number, "price": number, "category": string|null, "health_tier": "healthy"|"neutral"|"treat"|"harmful"|null, "refund_policy_id": string|null, "returned": boolean }
   ],
@@ -65,8 +65,16 @@ NOT-A-RECEIPT — if the input is clearly NOT a receipt (a selfie / portrait, a 
 Set is_receipt: true for any receipt, invoice, e-receipt email, or order confirmation — even if some fields are unreadable or smudged. Only set false when the image is unmistakably NOT a receipt.
 
 BEVERAGE ITEMS — when an item line names a beverage brand or kind, set the per-item category to the matching beverage slug, not the receipt-level slug:
-  "COKE 12PK" → "coke" · "PEPSI 2L" / "MTN DEW" → "pepsi" · "STARBUCKS LATTE" / "COLD BREW" / "ESPRESSO" → "coffee" · "EARL GREY" / "MATCHA" → "tea" · "TROPICANA" / "MINUTE MAID OJ" → "juice" · "OREO MILKSHAKE" / "FROSTY" → "milkshake" · "BUDWEISER 6PK" / "RED WINE" / "MARGARITA" → "bars".
-A Starbucks receipt's RECEIPT-LEVEL category is "coffee"; a bar tab is "bars". A grocery run with mixed items has receipt-level "grub" but the Coke line still gets per-item "coke".
+  "COKE 12PK" / "PEPSI 2L" / "MTN DEW" / "STARBUCKS LATTE" / "COLD BREW" / "ESPRESSO" / "TROPICANA" / "MINUTE MAID OJ" / "OREO MILKSHAKE" / "FROSTY" / "GATORADE" → "drinks"
+  "EARL GREY" / "MATCHA" / "CHAMOMILE" → "tea"
+  "BUDWEISER 6PK" / "RED WINE" / "MARGARITA" → "bars"
+A Starbucks receipt's RECEIPT-LEVEL category is "drinks"; a bar tab is "bars". A grocery run with mixed items has receipt-level "grub" but a Coke line still gets per-item "drinks".
+
+HEALTH & HOUSEHOLD ITEMS — split between four specific slugs (do not lump into "misc"):
+  "TYLENOL" / "ADVIL" / "RX " / "PRESCRIPTION" / "BAND-AID" → "pharmacy"
+  "VITAMIN D" / "OMEGA-3" / "WHEY PROTEIN" / "CREATINE" / "MULTIVITAMIN" → "health"
+  "TOOTHPASTE" / "SHAMPOO" / "DEODORANT" / "RAZOR" / "LOTION" → "personal-care"
+  "TOILET PAPER" / "PAPER TOWELS" / "DISH SOAP" / "LAUNDRY DETERGENT" / "TRASH BAGS" → "household"
 
 HEALTH TIER — for each item, set health_tier to:
 - "healthy" : vegetables, fruit, lean protein, water, tea, plain yogurt, eggs, oats, legumes

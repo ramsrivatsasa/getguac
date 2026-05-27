@@ -2,7 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import {
-  getReceipts, getReceipt, upsertReceipt, deleteReceipt, upsertReceiptItem, updateReceiptItem, uploadReceipt, upsertStore, upsertStoreLocation, replaceRefundPolicies, ensureStoreReward, upsertStoreItem
+  getReceipts, getReceipt, upsertReceipt, deleteReceipt, upsertReceiptItem, updateReceiptItem, uploadReceipt, upsertStore, upsertStoreLocation, replaceRefundPolicies, ensureStoreReward, upsertStoreItem, getBankStatements
 } from '../lib/db'
 import { createClient } from '../lib/supabase/client'
 import { findExistingReceipt } from '../lib/findExistingReceipt'
@@ -19,6 +19,24 @@ export function useReceipt(id) {
     queryKey: ['receipts', id],
     queryFn: () => getReceipt(id),
     enabled: !!id,
+  })
+}
+
+// Bank statements indexed for badge rendering on the receipts list.
+// Returns a Map keyed by statement_import_id so callers can do an O(1)
+// lookup when rendering each row. Empty Map for users who never imported.
+export function useBankStatementMap() {
+  return useQuery({
+    queryKey: ['bank_statements'],
+    queryFn: async () => {
+      const rows = await getBankStatements()
+      const m = new Map()
+      for (const r of rows) {
+        if (r.statement_import_id) m.set(r.statement_import_id, r)
+      }
+      return m
+    },
+    staleTime: 1000 * 60 * 5,
   })
 }
 

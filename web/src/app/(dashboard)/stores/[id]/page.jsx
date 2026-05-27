@@ -4,9 +4,10 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getStore, updateStore, getReceipts, getStoreReturnPolicies } from '../../../../lib/db'
+import { useBankStatementMap } from '../../../../hooks/useReceipts'
 import { formatDateShort } from '../../../../lib/dateFormat'
 import toast from 'react-hot-toast'
-import { ArrowLeft, Save, Store, Phone, Globe, MapPin, Receipt, ChevronRight, Hash, Navigation, Crosshair, Loader2, Shield, ExternalLink, X } from 'lucide-react'
+import { ArrowLeft, Save, Store, Phone, Globe, MapPin, Receipt, ChevronRight, Hash, Navigation, Crosshair, Loader2, Shield, ExternalLink, X, Link2 } from 'lucide-react'
 export default function StoreDetailPage() {
   const { id } = useParams()
   const router = useRouter()
@@ -59,6 +60,20 @@ export default function StoreDetailPage() {
   }
 
   const f = k => e => setForm(p => ({ ...p, [k]: e.target.value }))
+
+  // Bank statement map — keyed by statement_import_id — so we can render
+  // "🏦 Chase ••1234" / "🔗 Reconciled · Chase" badges next to each row.
+  const { data: bankStmts = new Map() } = useBankStatementMap()
+  const receiptById = new Map(receipts.map(r => [r.id, r]))
+  function bankInfoFor(r) {
+    if (!r) return null
+    if (r.statement_import_id) return bankStmts.get(r.statement_import_id) || null
+    if (r.reconciled && r.reconciled_with) {
+      const partner = receiptById.get(r.reconciled_with)
+      if (partner?.statement_import_id) return bankStmts.get(partner.statement_import_id) || null
+    }
+    return null
+  }
 
   if (isLoading) return <div className="py-16 text-center text-gray-400">Loading…</div>
   if (!store) return <div className="py-16 text-center text-red-500">Store not found</div>
@@ -239,20 +254,37 @@ export default function StoreDetailPage() {
                 <span className="float-right">{items.length} receipt{items.length !== 1 ? 's' : ''}</span>
               </div>
               <div className="divide-y divide-gray-50">
-                {items.map(r => (
-                  <Link key={r.id} href={`/receipts/${r.id}`}
-                    className="flex items-center justify-between px-5 py-3 hover:bg-gray-50/70 transition-colors group">
-                    <div className="flex items-center gap-4 min-w-0">
-                      <span className="text-sm text-gray-500 w-24 shrink-0">{formatDateShort(r.date)}</span>
-                      <span className={`text-sm font-semibold ${parseFloat(r.total_amount) < 0 ? 'text-rose-600' : 'text-gray-800'}`}>
-                        ${parseFloat(r.total_amount || 0).toFixed(2)}
-                      </span>
-                      {r.business_purchase && <span className="badge-blue text-xs">Biz</span>}
-                      {parseFloat(r.total_amount) < 0 && <span className="badge-gray text-xs">Return</span>}
-                    </div>
-                    <ChevronRight size={16} className="text-gray-300 group-hover:text-blue-500" />
-                  </Link>
-                ))}
+                {items.map(r => {
+                  const bank = bankInfoFor(r)
+                  const bankLabel = bank ? `${bank.issuer || 'Bank'}${bank.account_last4 ? ` ••${bank.account_last4}` : ''}` : null
+                  const stmtTooltip = bank
+                    ? `${bank.issuer || 'Bank'}${bank.account_last4 ? ` ••${bank.account_last4}` : ''}${bank.period_start && bank.period_end ? ` · ${bank.period_start} → ${bank.period_end}` : (bank.file_name ? ` · ${bank.file_name}` : '')}`
+                    : null
+                  return (
+                    <Link key={r.id} href={`/receipts/${r.id}`}
+                      className="flex items-center justify-between px-5 py-3 hover:bg-gray-50/70 transition-colors group">
+                      <div className="flex items-center gap-3 min-w-0 flex-wrap">
+                        <span className="text-sm text-gray-500 w-24 shrink-0">{formatDateShort(r.date)}</span>
+                        <span className={`text-sm font-semibold ${parseFloat(r.total_amount) < 0 ? 'text-rose-600' : 'text-gray-800'}`}>
+                          ${parseFloat(r.total_amount || 0).toFixed(2)}
+                        </span>
+                        {r.business_purchase && <span className="badge-blue text-xs">Biz</span>}
+                        {parseFloat(r.total_amount) < 0 && <span className="badge-gray text-xs">Return</span>}
+                        {r.from_statement && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100" title={stmtTooltip || r.statement_source || 'From statement'}>
+                            🏦 {bankLabel || 'Statement'}
+                          </span>
+                        )}
+                        {r.reconciled && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100" title={bank ? `Reconciled with ${stmtTooltip}` : 'Reconciled'}>
+                            <Link2 size={10} /> Reconciled{!r.from_statement && bankLabel ? <span className="text-emerald-600 font-normal">· {bankLabel}</span> : null}
+                          </span>
+                        )}
+                      </div>
+                      <ChevronRight size={16} className="text-gray-300 group-hover:text-blue-500" />
+                    </Link>
+                  )
+                })}
               </div>
             </div>
           ))

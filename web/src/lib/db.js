@@ -15,6 +15,25 @@ const RECEIPTS_LIST_COLS =
   'from_statement, statement_source, statement_import_id, reconciled, reconciled_with, ' +
   'is_return, receipt_items(count)'
 
+// Bank statements — small set per user, used by list pages to show which
+// statement / bank a receipt was imported from or reconciled against.
+export async function getBankStatements() {
+  const sb = createClient()
+  // `bank_statements` may not exist for users who never imported a statement;
+  // we tolerate the table-missing case by catching the error and returning [].
+  try {
+    const { data, error } = await sb
+      .from('bank_statements')
+      .select('id, statement_import_id, issuer, file_name, account_last4, period_start, period_end')
+      .order('uploaded_at', { ascending: false })
+      .limit(500)
+    if (error) return []
+    return data || []
+  } catch {
+    return []
+  }
+}
+
 // Receipts
 export async function getReceipts({ dateFrom, dateTo, storeId, storeLocationId } = {}) {
   const sb = createClient()

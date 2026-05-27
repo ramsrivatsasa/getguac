@@ -1,9 +1,9 @@
 'use client'
-import { useState, useCallback, useRef, useEffect, Fragment } from 'react'
+import { useState, useCallback, useRef, useEffect, useMemo, Fragment } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useDropzone } from 'react-dropzone'
-import { useReceipts, useReceipt, useAddReceipt, useDeleteReceipt, useUpdateReceiptItem } from '../../../hooks/useReceipts'
+import { useReceipts, useReceipt, useAddReceipt, useDeleteReceipt, useUpdateReceiptItem, useBankStatementMap } from '../../../hooks/useReceipts'
 import { addToShoppingList } from '../../../lib/db'
 import { uploadReceiptForParse } from '../../../lib/parse-receipt-upload'
 import { createClient } from '../../../lib/supabase/client'
@@ -67,6 +67,26 @@ export default function ReceiptsPage() {
   })
 
   const { data: receipts = [], isLoading } = useReceipts()
+  const { data: bankStmts = new Map() } = useBankStatementMap()
+  // Quick lookup so we can resolve reconciled-but-not-from-statement rows
+  // to their paired statement row's issuer/file_name without an extra query.
+  const receiptById = useMemo(() => {
+    const m = new Map()
+    for (const r of receipts) m.set(r.id, r)
+    return m
+  }, [receipts])
+  // Given any receipt, return the bank_statements row that explains its
+  // statement linkage (its own, if from_statement; otherwise its paired
+  // partner's). Returns null when there's no statement linkage at all.
+  function bankInfoFor(r) {
+    if (!r) return null
+    if (r.statement_import_id) return bankStmts.get(r.statement_import_id) || null
+    if (r.reconciled && r.reconciled_with) {
+      const partner = receiptById.get(r.reconciled_with)
+      if (partner?.statement_import_id) return bankStmts.get(partner.statement_import_id) || null
+    }
+    return null
+  }
   const addReceipt = useAddReceipt()
   const deleteReceipt = useDeleteReceipt()
 
@@ -1015,22 +1035,31 @@ export default function ReceiptsPage() {
                         </td>
                         <td className="px-4 py-1">
                           <div className="text-blue-700 hover:underline">{r.store_name}</div>
-                          <div className="flex items-center gap-1 mt-0.5">
-                            {r.from_statement && (
-                              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100" title={r.statement_source || 'Imported from statement'}>
-                                🏦 Statement
-                              </span>
-                            )}
-                            {r.reconciled && (
-                              <button
-                                type="button"
-                                onClick={e => { e.stopPropagation(); handleUnreconcile(r.id) }}
-                                className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-100 transition-colors"
-                                title="Reconciled — click to unlink"
-                              >
-                                <Link2 size={10} /> Reconciled
-                              </button>
-                            )}
+                          <div className="flex items-center gap-1 mt-0.5 flex-wrap">
+                            {(() => {
+                              const bank = bankInfoFor(r)
+                              const bankLabel = bank ? `${bank.issuer || 'Bank'}${bank.account_last4 ? ` ••${bank.account_last4}` : ''}` : null
+                              const stmtTooltip = bank
+                                ? `${bank.issuer || 'Bank'}${bank.account_last4 ? ` ••${bank.account_last4}` : ''}${bank.period_start && bank.period_end ? ` · ${bank.period_start} → ${bank.period_end}` : (bank.file_name ? ` · ${bank.file_name}` : '')}`
+                                : (r.statement_source || 'Imported from statement')
+                              return <>
+                                {r.from_statement && (
+                                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100" title={stmtTooltip}>
+                                    🏦 {bankLabel || 'Statement'}
+                                  </span>
+                                )}
+                                {r.reconciled && (
+                                  <button
+                                    type="button"
+                                    onClick={e => { e.stopPropagation(); handleUnreconcile(r.id) }}
+                                    className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-100 transition-colors"
+                                    title={bank ? `Reconciled with ${stmtTooltip} — click to unlink` : 'Reconciled — click to unlink'}
+                                  >
+                                    <Link2 size={10} /> Reconciled{!r.from_statement && bankLabel ? <span className="text-emerald-600 font-normal">· {bankLabel}</span> : null}
+                                  </button>
+                                )}
+                              </>
+                            })()}
                           </div>
                         </td>
                         <td className="px-4 py-1 text-gray-500 whitespace-nowrap">{formatDateShort(r.date)}</td>

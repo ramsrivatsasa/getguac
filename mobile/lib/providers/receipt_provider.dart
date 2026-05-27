@@ -6,7 +6,7 @@ import '../models/receipt_model.dart';
 
 const _kReceiptListCols =
     'id, store_name, date, total_amount, tax_paid, reward_no, '
-    'receipt_link, business_purchase, processed, category, rating, '
+    'receipt_link, extra_page_urls, business_purchase, processed, category, rating, '
     'from_statement, statement_source, reconciled, is_return, '
     'receipt_items(count)';
 
@@ -234,12 +234,29 @@ class ReceiptProvider extends ChangeNotifier {
   /// row instead of creating a duplicate. Items get appended only when
   /// the existing row has zero items, so we don't pile on dup line items
   /// every time the user re-uploads the same photo.
-  Future<({String? id, String? error, bool merged})> addParsedReceipt(Map<String, dynamic> parsed, File imageFile) async {
+  Future<({String? id, String? error, bool merged})> addParsedReceipt(
+    Map<String, dynamic> parsed,
+    File imageFile, {
+    List<File> extraPages = const [],
+  }) async {
     final uid = _sb.auth.currentUser?.id;
     if (uid == null) return (id: null, error: 'Not signed in', merged: false);
     String? link;
+    final extraUrls = <String>[];
     try {
       link = await uploadImage(imageFile);
+      // Upload extra pages from a multi-page scan / long-receipt camera
+      // run. Each gets its own storage object; URLs stored in
+      // receipts.extra_page_urls so the detail screen can paginate
+      // through every captured page, not just the first.
+      for (final p in extraPages) {
+        try {
+          final u = await uploadImage(p);
+          extraUrls.add(u);
+        } catch (e) {
+          if (kDebugMode) debugPrint('extra page upload failed: $e');
+        }
+      }
     } catch (e) {
       return (id: null, error: 'Image upload failed: $e', merged: false);
     }
@@ -273,6 +290,10 @@ class ReceiptProvider extends ChangeNotifier {
         if (parsed['payment_last4'] != null) patch['payment_last4'] = parsed['payment_last4'];
         if (parsed['category'] != null) patch['category'] = parsed['category'];
         if ((link ?? '').isNotEmpty) patch['receipt_link'] = link;
+        // Re-upload of a multi-page receipt: replace extra_page_urls with
+        // the newest set. We don't union-merge because the user may have
+        // intentionally re-captured fewer pages.
+        if (extraUrls.isNotEmpty) patch['extra_page_urls'] = extraUrls;
         if (patch.isNotEmpty) {
           await _sb.from('receipts').update(patch).eq('id', existingId);
         }
@@ -312,6 +333,7 @@ class ReceiptProvider extends ChangeNotifier {
         'is_return':     parsed['is_return'] == true,
         'category':      parsed['category'],
         'receipt_link': link,
+        if (extraUrls.isNotEmpty) 'extra_page_urls': extraUrls,
         'processed': true,
       }).select('id').single();
       final id = row['id'] as String;

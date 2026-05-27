@@ -52,8 +52,9 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
             .select('*')
             .eq('id', widget.id)
             .maybeSingle();
-        if (row is Map) {
-          receipt = Receipt.fromMap(row['id'] as String, row as Map<String, dynamic>);
+        if (row != null && row is Map) {
+          final m = Map<String, dynamic>.from(row as Map);
+          receipt = Receipt.fromMap(m['id'] as String, m);
         }
       } catch (_) {
         // Best-effort. The "Receipt not found" empty state covers true misses.
@@ -278,25 +279,79 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
                     _row('Reward No', r.rewardNo.isEmpty ? '—' : r.rewardNo),
                     _row('Business', r.businessPurchase ? 'Yes' : 'No'),
 
-                    // Big, clear "View Receipt Image" — only when an image actually
-                    // exists (statement-imported receipts never have one).
+                    // Receipt image(s). Single-page receipts get one button;
+                    // multi-page receipts (long-receipt camera flow) show
+                    // page chips so the user can tap any specific page.
                     if (r.receiptLink.isNotEmpty && !r.fromStatement)
                       Padding(
                         padding: const EdgeInsets.only(top: 14),
-                        child: SizedBox(
-                          width: double.infinity,
-                          child: FilledButton.icon(
-                            onPressed: () => _viewImage(r.receiptLink),
-                            icon: const Icon(Icons.photo_camera_back_outlined, size: 20),
-                            label: const Text('View Receipt Image',
-                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
-                            style: FilledButton.styleFrom(
-                              backgroundColor: const Color(0xFF15803d),
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        child: r.extraPageUrls.isEmpty
+                          ? SizedBox(
+                              width: double.infinity,
+                              child: FilledButton.icon(
+                                onPressed: () => _viewImage(r.receiptLink),
+                                icon: const Icon(Icons.photo_camera_back_outlined, size: 20),
+                                label: const Text('View Receipt Image',
+                                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: const Color(0xFF15803d),
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                ),
+                              ),
+                            )
+                          : Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(children: [
+                                  const Icon(Icons.photo_library_outlined, size: 16, color: Color(0xFF15803d)),
+                                  const SizedBox(width: 6),
+                                  Text('${r.extraPageUrls.length + 1} pages',
+                                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF064e3b))),
+                                  const SizedBox(width: 6),
+                                  const Text('· tap to view',
+                                    style: TextStyle(fontSize: 11, color: Colors.black54)),
+                                ]),
+                                const SizedBox(height: 8),
+                                SizedBox(
+                                  height: 110,
+                                  child: ListView.separated(
+                                    scrollDirection: Axis.horizontal,
+                                    itemCount: 1 + r.extraPageUrls.length,
+                                    separatorBuilder: (_, __) => const SizedBox(width: 8),
+                                    itemBuilder: (_, i) {
+                                      final url = i == 0 ? r.receiptLink : r.extraPageUrls[i - 1];
+                                      return GestureDetector(
+                                        onTap: () => _viewImage(url),
+                                        child: Container(
+                                          width: 80,
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(10),
+                                            border: Border.all(color: const Color(0xFFa7f3d0), width: 1),
+                                            image: DecorationImage(
+                                              image: NetworkImage(url),
+                                              fit: BoxFit.cover,
+                                              onError: (_, __) {},
+                                            ),
+                                          ),
+                                          alignment: Alignment.bottomRight,
+                                          padding: const EdgeInsets.all(4),
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                                            decoration: BoxDecoration(
+                                              color: Colors.black.withValues(alpha: 0.6),
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                            child: Text('${i + 1}',
+                                              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w800)),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                        ),
                       ),
 
                     // Re-parse — re-runs the AI on the source (email body or

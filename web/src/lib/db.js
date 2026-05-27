@@ -11,7 +11,7 @@ import { createClient } from './supabase/client'
 // no list view shows. Saves ~40% on payload size for big receipt sets.
 const RECEIPTS_LIST_COLS =
   'id, user_id, store_name, store_id, store_location_id, date, total_amount, tax_paid, ' +
-  'reward_no, receipt_link, business_purchase, rating, validation_tags, category, ' +
+  'reward_no, receipt_link, extra_page_urls, business_purchase, rating, validation_tags, category, ' +
   'from_statement, statement_source, statement_import_id, reconciled, reconciled_with, ' +
   'is_return, receipt_items(count)'
 
@@ -63,7 +63,7 @@ export async function getReceipt(id) {
 // stripped before sending to upsert, or Supabase rejects them as unknown columns.
 const RECEIPT_COLUMNS = [
   'id', 'user_id', 'store_name', 'store_id', 'store_location_id', 'date',
-  'total_amount', 'tax_paid', 'reward_no', 'receipt_link',
+  'total_amount', 'tax_paid', 'reward_no', 'receipt_link', 'extra_page_urls',
   'business_purchase', 'processed', 'payment_method', 'payment_last4',
   'rating', 'validation_tags', 'validation_comment', 'validated_at',
   'category', 'category_source',

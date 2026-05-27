@@ -8,6 +8,9 @@ class Receipt {
   final double taxPaid;
   final String rewardNo;
   final String receiptLink;
+  // Additional page image URLs for multi-page captures. receiptLink is
+  // page 1; extraPageUrls is pages 2..N. Empty for single-page receipts.
+  final List<String> extraPageUrls;
   final bool businessPurchase;
   final bool processed;
   final String? category;
@@ -24,6 +27,7 @@ class Receipt {
     required this.taxPaid,
     this.rewardNo = '',
     this.receiptLink = '',
+    this.extraPageUrls = const [],
     this.businessPurchase = false,
     this.processed = false,
     this.category,
@@ -45,6 +49,11 @@ class Receipt {
         taxPaid: double.tryParse(map['tax_paid']?.toString() ?? '0') ?? 0,
         rewardNo: map['reward_no'] ?? '',
         receiptLink: map['receipt_link'] ?? '',
+        extraPageUrls: () {
+          final raw = map['extra_page_urls'];
+          if (raw is List) return raw.whereType<String>().toList();
+          return const <String>[];
+        }(),
         businessPurchase: map['business_purchase'] ?? false,
         processed: map['processed'] ?? false,
         category: map['category'],

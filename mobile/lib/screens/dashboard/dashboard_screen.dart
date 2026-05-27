@@ -334,9 +334,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           'returned': it.returned, 'category': it.category,
         }).toList(),
       };
-      // Receipt_link points at the first page (the rest get uploaded by the
-      // provider too but aren't linked yet — minor schema change pending).
-      final insert = await provider.addParsedReceipt(asMap, pages.first);
+      // Multi-page: pages[0] is the cover (receipt_link), pages[1..] go to
+      // extra_page_urls. Provider uploads each to storage and persists the
+      // full set so the detail screen can paginate every captured page.
+      final extras = pages.length > 1 ? pages.sublist(1) : <File>[];
+      final insert = await provider.addParsedReceipt(asMap, pages.first, extraPages: extras);
       if (!mounted) return;
       if (insert.id == null) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(

@@ -319,17 +319,36 @@ export default function ReceiptDetailPage() {
             )}
           </div>
         )}
-        {current.receipt_link && !current.from_statement && (
-          <a
-            href={current.receipt_link}
-            target="_blank"
-            rel="noreferrer"
-            title="View receipt image"
-            aria-label="View receipt image"
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 active:scale-95 transition-all shadow-sm font-bold text-sm">
-            <ImageIcon size={16} /> View image
-          </a>
-        )}
+        {current.receipt_link && !current.from_statement && (() => {
+          const extras = Array.isArray(current.extra_page_urls) ? current.extra_page_urls : []
+          const pages = [current.receipt_link, ...extras]
+          if (pages.length === 1) {
+            return (
+              <a
+                href={current.receipt_link}
+                target="_blank"
+                rel="noreferrer"
+                title="View receipt image"
+                aria-label="View receipt image"
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 active:scale-95 transition-all shadow-sm font-bold text-sm">
+                <ImageIcon size={16} /> View image
+              </a>
+            )
+          }
+          // Multi-page receipt — show one button per page so the user can open each.
+          return (
+            <div className="inline-flex items-center gap-1.5 flex-wrap">
+              <span className="text-xs font-semibold text-emerald-800 mr-1">{pages.length} pages:</span>
+              {pages.map((url, i) => (
+                <a key={i} href={url} target="_blank" rel="noreferrer"
+                  title={`Open page ${i + 1}`} aria-label={`Open page ${i + 1}`}
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 active:scale-95 transition-all shadow-sm text-xs font-bold">
+                  <ImageIcon size={12} /> {i + 1}
+                </a>
+              ))}
+            </div>
+          )
+        })()}
         <button onClick={handleSave} disabled={updateReceipt.isPending} className="btn-primary">
           <Save size={15} /> {updateReceipt.isPending ? 'Saving…' : 'Save Changes'}
         </button>

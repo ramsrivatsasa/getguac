@@ -31,7 +31,7 @@ const DEFAULT_PERIOD = '1y'
 const CATEGORY_COLORS = {
   grub: '#10b981', eats: '#f97316', bars: '#d946ef', tea: '#10b981',
   drinks: '#ef4444',
-  subs: '#8b5cf6', bills: '#0ea5e9', 'bank-fees': '#dc2626', tech: '#0ea5e9',
+  subs: '#8b5cf6', bills: '#0ea5e9', 'bank-fees': '#dc2626', cloud: '#38bdf8', tech: '#0ea5e9',
   'big-stuff': '#6366f1', 'fix-it': '#f59e0b', outdoors: '#84cc16',
   supplies: '#6366f1', fits: '#d946ef',
   pharmacy: '#f43f5e', health: '#10b981',

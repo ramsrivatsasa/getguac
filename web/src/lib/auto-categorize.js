@@ -19,6 +19,14 @@ const RULES = [
   // before generic "fee" so a "service fee" at a restaurant doesn't get
   // misrouted — the bank-fee keywords are specific to issuer statements.
   { slug: 'bank-fees',     re: /\b(balance ?transfer( fee)?|purchase interest|interest charge|finance charge|annual fee|late fee|overdraft( fee)?|atm fee|foreign transaction fee|cash advance fee|returned payment( fee)?|monthly (service|maintenance) fee|wire (transfer )?fee|nsf fee|over[- ]?limit fee)\b/i },
+  // Cloud / web infrastructure — match the merchant name AND common item
+  // line phrasings ("Domain renewal — 1y", ".com renewal", "Hosting plan").
+  // Must come before generic 'subs' so domain/hosting fees don't end up in
+  // streaming. Doesn't grab consumer SaaS (Adobe, Notion) — those stay subs.
+  { slug: 'cloud',         re: /\b(ionos|godaddy|namecheap|hostinger|bluehost|siteground|dreamhost|name\.com|cloudflare|vercel|netlify|digitalocean|linode|aws|amazon web services|google cloud|gcp|microsoft azure|\bazure\b|domain (fee|renewal|registration|transfer|privacy)|\.com renewal|\.net renewal|\.org renewal|\.io renewal|web ?hosting( plan)?|shared hosting|vps|dedicated server|cloud (hosting|storage|server|compute|infra)|ssl certificate|cdn|email hosting|workspace plan|google workspace|microsoft 365 (business|enterprise)|prepaid (hosting|domain))\b/i },
+  // Utilities — match common provider patterns AND keyword variants so
+  // mobile/internet/electric/gas/water/trash/insurance bills route to bills.
+  { slug: 'bills',         re: /\b(electric(ity)? bill|gas bill|natural gas|water bill|sewer|trash (service|bill|pickup)|garbage (service|bill|pickup)|mobile (service|bill|plan)|cell ?phone|cellular|wireless plan|landline|home phone|internet (bill|service|plan)|isp |fios|verizon (wireless|fios|fixed)|comcast|xfinity|att fiber|spectrum|t[- ]?mobile|sprint|cricket|metro pcs|google fi|mint mobile|consolidated edison|con ?edison|pse&g|pseg|national grid|dominion energy|duke energy|pg&e|conservation utility)\b/i },
   { slug: 'gas-up',        re: /\b(unleaded|regular gas|premium gas|diesel|fuel|gasoline|gallons?)\b/i },
   { slug: 'health',        re: /\b(vitamin|multivitamin|protein ?(powder|bar|shake)?|whey|creatine|bcaa|electrolyte|supplement|fish ?oil|omega[- ]?3|magnesium|biotin|collagen|melatonin|probiotic|elderberry|ashwagandha)\b/i },
   { slug: 'pharmacy',      re: /\b(advil|tylenol|aspirin|ibuprofen|acetaminophen|naproxen|aleve|benadryl|claritin|zyrtec|allegra|prescription|rx |pharmacy|band[- ]?aid|bandages?|antiseptic|hydrogen peroxide|cough drops?|nyquil|dayquil|sudafed|mucinex|robitussin)\b/i },

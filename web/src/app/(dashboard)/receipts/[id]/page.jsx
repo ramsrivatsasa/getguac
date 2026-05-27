@@ -7,6 +7,7 @@ import { ArrowLeft, Save, Plus, Shield, MapPin, Phone, Hash, Sparkles, MessageCi
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { addToShoppingList, setStashProductCategory } from '../../../../lib/db'
 import { CATEGORIES } from '../../../../lib/categories'
+import { isItemNonReturnable } from '../../../../lib/non-returnable'
 import CategoryPicker from '../../../../components/CategoryPicker'
 
 const RECEIPT_RATING_META = {
@@ -439,7 +440,14 @@ export default function ReceiptDetailPage() {
                 )}</tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {items.map(item => (
+                {items.map(item => {
+                  // Per-line non-returnable check: covers charity, subs,
+                  // cloud (hosting/domain/AWS), bills, bank-fees, drinks,
+                  // tea, bars, eats, gas-up — plus name-keyword heuristics
+                  // (domain renewal, subscription, etc.) and a known-service-
+                  // merchant fallback (IONOS, GoDaddy, AWS, …).
+                  const nonReturnable = isItemNonReturnable(item, current)
+                  return (
                   <tr key={item.id}>
                     <td className="px-3 py-1 text-gray-400">{item.sku || '—'}</td>
                     <td className="px-3 py-1 text-gray-400">{item.model || '—'}</td>
@@ -494,18 +502,33 @@ export default function ReceiptDetailPage() {
                         onBlur={e => updateItem.mutate({ id: item.id, warranty_info: e.target.value })} />
                     </td>
                     <td className="px-3 py-1">
-                      {item.category === 'charity' ? (
-                        <span className="text-[10px] text-gray-400" title="Donations have no return window">—</span>
+                      {nonReturnable ? (
+                        <span className="text-[10px] text-gray-400" title="Non-returnable line — no return window">—</span>
                       ) : (
                         <input type="date" className="input py-0.5 text-xs" defaultValue={item.return_date}
                           onBlur={e => updateItem.mutate({ id: item.id, return_date: e.target.value })} />
                       )}
                     </td>
                     <td className="px-3 py-1">
-                      {item.category === 'charity' ? (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-rose-700 bg-rose-50 border border-rose-100 rounded-full px-1.5 py-0.5"
-                          title="Charitable contribution — no return">
-                          ❤️ Donation
+                      {nonReturnable ? (
+                        <span
+                          className="inline-flex items-center gap-1 text-[10px] font-semibold text-gray-500 bg-gray-50 border border-gray-200 rounded-full px-1.5 py-0.5"
+                          title={
+                            item.returned ? 'Already returned' :
+                            item.category === 'charity' ? 'Charitable contribution — no return' :
+                            item.category === 'cloud' ? 'Cloud / hosting / domain service — no return' :
+                            item.category === 'subs' ? 'Subscription — cancel via the merchant' :
+                            item.category === 'bills' ? 'Utility bill — no return' :
+                            item.category === 'bank-fees' ? 'Bank fee — dispute via issuer' :
+                            'Non-returnable line item'
+                          }
+                        >
+                          {item.category === 'charity' ? '❤️ Donation'
+                            : item.category === 'cloud' ? '☁️ Service'
+                            : item.category === 'subs' ? '🔁 Subscription'
+                            : item.category === 'bills' ? '💡 Utility'
+                            : item.category === 'bank-fees' ? '💸 Bank fee'
+                            : '— No return'}
                         </span>
                       ) : (
                         <input type="checkbox" checked={item.returned || false}
@@ -513,7 +536,7 @@ export default function ReceiptDetailPage() {
                       )}
                     </td>
                     <td className="px-3 py-1">
-                      {(item.category === 'charity' || item.returned || current.is_return || current.from_statement) ? (
+                      {nonReturnable ? (
                         <span className="text-[10px] text-gray-400">—</span>
                       ) : (
                         <button
@@ -528,7 +551,8 @@ export default function ReceiptDetailPage() {
                       )}
                     </td>
                   </tr>
-                ))}
+                  )
+                })}
               </tbody>
             </table>
           </div>

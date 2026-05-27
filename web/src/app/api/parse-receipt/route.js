@@ -42,7 +42,7 @@ Return ONLY a single JSON object. No prose, no markdown fences. Schema:
   "is_return": boolean,
   "is_receipt": boolean,                 // TRUE for any receipt / invoice / order confirmation. FALSE for non-receipt photos (selfie, cat, landscape, blank paper, screenshot of something else).
   "non_receipt_subject": string|null,    // When is_receipt=false: short 2-3 word description of what you DID see, lowercase ("a person", "a cat", "a sunset", "a blank page", "a screenshot of a chat"). When is_receipt=true: null.
-  "category": string|null,               // ONE of: "grub", "eats", "bars", "tea", "drinks", "subs", "bills", "bank-fees", "tech", "big-stuff", "fix-it", "outdoors", "supplies", "fits", "pharmacy", "health", "personal-care", "household", "gas-up", "fun", "gifting", "charity", "misc"
+  "category": string|null,               // ONE of: "grub", "eats", "bars", "tea", "drinks", "subs", "bills", "bank-fees", "cloud", "tech", "big-stuff", "fix-it", "outdoors", "supplies", "fits", "pharmacy", "health", "personal-care", "household", "gas-up", "fun", "gifting", "charity", "misc"
   "items": [
     { "sku": string|null, "model": string|null, "item_name": string, "qty": number, "price": number, "category": string|null, "health_tier": "healthy"|"neutral"|"treat"|"harmful"|null, "refund_policy_id": string|null, "returned": boolean }
   ],
@@ -76,13 +76,18 @@ HEALTH & HOUSEHOLD ITEMS — split between four specific slugs (do not lump into
   "TOOTHPASTE" / "SHAMPOO" / "DEODORANT" / "RAZOR" / "LOTION" → "personal-care"
   "TOILET PAPER" / "PAPER TOWELS" / "DISH SOAP" / "LAUNDRY DETERGENT" / "TRASH BAGS" → "household"
 
-SERVICES & SUBSCRIPTIONS — receipts from hosting, domains, SaaS, streaming, cloud, and other recurring online services use "subs", NOT "tech":
-  Hosting / domains: IONOS, GoDaddy, Namecheap, Cloudflare, Vercel, Netlify, DigitalOcean, Linode, Hostinger, Bluehost, SiteGround → "subs"
-  Cloud / infra: AWS, Amazon Web Services, Google Cloud, Microsoft Azure → "subs"
-  SaaS: Adobe Creative Cloud, Microsoft 365, GitHub, Notion, Figma, Slack, Zoom, Canva → "subs"
-  Streaming / media: Netflix, Hulu, Disney+, HBO Max, Spotify, Apple Music, YouTube Premium → "subs"
-  AI tools: ChatGPT Plus, Claude Pro, GitHub Copilot, Cursor, Midjourney → "subs"
-"tech" is for PHYSICAL electronics (laptops, phones, cables, chargers) — not for software services. A subscription renewal at $26.40 from IONOS is "subs", not "tech".
+CLOUD vs SUBS vs TECH — split between three slugs:
+  "cloud" — web/cloud infrastructure: hosting, domains, SSL, CDN, cloud compute/storage, VPS, email hosting.
+    IONOS, GoDaddy, Namecheap, Hostinger, Bluehost, SiteGround, DreamHost, Name.com,
+    Cloudflare, Vercel, Netlify, DigitalOcean, Linode,
+    AWS, Amazon Web Services, Google Cloud, GCP, Microsoft Azure,
+    Google Workspace, Microsoft 365 Business, line items like "Domain renewal", "Hosting plan", ".com renewal" → "cloud"
+  "subs" — consumer software / media subscriptions with a user-facing UI:
+    Netflix, Hulu, Disney+, HBO Max, Paramount+, Peacock, Spotify, Apple Music, YouTube Premium,
+    Adobe Creative Cloud, Microsoft 365 personal, GitHub Pro, Notion, Figma, Slack, Zoom, Canva, JetBrains,
+    ChatGPT Plus, Claude Pro, GitHub Copilot, Cursor, Midjourney, Perplexity → "subs"
+  "tech" — PHYSICAL electronics, gadgets, cables, chargers, peripherals (laptop, phone, monitor, USB cable, charger). NOT for hosting / domains / SaaS.
+A $26.40 IONOS domain renewal is "cloud" (not "tech", not "subs"). An $11.99 Netflix charge is "subs". A $1,299 MacBook Pro is "tech".
 
 BANK FEES — anything the cardholder pays the issuer/bank for (NOT for a merchant purchase) uses "bank-fees":
   Interest charges, finance charges, balance-transfer fees, annual fees, late fees, overdraft fees, ATM fees, foreign-transaction fees, cash-advance fees → "bank-fees"

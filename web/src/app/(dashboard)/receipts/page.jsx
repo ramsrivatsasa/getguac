@@ -14,6 +14,7 @@ import { Upload, Trash2, Eye, Search, Download, Loader2, Sparkles, X, Shield, Ca
 import { guessCategory } from '../../../lib/categorizeRules'
 import { normalizeStoreName } from '../../../lib/store-name-normalize'
 import { isItemPerishable, getNonReturnableReason } from '../../../lib/perishable'
+import { isItemNonReturnable } from '../../../lib/non-returnable'
 import { createClient as createSbClient } from '../../../lib/supabase/client'
 import { useQueryClient } from '@tanstack/react-query'
 import CameraCapture from '../../../components/CameraCapture'
@@ -1452,7 +1453,7 @@ function ReceiptLineItems({ receiptId }) {
       // line item returned in our app.
       const NON_RETURNABLE_CATEGORIES = new Set([
         'eats', 'gas-up', 'bars', 'tea', 'drinks',
-        'subs', 'bills', 'bank-fees', 'charity',
+        'subs', 'bills', 'bank-fees', 'cloud', 'charity',
       ])
       const isNonReturnable = NON_RETURNABLE_CATEGORIES.has(data?.category)
       const nonReturnableLabel = {
@@ -1464,6 +1465,7 @@ function ReceiptLineItems({ receiptId }) {
         'subs':       'Subscription — cancel/refund via the merchant, not via a return',
         'bills':      'Utility bill — non-returnable; disputes go to the provider',
         'bank-fees':  'Bank fee — dispute with the issuer, not via return',
+        'cloud':      'Cloud / hosting / domain — refund via the provider, not via a return',
         'charity':    'Donation — non-refundable',
       }[data?.category] || 'Non-returnable category'
       return (
@@ -1500,7 +1502,26 @@ function ReceiptLineItems({ receiptId }) {
             // merchant takes back a half-eaten salad or a dispensed Rx even
             // when the store's general window is generous.
             const nrReason = getNonReturnableReason(it)
-            const perishable = nrReason !== null
+            // serviceBlock = item is a service / subscription / bank fee /
+            // cloud hosting / domain renewal — not a physical product. Covers
+            // the IONOS case where the receipt is categorized 'tech' or 'misc'
+            // but the line is still non-returnable based on item category,
+            // name keywords ("domain renewal", "hosting plan"), or the
+            // known-service-merchant store fallback.
+            const serviceBlock = !nrReason && isItemNonReturnable(it, data)
+            const perishable = nrReason !== null || serviceBlock
+            const blockLabel = nrReason === 'pharmacy' ? 'Pharmacy · final sale'
+                             : nrReason ? 'Perishable · final sale'
+                             : it.category === 'cloud' ? '☁️ Service · no return'
+                             : it.category === 'subs' ? '🔁 Subscription · no return'
+                             : it.category === 'bills' ? '💡 Utility · no return'
+                             : it.category === 'bank-fees' ? '💸 Bank fee · no return'
+                             : it.category === 'charity' ? '❤️ Donation · no return'
+                             : 'Service · no return'
+            const blockTip = nrReason === 'pharmacy'
+              ? "Pharmacy item — dispensed prescriptions, CGM sensors, test strips, hearing aids etc. can't be returned for resale (FDA / state regs)."
+              : nrReason ? "Fresh produce / dairy / meat / eggs / prepared food — merchants don't accept returns on perishables."
+              : "Service / subscription / cloud line — refund happens via the provider's cancel flow, not as a return."
             return (
             <tr key={it.id} className={it.returned ? 'bg-rose-50/40' : ''}>
               <td className="px-3 py-0.5 text-gray-400 text-[11px]">{it.sku || '—'}</td>
@@ -1518,11 +1539,9 @@ function ReceiptLineItems({ receiptId }) {
                 {perishable ? (
                   <span
                     className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200"
-                    title={nrReason === 'pharmacy'
-                      ? "Pharmacy item — dispensed prescriptions, CGM sensors, test strips, hearing aids etc. can't be returned for resale (FDA / state regs)."
-                      : "Fresh produce / dairy / meat / eggs / prepared food — merchants don't accept returns on perishables."}
+                    title={blockTip}
                   >
-                    {nrReason === 'pharmacy' ? 'Pharmacy · final sale' : 'Perishable · final sale'}
+                    {blockLabel}
                   </span>
                 ) : (() => {
                   // Render policy inline: ID + days, with expiry + eligible in

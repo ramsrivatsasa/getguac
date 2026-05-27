@@ -3,10 +3,10 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getStore, updateStore, getReceipts } from '../../../../lib/db'
+import { getStore, updateStore, getReceipts, getStoreReturnPolicies } from '../../../../lib/db'
 import { formatDateShort } from '../../../../lib/dateFormat'
 import toast from 'react-hot-toast'
-import { ArrowLeft, Save, Store, Phone, Globe, MapPin, Receipt, ChevronRight, Hash, Navigation, Crosshair, Loader2 } from 'lucide-react'
+import { ArrowLeft, Save, Store, Phone, Globe, MapPin, Receipt, ChevronRight, Hash, Navigation, Crosshair, Loader2, Shield, ExternalLink } from 'lucide-react'
 export default function StoreDetailPage() {
   const { id } = useParams()
   const router = useRouter()
@@ -22,6 +22,15 @@ export default function StoreDetailPage() {
     queryKey: ['receipts', { storeId: id }],
     queryFn: () => getReceipts({ storeId: id }),
     enabled: !!id,
+  })
+
+  // Curated return policies (from store_return_policies, seeded migration 026)
+  // for this store. Looks up by normalized store_name so "COSTCO WHOLESALE"
+  // and "Costco #218 RESTON" both find Costco's policy.
+  const { data: returnPolicies = [] } = useQuery({
+    queryKey: ['store-return-policies', store?.store_name],
+    queryFn: () => getStoreReturnPolicies(store?.store_name),
+    enabled: !!store?.store_name,
   })
 
   const [form, setForm] = useState({ store_name: '', address: '', phone_no: '', website: '' })
@@ -147,6 +156,53 @@ export default function StoreDetailPage() {
                       <Navigation size={11} /> Directions
                     </a>
                   )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Return Policy — curated from store_return_policies. The merchant's
+          published policy + a clickable citation so the user can verify
+          before driving back to the store with an item to return. */}
+      {returnPolicies.length > 0 && (
+        <div className="card">
+          <div className="flex items-center gap-2 mb-3">
+            <Shield size={16} className="text-emerald-600" />
+            <h3 className="font-semibold text-gray-800">Return Policy</h3>
+            <span className="ml-auto text-[11px] text-gray-400">From the merchant's published policy</span>
+          </div>
+          <div className="space-y-3">
+            {returnPolicies.map(p => {
+              const windowLabel = p.days == null ? 'No time limit' : `${p.days} days`
+              const eligible = p.eligible !== false
+              return (
+                <div key={p.id} className="flex items-start gap-3 py-2 border-t border-gray-100 first:border-0 first:pt-0">
+                  <div className={`shrink-0 w-12 text-center px-2 py-1 rounded-lg text-xs font-bold ${eligible ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'}`}>
+                    {p.days == null && eligible ? '∞' : (p.days ?? '—')}
+                    <div className="text-[9px] font-medium uppercase tracking-wider text-gray-500 mt-0.5">
+                      {p.days == null && eligible ? 'days' : (eligible ? 'days' : 'final')}
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 text-sm font-semibold">
+                      <span>{p.category ? p.category : 'All items'}</span>
+                      <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">#{p.policy_id}</span>
+                    </div>
+                    {p.details && <p className="text-xs text-gray-600 mt-0.5">{p.details}</p>}
+                    {p.source_url && (
+                      <a
+                        href={p.source_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 mt-1.5 text-[11px] font-semibold text-emerald-700 hover:text-emerald-900"
+                        title={`Read ${store.store_name}'s full return policy`}
+                      >
+                        Read {store.store_name}'s full policy <ExternalLink size={11} />
+                      </a>
+                    )}
+                  </div>
                 </div>
               )
             })}

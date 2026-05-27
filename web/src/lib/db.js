@@ -691,6 +691,80 @@ async function fetchStoreDefaultPolicy(sb, storeName, category) {
   return null
 }
 
+// Curated return policies for a store, fetched by normalized store name.
+// Returns ALL rows (the catch-all + any category-specific overrides) so the
+// /stores/[id] page can render the full picture, sorted by category.
+export async function getStoreReturnPolicies(storeName) {
+  if (!storeName) return []
+  const sb = createClient()
+  const { normalizeStoreName } = await import('./store-name-normalize')
+  const key = normalizeStoreName(storeName)
+  if (!key) return []
+  const { data, error } = await sb
+    .from('store_return_policies')
+    .select('id, policy_id, category, days, eligible, details, source_url, store_display_name')
+    .eq('store_name_normalized', key)
+    .order('category', { ascending: true, nullsFirst: true })
+  if (error) return []
+  return data || []
+}
+
+// Items the user still owns whose receipt-level refund policy is still
+// inside its return window. Powers the "What can I still return?" tab on
+// /returns. Includes days-remaining so the UI can colour-code urgency.
+export async function getEligibleReturns() {
+  const sb = createClient()
+  const today = new Date().toISOString().slice(0, 10)
+  // Join receipt_items → receipts → receipt_refund_policies. We filter on
+  // expiry_date > today so a missing/stale expiry doesn't pollute the list
+  // (the backfill migration_034 fills these in for older receipts).
+  const { data, error } = await sb
+    .from('receipt_items')
+    .select(`
+      id, item_name, sku, model, qty, price, returned, refund_policy_id,
+      receipts!inner(id, store_id, store_name, date,
+        receipt_refund_policies(policy_id, days, expiry_date, eligible, details, source, source_url)
+      )
+    `)
+    .eq('returned', false)
+    .order('purchase_date', { ascending: false, nullsFirst: false })
+    .limit(500)
+  if (error) return []
+  const out = []
+  for (const it of (data || [])) {
+    const r = it.receipts
+    if (!r) continue
+    const policies = r.receipt_refund_policies || []
+    // Match by item's refund_policy_id when set, otherwise the receipt's
+    // first eligible policy (most one-policy receipts just have a default).
+    const match = (it.refund_policy_id
+      ? policies.find(p => p.policy_id === it.refund_policy_id)
+      : null) || policies.find(p => p.eligible !== false)
+    if (!match) continue
+    if (match.eligible === false) continue
+    if (!match.expiry_date) continue
+    if (match.expiry_date <= today) continue
+    const daysLeft = Math.ceil((new Date(match.expiry_date) - new Date(today)) / 86400000)
+    out.push({
+      item_id: it.id,
+      item_name: it.item_name,
+      sku: it.sku,
+      model: it.model,
+      qty: it.qty,
+      price: it.price,
+      receipt_id: r.id,
+      store_id: r.store_id,
+      store_name: r.store_name,
+      receipt_date: r.date,
+      policy: match,
+      days_left: daysLeft,
+    })
+  }
+  // Most urgent first.
+  out.sort((a, b) => a.days_left - b.days_left)
+  return out
+}
+
 // Auto-generate a placeholder reward number for a store the user can replace later.
 // Returns existing reward_no if the user already has one for this store, otherwise
 // creates a "GG-XXXXXXXX" placeholder and returns it.

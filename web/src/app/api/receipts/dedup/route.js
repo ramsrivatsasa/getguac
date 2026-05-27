@@ -68,7 +68,7 @@ export async function POST(request) {
   // and fine at the scale of "one person's lifetime of receipts" (<10k rows).
   const { data: receipts, error } = await sb
     .from('receipts')
-    .select('id, store_name, date, total_amount, tax_paid, from_statement, receipt_link, created_at')
+    .select('id, store_name, date, total_amount, tax_paid, from_statement, receipt_link, created_at, is_return, reconciled, statement_source')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
   if (error) return Response.json({ error: error.message }, { status: 500 })
@@ -119,6 +119,12 @@ export async function POST(request) {
     const sorted = [...b.rows].sort(compareForKeeper)
     const keeper = sorted[0]
     const toDelete = sorted.slice(1)
+    function reasonFor(r) {
+      if (r.from_statement) return 'newest (all rows are statement)'
+      if (Number(r.tax_paid || 0) > 0) return 'parsed receipt (tax > 0)'
+      if (r.receipt_link) return 'has receipt image / email'
+      return 'newest non-statement'
+    }
     dupGroups.push({
       key,
       store_name: keeper.store_name,
@@ -127,16 +133,30 @@ export async function POST(request) {
       sign: b.sign,
       total_amount: Number(keeper.total_amount),
       keeper_id: keeper.id,
-      keeper_reason: keeper.from_statement
-        ? 'newest (all rows are statement)'
-        : (Number(keeper.tax_paid || 0) > 0 ? 'parsed receipt (tax > 0)'
-            : (keeper.receipt_link ? 'has receipt image / email'
-                : 'newest non-statement')),
+      keeper_reason: reasonFor(keeper),
       delete_count: toDelete.length,
       delete_ids: toDelete.map(r => r.id),
       // Surface the AI variants we matched together so the user can see
       // why two rows clustered (e.g. "GLORY DAYS GRILL" + "Glory Days Grill").
       variants: [...new Set(b.rows.map(r => r.store_name))],
+      // Full per-receipt details so the UI can let the user override
+      // the auto-pick (mark a different keeper) and/or deselect specific
+      // rows from deletion before confirming.
+      receipts: sorted.map(r => ({
+        id: r.id,
+        store_name: r.store_name,
+        date: r.date,
+        total_amount: Number(r.total_amount),
+        tax_paid: Number(r.tax_paid || 0),
+        from_statement: !!r.from_statement,
+        statement_source: r.statement_source || null,
+        is_return: !!r.is_return,
+        reconciled: !!r.reconciled,
+        receipt_link: r.receipt_link || null,
+        created_at: r.created_at,
+        suggested_keeper: r.id === keeper.id,
+        reason: reasonFor(r),
+      })),
     })
     totalToDelete += toDelete.length
   }
@@ -153,10 +173,33 @@ export async function POST(request) {
   }
 
   // Execute: walk each group, relink emails, delete the duplicates.
+  // If the caller passed `custom_groups: [{ keeper_id, delete_ids }, ...]`
+  // we honor those decisions exactly (after validating ownership). Otherwise
+  // fall back to the auto-picked keepers from the dry-run pass.
+  const customGroups = Array.isArray(body?.custom_groups) ? body.custom_groups : null
+  let groupsToExecute = dupGroups
+  if (customGroups) {
+    // Build a lookup of valid receipt IDs the user owns so we can't be
+    // tricked into deleting unrelated rows by a crafted payload.
+    const allIds = new Set((receipts || []).map(r => r.id))
+    groupsToExecute = []
+    for (const g of customGroups) {
+      if (!g || !g.keeper_id || !Array.isArray(g.delete_ids)) continue
+      if (!allIds.has(g.keeper_id)) continue
+      const validDeleteIds = g.delete_ids.filter(id => allIds.has(id) && id !== g.keeper_id)
+      if (validDeleteIds.length === 0) continue
+      groupsToExecute.push({
+        key: g.key || `${g.keeper_id}|custom`,
+        keeper_id: g.keeper_id,
+        delete_ids: validDeleteIds,
+      })
+    }
+  }
+
   let relinked = 0
   let deleted = 0
   const errors = []
-  for (const g of dupGroups) {
+  for (const g of groupsToExecute) {
     // 1. Re-point email_messages from any deleted receipt to the keeper, so
     //    the inbox→receipt link keeps working.
     const { data: relinkRows, error: relinkErr } = await sb.from('email_messages')
@@ -186,7 +229,7 @@ export async function POST(request) {
   return Response.json({
     ok: true,
     mode: 'execute',
-    groups_processed: dupGroups.length,
+    groups_processed: groupsToExecute.length,
     receipts_deleted: deleted,
     email_messages_relinked: relinked,
     errors,

@@ -518,7 +518,10 @@ export default function ReceiptsPage() {
   const [reconciling, setReconciling] = useState(false)
   const unreconciledStatementCount = receipts.filter(r => r.from_statement && !r.reconciled).length
   const [dedupBusy, setDedupBusy] = useState(false)
-  const [dedupPreview, setDedupPreview] = useState(null)  // null | { groups, receipts_to_delete }
+  const [dedupPreview, setDedupPreview] = useState(null)  // null | { groups }
+  // Per-group selection: { [groupKey]: { keeperId, deleteIds: Set<string> } }.
+  // Seeded from the server's suggested keeper but fully user-editable.
+  const [dedupSelection, setDedupSelection] = useState({})
   // Inline per-row category update from the receipts table. Optimistic
   // refetch via TanStack invalidation so the chip reflects the new state
   // immediately. Toast on save / error.
@@ -544,8 +547,21 @@ export default function ReceiptsPage() {
       if (!data.groups || data.groups.length === 0) {
         toast.success('No duplicate receipts found 🎉')
         setDedupPreview(null)
+        setDedupSelection({})
       } else {
-        setDedupPreview({ groups: data.groups, receipts_to_delete: data.receipts_to_delete })
+        // Seed per-group selection from the server's suggested keeper.
+        const seed = {}
+        for (const g of data.groups) {
+          const rows = g.receipts || []
+          const keeper = rows.find(r => r.suggested_keeper) || rows[0]
+          if (!keeper) continue
+          seed[g.key] = {
+            keeperId: keeper.id,
+            deleteIds: new Set(rows.filter(r => r.id !== keeper.id).map(r => r.id)),
+          }
+        }
+        setDedupPreview({ groups: data.groups })
+        setDedupSelection(seed)
       }
     } catch (err) {
       toast.error(err.message)
@@ -553,14 +569,63 @@ export default function ReceiptsPage() {
       setDedupBusy(false)
     }
   }
+
+  // Make a different receipt the keeper in this group. Everything that was
+  // marked for deletion gets re-marked relative to the new keeper, and the
+  // previous keeper joins the deletion set (preserving the user's prior
+  // include/exclude choices on the OTHER rows).
+  function setGroupKeeper(groupKey, newKeeperId) {
+    setDedupSelection(prev => {
+      const cur = prev[groupKey]
+      if (!cur) return prev
+      const oldKeeperId = cur.keeperId
+      const nextDelete = new Set(cur.deleteIds)
+      nextDelete.delete(newKeeperId)            // new keeper is no longer a delete candidate
+      if (oldKeeperId && oldKeeperId !== newKeeperId) nextDelete.add(oldKeeperId)  // demoted keeper now joins (unless user excludes it next)
+      return { ...prev, [groupKey]: { keeperId: newKeeperId, deleteIds: nextDelete } }
+    })
+  }
+  // Toggle a non-keeper receipt's "delete me" checkbox. Keepers can't be
+  // toggled — they go on the delete list only by making something else the
+  // keeper (via setGroupKeeper).
+  function toggleDeleteId(groupKey, receiptId) {
+    setDedupSelection(prev => {
+      const cur = prev[groupKey]
+      if (!cur || cur.keeperId === receiptId) return prev
+      const nextDelete = new Set(cur.deleteIds)
+      if (nextDelete.has(receiptId)) nextDelete.delete(receiptId)
+      else nextDelete.add(receiptId)
+      return { ...prev, [groupKey]: { ...cur, deleteIds: nextDelete } }
+    })
+  }
+  // Sum of receipts the user has actually marked for deletion across all groups.
+  const dedupTotalToDelete = Object.values(dedupSelection).reduce((acc, g) => acc + (g?.deleteIds?.size || 0), 0)
+
   async function handleConfirmDedup() {
     setDedupBusy(true)
     try {
-      const res = await fetch('/api/receipts/dedup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ confirm: true }) })
+      // Build the explicit custom_groups payload from the user's selections.
+      // Groups where the user deselected EVERY non-keeper get skipped server-side.
+      const custom_groups = Object.entries(dedupSelection).map(([key, sel]) => ({
+        key,
+        keeper_id: sel.keeperId,
+        delete_ids: [...sel.deleteIds],
+      })).filter(g => g.delete_ids.length > 0)
+      if (custom_groups.length === 0) {
+        toast('Nothing selected for deletion', { icon: '🤔' })
+        setDedupBusy(false)
+        return
+      }
+      const res = await fetch('/api/receipts/dedup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirm: true, custom_groups }),
+      })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Dedup failed')
       toast.success(`Removed ${data.receipts_deleted} duplicate receipt${data.receipts_deleted === 1 ? '' : 's'}`)
       setDedupPreview(null)
+      setDedupSelection({})
       qc.invalidateQueries({ queryKey: ['receipts'] })
       qc.invalidateQueries({ queryKey: ['reports'] })
       router.refresh()
@@ -1139,11 +1204,13 @@ export default function ReceiptsPage() {
         )}
       </div>
 
-      {/* Find-duplicates preview modal. Opens after a dry-run scan returns groups;
-          user confirms to actually delete the dups, or cancels to dismiss. */}
+      {/* Find-duplicates preview modal. Each group lists every receipt in it
+          with a Keep radio + a Delete checkbox. The auto-pick is pre-selected
+          but fully editable; user can change the keeper or exclude any row
+          from deletion before confirming. */}
       {dedupPreview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[80vh] flex flex-col">
+          <div className="bg-white rounded-2xl shadow-xl max-w-3xl w-full max-h-[85vh] flex flex-col">
             <div className="flex items-center justify-between p-4 border-b">
               <div className="flex items-center gap-2">
                 <Copy size={18} className="text-amber-600" />
@@ -1157,33 +1224,89 @@ export default function ReceiptsPage() {
             </div>
             <div className="p-4 overflow-y-auto flex-1">
               <p className="text-sm text-gray-600 mb-3">
-                Confirming will <strong>delete {dedupPreview.receipts_to_delete}</strong> duplicate receipt{dedupPreview.receipts_to_delete === 1 ? '' : 's'} and keep the best one in each group. Items and refund policies are preserved on the kept row; email-message links are re-pointed automatically.
+                Pick which receipt to <strong>keep</strong> per group (radio) and uncheck any duplicate you'd rather <strong>not delete</strong>. Items and refund policies on the kept row are preserved; email-message links are re-pointed automatically.
               </p>
-              <div className="space-y-2 text-xs">
-                {dedupPreview.groups.map(g => (
-                  <div key={g.key} className="border rounded-lg p-3 bg-gray-50">
-                    <div className="flex items-center justify-between gap-2 mb-1">
-                      <span className="font-semibold text-gray-800">{g.store_name}</span>
-                      <span className="text-gray-500">{g.date} · ${Math.abs(g.total_amount).toFixed(2)}{g.sign === '-' ? ' refund' : ''}</span>
-                    </div>
-                    <div className="text-gray-500">
-                      Will delete <strong className="text-rose-600">{g.delete_count}</strong> · keeping <strong className="text-emerald-600">1</strong> ({g.keeper_reason})
-                    </div>
-                    {g.variants && g.variants.length > 1 && (
-                      <div className="text-[10px] text-gray-400 mt-1">
-                        Matched name variants: {g.variants.join(' · ')}
+              <div className="space-y-3 text-xs">
+                {dedupPreview.groups.map(g => {
+                  const sel = dedupSelection[g.key]
+                  if (!sel) return null
+                  return (
+                    <div key={g.key} className="border rounded-lg bg-gray-50 overflow-hidden">
+                      <div className="flex items-center justify-between gap-2 px-3 py-2 border-b bg-white">
+                        <span className="font-semibold text-gray-800">{g.store_name}</span>
+                        <span className="text-gray-500">{g.date} · ${Math.abs(g.total_amount).toFixed(2)}{g.sign === '-' ? ' refund' : ''}</span>
                       </div>
-                    )}
-                  </div>
-                ))}
+                      {g.variants && g.variants.length > 1 && (
+                        <div className="px-3 pt-2 text-[10px] text-gray-400">
+                          Matched name variants: {g.variants.join(' · ')}
+                        </div>
+                      )}
+                      <table className="w-full">
+                        <thead className="bg-gray-100 text-[10px] uppercase text-gray-500">
+                          <tr>
+                            <th className="px-2 py-1.5 text-center w-12">Keep</th>
+                            <th className="px-2 py-1.5 text-center w-14">Delete</th>
+                            <th className="px-2 py-1.5 text-left">Receipt</th>
+                            <th className="px-2 py-1.5 text-right">Why</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {g.receipts.map(r => {
+                            const isKeeper = sel.keeperId === r.id
+                            const isDeleting = sel.deleteIds.has(r.id)
+                            return (
+                              <tr key={r.id} className={isKeeper ? 'bg-emerald-50/60' : (isDeleting ? '' : 'bg-amber-50/30')}>
+                                <td className="px-2 py-1.5 text-center">
+                                  <input
+                                    type="radio"
+                                    name={`keeper-${g.key}`}
+                                    checked={isKeeper}
+                                    onChange={() => setGroupKeeper(g.key, r.id)}
+                                    aria-label="Keep this receipt"
+                                  />
+                                </td>
+                                <td className="px-2 py-1.5 text-center">
+                                  <input
+                                    type="checkbox"
+                                    disabled={isKeeper}
+                                    checked={isDeleting}
+                                    onChange={() => toggleDeleteId(g.key, r.id)}
+                                    aria-label="Mark for deletion"
+                                  />
+                                </td>
+                                <td className="px-2 py-1.5">
+                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                    <Link href={`/receipts/${r.id}`} target="_blank" className="text-blue-700 hover:underline font-mono text-[10px]">{r.id.slice(0, 8)}</Link>
+                                    <span className="text-gray-700">{r.store_name}</span>
+                                    {r.from_statement && <span className="inline-flex items-center text-[9px] px-1 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">🏦 Statement</span>}
+                                    {r.reconciled && <span className="inline-flex items-center text-[9px] px-1 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">🔗 Reconciled</span>}
+                                    {r.is_return && <span className="inline-flex items-center text-[9px] px-1 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-100">Refund</span>}
+                                    {r.receipt_link && <a href={r.receipt_link} target="_blank" rel="noreferrer" className="text-blue-500 hover:text-blue-700" title="Open receipt link"><Download size={11} /></a>}
+                                  </div>
+                                  <div className="text-[10px] text-gray-400 mt-0.5">tax ${r.tax_paid.toFixed(2)} · created {(r.created_at || '').slice(0,10)}</div>
+                                </td>
+                                <td className="px-2 py-1.5 text-right text-gray-500">{r.reason}</td>
+                              </tr>
+                            )
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )
+                })}
               </div>
             </div>
-            <div className="p-4 border-t flex items-center justify-end gap-2">
-              <button onClick={() => setDedupPreview(null)} className="btn-secondary text-sm">Cancel</button>
-              <button onClick={handleConfirmDedup} disabled={dedupBusy} className="btn-primary text-sm">
-                {dedupBusy && <Loader2 size={14} className="animate-spin" />}
-                Delete {dedupPreview.receipts_to_delete} duplicate{dedupPreview.receipts_to_delete === 1 ? '' : 's'}
-              </button>
+            <div className="p-4 border-t flex items-center justify-between gap-2">
+              <span className="text-xs text-gray-500">
+                {dedupTotalToDelete} receipt{dedupTotalToDelete === 1 ? '' : 's'} marked for deletion across {Object.values(dedupSelection).filter(g => g?.deleteIds?.size > 0).length} group{Object.values(dedupSelection).filter(g => g?.deleteIds?.size > 0).length === 1 ? '' : 's'}
+              </span>
+              <div className="flex items-center gap-2">
+                <button onClick={() => setDedupPreview(null)} className="btn-secondary text-sm">Cancel</button>
+                <button onClick={handleConfirmDedup} disabled={dedupBusy || dedupTotalToDelete === 0} className="btn-primary text-sm">
+                  {dedupBusy && <Loader2 size={14} className="animate-spin" />}
+                  Delete {dedupTotalToDelete} duplicate{dedupTotalToDelete === 1 ? '' : 's'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

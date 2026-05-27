@@ -38,7 +38,27 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
 
   Future<void> _load() async {
     final provider = context.read<ReceiptProvider>();
-    final receipt = provider.receipts.where((r) => r.id == widget.id).firstOrNull;
+    // Try the in-memory list first (zero round-trips for the common case).
+    Receipt? receipt = provider.receipts.where((r) => r.id == widget.id).firstOrNull;
+    // Fall through to Supabase when the receipt is outside the current
+    // period filter (e.g. the merged-into row is older than the 1-month
+    // default) — without this, View on a merged dedup toast lands on
+    // "Receipt not found" because the cached list doesn't contain it.
+    if (receipt == null) {
+      try {
+        final sb = Supabase.instance.client;
+        final row = await sb
+            .from('receipts')
+            .select('*')
+            .eq('id', widget.id)
+            .maybeSingle();
+        if (row is Map) {
+          receipt = Receipt.fromMap(row['id'] as String, row as Map<String, dynamic>);
+        }
+      } catch (_) {
+        // Best-effort. The "Receipt not found" empty state covers true misses.
+      }
+    }
     final items = await provider.getItems(widget.id);
     if (mounted) setState(() { _receipt = receipt; _items = items; _loading = false; });
   }

@@ -18,11 +18,86 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _bioCapable = false;
   bool _bioEnabled = false;
+  // profiles.email_auto_delete_after_import — opt-in toggle controlling
+  // whether the poll route hard-deletes the upstream copy after import.
+  // Off by default: imports get moved to the "Guacked" archive folder so
+  // they stay readable in webmail.
+  bool _autoDelete = false;
+  bool _autoDeleteLoading = true;
 
   @override
   void initState() {
     super.initState();
     _checkBiometric();
+    _loadAutoDelete();
+  }
+
+  Future<void> _loadAutoDelete() async {
+    try {
+      final sb = Supabase.instance.client;
+      final uid = sb.auth.currentUser?.id;
+      if (uid == null) return;
+      final row = await sb
+          .from('profiles')
+          .select('email_auto_delete_after_import')
+          .eq('id', uid)
+          .maybeSingle();
+      if (!mounted) return;
+      setState(() {
+        _autoDelete = row?['email_auto_delete_after_import'] == true;
+        _autoDeleteLoading = false;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _autoDeleteLoading = false);
+    }
+  }
+
+  Future<void> _setAutoDelete(bool next) async {
+    final sb = Supabase.instance.client;
+    final uid = sb.auth.currentUser?.id;
+    if (uid == null) return;
+    // First-time enable: show a clear explanation of what changes.
+    if (next && !_autoDelete) {
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Auto-delete from mail server?'),
+          content: const Text(
+            "Once on, every imported email is permanently removed from your "
+            "@getguac.app mailbox after we save it. Webmail won't see them "
+            "anymore — only GetGuac will.\n\n"
+            "With this off (recommended for most people), imports are moved "
+            "to a 'Guacked' archive folder on the mail server so you can "
+            "still read them in webmail any time.",
+            style: TextStyle(height: 1.4),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: const Color(0xFFb91c1c)),
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: const Text('Turn on'),
+            ),
+          ],
+        ),
+      );
+      if (ok != true) return;
+    }
+    try {
+      await sb.from('profiles').update({'email_auto_delete_after_import': next}).eq('id', uid);
+      if (!mounted) return;
+      setState(() => _autoDelete = next);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(next
+            ? 'Auto-delete ON. Future imports will be removed from your mailbox.'
+            : 'Auto-delete OFF. Future imports will move to the Guacked archive.'),
+        duration: const Duration(seconds: 3),
+      ));
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not save setting: $e')),
+      );
+    }
   }
 
   Future<void> _checkBiometric() async {
@@ -352,10 +427,70 @@ class _ProfileScreenState extends State<ProfileScreen> {
             label: const Text('Diagnose biometric'),
           ),
 
+          // Mailbox section — explains the Guacked archive, offers a
+          // webmail link so users can verify nothing is hidden, and exposes
+          // the auto-delete toggle for users who want a single copy.
+          const SizedBox(height: 18),
+          Container(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFf0fdf4),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: const Color(0xFFa7f3d0)),
+            ),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Row(children: [
+                Icon(Icons.mail_outline, size: 18, color: Color(0xFF065f46)),
+                SizedBox(width: 8),
+                Text('Mailbox',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF064e3b))),
+              ]),
+              const SizedBox(height: 6),
+              const Text(
+                'Imports land in a "Guacked" folder on your mail server so your inbox stays clean — but you can still read them in webmail any time.',
+                style: TextStyle(fontSize: 11, color: Color(0xFF065f46), height: 1.4),
+              ),
+              const SizedBox(height: 10),
+              OutlinedButton.icon(
+                onPressed: () => UpdateService.openDownload('https://webmail.getguac.app'),
+                icon: const Icon(Icons.open_in_new, size: 16, color: Color(0xFF15803d)),
+                label: const Text('Open my webmail',
+                  style: TextStyle(color: Color(0xFF15803d), fontWeight: FontWeight.w700)),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Color(0xFF15803d), width: 1.2),
+                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+              ),
+              const SizedBox(height: 10),
+              IgnorePointer(
+                ignoring: _autoDeleteLoading,
+                child: Opacity(
+                  opacity: _autoDeleteLoading ? 0.5 : 1,
+                  child: SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                    value: _autoDelete,
+                    onChanged: _setAutoDelete,
+                    activeColor: const Color(0xFFb91c1c),
+                    title: const Text('Auto-delete from mail server after import',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF064e3b))),
+                    subtitle: Text(
+                      _autoDelete
+                          ? 'Imports are permanently removed from your mailbox after we save them.'
+                          : 'Imports stay readable in webmail under "Guacked".',
+                      style: const TextStyle(fontSize: 10, color: Color(0xFF065f46)),
+                    ),
+                  ),
+                ),
+              ),
+            ]),
+          ),
+
           // Diagnostic + support actions, styled as _Pill tiles to match
           // the Security / Privacy / dashboard quick-action row. Two per
           // line so they fit on a narrow phone without horizontal scroll.
-          const SizedBox(height: 6),
+          const SizedBox(height: 14),
           Row(children: [
             Expanded(child: _Pill(
               gradient: const [Color(0xFFfde68a), Color(0xFFd97706)],

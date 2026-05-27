@@ -210,6 +210,42 @@ export async function deleteImapMessage({ localPart, password, folder, uid }) {
   }
 }
 
+// Move a message from its source folder to the "Guacked" archive folder on
+// the upstream IMAP server. Used after a successful local import so the
+// user's inbox stays clean but the original is still retrievable via
+// webmail. Creates the destination folder on first use.
+//
+// Returns { ok: true, moved: 1 } on success. Throws on connection errors;
+// caller wraps so a single move failure doesn't roll back the local insert.
+export async function moveImapMessage({ localPart, password, folder, uid, destFolder = 'Guacked' }) {
+  if (!folder || !uid) throw new Error('folder + uid required')
+  const client = new ImapFlow({
+    host: ENDPOINTS.imap.host,
+    port: ENDPOINTS.imap.port,
+    secure: ENDPOINTS.imap.secure,
+    auth: { user: fullEmail(localPart), pass: password },
+    logger: false,
+  })
+  await client.connect()
+  try {
+    // mailboxCreate is idempotent — re-running on an existing folder throws
+    // a "Mailbox already exists" we can safely swallow.
+    try { await client.mailboxCreate(destFolder) } catch (_) { /* already exists */ }
+
+    const lock = await client.getMailboxLock(folder)
+    try {
+      // messageMove uses IMAP MOVE on servers that support it (Dovecot does)
+      // and falls back to COPY + DELETE + EXPUNGE on those that don't.
+      const r = await client.messageMove({ uid: String(uid) }, destFolder, { uid: true })
+      return { ok: true, moved: r?.uidMap?.size ?? 1 }
+    } finally {
+      lock.release()
+    }
+  } finally {
+    await client.logout().catch(() => {})
+  }
+}
+
 export function isReceiptsAddress(message, localPart) {
   // Folder-based detection works even when the user FORWARDS a receipt from
   // their personal address — Delivered-To gets rewritten, but the Migadu

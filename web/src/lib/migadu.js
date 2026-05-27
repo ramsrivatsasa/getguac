@@ -69,6 +69,14 @@ export async function deleteMailbox(localPart) {
   })
 }
 
+// List every mailbox on the domain. Used by scripts/bulk-delete-mailboxes.mjs
+// to clean up load-test / abandoned accounts. Returns an array of objects
+// with { local_part, address, name, ... } — full Migadu mailbox records.
+export async function listMailboxes() {
+  const data = await migaduFetch(`/domains/${domain()}/mailboxes`)
+  return data?.mailboxes ?? []
+}
+
 export async function mailboxExists(localPart) {
   try {
     await migaduFetch(`/domains/${domain()}/mailboxes/${encodeURIComponent(localPart)}`)

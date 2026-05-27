@@ -12,7 +12,7 @@
 // multiple cron jobs in parallel.
 
 import { createClient as createServiceClient } from '@supabase/supabase-js'
-import { pollMailbox, isReceiptsAddress } from '../../../../lib/imap-poll'
+import { pollMailbox, isReceiptsAddress, deleteImapMessage, moveImapMessage } from '../../../../lib/imap-poll'
 import { decryptSecret } from '../../../../lib/crypto'
 import { draftReceiptFromEmail } from '../../../../lib/email-to-receipt'
 
@@ -27,6 +27,14 @@ function adminClient() {
   )
 }
 
+// Already in the Guacked archive — handles both raw 'Guacked' and namespaced
+// shapes like 'INBOX.Guacked' or 'INBOX/Guacked' that some servers create.
+function leafLooksLikeGuacked(path) {
+  if (!path) return false
+  const leaf = path.split(/[./]/).filter(Boolean).pop() || path
+  return leaf.toLowerCase() === 'guacked'
+}
+
 export async function POST(request) {
   if (request.headers.get('x-cron-secret') !== process.env.CRON_SECRET) {
     return Response.json({ error: 'unauthorized' }, { status: 401 })
@@ -38,7 +46,7 @@ export async function POST(request) {
   const sb = adminClient()
   const { data: users, error } = await sb
     .from('profiles')
-    .select('id, email_alias, email_inbox_password_enc, email_last_poll_at, email_processing_enabled')
+    .select('id, email_alias, email_inbox_password_enc, email_last_poll_at, email_processing_enabled, email_auto_delete_after_import')
     .eq('email_inbox_provisioned', true)
     .eq('email_processing_enabled', true)
     .not('email_alias', 'is', null)
@@ -50,7 +58,7 @@ export async function POST(request) {
     return Response.json({ error: error.message }, { status: 500 })
   }
 
-  const summary = { users: 0, messages: 0, errors: [] }
+  const summary = { users: 0, messages: 0, moved_to_guacked: 0, deleted_upstream: 0, errors: [] }
 
   for (const u of users || []) {
     summary.users++
@@ -132,6 +140,41 @@ export async function POST(request) {
           } catch (e) {
             console.warn('[email/poll] draft from email failed:', e.message)
             summary.errors.push({ user: u.id, uid: m.uid, error: `draft: ${e.message}` })
+          }
+        }
+
+        // Upstream cleanup. Two modes per-user:
+        //   - Default: MOVE the imported message into the user's "Guacked"
+        //     folder so their inbox stays clean but the email is still
+        //     retrievable via webmail.
+        //   - Opt-in (profiles.email_auto_delete_after_import = true):
+        //     DELETE the upstream copy entirely. Single-source-of-truth
+        //     mode for users who want maximum privacy.
+        // Both are best-effort: the local insert already succeeded and is
+        // the user's authoritative copy, so a cleanup failure isn't fatal.
+        if (m.uid && m.imapFolder) {
+          try {
+            if (u.email_auto_delete_after_import) {
+              const r = await deleteImapMessage({
+                localPart: u.email_alias,
+                password,
+                folder: m.imapFolder,
+                uid: m.uid,
+              })
+              if (r?.ok) summary.deleted_upstream++
+            } else if (!leafLooksLikeGuacked(m.imapFolder)) {
+              const r = await moveImapMessage({
+                localPart: u.email_alias,
+                password,
+                folder: m.imapFolder,
+                uid: m.uid,
+                destFolder: 'Guacked',
+              })
+              if (r?.ok) summary.moved_to_guacked++
+            }
+          } catch (e) {
+            const tag = u.email_auto_delete_after_import ? 'upstream-delete' : 'upstream-move'
+            summary.errors.push({ user: u.id, uid: m.uid, error: `${tag}: ${e.message}` })
           }
         }
       }

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../services/update_service.dart';
 import '../../widgets/guac_mascot.dart';
 
 const _kBrand = Color(0xFF15803d);
@@ -182,16 +183,31 @@ class _InboxScreenState extends State<InboxScreen> {
             _openComposer(context, prefill: null);
           }, tooltip: 'Compose'),
           IconButton(icon: const Icon(Icons.refresh), onPressed: _refresh, tooltip: 'Refresh'),
+          // Direct webmail link — reassures the user that nothing is being
+          // hidden by GetGuac. Processed mail lives in the "Guacked" folder
+          // on the mail server and is readable here any time.
+          IconButton(
+            icon: const Icon(Icons.open_in_new),
+            tooltip: 'Open in webmail',
+            onPressed: () => UpdateService.openDownload('https://webmail.getguac.app'),
+          ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
             onSelected: (v) {
               if (v == 'backfill') _backfillAll();
+              if (v == 'webmail') UpdateService.openDownload('https://webmail.getguac.app');
             },
             itemBuilder: (_) => const [
               PopupMenuItem(value: 'backfill', child: ListTile(
                 leading: Icon(Icons.cloud_download_outlined, size: 18),
                 title: Text('Backfill all mail', style: TextStyle(fontSize: 13)),
                 subtitle: Text('Download every message from the start', style: TextStyle(fontSize: 11)),
+                visualDensity: VisualDensity.compact,
+              )),
+              PopupMenuItem(value: 'webmail', child: ListTile(
+                leading: Icon(Icons.open_in_new, size: 18),
+                title: Text('Open in webmail', style: TextStyle(fontSize: 13)),
+                subtitle: Text('Read your full mailbox at webmail.getguac.app', style: TextStyle(fontSize: 11)),
                 visualDensity: VisualDensity.compact,
               )),
             ],

@@ -85,9 +85,25 @@ export function useAddReceipt() {
       //    store / date / total, merge into the existing row instead of
       //    creating a duplicate. Editing an existing receipt (receipt.id
       //    set) always goes through as-is — that's an update, not a create.
+      // Tier 2 learning: when creating new, check whether the user already
+      // has a per-store category preference (≥3 same-category corrections
+      // at this store). If yes, override the Gemini-parsed category.
       let saved
+      let inferredCategory = null
+      let categorySource = receipt.id ? undefined : 'ai'
       if (!receipt.id) {
         const sb = createClient()
+        try {
+          const { data: pref } = await sb.rpc('infer_user_store_category', {
+            p_user_id: userId,
+            p_store_id: store_id,
+            p_store_name: receipt.store_name || storeInfo?.store_name || null,
+          })
+          if (pref) {
+            inferredCategory = pref
+            categorySource = 'inferred'
+          }
+        } catch { /* RPC absent on older DBs — fall through */ }
         const existingId = await findExistingReceipt(sb, userId, {
           store_name: receipt.store_name,
           date: receipt.date,
@@ -103,7 +119,10 @@ export function useAddReceipt() {
             store_id: store_id || undefined,
             store_location_id: store_location_id || undefined,
             reward_no: reward_no || undefined,
-            category: receipt.category || undefined,
+            // Per-store learning may have inferred a better category; apply it
+            // unless the user explicitly picked one in the form.
+            category: receipt.category || inferredCategory || undefined,
+            category_source: receipt.category ? 'user' : (inferredCategory ? 'inferred' : undefined),
           })
         }
       }
@@ -116,7 +135,8 @@ export function useAddReceipt() {
           store_id,
           store_location_id,
           reward_no,
-          category: receipt.category || undefined,
+          category: inferredCategory || receipt.category || undefined,
+          category_source: categorySource,
         })
       }
 

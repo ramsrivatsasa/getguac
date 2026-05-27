@@ -79,7 +79,15 @@ export default function ReceiptDetailPage() {
   })
 
   function handleFieldChange(key, value) {
-    setLocalReceipt(p => ({ ...(p ?? receipt), [key]: value }))
+    setLocalReceipt(p => {
+      const base = p ?? receipt
+      const next = { ...base, [key]: value }
+      // Tier 2 learning: a manual category change is the strongest signal
+      // we have for per-store preferences. Mark the source so the
+      // infer_user_store_category RPC counts it correctly.
+      if (key === 'category') next.category_source = 'user'
+      return next
+    })
   }
 
   async function handleSave() {

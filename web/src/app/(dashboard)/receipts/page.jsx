@@ -529,7 +529,13 @@ export default function ReceiptsPage() {
   async function handleRowCategoryChange(receiptId, slug) {
     try {
       const sb = createSbClient()
-      const { error } = await sb.from('receipts').update({ category: slug || null }).eq('id', receiptId)
+      // category_source = 'user' marks this as a confirmed override, so the
+      // Tier 2 per-store learning (infer_user_store_category RPC) treats it
+      // as signal. After ~3 same-category corrections at the same store the
+      // next receipt from that store auto-uses this slug.
+      const { error } = await sb.from('receipts')
+        .update({ category: slug || null, category_source: 'user' })
+        .eq('id', receiptId)
       if (error) throw new Error(error.message)
       toast.success(slug ? `Categorized as ${slug}` : 'Category cleared')
       qc.invalidateQueries({ queryKey: ['receipts'] })

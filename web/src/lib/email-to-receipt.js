@@ -312,6 +312,21 @@ async function insertParsedReceipt(sb, userId, parsed, bodyPreview) {
   // Resolve the store first so the receipt insert can carry the FK.
   const { store_id, store_location_id } = await resolveStoreAndLocation(sb, parsed)
 
+  // Tier 2 learning: if the user has already corrected ≥3 receipts from
+  // this store to the same category, prefer THEIR slug over Gemini's
+  // call. Best-effort — falls back to parsed.category on any RPC error.
+  let inferredCategory = null
+  try {
+    const { data: pref } = await sb.rpc('infer_user_store_category', {
+      p_user_id: userId,
+      p_store_id: store_id,
+      p_store_name: parsed.store_name || null,
+    })
+    if (pref) inferredCategory = pref
+  } catch { /* RPC missing on older DBs — fall through */ }
+  const finalCategory = inferredCategory || parsed.category || null
+  const categorySource = inferredCategory ? 'inferred' : 'ai'
+
   const candidate = {
     store_name: parsed.store_name || 'Receipt by email',
     date: parsed.date || new Date().toISOString().slice(0, 10),
@@ -351,7 +366,8 @@ async function insertParsedReceipt(sb, userId, parsed, bodyPreview) {
     payment_method: parsed.payment_method || null,
     payment_last4: parsed.payment_last4 || null,
     is_return: Boolean(parsed.is_return),
-    category: parsed.category || null,
+    category: finalCategory,
+    category_source: categorySource,
     receipt_link: '',
     business_purchase: false,
     processed: true,

@@ -66,7 +66,7 @@ const RECEIPT_COLUMNS = [
   'total_amount', 'tax_paid', 'reward_no', 'receipt_link',
   'business_purchase', 'processed', 'payment_method', 'payment_last4',
   'rating', 'validation_tags', 'validation_comment', 'validated_at',
-  'category',
+  'category', 'category_source',
   'from_statement', 'statement_source', 'statement_import_id',
   'reconciled', 'reconciled_with', 'reconciled_at',
 ]

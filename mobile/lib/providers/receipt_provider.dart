@@ -230,7 +230,11 @@ class ReceiptProvider extends ChangeNotifier {
             'sku': m['sku'],
             'model': m['model'],
             'item_name': (m['item_name'] as String?) ?? '',
-            'qty': (m['qty'] as num?)?.toDouble() ?? 1,
+            // qty MUST be an integer in Postgres — sending 1.0 as a double
+            // serializes to JSON "1.0" and Postgres rejects with 22P02
+            // ("invalid input syntax for type integer"). round() before
+            // toInt() so 0.5 doesn't silently floor to 0.
+            'qty': ((m['qty'] as num?) ?? 1).round(),
             'price': m['price'] == null ? null : (m['price'] as num).toDouble(),
             'returned': m['returned'] == true,
             'category': m['category'],

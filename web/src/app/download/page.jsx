@@ -4,16 +4,20 @@ import Link from 'next/link'
 import { Download, Smartphone, Apple, Monitor, Share2, Check } from 'lucide-react'
 import GuacMascot from '../../components/GuacMascot'
 
-// Latest Android release — bump these when you cut a new version on GitHub.
-// In a future iteration we can fetch /repos/ramsrivatsasa/getguac/releases/latest at build time.
+// Latest Android release — bump these when you cut a new version.
+// APKs are hosted in web/public/downloads/<version>/ so users can download
+// directly from getguac.app/download without depending on a GitHub Release
+// existing. The mobile UpdateService still polls GitHub for in-app update
+// alerts; the /download page is for fresh installs + the manual update
+// path while CI release pipeline isn't wired up.
 const ANDROID_RELEASE = {
-  version: 'v0.2.70',
+  version: 'v0.2.77',
   releasedAt: '2026-05-28',
-  base: 'https://github.com/ramsrivatsasa/getguac/releases/download/v0.2.70',
+  base: '/downloads/v0.2.77',
   apks: [
-    { abi: 'arm64-v8a',   sizeMB: 20.9, label: 'Most modern Android phones (Samsung, Pixel, OnePlus, etc.)', file: 'app-arm64-v8a-release.apk',   primary: true  },
-    { abi: 'armeabi-v7a', sizeMB: 18.7, label: 'Older 32-bit Android phones',                                   file: 'app-armeabi-v7a-release.apk', primary: false },
-    { abi: 'x86_64',      sizeMB: 22.4, label: 'Android emulators + Chromebooks',                                file: 'app-x86_64-release.apk',      primary: false },
+    { abi: 'arm64-v8a',   sizeMB: 21.1, label: 'Most modern Android phones (Samsung, Pixel, OnePlus, etc.)', file: 'app-arm64-v8a-release.apk',   primary: true  },
+    { abi: 'armeabi-v7a', sizeMB: 18.9, label: 'Older 32-bit Android phones',                                   file: 'app-armeabi-v7a-release.apk', primary: false },
+    { abi: 'x86_64',      sizeMB: 22.6, label: 'Android emulators + Chromebooks',                                file: 'app-x86_64-release.apk',      primary: false },
   ],
 }
 

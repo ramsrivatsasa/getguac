@@ -7,6 +7,8 @@ import { Trash2, CheckCircle, Circle, X, Sparkles, Wand2, Zap, Store as StoreIco
 import GuacMascot from '../../../components/GuacMascot'
 import { groupPredictionsByStore } from '../../../lib/prediction-feedback'
 import { displayStoreName } from '../../../lib/store-name-normalize'
+import { createClient } from '../../../lib/supabase/client'
+import { StoreList } from '../../../components/StoreList'
 
 // Same tone palette as /stash so Buy Again cards visually rhyme with
 // the Stash grid. Maps the per-Smashlist color (Pantry=emerald,
@@ -765,12 +767,54 @@ function BuyAgainCard({ item, onAdd, onQty }) {
   const u = urgencyForItem(item)
   const storeName = item.store?.store_name ? displayStoreName(item.store.store_name) : ''
 
-  // Inline best-price hunter — calls /api/best-price with browser
-  // geolocation. Results render below the stat tiles as selectable
-  // rows (like the Stash card's "Live web prices" panel).
+  // Per-store history of THIS item across the user's receipts. Lazy:
+  // fetched on first expand so the page-load cost stays zero. Same
+  // shape as the Stash card's "Your stores" panel (count + min/last
+  // price) so we can reuse the StoreList component verbatim.
   const [expanded, setExpanded] = useState(false)
-  const [webPrices, setWebPrices] = useState(null)  // null | array
+  const [yourStores, setYourStores] = useState(null)
+  const [yourStoresLoading, setYourStoresLoading] = useState(false)
+  // Inline best-price hunter — calls /api/best-price with browser
+  // geolocation. Results render below the user's-stores list.
+  const [webPrices, setWebPrices] = useState(null)
   const [webLoading, setWebLoading] = useState(false)
+
+  const fetchStoreHistory = useCallback(async () => {
+    if (yourStores !== null) return  // already loaded
+    setYourStoresLoading(true)
+    try {
+      const sb = createClient()
+      // Match on item_name (case-insensitive) — predictor merges variants
+      // via embeddings, but this client-side fetch is a quick ILIKE so
+      // exact + near-exact names land. Worth replacing with a server
+      // endpoint that uses the same canonical key as the predictor if
+      // we want fuzzier matching later.
+      const { data } = await sb
+        .from('receipt_items')
+        .select('price, receipts!inner(store_id, store_name, date)')
+        .ilike('item_name', item.item_name)
+        .limit(500)
+      const m = new Map()
+      for (const row of data || []) {
+        const sid = row.receipts?.store_id || null
+        const sname = row.receipts?.store_name || 'Unknown store'
+        const price = row.price != null ? Number(row.price) : null
+        const date = row.receipts?.date || ''
+        const key = sid || sname
+        if (!m.has(key)) m.set(key, { id: sid, name: sname, count: 0, min_price: null, last_price: null, last_date: '' })
+        const e = m.get(key)
+        e.count++
+        if (price != null && (e.min_price == null || price < e.min_price)) e.min_price = price
+        if (date > e.last_date) { e.last_date = date; if (price != null) e.last_price = price }
+      }
+      setYourStores([...m.values()])
+    } catch (e) {
+      toast.error('Could not load store history: ' + e.message)
+      setYourStores([])
+    } finally {
+      setYourStoresLoading(false)
+    }
+  }, [item.item_name, yourStores])
 
   const getLocation = useCallback(() => new Promise((resolve) => {
     if (!navigator?.geolocation) return resolve({ lat: null, lng: null })
@@ -884,54 +928,68 @@ function BuyAgainCard({ item, onAdd, onQty }) {
           </div>
         )}
 
-        {/* Best-price expander — mirrors the Stash "Hunt web prices" affordance */}
+        {/* Compare stores — same expandable affordance as the Stash card.
+            Tapping opens a panel with the user's per-store price history
+            for this item, plus a "Hunt web prices" CTA at the bottom. */}
         <button
           type="button"
-          onClick={() => setExpanded(v => !v)}
+          onClick={() => { setExpanded(v => !v); fetchStoreHistory() }}
           className="mt-3 flex items-center gap-1 text-xs font-semibold text-emerald-800 hover:text-emerald-900 self-start"
         >
           {expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
-          Find best price
+          {yourStores && yourStores.length > 1
+            ? `Compare ${yourStores.length} stores`
+            : yourStores && yourStores.length === 1
+              ? `1 store`
+              : 'Compare stores'}
         </button>
 
         {expanded && (
           <div className="mt-2 bg-white/80 rounded-xl p-2 ring-1 ring-white space-y-2">
-            {webPrices === null && (
-              <p className="text-[11px] text-gray-500 px-1">
-                Tap below to search the web — we'll use your location for nearby stores.
-              </p>
-            )}
+            <div>
+              <p className="text-[9px] uppercase tracking-wider font-bold text-gray-500 mb-1 px-2">📦 Your stores</p>
+              {yourStoresLoading ? (
+                <p className="text-[11px] text-gray-400 px-2 py-1">Loading…</p>
+              ) : yourStores && yourStores.length > 0 ? (
+                <StoreList
+                  stores={yourStores}
+                  best={yourStores.length > 1
+                    ? yourStores.reduce((best, s) => !best || (s.min_price != null && s.min_price < (best.min_price ?? Infinity)) ? s : best, null)
+                    : null}
+                  onAddToSmashlist={(store) => {
+                    onAdd()
+                    // Also pin the chosen store on the row so the next
+                    // Add records the user's choice for future predictions.
+                    if (store?.id) {
+                      // best-effort upsert with store_name_id; ignore errors
+                      const sb = createClient()
+                      sb.from('shopping_list').update({ store_name_id: String(store.id) }).eq('id', item.id).then(() => {}, () => {})
+                    }
+                  }}
+                />
+              ) : (
+                <p className="text-[11px] text-gray-400 px-2 py-1">No prior buys found.</p>
+              )}
+            </div>
+
             {webPrices && webPrices.length > 0 && (
-              <ul className="space-y-1">
-                {webPrices.map((p, i) => (
-                  <li key={i} className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg bg-emerald-50/60 ring-1 ring-emerald-100">
-                    <div className="flex-1 min-w-0 truncate">
-                      <p className="text-xs font-semibold text-emerald-900 truncate">
-                        {p.store_name || 'Unknown store'}
-                      </p>
-                      {p.source === 'cache' && (
-                        <p className="text-[9px] text-gray-400">cached · tap refresh for live</p>
-                      )}
-                    </div>
-                    <span className="text-sm font-black text-emerald-700 tabular-nums">
-                      {p.price != null ? `$${Number(p.price).toFixed(2)}` : '—'}
-                    </span>
-                    {p.url && (
-                      <a href={p.url} target="_blank" rel="noreferrer"
-                         className="text-emerald-700 hover:text-emerald-900 text-xs"
-                         title="Open at the store">↗</a>
-                    )}
-                  </li>
-                ))}
-              </ul>
+              <div className="pt-2 border-t border-gray-100">
+                <p className="text-[9px] uppercase tracking-wider font-bold text-fuchsia-700 mb-1 px-2">💎 Live web prices</p>
+                <StoreList
+                  stores={webPrices.map(p => ({ id: null, name: p.store_name || 'Unknown', last_price: p.price, min_price: p.price, count: 1, url: p.url, web: true }))}
+                  best={null}
+                  onAddToSmashlist={() => onAdd()}
+                />
+              </div>
             )}
+
             <button
               type="button"
               onClick={huntBestPrice}
               disabled={webLoading}
               className="w-full text-[11px] font-bold text-emerald-700 hover:bg-emerald-50 rounded-lg py-1.5 transition-all flex items-center justify-center gap-1.5"
             >
-              {webLoading ? <>⏳ Scanning the web…</> : webPrices ? <>🔄 Refresh price</> : <>💎 Hunt best price</>}
+              {webLoading ? <>⏳ Scanning the web…</> : webPrices ? <>🔄 Refresh web prices</> : <>💎 Hunt web prices</>}
             </button>
           </div>
         )}

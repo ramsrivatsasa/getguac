@@ -157,7 +157,7 @@ export async function saveReceipt(sb, userId, parsed, opts = {}) {
       const { data: hadItems } = await sb
         .from('receipt_items').select('id').eq('receipt_id', existingId).limit(1)
       if (!hadItems || hadItems.length === 0) {
-        const itemRows = items.map(it => normalizeItemRow(existingId, it))
+        const itemRows = items.map(it => normalizeItemRow(existingId, it, candidate.date))
         await sb.from('receipt_items').insert(itemRows).then(
           () => {},
           (e) => console.warn('[save-receipt] merge item insert failed:', e.message),
@@ -239,7 +239,7 @@ export async function saveReceipt(sb, userId, parsed, opts = {}) {
       }
     }
     for (let i = 0; i < items.length; i++) {
-      const row = normalizeItemRow(receiptId, items[i])
+      const row = normalizeItemRow(receiptId, items[i], insertRow.date)
       if (catalogIdByIndex[i]) row.store_item_id = catalogIdByIndex[i]
       itemRows.push(row)
     }
@@ -434,7 +434,7 @@ async function upsertStoreItemServer(sb, { store_id, sku, item_name, price, retu
   return data
 }
 
-function normalizeItemRow(receiptId, it) {
+function normalizeItemRow(receiptId, it, purchaseDate = null) {
   return {
     receipt_id: receiptId,
     sku: it.sku || null,
@@ -448,5 +448,12 @@ function normalizeItemRow(receiptId, it) {
     returned: it.category === 'charity' ? false : Boolean(it.returned),
     category: it.category || null,
     health_tier: it.health_tier || null,
+    // Copy the parent receipt's date down to the item so the smashlist
+    // predictor (predict-smashlist.js aggregate()) doesn't skip the
+    // row. Without this, every item saved through the central pipeline
+    // had purchase_date=null and never participated in cadence
+    // detection — silent across web + mobile + email-poller + statement
+    // importer. Fixed at the writer so all callers get it for free.
+    purchase_date: purchaseDate,
   }
 }

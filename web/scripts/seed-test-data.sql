@@ -90,15 +90,16 @@ begin
     )
     returning id into rcpt_id;
 
-    -- Unified item names across stores so the cadence detector sees
-    -- ONE bucket per item with the real weekly cadence (24 buys, 7-day
-    -- interval), not three name-buckets at 21-day cadence which would
-    -- fail the due-now gate.
-    insert into public.receipt_items (receipt_id, item_name, qty, price, category) values
-      (rcpt_id, 'MILK',    1, 5.49, 'grub'),
-      (rcpt_id, 'EGGS',    1, 4.99, 'grub'),
-      (rcpt_id, 'BANANAS', 1, 1.29, 'grub'),
-      (rcpt_id, 'BREAD',   1, 3.79, 'grub');
+    -- Unified item names + purchase_date set to the parent receipt's
+    -- date. The predictor (predict-smashlist.js aggregate()) skips any
+    -- receipt_item with a null purchase_date — without this column,
+    -- 100% of the seed items get filtered out and the Buy Again strip
+    -- stays empty regardless of how many items you embed.
+    insert into public.receipt_items (receipt_id, item_name, qty, price, category, purchase_date) values
+      (rcpt_id, 'MILK',    1, 5.49, 'grub', d),
+      (rcpt_id, 'EGGS',    1, 4.99, 'grub', d),
+      (rcpt_id, 'BANANAS', 1, 1.29, 'grub', d),
+      (rcpt_id, 'BREAD',   1, 3.79, 'grub', d);
   end loop;
 
   -- ─── 2. BI-WEEKLY HOUSEHOLD (12 buys) ──────────────────────────────────
@@ -112,9 +113,9 @@ begin
       uid, 'Target', d, 22.50, 22.50 * 0.082,
       'household', 4, '[SEED v2 SQL]', true
     ) returning id into rcpt_id;
-    insert into public.receipt_items (receipt_id, item_name, qty, price, category) values
-      (rcpt_id, 'BOUNTY SELECT-A-SIZE 6 PK', 1, 17.84, 'household'),
-      (rcpt_id, 'DAWN ULTRA ORIGINAL', 1, 4.66, 'household');
+    insert into public.receipt_items (receipt_id, item_name, qty, price, category, purchase_date) values
+      (rcpt_id, 'BOUNTY SELECT-A-SIZE 6 PK', 1, 17.84, 'household', d),
+      (rcpt_id, 'DAWN ULTRA ORIGINAL', 1, 4.66, 'household', d);
   end loop;
 
   -- ─── 3. MONTHLY RESTOCK (6 buys) ───────────────────────────────────────
@@ -128,11 +129,11 @@ begin
       uid, 'Costco Wholesale', d, 89.99, 89.99 * 0.082,
       'household', 5, '[SEED v2 SQL]', true
     ) returning id into rcpt_id;
-    insert into public.receipt_items (receipt_id, item_name, qty, price, category) values
-      (rcpt_id, 'TIDE HE LIQUID 170 LOADS', 1, 24.99, 'household'),
-      (rcpt_id, 'KS DAILY MULTI 365CT', 1, 11.99, 'health'),
-      (rcpt_id, 'KS ADULT CHICKEN&RICE 40LB', 1, 39.99, 'pets'),
-      (rcpt_id, 'PAPER TOWELS 12 ROLL', 1, 22.99, 'household');
+    insert into public.receipt_items (receipt_id, item_name, qty, price, category, purchase_date) values
+      (rcpt_id, 'TIDE HE LIQUID 170 LOADS', 1, 24.99, 'household', d),
+      (rcpt_id, 'KS DAILY MULTI 365CT', 1, 11.99, 'health', d),
+      (rcpt_id, 'KS ADULT CHICKEN&RICE 40LB', 1, 39.99, 'pets', d),
+      (rcpt_id, 'PAPER TOWELS 12 ROLL', 1, 22.99, 'household', d);
   end loop;
 
   -- ─── 4. MONTHLY SUBSCRIPTIONS (auto-pay merchants) ─────────────────────

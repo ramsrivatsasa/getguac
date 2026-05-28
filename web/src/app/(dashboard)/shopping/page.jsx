@@ -415,18 +415,13 @@ export default function ShoppingPage() {
           <p className="text-sm text-gray-500">Stocked, themed, ready to grab</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button
-            onClick={predictNow}
-            disabled={predicting}
-            className="btn-secondary inline-flex items-center gap-1.5 text-sm disabled:opacity-50"
-            title="Find items you usually buy that are due for a restock"
-          >
-            <Wand2 size={16} /> {
-              embedding ? 'Embedding…' :
-              predicting ? 'Finding…' :
-              'Buy Again'
-            }
-          </button>
+          {/* Buy Again button removed — the nightly cron at 05:30 UTC
+              runs the embedding backfill + predictor automatically, so
+              the manual button was redundant for daily use. Edge cases
+              (just imported 200 receipts, just seeded) can either wait
+              for the cron or trigger via /api/smashlist/predict directly.
+              predictNow() is kept in scope in case we want to re-add it
+              as a small icon in the section header later. */}
           <AutoAddMenu
             count={filteredSuggestions.length}
             onPick={(criteria) => autoAddAll(criteria)}

@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query'
 import { getStores } from '../../../lib/db'
 import AddressInput from '../../../components/AddressInput'
 import GuacMascot from '../../../components/GuacMascot'
+import { displayStoreName } from '../../../lib/store-name-normalize'
 
 const EMPTY = { start_date: '', end_date: '', total_miles: '', description: '', category: 'Personal', from_address: '', to_address: '', tags: [] }
 
@@ -261,7 +262,7 @@ export default function CarMilesPage() {
                         className="text-[10px] font-bold text-emerald-700 bg-transparent border-none cursor-pointer mb-1">
                         <option value="" disabled>🏪 Pick a store…</option>
                         {storesList.map(st => (
-                          <option key={st.id} value={st.id}>{st.store_name}</option>
+                          <option key={st.id} value={st.id}>{displayStoreName(st.store_name)}</option>
                         ))}
                       </select>
                     )}

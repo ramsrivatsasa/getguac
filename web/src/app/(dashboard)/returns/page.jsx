@@ -6,6 +6,7 @@ import toast from 'react-hot-toast'
 import { Undo2, Search, ExternalLink, RotateCcw, Calendar, Store as StoreIcon, Clock, Shield } from 'lucide-react'
 import { getReturns, updateReceiptItem, getEligibleReturns } from '../../../lib/db'
 import GuacMascot from '../../../components/GuacMascot'
+import { displayStoreName } from '../../../lib/store-name-normalize'
 
 export default function ReturnsPage() {
   const qc = useQueryClient()
@@ -199,10 +200,10 @@ export default function ReturnsPage() {
                         <td className="px-4 py-3">
                           {r.store_id ? (
                             <Link href={`/stores/${r.store_id}`} className="inline-flex items-center gap-1 text-blue-600 hover:underline">
-                              <StoreIcon size={11} />{r.store_name}
+                              <StoreIcon size={11} />{displayStoreName(r.store_name)}
                             </Link>
                           ) : (
-                            <span className="text-gray-500">{r.store_name || '—'}</span>
+                            <span className="text-gray-500">{displayStoreName(r.store_name) || '—'}</span>
                           )}
                         </td>
                         <td className="px-4 py-3 text-gray-500">{r.receipt_date || '—'}</td>
@@ -301,10 +302,10 @@ export default function ReturnsPage() {
                       <td className="px-4 py-3">
                         {r.receipts?.store_id ? (
                           <Link href={`/stores/${r.receipts.store_id}`} className="inline-flex items-center gap-1 text-blue-600 hover:underline">
-                            <StoreIcon size={11} />{r.receipts.store_name}
+                            <StoreIcon size={11} />{displayStoreName(r.receipts.store_name)}
                           </Link>
                         ) : (
-                          <span className="text-gray-500">{r.receipts?.store_name || '—'}</span>
+                          <span className="text-gray-500">{displayStoreName(r.receipts?.store_name) || '—'}</span>
                         )}
                       </td>
                       <td className="px-4 py-3 text-gray-500">{r.receipts?.date || '—'}</td>

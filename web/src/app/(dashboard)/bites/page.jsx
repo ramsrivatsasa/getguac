@@ -7,6 +7,7 @@ import { Search, ThumbsUp, ThumbsDown, ExternalLink, Utensils, ShoppingCart } fr
 import { getBites, setItemValidation, addToShoppingList, SHOPPING_LISTS, SHOPPING_LIST_META } from '../../../lib/db'
 import { useShoppingList } from '../../../hooks/useShopping'
 import GuacMascot from '../../../components/GuacMascot'
+import { displayStoreName } from '../../../lib/store-name-normalize'
 
 export default function BitesPage() {
   const qc = useQueryClient()
@@ -53,7 +54,7 @@ export default function BitesPage() {
   const byRestaurant = useMemo(() => {
     const m = new Map()
     for (const r of filtered) {
-      const store = r.receipts?.store_name || 'Unknown'
+      const store = displayStoreName(r.receipts?.store_name) || 'Unknown'
       if (!m.has(store)) m.set(store, { store, store_id: r.receipts?.store_id, items: [] })
       m.get(store).items.push(r)
     }

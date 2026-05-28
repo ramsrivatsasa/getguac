@@ -15,6 +15,7 @@ import { useQuery } from '@tanstack/react-query'
 import { createClient } from '../../../lib/supabase/client'
 import { CATEGORIES, categoryLabel, categoryClass } from '../../../lib/categories'
 import { isPaymentReceipt } from '../../../lib/payment-rows'
+import { displayStoreName } from '../../../lib/store-name-normalize'
 import { formatDateShort } from '../../../lib/dateFormat'
 import { BarChart3, PieChart as PieIcon, Repeat, Award, Store as StoreIcon, X } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
@@ -87,7 +88,7 @@ export default function ReportsPage() {
       const ck = r.category || 'misc'
       cat.set(ck, (cat.get(ck) || 0) + amt)
       const sk = r.store_id || `name:${r.store_name || '—'}`
-      const sentry = store.get(sk) || { id: r.store_id, name: r.store_name || '—', count: 0, spent: 0 }
+      const sentry = store.get(sk) || { id: r.store_id, name: displayStoreName(r.store_name) || '—', count: 0, spent: 0 }
       sentry.count++
       sentry.spent += amt
       store.set(sk, sentry)
@@ -262,8 +263,8 @@ export default function ReportsPage() {
                             <td className="px-3 py-1.5 text-gray-500 whitespace-nowrap">{formatDateShort(r.date)}</td>
                             <td className="px-3 py-1.5">
                               {r.store_id ? (
-                                <Link href={`/stores/${r.store_id}`} className="text-blue-700 hover:underline">{r.store_name || '—'}</Link>
-                              ) : <span>{r.store_name || '—'}</span>}
+                                <Link href={`/stores/${r.store_id}`} className="text-blue-700 hover:underline">{displayStoreName(r.store_name) || '—'}</Link>
+                              ) : <span>{displayStoreName(r.store_name) || '—'}</span>}
                             </td>
                             <td className="px-3 py-1.5 text-gray-500 max-w-md truncate" title={preview}>
                               {itemCount > 0

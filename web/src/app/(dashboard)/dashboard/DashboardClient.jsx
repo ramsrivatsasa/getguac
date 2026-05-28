@@ -8,7 +8,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { DollarSign, Receipt, Gift, TrendingUp, ArrowRight, Sparkles } from 'lucide-react'
 import GuacoScoreCard from '../../../components/GuacoScoreCard'
 import { subDays, subWeeks, subMonths, subYears } from 'date-fns'
-import { normalizeStoreName, canonicalStoreName, storeGroupKey } from '../../../lib/store-name-normalize'
+import { normalizeStoreName, canonicalStoreName, displayStoreName, storeGroupKey } from '../../../lib/store-name-normalize'
 import { periodToReceiptsChip, buildReceiptsUrl } from '../../../lib/receipts-deeplink'
 import { isPaymentReceipt } from '../../../lib/payment-rows'
 const PERIODS = ['daily', 'weekly', 'monthly', 'yearly']
@@ -92,7 +92,7 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
       const key = storeGroupKey(raw)
       if (!key) continue
       const amount = parseFloat(r.total_amount || 0)
-      const entry = byStore.get(key) || { name: canonicalStoreName(raw), amount: 0, count: 0, samples: [] }
+      const entry = byStore.get(key) || { name: displayStoreName(raw), amount: 0, count: 0, samples: [] }
       // Track every raw variant we saw so the click-through can filter on
       // "store_name in (...)" instead of an arbitrary one — otherwise the
       // bar showing "Costco" $234 navigates to receipts page filtered on
@@ -266,7 +266,7 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
                 <div key={r.id} className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium leading-tight">{r.reward_title}</p>
-                    <p className="text-xs text-gray-400">{r.store_name}</p>
+                    <p className="text-xs text-gray-400">{displayStoreName(r.store_name)}</p>
                   </div>
                   <span className={`badge ${r.expiry_date < today ? 'badge-red' : 'badge-green'} ml-2 flex-shrink-0`}>
                     {r.expiry_date < today ? 'Expired' : r.expiry_date}
@@ -302,7 +302,7 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
               {filtered.slice(0, 8).map(r => (
                 <tr key={r.id} className="hover:bg-gray-50/50">
                   <td className="px-5 py-3 font-medium">
-                    <Link href={`/receipts/${r.id}`} className="hover:text-blue-700">{r.store_name}</Link>
+                    <Link href={`/receipts/${r.id}`} className="hover:text-blue-700">{displayStoreName(r.store_name)}</Link>
                   </td>
                   <td className="px-5 py-3 text-gray-500">{formatDateShort(r.date)}</td>
                   <td className="px-5 py-3 font-semibold">${parseFloat(r.total_amount || 0).toFixed(2)}</td>

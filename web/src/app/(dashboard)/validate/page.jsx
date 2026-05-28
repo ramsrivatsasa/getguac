@@ -12,6 +12,7 @@ import GuacMascot from '../../../components/GuacMascot'
 import { subDays, subWeeks, subMonths, subYears } from 'date-fns'
 import { useReceipts, useReceipt } from '../../../hooks/useReceipts'
 import { setReceiptValidation, setItemValidation } from '../../../lib/db'
+import { displayStoreName } from '../../../lib/store-name-normalize'
 const RATING_LABELS = {
   5: { label: 'Essential', emoji: '💎', color: 'emerald', fill: '#10b981' },
   4: { label: 'Important', emoji: '✅', color: 'lime',    fill: '#84cc16' },
@@ -264,7 +265,7 @@ function ReceiptRow({ r, isExpanded, onToggle }) {
       </td>
       <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{formatDateShort(r.date)}</td>
       <td className="px-4 py-3 font-medium">
-        <Link href={`/receipts/${r.id}`} className="text-emerald-800 hover:underline">{r.store_name}</Link>
+        <Link href={`/receipts/${r.id}`} className="text-emerald-800 hover:underline">{displayStoreName(r.store_name)}</Link>
       </td>
       <td className={`px-4 py-3 font-bold whitespace-nowrap ${parseFloat(r.total_amount) < 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
         {parseFloat(r.total_amount) < 0 ? '+' : ''}${Math.abs(parseFloat(r.total_amount || 0)).toFixed(2)}

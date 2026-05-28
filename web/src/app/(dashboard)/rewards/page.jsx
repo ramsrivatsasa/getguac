@@ -5,6 +5,7 @@ import { useRewards, useUpsertReward, useDeleteReward } from '../../../hooks/use
 import toast from 'react-hot-toast'
 import { Trash2, Eye } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
+import { displayStoreName } from '../../../lib/store-name-normalize'
 
 const EMPTY = { reward_no: '', expiry_date: '', reward_type: '', reward_title: '', description: '', store_name: '' }
 const today = new Date().toISOString().split('T')[0]
@@ -117,7 +118,7 @@ export default function RewardsPage() {
                     <td className="px-4 py-3 font-mono text-xs text-gray-500">{r.reward_no}</td>
                     <td className="px-4 py-3 font-medium">{r.reward_title}</td>
                     <td className="px-4 py-3 text-gray-500">{r.reward_type}</td>
-                    <td className="px-4 py-3 text-gray-500">{r.store_name}</td>
+                    <td className="px-4 py-3 text-gray-500">{displayStoreName(r.store_name)}</td>
                     <td className="px-4 py-3 text-gray-500">{r.expiry_date}</td>
                     <td className="px-4 py-3">
                       <span className={r.expiry_date < today ? 'badge-red' : 'badge-green'}>

@@ -13,6 +13,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { ArrowLeft, ShoppingCart, MapPin, Receipt, ExternalLink, X } from 'lucide-react'
+import { displayStoreName } from '../../../../lib/store-name-normalize'
 import { createClient } from '../../../../lib/supabase/client'
 import { updateReceiptItem, setStashProductCategory, addToShoppingList } from '../../../../lib/db'
 import { formatDateShort } from '../../../../lib/dateFormat'
@@ -211,7 +212,7 @@ export default function ItemDetailPage() {
         <Link href={`/receipts/${item.receipt?.id}`}
           className="flex items-center justify-between p-3 rounded-lg bg-emerald-50/40 hover:bg-emerald-50 transition-colors group">
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-emerald-900 truncate">{item.receipt?.store_name || 'Receipt'}</p>
+            <p className="text-sm font-semibold text-emerald-900 truncate">{displayStoreName(item.receipt?.store_name) || 'Receipt'}</p>
             <p className="text-[11px] text-gray-500 flex items-center gap-2">
               {formatDateShort(item.receipt?.date)}
               {item.receipt?.business_purchase && <span className="badge-blue text-[9px]">Biz</span>}
@@ -236,7 +237,7 @@ export default function ItemDetailPage() {
             <p className="text-[10px] text-gray-400">
               {history.length + 1} buy{history.length === 0 ? '' : 's'} · total ${totalSpent.toFixed(2)} · avg ${avgPrice.toFixed(2)}
               {minPriceRow && minPrice > 0 && (
-                <span> · best ${minPrice.toFixed(2)} at {minPriceRow.receipt?.store_name || minPriceRow === item ? item.receipt?.store_name : '?'}</span>
+                <span> · best ${minPrice.toFixed(2)} at {displayStoreName(minPriceRow.receipt?.store_name || (minPriceRow === item ? item.receipt?.store_name : '')) || '?'}</span>
               )}
             </p>
           </div>
@@ -257,7 +258,7 @@ export default function ItemDetailPage() {
                     <td className="px-3 py-1 text-gray-500 whitespace-nowrap">{formatDateShort(h.receipt?.date)}</td>
                     <td className="px-3 py-1">
                       <Link href={`/receipts/${h.receipt?.id}`} className="text-blue-700 hover:underline">
-                        {h.receipt?.store_name || '—'}
+                        {displayStoreName(h.receipt?.store_name) || '—'}
                       </Link>
                     </td>
                     <td className="px-3 py-1 text-right">{h.qty || 1}</td>

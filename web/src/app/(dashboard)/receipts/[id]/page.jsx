@@ -9,6 +9,7 @@ import { addToShoppingList, setStashProductCategory } from '../../../../lib/db'
 import { CATEGORIES } from '../../../../lib/categories'
 import { isItemNonReturnable } from '../../../../lib/non-returnable'
 import CategoryPicker from '../../../../components/CategoryPicker'
+import { displayStoreName } from '../../../../lib/store-name-normalize'
 
 const RECEIPT_RATING_META = {
   5: { label: 'Essential', emoji: '💎' },
@@ -136,7 +137,7 @@ export default function ReceiptDetailPage() {
     <div className="space-y-6 max-w-4xl">
       <div className="flex items-center gap-3 flex-wrap">
         <button onClick={() => router.back()} className="btn-ghost p-1.5"><ArrowLeft size={20} /></button>
-        <h1 className="page-title flex-1 min-w-0 truncate">Receipt — {current.store_name}</h1>
+        <h1 className="page-title flex-1 min-w-0 truncate">Receipt — {displayStoreName(current.store_name)}</h1>
         <button
           onClick={() => reparseFromEmail.mutate()}
           disabled={reparseFromEmail.isPending}

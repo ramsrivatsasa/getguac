@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { createClient } from '../../../lib/supabase/client'
 import { ShieldCheck, Search } from 'lucide-react'
+import { displayStoreName } from '../../../lib/store-name-normalize'
 export default function AdminPage() {
   const [type, setType] = useState('receipts')
   const [userName, setUserName] = useState('')
@@ -68,7 +69,7 @@ export default function AdminPage() {
                   <tr key={r.id}>
                     <td className="px-4 py-3 font-mono text-xs text-gray-400">{r.id.substring(0, 8)}…</td>
                     <td className="px-4 py-3">{r.profiles?.email ?? '—'}</td>
-                    <td className="px-4 py-3 font-medium">{r.store_name ?? '—'}</td>
+                    <td className="px-4 py-3 font-medium">{displayStoreName(r.store_name) ?? '—'}</td>
                     <td className="px-4 py-3 text-gray-400">{r.date ?? r.expiry_date ?? '—'}</td>
                     <td className="px-4 py-3">{r.total_amount ? `$${r.total_amount}` : '—'}</td>
                   </tr>

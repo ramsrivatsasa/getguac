@@ -261,3 +261,21 @@ export function canonicalStoreName(raw) {
   if (ALIASES[key]) return ALIASES[key]
   return (raw || '').trim()
 }
+
+/**
+ * THE display form. All store names rendered in the UI go through this
+ * helper so the table, charts, reports, and store pages all show the
+ * SAME styling for the SAME merchant.
+ *
+ * Style: ALL CAPS. Uppercase canonicalization makes "Costco", "costco",
+ * "Costco Wholesale", "COSTCO WHSE", and "Costco Pharmacy" all render
+ * as "COSTCO" — visually consistent + impossible to mistake for two
+ * different stores when scanning a list.
+ *
+ * The stored receipts.store_name keeps whatever the merchant printed
+ * (or whatever the AI cron canonicalized it to). This helper is the
+ * presentation layer.
+ */
+export function displayStoreName(raw) {
+  return (canonicalStoreName(raw) || '').toUpperCase()
+}

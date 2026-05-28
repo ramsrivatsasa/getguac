@@ -12,7 +12,7 @@ import toast from 'react-hot-toast'
 import { formatDateShort } from '../../../lib/dateFormat'
 import { Upload, Trash2, Eye, Search, Download, Loader2, Sparkles, X, Shield, Camera, ChevronDown, ChevronRight, Undo2, ShoppingCart, Monitor, Link2, Tag, RefreshCw, Copy } from 'lucide-react'
 import { guessCategory } from '../../../lib/categorizeRules'
-import { normalizeStoreName, canonicalStoreName } from '../../../lib/store-name-normalize'
+import { normalizeStoreName, displayStoreName } from '../../../lib/store-name-normalize'
 import { RECEIPT_CHIP_IDS, parseReceiptsUrlParams, chipToDateFrom } from '../../../lib/receipts-deeplink'
 import { isItemPerishable, getNonReturnableReason } from '../../../lib/perishable'
 import { isItemNonReturnable } from '../../../lib/non-returnable'
@@ -1161,7 +1161,7 @@ export default function ReceiptsPage() {
                               raw printed merchant string; this is purely a
                               presentation layer. The nightly normalize-stores
                               cron eventually rewrites the DB to match. */}
-                          <div className="text-blue-700 hover:underline">{canonicalStoreName(r.store_name)}</div>
+                          <div className="text-blue-700 hover:underline">{displayStoreName(r.store_name)}</div>
                           <div className="flex items-center gap-1 mt-0.5 flex-wrap">
                             {(() => {
                               const bank = bankInfoFor(r)
@@ -1278,7 +1278,7 @@ export default function ReceiptsPage() {
                   return (
                     <div key={g.key} className="border rounded-lg bg-gray-50 overflow-hidden">
                       <div className="flex items-center justify-between gap-2 px-3 py-2 border-b bg-white">
-                        <span className="font-semibold text-gray-800">{g.store_name}</span>
+                        <span className="font-semibold text-gray-800">{displayStoreName(g.store_name)}</span>
                         <span className="text-gray-500">{g.date} · ${Math.abs(g.total_amount).toFixed(2)}{g.sign === '-' ? ' refund' : ''}</span>
                       </div>
                       {g.variants && g.variants.length > 1 && (
@@ -1322,7 +1322,7 @@ export default function ReceiptsPage() {
                                 <td className="px-2 py-1.5">
                                   <div className="flex items-center gap-1.5 flex-wrap">
                                     <Link href={`/receipts/${r.id}`} target="_blank" className="text-blue-700 hover:underline font-mono text-[10px]">{r.id.slice(0, 8)}</Link>
-                                    <span className="text-gray-700">{r.store_name}</span>
+                                    <span className="text-gray-700">{displayStoreName(r.store_name)}</span>
                                     {r.from_statement && <span className="inline-flex items-center text-[9px] px-1 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">🏦 Statement</span>}
                                     {r.reconciled && <span className="inline-flex items-center text-[9px] px-1 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">🔗 Reconciled</span>}
                                     {r.is_return && <span className="inline-flex items-center text-[9px] px-1 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-100">Refund</span>}

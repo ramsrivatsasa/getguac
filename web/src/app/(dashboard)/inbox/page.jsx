@@ -8,6 +8,7 @@ import {
   Mail, Search, Inbox as InboxIcon, Star, Archive, Trash2, Reply, Send, Loader2, X, Sparkles, Filter, Edit3, RefreshCw, ChevronsLeft, ChevronsRight, ChevronDown, DownloadCloud,
 } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
+import { displayStoreName } from '../../../lib/store-name-normalize'
 
 const FILTERS = [
   { value: '',         label: 'All' },
@@ -425,7 +426,7 @@ function MessageRow({ m, selected, onClick, onToggleStar }) {
             <>
               <span className="text-base">{isReturn ? '↩️' : '🥑'}</span>
               <span className={`text-sm truncate ${unread ? 'font-extrabold text-emerald-900' : 'font-bold text-emerald-800'}`}>
-                {rcpt.store_name || 'Receipt'}
+                {displayStoreName(rcpt.store_name) || 'Receipt'}
               </span>
               {amount && (
                 <span className={`text-xs font-extrabold tabular-nums ${isReturn ? 'text-rose-600' : 'text-emerald-700'}`}>

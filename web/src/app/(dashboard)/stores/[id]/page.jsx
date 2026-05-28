@@ -8,6 +8,7 @@ import { useBankStatementMap } from '../../../../hooks/useReceipts'
 import { formatDateShort } from '../../../../lib/dateFormat'
 import toast from 'react-hot-toast'
 import { ArrowLeft, Save, Store, Phone, Globe, MapPin, Receipt, ChevronRight, Hash, Navigation, Crosshair, Loader2, Shield, ExternalLink, X, Link2 } from 'lucide-react'
+import { displayStoreName } from '../../../../lib/store-name-normalize'
 export default function StoreDetailPage() {
   const { id } = useParams()
   const router = useRouter()
@@ -103,7 +104,7 @@ export default function StoreDetailPage() {
         <button onClick={() => router.back()} className="btn-ghost p-1.5"><ArrowLeft size={20} /></button>
         <div className="flex items-center gap-2">
           <div className="p-2 bg-blue-100 rounded-xl"><Store className="text-blue-800" size={18} /></div>
-          <h1 className="page-title">{store.store_name}</h1>
+          <h1 className="page-title">{displayStoreName(store.store_name)}</h1>
         </div>
         <button
           onClick={() => router.back()}
@@ -220,9 +221,9 @@ export default function StoreDetailPage() {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 mt-1.5 text-[11px] font-semibold text-emerald-700 hover:text-emerald-900"
-                        title={`Read ${store.store_name}'s full return policy`}
+                        title={`Read ${displayStoreName(store.store_name)}'s full return policy`}
                       >
-                        Read {store.store_name}'s full policy <ExternalLink size={11} />
+                        Read {displayStoreName(store.store_name)}'s full policy <ExternalLink size={11} />
                       </a>
                     )}
                   </div>

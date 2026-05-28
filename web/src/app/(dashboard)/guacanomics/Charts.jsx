@@ -6,6 +6,7 @@ import {
 } from 'recharts'
 import { Sparkles, TrendingDown, Tag, Calendar, ShoppingBag } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
+import { displayStoreName } from '../../../lib/store-name-normalize'
 
 const PIE_COLORS = ['#e11d48', '#10b981']
 
@@ -275,7 +276,7 @@ export default function Charts({ insights }) {
               {insights.largest.map(r => (
                 <tr key={r.id} className="hover:bg-gray-50/50">
                   <td className="px-5 py-3 font-medium">
-                    <Link href={`/receipts/${r.id}`} className="text-blue-700 hover:underline">{r.store_name}</Link>
+                    <Link href={`/receipts/${r.id}`} className="text-blue-700 hover:underline">{displayStoreName(r.store_name)}</Link>
                   </td>
                   <td className="px-5 py-3 text-gray-500">{formatDateShort(r.date)}</td>
                   <td className="px-5 py-3 font-semibold">${parseFloat(r.total_amount || 0).toFixed(2)}</td>

@@ -5,7 +5,7 @@ import Link from 'next/link'
 import toast from 'react-hot-toast'
 import { Store, Phone, Globe, MapPin, ChevronRight, ChevronDown, Search, Trash2, AlertTriangle, Shield, ExternalLink } from 'lucide-react'
 import { getStores, deleteStore, getAllStoreDefaultPolicies } from '../../../lib/db'
-import { normalizeStoreName } from '../../../lib/store-name-normalize'
+import { normalizeStoreName, displayStoreName } from '../../../lib/store-name-normalize'
 function normalizePhone(p) {
   if (!p) return ''
   return String(p).replace(/\D+/g, '')
@@ -181,7 +181,7 @@ export default function StoresPage() {
                   {group.map(s => (
                     <div key={s.id} className="flex items-center justify-between gap-3 text-sm">
                       <div className="min-w-0 flex-1">
-                        <p className="font-medium">{s.store_name}</p>
+                        <p className="font-medium">{displayStoreName(s.store_name)}</p>
                         <div className="flex gap-3 text-xs text-gray-500">
                           {s.phone_no && <span><Phone size={10} className="inline mr-0.5" />{s.phone_no}</span>}
                           {s.address && <span className="truncate"><MapPin size={10} className="inline mr-0.5" />{s.address}</span>}
@@ -234,7 +234,7 @@ export default function StoresPage() {
                     onChange={() => toggleOne(store.id)} aria-label={`Select ${store.store_name}`} />
                   <Link href={`/stores/${store.id}`} className="flex-1 flex items-center justify-between min-w-0">
                     <div className="space-y-1 min-w-0">
-                      <p className="font-semibold text-gray-800 group-hover:text-blue-700 transition-colors">{store.store_name}</p>
+                      <p className="font-semibold text-gray-800 group-hover:text-blue-700 transition-colors">{displayStoreName(store.store_name)}</p>
                       <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-gray-400">
                         {store.address && <span className="flex items-center gap-1"><MapPin size={11} />{store.address}</span>}
                         {store.phone_no && <span className="flex items-center gap-1"><Phone size={11} />{store.phone_no}</span>}

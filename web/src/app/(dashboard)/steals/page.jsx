@@ -7,6 +7,7 @@ import { getStashItems, getReceipts, getRewards } from '../../../lib/db'
 import { predictReplenishItems, expiringRewards } from '../../../lib/userProfile'
 import BestPricesModal from '../../../components/BestPricesModal'
 import GuacMascot from '../../../components/GuacMascot'
+import { displayStoreName } from '../../../lib/store-name-normalize'
 
 export default function StealsPage() {
   const [query, setQuery] = useState('')
@@ -82,7 +83,7 @@ export default function StealsPage() {
                     <span className="w-8 h-8 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center shrink-0 text-base">🎁</span>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-bold text-gray-800 truncate">{r.reward_title || r.reward_no}</p>
-                      <p className="text-[10px] text-gray-500 truncate">{r.store_name}</p>
+                      <p className="text-[10px] text-gray-500 truncate">{displayStoreName(r.store_name)}</p>
                     </div>
                     <div className="text-right shrink-0">
                       <p className={`text-[10px] font-bold tabular-nums ${r.expires_in_days <= 7 ? 'text-rose-600' : 'text-amber-700'}`}>
@@ -116,7 +117,7 @@ export default function StealsPage() {
                       <p className="text-xs font-bold text-gray-800 truncate">{r.item_name}</p>
                       <p className="text-[10px] text-gray-500">
                         {r.times_bought}× · last {r.days_since_last}d ago
-                        {r.store_name && <> · usually {r.store_name}</>}
+                        {r.store_name && <> · usually {displayStoreName(r.store_name)}</>}
                       </p>
                     </div>
                     <span className="text-[10px] font-bold uppercase text-gray-500 shrink-0">Steal&nbsp;it</span>

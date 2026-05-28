@@ -101,7 +101,7 @@ function CreateForm({ onCreated }) {
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="The Sridhar Family"
+          placeholder="The Johnson Family"
           maxLength={80}
           required
           className="input flex-1"

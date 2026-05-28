@@ -91,8 +91,12 @@ export default function ProfilePage() {
           tight set (2-4 people); receipts + analytics stay personal.
           Self-contained: this component handles create, invite,
           member roster, leave, and the chat thread, all reading +
-          writing through lib/households.js. */}
-      <HouseholdPanel />
+          writing through lib/households.js.
+          The id="household" anchor is the target of the sidebar
+          "House" entry (/profile#household). */}
+      <div id="household" className="scroll-mt-20">
+        <HouseholdPanel />
+      </div>
 
       {/* Payment options */}
       <div className="card space-y-4">

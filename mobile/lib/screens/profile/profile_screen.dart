@@ -311,6 +311,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
               onTap: () => context.go('/car-miles'),
             )),
           ]),
+          const SizedBox(height: 10),
+          Row(children: [
+            Expanded(child: _Pill(
+              gradient: const [Color(0xFF84cc16), Color(0xFF15803d), Color(0xFF064e3b)],
+              emoji: '🥑', title: 'How It Works', subtitle: "Meet Guac-AI in 7 cards",
+              onTap: () => context.go('/how-it-works'),
+            )),
+            const SizedBox(width: 10),
+            const Expanded(child: SizedBox.shrink()),
+          ]),
 
           const SizedBox(height: 18),
           _SectionHeader(label: 'More'),

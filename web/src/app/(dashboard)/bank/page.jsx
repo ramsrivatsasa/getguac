@@ -259,6 +259,23 @@ export default function BankPage() {
         console.warn('[refresh] cleanup-payments skipped:', e.message)
       }
 
+      // ── 6. Re-categorize legacy bank fees + interest into bank-fees ──
+      // Old imports landed fee + interest rows in 'misc' instead of the
+      // dedicated 'bank-fees' slug, so the Reports donut undercounted
+      // bank charges and dumped them into Misc. Same central-endpoint
+      // pattern as step 5.
+      try {
+        const res = await fetch('/api/receipts/recategorize-bank-fees', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ confirm: true }),
+        })
+        const json = await res.json()
+        if (res.ok) result.bankFeesRecategorized = json.updated || 0
+      } catch (e) {
+        console.warn('[refresh] recategorize-bank-fees skipped:', e.message)
+      }
+
       return result
     },
     onSuccess: (r) => {
@@ -268,7 +285,8 @@ export default function BankPage() {
       if (r.countersUpdated > 0)  bits.push(`${r.countersUpdated} counter${r.countersUpdated === 1 ? '' : 's'} corrected`)
       if (r.reconciled > 0)       bits.push(`${r.reconciled} new pair${r.reconciled === 1 ? '' : 's'} reconciled`)
       if (r.paymentsCleaned > 0)  bits.push(`${r.paymentsCleaned} CC payment${r.paymentsCleaned === 1 ? '' : 's'} moved out of receipts`)
-      const allClean = r.repaired === 0 && r.countersUpdated === 0 && r.reconciled === 0 && !r.paymentsCleaned
+      if (r.bankFeesRecategorized > 0) bits.push(`${r.bankFeesRecategorized} fee/interest row${r.bankFeesRecategorized === 1 ? '' : 's'} moved to Bank Fees`)
+      const allClean = r.repaired === 0 && r.countersUpdated === 0 && r.reconciled === 0 && !r.paymentsCleaned && !r.bankFeesRecategorized
       if (allClean) toast.success(`Everything's in sync · ${r.statementsFixed} statement${r.statementsFixed === 1 ? '' : 's'}`, { icon: '✓' })
       else          toast.success(bits.join(' · '))
       qc.invalidateQueries({ queryKey: ['bank_statements'] })

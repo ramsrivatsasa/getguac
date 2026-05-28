@@ -240,21 +240,42 @@ export default function BankPage() {
       }
 
       result.statementsFixed = statements.length
+
+      // ── 5. Clean up legacy payment receipts ─────────────────────────
+      // Pre-v0.2.71, statement imports inserted CC payments as receipts
+      // (store_name "[Card payment] CHASE BANK PAYMENT"). They polluted
+      // spending charts. The endpoint is the single source of truth for
+      // this cleanup — Refresh just triggers it on the user's behalf,
+      // so there's no separate button OR duplicated logic in the client.
+      try {
+        const res = await fetch('/api/receipts/cleanup-payments', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ confirm: true }),
+        })
+        const json = await res.json()
+        if (res.ok) result.paymentsCleaned = json.deleted || 0
+      } catch (e) {
+        console.warn('[refresh] cleanup-payments skipped:', e.message)
+      }
+
       return result
     },
     onSuccess: (r) => {
       const bits = []
       bits.push(`Checked ${r.statementsFixed} statement${r.statementsFixed === 1 ? '' : 's'}`)
-      if (r.repaired > 0)        bits.push(`${r.repaired} transactions backfilled`)
-      if (r.countersUpdated > 0) bits.push(`${r.countersUpdated} counter${r.countersUpdated === 1 ? '' : 's'} corrected`)
-      if (r.reconciled > 0)      bits.push(`${r.reconciled} new pair${r.reconciled === 1 ? '' : 's'} reconciled`)
-      const allClean = r.repaired === 0 && r.countersUpdated === 0 && r.reconciled === 0
+      if (r.repaired > 0)         bits.push(`${r.repaired} transactions backfilled`)
+      if (r.countersUpdated > 0)  bits.push(`${r.countersUpdated} counter${r.countersUpdated === 1 ? '' : 's'} corrected`)
+      if (r.reconciled > 0)       bits.push(`${r.reconciled} new pair${r.reconciled === 1 ? '' : 's'} reconciled`)
+      if (r.paymentsCleaned > 0)  bits.push(`${r.paymentsCleaned} CC payment${r.paymentsCleaned === 1 ? '' : 's'} moved out of receipts`)
+      const allClean = r.repaired === 0 && r.countersUpdated === 0 && r.reconciled === 0 && !r.paymentsCleaned
       if (allClean) toast.success(`Everything's in sync · ${r.statementsFixed} statement${r.statementsFixed === 1 ? '' : 's'}`, { icon: '✓' })
       else          toast.success(bits.join(' · '))
       qc.invalidateQueries({ queryKey: ['bank_statements'] })
       qc.invalidateQueries({ queryKey: ['bank_fees'] })
       qc.invalidateQueries({ queryKey: ['bank_transactions'] })
       qc.invalidateQueries({ queryKey: ['receipts'] })
+      qc.invalidateQueries({ queryKey: ['reports'] })
     },
     onError: e => toast.error(`Refresh failed: ${e.message}`),
   })

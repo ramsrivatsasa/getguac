@@ -16,8 +16,9 @@ import { createClient } from '../../../lib/supabase/client'
 import { CATEGORIES, categoryLabel, categoryClass } from '../../../lib/categories'
 import { isPaymentReceipt } from '../../../lib/payment-rows'
 import { displayStoreName } from '../../../lib/store-name-normalize'
+import { computeTaxSummary, buildTaxExportCsv } from '../../../lib/tax-summary'
 import { formatDateShort } from '../../../lib/dateFormat'
-import { BarChart3, PieChart as PieIcon, Repeat, Award, Store as StoreIcon, X } from 'lucide-react'
+import { BarChart3, PieChart as PieIcon, Repeat, Award, Store as StoreIcon, X, Receipt as ReceiptIcon, Download, HeartHandshake, Briefcase, Percent } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
 
@@ -122,6 +123,27 @@ export default function ReportsPage() {
 
   const oneTime = useMemo(() => itemHistory.filter(it => it.count === 1).sort((a, b) => b.spent - a.spent), [itemHistory])
   const repeats = useMemo(() => itemHistory.filter(it => it.count >= 2).sort((a, b) => b.count - a.count || b.spent - a.spent), [itemHistory])
+
+  // Tax rollups — computed via the central lib so the same numbers
+  // show on /reports today AND can be reused later (year-end email,
+  // GuacWizard prompts, etc.) without duplicating the aggregation.
+  const taxStats = useMemo(() => computeTaxSummary(receipts), [receipts])
+
+  // Build the CSV on-click (client-side, no endpoint). Triggers a
+  // download via a synthetic anchor.
+  function downloadTaxCsv() {
+    const { filename, body, count } = buildTaxExportCsv(taxStats, period.label)
+    if (count === 0) return
+    const blob = new Blob([body], { type: 'text/csv;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
 
   // Receipts in the user-selected category. Tagging is on the receipt itself
   // (r.category) — receipt_items have their own category but the donut groups
@@ -284,7 +306,66 @@ export default function ReportsPage() {
             </div>
           )}
 
-          {/* 2. Top stores by spend */}
+          {/* 2. Tax-relevant rollup. Business purchases, charity
+              donations, and sales tax paid — the three buckets the
+              user needs at filing time. Numbers come from
+              lib/tax-summary.js so the same logic powers any future
+              year-end email automation. The export button builds a
+              CSV client-side via buildTaxExportCsv(). */}
+          <div className="card">
+            <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
+              <div className="flex items-center gap-2">
+                <ReceiptIcon size={14} className="text-emerald-700" />
+                <h2 className="font-semibold text-gray-800 text-sm">Tax summary</h2>
+                <span className="text-xs text-gray-400">· {period.label}</span>
+              </div>
+              <button
+                type="button"
+                onClick={downloadTaxCsv}
+                disabled={taxStats.businessCount === 0 && taxStats.charityCount === 0}
+                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold text-xs hover:bg-emerald-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                title="Download business + charity receipts as CSV for filing"
+              >
+                <Download size={12} />
+                Export CSV
+              </button>
+            </div>
+            <div className="grid sm:grid-cols-3 gap-3">
+              <div className="rounded-lg border border-blue-100 bg-blue-50/50 p-3">
+                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-semibold text-blue-700">
+                  <Briefcase size={11} /> Business
+                </div>
+                <p className="font-bold text-blue-900 mt-1 text-lg">${taxStats.businessSpent.toFixed(2)}</p>
+                <p className="text-[11px] text-blue-700/80 mt-0.5">
+                  {taxStats.businessCount} receipt{taxStats.businessCount === 1 ? '' : 's'}
+                  {taxStats.businessTax > 0 && <> · ${taxStats.businessTax.toFixed(2)} tax</>}
+                </p>
+              </div>
+              <div className="rounded-lg border border-rose-100 bg-rose-50/50 p-3">
+                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-semibold text-rose-700">
+                  <HeartHandshake size={11} /> Charity
+                </div>
+                <p className="font-bold text-rose-900 mt-1 text-lg">${taxStats.charityDonated.toFixed(2)}</p>
+                <p className="text-[11px] text-rose-700/80 mt-0.5">
+                  {taxStats.charityCount} donation{taxStats.charityCount === 1 ? '' : 's'}
+                </p>
+              </div>
+              <div className="rounded-lg border border-amber-100 bg-amber-50/50 p-3">
+                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-semibold text-amber-700">
+                  <Percent size={11} /> Sales tax paid
+                </div>
+                <p className="font-bold text-amber-900 mt-1 text-lg">${taxStats.salesTax.toFixed(2)}</p>
+                <p className="text-[11px] text-amber-700/80 mt-0.5">
+                  across {taxStats.salesTaxCount} receipt{taxStats.salesTaxCount === 1 ? '' : 's'}
+                </p>
+              </div>
+            </div>
+            <p className="mt-3 text-[11px] text-gray-400">
+              Business + charity rows export to a CSV ready for your accountant or tax software. Payment / refund rows are excluded.
+            </p>
+          </div>
+
+          {/* 3. Top stores by spend */}
           <div className="card">
             <div className="flex items-center gap-2 mb-3">
               <StoreIcon size={14} className="text-emerald-700" />

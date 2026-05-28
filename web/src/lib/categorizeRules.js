@@ -18,6 +18,31 @@
 export const GAS_STATION_STORE_RE = /\b(shell|chevron|exxon|exxonmobil|mobil|bp\b|sunoco|valero|texaco|arco|conoco|phillips ?66|76 (gas|station)|marathon|amoco|citgo|circle k|wawa|sheetz|pilot (flying ?j|travel)|flying ?j|loves? travel|race ?trac|raceway|kwik trip|kwik star|maverik|murphy (usa|express)|costco gas|costco gasoline|costco fuel|sams? gas|sam'?s club gas|bj'?s gas|bj gas|gas station|gasoline|fuel ?(station|stop|center|center))\b/i
 export const GAS_ITEM_RE = /\b(unleaded|regular ?gas|premium ?gas|mid[- ]?grade|diesel|gasoline|gallons?|pump ?\d|fuel grade|fuel \d|gas pump)\b/i
 
+// Auto = car maintenance / parts / service / wash / tolls / registration.
+// Distinct from gas-up (fuel only) and fix-it (home repair / hardware).
+// Item-first detection means a "Tire" line at Costco routes here while
+// the rest of the Costco basket stays in grub.
+export const AUTO_STORE_RE = /\b(autozone|auto zone|napa( auto)?|o'?reilly( auto)?|advance auto( parts)?|pep boys|jiffy lube|valvoline( instant ?oil)?|midas|firestone( complete)?|goodyear( auto)?|discount tire|tire rack|big o tires|les schwab|mavis (tire|discount)|monro( auto)?|carx|brakes? plus|aamco|meineke|maaco|tuffy|car ?wash|carwash|mister car wash|take 5 (oil|car wash)|costco tire|sam'?s club tire|bj'?s tire|dmv|dept of motor vehicles|department of motor vehicles|toll(way)?|e[- ]?z ?pass|fastrak|sunpass|peach pass|good to go|state farm.*auto|geico.*auto)\b/i
+export const AUTO_ITEM_RE = /\b(oil change|synthetic oil|motor oil|engine oil|brake (pad|fluid|rotor|disc)|brake job|tire rotation|tire balanc|tire mount|wheel alignment|alignment service|new tires?|tires? (set|installation)|wiper blade|windshield wiper|cabin air filter|engine air filter|spark plug|serpentine belt|timing belt|coolant flush|transmission (flush|fluid)|battery (replacement|install)|car battery|auto battery|car wash|detail service|car detail|tire pressure|valve stem|tow truck|towing service|registration renewal|inspection sticker|smog (check|test)|toll charge|toll plaza|ezpass|fastrak)\b/i
+
+/**
+ * True when this receipt is an auto-service / parts / wash / tolls /
+ * registration purchase. Detection order: ITEMS FIRST, STORE SECOND.
+ * Compared with gas-up: gas-up is FUEL only (a fill-up). Auto is the
+ * everything-else-car bucket (tires, oil change, brakes, car wash,
+ * tolls, DMV fees, parts stores).
+ */
+export function isAutoReceipt(storeName, items = []) {
+  if (Array.isArray(items)) {
+    for (const it of items) {
+      const name = String(it?.item_name || it || '')
+      if (name && AUTO_ITEM_RE.test(name)) return true
+    }
+  }
+  if (storeName && AUTO_STORE_RE.test(String(storeName))) return true
+  return false
+}
+
 /**
  * True when this receipt is a gas-station fill-up.
  *
@@ -59,7 +84,12 @@ export function isGasStationReceipt(storeName, items = []) {
 // rules earlier so they win against generic ones.
 // ─────────────────────────────────────────────────────────────────────────
 const RULE_ORDER = [
+  // gas-up wins before auto so a "GAS" line at Costco routes to fuel,
+  // not to the broader auto bucket (a Costco trip with both a fill-up
+  // line AND a tire rotation should ideally split — but at the receipt
+  // level we pick the more specific category, which is gas-up).
   { cat: 'gas-up', test: isGasStationReceipt },
+  { cat: 'auto',   test: isAutoReceipt },
   // Future: { cat: 'eats', test: isRestaurantReceipt },
   //         { cat: 'bank-fees', test: isBankChargeReceiptDeep },
   //         ... — each test takes (storeName, items), returns boolean.

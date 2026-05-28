@@ -181,8 +181,16 @@ export default function CarMilesPage() {
     if (failed) toast.error(`${failed} failed`); else toast.success(`Deleted ${ids.length}`)
   }
 
-  const businessMiles = trips.filter(t => t.category === 'Business').reduce((sum, t) => sum + parseFloat(t.total_miles || 0), 0)
-  const personalMiles = trips.filter(t => t.category === 'Personal').reduce((sum, t) => sum + parseFloat(t.total_miles || 0), 0)
+  // Per-category mileage sums — used for the summary header. Matches
+  // the four IRS-recognized mileage categories so the year-end CSV
+  // export lines up with what tax software expects.
+  const milesByCat = (cat) => trips
+    .filter(t => t.category === cat)
+    .reduce((sum, t) => sum + parseFloat(t.total_miles || 0), 0)
+  const businessMiles = milesByCat('Business')
+  const charityMiles  = milesByCat('Charity')
+  const medicalMiles  = milesByCat('Medical')
+  const personalMiles = milesByCat('Personal')
 
   function handleSave(e) {
     e.preventDefault()
@@ -203,11 +211,13 @@ export default function CarMilesPage() {
         <button onClick={() => { setEditingId(null); setForm(EMPTY); setShowForm(v => !v) }} className="btn-primary"><GuacMascot expression="happy" size={22} /> Add Trip</button>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {[
-          { label: 'Business Miles', miles: businessMiles, color: 'bg-blue-100 text-blue-700' },
-          { label: 'Personal Miles', miles: personalMiles, color: 'bg-green-100 text-green-700' },
-          { label: 'Total Miles', miles: businessMiles + personalMiles, color: 'bg-purple-100 text-purple-700' },
+          { label: 'Business', miles: businessMiles, color: 'bg-blue-100 text-blue-700' },
+          { label: 'Charity',  miles: charityMiles,  color: 'bg-rose-100 text-rose-700' },
+          { label: 'Medical',  miles: medicalMiles,  color: 'bg-amber-100 text-amber-700' },
+          { label: 'Personal', miles: personalMiles, color: 'bg-green-100 text-green-700' },
+          { label: 'Total',    miles: businessMiles + charityMiles + medicalMiles + personalMiles, color: 'bg-purple-100 text-purple-700' },
         ].map(({ label, miles, color }) => (
           <div key={label} className="stat-card">
             <div className={`p-3 rounded-xl ${color}`}><Car size={20} /></div>
@@ -311,7 +321,10 @@ export default function CarMilesPage() {
               <div>
                 <label className="label">Category</label>
                 <select className="input font-sans" value={form.category} onChange={s('category')}>
-                  <option>Business</option><option>Personal</option>
+                  <option>Business</option>
+                  <option>Charity</option>
+                  <option>Medical</option>
+                  <option>Personal</option>
                 </select>
               </div>
             </div>
@@ -403,7 +416,12 @@ export default function CarMilesPage() {
                     <td className="px-4 py-3 text-gray-500">{t.end_date}</td>
                     <td className="px-4 py-3 font-bold">{t.total_miles}</td>
                     <td className="px-4 py-3">
-                      <span className={t.category === 'Business' ? 'badge-blue' : 'badge-green'}>{t.category}</span>
+                      <span className={
+                        t.category === 'Business' ? 'badge-blue'
+                        : t.category === 'Charity'  ? 'badge-red'
+                        : t.category === 'Medical'  ? 'badge-amber'
+                        : 'badge-green'
+                      }>{t.category}</span>
                     </td>
                     <td className="px-4 py-3 text-gray-500 max-w-xs">
                       {(t.tags || []).length > 0 && (

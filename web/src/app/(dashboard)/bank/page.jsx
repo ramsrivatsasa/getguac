@@ -276,23 +276,21 @@ export default function BankPage() {
         console.warn('[refresh] recategorize-bank-fees skipped:', e.message)
       }
 
-      // ── 7. Re-categorize gas-station receipts into gas-up ────────────
-      // Costco Gas / Sam's Club Gas / etc. were landing in 'grub' or
-      // 'misc' because the parent store is a grocery warehouse. The
-      // central applyCategoryRules() engine catches them by ITEM name
-      // (unleaded / gallons / pump #) first, falling back to STORE name
-      // (Shell / BP / Costco Gas / …). User-curated categories are
-      // preserved.
+      // ── 7. Apply the central category-rule engine ───────────────────
+      // One endpoint runs RULE_ORDER (gas-up, auto, future rules) over
+      // every receipt. Adding a new rule = automatic backfill on next
+      // Refresh, no per-category endpoint needed. User-curated rows
+      // (category_source='user') are preserved.
       try {
-        const res = await fetch('/api/receipts/recategorize-gas', {
+        const res = await fetch('/api/receipts/apply-rules', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ confirm: true }),
         })
         const json = await res.json()
-        if (res.ok) result.gasRecategorized = json.updated || 0
+        if (res.ok) result.rulesApplied = json.updated || 0
       } catch (e) {
-        console.warn('[refresh] recategorize-gas skipped:', e.message)
+        console.warn('[refresh] apply-rules skipped:', e.message)
       }
 
       return result
@@ -305,8 +303,8 @@ export default function BankPage() {
       if (r.reconciled > 0)       bits.push(`${r.reconciled} new pair${r.reconciled === 1 ? '' : 's'} reconciled`)
       if (r.paymentsCleaned > 0)  bits.push(`${r.paymentsCleaned} CC payment${r.paymentsCleaned === 1 ? '' : 's'} moved out of receipts`)
       if (r.bankFeesRecategorized > 0) bits.push(`${r.bankFeesRecategorized} fee/interest row${r.bankFeesRecategorized === 1 ? '' : 's'} moved to Bank Fees`)
-      if (r.gasRecategorized > 0) bits.push(`${r.gasRecategorized} fuel receipt${r.gasRecategorized === 1 ? '' : 's'} moved to Gas Up`)
-      const allClean = r.repaired === 0 && r.countersUpdated === 0 && r.reconciled === 0 && !r.paymentsCleaned && !r.bankFeesRecategorized && !r.gasRecategorized
+      if (r.rulesApplied > 0) bits.push(`${r.rulesApplied} row${r.rulesApplied === 1 ? '' : 's'} re-categorized by rules`)
+      const allClean = r.repaired === 0 && r.countersUpdated === 0 && r.reconciled === 0 && !r.paymentsCleaned && !r.bankFeesRecategorized && !r.rulesApplied
       if (allClean) toast.success(`Everything's in sync · ${r.statementsFixed} statement${r.statementsFixed === 1 ? '' : 's'}`, { icon: '✓' })
       else          toast.success(bits.join(' · '))
       qc.invalidateQueries({ queryKey: ['bank_statements'] })

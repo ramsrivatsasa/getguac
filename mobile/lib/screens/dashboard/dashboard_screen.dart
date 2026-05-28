@@ -8,6 +8,7 @@ import '../../providers/receipt_provider.dart';
 import '../../providers/reward_provider.dart';
 import '../../models/receipt_model.dart';
 import '../../widgets/guac_mascot.dart';
+import '../../widgets/anomalies_card.dart';
 import '../../utils/date_format.dart';
 import '../../store_name_normalize.dart';
 
@@ -149,6 +150,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   style: TextStyle(fontSize: 13, color: Colors.black54)),
               ])),
             ]),
+            // Spending alerts (auto-hides when none). Reads receipts already
+            // loaded by ReceiptProvider — no extra fetch.
+            AnomaliesCard(receipts: receipts),
             const SizedBox(height: 18),
 
             // CTA pills — primary actions

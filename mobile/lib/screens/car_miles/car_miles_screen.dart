@@ -188,6 +188,24 @@ class _CarMilesScreenState extends State<CarMilesScreen> {
               _DatePickRow(label: 'Start', value: startDate, onPicked: (d) => setSt(() => startDate = d)),
               _DatePickRow(label: 'End',   value: endDate,   onPicked: (d) => setSt(() => endDate = d)),
               const SizedBox(height: 8),
+              // Quick Charity tag — easier than scrolling the dropdown
+              // for users who log mostly volunteer miles. Toggle snaps
+              // the dropdown below; unchecking it falls back to Personal.
+              CheckboxListTile(
+                value: category == 'Charity',
+                onChanged: (v) => setSt(() => category = (v == true) ? 'Charity' : 'Personal'),
+                title: const Row(children: [
+                  Icon(Icons.volunteer_activism, size: 16, color: Color(0xFFe11d48)),
+                  SizedBox(width: 6),
+                  Text('Charity trip', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                ]),
+                subtitle: const Text(r'IRS volunteer mileage rate ($0.14/mi)',
+                  style: TextStyle(fontSize: 10, color: Colors.black54)),
+                controlAffinity: ListTileControlAffinity.leading,
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                activeColor: const Color(0xFFe11d48),
+              ),
               DropdownButtonFormField<String>(
                 value: category,
                 // Full IRS-recognised mileage categories so the year-end

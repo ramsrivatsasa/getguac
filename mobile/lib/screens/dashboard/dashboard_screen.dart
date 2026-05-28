@@ -46,7 +46,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<ReceiptProvider>().loadReceipts();
+    // Dashboard needs FULL history for cross-period analytics (year-over-
+    // year totals, month-by-month bars going back). The list-screen
+    // default (1-month, 10-cap) is too narrow for this view — selecting
+    // Monthly·36 should chart 36 months of bars, not the same 10 rows.
+    // Provider caches by period, so other screens that explicitly call
+    // with `month` will still get the lighter payload.
+    context.read<ReceiptProvider>().loadReceipts(period: ReceiptPeriod.all);
     context.read<RewardProvider>().loadRewards();
   }
 
@@ -829,7 +835,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         onRefresh: () async {
           final receiptProv = context.read<ReceiptProvider>();
           final rewardProv = context.read<RewardProvider>();
-          await receiptProv.loadReceipts(force: true);
+          // Dashboard always needs full history — refresh must preserve
+          // that scope, NOT fall back to the 1-month default.
+          await receiptProv.loadReceipts(period: ReceiptPeriod.all, force: true);
           await rewardProv.loadRewards(force: true);
         },
         child: ListView(

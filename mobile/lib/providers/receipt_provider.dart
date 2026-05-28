@@ -35,16 +35,17 @@ extension ReceiptPeriodX on ReceiptPeriod {
     ReceiptPeriod.year       => const Duration(days: 365),
     ReceiptPeriod.all        => null,
   };
-  // Per-period row caps. Default (1M) is intentionally tiny so the
-  // receipts screen opens INSTANTLY on first paint — most users scroll
-  // recent activity, not full history. Tapping 3M / 6M / 1Y / All loads
-  // progressively more.
+  // Per-period row caps. Default (1M) opens the receipts screen quickly
+  // without truncating real-world months — a household easily has 30-60
+  // receipts/month, so 100 is the right ceiling. Bumping past this hurts
+  // first-paint without helping the common case; widening past 1M is
+  // done by tapping a longer-period chip.
   int get limit => switch (this) {
-    ReceiptPeriod.month      => 10,
-    ReceiptPeriod.threeMonth => 200,
-    ReceiptPeriod.sixMonth   => 400,
-    ReceiptPeriod.year       => 800,
-    ReceiptPeriod.all        => 1500,
+    ReceiptPeriod.month      => 100,
+    ReceiptPeriod.threeMonth => 300,
+    ReceiptPeriod.sixMonth   => 600,
+    ReceiptPeriod.year       => 1000,
+    ReceiptPeriod.all        => 2000,
   };
 }
 

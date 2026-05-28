@@ -7,6 +7,8 @@ import { rateLimit, rateKey } from '../../../lib/apiGuard'
 import { parseReceiptFromImages } from '../../../lib/parse-receipt-engine'
 import { autoCategorize } from '../../../lib/auto-categorize'
 import { guackyNonReceiptResponse } from '../../../lib/guacky-responses'
+import { createApiClient } from '../../../lib/supabase/server'
+import { buildUserContextPrompt } from '../../../lib/user-context'
 export const runtime = 'nodejs'
 export const maxDuration = 60
 
@@ -117,10 +119,10 @@ function safeParseJson(raw) {
 }
 
 // ── Gemini path ────────────────────────────────────────────────────
-async function callGemini({ apiKey, mimeType, base64 }) {
+async function callGemini({ apiKey, mimeType, base64, userContextSuffix = '' }) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`
   const body = {
-    systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+    systemInstruction: { parts: [{ text: SYSTEM_PROMPT + userContextSuffix }] },
     contents: [{
       role: 'user',
       parts: [
@@ -167,14 +169,14 @@ async function callGroq({ apiKey, model, messages }) {
   }
 }
 
-async function callGroqForFile({ apiKey, mimeType, buffer }) {
+async function callGroqForFile({ apiKey, mimeType, buffer, userContextSuffix = '' }) {
   if (mimeType === 'application/pdf') {
     const extracted = await pdfParse(buffer)
     if (!extracted.text || extracted.text.trim().length < 10) throw new Error('PDF text empty')
     return callGroq({
       apiKey, model: GROQ_TEXT_MODEL,
       messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'system', content: SYSTEM_PROMPT + userContextSuffix },
         { role: 'user', content: `Receipt text:\n\n---\n${extracted.text}\n---\n\nJSON only.` },
       ],
     })
@@ -185,7 +187,7 @@ async function callGroqForFile({ apiKey, mimeType, buffer }) {
     messages: [{
       role: 'user',
       content: [
-        { type: 'text', text: SYSTEM_PROMPT + '\n\nExtract this receipt:' },
+        { type: 'text', text: SYSTEM_PROMPT + userContextSuffix + '\n\nExtract this receipt:' },
         { type: 'image_url', image_url: { url: dataUrl } },
       ],
     }],
@@ -208,6 +210,19 @@ export async function POST(request) {
     const groqKey   = process.env.GROQ_API_KEY
     if (!geminiKey && !groqKey) {
       return Response.json({ error: 'No AI provider configured. Set GEMINI_API_KEY or GROQ_API_KEY in .env.local.' }, { status: 500 })
+    }
+
+    // Per-user few-shot context — one cheap query, baked into every Gemini
+    // and Groq call this request makes. Anonymous calls and brand-new users
+    // get "" (base behavior). See lib/user-context.js for the contract.
+    // Wrapped in try/catch because a context-fetch failure must NEVER block
+    // a parse: degraded personalization is fine; a 500 here is not.
+    let userContextSuffix = ''
+    try {
+      const supabase = createApiClient()
+      userContextSuffix = await buildUserContextPrompt(supabase)
+    } catch (e) {
+      console.warn('[parse-receipt] user-context fetch failed (continuing without):', e.message)
     }
 
     const formData = await request.formData()
@@ -248,7 +263,7 @@ export async function POST(request) {
       }
       let multiParsed
       try {
-        multiParsed = await parseReceiptFromImages({ images })
+        multiParsed = await parseReceiptFromImages({ images, userContextSuffix })
       } catch (e) {
         return Response.json({ error: e.message || 'Multi-page parse failed' }, { status: 502 })
       }
@@ -315,7 +330,7 @@ export async function POST(request) {
     // Try Gemini first
     if (geminiKey) {
       try {
-        result = await callGemini({ apiKey: geminiKey, mimeType, base64 })
+        result = await callGemini({ apiKey: geminiKey, mimeType, base64, userContextSuffix })
       } catch (err) {
         geminiError = err.message
         console.warn('[parse-receipt] Gemini failed, will try Groq:', err.message)
@@ -324,7 +339,7 @@ export async function POST(request) {
 
     // Fall back to Groq if Gemini failed (or wasn't configured)
     if (!result && groqKey) {
-      result = await callGroqForFile({ apiKey: groqKey, mimeType, buffer })
+      result = await callGroqForFile({ apiKey: groqKey, mimeType, buffer, userContextSuffix })
     }
 
     if (!result) {
@@ -338,7 +353,7 @@ export async function POST(request) {
     // the photo, and bumps the multi-photo batch success rate.
     if (!parsed && geminiKey) {
       try {
-        const retry = await callGemini({ apiKey: geminiKey, mimeType, base64 })
+        const retry = await callGemini({ apiKey: geminiKey, mimeType, base64, userContextSuffix })
         if (retry?.text) {
           parsed = safeParseJson(retry.text)
           if (parsed) {

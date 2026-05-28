@@ -176,10 +176,13 @@ function normalizeResult(parsed, provider, model, usage) {
 }
 
 // ── Provider callers ─────────────────────────────────────────────────────
-async function callGeminiInline({ apiKey, mimeType, base64, timeoutMs = 30_000 }) {
+// `userContextSuffix` (optional) is a string appended to the system prompt
+// with per-user preferences (see lib/user-context.js). Empty string for
+// anonymous / cold-start users — keeps the model on base behavior.
+async function callGeminiInline({ apiKey, mimeType, base64, timeoutMs = 30_000, userContextSuffix = '' }) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`
   const body = {
-    systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+    systemInstruction: { parts: [{ text: SYSTEM_PROMPT + userContextSuffix }] },
     contents: [{
       role: 'user',
       parts: [
@@ -236,7 +239,7 @@ async function callGroq({ apiKey, model, messages, timeoutMs = 30_000 }) {
 // Optional `emailDate` is an ISO YYYY-MM-DD or full date string for the email's
 // received_at. When provided, the AI is told to REJECT this date as a candidate
 // — useful when the forwarder's email date isn't the actual transaction date.
-export async function parseReceiptFromText(text, { maxChars = 32_000, emailDate = null } = {}) {
+export async function parseReceiptFromText(text, { maxChars = 32_000, emailDate = null, userContextSuffix = '' } = {}) {
   if (!text || !text.trim()) return null
 
   const groqKey = process.env.GROQ_API_KEY
@@ -272,7 +275,7 @@ export async function parseReceiptFromText(text, { maxChars = 32_000, emailDate 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+          systemInstruction: { parts: [{ text: SYSTEM_PROMPT + userContextSuffix }] },
           contents: [{ role: 'user', parts: [{ text: `Extract the receipt from this email body. JSON only.${hint}\n\n${body}` }] }],
           generationConfig: { responseMimeType: 'application/json', temperature: 0, maxOutputTokens: 4096 },
         }),
@@ -298,7 +301,7 @@ export async function parseReceiptFromText(text, { maxChars = 32_000, emailDate 
         apiKey: groqKey,
         model: GROQ_TEXT_MODEL,
         messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'system', content: SYSTEM_PROMPT + userContextSuffix },
           { role: 'user', content: `Extract the receipt from this email body. JSON only.${hint}\n\n${body}` },
         ],
       })
@@ -319,7 +322,7 @@ export async function parseReceiptFromText(text, { maxChars = 32_000, emailDate 
 // captured a multi-page CVS-style receipt.
 //
 // Returns the same shape as callGeminiInline: { text, usage, provider, model }.
-async function callGeminiMultiImage({ apiKey, images, timeoutMs = 45_000 }) {
+async function callGeminiMultiImage({ apiKey, images, timeoutMs = 45_000, userContextSuffix = '' }) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`
   const parts = []
   // Each image as its own inline_data, in capture order.
@@ -331,7 +334,7 @@ async function callGeminiMultiImage({ apiKey, images, timeoutMs = 45_000 }) {
     text: `The ${images.length} image${images.length === 1 ? '' : 's'} above ${images.length === 1 ? 'is' : 'are'} sequential photos of ONE long receipt, taken top to bottom. Treat them as a single receipt. Extract every line item from every image. Use the grand total / final total printed somewhere in the images (usually the last one). JSON only per the schema.`,
   })
   const body = {
-    systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+    systemInstruction: { parts: [{ text: SYSTEM_PROMPT + userContextSuffix }] },
     contents: [{ role: 'user', parts }],
     generationConfig: { responseMimeType: 'application/json', temperature: 0, maxOutputTokens: 8192 },
   }
@@ -355,7 +358,7 @@ async function callGeminiMultiImage({ apiKey, images, timeoutMs = 45_000 }) {
 // flow). Falls back to parsing only the first image with Groq if Gemini
 // fails — Groq Vision can't accept multiple images in one call, and a
 // best-effort parse of page 1 is still better than nothing.
-export async function parseReceiptFromImages({ images }) {
+export async function parseReceiptFromImages({ images, userContextSuffix = '' }) {
   const geminiKey = process.env.GEMINI_API_KEY
   const groqKey   = process.env.GROQ_API_KEY
   if (!geminiKey && !groqKey) return null
@@ -374,7 +377,7 @@ export async function parseReceiptFromImages({ images }) {
 
   if (geminiKey) {
     try {
-      result = await callGeminiMultiImage({ apiKey: geminiKey, images: prepared })
+      result = await callGeminiMultiImage({ apiKey: geminiKey, images: prepared, userContextSuffix })
     } catch (err) {
       firstErr = err.message
       console.warn('[parse-receipt-engine] Gemini multi-image failed, falling back to Groq on first page:', err.message)
@@ -392,7 +395,7 @@ export async function parseReceiptFromImages({ images }) {
         messages: [{
           role: 'user',
           content: [
-            { type: 'text', text: SYSTEM_PROMPT + '\n\nExtract this receipt (page 1 of multi-page):' },
+            { type: 'text', text: SYSTEM_PROMPT + userContextSuffix + '\n\nExtract this receipt (page 1 of multi-page):' },
             { type: 'image_url', image_url: { url: dataUrl } },
           ],
         }],
@@ -415,7 +418,7 @@ export async function parseReceiptFromImages({ images }) {
   let parsed = safeParseJson(result.text)
   if (!parsed && geminiKey) {
     try {
-      const retry = await callGeminiMultiImage({ apiKey: geminiKey, images: prepared })
+      const retry = await callGeminiMultiImage({ apiKey: geminiKey, images: prepared, userContextSuffix })
       if (retry?.text) {
         const retryParsed = safeParseJson(retry.text)
         if (retryParsed) {
@@ -432,7 +435,7 @@ export async function parseReceiptFromImages({ images }) {
 }
 
 // Parse a receipt from a file (PDF or image). Returns normalized shape OR null.
-export async function parseReceiptFromFile({ buffer, mimeType }) {
+export async function parseReceiptFromFile({ buffer, mimeType, userContextSuffix = '' }) {
   const geminiKey = process.env.GEMINI_API_KEY
   const groqKey   = process.env.GROQ_API_KEY
   if (!geminiKey && !groqKey) return null
@@ -443,7 +446,7 @@ export async function parseReceiptFromFile({ buffer, mimeType }) {
 
   if (geminiKey) {
     try {
-      result = await callGeminiInline({ apiKey: geminiKey, mimeType, base64 })
+      result = await callGeminiInline({ apiKey: geminiKey, mimeType, base64, userContextSuffix })
     } catch (err) {
       firstErr = err.message
       console.warn('[parse-receipt-engine] Gemini failed, will try Groq:', err.message)
@@ -459,7 +462,7 @@ export async function parseReceiptFromFile({ buffer, mimeType }) {
         result = await callGroq({
           apiKey: groqKey, model: GROQ_TEXT_MODEL,
           messages: [
-            { role: 'system', content: SYSTEM_PROMPT },
+            { role: 'system', content: SYSTEM_PROMPT + userContextSuffix },
             { role: 'user', content: `Extract this receipt. JSON only.\n\n${text}` },
           ],
         })
@@ -472,7 +475,7 @@ export async function parseReceiptFromFile({ buffer, mimeType }) {
           messages: [{
             role: 'user',
             content: [
-              { type: 'text', text: SYSTEM_PROMPT + '\n\nExtract this receipt:' },
+              { type: 'text', text: SYSTEM_PROMPT + userContextSuffix + '\n\nExtract this receipt:' },
               { type: 'image_url', image_url: { url: dataUrl } },
             ],
           }],

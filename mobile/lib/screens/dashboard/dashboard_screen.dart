@@ -355,6 +355,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final extras = pages.length > 1 ? pages.sublist(1) : <File>[];
       final insert = await provider.addParsedReceipt(asMap, pages.first, extraPages: extras);
       if (!mounted) return;
+      if (insert.queued) {
+        // Network was unavailable when we tried to save. Image and parse
+        // are sitting in the local outbox and will sync on the next app
+        // start / online window. No row to "View" yet.
+        final storeBit = parsed.storeName.isNotEmpty ? parsed.storeName : 'Receipt';
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Saved offline — $storeBit will sync when you’re back online.'),
+          duration: const Duration(seconds: 5),
+        ));
+        return;
+      }
       if (insert.id == null) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('Insert failed: ${insert.error ?? "unknown reason"}'),
@@ -452,7 +463,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
 
-    int saved = 0, failed = 0, merged = 0;
+    int saved = 0, failed = 0, merged = 0, queued = 0;
     final failures = <String>[];
     final List<String> savedIds = [];
     final List<String> mergedIds = [];
@@ -507,7 +518,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
           }).toList(),
         };
         final insert = await provider.addParsedReceipt(asMap, file);
-        if (insert.id != null) {
+        if (insert.queued) {
+          // No network — payload sits in the outbox. Count it under a
+          // separate bucket so the summary tells the user "X queued"
+          // instead of misleadingly reporting them as saved.
+          queued++;
+        } else if (insert.id != null) {
           if (insert.merged) {
             merged++;
             mergedIds.add(insert.id!);
@@ -537,6 +553,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final summary = StringBuffer();
     summary.write('Saved $saved');
     if (merged > 0) summary.write(', $merged merged into existing');
+    if (queued > 0) summary.write(', $queued queued offline');
     if (duplicates.isNotEmpty) summary.write(', ${duplicates.length} duplicate${duplicates.length == 1 ? '' : 's'} skipped');
     if (failed > 0) summary.write(', $failed failed');
 
@@ -789,6 +806,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
       };
       final insert = await provider.addParsedReceipt(asMap, file);
       if (!mounted) return;
+      if (insert.queued) {
+        final storeBit = parsed.storeName.isNotEmpty ? parsed.storeName : 'Receipt';
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Saved offline — $storeBit will sync when you’re back online.'),
+          duration: const Duration(seconds: 5),
+        ));
+        return;
+      }
       if (insert.id == null) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('Insert failed: ${insert.error ?? "unknown reason"}'),

@@ -11,6 +11,7 @@ import 'services/share_intent_service.dart';
 import 'services/app_lock_service.dart';
 import 'services/debug_log.dart';
 import 'services/update_service.dart';
+import 'services/receipt_outbox.dart';
 
 // Brand palette — matches the web app (emerald + lime).
 const kBrandPrimary    = Color(0xFF15803d); // emerald-700 — main brand
@@ -67,6 +68,13 @@ void main() async {
   // here, the new build is running, so the old APK in the app cache is
   // useless. Fire-and-forget so app start isn't blocked.
   unawaited(UpdateService.cleanupOldApk());
+
+  // Sweep the receipt outbox. Pure fire-and-forget so a slow network can't
+  // delay the first frame. Anything queued by a prior session (offline
+  // capture, server 5xx) is replayed with its original Idempotency-Key.
+  // ReceiptOutbox.flush() reads the supabase session itself; if the user
+  // isn't signed in it no-ops cleanly.
+  unawaited(ReceiptOutbox.flush());
 
   // Set up share-intent listener AFTER router is constructed so we can
   // navigate to /car-miles on incoming shares.

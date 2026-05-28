@@ -2,10 +2,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import {
-  getReceipts, getReceipt, upsertReceipt, deleteReceipt, upsertReceiptItem, updateReceiptItem, uploadReceipt, upsertStore, upsertStoreLocation, replaceRefundPolicies, ensureStoreReward, upsertStoreItem, getBankStatements
+  getReceipts, getReceipt, upsertReceipt, deleteReceipt, upsertReceiptItem, updateReceiptItem, uploadReceipt, ensureStoreReward, getBankStatements
 } from '../lib/db'
-import { createClient } from '../lib/supabase/client'
-import { findExistingReceipt } from '../lib/findExistingReceipt'
+import { saveReceiptViaOutbox } from '../lib/receipt-outbox'
 export function useReceipts(filters = {}) {
   return useQuery({
     queryKey: ['receipts', filters],
@@ -40,6 +39,21 @@ export function useBankStatementMap() {
   })
 }
 
+// useAddReceipt — CREATE path only. Now a thin wrapper around the
+// /api/receipts/save endpoint via the outbox, so web / mobile / iOS all
+// hit the SAME save pipeline (dedup, Tier 2, store resolve, items,
+// refund policies, store_items catalog). For edits, useUpdateReceipt
+// continues to direct-upsert below.
+//
+// What this still does on the client:
+//   - Upload the receipt image to Supabase Storage (browser → Storage is
+//     more efficient than browser → API → Storage; saves a hop).
+//   - Auto-create the placeholder reward_no (web-only UI affordance).
+// Everything else is server-side.
+//
+// Offline path: if the network fails, saveReceiptViaOutbox queues the
+// save in localStorage and returns { queued: true }. The next flush
+// (app reload / explicit call) replays it with the same Idempotency-Key.
 export function useAddReceipt() {
   const qc = useQueryClient()
   const router = useRouter()
@@ -48,139 +62,67 @@ export function useAddReceipt() {
       receipt, file, userId, items = [], storeInfo = null,
       locationInfo = null, refundPolicies = [],
     }) => {
+      // Edit path — keep direct-upsert. saveReceipt is CREATE-only.
+      if (receipt.id) {
+        const saved = await upsertReceipt({ ...receipt, user_id: userId })
+        return saved
+      }
+
+      // 1. Upload image (browser → Supabase Storage, single hop).
       let receipt_link = receipt.receipt_link || ''
       if (file) receipt_link = await uploadReceipt(file, userId)
 
-      // 1. Upsert store (case-insensitive by name)
-      let store_id = receipt.store_id || null
+      // 2. Build the "parsed" shape the save endpoint expects. Flattens
+      //    the form-style storeInfo / locationInfo into the nested store
+      //    object the parser produces, so save-receipt.js can resolve
+      //    stores + locations identically across all callers.
+      const parsed = {
+        store_name:     receipt.store_name,
+        date:           receipt.date,
+        total_amount:   receipt.total_amount,
+        tax_paid:       receipt.tax_paid,
+        payment_method: receipt.payment_method,
+        payment_last4:  receipt.payment_last4,
+        is_return:      receipt.is_return,
+        category:       receipt.category,
+        items,
+        refund_policies: refundPolicies,
+        store: {
+          location_name: locationInfo?.location_name || null,
+          address:       locationInfo?.address || storeInfo?.address || null,
+          city:          locationInfo?.city || null,
+          state:         locationInfo?.state || null,
+          zip:           locationInfo?.zip || null,
+          phone_no:      locationInfo?.phone_no || storeInfo?.phone_no || null,
+          website:       storeInfo?.website || null,
+          store_no:      locationInfo?.store_no || null,
+        },
+      }
+
+      // 3. POST via outbox — handles online + offline + retry. Never
+      //    hangs the UI: returns within 30s either as success or queued.
+      const result = await saveReceiptViaOutbox({
+        parsed,
+        receipt_link,
+        business_purchase: Boolean(receipt.business_purchase),
+        user_category: receipt.category || undefined,
+      })
+
+      // 4. Queued (offline) — return a synthetic shape; the row will exist
+      //    after the next flush. Callers that need the real id should wait
+      //    for the flush listener or just refresh the list.
+      if (result.queued) {
+        return { id: null, queued: true, idempotency_key: result.idempotency_key }
+      }
+
+      // 5. Online — web-only post-step: ensure the placeholder reward_no
+      //    exists for this store. Not parity-critical (web rewards UI only).
       if (storeInfo?.store_name) {
-        try {
-          const store = await upsertStore(storeInfo)
-          store_id = store?.id || null
-        } catch (e) {
-          console.warn('Store upsert skipped:', e.message)
-        }
-      }
-
-      // 2. Upsert physical location under that store (per-address, per-phone)
-      let store_location_id = receipt.store_location_id || null
-      if (store_id && locationInfo && (locationInfo.address || locationInfo.phone_no || locationInfo.store_no)) {
-        try {
-          const loc = await upsertStoreLocation({ ...locationInfo, store_id })
-          store_location_id = loc?.id || null
-        } catch (e) {
-          console.warn('Store location upsert skipped:', e.message)
-        }
-      }
-
-      // 3. Auto-generate placeholder reward_no if user hasn't given one
-      let reward_no = receipt.reward_no || ''
-      if (!reward_no && storeInfo?.store_name) {
-        try { reward_no = await ensureStoreReward({ userId, storeName: storeInfo.store_name }) }
+        try { await ensureStoreReward({ userId, storeName: storeInfo.store_name }) }
         catch (e) { console.warn('ensureStoreReward skipped:', e.message) }
       }
 
-      // 4. Save the receipt. Pre-insert dedup: if this is a NEW receipt
-      //    (no id) and a matching one already exists for the same user /
-      //    store / date / total, merge into the existing row instead of
-      //    creating a duplicate. Editing an existing receipt (receipt.id
-      //    set) always goes through as-is — that's an update, not a create.
-      // Tier 2 learning: when creating new, check whether the user already
-      // has a per-store category preference (≥3 same-category corrections
-      // at this store). If yes, override the Gemini-parsed category.
-      let saved
-      let inferredCategory = null
-      let categorySource = receipt.id ? undefined : 'ai'
-      if (!receipt.id) {
-        const sb = createClient()
-        try {
-          const { data: pref } = await sb.rpc('infer_user_store_category', {
-            p_user_id: userId,
-            p_store_id: store_id,
-            p_store_name: receipt.store_name || storeInfo?.store_name || null,
-          })
-          if (pref) {
-            inferredCategory = pref
-            categorySource = 'inferred'
-          }
-        } catch { /* RPC absent on older DBs — fall through */ }
-        const existingId = await findExistingReceipt(sb, userId, {
-          store_name: receipt.store_name,
-          date: receipt.date,
-          total_amount: receipt.total_amount,
-        }).catch(() => null)
-        if (existingId) {
-          saved = await upsertReceipt({
-            ...receipt,
-            id: existingId,
-            receipt_link: receipt_link || receipt.receipt_link || undefined,
-            processed: items.length > 0,
-            user_id: userId,
-            store_id: store_id || undefined,
-            store_location_id: store_location_id || undefined,
-            reward_no: reward_no || undefined,
-            // Per-store learning may have inferred a better category; apply it
-            // unless the user explicitly picked one in the form.
-            category: receipt.category || inferredCategory || undefined,
-            category_source: receipt.category ? 'user' : (inferredCategory ? 'inferred' : undefined),
-          })
-        }
-      }
-      if (!saved) {
-        saved = await upsertReceipt({
-          ...receipt,
-          receipt_link,
-          processed: items.length > 0,
-          user_id: userId,
-          store_id,
-          store_location_id,
-          reward_no,
-          category: inferredCategory || receipt.category || undefined,
-          category_source: categorySource,
-        })
-      }
-
-      // 5. Save line items, AND upsert each into the store's catalog (store_items).
-      //    Each line gets a store_item_id FK pointing at the catalog row so we can
-      //    pull warranty / manual / return-policy data on future receipts.
-      if (items.length > 0) {
-        const results = await Promise.allSettled(items.map(async (item) => {
-          let store_item_id = null
-          if (store_id) {
-            try {
-              const cat = await upsertStoreItem({
-                store_id,
-                sku: item.sku || null,
-                item_name: item.item_name,
-                price: Number(item.price || 0),
-                warranty_info: item.warranty_info || null,
-                item_manual: item.item_manual || null,
-              })
-              store_item_id = cat?.id || null
-            } catch (e) { console.warn('store_items upsert skipped:', e.message) }
-          }
-          return upsertReceiptItem({ ...item, receipt_id: saved.id, store_item_id })
-        }))
-        const failed = results.filter(r => r.status === 'rejected')
-        if (failed.length > 0) {
-          console.error(`Items failed to save (${failed.length}/${items.length}):`, failed.map(r => r.reason?.message || r.reason))
-        }
-      }
-
-      // 6. Save refund policies (replace-all on update).
-      // Call unconditionally — replaceRefundPolicies now falls back to the
-      // seeded store_return_policies row when the AI returned no policy
-      // (Amazon e-receipts never print one). Pass receipt date so days-only
-      // policies get a real expiry date derived.
-      try {
-        await replaceRefundPolicies(saved.id, refundPolicies || [], {
-          receiptDate: receipt?.date || saved.date,
-          storeName: receipt?.store_name || saved.store_name || storeInfo?.store_name,
-          category: receipt?.category || saved.category,
-        })
-      } catch (e) { console.warn('Refund policies skipped:', e.message) }
-
-      return saved
+      return { id: result.receipt_id, merged: Boolean(result.merged) }
     },
     onSuccess: () => {
       _invalidateAllReceiptQueries(qc)

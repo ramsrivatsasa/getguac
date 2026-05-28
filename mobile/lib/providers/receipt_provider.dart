@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/receipt_model.dart';
+import '../services/receipt_outbox.dart';
 
 const _kReceiptListCols =
     'id, store_name, date, total_amount, tax_paid, reward_no, '
@@ -104,74 +105,6 @@ class ReceiptProvider extends ChangeNotifier {
     return _sb.storage.from('receipts').getPublicUrl(path);
   }
 
-  /// Look for an existing receipt that matches the supplied (store, date,
-  /// total) tuple — same key the /api/receipts/dedup sweep uses. Returns
-  /// the matching receipt row (or null). Lets the camera flow ask the user
-  /// "this looks like a duplicate, save anyway?" before inserting.
-  ///
-  /// Matching tolerance:
-  ///   - store name is normalized (lowercased, punctuation/whitespace
-  ///     stripped, common suffixes like "Restaurant" / "Inc" / "LLC"
-  ///     dropped) before comparing. Catches cases where the AI parsed
-  ///     "GLORY DAYS GRILL" on one shot and "Glory Days Grill Restaurant"
-  ///     on a retake — both still resolve to the same key.
-  ///   - date must match exactly (single day).
-  ///   - total must match within 1¢ (rounding wobble).
-  Future<Receipt?> findDuplicate({
-    required String storeName,
-    required String date,        // YYYY-MM-DD
-    required double totalAmount,
-  }) async {
-    final uid = _sb.auth.currentUser?.id;
-    if (uid == null || storeName.trim().isEmpty || date.isEmpty) return null;
-    try {
-      // Pull every receipt for the user on this exact date with a total
-      // within 1 cent of the parsed total, then filter on normalized store
-      // name client-side. Keeps the SQL simple (no normalization functions
-      // in Postgres) and the result set is tiny (usually 0-1 rows).
-      final lo = totalAmount - 0.005;
-      final hi = totalAmount + 0.005;
-      final rows = await _sb
-          .from('receipts')
-          .select(_kReceiptListCols)
-          .eq('user_id', uid)
-          .eq('date', date)
-          .gte('total_amount', lo)
-          .lte('total_amount', hi)
-          .limit(10);
-      final target = _normalizeStoreName(storeName);
-      for (final r in (rows as List)) {
-        final m = r as Map<String, dynamic>;
-        final candidate = _normalizeStoreName((m['store_name'] as String?) ?? '');
-        if (candidate.isEmpty) continue;
-        if (candidate == target
-            || candidate.contains(target)
-            || target.contains(candidate)) {
-          return Receipt.fromMap(m['id'] as String, m);
-        }
-      }
-      return null;
-    } catch (e) {
-      if (kDebugMode) debugPrint('findDuplicate error: $e');
-      return null;
-    }
-  }
-
-  /// Same normalization the dedup sweep should use server-side. Lowercase,
-  /// strip punctuation/whitespace, drop common store-name suffixes that the
-  /// AI inconsistently includes.
-  static String _normalizeStoreName(String raw) {
-    var s = raw.toLowerCase().trim();
-    s = s.replaceAll(RegExp(r'[^a-z0-9]'), '');
-    // Drop common business-type suffixes the AI sometimes appends.
-    for (final suffix in const ['restaurant', 'grill', 'cafe', 'inc', 'llc', 'corp', 'co']) {
-      if (s.endsWith(suffix) && s.length > suffix.length + 2) {
-        s = s.substring(0, s.length - suffix.length);
-      }
-    }
-    return s;
-  }
-
   Future<void> addReceipt(Receipt receipt, {File? imageFile}) async {
     String link = receipt.receiptLink;
     if (imageFile != null) link = await uploadImage(imageFile);
@@ -184,72 +117,38 @@ class ReceiptProvider extends ChangeNotifier {
     await loadReceipts(force: true);
   }
 
-  /// Pre-insert duplicate check. Mirrors web's lib/findExistingReceipt.js.
-  /// Returns the id of an existing receipt that matches (same user,
-  /// normalized store name, same date, total within 1¢, same sign) or
-  /// null. Falls through on any error so a Supabase blip can't block
-  /// new saves.
-  Future<String?> _findExistingReceiptId({
-    required String userId,
-    required String storeName,
-    required String date,
-    required double totalAmount,
-  }) async {
-    try {
-      final norm = _normalizeStoreName(storeName);
-      if (norm.isEmpty) return null;
-      final sign = totalAmount < 0 ? -1 : 1;
-      final absCents = (totalAmount.abs() * 100).round();
-      final rows = await _sb
-          .from('receipts')
-          .select('id, store_name, total_amount')
-          .eq('user_id', userId)
-          .eq('date', date)
-          .limit(50);
-      for (final r in (rows as List)) {
-        final m = r as Map<String, dynamic>;
-        final candidate = _normalizeStoreName((m['store_name'] as String?) ?? '');
-        if (candidate.isEmpty) continue;
-        if (candidate != norm) continue;
-        final rTotal = (m['total_amount'] as num?)?.toDouble() ?? 0;
-        final rSign = rTotal < 0 ? -1 : 1;
-        if (rSign != sign) continue;
-        final rCents = (rTotal.abs() * 100).round();
-        if ((rCents - absCents).abs() <= 1) return m['id'] as String;
-      }
-      return null;
-    } catch (e) {
-      if (kDebugMode) debugPrint('_findExistingReceiptId failed: $e');
-      return null;
-    }
-  }
-
   /// Upload + insert a receipt straight from AI-parsed JSON (the shape the
   /// /api/parse-receipt endpoint returns). Saves items in the same call.
-  /// Returns a record with either an `id` (success) or an `error` string
-  /// explaining what failed. Used by the dashboard camera-FAB so the batch
-  /// summary can show the real reason instead of "insert failed".
   ///
-  /// Pre-insert dedup: if a matching receipt already exists for the user
-  /// at the same store+date+total, the new parse MERGES into the existing
-  /// row instead of creating a duplicate. Items get appended only when
-  /// the existing row has zero items, so we don't pile on dup line items
-  /// every time the user re-uploads the same photo.
-  Future<({String? id, String? error, bool merged})> addParsedReceipt(
+  /// As of v0.2.66 this routes through POST /api/receipts/save (via the
+  /// outbox) so dedup, Tier 2 category inference, store-and-location
+  /// resolution, items, store_items catalog, and refund policies all
+  /// run on the SERVER, identical to the web flow. The old inline
+  /// pipeline lived here for ~6 months; the divergence (mobile dedup
+  /// missing TLD strip, mobile not calling Tier 2 RPC, mobile writing
+  /// store_id NULL) caused the dashboard mismatches we fixed by hand
+  /// over weeks. Now there is one writer.
+  ///
+  /// Offline: if the network is down or /api/receipts/save times out,
+  /// the save is QUEUED in shared_preferences and replayed on next app
+  /// launch / online flush. Returns `queued: true` in that case.
+  Future<({String? id, String? error, bool merged, bool queued})> addParsedReceipt(
     Map<String, dynamic> parsed,
     File imageFile, {
     List<File> extraPages = const [],
   }) async {
     final uid = _sb.auth.currentUser?.id;
-    if (uid == null) return (id: null, error: 'Not signed in', merged: false);
+    if (uid == null) {
+      return (id: null, error: 'Not signed in', merged: false, queued: false);
+    }
+
+    // 1. Upload primary + extra page images. These go to Supabase Storage
+    //    directly (faster than tunneling through our API). If THIS fails,
+    //    there's nothing to queue yet — surface the error.
     String? link;
     final extraUrls = <String>[];
     try {
       link = await uploadImage(imageFile);
-      // Upload extra pages from a multi-page scan / long-receipt camera
-      // run. Each gets its own storage object; URLs stored in
-      // receipts.extra_page_urls so the detail screen can paginate
-      // through every captured page, not just the first.
       for (final p in extraPages) {
         try {
           final u = await uploadImage(p);
@@ -259,120 +158,47 @@ class ReceiptProvider extends ChangeNotifier {
         }
       }
     } catch (e) {
-      return (id: null, error: 'Image upload failed: $e', merged: false);
+      return (id: null, error: 'Image upload failed: $e', merged: false, queued: false);
     }
-    try {
-      final today = DateTime.now().toIso8601String().substring(0, 10);
-      final dateField = (parsed['date'] is String &&
-                        RegExp(r'^\d{4}-\d{2}-\d{2}').hasMatch(parsed['date'] as String))
-          ? (parsed['date'] as String).substring(0, 10)
-          : today;
 
-      // Pre-insert dedup. Skip if Gemini didn't return enough to identify
-      // the receipt (no store_name + 0 total = can't tell).
-      final storeName = (parsed['store_name'] as String?)?.trim().isNotEmpty == true
-          ? parsed['store_name'] as String
-          : 'Camera receipt';
-      final totalAmount = (parsed['total_amount'] as num?)?.toDouble() ?? 0;
-      String? existingId;
-      if (totalAmount.abs() > 0.01) {
-        existingId = await _findExistingReceiptId(
-          userId: uid,
-          storeName: storeName,
-          date: dateField,
-          totalAmount: totalAmount,
-        );
-      }
-      if (existingId != null) {
-        // Patch the existing row with any richer fields from the new parse.
-        final patch = <String, dynamic>{};
-        if (parsed['tax_paid'] != null) patch['tax_paid'] = (parsed['tax_paid'] as num).toDouble();
-        if (parsed['payment_method'] != null) patch['payment_method'] = parsed['payment_method'];
-        if (parsed['payment_last4'] != null) patch['payment_last4'] = parsed['payment_last4'];
-        if (parsed['category'] != null) patch['category'] = parsed['category'];
-        if ((link ?? '').isNotEmpty) patch['receipt_link'] = link;
-        // Re-upload of a multi-page receipt: replace extra_page_urls with
-        // the newest set. We don't union-merge because the user may have
-        // intentionally re-captured fewer pages.
-        if (extraUrls.isNotEmpty) patch['extra_page_urls'] = extraUrls;
-        if (patch.isNotEmpty) {
-          await _sb.from('receipts').update(patch).eq('id', existingId);
-        }
-        // Append items only if the existing row had none — otherwise we'd
-        // be doubling line items every time the user re-uploads.
-        final hadItems = await _sb.from('receipt_items').select('id').eq('receipt_id', existingId).limit(1);
-        final items = (parsed['items'] as List?) ?? const [];
-        if ((hadItems as List).isEmpty && items.isNotEmpty) {
-          final rows = items.map((it) {
-            final m = it as Map<String, dynamic>;
-            return {
-              'receipt_id': existingId,
-              'sku': m['sku'],
-              'model': m['model'],
-              'item_name': (m['item_name'] as String?) ?? '',
-              'qty': ((m['qty'] as num?) ?? 1).round(),
-              'price': m['price'] == null ? null : (m['price'] as num).toDouble(),
-              'returned': m['returned'] == true,
-              'category': m['category'],
-            };
-          }).toList();
-          await _sb.from('receipt_items').insert(rows);
-        }
-        _lastLoaded = null;
-        await loadReceipts(force: true);
-        return (id: existingId, error: null, merged: true);
-      }
+    // 2. Normalize date — server defaults to today if missing.
+    final today = DateTime.now().toIso8601String().substring(0, 10);
+    final dateField = (parsed['date'] is String &&
+                      RegExp(r'^\d{4}-\d{2}-\d{2}').hasMatch(parsed['date'] as String))
+        ? (parsed['date'] as String).substring(0, 10)
+        : today;
 
-      final row = await _sb.from('receipts').insert({
-        'user_id': uid,
-        'store_name': storeName,
+    // 3. Build the save payload — same shape /api/parse-receipt returns,
+    //    with the uploaded image URL bolted on. The server pipeline
+    //    handles everything else (dedup, Tier 2, store resolve, items,
+    //    refund policies, store_items catalog).
+    final payload = <String, dynamic>{
+      'parsed': {
+        ...parsed,
         'date': dateField,
-        'total_amount': totalAmount,
-        'tax_paid':     (parsed['tax_paid']     as num?)?.toDouble() ?? 0,
-        'payment_method': parsed['payment_method'],
-        'payment_last4':  parsed['payment_last4'],
-        'is_return':     parsed['is_return'] == true,
-        'category':      parsed['category'],
-        'receipt_link': link,
-        if (extraUrls.isNotEmpty) 'extra_page_urls': extraUrls,
-        'processed': true,
-      }).select('id').single();
-      final id = row['id'] as String;
+      },
+      'receipt_link': link,
+      if (extraUrls.isNotEmpty) 'extra_page_urls': extraUrls,
+    };
 
-      // Items, if the AI returned any.
-      final items = (parsed['items'] as List?) ?? const [];
-      if (items.isNotEmpty) {
-        final rows = items.map((it) {
-          final m = it as Map<String, dynamic>;
-          return {
-            'receipt_id': id,
-            'sku': m['sku'],
-            'model': m['model'],
-            'item_name': (m['item_name'] as String?) ?? '',
-            // qty MUST be an integer in Postgres — sending 1.0 as a double
-            // serializes to JSON "1.0" and Postgres rejects with 22P02
-            // ("invalid input syntax for type integer"). round() before
-            // toInt() so 0.5 doesn't silently floor to 0.
-            'qty': ((m['qty'] as num?) ?? 1).round(),
-            'price': m['price'] == null ? null : (m['price'] as num).toDouble(),
-            'returned': m['returned'] == true,
-            'category': m['category'],
-          };
-        }).toList();
-        await _sb.from('receipt_items').insert(rows);
-      }
-      _lastLoaded = null;
-      await loadReceipts(force: true);
-      return (id: id, error: null, merged: false);
-    } on PostgrestException catch (e) {
-      if (kDebugMode) debugPrint('addParsedReceipt postgrest: ${e.message} (${e.code})');
-      // Surface the database's actual rejection reason. Most useful causes:
-      // 23505 = unique constraint, 42501 = RLS denied, 23502 = NOT NULL.
-      return (id: null, error: 'DB rejected: ${e.message}${e.code != null ? " (${e.code})" : ""}', merged: false);
-    } catch (e) {
-      if (kDebugMode) debugPrint('addParsedReceipt error: $e');
-      return (id: null, error: e.toString(), merged: false);
+    // 4. Send via outbox (online → POST + immediate result; offline →
+    //    queue + return queued=true). Never throws; never hangs UI past
+    //    the 30s timeout.
+    final result = await ReceiptOutbox.trySave(payload);
+
+    if (result.error != null) {
+      return (id: null, error: result.error, merged: false, queued: false);
     }
+    if (result.queued) {
+      // Locally cached — UI should show "Queued (X)". Don't force a
+      // reload (the row doesn't exist yet).
+      return (id: null, error: null, merged: false, queued: true);
+    }
+
+    // 5. Online success — refresh the list so the new row appears.
+    _lastLoaded = null;
+    unawaited(loadReceipts(force: true));
+    return (id: result.receiptId, error: null, merged: result.merged, queued: false);
   }
 
   Future<void> updateReceipt(String id, Map<String, dynamic> data) async {

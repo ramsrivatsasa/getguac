@@ -80,3 +80,4 @@ supabase/.branches/
 supabase/.temp/
 
 .git-commit-msg.tmp
+.backup_pre_centralization/

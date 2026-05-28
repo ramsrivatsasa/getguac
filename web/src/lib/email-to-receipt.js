@@ -10,6 +10,13 @@
 import { parseReceiptFromText } from './parse-receipt-engine'
 import { normalizeStoreName, canonicalStoreName } from './store-name-normalize'
 import { findExistingReceipt } from './findExistingReceipt'
+// saveReceipt is the central save pipeline (lib/save-receipt.js). The email
+// path used to inline its own insertParsedReceipt() — now delegated so a
+// single bug fix or threshold change propagates to web + mobile + email.
+// We must import LAZILY (inside the function) because save-receipt.js
+// imports back from THIS file (resolveStoreAndLocation/writeRefundPolicies/
+// lookupStoreDefaultPolicies), creating a CommonJS-style circular dep that
+// breaks if eagerly imported at module-load time.
 
 function normalizePhone(s) {
   return (s || '').replace(/\D+/g, '')
@@ -302,115 +309,21 @@ export async function resolveStoreAndLocation(sb, parsed) {
   return { store_id: store?.id || null, store_location_id: location?.id || null }
 }
 
-// Insert a receipt row + its items + refund policies for an AI-parsed result.
-// Also find-or-creates the linked store + store_location so the receipt
-// joins into the per-store views (Stash, Worth It, store detail page).
-// Returns { receipt_id, deduped } — deduped:true means we merged into an
-// existing row instead of inserting a new one (caller can skip its own
-// post-processing in that case if it wants to).
+// Insert a parsed receipt — now a thin wrapper around the canonical
+// save pipeline at lib/save-receipt.js. The pipeline (store resolve,
+// Tier 2 inference, dedup, items, refund policies) lives there so web,
+// mobile, iOS, and email all share one implementation.
+//
+// Note: lazy import to avoid a circular module-load with save-receipt.js
+// (which imports resolveStoreAndLocation et al from this file). Calling
+// saveReceipt at runtime is fine — only top-level imports would loop.
 async function insertParsedReceipt(sb, userId, parsed, bodyPreview) {
-  // Resolve the store first so the receipt insert can carry the FK.
-  const { store_id, store_location_id } = await resolveStoreAndLocation(sb, parsed)
-
-  // Tier 2 learning: if the user has already corrected ≥3 receipts from
-  // this store to the same category, prefer THEIR slug over Gemini's
-  // call. Best-effort — falls back to parsed.category on any RPC error.
-  let inferredCategory = null
-  try {
-    const { data: pref } = await sb.rpc('infer_user_store_category', {
-      p_user_id: userId,
-      p_store_id: store_id,
-      p_store_name: parsed.store_name || null,
-    })
-    if (pref) inferredCategory = pref
-  } catch { /* RPC missing on older DBs — fall through */ }
-  const finalCategory = inferredCategory || parsed.category || null
-  const categorySource = inferredCategory ? 'inferred' : 'ai'
-
-  const candidate = {
-    store_name: parsed.store_name || 'Receipt by email',
-    date: parsed.date || new Date().toISOString().slice(0, 10),
-    total_amount: parsed.total_amount || 0,
-  }
-
-  // Pre-insert dedup: if we already have a receipt for the same user/store/
-  // date/total, skip the insert. Without this, two emails about the same
-  // purchase (confirmation + receipt, or a forwarded duplicate) each create
-  // their own row.
-  const existingId = await findExistingReceipt(sb, userId, candidate).catch(() => null)
-  if (existingId) {
-    // Best-effort patch the existing row with anything richer the new parse
-    // produced — store FKs, tax, payment details — without overwriting
-    // anything the user has already curated.
-    const patch = {}
-    if (store_id)          patch.store_id          = store_id
-    if (store_location_id) patch.store_location_id = store_location_id
-    if (parsed.tax_paid)        patch.tax_paid        = parsed.tax_paid
-    if (parsed.payment_method)  patch.payment_method  = parsed.payment_method
-    if (parsed.payment_last4)   patch.payment_last4   = parsed.payment_last4
-    if (parsed.category)        patch.category        = parsed.category
-    if (Object.keys(patch).length) {
-      await sb.from('receipts').update(patch).eq('id', existingId).eq('user_id', userId).catch(() => {})
-    }
-    return { receipt_id: existingId, deduped: true }
-  }
-
-  const { data: rcpt, error } = await sb.from('receipts').insert({
-    user_id: userId,
-    store_name: parsed.store_name || 'Receipt by email',
-    store_id,
-    store_location_id,
-    date: parsed.date || new Date().toISOString().slice(0, 10),
-    total_amount: parsed.total_amount || 0,
-    tax_paid: parsed.tax_paid || 0,
-    payment_method: parsed.payment_method || null,
-    payment_last4: parsed.payment_last4 || null,
-    is_return: Boolean(parsed.is_return),
-    category: finalCategory,
-    category_source: categorySource,
-    receipt_link: '',
-    business_purchase: false,
-    processed: true,
+  const { saveReceipt } = await import('./save-receipt')
+  const fallbackStoreName = parsed.store_name || 'Receipt by email'
+  const r = await saveReceipt(sb, userId, { ...parsed, store_name: fallbackStoreName }, {
     validation_comment: bodyPreview ? `From email:\n\n${bodyPreview}` : null,
-  }).select('id').single()
-  if (error) throw error
-
-  // Items — best effort. A failure here doesn't undo the receipt row.
-  if (Array.isArray(parsed.items) && parsed.items.length > 0) {
-    const itemRows = parsed.items.map(it => ({
-      receipt_id: rcpt.id,
-      sku: it.sku || null,
-      model: it.model || null,
-      item_name: it.item_name || '',
-      qty: it.qty || 1,
-      price: it.price == null ? null : Number(it.price),
-      // Charity items can never be "returned" — force false regardless of
-      // what the AI returned.
-      returned: it.category === 'charity' ? false : Boolean(it.returned),
-      category: it.category || null,
-    }))
-    const { error: itemErr } = await sb.from('receipt_items').insert(itemRows)
-    if (itemErr) console.warn('[email-to-receipt] item insert failed:', itemErr.message)
-  }
-
-  // Refund policies. Two-tier:
-  //   1. If the AI extracted policies from the receipt body, use those.
-  //   2. Otherwise fall back to the curated store_return_policies table
-  //      (Amazon 30d, Costco lifetime, etc.) so receipts without printed
-  //      policies still surface return rights in the UI.
-  // Best-effort: a failure here doesn't undo the parent receipt.
-  if (Array.isArray(parsed.refund_policies) && parsed.refund_policies.length > 0) {
-    await writeRefundPolicies(sb, rcpt.id, parsed.refund_policies, 'receipt', parsed.date).catch(() => {})
-  } else {
-    const cats = (parsed.items || []).map(i => i.category).filter(Boolean)
-    if (parsed.category) cats.push(parsed.category)
-    const defaults = await lookupStoreDefaultPolicies(sb, parsed.store_name, cats).catch(() => [])
-    if (defaults.length > 0) {
-      await writeRefundPolicies(sb, rcpt.id, defaults, 'store-default', parsed.date).catch(() => {})
-    }
-  }
-
-  return { receipt_id: rcpt.id }
+  })
+  return { receipt_id: r.receipt_id, deduped: r.merged }
 }
 
 // Stub fallback when AI parsing failed or is unavailable.

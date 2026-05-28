@@ -3,6 +3,7 @@ import { createClient } from '../../lib/supabase/server'
 import Sidebar from '../../components/Sidebar'
 import TopBar from '../../components/TopBar'
 import QuickAddReceipt from '../../components/QuickAddReceipt'
+import OutboxFlusher from '../../components/OutboxFlusher'
 
 export default async function DashboardLayout({ children }) {
   const sb = createClient()
@@ -23,6 +24,7 @@ export default async function DashboardLayout({ children }) {
         </main>
       </div>
       <QuickAddReceipt />
+      <OutboxFlusher />
     </div>
   )
 }

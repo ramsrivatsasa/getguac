@@ -13,6 +13,7 @@ import { formatDateShort } from '../../../lib/dateFormat'
 import { Upload, Trash2, Eye, Search, Download, Loader2, Sparkles, X, Shield, Camera, ChevronDown, ChevronRight, Undo2, ShoppingCart, Monitor, Link2, Tag, RefreshCw, Copy } from 'lucide-react'
 import { guessCategory } from '../../../lib/categorizeRules'
 import { normalizeStoreName, canonicalStoreName } from '../../../lib/store-name-normalize'
+import { RECEIPT_CHIP_IDS, parseReceiptsUrlParams, chipToDateFrom } from '../../../lib/receipts-deeplink'
 import { isItemPerishable, getNonReturnableReason } from '../../../lib/perishable'
 import { isItemNonReturnable } from '../../../lib/non-returnable'
 import { createClient as createSbClient } from '../../../lib/supabase/client'
@@ -23,25 +24,6 @@ import GuacMascot from '../../../components/GuacMascot'
 import CategoryPicker from '../../../components/CategoryPicker'
 
 const EMPTY = { store_name: '', date: '', total_amount: '', tax_paid: '', reward_no: '', business_purchase: false }
-
-// Period chips — mirror mobile's ReceiptPeriod enum so the same labels
-// and time windows render across all three platforms. 1M is the default
-// entry point; wider scopes are opt-in via these chips.
-const RECEIPT_PERIODS = [
-  { id: '1M',  label: '1M',  days: 30  },
-  { id: '3M',  label: '3M',  days: 90  },
-  { id: '6M',  label: '6M',  days: 180 },
-  { id: '1Y',  label: '1Y',  days: 365 },
-  { id: 'All', label: 'All', days: null },
-]
-
-function periodToDateFrom(period) {
-  const found = RECEIPT_PERIODS.find(p => p.id === period)
-  if (!found || found.days == null) return undefined
-  const d = new Date()
-  d.setDate(d.getDate() - found.days)
-  return d.toISOString().slice(0, 10)
-}
 
 // Column definitions for the receipts table. `default` is the initial pixel
 // width; users can drag the right edge of any header to override, and the
@@ -64,18 +46,13 @@ export default function ReceiptsPage() {
   const searchParams = useSearchParams()
   // Initialize the search box from ?store=<name> so the Spending-by-Store
   // bars on the dashboard can deep-link into a pre-filtered receipts list.
-  const initialSearch = searchParams.get('store') || ''
-  const [search, setSearch] = useState(initialSearch)
-  // Default to 1M to match mobile + iOS. Wider scopes are opt-in via the
-  // chip row below. Avoids hammering the table with an unbounded fetch on
-  // every visit for users with thousands of receipts.
-  // When arriving from the dashboard's chart, ?period=3M (etc) seeds the
-  // chip so the user lands on the same time window they were just looking
-  // at. Falls back to 1M if the param is missing or unknown.
-  const [period, setPeriod] = useState(() => {
-    const p = searchParams.get('period')
-    return ['1M','3M','6M','1Y','All'].includes(p) ? p : '1M'
-  })
+  // Initial state from the URL via the shared deep-link parser.
+  // Default chip is 1M; arriving from the dashboard chart with ?period=3M
+  // (etc) overrides it. Centralized so the chip set + parse rules live in
+  // one place (lib/receipts-deeplink.js).
+  const initialDeeplink = parseReceiptsUrlParams(searchParams)
+  const [search, setSearch] = useState(initialDeeplink.store)
+  const [period, setPeriod] = useState(initialDeeplink.period)
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState(EMPTY)
   const [file, setFile] = useState(null)
@@ -101,7 +78,7 @@ export default function ReceiptsPage() {
   // Scope the query to the selected period. Undefined dateFrom = no
   // lower bound (for "All"). useReceipts is keyed by filters so swapping
   // periods triggers a fresh fetch automatically.
-  const dateFrom = useMemo(() => periodToDateFrom(period), [period])
+  const dateFrom = useMemo(() => chipToDateFrom(period), [period])
   const { data: receipts = [], isLoading } = useReceipts({ dateFrom })
   const { data: bankStmts = new Map() } = useBankStatementMap()
   // Quick lookup so we can resolve reconciled-but-not-from-statement rows
@@ -145,11 +122,11 @@ export default function ReceiptsPage() {
   // back from the dashboard with a fresh ?store + ?period updates the
   // visible state even when this component was already mounted (e.g.
   // user already opened /receipts, then clicked a different dashboard bar).
+  // Uses the shared parser so the chip allowlist + default stay in one place.
   useEffect(() => {
-    const fromUrl = searchParams.get('store') || ''
-    if (fromUrl && fromUrl !== search) setSearch(fromUrl)
-    const p = searchParams.get('period')
-    if (p && ['1M','3M','6M','1Y','All'].includes(p) && p !== period) setPeriod(p)
+    const dl = parseReceiptsUrlParams(searchParams)
+    if (dl.store && dl.store !== search) setSearch(dl.store)
+    if (dl.period && dl.period !== period) setPeriod(dl.period)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams])
   const startResize = useCallback((e, colId) => {
@@ -1062,18 +1039,18 @@ export default function ReceiptsPage() {
       {/* Period chips — mirrors mobile's chip row. 1M default; wider on tap. */}
       <div className="flex items-center gap-1.5 flex-wrap">
         <span className="text-[11px] font-bold uppercase tracking-wider text-gray-500 mr-1">Show:</span>
-        {RECEIPT_PERIODS.map(p => (
+        {RECEIPT_CHIP_IDS.map(id => (
           <button
-            key={p.id}
+            key={id}
             type="button"
-            onClick={() => setPeriod(p.id)}
+            onClick={() => setPeriod(id)}
             className={`text-xs font-bold px-2.5 py-1 rounded-full transition-colors ${
-              period === p.id
+              period === id
                 ? 'bg-emerald-100 text-emerald-900 ring-1 ring-emerald-200'
                 : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
             }`}
           >
-            {p.label}
+            {id}
           </button>
         ))}
       </div>

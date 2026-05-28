@@ -132,24 +132,65 @@ create policy "dm_messages: participants write"
 
 -- ─── User lookup RPCs ───────────────────────────────────────────────────
 
--- Look up a user-id by email. Returns NULL if no profile for that email.
--- Used by:
+-- Look up a user-id by any of three handle forms. Returns NULL if no
+-- match. Used by:
 --   - addMemberByEmail() (households invite)
 --   - openThreadByEmail() (start a DM)
--- This is the same disclosure surface as the password-reset flow already
--- offers (you can already discover whether an email has an account by
--- attempting a password reset), so no new information leak.
+--
+-- Resolution order:
+--   A. @getguac.app address → split, look up email_alias on profiles
+--   B. Plain handle (no @)   → look up email_alias on profiles
+--   C. Real email            → look up auth.users.email
+--
+-- Important: profiles has NO `email` column — the real signup email
+-- lives on auth.users.email (Supabase auth schema). The FK
+-- profiles.id -> auth.users.id makes the id spaces identical, so a
+-- hit on auth.users.id is also a valid profiles.id.
+--
+-- Same disclosure surface as the password-reset flow already offers
+-- (you can already discover whether an email has an account by trying
+-- a password reset), so no new information leak.
 create or replace function public.lookup_user_id_by_email(p_email text)
 returns uuid
-language sql
+language plpgsql
 stable
 security definer
-set search_path = public
+set search_path = public, auth
 as $$
-  select id
-    from public.profiles
-   where lower(email) = lower(trim(p_email))
+declare
+  s text := lower(trim(coalesce(p_email, '')));
+  local_part text;
+  match uuid;
+begin
+  if s = '' then
+    return null;
+  end if;
+
+  if s like '%@getguac.app' then
+    local_part := split_part(s, '@', 1);
+    select id into match
+      from public.profiles
+     where email_alias = local_part
+     limit 1;
+    if match is not null then
+      return match;
+    end if;
+  end if;
+
+  if position('@' in s) = 0 then
+    select id into match
+      from public.profiles
+     where email_alias = s
+     limit 1;
+    return match;
+  end if;
+
+  select u.id into match
+    from auth.users u
+   where lower(u.email) = s
    limit 1;
+  return match;
+end;
 $$;
 
 revoke all on function public.lookup_user_id_by_email(text) from public;

@@ -12,7 +12,7 @@ import toast from 'react-hot-toast'
 import { formatDateShort } from '../../../lib/dateFormat'
 import { Upload, Trash2, Eye, Search, Download, Loader2, Sparkles, X, Shield, Camera, ChevronDown, ChevronRight, Undo2, ShoppingCart, Monitor, Link2, Tag, RefreshCw, Copy } from 'lucide-react'
 import { guessCategory } from '../../../lib/categorizeRules'
-import { normalizeStoreName } from '../../../lib/store-name-normalize'
+import { normalizeStoreName, canonicalStoreName } from '../../../lib/store-name-normalize'
 import { isItemPerishable, getNonReturnableReason } from '../../../lib/perishable'
 import { isItemNonReturnable } from '../../../lib/non-returnable'
 import { createClient as createSbClient } from '../../../lib/supabase/client'
@@ -1178,7 +1178,13 @@ export default function ReceiptsPage() {
                           })()}
                         </td>
                         <td className="px-4 py-1">
-                          <div className="text-blue-700 hover:underline">{r.store_name}</div>
+                          {/* Display canonicalized name ("Costco" instead of
+                              "COSTCO WHOLESALE" / "Costco Wholesale"). The
+                              underlying receipts.store_name still stores the
+                              raw printed merchant string; this is purely a
+                              presentation layer. The nightly normalize-stores
+                              cron eventually rewrites the DB to match. */}
+                          <div className="text-blue-700 hover:underline">{canonicalStoreName(r.store_name)}</div>
                           <div className="flex items-center gap-1 mt-0.5 flex-wrap">
                             {(() => {
                               const bank = bankInfoFor(r)

@@ -24,7 +24,7 @@
 
 import { createApiClient } from '../../../../lib/supabase/server'
 import { rateLimit, userRateKey } from '../../../../lib/apiGuard'
-import { normalizeStoreName, canonicalStoreName } from '../../../../lib/store-name-normalize'
+import { normalizeStoreName, canonicalStoreName, storeGroupKey } from '../../../../lib/store-name-normalize'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
@@ -60,11 +60,14 @@ export async function POST(request) {
     receiptCountByStore.set(r.store_id, (receiptCountByStore.get(r.store_id) || 0) + 1)
   }
 
-  // Group stores by normalized name. Stores with empty normalized name are
-  // skipped (nothing to group on).
+  // Group stores by CANONICAL alias key. Without this, "Costco" and
+  // "Costco Wholesale" hashed to different keys ("costco" vs
+  // "costco wholesale") even though they're the same merchant — so the
+  // merge endpoint left them as separate rows. storeGroupKey resolves
+  // both to "costco" via the alias map, and the merger does its job.
   const groups = new Map()
   for (const s of stores || []) {
-    const key = normalizeStoreName(s.store_name)
+    const key = storeGroupKey(s.store_name)
     if (!key) continue
     if (!groups.has(key)) groups.set(key, [])
     groups.get(key).push({ ...s, _receipts: receiptCountByStore.get(s.id) || 0 })

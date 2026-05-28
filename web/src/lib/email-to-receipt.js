@@ -8,7 +8,7 @@
 // strategy actually produced the row — useful for diagnostics.
 
 import { parseReceiptFromText } from './parse-receipt-engine'
-import { normalizeStoreName, canonicalStoreName } from './store-name-normalize'
+import { normalizeStoreName, canonicalStoreName, storeGroupKey } from './store-name-normalize'
 import { findExistingReceipt } from './findExistingReceipt'
 // saveReceipt is the central save pipeline (lib/save-receipt.js). The email
 // path used to inline its own insertParsedReceipt() — now delegated so a
@@ -20,6 +20,21 @@ import { findExistingReceipt } from './findExistingReceipt'
 
 function normalizePhone(s) {
   return (s || '').replace(/\D+/g, '')
+}
+
+// Light address normalization for store dedup. Lowercases, strips
+// punctuation, drops common street-suffix abbreviations + their full
+// forms so "14390 Chantilly Crossing" matches "14390 CHANTILLY CROSSING LN"
+// matches "14390 chantilly crossing lane".
+function _normalizeAddress(s) {
+  if (!s) return ''
+  let a = String(s).trim().toLowerCase()
+  a = a.replace(/[.,'`"]/g, '')              // drop punctuation
+  a = a.replace(/[-/]+/g, ' ')               // hyphens -> spaces
+  // Strip trailing street-suffix tokens (both abbreviated + full forms).
+  a = a.replace(/\s+(st|street|ave|avenue|rd|road|blvd|boulevard|ln|lane|dr|drive|ct|court|way|pl|place|pkwy|parkway|cir|circle|ter|terrace|hwy|highway|trl|trail|sq|square|loop|run|crossing|xing)\.?(\s+|$)/g, ' ')
+  a = a.replace(/\s+/g, ' ').trim()
+  return a
 }
 
 // Find-or-create a row in `stores` for a parsed AI result. Match strategy:
@@ -40,8 +55,8 @@ async function upsertStoreServer(sb, parsed) {
   const website  = parsed.store_website || null
 
   const phoneNorm = normalizePhone(phoneNo)
-  const addrNorm  = (address || '').trim().toLowerCase()
-  const nameNorm  = normalizeStoreName(storeName)
+  const addrNorm  = _normalizeAddress(address)
+  const nameKey   = storeGroupKey(storeName)
 
   // Match against the global stores table. The scale issue with this full
   // table-scan is logged in the audit — fine for now, costly later.
@@ -53,11 +68,17 @@ async function upsertStoreServer(sb, parsed) {
     match = stores.find(s => normalizePhone(s.phone_no) === phoneNorm) || null
   }
   if (!match && addrNorm) {
-    match = stores.find(s => (s.address || '').trim().toLowerCase() === addrNorm) || null
+    // Address match with light normalization — strips street suffixes
+    // ("ln", "lane", "st", etc.) + case + punctuation, so
+    // "14390 Chantilly Crossing" matches "14390 CHANTILLY CROSSING LN".
+    match = stores.find(s => _normalizeAddress(s.address) === addrNorm) || null
   }
-  if (!match && nameNorm) {
-    // Normalised-name match: "amazon" === "amazon.com" === "amazon mktp"
-    match = stores.find(s => normalizeStoreName(s.store_name) === nameNorm) || null
+  if (!match && nameKey) {
+    // Canonical-alias match: "Costco" === "Costco Wholesale" === "COSTCO WHSE"
+    // because all three resolve to "costco" via storeGroupKey. The old
+    // normalizeStoreName-only match created a fresh store row for each
+    // distinct variant.
+    match = stores.find(s => storeGroupKey(s.store_name) === nameKey) || null
   }
 
   if (match) {

@@ -32,7 +32,7 @@
 
 do $$
 declare
-  uid uuid := auth.uid();
+  uid uuid := 'b1485b86-8265-4830-844f-fa4964765c67';
   today date := current_date;
   i int;
   d date;
@@ -270,10 +270,18 @@ begin
     (uid, 'Coffee Beans', 1, 'Monthly', 'Cravings', false, false, false, '[SEED v2 SQL]');
 
   -- ─── 12. REWARDS rows (so /rewards isn't empty) ────────────────────────
-  insert into public.rewards (user_id, store_name, reward_no) values
-    (uid, 'Costco Wholesale', 'SEED-COSTCO-' || substr(uid::text, 1, 8)),
-    (uid, 'Target',           'SEED-TARGET-' || substr(uid::text, 1, 8)),
-    (uid, 'Walmart',          'SEED-WMART-'  || substr(uid::text, 1, 8))
+  -- rewards.expiry_date + reward_type + reward_title are NOT NULL on the
+  -- table — defaults provided here. Expiry one year out so the rows show
+  -- as "active" in the /rewards UI.
+  insert into public.rewards (
+    user_id, store_name, reward_no, expiry_date, reward_type, reward_title
+  ) values
+    (uid, 'Costco Wholesale', 'SEED-COSTCO-' || substr(uid::text, 1, 8),
+      today + 365, 'loyalty', 'Costco Gold Star'),
+    (uid, 'Target',           'SEED-TARGET-' || substr(uid::text, 1, 8),
+      today + 365, 'loyalty', 'Target Circle'),
+    (uid, 'Walmart',          'SEED-WMART-'  || substr(uid::text, 1, 8),
+      today + 365, 'loyalty', 'Walmart+ Member')
   on conflict do nothing;
 
   raise notice 'Seed complete. Tag: [SEED v2 SQL]. Re-run to refresh; the WIPE step at the top of this script removes prior seed rows for this user.';

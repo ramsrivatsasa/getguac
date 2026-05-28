@@ -3,12 +3,50 @@ import { useState, useMemo } from 'react'
 import { useShoppingList, useUpsertShoppingItem, useDeleteShoppingItem } from '../../../hooks/useShopping'
 import { SHOPPING_LISTS, SHOPPING_LIST_META } from '../../../lib/db'
 import toast from 'react-hot-toast'
-import { Trash2, CheckCircle, Circle, X, Sparkles, Wand2, Zap, Store as StoreIcon, MapPin } from 'lucide-react'
+import { Trash2, CheckCircle, Circle, X, Sparkles, Wand2, Zap, Store as StoreIcon, MapPin, Star } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
 import { groupPredictionsByStore } from '../../../lib/prediction-feedback'
 import { displayStoreName } from '../../../lib/store-name-normalize'
 
 const EMPTY = { sku: '', item_name: '', order_date: '', qty: '1', price: '', store_name_id: '', comments: '', frequency: 'Monthly', list_name: 'Pantry', approved: false, sent_to_store: false }
+
+// Urgency math for a Buy Again row. Returns null when the item lacks
+// the predicted_* columns (a hand-curated row that slipped in won't
+// have them). When set:
+//   ratio        — daysSince / avgCadence
+//   isOverdue    — ratio >= 1.0 (past typical reorder point)
+//   isUrgent     — ratio >= 1.2 (gets the ⭐ Restock badge)
+//   runsOutISO   — predicted_last_purchase + avgCadence (YYYY-MM-DD)
+//   daysToRunOut — signed; negative = past, positive = future
+function urgencyForItem(item) {
+  const cadence = Number(item.predicted_avg_cadence_days || 0)
+  const lastIso = item.predicted_last_purchase_date
+  if (!cadence || !lastIso) return null
+  const lastMs = new Date(lastIso + 'T00:00:00Z').getTime()
+  const todayMs = Date.now()
+  const daysSince = Math.floor((todayMs - lastMs) / 86400000)
+  const ratio = daysSince / cadence
+  const runsOutMs = lastMs + cadence * 86400000
+  const daysToRunOut = Math.round((runsOutMs - todayMs) / 86400000)
+  return {
+    ratio,
+    runsOutISO: new Date(runsOutMs).toISOString().slice(0, 10),
+    daysToRunOut,
+    isOverdue: ratio >= 1.0,
+    isUrgent: ratio >= 1.2,
+  }
+}
+
+// Human-friendly "runs out" label. Negative days = already past.
+function formatRunsOut(daysToRunOut, isoDate) {
+  if (daysToRunOut == null) return ''
+  if (daysToRunOut < 0) return `out ${-daysToRunOut}d ago`
+  if (daysToRunOut === 0) return 'today'
+  if (daysToRunOut === 1) return 'tomorrow'
+  if (daysToRunOut < 7) return `in ${daysToRunOut}d`
+  const d = new Date(isoDate + 'T00:00:00Z')
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
 
 const LIST_TONE = {
   emerald: 'from-emerald-400 to-green-600',
@@ -132,8 +170,17 @@ export default function ShoppingPage() {
   }, [ownList, activeList])
 
   const filteredSuggestions = useMemo(() => {
-    if (activeList === 'all') return suggestions
-    return suggestions.filter(i => (i.list_name || 'Pantry') === activeList)
+    const filtered = activeList === 'all'
+      ? suggestions
+      : suggestions.filter(i => (i.list_name || 'Pantry') === activeList)
+    // Sort by urgency descending — most overdue at the top so the
+    // user sees what's actually running out first. Rows without
+    // cadence metadata fall to the bottom.
+    return [...filtered].sort((a, b) => {
+      const ua = urgencyForItem(a)?.ratio ?? -Infinity
+      const ub = urgencyForItem(b)?.ratio ?? -Infinity
+      return ub - ua
+    })
   }, [suggestions, activeList])
 
   // Errand Plan — group predictions by store so the user can plan "one
@@ -300,6 +347,13 @@ export default function ShoppingPage() {
                 <tbody className="divide-y divide-gray-50">
                   {filteredSuggestions.map(item => {
                     const meta = SHOPPING_LIST_META[item.list_name || 'Pantry'] || {}
+                    const u = urgencyForItem(item)
+                    const storeName = item.store?.store_name ? displayStoreName(item.store.store_name) : ''
+                    // External price-comparison link. We don't host a paid
+                    // price API yet, but a Google Shopping search ("buy <item>
+                    // best price") is one tap away and free. Future surface
+                    // can swap in the real /steals AI price hunt.
+                    const priceSearchUrl = `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(item.item_name + ' best price')}`
                     return (
                       <tr key={item.id} className="hover:bg-violet-50/30">
                         <td className="px-4 py-3">
@@ -308,17 +362,56 @@ export default function ShoppingPage() {
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-violet-100 text-violet-700">
-                              <Sparkles size={10} /> Buy Again
-                            </span>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {u?.isUrgent ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 ring-1 ring-rose-200">
+                                <Star size={10} className="fill-rose-500 text-rose-500" /> Restock
+                              </span>
+                            ) : u?.isOverdue ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
+                                Due now
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-violet-100 text-violet-700">
+                                <Sparkles size={10} /> Buy Again
+                              </span>
+                            )}
                             <span className="font-medium">{item.item_name}</span>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-xs text-gray-500 max-w-xs">{item.predicted_reason || '—'}</td>
-                        <td className="px-4 py-3 text-gray-500">{item.store?.store_name ? displayStoreName(item.store.store_name) : '—'}</td>
+                        <td className="px-4 py-3 text-xs text-gray-500 max-w-xs">
+                          {u ? (
+                            <div className="space-y-0.5">
+                              <div className={u.isOverdue ? 'text-rose-700 font-semibold' : 'text-gray-700'}>
+                                Runs out {formatRunsOut(u.daysToRunOut, u.runsOutISO)}
+                              </div>
+                              <div className="text-[10px] text-gray-400">Bought every {Math.round(item.predicted_avg_cadence_days)}d</div>
+                            </div>
+                          ) : (item.predicted_reason || '—')}
+                        </td>
+                        <td className="px-4 py-3 text-gray-500">
+                          {storeName ? (
+                            <span className="inline-flex items-center gap-1">
+                              <StoreIcon size={12} className="text-gray-400" />
+                              {storeName}
+                            </span>
+                          ) : '—'}
+                        </td>
                         <td className="px-4 py-3">{item.qty}</td>
-                        <td className="px-4 py-3">{item.price ? `$${item.price}` : '—'}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <span>{item.price ? `$${item.price}` : '—'}</span>
+                            <a
+                              href={priceSearchUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              title="Search the web for the best current price"
+                              className="text-[10px] text-emerald-700 hover:text-emerald-900 underline-offset-2 hover:underline whitespace-nowrap"
+                            >
+                              best price ↗
+                            </a>
+                          </div>
+                        </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             <button

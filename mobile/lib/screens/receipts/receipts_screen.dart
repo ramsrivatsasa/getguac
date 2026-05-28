@@ -27,15 +27,26 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
   final Set<String> _selected = {};
   bool get _selectionMode => _selected.isNotEmpty;
 
+  /// Period chip selection is LOCAL to this screen, not driven by the
+  /// provider. The provider holds whatever was most recently fetched
+  /// (often the dashboard's wider .all pre-fetch); this screen filters
+  /// it client-side by [_selectedPeriod] so opening the tab is instant
+  /// when the dashboard already has data in memory. We only call
+  /// loadReceipts when the cache genuinely can't cover the requested
+  /// period (cold start, or user taps a wider chip than cached).
+  ReceiptPeriod _selectedPeriod = ReceiptPeriod.month;
+
   @override
   void initState() {
     super.initState();
     if (context.read<AppAuthProvider>().currentUser?.id != null) {
-      // Always default the Receipts screen to 1M, regardless of what the
-      // dashboard (or any other surface) pre-fetched with a wider period.
-      // This is the canonical entry point — wider scopes are opt-in via
-      // the chip row. Honours the 60s cache for repeat entries.
-      context.read<ReceiptProvider>().loadReceipts(period: ReceiptPeriod.month);
+      final p = context.read<ReceiptProvider>();
+      // Only fetch on cold start. If the dashboard (or any other surface)
+      // pre-fetched a superset of 1M, the data is already in memory and
+      // we render instantly via client-side filtering — no network wait.
+      if (p.receipts.isEmpty) {
+        p.loadReceipts(period: ReceiptPeriod.month);
+      }
     }
     // Apply the deep-link store filter (if any) by pre-filling both the
     // visible search text and the filter state used by the list query.
@@ -44,6 +55,37 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
       _filter = initial;
       _search.text = initial;
     }
+  }
+
+  /// True when [have] (what's cached) covers everything [want] needs.
+  /// .all covers anything; otherwise compare durations.
+  bool _periodCovers(ReceiptPeriod have, ReceiptPeriod want) {
+    if (have == ReceiptPeriod.all) return true;
+    if (want == ReceiptPeriod.all) return false;
+    return have.duration!.inDays >= want.duration!.inDays;
+  }
+
+  /// User tapped a chip. Update local state; only hit the network if the
+  /// cached data can't cover the new period.
+  void _selectPeriod(ReceiptPeriod p) {
+    setState(() => _selectedPeriod = p);
+    final prov = context.read<ReceiptProvider>();
+    if (prov.receipts.isEmpty || !_periodCovers(prov.currentPeriod, p)) {
+      prov.loadReceipts(period: p);
+    }
+  }
+
+  /// Client-side filter: keep only rows whose date is on or after the
+  /// cutoff for [_selectedPeriod]. Uses YYYY-MM-DD string compare so
+  /// timezone differences can't shift the boundary (same approach as
+  /// the dashboard chart).
+  List<Receipt> _scopeToPeriod(List<Receipt> all) {
+    if (_selectedPeriod.duration == null) return all;
+    final cutoff = DateTime.now().subtract(_selectedPeriod.duration!);
+    final mm = cutoff.month.toString().padLeft(2, '0');
+    final dd = cutoff.day.toString().padLeft(2, '0');
+    final cutoffStr = '${cutoff.year}-$mm-$dd';
+    return all.where((r) => r.date.compareTo(cutoffStr) >= 0).toList();
   }
 
   @override
@@ -232,7 +274,11 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
   Widget build(BuildContext context) {
     final receipts = context.watch<ReceiptProvider>().receipts;
     final loading = context.watch<ReceiptProvider>().loading;
-    final filtered = receipts.where((r) =>
+    // Scope client-side by the chip selection first, then apply the
+    // text search. This way changing chips is instant (no network)
+    // whenever the provider cache already covers the period.
+    final scoped = _scopeToPeriod(receipts);
+    final filtered = scoped.where((r) =>
       r.storeName.toLowerCase().contains(_filter.toLowerCase()) || r.id.contains(_filter)
     ).toList();
 
@@ -273,11 +319,11 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
                   padding: const EdgeInsets.only(right: 6),
                   child: ChoiceChip(
                     label: Text(p.label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800)),
-                    selected: context.watch<ReceiptProvider>().currentPeriod == p,
-                    onSelected: (_) => context.read<ReceiptProvider>().loadReceipts(period: p),
+                    selected: _selectedPeriod == p,
+                    onSelected: (_) => _selectPeriod(p),
                     selectedColor: const Color(0xFFd1fae5),
                     labelStyle: TextStyle(
-                      color: context.watch<ReceiptProvider>().currentPeriod == p
+                      color: _selectedPeriod == p
                         ? const Color(0xFF064e3b) : Colors.black54,
                     ),
                     visualDensity: VisualDensity.compact,
@@ -297,10 +343,11 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
         ),
         Expanded(
           child: RefreshIndicator(
-            onRefresh: () {
-              final p = context.read<ReceiptProvider>();
-              return p.loadReceipts(period: p.currentPeriod, force: true);
-            },
+            // Force a refetch scoped to whatever chip the user has selected.
+            // Falls back to the provider's last period if for some reason
+            // our local selection hasn't been satisfied yet.
+            onRefresh: () => context.read<ReceiptProvider>()
+              .loadReceipts(period: _selectedPeriod, force: true),
             child: loading
             ? const Center(child: CircularProgressIndicator())
             : filtered.isEmpty

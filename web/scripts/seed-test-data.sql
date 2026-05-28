@@ -1,0 +1,290 @@
+-- =============================================================================
+-- GetGuac test-data seed — every feature, one SQL block.
+-- =============================================================================
+-- Paste this into the Supabase SQL editor while signed in as the user you want
+-- to populate. Everything keys off auth.uid(), so no IDs to edit.
+--
+-- What it builds, for the LAST 6 MONTHS of fake history:
+--   - Weekly grocery runs (Costco / Walmart / Target rotating) → predictive
+--     shopping list will detect cadences + suggest "buy again" items
+--   - Bi-weekly + monthly cadences (dish soap, laundry, dog food)
+--   - Monthly recurring CHARGES at fixed merchants (Netflix, Spotify,
+--     Apple One, gym) → subscription tracker picks these up
+--   - One "merchant spike": Target spend in the last 30 days is 4× the avg
+--     of the prior 3 windows → anomaly card flag
+--   - One "missing recurring": Hulu paid monthly for 5 months then nothing
+--     for 50+ days → anomaly card watch
+--   - Rated receipts (1-5★) for GuacScore
+--   - Bank fees + interest for GuacScore bite penalty
+--   - Business + charity receipts for the tax summary
+--   - Predicted items pre-populated in shopping_list (predicted=true,
+--     approved=false) for the Smashlist suggestion strip
+--
+-- Markers:
+--   - receipts.validation_comment = '[SEED v2 SQL]'
+--   - shopping_list.comments      = '[SEED v2 SQL]'
+--   - bank_fees.raw_description   = '[SEED v2 SQL] …'
+--   - rewards.reward_no LIKE 'SEED-%'
+--
+-- Idempotent: re-running the script wipes the prior [SEED v2 SQL] data for
+-- THIS user before re-inserting. Other users' data is untouched.
+-- =============================================================================
+
+do $$
+declare
+  uid uuid := auth.uid();
+  today date := current_date;
+  i int;
+  d date;
+  rcpt_id uuid;
+begin
+  if uid is null then
+    raise exception 'auth.uid() is null — sign in via Supabase before running this seed';
+  end if;
+
+  -- ─── 0. WIPE prior seed rows for this user (idempotent re-run) ─────────
+  delete from public.shopping_list
+   where user_id = uid
+     and comments = '[SEED v2 SQL]';
+
+  delete from public.receipts
+   where user_id = uid
+     and validation_comment = '[SEED v2 SQL]';
+  -- receipt_items cascade via FK ON DELETE CASCADE
+
+  delete from public.bank_fees
+   where user_id = uid
+     and raw_description like '[SEED v2 SQL]%';
+
+  delete from public.rewards
+   where user_id = uid
+     and reward_no like 'SEED-%';
+
+  -- ─── 1. WEEKLY GROCERY RUNS (24 buys, rotating 3 stores) ───────────────
+  -- Each week we generate one receipt at one of the three stores. Items
+  -- vary slightly per store so the embedding-merge path has work to do.
+  for i in 0..23 loop
+    d := today - (i * 7 + 1);
+    insert into public.receipts (
+      user_id, store_name, date, total_amount, tax_paid,
+      category, rating, is_return, business_purchase, validation_comment, processed
+    ) values (
+      uid,
+      case (i % 3)
+        when 0 then 'Costco Wholesale'
+        when 1 then 'Walmart'
+        else        'Target'
+      end,
+      d,
+      35.00 + (i % 5) * 3.50,                                -- $35–$49
+      (35.00 + (i % 5) * 3.50) * 0.082,                      -- ~8.2% tax
+      'grub',
+      case when i < 4 then 4 else 5 end,                     -- recent rated 4★, older 5★
+      false, false,
+      '[SEED v2 SQL]',
+      true
+    )
+    returning id into rcpt_id;
+
+    insert into public.receipt_items (receipt_id, item_name, qty, price, category) values
+      (rcpt_id,
+        case (i % 3)
+          when 0 then 'KS ORGANIC WHOLE MILK 2 PK'
+          when 1 then 'GREAT VALUE 2% MILK 1 GAL'
+          else        'HORIZON ORGANIC WHOLE 1/2 GAL'
+        end,
+        1, 5.49, 'grub'),
+      (rcpt_id,
+        case (i % 3)
+          when 0 then 'KIRKLAND CAGE FREE EGGS 24CT'
+          when 1 then 'GV LARGE EGGS DOZEN'
+          else        'GOOD&GATHER FREE RANGE 12CT'
+        end,
+        1, 4.99, 'grub'),
+      (rcpt_id, 'BANANAS', 1, 1.29, 'grub'),
+      (rcpt_id, 'BREAD', 1, 3.79, 'grub');
+  end loop;
+
+  -- ─── 2. BI-WEEKLY HOUSEHOLD (12 buys) ──────────────────────────────────
+  for i in 0..11 loop
+    d := today - (i * 14 + 4);
+    insert into public.receipts (
+      user_id, store_name, date, total_amount, tax_paid,
+      category, rating, validation_comment, processed
+    ) values (
+      uid, 'Target', d, 22.50, 22.50 * 0.082,
+      'household', 4, '[SEED v2 SQL]', true
+    ) returning id into rcpt_id;
+    insert into public.receipt_items (receipt_id, item_name, qty, price, category) values
+      (rcpt_id, 'BOUNTY SELECT-A-SIZE 6 PK', 1, 17.84, 'household'),
+      (rcpt_id, 'DAWN ULTRA ORIGINAL', 1, 4.66, 'household');
+  end loop;
+
+  -- ─── 3. MONTHLY RESTOCK (6 buys) ───────────────────────────────────────
+  for i in 0..5 loop
+    d := today - (i * 30 + 8);
+    insert into public.receipts (
+      user_id, store_name, date, total_amount, tax_paid,
+      category, rating, validation_comment, processed
+    ) values (
+      uid, 'Costco Wholesale', d, 89.99, 89.99 * 0.082,
+      'household', 5, '[SEED v2 SQL]', true
+    ) returning id into rcpt_id;
+    insert into public.receipt_items (receipt_id, item_name, qty, price, category) values
+      (rcpt_id, 'TIDE HE LIQUID 170 LOADS', 1, 24.99, 'household'),
+      (rcpt_id, 'KS DAILY MULTI 365CT', 1, 11.99, 'health'),
+      (rcpt_id, 'KS ADULT CHICKEN&RICE 40LB', 1, 39.99, 'pets'),
+      (rcpt_id, 'PAPER TOWELS 12 ROLL', 1, 22.99, 'household');
+  end loop;
+
+  -- ─── 4. MONTHLY SUBSCRIPTIONS (auto-pay merchants) ─────────────────────
+  -- 6 monthly Netflix charges → subscription tracker picks this up cleanly.
+  -- One small price bump in the most recent charge to exercise the
+  -- priceChanged flag.
+  for i in 0..5 loop
+    d := today - (i * 30 + 2);
+    insert into public.receipts (
+      user_id, store_name, date, total_amount, tax_paid,
+      category, validation_comment, processed
+    ) values (
+      uid, 'NETFLIX.COM',
+      d,
+      case when i = 0 then 17.99 else 15.49 end,             -- recent bump
+      0,
+      'subscriptions', '[SEED v2 SQL]', true
+    );
+  end loop;
+
+  for i in 0..5 loop
+    d := today - (i * 30 + 5);
+    insert into public.receipts (
+      user_id, store_name, date, total_amount, tax_paid,
+      category, validation_comment, processed
+    ) values (
+      uid, 'Spotify', d, 10.99, 0,
+      'subscriptions', '[SEED v2 SQL]', true
+    );
+  end loop;
+
+  for i in 0..5 loop
+    d := today - (i * 30 + 12);
+    insert into public.receipts (
+      user_id, store_name, date, total_amount, tax_paid,
+      category, validation_comment, processed
+    ) values (
+      uid, 'Apple.com/Bill', d, 19.95, 0,
+      'subscriptions', '[SEED v2 SQL]', true
+    );
+  end loop;
+
+  -- ─── 5. MISSING-RECURRING: Hulu paid 5× monthly, then silence ──────────
+  -- Last charge ~70 days ago → anomaly card "No HULU charge in 70 days".
+  for i in 1..5 loop
+    d := today - (i * 30 + 70);                              -- 100, 130, ... days ago
+    insert into public.receipts (
+      user_id, store_name, date, total_amount, tax_paid,
+      category, validation_comment, processed
+    ) values (
+      uid, 'Hulu', d, 12.99, 0, 'subscriptions',
+      '[SEED v2 SQL]', true
+    );
+  end loop;
+
+  -- ─── 6. MERCHANT SPIKE: Target current period 4× usual ─────────────────
+  -- One big-ticket Target run in the last 5 days that dwarfs prior Target
+  -- visits → anomaly card flag "TARGET is 4.x× your usual".
+  insert into public.receipts (
+    user_id, store_name, date, total_amount, tax_paid,
+    category, rating, validation_comment, processed
+  ) values (
+    uid, 'Target', today - 3, 285.00, 285.00 * 0.082,
+    'household', 3, '[SEED v2 SQL]', true
+  );
+
+  -- ─── 7. BUSINESS PURCHASES (tax summary) ───────────────────────────────
+  for i in 0..3 loop
+    d := today - (i * 22 + 6);
+    insert into public.receipts (
+      user_id, store_name, date, total_amount, tax_paid,
+      category, business_purchase, rating, validation_comment, processed
+    ) values (
+      uid, 'Office Depot', d, 65.40, 65.40 * 0.082,
+      'office', true, 5, '[SEED v2 SQL]', true
+    );
+  end loop;
+
+  -- ─── 8. CHARITY DONATIONS (tax summary) ────────────────────────────────
+  for i in 0..2 loop
+    d := today - (i * 45 + 10);
+    insert into public.receipts (
+      user_id, store_name, date, total_amount, tax_paid,
+      category, validation_comment, processed
+    ) values (
+      uid, 'Goodwill', d, 50.00, 0, 'charity',
+      '[SEED v2 SQL]', true
+    );
+  end loop;
+
+  -- ─── 9. ONE-OFF + QUARTERLY (negative-control for predictions) ─────────
+  -- Predictor should NOT surface these as "due now".
+  insert into public.receipts (user_id, store_name, date, total_amount, tax_paid, category, validation_comment, processed) values
+    (uid, 'Home Depot', today - 20,  14.99, 1.20, 'household', '[SEED v2 SQL]', true),
+    (uid, 'Best Buy',   today - 88,  129.99, 10.6, 'tech',     '[SEED v2 SQL]', true),
+    (uid, 'Patagonia',  today - 55,  89.00,  7.30, 'apparel',  '[SEED v2 SQL]', true);
+
+  -- ─── 10. BANK FEES + INTEREST (GuacScore bite penalty) ─────────────────
+  -- Total ~$120 across the period: $80 interest, $40 fees. The bite
+  -- penalty formula weighs interest 2× harder than fees, so this gives a
+  -- visible -10 to -15 point hit on the score.
+  for i in 0..3 loop
+    insert into public.bank_fees (
+      user_id, date, kind, fee_kind, merchant, amount, raw_description
+    ) values
+      (uid, today - (i * 30 + 5), 'interest', 'Purchase interest',
+        'AMEX', 20.00, '[SEED v2 SQL] purchase interest'),
+      (uid, today - (i * 30 + 9), 'fee',      'Late fee',
+        'CHASE', 10.00, '[SEED v2 SQL] late fee');
+  end loop;
+
+  -- ─── 11. PREDICTED ITEMS in shopping_list (Smashlist suggestions) ──────
+  -- The /shopping page splits "predicted=true, approved=false" rows into
+  -- a Suggestions strip above the curated list. Pre-populate three so
+  -- the strip renders on a fresh dashboard without waiting for the cron.
+  insert into public.shopping_list (
+    user_id, item_name, qty, frequency, list_name,
+    predicted, predicted_reason, predicted_avg_cadence_days, predicted_last_purchase_date,
+    approved, sent_to_store, comments
+  ) values
+    (uid, 'Whole Milk',     1, 'Weekly',   'Pantry',
+      true, 'Avg every 7d, last bought 6d ago',  7,  today - 6,  false, false, '[SEED v2 SQL]'),
+    (uid, 'Paper Towels',   1, 'Biweekly', 'Pantry',
+      true, 'Avg every 14d, last bought 13d ago', 14, today - 13, false, false, '[SEED v2 SQL]'),
+    (uid, 'Dog Food',       1, 'Monthly',  'Pantry',
+      true, 'Avg every 30d, last bought 28d ago', 30, today - 28, false, false, '[SEED v2 SQL]');
+
+  -- Plus one user-curated (non-predicted) row so the main list isn't empty.
+  insert into public.shopping_list (
+    user_id, item_name, qty, frequency, list_name,
+    predicted, approved, sent_to_store, comments
+  ) values
+    (uid, 'Coffee Beans', 1, 'Monthly', 'Cravings', false, false, false, '[SEED v2 SQL]');
+
+  -- ─── 12. REWARDS rows (so /rewards isn't empty) ────────────────────────
+  insert into public.rewards (user_id, store_name, reward_no) values
+    (uid, 'Costco Wholesale', 'SEED-COSTCO-' || substr(uid::text, 1, 8)),
+    (uid, 'Target',           'SEED-TARGET-' || substr(uid::text, 1, 8)),
+    (uid, 'Walmart',          'SEED-WMART-'  || substr(uid::text, 1, 8))
+  on conflict do nothing;
+
+  raise notice 'Seed complete. Tag: [SEED v2 SQL]. Re-run to refresh; the WIPE step at the top of this script removes prior seed rows for this user.';
+end $$;
+
+-- =============================================================================
+-- Optional cleanup (only this user's seed)
+-- =============================================================================
+-- To wipe without re-seeding, run JUST this snippet (uncomment):
+--
+-- delete from public.shopping_list where user_id = auth.uid() and comments = '[SEED v2 SQL]';
+-- delete from public.receipts      where user_id = auth.uid() and validation_comment = '[SEED v2 SQL]';
+-- delete from public.bank_fees     where user_id = auth.uid() and raw_description like '[SEED v2 SQL]%';
+-- delete from public.rewards       where user_id = auth.uid() and reward_no like 'SEED-%';

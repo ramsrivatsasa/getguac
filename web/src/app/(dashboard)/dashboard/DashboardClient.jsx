@@ -30,6 +30,28 @@ function periodStart(period, count) {
   return now
 }
 
+// Convert the dashboard's free-form (period, count) selection into the
+// nearest Receipts-screen chip id. Used when navigating from a bar in
+// the Spending-by-Store chart so the receipts page opens scoped to the
+// SAME time window the user was just looking at.
+//
+// The receipts chips are coarser than the dashboard selector — we
+// round UP to the next chip so we never accidentally HIDE rows the
+// user was already viewing on the dashboard.
+function periodToReceiptsChip(period, count) {
+  let days
+  if (period === 'daily')   days = count
+  else if (period === 'weekly')  days = count * 7
+  else if (period === 'monthly') days = count * 30
+  else if (period === 'yearly')  days = count * 365
+  else days = 30
+  if (days <= 30)  return '1M'
+  if (days <= 90)  return '3M'
+  if (days <= 180) return '6M'
+  if (days <= 365) return '1Y'
+  return 'All'
+}
+
 export default function DashboardClient({ initialReceipts, initialRewards, firstName }) {
   const { spendingPeriod, setSpendingPeriod } = useStore()
   const router = useRouter()
@@ -212,7 +234,11 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
                 onClick={(state) => {
                   const datum = state?.activePayload?.[0]?.payload
                   if (datum?.fullName) {
-                    router.push(`/receipts?store=${encodeURIComponent(datum.fullName)}`)
+                    // Carry the dashboard's current period selection into
+                    // the receipts page so the user lands on the same
+                    // time window they were just viewing, not the default 1M.
+                    const chip = periodToReceiptsChip(period, periodCount)
+                    router.push(`/receipts?store=${encodeURIComponent(datum.fullName)}&period=${chip}`)
                   }
                 }}
               >

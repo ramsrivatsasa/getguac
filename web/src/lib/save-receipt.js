@@ -157,7 +157,19 @@ export async function saveReceipt(sb, userId, parsed, opts = {}) {
     return { receipt_id: existingId, merged: true }
   }
 
-  // 4. INSERT new row.
+  // 4. Ensure a rewards row for this (user, store) so the receipt list
+  // shows a reward placeholder. Used to be a web-only post-step in
+  // useAddReceipt; without it, mobile-captured receipts (and post-
+  // centralization web receipts) had a blank Reward No column. Moving
+  // it into the central pipeline restores parity for every platform.
+  // Best-effort: a rewards failure must NEVER block the receipt insert.
+  let rewardNo = ''
+  if (flatParsed.store_name) {
+    rewardNo = await _ensureStoreRewardServer(sb, userId, flatParsed.store_name)
+      .catch((e) => { console.warn('[save-receipt] ensureStoreReward skipped:', e.message); return '' })
+  }
+
+  // 5. INSERT new row.
   const insertRow = {
     user_id: userId,
     store_name: flatParsed.store_name || 'Receipt',
@@ -175,6 +187,7 @@ export async function saveReceipt(sb, userId, parsed, opts = {}) {
     business_purchase: Boolean(opts.business_purchase),
     processed: Array.isArray(flatParsed.items) && flatParsed.items.length > 0,
     validation_comment: opts.validation_comment || null,
+    reward_no: rewardNo || null,
   }
   if (Array.isArray(opts.extra_page_urls) && opts.extra_page_urls.length > 0) {
     insertRow.extra_page_urls = opts.extra_page_urls
@@ -189,7 +202,7 @@ export async function saveReceipt(sb, userId, parsed, opts = {}) {
 
   const receiptId = rcpt.id
 
-  // 5. Items — best effort. Failure doesn't undo the parent receipt.
+  // 6. Items — best effort. Failure doesn't undo the parent receipt.
   //    When we have a store_id, also upsert into store_items so the
   //    /stores page + Worth-It analytics include items from receipts
   //    captured on every platform (this used to be web-only).
@@ -220,7 +233,7 @@ export async function saveReceipt(sb, userId, parsed, opts = {}) {
     if (itemErr) console.warn('[save-receipt] item insert failed:', itemErr.message)
   }
 
-  // 6. Refund policies. Two tier:
+  // 7. Refund policies. Two tier:
   //    a) AI extracted policies from the receipt body → use those.
   //    b) Otherwise look up curated store defaults (Amazon 30d, Costco lifetime, ...).
   if (Array.isArray(flatParsed.refund_policies) && flatParsed.refund_policies.length > 0) {
@@ -259,6 +272,42 @@ function flattenParsed(p) {
     }
   }
   return p
+}
+
+// Server-side mirror of lib/db.js#ensureStoreReward. Takes the supabase
+// client as a parameter so the central save pipeline (which serves web,
+// mobile, iOS) can ensure a rewards row regardless of which auth flavor
+// the caller has — the db.js version uses createClient() which only
+// works in browser contexts. Best-effort: returns '' on any failure so
+// receipt save never blocks on the rewards table.
+async function _ensureStoreRewardServer(sb, userId, storeName) {
+  if (!sb || !userId || !storeName) return ''
+  const { data: existing } = await sb
+    .from('rewards')
+    .select('reward_no')
+    .eq('user_id', userId)
+    .ilike('store_name', storeName)
+    .limit(1)
+    .maybeSingle()
+  if (existing?.reward_no) return existing.reward_no
+
+  const placeholder = `GG-${Math.random().toString(36).slice(2, 10).toUpperCase()}`
+  const oneYear = new Date(); oneYear.setFullYear(oneYear.getFullYear() + 1)
+  const { error } = await sb.from('rewards').insert({
+    user_id: userId,
+    reward_no: placeholder,
+    expiry_date: oneYear.toISOString().slice(0, 10),
+    reward_type: 'Loyalty',
+    reward_title: `${storeName} (placeholder)`,
+    description: 'Auto-created by receipt scan. Replace with your real loyalty number.',
+    store_name: storeName,
+    reward_points: 0,
+  })
+  if (error) {
+    console.warn('[save-receipt] ensureStoreReward insert failed:', error.message)
+    return placeholder
+  }
+  return placeholder
 }
 
 // Server-side store_items upsert. Mirrors lib/db.js#upsertStoreItem but

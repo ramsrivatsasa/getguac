@@ -69,7 +69,13 @@ export default function ReceiptsPage() {
   // Default to 1M to match mobile + iOS. Wider scopes are opt-in via the
   // chip row below. Avoids hammering the table with an unbounded fetch on
   // every visit for users with thousands of receipts.
-  const [period, setPeriod] = useState('1M')
+  // When arriving from the dashboard's chart, ?period=3M (etc) seeds the
+  // chip so the user lands on the same time window they were just looking
+  // at. Falls back to 1M if the param is missing or unknown.
+  const [period, setPeriod] = useState(() => {
+    const p = searchParams.get('period')
+    return ['1M','3M','6M','1Y','All'].includes(p) ? p : '1M'
+  })
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState(EMPTY)
   const [file, setFile] = useState(null)
@@ -135,12 +141,15 @@ export default function ReceiptsPage() {
     try { localStorage.setItem('receipts_col_widths_v1', JSON.stringify(colWidths)) } catch {}
   }, [colWidths])
 
-  // Keep the search box in sync with ?store=... so coming back from the
-  // dashboard with a fresh store filter updates the visible filter even
-  // when this component was already mounted.
+  // Keep the search box AND period chip in sync with the URL so coming
+  // back from the dashboard with a fresh ?store + ?period updates the
+  // visible state even when this component was already mounted (e.g.
+  // user already opened /receipts, then clicked a different dashboard bar).
   useEffect(() => {
     const fromUrl = searchParams.get('store') || ''
     if (fromUrl && fromUrl !== search) setSearch(fromUrl)
+    const p = searchParams.get('period')
+    if (p && ['1M','3M','6M','1Y','All'].includes(p) && p !== period) setPeriod(p)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams])
   const startResize = useCallback((e, colId) => {

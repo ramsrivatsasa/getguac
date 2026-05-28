@@ -3,7 +3,7 @@ import { useState, useMemo, useCallback } from 'react'
 import { useShoppingList, useUpsertShoppingItem, useDeleteShoppingItem } from '../../../hooks/useShopping'
 import { SHOPPING_LISTS, SHOPPING_LIST_META } from '../../../lib/db'
 import toast from 'react-hot-toast'
-import { Trash2, CheckCircle, Circle, X, Sparkles, Wand2, Zap, Store as StoreIcon, MapPin, Star, Share2, ShoppingCart, BadgeDollarSign, ChevronDown, ChevronRight } from 'lucide-react'
+import { Trash2, CheckCircle, Circle, X, Sparkles, Wand2, Zap, Store as StoreIcon, MapPin, Star, Share2, ShoppingCart, BadgeDollarSign, ChevronDown, ChevronRight, MessageCircle, Phone, Mail, Copy } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
 import { groupPredictionsByStore } from '../../../lib/prediction-feedback'
 import { displayStoreName } from '../../../lib/store-name-normalize'
@@ -144,31 +144,52 @@ export default function ShoppingPage() {
     return `${header}${sections.join('\n')}\n\n— shared from getguac.app`
   }
 
+  // Direct share-channel handlers — bypass the native share sheet so
+  // the user picks WhatsApp / Messages / Mail without a second tap.
+  // Each opens a URL the system already knows how to route.
+  function shareViaWhatsApp(text) {
+    // wa.me works on web, Android, and iOS; opens the WhatsApp app
+    // pre-filled when installed, otherwise the WhatsApp web client.
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer')
+  }
+  function shareViaSMS(text) {
+    // sms: URI scheme works on mobile (opens Messages); on desktop most
+    // browsers do nothing, so we fall back to clipboard.
+    const isPhone = /iPhone|iPad|Android/i.test(typeof navigator !== 'undefined' ? navigator.userAgent : '')
+    if (isPhone) {
+      // iOS uses & for the body separator; Android uses ?body=. The
+      // ?body= form is widely supported on iOS too, so use it.
+      window.location.href = `sms:?body=${encodeURIComponent(text)}`
+    } else {
+      navigator.clipboard.writeText(text).then(
+        () => toast.success('SMS not supported on desktop — copied so you can paste'),
+        () => toast.error('Copy failed'),
+      )
+    }
+  }
+  function shareViaEmail(text) {
+    const subject = 'My GetGuac Smashlist'
+    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`
+  }
+  function shareViaClipboard(text) {
+    navigator.clipboard.writeText(text).then(
+      () => toast.success('Copied — paste anywhere 🛒'),
+      (e) => toast.error('Copy failed: ' + e.message),
+    )
+  }
+  // Original native share sheet — kept as the "More" affordance for
+  // surfaces the explicit channels can't cover (Slack, Telegram, etc).
+  async function shareNative(text) {
+    if (typeof navigator?.share === 'function') {
+      try { await navigator.share({ title: 'My GetGuac Smashlist', text }); return }
+      catch (e) { if (e?.name !== 'AbortError') console.warn('[share] native failed:', e.message) }
+    }
+    shareViaClipboard(text)
+  }
+  // Convenience used by the Share button to fall through to native on
+  // phones, clipboard on desktop. Kept for keyboard-tab speed.
   async function shareSmashlist(items, listLabel = 'all') {
-    const text = buildShareText(items, listLabel)
-    const shareData = {
-      title: 'My GetGuac Smashlist',
-      text,
-    }
-    // Phones (Chrome/Safari iOS+Android) expose navigator.share — opens
-    // the native share sheet with WhatsApp, Messages, Mail, etc.
-    if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
-      try {
-        await navigator.share(shareData)
-        return
-      } catch (e) {
-        // User cancelled or share denied — fall through to clipboard.
-        if (e?.name !== 'AbortError') console.warn('[share] failed:', e.message)
-      }
-    }
-    // Desktop fallback: copy the dated list to clipboard so the user can
-    // paste it anywhere (Slack, email, message).
-    try {
-      await navigator.clipboard.writeText(text)
-      toast.success('Smashlist copied to clipboard — paste anywhere 🛒')
-    } catch (e) {
-      toast.error('Copy failed: ' + e.message)
-    }
+    shareNative(buildShareText(items, listLabel))
   }
 
   async function dismissPredicted(item) {
@@ -319,18 +340,19 @@ export default function ShoppingPage() {
               'Buy Again'
             }
           </button>
-          <button
-            onClick={() => {
-              // Share the currently-visible items (current tab's ownList +
-              // its Buy Again suggestions) as a dated, grouped text block.
-              const visible = [...filteredOwn, ...filteredSuggestions]
-              shareSmashlist(visible, activeList === 'all' ? 'all' : activeList)
+          <ShareMenu
+            buildText={() => buildShareText(
+              [...filteredOwn, ...filteredSuggestions],
+              activeList === 'all' ? 'all' : activeList,
+            )}
+            handlers={{
+              whatsapp: shareViaWhatsApp,
+              sms:      shareViaSMS,
+              email:    shareViaEmail,
+              clipboard: shareViaClipboard,
+              native:   shareNative,
             }}
-            className="btn-secondary inline-flex items-center gap-1.5 text-sm"
-            title="Share this list — phone opens the native share sheet, desktop copies to clipboard"
-          >
-            <Share2 size={16} /> Share
-          </button>
+          />
           <button onClick={() => setShowForm(v => !v)} className="btn-primary">
             <GuacMascot expression="happy" size={22} /> Add Item
           </button>
@@ -562,6 +584,54 @@ export default function ShoppingPage() {
           )}
         </div>
       </section>
+    </div>
+  )
+}
+
+// Share dropdown — main button opens the native share sheet (best on
+// phones); secondary buttons send directly to WhatsApp / Messages /
+// Mail / clipboard. The dropdown closes when the user clicks anywhere
+// outside it.
+function ShareMenu({ buildText, handlers }) {
+  const [open, setOpen] = useState(false)
+  // Click-outside: close when the focus leaves the menu container.
+  function handleBlur(e) {
+    if (!e.currentTarget.contains(e.relatedTarget)) setOpen(false)
+  }
+  return (
+    <div className="relative inline-block" onBlur={handleBlur}>
+      <button
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        className="btn-secondary inline-flex items-center gap-1.5 text-sm"
+        title="Share this Smashlist"
+      >
+        <Share2 size={16} /> Share <ChevronDown size={12} />
+      </button>
+      {open && (
+        <div className="absolute right-0 mt-1 w-56 rounded-xl bg-white shadow-xl ring-1 ring-gray-200 z-50 overflow-hidden">
+          <div className="px-3 py-2 border-b border-gray-100 text-[10px] uppercase tracking-wider text-gray-500 font-bold">
+            Send your list to…
+          </div>
+          {[
+            { key: 'whatsapp',  icon: <MessageCircle size={14} className="text-emerald-600" />, label: 'WhatsApp', tone: 'hover:bg-emerald-50' },
+            { key: 'sms',       icon: <Phone size={14} className="text-sky-600" />,            label: 'Text / SMS', tone: 'hover:bg-sky-50' },
+            { key: 'email',     icon: <Mail size={14} className="text-amber-600" />,           label: 'Email',     tone: 'hover:bg-amber-50' },
+            { key: 'clipboard', icon: <Copy size={14} className="text-gray-600" />,            label: 'Copy text', tone: 'hover:bg-gray-50' },
+            { key: 'native',    icon: <Share2 size={14} className="text-violet-600" />,        label: 'More…',     tone: 'hover:bg-violet-50' },
+          ].map(opt => (
+            <button
+              key={opt.key}
+              type="button"
+              onClick={() => { handlers[opt.key](buildText()); setOpen(false) }}
+              className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-800 ${opt.tone}`}
+            >
+              {opt.icon}
+              <span>{opt.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

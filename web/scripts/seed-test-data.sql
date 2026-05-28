@@ -63,8 +63,12 @@ begin
   -- ─── 1. WEEKLY GROCERY RUNS (24 buys, rotating 3 stores) ───────────────
   -- Each week we generate one receipt at one of the three stores. Items
   -- vary slightly per store so the embedding-merge path has work to do.
+  -- The "+6" offset on the most recent buy puts it just over the 0.80×
+  -- cadence threshold (6 days vs avg 7) so the predictor surfaces it
+  -- as "due now". Without this offset, daysSince=1 fails the gate and
+  -- the seed produces zero suggestions.
   for i in 0..23 loop
-    d := today - (i * 7 + 1);
+    d := today - (i * 7 + 6);
     insert into public.receipts (
       user_id, store_name, date, total_amount, tax_paid,
       category, rating, is_return, business_purchase, validation_comment, processed
@@ -106,8 +110,9 @@ begin
   end loop;
 
   -- ─── 2. BI-WEEKLY HOUSEHOLD (12 buys) ──────────────────────────────────
+  -- Last buy 12 days ago, cadence 14 → 12 >= 11.2 → predictor surfaces.
   for i in 0..11 loop
-    d := today - (i * 14 + 4);
+    d := today - (i * 14 + 12);
     insert into public.receipts (
       user_id, store_name, date, total_amount, tax_paid,
       category, rating, validation_comment, processed
@@ -121,8 +126,9 @@ begin
   end loop;
 
   -- ─── 3. MONTHLY RESTOCK (6 buys) ───────────────────────────────────────
+  -- Last buy 25 days ago, cadence 30 → 25 >= 24 → predictor surfaces.
   for i in 0..5 loop
-    d := today - (i * 30 + 8);
+    d := today - (i * 30 + 25);
     insert into public.receipts (
       user_id, store_name, date, total_amount, tax_paid,
       category, rating, validation_comment, processed

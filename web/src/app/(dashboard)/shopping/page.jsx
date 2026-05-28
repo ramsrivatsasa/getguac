@@ -60,9 +60,40 @@ export default function ShoppingPage() {
     }
   }
 
+  // Predict button does BOTH steps the right way round:
+  //   1. backfill embeddings for any unembedded items (so the similarity
+  //      merge in step 2 actually works — "KS Whole Milk" + "GV 2% Milk"
+  //      collapse into one cadence signal)
+  //   2. run the smashlist predictor
+  // No need for a separate "Embed" button — the user shouldn't have to
+  // know about the embedding step.
   async function predictNow() {
     setPredicting(true)
     try {
+      // STEP 1: embed unembedded items. One backfill call processes up
+      // to 30 batches × 50 = 1500 items; for accounts bigger than that
+      // we tell the user the next click picks up where we left off
+      // instead of blocking the whole flow. The predictor still works
+      // on partial embeddings — it just won't merge variants that
+      // haven't been embedded yet.
+      setEmbedding(true)
+      try {
+        const eres = await fetch('/api/embeddings/backfill', { method: 'POST' })
+        const ejson = await eres.json().catch(() => ({}))
+        if (eres.ok && ejson.embedded > 0) {
+          if (ejson.done) {
+            toast.success(`Embedded ${ejson.embedded} items 🧠`)
+          } else {
+            toast(`Embedded ${ejson.embedded}, ${ejson.remaining} left — running predictor on what's ready`, { icon: '⏳' })
+          }
+        }
+        // If embedding fails (rate limit, missing migration, etc.) we
+        // press on — the predictor still works on names alone, just
+        // with lower merge quality.
+      } catch (_) { /* fall through to predict */ }
+      finally { setEmbedding(false) }
+
+      // STEP 2: run the predictor.
       const res = await fetch('/api/smashlist/predict', { method: 'POST' })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Predict failed')
@@ -80,25 +111,6 @@ export default function ShoppingPage() {
       toast.error(e.message)
     } finally {
       setPredicting(false)
-    }
-  }
-
-  async function embedNow() {
-    setEmbedding(true)
-    try {
-      const res = await fetch('/api/embeddings/backfill', { method: 'POST' })
-      const json = await res.json()
-      if (!res.ok) throw new Error(json.error || 'Embed failed')
-      const { embedded = 0, remaining = 0, done = false } = json
-      toast.success(
-        done
-          ? `All caught up — ${embedded} embedded`
-          : `Embedded ${embedded}, ${remaining} remaining. Click again to continue.`
-      )
-    } catch (e) {
-      toast.error(e.message)
-    } finally {
-      setEmbedding(false)
     }
   }
 
@@ -153,17 +165,13 @@ export default function ShoppingPage() {
             onClick={predictNow}
             disabled={predicting}
             className="btn-secondary inline-flex items-center gap-1.5 text-sm disabled:opacity-50"
-            title="Refresh suggestions from your purchase history"
+            title="Refresh suggestions from your purchase history (auto-embeds new items)"
           >
-            <Wand2 size={16} /> {predicting ? 'Predicting…' : 'Predict now'}
-          </button>
-          <button
-            onClick={embedNow}
-            disabled={embedding}
-            className="btn-secondary inline-flex items-center gap-1.5 text-sm disabled:opacity-50"
-            title="Embed historical items so similar names get grouped"
-          >
-            <Zap size={16} /> {embedding ? 'Embedding…' : 'Embed now'}
+            <Wand2 size={16} /> {
+              embedding ? 'Embedding…' :
+              predicting ? 'Predicting…' :
+              'Predict now'
+            }
           </button>
           <button onClick={() => setShowForm(v => !v)} className="btn-primary">
             <GuacMascot expression="happy" size={22} /> Add Item

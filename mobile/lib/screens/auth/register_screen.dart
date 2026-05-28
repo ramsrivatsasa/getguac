@@ -116,9 +116,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
     if (_usernameStatus != 'available') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pick an available @getguac.app handle first.')),
-      );
+      // Specific reason → user can act on it, instead of the generic
+      // "pick available" message that left them re-typing the same handle.
+      final hint = switch (_usernameStatus) {
+        'taken'    => 'That handle is already taken — try another.',
+        'reserved' => 'That handle is reserved — try another.',
+        'invalid'  => '3–32 chars, must start + end with a letter or number.',
+        _          => 'Pick a GetGuac handle first.',
+      };
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(hint)));
       return;
     }
     if (!_acceptTerms) {

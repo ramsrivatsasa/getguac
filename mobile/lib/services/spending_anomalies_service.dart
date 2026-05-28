@@ -59,18 +59,24 @@ String _displayName(String raw) {
   return canon.toUpperCase();
 }
 
-String _dayString(DateTime d) {
-  final y = d.year.toString().padLeft(4, '0');
-  final m = d.month.toString().padLeft(2, '0');
-  final dd = d.day.toString().padLeft(2, '0');
+String _dayStringUtc(DateTime d) {
+  final u = d.toUtc();
+  final y = u.year.toString().padLeft(4, '0');
+  final m = u.month.toString().padLeft(2, '0');
+  final dd = u.day.toString().padLeft(2, '0');
   return '$y-$m-$dd';
 }
 
 List<Anomaly> detectAnomalies(List<Receipt> receipts, {int windowDays = 30}) {
   if (receipts.isEmpty) return const [];
-  final now = DateTime.now();
-  final currentStart = _dayString(now.subtract(Duration(days: windowDays)));
-  final priorStart   = _dayString(now.subtract(Duration(days: windowDays * (_kPriorWindows + 1))));
+  // Compare receipts (ISO YYYY-MM-DD strings, UTC-stable) against UTC
+  // cutoffs. DateTime.now() is local: subtracting days then formatting
+  // can shift the boundary by 24h for users east of UTC, silently moving
+  // anomaly windows by a day. UTC keeps the boundaries consistent with
+  // how the receipts table actually stores dates.
+  final now = DateTime.now().toUtc();
+  final currentStart = _dayStringUtc(now.subtract(Duration(days: windowDays)));
+  final priorStart   = _dayStringUtc(now.subtract(Duration(days: windowDays * (_kPriorWindows + 1))));
 
   // Aggregations:
   //   merchant: per storeGroupKey → { name, category, current, prior }

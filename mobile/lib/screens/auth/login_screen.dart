@@ -48,7 +48,13 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) setState(() {
         _keepSignedIn = prefs.getBool('gg_keep_signed_in') ?? true;
       });
-    } catch (_) {}
+    } catch (e) {
+      // Recoverable: default _keepSignedIn=true is already in state, the
+      // user just won't have their previous preference. Log so the bug
+      // shows up in upload-to-server logs instead of vanishing.
+      DebugLog.event('login-screen', 'loadKeepSignedIn failed',
+        level: 'warn', meta: {'error': e.toString()});
+    }
   }
 
   Future<void> _checkForUpdate() async {
@@ -236,7 +242,13 @@ class _LoginScreenState extends State<LoginScreen> {
       try {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('gg_keep_signed_in', _keepSignedIn);
-      } catch (_) {}
+      } catch (e) {
+        // Pref write failed → user will be re-prompted to choose next time.
+        // Logged because the previous bare catch hid SecureStorage errors
+        // we only discovered via user reports.
+        DebugLog.event('login-screen', 'keep-signed-in write failed',
+          level: 'warn', meta: {'error': e.toString()});
+      }
 
       // Stash credentials for next-time biometric login.
       // Two prior bugs we are guarding against:

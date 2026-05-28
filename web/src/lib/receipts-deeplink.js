@@ -54,12 +54,19 @@ export function periodToReceiptsChip(period, count) {
 /**
  * Compute the ISO date (YYYY-MM-DD) that a chip's window starts from.
  * Returns undefined for the 'All' chip (no lower bound).
+ *
+ * Uses UTC arithmetic deliberately. `new Date()` + `setDate(getDate() -
+ * days)` is LOCAL time; toISOString() then formats as UTC. Across the
+ * UTC midnight boundary the two disagree by a day, so a user in UTC+8
+ * at 23:30 local got a cutoff anchored to "yesterday", silently shifting
+ * the 1M window by one day. Compare against the DB strings, which are
+ * UTC-stable.
  */
 export function chipToDateFrom(chip) {
   const days = RECEIPT_CHIP_DAYS[chip]
   if (days == null) return undefined
   const d = new Date()
-  d.setDate(d.getDate() - days)
+  d.setUTCDate(d.getUTCDate() - days)
   return d.toISOString().slice(0, 10)
 }
 

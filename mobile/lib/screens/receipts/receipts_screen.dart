@@ -321,12 +321,23 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
     if (confirm != true) return;
     final provider = context.read<ReceiptProvider>();
     final ids = _selected.toList();
+    final failures = <String>[];
     for (final id in ids) {
-      try { await provider.deleteReceipt(id); } catch (_) {}
+      try {
+        await provider.deleteReceipt(id);
+      } catch (e) {
+        failures.add(id);
+      }
     }
     setState(_selected.clear);
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Deleted ${ids.length}')));
+      final deleted = ids.length - failures.length;
+      final msg = failures.isEmpty
+          ? 'Deleted $deleted'
+          : failures.length == ids.length
+              ? 'Delete failed — none removed'
+              : 'Deleted $deleted · ${failures.length} failed';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     }
   }
 

@@ -77,8 +77,21 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
   }
 
   Future<void> _delete(_Item it) async {
+    // Optimistic remove from list. If the DB delete fails we put it back
+    // and surface the error — previously the catch was bare, so a failed
+    // delete left a "deleted" row that reappeared on next load with no
+    // explanation.
     setState(() => _items.removeWhere((x) => x.id == it.id));
-    try { await _sb.from('shopping_list').delete().eq('id', it.id); } catch (_) {}
+    try {
+      await _sb.from('shopping_list').delete().eq('id', it.id);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _items.add(it));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not delete: $e')),
+        );
+      }
+    }
   }
 
   @override

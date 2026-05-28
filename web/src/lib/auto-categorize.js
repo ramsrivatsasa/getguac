@@ -43,8 +43,11 @@ export function autoCategorize(items) {
   if (!Array.isArray(items)) return items
   return items.map(it => {
     if (!it || it.category) return it
-    const name = String(it.item_name || '')
-    const match = RULES.find(r => r.re.test(name))
+    // Guard against item_name being non-string (object/array from a
+    // malformed parse). Stringifying `{}` produces "[object Object]"
+    // which can spuriously match permissive rules.
+    if (typeof it.item_name !== 'string' || it.item_name.length === 0) return it
+    const match = RULES.find(r => r.re.test(it.item_name))
     return match ? { ...it, category: match.slug } : it
   })
 }

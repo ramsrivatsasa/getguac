@@ -15,7 +15,7 @@ import { useQuery } from '@tanstack/react-query'
 import { createClient } from '../../../lib/supabase/client'
 import { CATEGORIES, categoryLabel, categoryClass } from '../../../lib/categories'
 import { isPaymentReceipt } from '../../../lib/payment-rows'
-import { displayStoreName } from '../../../lib/store-name-normalize'
+import { displayStoreName, storeGroupKey } from '../../../lib/store-name-normalize'
 import { computeTaxSummary, buildTaxExportCsv } from '../../../lib/tax-summary'
 import { detectSubscriptions, summarizeSubscriptions } from '../../../lib/subscription-tracker'
 import { computeSpendingTrend, formatTrend } from '../../../lib/spending-trends'
@@ -105,7 +105,12 @@ export default function ReportsPage() {
       sum += amt
       const ck = r.category || 'misc'
       cat.set(ck, (cat.get(ck) || 0) + amt)
-      const sk = r.store_id || `name:${r.store_name || '—'}`
+      // Bucket by CANONICAL alias key (same logic the dashboard's
+      // Spending-by-Store chart uses) — not by raw store_id. Otherwise
+      // every duplicate `stores` table row for the same merchant gets
+      // its own line, producing "COSTCO" appearing 8 times. The
+      // storeGroupKey collapses every variant to one bucket.
+      const sk = storeGroupKey(r.store_name) || (r.store_id || `name:${r.store_name || '—'}`)
       const sentry = store.get(sk) || { id: r.store_id, name: displayStoreName(r.store_name) || '—', count: 0, spent: 0 }
       sentry.count++
       sentry.spent += amt

@@ -74,69 +74,13 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
     try { await _sb.from('shopping_list').delete().eq('id', it.id); } catch (_) {}
   }
 
-  Future<void> _add() async {
-    final ctrl = TextEditingController();
-    final qtyCtrl = TextEditingController(text: '1');
-    String listName = _activeList;
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => StatefulBuilder(builder: (ctx, setSt) => AlertDialog(
-        title: const Text('Add to Smashlist'),
-        content: Column(mainAxisSize: MainAxisSize.min, children: [
-          TextField(controller: ctrl, decoration: const InputDecoration(labelText: 'Item name*'), autofocus: true),
-          const SizedBox(height: 8),
-          TextField(controller: qtyCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Qty')),
-          const SizedBox(height: 8),
-          DropdownButtonFormField<String>(
-            value: listName,
-            items: _kLists.map((l) => DropdownMenuItem(value: l, child: Text('${_kListEmoji[l]}  $l'))).toList(),
-            onChanged: (v) => setSt(() => listName = v ?? listName),
-            decoration: const InputDecoration(labelText: 'List'),
-          ),
-        ]),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Add')),
-        ],
-      )),
-    );
-    ctrl.dispose();
-    qtyCtrl.dispose();
-    if (ok != true) return;
-    final name = ctrl.text.trim();
-    if (name.isEmpty) return;
-    final uid = _sb.auth.currentUser?.id;
-    if (uid == null) return;
-    try {
-      final inserted = await _sb.from('shopping_list').insert({
-        'user_id': uid,
-        'item_name': name,
-        'qty': int.tryParse(qtyCtrl.text) ?? 1,
-        'list_name': listName,
-        'frequency': 'Monthly',
-        'order_date': DateTime.now().toIso8601String().substring(0, 10),
-        'approved': false,
-        'sent_to_store': false,
-      }).select(_kListCols).single();
-      setState(() => _items.insert(0, _Item(
-        inserted['id'].toString(),
-        name, int.tryParse(qtyCtrl.text) ?? 1, listName, false,
-      )));
-    } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Add failed: $e')));
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final inList = _items.where((i) => i.listName == _activeList).toList();
     return Scaffold(
       appBar: AppBar(title: const Text('Smashlist')),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: _kBrand,
-        onPressed: _add,
-        child: const Icon(Icons.add),
-      ),
+      // FAB removed in v0.2.69. The web/email flows feed this list now;
+      // mobile is read-only (check off + swipe to delete still work).
       body: Column(children: [
         // List tabs
         Container(
@@ -167,7 +111,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                   const SizedBox(height: 12),
                   Text('$_activeList is empty', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 4),
-                  const Text('Tap + to add an item.', style: TextStyle(color: Colors.black54)),
+                  const Text('Add items from the web app or by parsing a receipt.', style: TextStyle(color: Colors.black54)),
                 ]))
               : RefreshIndicator(
                   onRefresh: _load,

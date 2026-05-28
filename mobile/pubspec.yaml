@@ -1,7 +1,7 @@
 name: getguac
 description: GetGuac — Smart receipt & rewards management
 publish_to: 'none'
-version: 0.2.68+78
+version: 0.2.69+79
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -53,17 +53,10 @@ dependencies:
   # app's cache dir (auto-cleaned by Android) instead of leaving it in
   # the user's Downloads folder forever.
   open_filex: ^4.5.0
-  # ML Kit Document Scanner — Google's on-device scanner UI: edge
-  # detection, perspective correction, multi-page session. Replaces the
-  # raw image_picker for receipts so long CVS / grocery receipts can be
-  # captured page-by-page and parsed as a single receipt by Gemini.
-  google_mlkit_document_scanner: ^0.4.0
-  # Keep the screen on during the upload + AI parse window. A 10-page
-  # scanner result + Gemini multi-image call can sit at 20-60 seconds; if
-  # the screen sleeps Android can kill the in-flight HTTP request, losing
-  # the parse. We hold the wakelock only across _processScannerResult /
-  # _processSingleCapture and release in `finally`.
-  wakelock_plus: ^1.2.0
+  # ML Kit Document Scanner + wakelock_plus removed in v0.2.69. The
+  # dashboard FAB and the multi-page scanner flow that used them were
+  # removed — capture is now a single-photo camera button on the
+  # Receipts screen only (image_picker, no scanner module download).
 
 dev_dependencies:
   flutter_test:

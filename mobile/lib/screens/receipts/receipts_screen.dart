@@ -207,12 +207,6 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
     }
   }
 
-  void _addManual() {
-    final uid = context.read<AppAuthProvider>().currentUser?.id;
-    if (uid == null) return;
-    showDialog(context: context, builder: (ctx) => _AddReceiptDialog(uid: uid));
-  }
-
   void _toggle(String id) {
     setState(() {
       if (_selected.contains(id)) {
@@ -301,7 +295,6 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
               IconButton(icon: const Icon(Icons.camera_alt), onPressed: _captureReceipt, tooltip: 'Camera'),
             ],
       ),
-      floatingActionButton: _selectionMode ? null : FloatingActionButton(onPressed: _addManual, child: const Icon(Icons.add)),
       body: Column(children: [
         // Period chips — scope the query to save load time on big accounts
         Container(

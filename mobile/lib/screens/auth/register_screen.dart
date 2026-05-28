@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 import '../../widgets/guac_mascot.dart';
 
 const _kBrand = Color(0xFF15803d);
@@ -18,9 +20,12 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _ctrls = {
-    for (var k in ['username', 'firstName', 'lastName', 'email', 'password', 'birthDate', 'age', 'mobile']) k: TextEditingController()
+    for (var k in ['username', 'firstName', 'lastName', 'email', 'password', 'confirmPassword', 'birthDate', 'age', 'mobile']) k: TextEditingController()
   };
   bool _loading = false;
+  bool _showPassword = false;
+  bool _showConfirmPassword = false;
+  bool _acceptTerms = false;
 
   // When the server returns needs_email_confirmation we show an in-place
   // "Check your email" panel with a Resend button — sticking on this screen
@@ -39,6 +44,38 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void initState() {
     super.initState();
     _ctrls['username']!.addListener(_onUsernameChange);
+    // Auto-derive age from birth date so the two fields can't disagree.
+    _ctrls['birthDate']!.addListener(_recomputeAge);
+  }
+
+  void _recomputeAge() {
+    final s = _ctrls['birthDate']!.text.trim();
+    if (s.isEmpty) {
+      if (_ctrls['age']!.text.isNotEmpty) _ctrls['age']!.text = '';
+      return;
+    }
+    // Accept ISO 8601 (YYYY-MM-DD). DateTime.tryParse handles the standard
+    // shape; anything malformed leaves age blank rather than guessing.
+    final bd = DateTime.tryParse(s);
+    if (bd == null) return;
+    final today = DateTime.now();
+    int age = today.year - bd.year;
+    if (today.month < bd.month || (today.month == bd.month && today.day < bd.day)) {
+      age--;
+    }
+    if (age < 0 || age > 150) return;
+    final next = age.toString();
+    if (_ctrls['age']!.text != next) _ctrls['age']!.text = next;
+  }
+
+  Future<void> _openUrl(String url) async {
+    try {
+      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not open link: $e')),
+      );
+    }
   }
 
   @override
@@ -72,9 +109,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_ctrls['password']!.text != _ctrls['confirmPassword']!.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Passwords do not match.')),
+      );
+      return;
+    }
     if (_usernameStatus != 'available') {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Pick an available @getguac.app handle first.')),
+      );
+      return;
+    }
+    if (!_acceptTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please accept the Terms & Privacy Policy.')),
       );
       return;
     }
@@ -217,6 +266,119 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _passwordField(String key, String label, bool show, VoidCallback onToggle, {String? hint}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: TextFormField(
+        controller: _ctrls[key],
+        obscureText: !show,
+        decoration: InputDecoration(
+          labelText: label,
+          hintText: hint,
+          prefixIcon: const Icon(Icons.lock_outline, color: _kBrand),
+          suffixIcon: IconButton(
+            icon: Icon(show ? Icons.visibility_off_outlined : Icons.visibility_outlined, size: 20, color: Colors.black54),
+            tooltip: show ? 'Hide password' : 'Show password',
+            onPressed: onToggle,
+          ),
+        ),
+        validator: (v) {
+          if (v == null || v.isEmpty) return 'Required';
+          if (key == 'password' && v.length < 10) return 'Min 10 characters';
+          if (key == 'confirmPassword' && v != _ctrls['password']!.text) return 'Passwords do not match';
+          return null;
+        },
+      ),
+    );
+  }
+
+  Widget _birthDateField() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: TextFormField(
+        controller: _ctrls['birthDate'],
+        readOnly: true,
+        onTap: () async {
+          final now = DateTime.now();
+          final initial = DateTime.tryParse(_ctrls['birthDate']!.text) ?? DateTime(now.year - 25, now.month, now.day);
+          final picked = await showDatePicker(
+            context: context,
+            initialDate: initial,
+            firstDate: DateTime(1900),
+            lastDate: now,
+          );
+          if (picked != null) {
+            _ctrls['birthDate']!.text = '${picked.year.toString().padLeft(4, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
+          }
+        },
+        decoration: const InputDecoration(
+          labelText: 'Birth Date',
+          hintText: 'Tap to pick',
+          prefixIcon: Icon(Icons.calendar_today_outlined, color: _kBrand),
+        ),
+      ),
+    );
+  }
+
+  Widget _ageField() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: TextFormField(
+        controller: _ctrls['age'],
+        readOnly: true,
+        decoration: const InputDecoration(
+          labelText: 'Age (auto)',
+          hintText: '—',
+          prefixIcon: Icon(Icons.cake_outlined, color: _kBrand),
+          filled: true,
+          fillColor: Color(0xFFf9fafb),
+        ),
+        style: const TextStyle(color: Colors.black54),
+      ),
+    );
+  }
+
+  Widget _termsCheckbox() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Checkbox(
+          value: _acceptTerms,
+          activeColor: _kBrand,
+          onChanged: (v) => setState(() => _acceptTerms = v ?? false),
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          visualDensity: VisualDensity.compact,
+        ),
+        Expanded(
+          child: GestureDetector(
+            onTap: () => setState(() => _acceptTerms = !_acceptTerms),
+            child: Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Text.rich(TextSpan(
+                style: const TextStyle(fontSize: 12, color: Colors.black87, height: 1.4),
+                children: [
+                  const TextSpan(text: 'I agree to the '),
+                  TextSpan(
+                    text: 'Terms of Service',
+                    style: const TextStyle(color: _kBrand, fontWeight: FontWeight.w700, decoration: TextDecoration.underline),
+                    recognizer: (TapGestureRecognizer()..onTap = () => _openUrl('https://getguac.app/terms')),
+                  ),
+                  const TextSpan(text: ' and '),
+                  TextSpan(
+                    text: 'Privacy Policy',
+                    style: const TextStyle(color: _kBrand, fontWeight: FontWeight.w700, decoration: TextDecoration.underline),
+                    recognizer: (TapGestureRecognizer()..onTap = () => _openUrl('https://getguac.app/privacy')),
+                  ),
+                  const TextSpan(text: '.'),
+                ],
+              )),
+            ),
+          ),
+        ),
+      ]),
     );
   }
 
@@ -403,13 +565,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             Expanded(child: _field('lastName', 'Last Name')),
                           ]),
                           _field('email', 'Email', type: TextInputType.emailAddress, icon: Icons.email_outlined),
-                          _field('password', 'Password', obscure: true, hint: 'Min 10 chars', icon: Icons.lock_outline),
-                          _field('birthDate', 'Birth Date', hint: 'YYYY-MM-DD', icon: Icons.calendar_today_outlined),
-                          _field('age', 'Age', type: TextInputType.number, icon: Icons.cake_outlined),
+                          _passwordField('password', 'Password', _showPassword, () => setState(() => _showPassword = !_showPassword), hint: 'Min 10 chars'),
+                          _passwordField('confirmPassword', 'Confirm Password', _showConfirmPassword, () => setState(() => _showConfirmPassword = !_showConfirmPassword)),
+                          _birthDateField(),
+                          _ageField(),
                           _field('mobile', 'Mobile (optional)', type: TextInputType.phone, icon: Icons.phone_outlined),
-                          const SizedBox(height: 8),
+                          _termsCheckbox(),
+                          const SizedBox(height: 4),
                           FilledButton(
-                            onPressed: _loading || _usernameStatus != 'available' ? null : _register,
+                            onPressed: _loading || _usernameStatus != 'available' || !_acceptTerms ? null : _register,
                             style: FilledButton.styleFrom(
                               backgroundColor: _kBrand,
                               foregroundColor: Colors.white,

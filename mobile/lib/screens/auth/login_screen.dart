@@ -30,6 +30,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _keepSignedIn = true;
   bool _bioAvailable = false;
   bool _bioEnabled = false;
+  bool _showPassword = false;
   String _versionLabel = '';
 
   @override
@@ -396,10 +397,18 @@ class _LoginScreenState extends State<LoginScreen> {
                             const SizedBox(height: 10),
                             TextFormField(
                               controller: _passCtrl,
-                              obscureText: true,
+                              obscureText: !_showPassword,
                               decoration: InputDecoration(
                                 labelText: 'Password',
                                 prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF15803d), size: 20),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _showPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                                    color: Colors.black54, size: 20,
+                                  ),
+                                  tooltip: _showPassword ? 'Hide password' : 'Show password',
+                                  onPressed: () => setState(() => _showPassword = !_showPassword),
+                                ),
                                 isDense: true,
                                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),

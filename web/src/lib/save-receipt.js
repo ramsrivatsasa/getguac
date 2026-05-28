@@ -37,6 +37,7 @@ import {
   writeRefundPolicies,
   lookupStoreDefaultPolicies,
 } from './email-to-receipt'
+import { applyCategoryRules } from './categorizeRules'
 
 /**
  * @param {object} sb        Supabase client bound to the caller's identity
@@ -84,13 +85,23 @@ export async function saveReceipt(sb, userId, parsed, opts = {}) {
   }
 
   // Final category resolution. Priority:
-  //   user pick > Tier 2 inferred > AI parse > null
+  //   user pick > rule engine > Tier 2 inferred > AI parse > null
   // category_source records which won so the learning RPC can count
   // user-corrections later (it only counts 'user' source).
+  //
+  // The 'rule' tier handles category invariants that should hold no
+  // matter what the AI or per-user history says. Today the engine
+  // handles gas-station detection (Costco Gas → gas-up, not grub).
+  // More rules slot into RULE_ORDER in lib/categorizeRules.js — each
+  // checks items first, store second.
+  const ruleCategory = applyCategoryRules(flatParsed, flatParsed.items)
   let finalCategory, categorySource
   if (opts.user_category) {
     finalCategory = opts.user_category
     categorySource = 'user'
+  } else if (ruleCategory) {
+    finalCategory = ruleCategory
+    categorySource = 'rule'
   } else if (inferredCategory) {
     finalCategory = inferredCategory
     categorySource = 'inferred'

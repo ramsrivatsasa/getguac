@@ -4,6 +4,83 @@
 //
 // Returns one of the category slugs from lib/categories.js, or null.
 
+// ─────────────────────────────────────────────────────────────────────────
+// Gas-station detection — exported so the save pipeline + the backfill
+// endpoint can apply this rule consistently. "If it's a fuel purchase,
+// it's gas-up, period" — even at warehouse-club stations (Costco / Sam's /
+// BJ's), which the AI sometimes routes to 'grub' because the store IS
+// a grocery store. Override happens AFTER AI + Tier-2 inference but
+// BEFORE user_category — user pick still wins.
+//
+// Detection: store-name brand match OR item-name fuel keywords. Either
+// signal is enough.
+// ─────────────────────────────────────────────────────────────────────────
+export const GAS_STATION_STORE_RE = /\b(shell|chevron|exxon|exxonmobil|mobil|bp\b|sunoco|valero|texaco|arco|conoco|phillips ?66|76 (gas|station)|marathon|amoco|citgo|circle k|wawa|sheetz|pilot (flying ?j|travel)|flying ?j|loves? travel|race ?trac|raceway|kwik trip|kwik star|maverik|murphy (usa|express)|costco gas|costco gasoline|costco fuel|sams? gas|sam'?s club gas|bj'?s gas|bj gas|gas station|gasoline|fuel ?(station|stop|center|center))\b/i
+export const GAS_ITEM_RE = /\b(unleaded|regular ?gas|premium ?gas|mid[- ]?grade|diesel|gasoline|gallons?|pump ?\d|fuel grade|fuel \d|gas pump)\b/i
+
+/**
+ * True when this receipt is a gas-station fill-up.
+ *
+ * Detection order — ITEMS FIRST, STORE SECOND:
+ *   1. Any item name matches fuel keywords (unleaded, gallons, …).
+ *   2. Store name matches a known gas-station brand.
+ *
+ * Items take priority because a "Costco" receipt with an "UNLEADED" line
+ * is unambiguously a gas-station purchase even though Costco itself is
+ * a grocery store. The store check is the fallback for receipts where
+ * the item list is empty or non-specific ("Pump 5", "Transaction").
+ */
+export function isGasStationReceipt(storeName, items = []) {
+  // 1) Item-name check first.
+  if (Array.isArray(items)) {
+    for (const it of items) {
+      const name = String(it?.item_name || it || '')
+      if (name && GAS_ITEM_RE.test(name)) return true
+    }
+  }
+  // 2) Store-name fallback.
+  if (storeName && GAS_STATION_STORE_RE.test(String(storeName))) return true
+  return false
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// CENTRAL CATEGORIZATION ENGINE
+//
+// One function, one place: `applyCategoryRules(receipt, items)`. Every
+// surface that needs to decide "what category is this receipt?" calls
+// this — the save pipeline, the backfill endpoints, the future cron
+// re-categorizer. Each rule checks ITEMS first then STORE so a "Costco"
+// gas-pump receipt routes to gas-up, not grub.
+//
+// Returns a category slug (one of lib/categories.js) or null if no rule
+// fires. Callers fall back to AI / Tier-2 / user pick when null.
+//
+// To add a new rule: append to RULE_ORDER below. Keep more-specific
+// rules earlier so they win against generic ones.
+// ─────────────────────────────────────────────────────────────────────────
+const RULE_ORDER = [
+  { cat: 'gas-up', test: isGasStationReceipt },
+  // Future: { cat: 'eats', test: isRestaurantReceipt },
+  //         { cat: 'bank-fees', test: isBankChargeReceiptDeep },
+  //         ... — each test takes (storeName, items), returns boolean.
+]
+
+/**
+ * Decide the rule-tier category for a receipt. Item-first, store-second
+ * inside each test; rules tried in declared order.
+ *
+ * @param {{store_name?: string}} receipt
+ * @param {Array<{item_name?: string}>} items
+ * @returns {string|null} category slug or null when no rule fires
+ */
+export function applyCategoryRules(receipt, items = []) {
+  const storeName = receipt?.store_name ?? receipt
+  for (const r of RULE_ORDER) {
+    if (r.test(storeName, items)) return r.cat
+  }
+  return null
+}
+
 // Order matters when patterns overlap (e.g. "shell gas" should hit gas-up
 // before any other match). Higher-priority rules come first.
 const RULES = [
@@ -29,7 +106,7 @@ const RULES = [
   { cat: 'supplies', re: /\b(office supplies?|stationery|stationary store|school supplies|printer ink|toner cartridge|pens? & pencils?)\b/i },
 
   // Gas / fuel — distinctive brands, easy
-  { cat: 'gas-up', re: /\b(shell|chevron|exxon|mobil|bp\b|sunoco|valero|texaco|arco|conoco|76 (gas|station)|circle k|wawa|sheetz|speedway|costco gas|sams gas|gas station|fuel)\b/i },
+  { cat: 'gas-up', re: GAS_STATION_STORE_RE },
 
   // Restaurants / fast food / coffee — strong eats indicators
   { cat: 'eats',   re: /\b(starbucks|peet's|peets coffee|dunkin|tim hortons|caribou|philz|blue bottle)\b/i },

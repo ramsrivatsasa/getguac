@@ -96,10 +96,15 @@ begin
     -- 100% of the seed items get filtered out and the Buy Again strip
     -- stays empty regardless of how many items you embed.
     insert into public.receipt_items (receipt_id, item_name, qty, price, category, purchase_date) values
+      -- Pantry (category 'grub')
       (rcpt_id, 'MILK',    1, 5.49, 'grub', d),
       (rcpt_id, 'EGGS',    1, 4.99, 'grub', d),
       (rcpt_id, 'BANANAS', 1, 1.29, 'grub', d),
-      (rcpt_id, 'BREAD',   1, 3.79, 'grub', d);
+      (rcpt_id, 'BREAD',   1, 3.79, 'grub', d),
+      -- Cravings (category 'drinks' → bucket Cravings)
+      (rcpt_id, 'COFFEE',  1, 12.99, 'drinks', d),
+      -- Snack Stack (category 'snacks' → bucket Snack Stack)
+      (rcpt_id, 'CHIPS',   1, 3.99, 'snacks', d);
   end loop;
 
   -- ─── 2. BI-WEEKLY HOUSEHOLD (12 buys) ──────────────────────────────────
@@ -114,8 +119,13 @@ begin
       'household', 4, '[SEED v2 SQL]', true
     ) returning id into rcpt_id;
     insert into public.receipt_items (receipt_id, item_name, qty, price, category, purchase_date) values
+      -- Pantry (household)
       (rcpt_id, 'BOUNTY SELECT-A-SIZE 6 PK', 1, 17.84, 'household', d),
-      (rcpt_id, 'DAWN ULTRA ORIGINAL', 1, 4.66, 'household', d);
+      (rcpt_id, 'DAWN ULTRA ORIGINAL', 1, 4.66, 'household', d),
+      -- Cravings (tea)
+      (rcpt_id, 'GREEN TEA',     1, 4.49, 'tea', d),
+      -- Snack Stack (snacks)
+      (rcpt_id, 'GRANOLA BARS',  1, 5.99, 'snacks', d);
   end loop;
 
   -- ─── 3. MONTHLY RESTOCK (6 buys) ───────────────────────────────────────
@@ -130,10 +140,13 @@ begin
       'household', 5, '[SEED v2 SQL]', true
     ) returning id into rcpt_id;
     insert into public.receipt_items (receipt_id, item_name, qty, price, category, purchase_date) values
+      -- Pantry
       (rcpt_id, 'TIDE HE LIQUID 170 LOADS', 1, 24.99, 'household', d),
       (rcpt_id, 'KS DAILY MULTI 365CT', 1, 11.99, 'health', d),
       (rcpt_id, 'KS ADULT CHICKEN&RICE 40LB', 1, 39.99, 'pets', d),
-      (rcpt_id, 'PAPER TOWELS 12 ROLL', 1, 22.99, 'household', d);
+      (rcpt_id, 'PAPER TOWELS 12 ROLL', 1, 22.99, 'household', d),
+      -- Snack Stack
+      (rcpt_id, 'POPCORN MULTIPACK', 1, 8.99, 'snacks', d);
   end loop;
 
   -- ─── 4. MONTHLY SUBSCRIPTIONS (auto-pay merchants) ─────────────────────
@@ -245,28 +258,54 @@ begin
         'CHASE', 10.00, '[SEED v2 SQL] late fee');
   end loop;
 
-  -- ─── 11. PREDICTED ITEMS in shopping_list (Smashlist suggestions) ──────
-  -- The /shopping page splits "predicted=true, approved=false" rows into
-  -- a Suggestions strip above the curated list. Pre-populate three so
-  -- the strip renders on a fresh dashboard without waiting for the cron.
+  -- ─── 11. PREDICTED + CURATED rows in shopping_list ────────────────────
+  -- One sample predicted row per Smashlist bucket so every tab has
+  -- visible content right after the seed runs (without waiting for the
+  -- nightly predictor cron). Grub & Grab in particular has no category
+  -- in BUCKET_MAP so the predictor never routes there organically —
+  -- pre-populating it here is the only way the tab gets content.
+  --
+  -- One row per bucket is at ratio >= 1.2 so the ⭐ Restock badge fires;
+  -- the rest sit just under the reorder point so they appear as plain
+  -- rows. Mix exists so the UI demo shows every tier.
   insert into public.shopping_list (
     user_id, item_name, qty, frequency, list_name,
     predicted, predicted_reason, predicted_avg_cadence_days, predicted_last_purchase_date,
     approved, sent_to_store, comments
   ) values
+    -- Pantry
     (uid, 'Whole Milk',     1, 'Weekly',   'Pantry',
-      true, 'Avg every 7d, last bought 6d ago',  7,  today - 6,  false, false, '[SEED v2 SQL]'),
+      true, 'Avg every 7d, last bought 9d ago',  7,  today - 9,  false, false, '[SEED v2 SQL]'),
     (uid, 'Paper Towels',   1, 'Biweekly', 'Pantry',
       true, 'Avg every 14d, last bought 13d ago', 14, today - 13, false, false, '[SEED v2 SQL]'),
     (uid, 'Dog Food',       1, 'Monthly',  'Pantry',
-      true, 'Avg every 30d, last bought 28d ago', 30, today - 28, false, false, '[SEED v2 SQL]');
+      true, 'Avg every 30d, last bought 28d ago', 30, today - 28, false, false, '[SEED v2 SQL]'),
+    -- Cravings
+    (uid, 'Cold Brew Coffee', 1, 'Weekly',   'Cravings',
+      true, 'Avg every 7d, last bought 6d ago',  7,  today - 6,  false, false, '[SEED v2 SQL]'),
+    (uid, 'Sparkling Water 12pk', 1, 'Biweekly', 'Cravings',
+      true, 'Avg every 14d, last bought 18d ago', 14, today - 18, false, false, '[SEED v2 SQL]'),
+    -- Snack Stack
+    (uid, 'Tortilla Chips', 1, 'Weekly',  'Snack Stack',
+      true, 'Avg every 7d, last bought 8d ago',  7,  today - 8,  false, false, '[SEED v2 SQL]'),
+    (uid, 'Trail Mix',      1, 'Biweekly', 'Snack Stack',
+      true, 'Avg every 14d, last bought 12d ago', 14, today - 12, false, false, '[SEED v2 SQL]'),
+    -- Grub & Grab (no predictor route; pre-populated only)
+    (uid, 'Frozen Pizza',   1, 'Biweekly', 'Grub & Grab',
+      true, 'Avg every 14d, last bought 17d ago', 14, today - 17, false, false, '[SEED v2 SQL]'),
+    (uid, 'Ready Meals',    1, 'Weekly',   'Grub & Grab',
+      true, 'Avg every 7d, last bought 6d ago',  7,  today - 6,  false, false, '[SEED v2 SQL]');
 
-  -- Plus one user-curated (non-predicted) row so the main list isn't empty.
+  -- Curated (non-predicted) rows so each bucket also has something the
+  -- user added themselves. Renders in the bucket-list section below
+  -- the Buy Again strip when the user clicks the matching tab.
   insert into public.shopping_list (
     user_id, item_name, qty, frequency, list_name,
     predicted, approved, sent_to_store, comments
   ) values
-    (uid, 'Coffee Beans', 1, 'Monthly', 'Cravings', false, false, false, '[SEED v2 SQL]');
+    (uid, 'Coffee Beans',    1, 'Monthly', 'Cravings',     false, false, false, '[SEED v2 SQL]'),
+    (uid, 'Cookies',         1, 'Monthly', 'Snack Stack',  false, false, false, '[SEED v2 SQL]'),
+    (uid, 'Birthday Card',   1, 'Monthly', 'Grub & Grab',  false, false, false, '[SEED v2 SQL]');
 
   -- ─── 12. REWARDS rows (so /rewards isn't empty) ────────────────────────
   -- rewards.expiry_date + reward_type + reward_title are NOT NULL on the

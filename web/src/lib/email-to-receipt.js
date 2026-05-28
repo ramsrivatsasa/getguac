@@ -8,7 +8,10 @@
 // strategy actually produced the row — useful for diagnostics.
 
 import { parseReceiptFromText } from './parse-receipt-engine'
-import { normalizeStoreName, canonicalStoreName, storeGroupKey } from './store-name-normalize'
+import {
+  normalizeStoreName, canonicalStoreName, storeGroupKey,
+  normalizePhone, normalizeStoreAddress,
+} from './store-name-normalize'
 import { findExistingReceipt } from './findExistingReceipt'
 // saveReceipt is the central save pipeline (lib/save-receipt.js). The email
 // path used to inline its own insertParsedReceipt() — now delegated so a
@@ -18,24 +21,9 @@ import { findExistingReceipt } from './findExistingReceipt'
 // lookupStoreDefaultPolicies), creating a CommonJS-style circular dep that
 // breaks if eagerly imported at module-load time.
 
-function normalizePhone(s) {
-  return (s || '').replace(/\D+/g, '')
-}
-
-// Light address normalization for store dedup. Lowercases, strips
-// punctuation, drops common street-suffix abbreviations + their full
-// forms so "14390 Chantilly Crossing" matches "14390 CHANTILLY CROSSING LN"
-// matches "14390 chantilly crossing lane".
-function _normalizeAddress(s) {
-  if (!s) return ''
-  let a = String(s).trim().toLowerCase()
-  a = a.replace(/[.,'`"]/g, '')              // drop punctuation
-  a = a.replace(/[-/]+/g, ' ')               // hyphens -> spaces
-  // Strip trailing street-suffix tokens (both abbreviated + full forms).
-  a = a.replace(/\s+(st|street|ave|avenue|rd|road|blvd|boulevard|ln|lane|dr|drive|ct|court|way|pl|place|pkwy|parkway|cir|circle|ter|terrace|hwy|highway|trl|trail|sq|square|loop|run|crossing|xing)\.?(\s+|$)/g, ' ')
-  a = a.replace(/\s+/g, ' ').trim()
-  return a
-}
+// normalizePhone + normalizeStoreAddress live in lib/store-name-normalize.js
+// alongside the name helpers — single library for "things you need to
+// identify a store". Imported above.
 
 // Find-or-create a row in `stores` for a parsed AI result. Match strategy:
 //   1. phone (most reliable — same digits = same location)
@@ -55,7 +43,7 @@ async function upsertStoreServer(sb, parsed) {
   const website  = parsed.store_website || null
 
   const phoneNorm = normalizePhone(phoneNo)
-  const addrNorm  = _normalizeAddress(address)
+  const addrNorm  = normalizeStoreAddress(address)
   const nameKey   = storeGroupKey(storeName)
 
   // Match against the global stores table. The scale issue with this full
@@ -68,10 +56,10 @@ async function upsertStoreServer(sb, parsed) {
     match = stores.find(s => normalizePhone(s.phone_no) === phoneNorm) || null
   }
   if (!match && addrNorm) {
-    // Address match with light normalization — strips street suffixes
-    // ("ln", "lane", "st", etc.) + case + punctuation, so
+    // Address match via the shared normalizer — strips street suffixes
+    // ("ln", "lane", "st", "crossing", etc.) + case + punctuation, so
     // "14390 Chantilly Crossing" matches "14390 CHANTILLY CROSSING LN".
-    match = stores.find(s => _normalizeAddress(s.address) === addrNorm) || null
+    match = stores.find(s => normalizeStoreAddress(s.address) === addrNorm) || null
   }
   if (!match && nameKey) {
     // Canonical-alias match: "Costco" === "Costco Wholesale" === "COSTCO WHSE"

@@ -1,4 +1,10 @@
-// Store-name normalization engine.
+// Store-identity normalization engine.
+//
+// Everything you need to decide "is this the same merchant as that one?"
+// lives in this file. Three pieces of evidence:
+//   1. Name  — normalizeStoreName / canonicalStoreName / storeGroupKey
+//   2. Address — normalizeStoreAddress
+//   3. Phone — normalizePhone
 //
 // Receipts come in with the merchant's name written many different ways:
 //   "Amazon"  /  "Amazon.com"  /  "AMAZON.COM, INC."  /  "Amazon Prime"
@@ -8,13 +14,24 @@
 // up with near-duplicates and "Spending by Store" charts split a single
 // merchant's spend across 5 columns.
 //
-// Two functions:
-//   normalizeStoreName(s)  — comparison key. Lowercase, strip URL/entity
-//                            suffixes + punctuation. Two names produce the
-//                            same key iff they're the same merchant.
-//   canonicalStoreName(s)  — display name. Maps a normalized key to a
-//                            pretty form ("amazon" -> "Amazon"). Falls back
-//                            to the trimmed original when no alias is known.
+// Same idea for addresses ("14390 Chantilly Crossing" vs "14390 CHANTILLY
+// CROSSING LN") and phones ("(703) 555-0100" vs "7035550100").
+//
+// Functions:
+//   normalizeStoreName(s)    — comparison key for name. Two names produce
+//                               the same key iff they're the same merchant.
+//   canonicalStoreName(s)    — display name. Maps a normalized key to a
+//                               pretty form ("amazon" -> "Amazon"). Falls
+//                               back to the trimmed original on no alias.
+//   storeGroupKey(s)         — bucket key for grouping (charts, /stores
+//                               rollups, etc). Returns lowercased canonical
+//                               when an alias matches, normalized otherwise.
+//   normalizeStoreAddress(s) — comparison key for address. Strips street-
+//                               suffix tokens (ln/st/ave/crossing/etc) +
+//                               punctuation + case so "14390 Chantilly
+//                               Crossing" matches "14390 CHANTILLY CROSSING LN".
+//   normalizePhone(s)        — digits-only key for phone. "(703) 555-0100"
+//                               matches "7035550100".
 
 // Common-merchant alias table. Key = normalized form, value = display form.
 // Add liberally — false positives are very unlikely with these specific brands.
@@ -129,6 +146,97 @@ export function storeGroupKey(raw) {
   if (!norm) return ''
   if (ALIASES[norm]) return ALIASES[norm].toLowerCase()
   return norm
+}
+
+/**
+ * Phone-number comparison key. Returns digits only — strips spaces,
+ * parens, dashes, country-code "+" prefixes. "(703) 555-0100" and
+ * "+1 703-555-0100" and "7035550100" all produce "17035550100" /
+ * "7035550100" depending on whether the caller included the country
+ * code. For matching, callers typically check length >= 7 first to
+ * avoid matching on three-digit codes.
+ */
+export function normalizePhone(s) {
+  return (s || '').replace(/\D+/g, '')
+}
+
+// Street-suffix tokens recognised by normalizeStoreAddress. Stripped when
+// they appear at the end (or as a whole word) of the address so abbreviation
+// variance can't block a match. Add new ones as we see them in the wild.
+const STREET_SUFFIXES = [
+  'st', 'street',
+  'ave', 'avenue', 'av',
+  'rd', 'road',
+  'blvd', 'boulevard',
+  'ln', 'lane',
+  'dr', 'drive',
+  'ct', 'court',
+  'way',
+  'pl', 'place',
+  'pkwy', 'parkway',
+  'cir', 'circle',
+  'ter', 'terrace',
+  'hwy', 'highway',
+  'trl', 'trail',
+  'sq', 'square',
+  'loop', 'run',
+  'crossing', 'xing',
+  'plaza', 'plz',
+  'center', 'centre', 'ctr',
+]
+const STREET_SUFFIX_RE = new RegExp(
+  `\\s+(${STREET_SUFFIXES.join('|')})\\.?(\\s+|$)`, 'g'
+)
+
+/**
+ * Address-comparison key. Two addresses yield the same key iff they
+ * almost certainly refer to the same physical location. Strips:
+ *  - case (lowercased)
+ *  - punctuation
+ *  - hyphens and slashes (treated as spaces)
+ *  - common street-suffix abbreviations + their full forms ("Ln"/"Lane",
+ *    "St"/"Street", "Crossing", "Pkwy"/"Parkway", etc.) — anchored at end
+ *    or whole-word so a suffix inside a street name isn't over-stripped.
+ *  - extra whitespace
+ *
+ * Examples:
+ *   "14390 Chantilly Crossing"      -> "14390 chantilly"
+ *   "14390 CHANTILLY CROSSING LN"   -> "14390 chantilly"
+ *   "1500 Main Street"              -> "1500 main"
+ *   "1500 main st."                 -> "1500 main"
+ */
+export function normalizeStoreAddress(raw) {
+  if (!raw) return ''
+  let a = String(raw).trim().toLowerCase()
+  a = a.replace(/[.,'`"]/g, '')          // drop punctuation
+  a = a.replace(/[-/]+/g, ' ')           // hyphens / slashes -> spaces
+  // Apply twice so trailing "Crossing Ln" strips both tokens, not just the
+  // last one — the regex's match-and-advance leaves the first token in
+  // place on the initial pass when the suffix isn't itself the very end.
+  a = a.replace(STREET_SUFFIX_RE, ' ')
+  a = a.replace(STREET_SUFFIX_RE, ' ')
+  a = a.replace(/\s+/g, ' ').trim()
+  return a
+}
+
+/**
+ * Combined: are two stores almost certainly the same merchant?
+ * Strongest signal first (phone -> address -> name), and any
+ * positive match wins. Returns true / false; callers can use this for
+ * find-or-insert logic against the stores table.
+ */
+export function isSameMerchant(a, b) {
+  if (!a || !b) return false
+  const aPhone = normalizePhone(a.phone_no)
+  const bPhone = normalizePhone(b.phone_no)
+  if (aPhone.length >= 7 && aPhone === bPhone) return true
+  const aAddr = normalizeStoreAddress(a.address)
+  const bAddr = normalizeStoreAddress(b.address)
+  if (aAddr && aAddr === bAddr) return true
+  const aName = storeGroupKey(a.store_name)
+  const bName = storeGroupKey(b.store_name)
+  if (aName && aName === bName) return true
+  return false
 }
 
 /**

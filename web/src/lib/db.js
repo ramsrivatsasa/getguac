@@ -300,16 +300,39 @@ export async function deleteReward(id) {
 // Shopping list
 export async function getShoppingList() {
   const sb = createClient()
-  // Join stores so the UI shows "COSTCO" instead of a raw store UUID,
-  // and so the Errand Plan panel can group predictions by merchant
-  // display name. Aliased to `store` to avoid the awkward stores[0]
-  // / stores.store_name nesting in components.
-  const { data, error } = await sb
+  // shopping_list.store_name_id is a plain text column — there's NO
+  // FK to stores, so the previous `store:store_name_id(...)` embed
+  // failed in PostgREST with a "could not find relationship" error,
+  // making the whole query throw and the page silently render
+  // `items = []`. We do a two-step fetch instead: pull the rows
+  // first, then look up the store names for any non-null store_name_id
+  // values in a second batched query and stitch the `store` field on
+  // client-side. Errand Plan + UI render unchanged.
+  const { data: rows, error } = await sb
     .from('shopping_list')
-    .select('*, store:store_name_id(id, store_name)')
+    .select('*')
     .order('created_at', { ascending: false })
   if (error) throw error
-  return data
+  const list = rows || []
+
+  const storeIds = Array.from(new Set(
+    list.map(r => r.store_name_id).filter(Boolean)
+  ))
+  if (storeIds.length === 0) {
+    return list.map(r => ({ ...r, store: null }))
+  }
+
+  // Best-effort: if the stores query fails we still return the list
+  // with store=null so the page renders.
+  const { data: stores } = await sb
+    .from('stores')
+    .select('id, store_name')
+    .in('id', storeIds)
+  const byId = new Map((stores || []).map(s => [s.id, s]))
+  return list.map(r => ({
+    ...r,
+    store: r.store_name_id ? (byId.get(r.store_name_id) || null) : null,
+  }))
 }
 
 export async function upsertShoppingItem(item) {

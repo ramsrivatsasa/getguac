@@ -13,6 +13,7 @@
 //                                 of that household share the row.
 
 import { createClient } from './supabase/client'
+import { lookupUserIdByEmail } from './displayNames'
 
 /**
  * Get the current user's primary household (one user, one household
@@ -106,20 +107,16 @@ export async function addMemberByEmail(householdId, email) {
   const cleanEmail = String(email || '').trim().toLowerCase()
   if (!cleanEmail) throw new Error('Email is required')
 
-  const { data: profile, error: pErr } = await sb
-    .from('profiles')
-    .select('id')
-    .ilike('email', cleanEmail)
-    .limit(1)
-    .maybeSingle()
-  if (pErr) throw pErr
-  if (!profile) throw new Error(`No GetGuac account for ${cleanEmail}. Ask them to sign up first.`)
+  // `profiles` has an "own row only" RLS so a direct SELECT returns 0
+  // for anyone else's email — broken for invites. Use the SECURITY
+  // DEFINER RPC from migration 048 instead.
+  const peerId = await lookupUserIdByEmail(cleanEmail)
+  if (!peerId) throw new Error(`No GetGuac account for ${cleanEmail}. Ask them to sign up first.`)
 
   const { error: mErr } = await sb
     .from('household_members')
-    .insert({ household_id: householdId, user_id: profile.id, role: 'member' })
+    .insert({ household_id: householdId, user_id: peerId, role: 'member' })
   if (mErr) {
-    // Most likely duplicate primary key — they're already a member.
     if (mErr.code === '23505') throw new Error('That person is already in the household.')
     throw mErr
   }

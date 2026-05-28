@@ -8,6 +8,7 @@ import {
   getMyHousehold, createHousehold, addMemberByEmail, leaveHousehold, removeMember,
   listMessages, postMessage,
 } from '../lib/households'
+import { getDisplayNames, formatName, initialFor } from '../lib/displayNames'
 
 // Single Profile-page component that handles every household
 // interaction: create / invite / member list / leave / chat. Reads +
@@ -61,9 +62,22 @@ export default function HouseholdPanel() {
     <div className="space-y-3">
       <Header household={household} onChanged={() => refetch()} />
       <Members household={household} onChanged={() => refetch()} />
-      <Chat householdId={household.id} />
+      <Chat householdId={household.id} memberIds={household.members.map(m => m.user_id)} />
     </div>
   )
+}
+
+// Shared display-name lookup. Returns a Map<user_id, { first_name, last_name }>.
+// Cached at the page level so Members + Chat share the same map.
+function useDisplayNames(userIds) {
+  const key = JSON.stringify([...new Set(userIds || [])].sort())
+  const { data } = useQuery({
+    queryKey: ['display-names', key],
+    queryFn: () => getDisplayNames(userIds),
+    staleTime: 5 * 60_000,
+    enabled: Array.isArray(userIds) && userIds.length > 0,
+  })
+  return data || new Map()
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -159,6 +173,7 @@ function Members({ household, onChanged }) {
   const isOwner = household.my_role === 'owner'
   const [email, setEmail] = useState('')
   const [busy, setBusy] = useState(false)
+  const names = useDisplayNames(household.members.map(m => m.user_id))
 
   async function invite(e) {
     e.preventDefault()
@@ -195,7 +210,12 @@ function Members({ household, onChanged }) {
       <ul className="space-y-1">
         {household.members.map(m => (
           <li key={m.user_id} className="flex items-center justify-between gap-2 text-xs py-1">
-            <span className="font-mono text-gray-600 truncate">{m.user_id.slice(0, 8)}…</span>
+            <span className="flex items-center gap-2 min-w-0">
+              <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[11px] flex items-center justify-center shrink-0">
+                {initialFor(names.get(m.user_id), m.user_id)}
+              </span>
+              <span className="text-gray-700 truncate">{formatName(names.get(m.user_id), m.user_id)}</span>
+            </span>
             <div className="flex items-center gap-2 shrink-0">
               {m.role === 'owner' && (
                 <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
@@ -237,7 +257,7 @@ function Members({ household, onChanged }) {
   )
 }
 
-function Chat({ householdId }) {
+function Chat({ householdId, memberIds }) {
   const qc = useQueryClient()
   const [draft, setDraft] = useState('')
   const scrollRef = useRef(null)
@@ -246,6 +266,7 @@ function Chat({ householdId }) {
     queryFn: () => listMessages(householdId),
     staleTime: 30_000,
   })
+  const names = useDisplayNames(memberIds)
 
   useEffect(() => {
     if (!scrollRef.current) return
@@ -284,7 +305,9 @@ function Chat({ householdId }) {
         ) : (
           messages.map(m => (
             <div key={m.id} className="flex items-baseline gap-2 leading-tight">
-              <span className="text-[10px] font-mono text-gray-400 shrink-0">{m.user_id.slice(0, 6)}</span>
+              <span className="text-[10px] font-semibold text-emerald-700 shrink-0">
+                {formatName(names.get(m.user_id), m.user_id)}
+              </span>
               <span className="text-gray-700 break-words">{m.body}</span>
               <span className="text-[10px] text-gray-300 shrink-0 ml-auto">
                 {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

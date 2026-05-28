@@ -17,8 +17,9 @@ import { CATEGORIES, categoryLabel, categoryClass } from '../../../lib/categorie
 import { isPaymentReceipt } from '../../../lib/payment-rows'
 import { displayStoreName } from '../../../lib/store-name-normalize'
 import { computeTaxSummary, buildTaxExportCsv } from '../../../lib/tax-summary'
+import { detectSubscriptions, summarizeSubscriptions } from '../../../lib/subscription-tracker'
 import { formatDateShort } from '../../../lib/dateFormat'
-import { BarChart3, PieChart as PieIcon, Repeat, Award, Store as StoreIcon, X, Receipt as ReceiptIcon, Download, HeartHandshake, Briefcase, Percent } from 'lucide-react'
+import { BarChart3, PieChart as PieIcon, Repeat, Award, Store as StoreIcon, X, Receipt as ReceiptIcon, Download, HeartHandshake, Briefcase, Percent, RotateCw, TrendingUp } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
 
@@ -72,6 +73,17 @@ export default function ReportsPage() {
     queryKey: ['reports', periodId],
     queryFn: () => getReportsData({ dateFrom }),
     staleTime: 60_000,
+  })
+
+  // Subscriptions need a wider lens than the page's period chip to
+  // detect recurring patterns. Pull last 12 months regardless of
+  // chip — gives the detector enough samples to spot monthly +
+  // quarterly cadence reliably.
+  const subsDateFrom = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+  const { data: subsReceipts = [] } = useQuery({
+    queryKey: ['reports-subs', subsDateFrom],
+    queryFn: () => getReportsData({ dateFrom: subsDateFrom }),
+    staleTime: 5 * 60_000,
   })
 
   // Aggregate everything in one pass: category totals, store totals, per-item history.
@@ -128,6 +140,12 @@ export default function ReportsPage() {
   // show on /reports today AND can be reused later (year-end email,
   // GuacWizard prompts, etc.) without duplicating the aggregation.
   const taxStats = useMemo(() => computeTaxSummary(receipts), [receipts])
+
+  // Subscription detection — always runs against the 12-month window
+  // (not the page chip) so monthly + quarterly patterns surface
+  // regardless of which period the user is viewing.
+  const subscriptions = useMemo(() => detectSubscriptions(subsReceipts), [subsReceipts])
+  const subsSummary   = useMemo(() => summarizeSubscriptions(subscriptions), [subscriptions])
 
   // Build the CSV on-click (client-side, no endpoint). Triggers a
   // download via a synthetic anchor.
@@ -365,7 +383,82 @@ export default function ReportsPage() {
             </p>
           </div>
 
-          {/* 3. Top stores by spend */}
+          {/* 3. Subscriptions — recurring-charge detector. Always
+              looks at the last 12 months regardless of the page chip
+              so monthly/quarterly patterns surface reliably. */}
+          {subscriptions.length > 0 && (
+            <div className="card">
+              <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <RotateCw size={14} className="text-violet-700" />
+                  <h2 className="font-semibold text-gray-800 text-sm">Subscriptions</h2>
+                  <span className="text-xs text-gray-400">· detected from last 12 mo</span>
+                </div>
+                <div className="text-xs text-gray-500">
+                  <span className="font-bold text-violet-800">${subsSummary.monthlyTotal.toFixed(2)}</span>/mo
+                  {' · '}
+                  <span className="font-bold text-violet-700">${subsSummary.annualTotal.toFixed(0)}</span>/yr
+                  {' · '}
+                  <span className="text-gray-500">{subsSummary.count} recurring</span>
+                  {subsSummary.priceIncreaseCount > 0 && (
+                    <> · <span className="text-rose-600 font-semibold">{subsSummary.priceIncreaseCount} ↑ priced up</span></>
+                  )}
+                </div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead className="bg-gray-50 border-b text-gray-500">
+                    <tr>
+                      <th className="px-3 py-2 text-left font-medium">Merchant</th>
+                      <th className="px-3 py-2 text-left font-medium">Cadence</th>
+                      <th className="px-3 py-2 text-right font-medium">Avg charge</th>
+                      <th className="px-3 py-2 text-right font-medium">Last charge</th>
+                      <th className="px-3 py-2 text-right font-medium">Per month</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {subscriptions.map(s => (
+                      <tr key={s.storeKey} className="hover:bg-violet-50/30">
+                        <td className="px-3 py-1.5">
+                          <div className="font-semibold text-gray-800">{s.merchant.toUpperCase()}</div>
+                          {s.category && (
+                            <div className="text-[10px] text-gray-400 mt-0.5">{s.category}</div>
+                          )}
+                        </td>
+                        <td className="px-3 py-1.5 text-gray-500">
+                          {s.intervalLabel}
+                          <span className="text-[10px] text-gray-400 ml-1">· {s.occurrences}×</span>
+                        </td>
+                        <td className="px-3 py-1.5 text-right font-mono text-gray-700">${s.avgAmount.toFixed(2)}</td>
+                        <td className="px-3 py-1.5 text-right text-gray-500">
+                          {s.lastDate}
+                          {s.priceChanged && (s.priceChangePct ?? 0) !== 0 && (
+                            <span
+                              className={`ml-1.5 inline-flex items-center gap-0.5 text-[10px] font-bold px-1 py-0.5 rounded-full ${
+                                (s.priceChangePct ?? 0) > 0
+                                  ? 'bg-rose-50 text-rose-700 border border-rose-100'
+                                  : 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                              }`}
+                              title={`Last charge ${(s.priceChangePct ?? 0) > 0 ? 'up' : 'down'} ${Math.abs(Math.round(s.priceChangePct))}% vs prior avg`}
+                            >
+                              <TrendingUp size={9} />
+                              {(s.priceChangePct ?? 0) > 0 ? '+' : ''}{Math.round(s.priceChangePct)}%
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-3 py-1.5 text-right font-bold text-violet-800">${s.monthlyCost.toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="mt-3 text-[11px] text-gray-400">
+                Spotted by recurring-charge pattern (3+ similar charges at roughly the same interval). Cancel the ones you forgot you had.
+              </p>
+            </div>
+          )}
+
+          {/* 4. Top stores by spend */}
           <div className="card">
             <div className="flex items-center gap-2 mb-3">
               <StoreIcon size={14} className="text-emerald-700" />

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'guac_mascot.dart';
+import '../services/update_service.dart';
 
 // Colorful bottom nav matching the web's brand palette.
 // Each tab keeps its own brand colour so the active state pops.
@@ -50,9 +51,126 @@ const _quickActions = <_QuickAction>[
   _QuickAction('/profile',    Icons.person,                    'Profile',      'Account + settings',    Color(0xFF7c3aed), Color(0xFFede9fe)),
 ];
 
-class MainScaffold extends StatelessWidget {
+class MainScaffold extends StatefulWidget {
   final Widget child;
   const MainScaffold({super.key, required this.child});
+
+  @override
+  State<MainScaffold> createState() => _MainScaffoldState();
+}
+
+class _MainScaffoldState extends State<MainScaffold> with WidgetsBindingObserver {
+  AvailableUpdate? _available;
+  DateTime? _lastChecked;
+  bool _dismissedThisSession = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    // Defer the first check by ~2s so the initial frame paints before
+    // a network call. The login screen also checks, but signed-in
+    // returning users skip /login entirely on cold start, so this is
+    // the only reliable place to catch them.
+    Future.delayed(const Duration(seconds: 2), _checkForUpdate);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    // Re-check on app foreground, but at most once per 4 hours so we
+    // don't hammer the GitHub API on every screen-on.
+    if (state == AppLifecycleState.resumed) {
+      final last = _lastChecked;
+      if (last == null || DateTime.now().difference(last) > const Duration(hours: 4)) {
+        _checkForUpdate();
+      }
+    }
+  }
+
+  Future<void> _checkForUpdate() async {
+    _lastChecked = DateTime.now();
+    final upd = await UpdateService.checkForUpdate();
+    if (!mounted || upd == null) return;
+    setState(() => _available = upd);
+  }
+
+  Future<void> _runUpdate() async {
+    final upd = _available;
+    if (upd == null) return;
+    // Show a tiny progress dialog while the APK downloads (~20MB).
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const AlertDialog(
+        content: Row(mainAxisSize: MainAxisSize.min, children: [
+          SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2)),
+          SizedBox(width: 14),
+          Flexible(child: Text('Downloading update…')),
+        ]),
+      ),
+    );
+    final ok = await UpdateService.downloadAndInstall(upd.downloadUrl);
+    if (!mounted) return;
+    Navigator.of(context, rootNavigator: true).pop();  // dismiss spinner
+    if (!ok) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Couldn't auto-download. Opening browser instead — install via the notification."),
+        duration: Duration(seconds: 4),
+      ));
+      await UpdateService.openDownload(upd.downloadUrl);
+    }
+  }
+
+  Widget? _updateBanner() {
+    final upd = _available;
+    if (upd == null || _dismissedThisSession) return null;
+    return Material(
+      color: const Color(0xFFf0fdf4),
+      child: SafeArea(
+        bottom: false,
+        child: InkWell(
+          onTap: _runUpdate,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
+            child: Row(children: [
+              const Icon(Icons.system_update, size: 18, color: Color(0xFF15803d)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+                  Text('Update available — ${upd.tag}',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF064e3b))),
+                  const Text('Tap to install',
+                    style: TextStyle(fontSize: 10, color: Color(0xFF065f46))),
+                ]),
+              ),
+              TextButton(
+                onPressed: _runUpdate,
+                style: TextButton.styleFrom(
+                  foregroundColor: const Color(0xFF15803d),
+                  visualDensity: VisualDensity.compact,
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                ),
+                child: const Text('Install', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12)),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close, size: 16, color: Colors.black54),
+                tooltip: 'Dismiss',
+                visualDensity: VisualDensity.compact,
+                onPressed: () => setState(() => _dismissedThisSession = true),
+              ),
+            ]),
+          ),
+        ),
+      ),
+    );
+  }
 
   int _selectedIndex(BuildContext context) {
     final loc = GoRouterState.of(context).matchedLocation;
@@ -112,12 +230,18 @@ class MainScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final idx = _selectedIndex(context);
+    final banner = _updateBanner();
     return Scaffold(
-      body: GestureDetector(
-        behavior: HitTestBehavior.translucent,
-        onHorizontalDragEnd: (d) => _handleHorizontalSwipe(context, idx, d),
-        child: child,
-      ),
+      body: Column(children: [
+        if (banner != null) banner,
+        Expanded(
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onHorizontalDragEnd: (d) => _handleHorizontalSwipe(context, idx, d),
+            child: widget.child,
+          ),
+        ),
+      ]),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,

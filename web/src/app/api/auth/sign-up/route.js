@@ -111,7 +111,6 @@ export async function POST(request) {
           pending_username:  username,
           birth_date:        body.birth_date        || null,
           age:               body.age               || null,
-          alternative_email: body.alternative_email || null,
           mobile_no:         body.mobile_no         || null,
         },
       },

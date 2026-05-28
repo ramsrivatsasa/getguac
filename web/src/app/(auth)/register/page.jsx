@@ -18,7 +18,7 @@ export default function RegisterPage() {
   const [resending, setResending] = useState(false)
   const [form, setForm] = useState({
     username: '', firstName: '', lastName: '', email: '', password: '', confirmPassword: '',
-    birthDate: '', age: '', alternativeEmail: '', mobileNo: ''
+    birthDate: '', age: '', mobileNo: ''
   })
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
@@ -87,7 +87,6 @@ export default function RegisterPage() {
           last_name: form.lastName,
           birth_date: form.birthDate || null,
           age: form.age || null,
-          alternative_email: form.alternativeEmail || null,
           mobile_no: form.mobileNo || null,
         }),
       })
@@ -288,7 +287,6 @@ export default function RegisterPage() {
                 />
               </div>
             </div>
-            <div><label className="label">Alternative Email</label><input type="email" className="input" value={form.alternativeEmail} onChange={s('alternativeEmail')} /></div>
             <div><label className="label">Mobile No <span className="text-gray-400 normal-case font-normal">(Optional)</span></label><input type="tel" className="input" value={form.mobileNo} onChange={s('mobileNo')} /></div>
 
             <label className="flex items-start gap-2 pt-1 cursor-pointer select-none">

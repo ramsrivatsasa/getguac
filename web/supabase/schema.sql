@@ -15,7 +15,6 @@ create table public.profiles (
   last_name       text,
   birth_date      date,
   age             integer,
-  alternative_email text,
   mobile_no       text,
   is_admin        boolean not null default false,
   created_at      timestamptz not null default now(),
@@ -26,14 +25,13 @@ create table public.profiles (
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
-  insert into public.profiles (id, first_name, last_name, birth_date, age, alternative_email, mobile_no)
+  insert into public.profiles (id, first_name, last_name, birth_date, age, mobile_no)
   values (
     new.id,
     new.raw_user_meta_data->>'first_name',
     new.raw_user_meta_data->>'last_name',
     (new.raw_user_meta_data->>'birth_date')::date,
     (new.raw_user_meta_data->>'age')::integer,
-    new.raw_user_meta_data->>'alternative_email',
     new.raw_user_meta_data->>'mobile_no'
   );
   return new;

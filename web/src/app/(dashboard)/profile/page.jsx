@@ -73,7 +73,6 @@ export default function ProfilePage() {
           <div><label className="label">First Name</label><input className="input" value={form.first_name || ''} onChange={s('first_name')} /></div>
           <div><label className="label">Last Name</label><input className="input" value={form.last_name || ''} onChange={s('last_name')} /></div>
           <div><label className="label">Email <span className="text-gray-400 font-normal normal-case">(read-only)</span></label><input className="input bg-gray-50 text-gray-500" value={user?.email || ''} readOnly /></div>
-          <div><label className="label">Alternative Email</label><input type="email" className="input" value={form.alternative_email || ''} onChange={s('alternative_email')} /></div>
           <div><label className="label">Mobile No</label><input type="tel" className="input" value={form.mobile_no || ''} onChange={s('mobile_no')} /></div>
           <div><label className="label">Birth Date</label><input type="date" className="input" value={form.birth_date || ''} onChange={s('birth_date')} /></div>
           <div><label className="label">Age</label><input type="number" className="input" value={form.age || ''} onChange={s('age')} /></div>

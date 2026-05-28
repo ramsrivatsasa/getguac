@@ -18,7 +18,7 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _ctrls = {
-    for (var k in ['username', 'firstName', 'lastName', 'email', 'password', 'birthDate', 'age', 'altEmail', 'mobile']) k: TextEditingController()
+    for (var k in ['username', 'firstName', 'lastName', 'email', 'password', 'birthDate', 'age', 'mobile']) k: TextEditingController()
   };
   bool _loading = false;
 
@@ -93,7 +93,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
           'last_name': _ctrls['lastName']!.text.trim(),
           'birth_date': _ctrls['birthDate']!.text,
           'age': _ctrls['age']!.text,
-          'alternative_email': _ctrls['altEmail']!.text.trim(),
           'mobile_no': _ctrls['mobile']!.text.trim(),
         }),
       );
@@ -407,7 +406,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           _field('password', 'Password', obscure: true, hint: 'Min 10 chars', icon: Icons.lock_outline),
                           _field('birthDate', 'Birth Date', hint: 'YYYY-MM-DD', icon: Icons.calendar_today_outlined),
                           _field('age', 'Age', type: TextInputType.number, icon: Icons.cake_outlined),
-                          _field('altEmail', 'Alternative Email (optional)', type: TextInputType.emailAddress, icon: Icons.alternate_email),
                           _field('mobile', 'Mobile (optional)', type: TextInputType.phone, icon: Icons.phone_outlined),
                           const SizedBox(height: 8),
                           FilledButton(

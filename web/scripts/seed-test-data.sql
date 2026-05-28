@@ -90,23 +90,15 @@ begin
     )
     returning id into rcpt_id;
 
+    -- Unified item names across stores so the cadence detector sees
+    -- ONE bucket per item with the real weekly cadence (24 buys, 7-day
+    -- interval), not three name-buckets at 21-day cadence which would
+    -- fail the due-now gate.
     insert into public.receipt_items (receipt_id, item_name, qty, price, category) values
-      (rcpt_id,
-        case (i % 3)
-          when 0 then 'KS ORGANIC WHOLE MILK 2 PK'
-          when 1 then 'GREAT VALUE 2% MILK 1 GAL'
-          else        'HORIZON ORGANIC WHOLE 1/2 GAL'
-        end,
-        1, 5.49, 'grub'),
-      (rcpt_id,
-        case (i % 3)
-          when 0 then 'KIRKLAND CAGE FREE EGGS 24CT'
-          when 1 then 'GV LARGE EGGS DOZEN'
-          else        'GOOD&GATHER FREE RANGE 12CT'
-        end,
-        1, 4.99, 'grub'),
+      (rcpt_id, 'MILK',    1, 5.49, 'grub'),
+      (rcpt_id, 'EGGS',    1, 4.99, 'grub'),
       (rcpt_id, 'BANANAS', 1, 1.29, 'grub'),
-      (rcpt_id, 'BREAD', 1, 3.79, 'grub');
+      (rcpt_id, 'BREAD',   1, 3.79, 'grub');
   end loop;
 
   -- ─── 2. BI-WEEKLY HOUSEHOLD (12 buys) ──────────────────────────────────

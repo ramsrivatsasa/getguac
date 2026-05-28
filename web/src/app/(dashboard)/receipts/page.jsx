@@ -717,16 +717,33 @@ export default function ReceiptsPage() {
     return () => window.removeEventListener('paste', onPaste)
   }, [onQuickDrop])
 
-  // When the search term itself normalizes to a canonical key (e.g. "Costco"
-  // → "costco"), match by normalized key too — that catches every variant
-  // ("COSTCO WHOLESALE", "Costco #218", etc.) the Spending-by-Store bar
-  // grouped together. Falls back to substring matching for free-text search.
+  // Full-text search across:
+  //   - receipt id (exact substring)
+  //   - store_name (substring + normalized-key match for variants like
+  //     "COSTCO WHOLESALE" / "Costco #218")
+  //   - item names (any item on the receipt — lets you find that
+  //     receipt with the oat milk on it, even if you forgot which
+  //     store you bought it at)
+  //   - category slug (so typing "grub" matches all grocery receipts)
+  // Empty search returns everything.
   const searchKey = normalizeStoreName(search)
+  const searchLower = search.toLowerCase().trim()
   const filtered = receipts.filter(r => {
+    if (!searchLower) return true
     if (r.id?.includes(search)) return true
     const name = r.store_name?.toLowerCase() || ''
-    if (name.includes(search.toLowerCase())) return true
+    if (name.includes(searchLower)) return true
     if (searchKey && normalizeStoreName(r.store_name || '') === searchKey) return true
+    // Category slug match — typing "auto" surfaces every auto receipt.
+    if ((r.category || '').toLowerCase().includes(searchLower)) return true
+    // Item-name substring match. Receipt_items array is preloaded by
+    // useReceipts (RECEIPTS_LIST_COLS in lib/db.js).
+    if (Array.isArray(r.receipt_items)) {
+      for (const it of r.receipt_items) {
+        const nm = (it?.item_name || '').toLowerCase()
+        if (nm && nm.includes(searchLower)) return true
+      }
+    }
     return false
   })
 
@@ -1059,7 +1076,7 @@ export default function ReceiptsPage() {
       <div className="flex items-center gap-2 flex-wrap">
         <div className="relative max-w-sm">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input className="input pl-9" placeholder="Search store or ID…" value={search} onChange={e => setSearch(e.target.value)} />
+          <input className="input pl-9" placeholder="Search store, item, category, ID…" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
         <span className="text-sm text-gray-400">{filtered.length} result{filtered.length !== 1 ? 's' : ''}</span>
         {filtered.length > 0 && (
@@ -1124,7 +1141,7 @@ export default function ReceiptsPage() {
                         </td>
                         <td className="px-4 py-1" onClick={e => e.stopPropagation()}>
                           {(() => {
-                            const itemCount = Array.isArray(r.receipt_items) ? (r.receipt_items[0]?.count ?? 0) : 0
+                            const itemCount = Array.isArray(r.receipt_items) ? r.receipt_items.length : 0
                             const canExpand = itemCount > 0
                             // Both branches use the SAME flex layout with a 12px chevron slot
                             // so the receipt-id text starts at the same x-coordinate whether

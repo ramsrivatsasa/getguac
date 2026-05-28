@@ -13,7 +13,10 @@ const RECEIPTS_LIST_COLS =
   'id, user_id, store_name, store_id, store_location_id, date, total_amount, tax_paid, ' +
   'reward_no, receipt_link, extra_page_urls, business_purchase, rating, validation_tags, category, ' +
   'from_statement, statement_source, statement_import_id, reconciled, reconciled_with, ' +
-  'is_return, receipt_items(count)'
+  // item_name (not count) so the receipts page can do full-text search
+  // across line items client-side. Callers that just want a count read
+  // `r.receipt_items?.length`.
+  'is_return, receipt_items(item_name)'
 
 // Bank statements — small set per user, used by list pages to show which
 // statement / bank a receipt was imported from or reconciled against.

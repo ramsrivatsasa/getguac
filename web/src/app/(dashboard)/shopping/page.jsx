@@ -81,13 +81,20 @@ export default function ShoppingPage() {
   const [activeList, setActiveList] = useState('all')
   const [predicting, setPredicting] = useState(false)
   const [embedding, setEmbedding] = useState(false)
-  // 'list' (default) groups by Smashlist bucket; 'store' groups by
-  // store name so the curated list reads as a per-merchant trip plan.
-  const [viewMode, setViewMode] = useState('list')
+  // The curated Smashlist is always grouped by store now — Auto-Add
+  // (especially "Cheapest store") routes each item to a different
+  // merchant, so reading the list as a per-store trip plan is the
+  // only sensible default. The old "By list" toggle was removed.
   // Bulk-add by store modal — open state. When set to a store_id, the
   // modal renders historical items from that store and the user picks
   // which ones to add to their Smashlist.
   const [bulkAddOpen, setBulkAddOpen] = useState(false)
+  // Accordion state — which store groups are expanded. Default behavior
+  // is "all expanded" so a first-time user sees their whole list without
+  // having to tap each header. Track collapsed-IDs (not expanded ones)
+  // so a newly-added store is open by default without us having to
+  // re-derive on every group change.
+  const [collapsedStores, setCollapsedStores] = useState(() => new Set())
   // Bulk-select set for the curated Your Smashlist. Empty set = no
   // selection mode; non-empty = checkboxes visible + bulk-delete CTA.
   const [bulkSelected, setBulkSelected] = useState(() => new Set())
@@ -106,15 +113,36 @@ export default function ShoppingPage() {
   // friendly dropdown ("I'm going to Costco — add Milk") instead of
   // the raw UUID input it used to be. Sorted alphabetically; cached
   // for 5 min since stores rarely change.
+  //
+  // Also drives the per-store accordion header on Your Smashlist (so we
+  // can show address/phone/website next to the store name) — that's why
+  // we pull the contact columns here rather than re-querying.
   const { data: knownStores = [] } = useQuery({
     queryKey: ['known-stores'],
     queryFn: async () => {
       const sb = createClient()
-      const { data } = await sb.from('stores').select('id, store_name').order('store_name')
+      const { data } = await sb.from('stores').select('id, store_name, address, phone_no, website').order('store_name')
       return data || []
     },
     staleTime: 5 * 60_000,
   })
+
+  // Lookup: store_name → { address, phone_no, website }. Used by the
+  // accordion header to enrich the store group with contact info.
+  // Predictor-populated items only carry store_name on the joined row,
+  // so we key by name rather than id.
+  const storeMeta = useMemo(() => {
+    const m = new Map()
+    for (const st of knownStores) {
+      m.set(displayStoreName(st.store_name), {
+        id: st.id,
+        address: st.address || null,
+        phone_no: st.phone_no || null,
+        website: st.website || null,
+      })
+    }
+    return m
+  }, [knownStores])
 
   function handleSave(e) {
     e.preventDefault()
@@ -400,19 +428,52 @@ export default function ShoppingPage() {
       return next
     })
   }
+  // Smart "remove" — predicted rows go back to Buy Again (approved=false)
+  // so the user doesn't have to wait for the next predictor pass to see
+  // them again, while hand-added rows actually get deleted. The user
+  // asked for this explicitly: removing from Smashlist should round-trip
+  // back to the top grid for the predicted items.
+  async function removeFromSmashlist(item) {
+    if (item.predicted) {
+      // Round-trip: set approved=false so it re-appears in Buy Again above.
+      return new Promise((resolve, reject) => upsert.mutate(
+        { ...item, approved: false },
+        { onSuccess: resolve, onError: reject },
+      ))
+    }
+    return new Promise((resolve, reject) => del.mutate(item.id, {
+      onSuccess: resolve, onError: reject,
+    }))
+  }
+
   async function bulkDeleteSelected() {
-    const ids = [...bulkSelected]
-    if (ids.length === 0) return
-    if (!confirm(`Delete ${ids.length} item${ids.length === 1 ? '' : 's'} from your Smashlist?`)) return
+    const idSet = new Set(bulkSelected)
+    if (idSet.size === 0) return
+    const targets = filteredOwn.filter(it => idSet.has(it.id))
+    if (targets.length === 0) return
+    const predictedCount = targets.filter(t => t.predicted).length
+    const deletedCount = targets.length - predictedCount
+    const msg = predictedCount && deletedCount
+      ? `Move ${predictedCount} predicted item${predictedCount === 1 ? '' : 's'} back to Buy Again and delete ${deletedCount} other${deletedCount === 1 ? '' : 's'}?`
+      : predictedCount
+        ? `Move ${predictedCount} item${predictedCount === 1 ? '' : 's'} back to Buy Again?`
+        : `Delete ${deletedCount} item${deletedCount === 1 ? '' : 's'} from your Smashlist?`
+    if (!confirm(msg)) return
     let ok = 0
-    for (const id of ids) {
+    for (const t of targets) {
       try {
-        await new Promise((resolve, reject) => del.mutate(id, { onSuccess: resolve, onError: reject }))
+        await removeFromSmashlist(t)
         ok++
       } catch (_) { /* keep going */ }
     }
     setBulkSelected(new Set())
-    toast.success(`Deleted ${ok}/${ids.length}`)
+    if (predictedCount && deletedCount) {
+      toast.success(`Updated ${ok}/${targets.length} — predicted back in Buy Again`)
+    } else if (predictedCount) {
+      toast.success(`Sent ${ok}/${targets.length} back to Buy Again ↩`)
+    } else {
+      toast.success(`Deleted ${ok}/${targets.length}`)
+    }
   }
 
   // Group filteredOwn by store_name for the "By store" view. Items
@@ -479,13 +540,19 @@ export default function ShoppingPage() {
           <p className="text-sm text-gray-500">Stocked, themed, ready to grab</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          {/* Buy Again button removed — the nightly cron at 05:30 UTC
-              runs the embedding backfill + predictor automatically, so
-              the manual button was redundant for daily use. Edge cases
-              (just imported 200 receipts, just seeded) can either wait
-              for the cron or trigger via /api/smashlist/predict directly.
-              predictNow() is kept in scope in case we want to re-add it
-              as a small icon in the section header later. */}
+          {/* Refresh List — re-runs the predictor on demand so the user
+              can regenerate Buy Again suggestions without waiting for
+              the nightly cron. Especially needed after the user deletes
+              from Smashlist and wants those predictions to come back. */}
+          <button
+            onClick={predictNow}
+            disabled={predicting || embedding}
+            className="btn-secondary inline-flex items-center gap-1.5 text-sm"
+            title="Re-run the predictor to refresh Buy Again suggestions"
+          >
+            <Sparkles size={14} className={predicting || embedding ? 'animate-spin' : ''} />
+            {predicting ? 'Refreshing…' : embedding ? 'Embedding…' : 'Refresh list'}
+          </button>
           <AutoAddMenu
             count={filteredSuggestions.length}
             onPick={(criteria) => autoAddAll(criteria)}
@@ -692,23 +759,30 @@ export default function ShoppingPage() {
             </div>
           )}
 
-          {/* View toggle — by Smashlist bucket OR by store */}
-          <div className="ml-auto inline-flex items-center bg-emerald-50 border border-emerald-100 rounded-full p-0.5 text-[11px] font-bold">
-            <button
-              type="button"
-              onClick={() => setViewMode('list')}
-              className={`px-3 py-1 rounded-full transition-all ${viewMode === 'list' ? 'bg-white text-emerald-900 shadow-sm' : 'text-emerald-700/70 hover:text-emerald-900'}`}
-            >
-              By list
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('store')}
-              className={`px-3 py-1 rounded-full transition-all ${viewMode === 'store' ? 'bg-white text-emerald-900 shadow-sm' : 'text-emerald-700/70 hover:text-emerald-900'}`}
-            >
-              By store
-            </button>
-          </div>
+          {/* Accordion expand-all / collapse-all toggle — fast way to
+              switch between scanning every group at once and tucking
+              them away to find a single store. */}
+          {ownByStore.length > 1 && (
+            <div className="ml-auto flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setCollapsedStores(new Set())}
+                className="text-[11px] font-semibold text-emerald-700 hover:text-emerald-900 px-2 py-1"
+                title="Expand every store group"
+              >
+                Expand all
+              </button>
+              <span className="text-gray-300">·</span>
+              <button
+                type="button"
+                onClick={() => setCollapsedStores(new Set(ownByStore.map(g => g.store)))}
+                className="text-[11px] font-semibold text-gray-600 hover:text-gray-800 px-2 py-1"
+                title="Collapse every store group"
+              >
+                Collapse all
+              </button>
+            </div>
+          )}
         </div>
         <div className="card p-0 overflow-hidden">
           {isLoading ? (
@@ -724,131 +798,139 @@ export default function ShoppingPage() {
                   : `Nothing in ${activeList} yet.`}
               </p>
             </div>
-          ) : viewMode === 'store' ? (
-            <div className="divide-y divide-gray-100">
-              {ownByStore.map(({ store, items: rows }) => (
-                <div key={store} className="p-3">
-                  <div className="flex items-center gap-2 mb-2 px-1">
-                    <StoreIcon size={14} className="text-emerald-700" />
-                    <h3 className="font-bold text-emerald-900 text-sm">{store}</h3>
-                    <span className="text-[10px] text-gray-500 font-semibold">{rows.length} item{rows.length === 1 ? '' : 's'}</span>
-                  </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead className="bg-gray-50 border-b text-xs text-gray-500 uppercase tracking-wide">
-                        <tr>{['List','Item','SKU','Qty','Price','Frequency','Status','Actions'].map(h =>
-                          <th key={h} className="px-3 py-2 text-left font-semibold">{h}</th>
-                        )}</tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-50">
-                        {rows.map(item => <SmashRow
-                          key={item.id}
-                          item={item}
-                          omitStoreCol
-                          onQty={(qty) => upsert.mutate({ ...item, qty }, { onError: (err) => toast.error(err.message) })}
-                          onToggleApproved={() => toggleApproved(item)}
-                          onDelete={() => del.mutate(item.id, { onSuccess: () => toast.success('Removed') })}
-                        />)}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              ))}
-            </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50 border-b text-xs text-gray-500 uppercase tracking-wide">
-                  <tr>
-                    <th className="px-3 py-3 w-8">
-                      {/* Header checkbox toggles all visible rows on/off
-                          for fast 'select everything → delete' flows. */}
+            <div className="divide-y divide-gray-100">
+              {ownByStore.map(({ store, items: rows }) => {
+                const collapsed = collapsedStores.has(store)
+                const meta = storeMeta.get(store) || {}
+                const allSelectedInGroup = rows.length > 0 && rows.every(it => bulkSelected.has(it.id))
+                return (
+                  <div key={store} className="bg-white">
+                    {/* Accordion header — store name + address/phone/web
+                        on a single readable line. Tap header to collapse,
+                        tap the website link to open the store's online
+                        order URL without toggling the panel. */}
+                    <div className="flex items-start gap-2 px-3 py-3">
                       <input
                         type="checkbox"
-                        className="w-4 h-4 accent-rose-500 cursor-pointer"
-                        checked={filteredOwn.length > 0 && filteredOwn.every(it => bulkSelected.has(it.id))}
+                        className="w-4 h-4 accent-rose-500 cursor-pointer mt-1"
+                        checked={allSelectedInGroup}
                         onChange={(e) => {
-                          if (e.target.checked) setBulkSelected(new Set(filteredOwn.map(it => it.id)))
-                          else setBulkSelected(new Set())
+                          setBulkSelected(prev => {
+                            const next = new Set(prev)
+                            if (e.target.checked) rows.forEach(r => next.add(r.id))
+                            else rows.forEach(r => next.delete(r.id))
+                            return next
+                          })
                         }}
-                        title="Select / deselect all"
+                        title={allSelectedInGroup ? 'Deselect all in this store' : 'Select all in this store'}
+                        onClick={(e) => e.stopPropagation()}
                       />
-                    </th>
-                    {['Item','Store','SKU','Qty','Price','Frequency','Status','Actions'].map(h =>
-                      <th key={h} className="px-4 py-3 text-left font-semibold">{h}</th>
-                    )}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {filteredOwn.map(item => {
-                    return (
-                      <tr key={item.id} className={`hover:bg-gray-50/50 ${bulkSelected.has(item.id) ? 'bg-rose-50/60' : ''}`}>
-                        <td className="px-3 py-3 w-8">
-                          <input
-                            type="checkbox"
-                            className="w-4 h-4 accent-rose-500 cursor-pointer"
-                            checked={bulkSelected.has(item.id)}
-                            onChange={() => toggleBulkSelect(item.id)}
-                            aria-label={`Select ${item.item_name}`}
-                          />
-                        </td>
-                        <td className="px-4 py-3">
-                          {/* List pill + 'Predicted' badge removed per
-                              UX feedback — the tab filter already tells
-                              the user which bucket they're viewing, and
-                              the predicted source isn't actionable on
-                              the curated list. */}
-                          <div className="flex flex-col">
-                            <span className="font-medium">{item.item_name}</span>
-                            {item.predicted && item.predicted_reason && (
-                              <span className="text-[11px] text-gray-400">{item.predicted_reason}</span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-gray-700">
-                          {/* Store moved to the second column (was 4th)
-                              so the merchant context sits next to the
-                              item name — that's the question the user
-                              asks ("which Walmart trip does this go on?"). */}
-                          {item.store?.store_name ? (
-                            <span className="inline-flex items-center gap-1">
-                              <StoreIcon size={12} className="text-emerald-700" />
-                              <span className="font-semibold">{displayStoreName(item.store.store_name)}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCollapsedStores(prev => {
+                            const next = new Set(prev)
+                            if (next.has(store)) next.delete(store); else next.add(store)
+                            return next
+                          })
+                        }}
+                        className="flex-1 flex items-start gap-2 text-left hover:bg-emerald-50/50 -mx-1 px-1 py-1 rounded-lg transition-colors"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center mt-0.5 shrink-0">
+                          {collapsed
+                            ? <ChevronRight size={14} className="text-emerald-700" />
+                            : <ChevronDown size={14} className="text-emerald-700" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="font-bold text-emerald-900 text-sm">{store}</h3>
+                            <span className="text-[10px] text-gray-500 font-semibold bg-gray-100 px-1.5 py-0.5 rounded-full">
+                              {rows.length} item{rows.length === 1 ? '' : 's'}
                             </span>
+                          </div>
+                          {/* Meta line — only render the separators when
+                              we actually have the field, so a store with
+                              just an address doesn't show " - · - ". */}
+                          {(meta.address || meta.phone_no || meta.website) ? (
+                            <div className="text-[11px] text-gray-500 mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                              {meta.address && (
+                                <span className="inline-flex items-center gap-1">
+                                  <MapPin size={10} className="text-gray-400" />
+                                  {meta.address}
+                                </span>
+                              )}
+                              {meta.phone_no && (
+                                <>
+                                  <span className="text-gray-300">·</span>
+                                  <a
+                                    href={`tel:${meta.phone_no}`}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="inline-flex items-center gap-1 hover:text-emerald-700"
+                                  >
+                                    <Phone size={10} className="text-gray-400" />
+                                    {meta.phone_no}
+                                  </a>
+                                </>
+                              )}
+                              {meta.website && (
+                                <>
+                                  <span className="text-gray-300">·</span>
+                                  <a
+                                    href={meta.website.startsWith('http') ? meta.website : `https://${meta.website}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="inline-flex items-center gap-1 text-fuchsia-700 hover:underline font-semibold"
+                                  >
+                                    <ShoppingCart size={10} />
+                                    Online order
+                                  </a>
+                                </>
+                              )}
+                            </div>
                           ) : (
-                            <span className="text-gray-400">Any store</span>
+                            <div className="text-[11px] text-gray-400 mt-0.5 italic">
+                              No address / phone / website on file
+                            </div>
                           )}
-                        </td>
-                        <td className="px-4 py-3 text-gray-400 text-xs">{item.sku || '—'}</td>
-                        <td className="px-4 py-3">
-                          <QtyInput
-                            value={item.qty || 1}
-                            onSave={(qty) => upsert.mutate({ ...item, qty }, {
-                              onError: (err) => toast.error(err.message),
-                            })}
-                          />
-                        </td>
-                        <td className="px-4 py-3">{item.price ? `$${item.price}` : '—'}</td>
-                        <td className="px-4 py-3"><span className="badge-gray">{item.frequency}</span></td>
-                        <td className="px-4 py-3">
-                          <button onClick={() => toggleApproved(item)} className="flex items-center gap-1 text-xs font-medium">
-                            {item.approved
-                              ? <><CheckCircle size={14} className="text-green-500" /> <span className="text-green-600">Approved</span></>
-                              : <><Circle size={14} className="text-yellow-400" /> <span className="text-yellow-600">Pending</span></>
-                            }
-                          </button>
-                        </td>
-                        <td className="px-4 py-3">
-                          <button onClick={() => del.mutate(item.id, { onSuccess: () => toast.success('Removed') })}
-                            className="w-8 h-8 rounded-full bg-rose-100 text-rose-600 hover:bg-rose-200 hover:scale-110 active:scale-95 transition-all flex items-center justify-center shadow-sm">
-                            <Trash2 size={14} />
-                          </button>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
+                        </div>
+                      </button>
+                    </div>
+                    {!collapsed && (
+                      <div className="overflow-x-auto border-t border-gray-50">
+                        <table className="w-full text-sm">
+                          <thead className="bg-gray-50/60 border-b text-xs text-gray-500 uppercase tracking-wide">
+                            <tr>
+                              <th className="px-3 py-2 w-8"></th>
+                              {['Item','SKU','Qty','Price','Frequency','Status','Actions'].map(h =>
+                                <th key={h} className="px-3 py-2 text-left font-semibold">{h}</th>
+                              )}
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-50">
+                            {rows.map(item => (
+                              <SmashRow
+                                key={item.id}
+                                item={item}
+                                omitStoreCol
+                                selected={bulkSelected.has(item.id)}
+                                onToggleSelect={() => toggleBulkSelect(item.id)}
+                                onQty={(qty) => upsert.mutate({ ...item, qty }, { onError: (err) => toast.error(err.message) })}
+                                onToggleApproved={() => toggleApproved(item)}
+                                onDelete={() => removeFromSmashlist(item).then(
+                                  () => toast.success(item.predicted ? 'Sent back to Buy Again ↩' : 'Removed'),
+                                  (e) => toast.error(e?.message || 'Remove failed'),
+                                )}
+                              />
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           )}
         </div>
@@ -923,7 +1005,7 @@ function AutoAddMenu({ count, onPick }) {
             Pick the store for each item
           </div>
           {[
-            { key: 'cheapest', icon: '💰', label: 'Cheapest store',  sub: 'Lowest historical price per item' },
+            { key: 'cheapest', icon: '💰', label: 'Cheapest store',  sub: 'Each item lands at ITS cheapest store — your list may span several stores' },
             { key: 'frequent', icon: '🏪', label: 'Most-used store',  sub: 'Where you buy this item most often' },
             { key: 'asis',     icon: '⚡', label: 'Whatever predictor picked', sub: 'Skip the store optimization' },
           ].map(opt => (
@@ -994,20 +1076,31 @@ function ShareMenu({ buildText, handlers }) {
   )
 }
 
-// Curated Smashlist row — used by both view modes. The `omitStoreCol`
-// flag skips the Store cell when the parent renders rows grouped under
-// a per-store header (since the header already carries the store name).
-function SmashRow({ item, omitStoreCol = false, onQty, onToggleApproved, onDelete }) {
+// Curated Smashlist row — used by the per-store accordion view. The
+// `omitStoreCol` flag skips the Store cell when the parent renders rows
+// grouped under a per-store header (the header already shows the store
+// name). selected/onToggleSelect drive the leading bulk-select checkbox.
+function SmashRow({ item, omitStoreCol = false, selected = false, onToggleSelect, onQty, onToggleApproved, onDelete }) {
   const meta = SHOPPING_LIST_META[item.list_name || 'Pantry'] || {}
+  const cellPad = omitStoreCol ? 'px-3 py-2' : 'px-4 py-3'
   return (
-    <tr className="hover:bg-gray-50/50">
-      <td className={omitStoreCol ? 'px-3 py-2' : 'px-4 py-3'}>
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 border border-emerald-200 text-emerald-800">
-          {meta.emoji} {item.list_name || 'Pantry'}
-        </span>
-      </td>
-      <td className={omitStoreCol ? 'px-3 py-2' : 'px-4 py-3'}>
+    <tr className={`hover:bg-gray-50/50 ${selected ? 'bg-rose-50/60' : ''}`}>
+      {onToggleSelect && (
+        <td className="px-3 py-2 w-8">
+          <input
+            type="checkbox"
+            className="w-4 h-4 accent-rose-500 cursor-pointer"
+            checked={selected}
+            onChange={onToggleSelect}
+            aria-label={`Select ${item.item_name}`}
+          />
+        </td>
+      )}
+      <td className={cellPad}>
         <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 border border-emerald-200 text-emerald-800 shrink-0">
+            {meta.emoji}
+          </span>
           <span className="font-medium">{item.item_name}</span>
           {item.predicted && (
             <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-violet-100 text-violet-700"
@@ -1020,16 +1113,16 @@ function SmashRow({ item, omitStoreCol = false, onQty, onToggleApproved, onDelet
           <div className="text-[11px] text-gray-400 mt-0.5">{item.predicted_reason}</div>
         )}
       </td>
-      <td className={`text-gray-400 text-xs ${omitStoreCol ? 'px-3 py-2' : 'px-4 py-3'}`}>{item.sku || '—'}</td>
+      <td className={`text-gray-400 text-xs ${cellPad}`}>{item.sku || '—'}</td>
       {!omitStoreCol && (
         <td className="px-4 py-3 text-gray-500">{item.store?.store_name ? displayStoreName(item.store.store_name) : '—'}</td>
       )}
-      <td className={omitStoreCol ? 'px-3 py-2' : 'px-4 py-3'}>
+      <td className={cellPad}>
         <QtyInput value={item.qty || 1} onSave={onQty} />
       </td>
-      <td className={omitStoreCol ? 'px-3 py-2' : 'px-4 py-3'}>{item.price ? `$${item.price}` : '—'}</td>
-      <td className={omitStoreCol ? 'px-3 py-2' : 'px-4 py-3'}><span className="badge-gray">{item.frequency}</span></td>
-      <td className={omitStoreCol ? 'px-3 py-2' : 'px-4 py-3'}>
+      <td className={cellPad}>{item.price ? `$${item.price}` : '—'}</td>
+      <td className={cellPad}><span className="badge-gray">{item.frequency}</span></td>
+      <td className={cellPad}>
         <button onClick={onToggleApproved} className="flex items-center gap-1 text-xs font-medium">
           {item.approved
             ? <><CheckCircle size={14} className="text-green-500" /> <span className="text-green-600">Approved</span></>
@@ -1037,8 +1130,9 @@ function SmashRow({ item, omitStoreCol = false, onQty, onToggleApproved, onDelet
           }
         </button>
       </td>
-      <td className={omitStoreCol ? 'px-3 py-2' : 'px-4 py-3'}>
+      <td className={cellPad}>
         <button onClick={onDelete}
+          title={item.predicted ? 'Send back to Buy Again' : 'Remove from list'}
           className="w-8 h-8 rounded-full bg-rose-100 text-rose-600 hover:bg-rose-200 hover:scale-110 active:scale-95 transition-all flex items-center justify-center shadow-sm">
           <Trash2 size={14} />
         </button>

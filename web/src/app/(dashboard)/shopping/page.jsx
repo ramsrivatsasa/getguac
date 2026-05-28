@@ -1,5 +1,6 @@
 'use client'
 import { useState, useMemo, useCallback } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useShoppingList, useUpsertShoppingItem, useDeleteShoppingItem } from '../../../hooks/useShopping'
 import { SHOPPING_LISTS, SHOPPING_LIST_META } from '../../../lib/db'
 import toast from 'react-hot-toast'
@@ -88,6 +89,21 @@ export default function ShoppingPage() {
   const upsert = useUpsertShoppingItem()
   const del = useDeleteShoppingItem()
   const s = k => e => setForm(p => ({ ...p, [k]: e.target.value }))
+
+  // Stores the user has shopped at — populated from receipts via the
+  // stores table. Used by the Add Item form so the Store field is a
+  // friendly dropdown ("I'm going to Costco — add Milk") instead of
+  // the raw UUID input it used to be. Sorted alphabetically; cached
+  // for 5 min since stores rarely change.
+  const { data: knownStores = [] } = useQuery({
+    queryKey: ['known-stores'],
+    queryFn: async () => {
+      const sb = createClient()
+      const { data } = await sb.from('stores').select('id, store_name').order('store_name')
+      return data || []
+    },
+    staleTime: 5 * 60_000,
+  })
 
   function handleSave(e) {
     e.preventDefault()
@@ -489,7 +505,22 @@ export default function ShoppingPage() {
               <div><label className="label">SKU</label><input className="input" value={form.sku} onChange={s('sku')} /></div>
               <div><label className="label">Qty</label><input type="number" className="input" value={form.qty} onChange={s('qty')} /></div>
               <div><label className="label">Price ($)</label><input type="number" step="0.01" className="input" value={form.price} onChange={s('price')} /></div>
-              <div><label className="label">Store</label><input className="input" value={form.store_name_id} onChange={s('store_name_id')} /></div>
+              <div>
+                <label className="label">Store</label>
+                <select
+                  className="input font-sans"
+                  value={form.store_name_id}
+                  onChange={s('store_name_id')}
+                  title="Tag this item for a specific store — use when you know which trip it's for"
+                >
+                  <option value="">Any store</option>
+                  {knownStores.map(st => (
+                    <option key={st.id} value={st.id}>
+                      {displayStoreName(st.store_name)}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div>
                 <label className="label">Frequency</label>
                 <select className="input font-sans" value={form.frequency} onChange={s('frequency')}>

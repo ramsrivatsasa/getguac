@@ -21,6 +21,8 @@ import 'screens/steals/steals_screen.dart';
 import 'screens/inbox/inbox_screen.dart';
 import 'screens/inbox/inbox_detail_screen.dart';
 import 'screens/how_it_works/how_it_works_screen.dart';
+import 'screens/chat/chat_list_screen.dart';
+import 'screens/chat/chat_thread_screen.dart';
 import 'widgets/main_scaffold.dart';
 
 final appRouter = GoRouter(
@@ -84,6 +86,8 @@ final appRouter = GoRouter(
         GoRoute(path: '/inbox', builder: (_, __) => const InboxScreen()),
         GoRoute(path: '/inbox/:id', builder: (_, state) => InboxDetailScreen(id: state.pathParameters['id']!)),
         GoRoute(path: '/how-it-works', builder: (_, __) => const HowItWorksScreen()),
+        GoRoute(path: '/chat', builder: (_, __) => const ChatListScreen()),
+        GoRoute(path: '/chat/:threadId', builder: (_, state) => ChatThreadScreen(threadId: state.pathParameters['threadId']!)),
       ],
     ),
   ],

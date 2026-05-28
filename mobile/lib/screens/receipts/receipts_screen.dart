@@ -31,9 +31,11 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
   void initState() {
     super.initState();
     if (context.read<AppAuthProvider>().currentUser?.id != null) {
-      // Honour the 60s cache so re-entering the tab doesn't network-spam.
-      // Pull-to-refresh forces a fresh fetch when the user actually wants one.
-      context.read<ReceiptProvider>().loadReceipts();
+      // Always default the Receipts screen to 1M, regardless of what the
+      // dashboard (or any other surface) pre-fetched with a wider period.
+      // This is the canonical entry point — wider scopes are opt-in via
+      // the chip row. Honours the 60s cache for repeat entries.
+      context.read<ReceiptProvider>().loadReceipts(period: ReceiptPeriod.month);
     }
     // Apply the deep-link store filter (if any) by pre-filling both the
     // visible search text and the filter state used by the list query.

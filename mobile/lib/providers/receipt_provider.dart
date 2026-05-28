@@ -75,6 +75,11 @@ class ReceiptProvider extends ChangeNotifier {
       return;
     }
 
+    // Set the period BEFORE the await so chip UI flips immediately. Without
+    // this, the chips on the Receipts screen would briefly show the
+    // previously-loaded period (e.g. "All" inherited from the dashboard's
+    // pre-fetch) until the new query completes — visible jank on slow links.
+    _lastPeriod = period;
     loading = true;
     notifyListeners();
     try {
@@ -88,7 +93,6 @@ class ReceiptProvider extends ChangeNotifier {
           .map((d) => Receipt.fromMap(d['id'] as String, d as Map<String, dynamic>))
           .toList();
       _lastLoaded = DateTime.now();
-      _lastPeriod = period;
     } catch (e) {
       if (kDebugMode) debugPrint('loadReceipts error: $e');
       rethrow;

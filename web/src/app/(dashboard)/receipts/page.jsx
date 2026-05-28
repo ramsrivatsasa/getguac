@@ -24,6 +24,25 @@ import CategoryPicker from '../../../components/CategoryPicker'
 
 const EMPTY = { store_name: '', date: '', total_amount: '', tax_paid: '', reward_no: '', business_purchase: false }
 
+// Period chips — mirror mobile's ReceiptPeriod enum so the same labels
+// and time windows render across all three platforms. 1M is the default
+// entry point; wider scopes are opt-in via these chips.
+const RECEIPT_PERIODS = [
+  { id: '1M',  label: '1M',  days: 30  },
+  { id: '3M',  label: '3M',  days: 90  },
+  { id: '6M',  label: '6M',  days: 180 },
+  { id: '1Y',  label: '1Y',  days: 365 },
+  { id: 'All', label: 'All', days: null },
+]
+
+function periodToDateFrom(period) {
+  const found = RECEIPT_PERIODS.find(p => p.id === period)
+  if (!found || found.days == null) return undefined
+  const d = new Date()
+  d.setDate(d.getDate() - found.days)
+  return d.toISOString().slice(0, 10)
+}
+
 // Column definitions for the receipts table. `default` is the initial pixel
 // width; users can drag the right edge of any header to override, and the
 // override is persisted to localStorage under 'receipts_col_widths_v1'.
@@ -47,6 +66,10 @@ export default function ReceiptsPage() {
   // bars on the dashboard can deep-link into a pre-filtered receipts list.
   const initialSearch = searchParams.get('store') || ''
   const [search, setSearch] = useState(initialSearch)
+  // Default to 1M to match mobile + iOS. Wider scopes are opt-in via the
+  // chip row below. Avoids hammering the table with an unbounded fetch on
+  // every visit for users with thousands of receipts.
+  const [period, setPeriod] = useState('1M')
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState(EMPTY)
   const [file, setFile] = useState(null)
@@ -69,7 +92,11 @@ export default function ReceiptsPage() {
     queryFn: async () => { const sb = createClient(); const { data } = await sb.auth.getUser(); return data.user },
   })
 
-  const { data: receipts = [], isLoading } = useReceipts()
+  // Scope the query to the selected period. Undefined dateFrom = no
+  // lower bound (for "All"). useReceipts is keyed by filters so swapping
+  // periods triggers a fresh fetch automatically.
+  const dateFrom = useMemo(() => periodToDateFrom(period), [period])
+  const { data: receipts = [], isLoading } = useReceipts({ dateFrom })
   const { data: bankStmts = new Map() } = useBankStatementMap()
   // Quick lookup so we can resolve reconciled-but-not-from-statement rows
   // to their paired statement row's issuer/file_name without an extra query.
@@ -1022,6 +1049,25 @@ export default function ReceiptsPage() {
           </form>
         </div>
       )}
+
+      {/* Period chips — mirrors mobile's chip row. 1M default; wider on tap. */}
+      <div className="flex items-center gap-1.5 flex-wrap">
+        <span className="text-[11px] font-bold uppercase tracking-wider text-gray-500 mr-1">Show:</span>
+        {RECEIPT_PERIODS.map(p => (
+          <button
+            key={p.id}
+            type="button"
+            onClick={() => setPeriod(p.id)}
+            className={`text-xs font-bold px-2.5 py-1 rounded-full transition-colors ${
+              period === p.id
+                ? 'bg-emerald-100 text-emerald-900 ring-1 ring-emerald-200'
+                : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
+            }`}
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
 
       {/* Search + bulk actions */}
       <div className="flex items-center gap-2 flex-wrap">

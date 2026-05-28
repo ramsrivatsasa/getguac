@@ -1,12 +1,23 @@
 'use client'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { useShoppingList, useUpsertShoppingItem, useDeleteShoppingItem } from '../../../hooks/useShopping'
 import { SHOPPING_LISTS, SHOPPING_LIST_META } from '../../../lib/db'
 import toast from 'react-hot-toast'
-import { Trash2, CheckCircle, Circle, X, Sparkles, Wand2, Zap, Store as StoreIcon, MapPin, Star, Share2, ShoppingCart } from 'lucide-react'
+import { Trash2, CheckCircle, Circle, X, Sparkles, Wand2, Zap, Store as StoreIcon, MapPin, Star, Share2, ShoppingCart, BadgeDollarSign, ChevronDown, ChevronRight } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
 import { groupPredictionsByStore } from '../../../lib/prediction-feedback'
 import { displayStoreName } from '../../../lib/store-name-normalize'
+
+// Same tone palette as /stash so Buy Again cards visually rhyme with
+// the Stash grid. Maps the per-Smashlist color (Pantry=emerald,
+// Cravings=rose, Snack Stack=amber, Grub & Grab=lime).
+const TONE_TINT = {
+  emerald: { from: 'from-emerald-50', to: 'to-green-100',   ring: 'ring-emerald-200', text: 'text-emerald-900', accent: 'bg-emerald-500' },
+  rose:    { from: 'from-rose-50',    to: 'to-red-100',     ring: 'ring-rose-200',    text: 'text-rose-900',    accent: 'bg-rose-500' },
+  amber:   { from: 'from-amber-50',   to: 'to-yellow-100',  ring: 'ring-amber-200',   text: 'text-amber-900',   accent: 'bg-amber-500' },
+  lime:    { from: 'from-lime-50',    to: 'to-emerald-100', ring: 'ring-lime-200',    text: 'text-lime-900',    accent: 'bg-lime-500' },
+  gray:    { from: 'from-gray-50',    to: 'to-gray-100',    ring: 'ring-gray-200',    text: 'text-gray-900',    accent: 'bg-gray-500' },
+}
 
 // Items the user manually adds default to approved=true ("ready to grab")
 // — if they took the trouble to add it, they're committing to buying it.
@@ -108,21 +119,26 @@ export default function ShoppingPage() {
       ? `🥑 GetGuac Smashlist · ${today}`
       : `🥑 GetGuac ${activeListLabel} · ${today}`
     if (!items.length) return `${header}\n\n(empty list)`
-    // Group by list_name so each section is its own header.
-    const byList = new Map()
+    // Group by STORE so the recipient can plan one stop per merchant
+    // ("here's everything at Costco, here's everything at Walmart").
+    // Items without a known store fall into a "🛒 ANY STORE" bucket
+    // so they're not dropped from the share.
+    const byStore = new Map()
     for (const it of items) {
-      const name = it.list_name || 'Pantry'
-      if (!byList.has(name)) byList.set(name, [])
-      byList.get(name).push(it)
+      const key = it.store?.store_name
+        ? displayStoreName(it.store.store_name)
+        : 'Any store'
+      if (!byStore.has(key)) byStore.set(key, [])
+      byStore.get(key).push(it)
     }
     const sections = []
-    for (const [name, rows] of byList) {
-      const meta = SHOPPING_LIST_META[name] || {}
-      const emoji = meta.emoji || '🛒'
-      sections.push(`\n${emoji} ${name.toUpperCase()}`)
+    for (const [storeName, rows] of byStore) {
+      const emoji = storeName === 'Any store' ? '🛒' : '📍'
+      sections.push(`\n${emoji} ${storeName.toUpperCase()}`)
       for (const it of rows) {
         const qty = it.qty && it.qty !== 1 ? ` (×${it.qty})` : ''
-        sections.push(`  □ ${it.item_name}${qty}`)
+        const listTag = it.list_name && it.list_name !== 'Pantry' ? ` · ${it.list_name}` : ''
+        sections.push(`  □ ${it.item_name}${qty}${listTag}`)
       }
     }
     return `${header}${sections.join('\n')}\n\n— shared from getguac.app`
@@ -431,109 +447,22 @@ export default function ShoppingPage() {
             <h2 className="font-semibold text-gray-800">Buy Again</h2>
             <span className="text-xs text-gray-500">Items you usually buy that look due for a restock. ✓ to add, ✕ to hide.</span>
           </div>
-          {/* Card grid — Google-Shopping-style. Each Buy Again row is its
-              own card with clear visual hierarchy: list pill + urgency
-              chip in the header, item name big, restock estimate, then
-              the frequency + store row, price + best-price link, qty
-              stepper, and a single Add-to-Smashlist CTA. Whole card is
-              clickable; qty + best-price stopPropagation. Auto-wraps
-              from 1 column (mobile) up to 4 columns on wide screens. */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-            {filteredSuggestions.map(item => {
-              const meta = SHOPPING_LIST_META[item.list_name || 'Pantry'] || {}
-              const u = urgencyForItem(item)
-              const storeName = item.store?.store_name ? displayStoreName(item.store.store_name) : ''
-              const priceSearchUrl = `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(item.item_name + ' best price')}`
-              return (
-                <div
-                  key={item.id}
-                  className="bg-white rounded-2xl border border-violet-100 hover:border-violet-300 hover:shadow-md transition-all p-4 flex flex-col gap-3 cursor-pointer"
-                  onClick={() => toggleApproved(item)}
-                  title="Click to add to your Smashlist"
-                >
-                  {/* Header — list pill + urgency badge */}
-                  <div className="flex items-start justify-between gap-2">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 border border-emerald-200 text-emerald-800">
-                      {meta.emoji} {item.list_name || 'Pantry'}
-                    </span>
-                    {u?.isUrgent ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 ring-1 ring-rose-200">
-                        <Star size={10} className="fill-rose-500 text-rose-500" /> Restock
-                      </span>
-                    ) : u?.isOverdue ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
-                        Due now
-                      </span>
-                    ) : null}
-                  </div>
-
-                  {/* Item title + restock estimate */}
-                  <div>
-                    <h3 className="font-bold text-gray-900 text-base leading-tight">{item.item_name}</h3>
-                    {u && (
-                      <p className={`text-[11px] mt-0.5 ${u.isOverdue ? 'text-rose-700 font-semibold' : 'text-gray-500'}`}>
-                        {formatRunsOut(u.daysToRunOut, u.runsOutISO)}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Frequency + Store row */}
-                  <div className="flex items-center gap-2 flex-wrap text-xs">
-                    {item.frequency && (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-violet-50 text-violet-700 ring-1 ring-violet-200">
-                        {item.frequency}
-                      </span>
-                    )}
-                    {storeName && (
-                      <span className="inline-flex items-center gap-1 text-gray-500">
-                        <StoreIcon size={11} className="text-gray-400" />
-                        {storeName}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Price + best-price link */}
-                  <div className="flex items-center justify-between border-t border-gray-100 pt-3">
-                    <span className="text-lg font-black text-gray-900">
-                      {item.price ? `$${item.price}` : '—'}
-                    </span>
-                    <a
-                      onClick={(e) => e.stopPropagation()}
-                      href={priceSearchUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      title="Search the web for the best current price"
-                      className="text-[11px] text-emerald-700 hover:text-emerald-900 underline-offset-2 hover:underline whitespace-nowrap"
-                    >
-                      best price ↗
-                    </a>
-                  </div>
-
-                  {/* Qty stepper — stopPropagation so + / − / typing
-                      doesn't trigger the card's Add-to-Smashlist action. */}
-                  <div className="flex items-center justify-between" onClick={(e) => e.stopPropagation()}>
-                    <span className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">Qty</span>
-                    <QtyInput
-                      value={item.qty || 1}
-                      onSave={(qty) => upsert.mutate({ ...item, qty }, {
-                        onError: (err) => toast.error(err.message),
-                      })}
-                    />
-                  </div>
-
-                  {/* Single CTA — Add to Smashlist. Tapping anywhere on
-                      the card also adds, but this makes the action
-                      explicit + accessible. */}
-                  <button
-                    onClick={(e) => { e.stopPropagation(); toggleApproved(item) }}
-                    className="w-full inline-flex items-center justify-center gap-1.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold"
-                    title="Add to Smashlist"
-                  >
-                    <ShoppingCart size={14} /> Add to Smashlist
-                  </button>
-                </div>
-              )
-            })}
+          {/* Card grid — Stash-style: gradient background per list tone,
+              color stripe header, emoji avatar, 3 stat tiles, expandable
+              best-price hunter, and Qty + Add to Smashlist footer. Mirrors
+              ProductCard from /stash so the two surfaces feel like one
+              app. */}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {filteredSuggestions.map(item => (
+              <BuyAgainCard
+                key={item.id}
+                item={item}
+                onAdd={() => toggleApproved(item)}
+                onQty={(qty) => upsert.mutate({ ...item, qty }, {
+                  onError: (err) => toast.error(err.message),
+                })}
+              />
+            ))}
           </div>
           <p className="text-[11px] text-gray-400 px-1">
             * Calculated based on your purchase dates.
@@ -633,6 +562,207 @@ export default function ShoppingPage() {
           )}
         </div>
       </section>
+    </div>
+  )
+}
+
+// Buy Again card — Stash-styled visual: gradient background by list
+// tone, color stripe header, emoji avatar, 3 stat tiles, expandable
+// best-price hunter (calls /api/best-price with geolocation), and a
+// Qty + Add to Smashlist footer.
+function BuyAgainCard({ item, onAdd, onQty }) {
+  const meta = SHOPPING_LIST_META[item.list_name || 'Pantry'] || {}
+  const tone = TONE_TINT[meta.color] || TONE_TINT.gray
+  const u = urgencyForItem(item)
+  const storeName = item.store?.store_name ? displayStoreName(item.store.store_name) : ''
+
+  // Inline best-price hunter — calls /api/best-price with browser
+  // geolocation. Results render below the stat tiles as selectable
+  // rows (like the Stash card's "Live web prices" panel).
+  const [expanded, setExpanded] = useState(false)
+  const [webPrices, setWebPrices] = useState(null)  // null | array
+  const [webLoading, setWebLoading] = useState(false)
+
+  const getLocation = useCallback(() => new Promise((resolve) => {
+    if (!navigator?.geolocation) return resolve({ lat: null, lng: null })
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => resolve({ lat: null, lng: null }),  // user denied — proceed without coords
+      { timeout: 4000, maximumAge: 600_000 },
+    )
+  }), [])
+
+  const huntBestPrice = useCallback(async () => {
+    setWebLoading(true)
+    try {
+      const { lat, lng } = await getLocation()
+      const res = await fetch('/api/best-price', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ item_name: item.item_name, lat, lng }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Best-price lookup failed')
+      // Wrap in array for uniform rendering even though endpoint
+      // currently returns a single best result.
+      setWebPrices(data.store_name ? [data] : [])
+      if (!data.store_name) toast('No reliable price found — try refreshing later', { icon: '🤷' })
+    } catch (e) {
+      toast.error(e.message)
+    } finally {
+      setWebLoading(false)
+    }
+  }, [item.item_name, getLocation])
+
+  return (
+    <div className={`relative bg-gradient-to-br ${tone.from} ${tone.to} rounded-2xl border-2 border-transparent shadow-sm hover:shadow-xl hover:border-emerald-300 hover:scale-[1.01] hover:-translate-y-0.5 transition-all duration-200 overflow-hidden ring-1 ${tone.ring}`}>
+      <div className={`h-1 ${tone.accent}`} />
+      <div className="p-3 flex flex-col">
+        {/* Header — emoji avatar + name + urgency badge */}
+        <div className="flex items-start gap-2.5">
+          <div className={`w-10 h-10 rounded-2xl ${tone.accent} text-white shadow-md flex items-center justify-center text-xl ring-2 ring-white shrink-0`}>
+            {meta.emoji || '🛒'}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className={`font-bold text-sm leading-tight line-clamp-2 ${tone.text}`}>{item.item_name}</p>
+            <p className="text-[10px] text-gray-500 mt-0.5 truncate">
+              {item.list_name || 'Pantry'}
+            </p>
+          </div>
+          {/* Right stack: list pill + urgency badge (matches the
+              "Drinks dropdown + count chip" stack on the Stash card). */}
+          <div className="shrink-0 flex flex-col items-end gap-1">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/80 text-emerald-800 border border-emerald-200">
+              {meta.emoji} {item.list_name || 'Pantry'}
+            </span>
+            {u?.isUrgent ? (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 ring-1 ring-rose-200">
+                <Star size={10} className="fill-rose-500 text-rose-500" /> Restock
+              </span>
+            ) : u?.isOverdue ? (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
+                Due now
+              </span>
+            ) : null}
+          </div>
+        </div>
+
+        {/* 4 stat tiles — Restock | Order frequency | Last bought | Store */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-3 text-xs">
+          <div className="rounded-xl bg-white/80 px-2 py-1 text-center ring-1 ring-white">
+            <p className="text-[9px] uppercase text-gray-500 font-bold">Restock</p>
+            <p className={`font-bold text-[11px] tabular-nums ${u?.isOverdue ? 'text-rose-700' : 'text-gray-700'}`}>
+              {u ? formatRunsOut(u.daysToRunOut, u.runsOutISO) : '—'}
+            </p>
+          </div>
+          <div className="rounded-xl bg-white/80 px-2 py-1 text-center ring-1 ring-white">
+            <p className="text-[9px] uppercase text-gray-500 font-bold">Order</p>
+            <p className="font-bold text-[11px] text-violet-700 truncate">
+              {item.frequency
+                ? `${item.frequency} Purchase`
+                : item.predicted_avg_cadence_days
+                  ? `every ${Math.round(item.predicted_avg_cadence_days)}d`
+                  : '—'}
+            </p>
+          </div>
+          <div className="rounded-xl bg-white/80 px-2 py-1 text-center ring-1 ring-white">
+            <p className="text-[9px] uppercase text-gray-500 font-bold">Last bought</p>
+            <p className="font-bold text-[11px] text-amber-700 tabular-nums">
+              {item.predicted_last_purchase_date
+                ? new Date(item.predicted_last_purchase_date + 'T00:00:00Z')
+                    .toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                : '—'}
+            </p>
+          </div>
+          <div className="rounded-xl bg-white/80 px-2 py-1 text-center ring-1 ring-white truncate">
+            <p className="text-[9px] uppercase text-gray-500 font-bold">Store</p>
+            <p className="font-bold text-[11px] text-emerald-700 truncate" title={storeName}>
+              {storeName || '—'}
+            </p>
+          </div>
+        </div>
+
+        {/* Amber callout — only when overdue. Mirrors the "Cheapest at
+            Walmart" strip on the Stash card. */}
+        {u?.isOverdue && (
+          <div className="mt-3 flex items-center gap-2 text-xs bg-amber-100/80 text-amber-900 rounded-xl px-3 py-2 border border-amber-200">
+            <Star size={14} className="text-amber-600 fill-amber-500 shrink-0" />
+            <span>
+              <span className="font-bold">Heads up</span> —
+              {' '}you usually re-up on <span className="font-bold">{item.frequency || 'this cadence'}</span>{' '}
+              and the last buy was <span className="font-bold">{u.runsOutISO}</span>.
+            </span>
+          </div>
+        )}
+
+        {/* Best-price expander — mirrors the Stash "Hunt web prices" affordance */}
+        <button
+          type="button"
+          onClick={() => setExpanded(v => !v)}
+          className="mt-3 flex items-center gap-1 text-xs font-semibold text-emerald-800 hover:text-emerald-900 self-start"
+        >
+          {expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+          Find best price
+        </button>
+
+        {expanded && (
+          <div className="mt-2 bg-white/80 rounded-xl p-2 ring-1 ring-white space-y-2">
+            {webPrices === null && (
+              <p className="text-[11px] text-gray-500 px-1">
+                Tap below to search the web — we'll use your location for nearby stores.
+              </p>
+            )}
+            {webPrices && webPrices.length > 0 && (
+              <ul className="space-y-1">
+                {webPrices.map((p, i) => (
+                  <li key={i} className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg bg-emerald-50/60 ring-1 ring-emerald-100">
+                    <div className="flex-1 min-w-0 truncate">
+                      <p className="text-xs font-semibold text-emerald-900 truncate">
+                        {p.store_name || 'Unknown store'}
+                      </p>
+                      {p.source === 'cache' && (
+                        <p className="text-[9px] text-gray-400">cached · tap refresh for live</p>
+                      )}
+                    </div>
+                    <span className="text-sm font-black text-emerald-700 tabular-nums">
+                      {p.price != null ? `$${Number(p.price).toFixed(2)}` : '—'}
+                    </span>
+                    {p.url && (
+                      <a href={p.url} target="_blank" rel="noreferrer"
+                         className="text-emerald-700 hover:text-emerald-900 text-xs"
+                         title="Open at the store">↗</a>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+            <button
+              type="button"
+              onClick={huntBestPrice}
+              disabled={webLoading}
+              className="w-full text-[11px] font-bold text-emerald-700 hover:bg-emerald-50 rounded-lg py-1.5 transition-all flex items-center justify-center gap-1.5"
+            >
+              {webLoading ? <>⏳ Scanning the web…</> : webPrices ? <>🔄 Refresh price</> : <>💎 Hunt best price</>}
+            </button>
+          </div>
+        )}
+
+        {/* Footer — qty stepper + Add to Smashlist CTA */}
+        <div className="flex items-center justify-between mt-4 pt-3 border-t border-white/50 gap-2">
+          <div className="flex items-center gap-2">
+            <span className="text-[9px] uppercase tracking-wider text-gray-500 font-bold">Qty</span>
+            <QtyInput value={item.qty || 1} onSave={onQty} />
+          </div>
+          <button
+            type="button"
+            onClick={onAdd}
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold shadow-sm hover:shadow-md transition-all"
+            title="Add to Smashlist"
+          >
+            <ShoppingCart size={13} /> Add
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

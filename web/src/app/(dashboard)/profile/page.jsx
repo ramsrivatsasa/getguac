@@ -7,6 +7,7 @@ import { Save, CreditCard, Plus, Trash2 } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
 import PrivacyPanel from '../../../components/PrivacyPanel'
 import EmailAliasPicker from '../../../components/EmailAliasPicker'
+import HouseholdPanel from '../../../components/HouseholdPanel'
 
 export default function ProfilePage() {
   const sb = createClient()
@@ -85,6 +86,13 @@ export default function ProfilePage() {
 
       {/* Vanity email picker (replaces the static GetGuac Email line) */}
       {user?.id && <EmailAliasPicker userId={user.id} />}
+
+      {/* Household — shared shopping list + family chat. Scoped to a
+          tight set (2-4 people); receipts + analytics stay personal.
+          Self-contained: this component handles create, invite,
+          member roster, leave, and the chat thread, all reading +
+          writing through lib/households.js. */}
+      <HouseholdPanel />
 
       {/* Payment options */}
       <div className="card space-y-4">

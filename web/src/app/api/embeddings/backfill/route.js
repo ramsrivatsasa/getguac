@@ -118,6 +118,16 @@ export async function POST(request) {
     })
   } catch (err) {
     console.error('[embeddings/backfill]', err)
+    // Postgres "column ... does not exist" = migration 014 wasn't
+    // applied. Return a structured hint so the client UI can guide
+    // the user to fix the underlying setup instead of asking them
+    // to retry (which then 429s on the rate limiter).
+    if (err?.code === '42703' || /column .* does not exist/i.test(err.message || '')) {
+      return Response.json({
+        error: 'Embeddings table not set up. Apply migration 014 (embeddings) in Supabase, then retry.',
+        migration_needed: '014_embeddings.sql',
+      }, { status: 503 })
+    }
     return Response.json({ error: err.message }, { status: 500 })
   }
 }

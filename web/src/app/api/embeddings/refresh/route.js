@@ -136,6 +136,15 @@ async function handle(request) {
     return Response.json({ embedded: r.embedded, failed: r.failed, remaining })
   } catch (err) {
     console.error('[embeddings/refresh]', err)
+    // Postgres "column ... does not exist" → migration 014 wasn't
+    // applied. Tell the user explicitly so they don't retry into
+    // the rate limiter.
+    if (err?.code === '42703' || /column .* does not exist/i.test(err.message || '')) {
+      return Response.json({
+        error: 'Embeddings table not set up. Apply migration 014 (embeddings) in Supabase, then retry.',
+        migration_needed: '014_embeddings.sql',
+      }, { status: 503 })
+    }
     return Response.json({ error: err.message }, { status: 500 })
   }
 }

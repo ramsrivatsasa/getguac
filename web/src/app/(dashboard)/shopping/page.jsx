@@ -431,107 +431,109 @@ export default function ShoppingPage() {
             <h2 className="font-semibold text-gray-800">Buy Again</h2>
             <span className="text-xs text-gray-500">Items you usually buy that look due for a restock. ✓ to add, ✕ to hide.</span>
           </div>
-          <div className="card p-0 overflow-hidden border-violet-200">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-violet-50/50 border-b text-xs text-violet-700 uppercase tracking-wide">
-                  <tr>{['List','Item','Restock *','Your Purchase Frequency','Store','Qty','Price'].map(h =>
-                    <th key={h} className="px-4 py-3 text-left font-semibold">{h}</th>
-                  )}</tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {filteredSuggestions.map(item => {
-                    const meta = SHOPPING_LIST_META[item.list_name || 'Pantry'] || {}
-                    const u = urgencyForItem(item)
-                    const storeName = item.store?.store_name ? displayStoreName(item.store.store_name) : ''
-                    // External price-comparison link. We don't host a paid
-                    // price API yet, but a Google Shopping search ("buy <item>
-                    // best price") is one tap away and free. Future surface
-                    // can swap in the real /steals AI price hunt.
-                    const priceSearchUrl = `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(item.item_name + ' best price')}`
-                    return (
-                      <tr
-                        key={item.id}
-                        className="hover:bg-violet-50/30 cursor-pointer"
-                        onClick={() => toggleApproved(item)}
-                        title="Click to add to your Smashlist"
-                      >
-                        <td className="px-4 py-3">
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 border border-emerald-200 text-emerald-800">
-                            {meta.emoji} {item.list_name || 'Pantry'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className="font-medium">{item.item_name}</span>
-                        </td>
-                        <td className="px-4 py-3 text-xs max-w-xs">
-                          {u ? (
-                            <div className="flex flex-col gap-0.5">
-                              {u.isUrgent ? (
-                                <span className="inline-flex items-center gap-1 self-start px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 ring-1 ring-rose-200">
-                                  <Star size={10} className="fill-rose-500 text-rose-500" /> Restock
-                                </span>
-                              ) : u.isOverdue ? (
-                                <span className="inline-flex items-center gap-1 self-start px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
-                                  Due now
-                                </span>
-                              ) : null}
-                              <span className={u.isOverdue ? 'text-rose-700 font-semibold' : 'text-gray-700'}>
-                                {formatRunsOut(u.daysToRunOut, u.runsOutISO)}
-                              </span>
-                            </div>
-                          ) : (item.predicted_reason || '—')}
-                        </td>
-                        <td className="px-4 py-3 text-gray-500">
-                          {/* Frequency comes BEFORE Store to match the
-                              column header order (List | Item | Restock |
-                              Frequency | Store | Qty | Price | Actions). */}
-                          {item.frequency ? (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-violet-50 text-violet-700 ring-1 ring-violet-200">
-                              {item.frequency}
-                            </span>
-                          ) : item.predicted_avg_cadence_days ? (
-                            <span className="text-xs text-gray-500">
-                              every {Math.round(item.predicted_avg_cadence_days)}d
-                            </span>
-                          ) : '—'}
-                        </td>
-                        <td className="px-4 py-3 text-gray-500">
-                          {storeName ? (
-                            <span className="inline-flex items-center gap-1">
-                              <StoreIcon size={12} className="text-gray-400" />
-                              {storeName}
-                            </span>
-                          ) : '—'}
-                        </td>
-                        <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                          <QtyInput
-                            value={item.qty || 1}
-                            onSave={(qty) => upsert.mutate({ ...item, qty }, {
-                              onError: (err) => toast.error(err.message),
-                            })}
-                          />
-                        </td>
-                        <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                          <div className="flex items-center gap-2">
-                            <span>{item.price ? `$${item.price}` : '—'}</span>
-                            <a
-                              href={priceSearchUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              title="Search the web for the best current price"
-                              className="text-[10px] text-emerald-700 hover:text-emerald-900 underline-offset-2 hover:underline whitespace-nowrap"
-                            >
-                              best price ↗
-                            </a>
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
+          {/* Card grid — Google-Shopping-style. Each Buy Again row is its
+              own card with clear visual hierarchy: list pill + urgency
+              chip in the header, item name big, restock estimate, then
+              the frequency + store row, price + best-price link, qty
+              stepper, and a single Add-to-Smashlist CTA. Whole card is
+              clickable; qty + best-price stopPropagation. Auto-wraps
+              from 1 column (mobile) up to 4 columns on wide screens. */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            {filteredSuggestions.map(item => {
+              const meta = SHOPPING_LIST_META[item.list_name || 'Pantry'] || {}
+              const u = urgencyForItem(item)
+              const storeName = item.store?.store_name ? displayStoreName(item.store.store_name) : ''
+              const priceSearchUrl = `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(item.item_name + ' best price')}`
+              return (
+                <div
+                  key={item.id}
+                  className="bg-white rounded-2xl border border-violet-100 hover:border-violet-300 hover:shadow-md transition-all p-4 flex flex-col gap-3 cursor-pointer"
+                  onClick={() => toggleApproved(item)}
+                  title="Click to add to your Smashlist"
+                >
+                  {/* Header — list pill + urgency badge */}
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 border border-emerald-200 text-emerald-800">
+                      {meta.emoji} {item.list_name || 'Pantry'}
+                    </span>
+                    {u?.isUrgent ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 ring-1 ring-rose-200">
+                        <Star size={10} className="fill-rose-500 text-rose-500" /> Restock
+                      </span>
+                    ) : u?.isOverdue ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
+                        Due now
+                      </span>
+                    ) : null}
+                  </div>
+
+                  {/* Item title + restock estimate */}
+                  <div>
+                    <h3 className="font-bold text-gray-900 text-base leading-tight">{item.item_name}</h3>
+                    {u && (
+                      <p className={`text-[11px] mt-0.5 ${u.isOverdue ? 'text-rose-700 font-semibold' : 'text-gray-500'}`}>
+                        {formatRunsOut(u.daysToRunOut, u.runsOutISO)}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Frequency + Store row */}
+                  <div className="flex items-center gap-2 flex-wrap text-xs">
+                    {item.frequency && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-violet-50 text-violet-700 ring-1 ring-violet-200">
+                        {item.frequency}
+                      </span>
+                    )}
+                    {storeName && (
+                      <span className="inline-flex items-center gap-1 text-gray-500">
+                        <StoreIcon size={11} className="text-gray-400" />
+                        {storeName}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Price + best-price link */}
+                  <div className="flex items-center justify-between border-t border-gray-100 pt-3">
+                    <span className="text-lg font-black text-gray-900">
+                      {item.price ? `$${item.price}` : '—'}
+                    </span>
+                    <a
+                      onClick={(e) => e.stopPropagation()}
+                      href={priceSearchUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      title="Search the web for the best current price"
+                      className="text-[11px] text-emerald-700 hover:text-emerald-900 underline-offset-2 hover:underline whitespace-nowrap"
+                    >
+                      best price ↗
+                    </a>
+                  </div>
+
+                  {/* Qty stepper — stopPropagation so + / − / typing
+                      doesn't trigger the card's Add-to-Smashlist action. */}
+                  <div className="flex items-center justify-between" onClick={(e) => e.stopPropagation()}>
+                    <span className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">Qty</span>
+                    <QtyInput
+                      value={item.qty || 1}
+                      onSave={(qty) => upsert.mutate({ ...item, qty }, {
+                        onError: (err) => toast.error(err.message),
+                      })}
+                    />
+                  </div>
+
+                  {/* Single CTA — Add to Smashlist. Tapping anywhere on
+                      the card also adds, but this makes the action
+                      explicit + accessible. */}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); toggleApproved(item) }}
+                    className="w-full inline-flex items-center justify-center gap-1.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold"
+                    title="Add to Smashlist"
+                  >
+                    <ShoppingCart size={14} /> Add to Smashlist
+                  </button>
+                </div>
+              )
+            })}
           </div>
           <p className="text-[11px] text-gray-400 px-1">
             * Calculated based on your purchase dates.

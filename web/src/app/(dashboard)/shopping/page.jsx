@@ -449,16 +449,6 @@ export default function ShoppingPage() {
                     // best price") is one tap away and free. Future surface
                     // can swap in the real /steals AI price hunt.
                     const priceSearchUrl = `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(item.item_name + ' best price')}`
-                    // Urgency-tier color for the asterisk after the item
-                    // name. Red = urgent restock, amber = due now,
-                    // violet = coming up, gray = no urgency data.
-                    const asteriskColor = u?.isUrgent
-                      ? 'text-rose-500'
-                      : u?.isOverdue
-                        ? 'text-amber-500'
-                        : u
-                          ? 'text-violet-500'
-                          : 'text-gray-300'
                     return (
                       <tr
                         key={item.id}
@@ -472,15 +462,7 @@ export default function ShoppingPage() {
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="font-medium">{item.item_name}</span>
-                            {u && (
-                              <span
-                                className={`text-lg font-black leading-none ${asteriskColor}`}
-                                title={u.isUrgent ? 'Restock urgently' : u.isOverdue ? 'Due now' : 'Coming up'}
-                              >*</span>
-                            )}
-                          </div>
+                          <span className="font-medium">{item.item_name}</span>
                         </td>
                         <td className="px-4 py-3 text-xs max-w-xs">
                           {u ? (

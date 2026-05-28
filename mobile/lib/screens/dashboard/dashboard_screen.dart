@@ -56,6 +56,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     context.read<RewardProvider>().loadRewards();
   }
 
+  /// Cutoff as a YYYY-MM-DD string. Mirrors the web filter so receipt
+  /// rows on the boundary are counted identically across platforms.
+  String _periodCutoffStr() {
+    final d = _periodCutoff();
+    final mm = d.month.toString().padLeft(2, '0');
+    final dd = d.day.toString().padLeft(2, '0');
+    return '${d.year}-$mm-$dd';
+  }
+
   DateTime _periodCutoff() {
     final now = DateTime.now();
     switch (_period) {
@@ -817,10 +826,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final firstName = auth.userProfile?['first_name']?.toString().trim();
     final greeting = (firstName == null || firstName.isEmpty) ? 'there' : firstName;
 
-    final cutoff = _periodCutoff();
+    // Date comparison is done on the STRING form (YYYY-MM-DD) to avoid
+    // timezone drift. Receipt.date is a calendar date with no time; if
+    // we parse it to DateTime (UTC midnight by default) and compare to
+    // a locally-constructed cutoff, the offset between UTC and the
+    // user's timezone shifts the boundary by one day. Web compares dates
+    // as strings, so mobile must too — otherwise the two dashboards
+    // disagree on which rows fall inside "Last 3 months".
+    final cutoffStr = _periodCutoffStr();
     final filtered = receipts.where((r) {
-      final d = DateTime.tryParse(r.date);
-      return d != null && d.isAfter(cutoff);
+      final d = (r.date).toString();
+      // Empty-date receipts (parse failures) drop out via the empty
+      // string being lexicographically smaller than any real date.
+      return d.length >= 10 && d.compareTo(cutoffStr) >= 0;
     }).toList();
 
     final totalSpend = filtered.fold<double>(0, (s, r) => s + r.totalAmount);

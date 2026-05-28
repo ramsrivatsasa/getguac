@@ -42,10 +42,20 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
   }
 
   function filterByPeriod(receipts) {
-    const cutoff = periodStart(period, periodCount)
+    // Compare on date STRING (YYYY-MM-DD), not parsed Date objects.
+    // `new Date('2026-02-27')` parses as UTC midnight; periodStart()
+    // returns a local-time Date. Comparing those across timezones
+    // shifts the boundary by ~a day, so mobile and web ended up
+    // counting different rows for the same "Last 3 months" window.
+    // Lexicographic string compare on ISO dates is timezone-free.
+    const cutoffDate = periodStart(period, periodCount)
+    const yyyy = cutoffDate.getFullYear()
+    const mm = String(cutoffDate.getMonth() + 1).padStart(2, '0')
+    const dd = String(cutoffDate.getDate()).padStart(2, '0')
+    const cutoffStr = `${yyyy}-${mm}-${dd}`
     return receipts.filter(r => {
-      const d = new Date(r.date)
-      return d >= cutoff
+      const d = String(r.date || '')
+      return d.length >= 10 && d >= cutoffStr
     })
   }
 

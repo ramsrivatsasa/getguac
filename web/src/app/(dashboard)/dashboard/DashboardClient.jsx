@@ -11,6 +11,7 @@ import { subDays, subWeeks, subMonths, subYears } from 'date-fns'
 import { normalizeStoreName, canonicalStoreName, displayStoreName, storeGroupKey } from '../../../lib/store-name-normalize'
 import { periodToReceiptsChip, buildReceiptsUrl } from '../../../lib/receipts-deeplink'
 import { isPaymentReceipt } from '../../../lib/payment-rows'
+import { computeSpendingTrend, formatTrend } from '../../../lib/spending-trends'
 const PERIODS = ['daily', 'weekly', 'monthly', 'yearly']
 
 // Dropdown options for "how many <period>s back to include"
@@ -70,6 +71,14 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
   const totalSpend = filtered.reduce((s, r) => s + parseFloat(r.total_amount || 0), 0)
   const totalTax = filtered.reduce((s, r) => s + parseFloat(r.tax_paid || 0), 0)
   const today = new Date().toISOString().split('T')[0]
+
+  // Period-over-period trend: total spend vs the avg of the prior 3
+  // windows of the same shape. Surfaces a small badge next to the
+  // Total Spent stat — "up 18% vs last 3M" style. Lives in the
+  // central spending-trends lib so future surfaces (weekly digest,
+  // category drill-down) share the math.
+  const trend = computeSpendingTrend(spendingReceipts, period, periodCount)
+  const trendBadge = formatTrend(trend.deltaPct)
 
   // True "Spending by Store" — sum every receipt's total per merchant, take
   // the top 8 spenders, sort descending. Previously this chart plotted the
@@ -178,20 +187,36 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
         <span className="text-xs text-gray-400">{filtered.length} transaction{filtered.length === 1 ? '' : 's'} • {rangeLabel}</span>
       </div>
 
-      {/* Stats — GuacScore first, then the spend tiles */}
+      {/* Stats — GuacScore first, then the spend tiles. Total Spent
+          gets an inline trend badge ("up 18% vs prior 3 windows")
+          using the central spending-trends lib. */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <GuacoScoreCard receipts={filtered} size="sm" />
         {[
-          { label: 'Total Spent', value: `$${totalSpend.toFixed(2)}`, icon: DollarSign, color: 'bg-gradient-to-br from-rose-400 via-rose-600 to-rose-800 text-white shadow-sm' },
+          { label: 'Total Spent', value: `$${totalSpend.toFixed(2)}`, icon: DollarSign, color: 'bg-gradient-to-br from-rose-400 via-rose-600 to-rose-800 text-white shadow-sm', trend: trendBadge },
           { label: 'Tax Paid', value: `$${totalTax.toFixed(2)}`, icon: TrendingUp, color: 'bg-amber-100 text-amber-700' },
           { label: 'Transactions', value: filtered.length, icon: Receipt, color: 'bg-emerald-100 text-emerald-700' },
           { label: 'Rewards', value: initialRewards.length, icon: Gift, color: 'bg-lime-100 text-lime-700' },
-        ].map(({ label, value, icon: Icon, color }) => (
+        ].map(({ label, value, icon: Icon, color, trend }) => (
           <div key={label} className="stat-card">
             <div className={`p-3 rounded-xl ${color}`}><Icon size={20} /></div>
             <div>
               <p className="text-xs text-gray-500 font-medium">{label}</p>
-              <p className="text-xl font-bold text-gray-900">{value}</p>
+              <div className="flex items-baseline gap-2">
+                <p className="text-xl font-bold text-gray-900">{value}</p>
+                {trend && trend.label !== '—' && (
+                  <span
+                    className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                      trend.tone === 'up'   ? 'bg-rose-50 text-rose-700 border border-rose-100'
+                      : trend.tone === 'down' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                      : 'bg-gray-50 text-gray-500 border border-gray-200'
+                    }`}
+                    title={`vs avg of prior 3 ${UNIT_LABEL[period]} window${periodCount === 1 ? '' : 's'}`}
+                  >
+                    {trend.label}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         ))}

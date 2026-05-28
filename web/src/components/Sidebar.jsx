@@ -48,10 +48,10 @@ const sections = [
   {
     title: 'More',
     items: [
-      { href: '/profile#household', icon: Home,  label: 'House',     emoji: '🏡', hoverMascot: 'happy' },
       { href: '/stores',    icon: Store, label: 'Stores',    emoji: '🏪', hoverMascot: 'happy' },
       { href: '/car-miles', icon: Car,   label: 'Car Miles', emoji: '🚗', hoverMascot: 'relaxing' },
       { href: '/profile',   icon: User,  label: 'Profile',   emoji: '👤', hoverMascot: 'sitting' },
+      { href: '/profile#household', icon: Home,  label: 'House', emoji: '🏡', hoverMascot: 'happy' },
     ],
   },
 ]

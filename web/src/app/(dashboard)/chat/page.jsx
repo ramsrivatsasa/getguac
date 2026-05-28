@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { MessageSquare, Send, Plus, Mail } from 'lucide-react'
@@ -20,6 +21,7 @@ import { getDisplayNames, formatName, initialFor } from '../../../lib/displayNam
 export default function ChatPage() {
   const sb = createClient()
   const qc = useQueryClient()
+  const sp = useSearchParams()
   const [activeId, setActiveId] = useState(null)
   const [newEmail, setNewEmail] = useState('')
   const [opening, setOpening] = useState(false)
@@ -29,6 +31,15 @@ export default function ChatPage() {
     queryFn: listMyThreads,
     staleTime: 30_000,
   })
+
+  // Deep-link: if `?thread=<id>` is in the URL, auto-select it once threads
+  // load. Lets the Household roster's "Chat" button drop the user right
+  // into the conversation rather than the empty thread list.
+  useEffect(() => {
+    const t = sp?.get('thread')
+    if (t && threads.some(x => x.id === t)) setActiveId(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sp, threads.length])
 
   // Pull display names for every peer once, batched.
   const peerIds = threads.map(t => t.peer_id)
@@ -91,13 +102,16 @@ export default function ChatPage() {
         {/* Thread list */}
         <aside className={`card p-3 space-y-3 ${activeId ? 'hidden lg:block' : ''}`}>
           <form onSubmit={startNew} className="space-y-2">
-            <label className="label text-[10px]">Start chat by email</label>
+            <label className="label text-[10px]">Start chat by handle or email</label>
             <div className="flex gap-2">
               <input
-                type="email"
+                type="text"
+                autoCapitalize="off"
+                autoCorrect="off"
+                spellCheck={false}
                 value={newEmail}
                 onChange={e => setNewEmail(e.target.value)}
-                placeholder="friend@example.com"
+                placeholder="alex   or   alex@getguac.app   or   alex@gmail.com"
                 className="input flex-1 text-xs"
               />
               <button type="submit" className="btn-primary text-xs px-3" disabled={opening}>
@@ -110,7 +124,7 @@ export default function ChatPage() {
             <h3 className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Conversations</h3>
             {threads.length === 0 ? (
               <p className="text-xs text-gray-400 py-3 text-center">
-                No chats yet. Enter an email above to start one.
+                No chats yet. Use a handle or email above to start one.
               </p>
             ) : (
               <ul className="space-y-0.5">

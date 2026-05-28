@@ -74,15 +74,22 @@ export function initialFor(row, userId) {
 }
 
 /**
- * Look up a user-id from an email address. Used by:
- *   - household invite (addMemberByEmail)
- *   - DM open-by-email
+ * Look up a user-id from any of three handle forms:
+ *   - real email       (alex@gmail.com  → profiles.email)
+ *   - getguac handle   (alex            → profiles.email_alias)
+ *   - getguac address  (alex@getguac.app→ split → profiles.email_alias)
  *
- * Returns the uuid or null. RPC is SECURITY DEFINER so it can read
- * `profiles.email` despite the per-row RLS.
+ * Used by:
+ *   - household invite (addMemberByEmail)
+ *   - DM open-by-handle (openThreadByEmail)
+ *
+ * Migration 050 extended the RPC to handle all three forms server-side;
+ * we just normalize whitespace + lowercase before sending. RPC name kept
+ * as `lookup_user_id_by_email` for backward compatibility, but the
+ * parameter accepts any of the three.
  */
-export async function lookupUserIdByEmail(email) {
-  const clean = String(email || '').trim().toLowerCase()
+export async function lookupUserIdByEmail(input) {
+  const clean = String(input || '').trim().toLowerCase()
   if (!clean) return null
   const sb = createClient()
   const { data, error } = await sb.rpc('lookup_user_id_by_email', { p_email: clean })

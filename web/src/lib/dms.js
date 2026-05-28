@@ -83,18 +83,18 @@ export async function openThreadWith(peerUserId) {
 }
 
 /**
- * Convenience: start (or resume) a thread by the peer's email. Calls the
- * SECURITY DEFINER RPC `lookup_user_id_by_email` so it works regardless of
- * the strict `profiles: own row` RLS.
+ * Convenience: start (or resume) a thread by any of the peer's handle
+ * forms — real email, GetGuac username, or username@getguac.app. The
+ * SECURITY DEFINER RPC (migration 050) tries all three so the caller
+ * doesn't have to disambiguate.
  *
- * Throws with a user-friendly message when no GetGuac account exists for
- * that email.
+ * Throws with a user-friendly message when no GetGuac account is found.
  */
-export async function openThreadByEmail(email) {
-  const clean = String(email || '').trim().toLowerCase()
-  if (!clean) throw new Error('Email is required')
+export async function openThreadByEmail(input) {
+  const clean = String(input || '').trim().toLowerCase()
+  if (!clean) throw new Error('Handle or email is required')
   const peerId = await lookupUserIdByEmail(clean)
-  if (!peerId) throw new Error(`No GetGuac account for ${clean}. Ask them to sign up first.`)
+  if (!peerId) throw new Error(`No GetGuac account for "${clean}". Ask them to sign up first.`)
   return openThreadWith(peerId)
 }
 

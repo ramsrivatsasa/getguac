@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { Home, UserPlus, LogOut, Crown, Users, Send, MessageSquare, X } from 'lucide-react'
@@ -8,6 +9,7 @@ import {
   getMyHousehold, createHousehold, addMemberByEmail, leaveHousehold, removeMember,
   listMessages, postMessage,
 } from '../lib/households'
+import { openThreadWith } from '../lib/dms'
 import { getDisplayNames, formatName, initialFor } from '../lib/displayNames'
 
 // Single Profile-page component that handles every household
@@ -170,10 +172,26 @@ function Header({ household, onChanged }) {
 }
 
 function Members({ household, onChanged }) {
+  const router = useRouter()
+  const sb = createClient()
   const isOwner = household.my_role === 'owner'
   const [email, setEmail] = useState('')
   const [busy, setBusy] = useState(false)
   const names = useDisplayNames(household.members.map(m => m.user_id))
+  const { data: meId } = useQuery({
+    queryKey: ['me-id'],
+    queryFn: async () => (await sb.auth.getUser()).data?.user?.id || null,
+    staleTime: Infinity,
+  })
+
+  async function chatWith(peerId) {
+    try {
+      const tid = await openThreadWith(peerId)
+      router.push(`/chat?thread=${tid}`)
+    } catch (err) {
+      toast.error(err.message)
+    }
+  }
 
   async function invite(e) {
     e.preventDefault()
@@ -222,6 +240,16 @@ function Members({ household, onChanged }) {
                   <Crown size={9} /> owner
                 </span>
               )}
+              {meId && m.user_id !== meId && (
+                <button
+                  type="button"
+                  onClick={() => chatWith(m.user_id)}
+                  title="Send a direct message"
+                  className="inline-flex items-center gap-1 text-emerald-700 hover:text-emerald-900 hover:bg-emerald-50 px-2 py-0.5 rounded-full text-[10px] font-semibold"
+                >
+                  <MessageSquare size={11} /> Chat
+                </button>
+              )}
               {isOwner && m.role !== 'owner' && (
                 <button
                   type="button"
@@ -236,10 +264,13 @@ function Members({ household, onChanged }) {
       {isOwner && (
         <form onSubmit={invite} className="flex gap-2 pt-1 border-t border-gray-100">
           <input
-            type="email"
+            type="text"
+            autoCapitalize="off"
+            autoCorrect="off"
+            spellCheck={false}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="spouse@example.com"
+            placeholder="handle or email"
             className="input flex-1 text-xs"
             required
           />

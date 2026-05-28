@@ -8,7 +8,11 @@ import GuacMascot from '../../../components/GuacMascot'
 import { groupPredictionsByStore } from '../../../lib/prediction-feedback'
 import { displayStoreName } from '../../../lib/store-name-normalize'
 
-const EMPTY = { sku: '', item_name: '', order_date: '', qty: '1', price: '', store_name_id: '', comments: '', frequency: 'Monthly', list_name: 'Pantry', approved: false, sent_to_store: false }
+// Items the user manually adds default to approved=true ("ready to grab")
+// — if they took the trouble to add it, they're committing to buying it.
+// Only predictor-generated suggestions live in the approved=false state
+// (where they show up in the Buy Again strip until the user taps the cart).
+const EMPTY = { sku: '', item_name: '', order_date: '', qty: '1', price: '', store_name_id: '', comments: '', frequency: 'Monthly', list_name: 'Pantry', approved: true, sent_to_store: false }
 
 // Urgency math for a Buy Again row. Returns null when the item lacks
 // the predicted_* columns (a hand-curated row that slipped in won't
@@ -431,7 +435,7 @@ export default function ShoppingPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-violet-50/50 border-b text-xs text-violet-700 uppercase tracking-wide">
-                  <tr>{['List','Item','Restock *','Store','Qty','Price','Actions'].map(h =>
+                  <tr>{['List','Item','Restock *','Frequency','Store','Qty','Price','Actions'].map(h =>
                     <th key={h} className="px-4 py-3 text-left font-semibold">{h}</th>
                   )}</tr>
                 </thead>
@@ -467,14 +471,11 @@ export default function ShoppingPage() {
                             <span className="font-medium">{item.item_name}</span>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-xs text-gray-500 max-w-xs">
+                        <td className="px-4 py-3 text-xs max-w-xs">
                           {u ? (
-                            <div className="space-y-0.5">
-                              <div className={u.isOverdue ? 'text-rose-700 font-semibold' : 'text-gray-700'}>
-                                Runs out {formatRunsOut(u.daysToRunOut, u.runsOutISO)}
-                              </div>
-                              <div className="text-[10px] text-gray-400">Bought every {Math.round(item.predicted_avg_cadence_days)}d</div>
-                            </div>
+                            <span className={u.isOverdue ? 'text-rose-700 font-semibold' : 'text-gray-700'}>
+                              {formatRunsOut(u.daysToRunOut, u.runsOutISO)}
+                            </span>
                           ) : (item.predicted_reason || '—')}
                         </td>
                         <td className="px-4 py-3 text-gray-500">
@@ -482,6 +483,21 @@ export default function ShoppingPage() {
                             <span className="inline-flex items-center gap-1">
                               <StoreIcon size={12} className="text-gray-400" />
                               {storeName}
+                            </span>
+                          ) : '—'}
+                        </td>
+                        <td className="px-4 py-3">
+                          {/* Frequency badge — prefer the explicit
+                              item.frequency (Weekly / Biweekly / Monthly)
+                              that the predictor sets; fall back to the
+                              raw cadence in days when only that's known. */}
+                          {item.frequency ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-violet-50 text-violet-700 ring-1 ring-violet-200">
+                              {item.frequency}
+                            </span>
+                          ) : item.predicted_avg_cadence_days ? (
+                            <span className="text-xs text-gray-500">
+                              every {Math.round(item.predicted_avg_cadence_days)}d
                             </span>
                           ) : '—'}
                         </td>

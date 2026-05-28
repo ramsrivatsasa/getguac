@@ -325,15 +325,16 @@ begin
       true, 'Avg every 7d, last bought 6d ago',  7,  today - 6,  false, false, '[SEED v2 SQL]');
 
   -- Curated (non-predicted) rows so each bucket also has something the
-  -- user added themselves. Renders in the bucket-list section below
-  -- the Buy Again strip when the user clicks the matching tab.
+  -- user added themselves. approved=true because user-added items
+  -- default to "ready to grab" — the Pending state is only meaningful
+  -- for predictor suggestions in the Buy Again strip.
   insert into public.shopping_list (
     user_id, item_name, qty, frequency, list_name,
     predicted, approved, sent_to_store, comments
   ) values
-    (uid, 'Coffee Beans',    1, 'Monthly', 'Cravings',     false, false, false, '[SEED v2 SQL]'),
-    (uid, 'Cookies',         1, 'Monthly', 'Snack Stack',  false, false, false, '[SEED v2 SQL]'),
-    (uid, 'Birthday Card',   1, 'Monthly', 'Grub & Grab',  false, false, false, '[SEED v2 SQL]');
+    (uid, 'Coffee Beans',    1, 'Monthly', 'Cravings',     false, true, false, '[SEED v2 SQL]'),
+    (uid, 'Cookies',         1, 'Monthly', 'Snack Stack',  false, true, false, '[SEED v2 SQL]'),
+    (uid, 'Birthday Card',   1, 'Monthly', 'Grub & Grab',  false, true, false, '[SEED v2 SQL]');
 
   -- ─── 12. REWARDS rows (so /rewards isn't empty) ────────────────────────
   -- rewards.expiry_date + reward_type + reward_title are NOT NULL on the

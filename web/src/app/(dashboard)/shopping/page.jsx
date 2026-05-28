@@ -388,6 +388,33 @@ export default function ShoppingPage() {
     return ownList.filter(i => (i.list_name || 'Pantry') === activeList)
   }, [ownList, activeList])
 
+  // Bulk-select toggle for a single row + bulk-delete handler. The
+  // checkbox column only appears when bulkSelected has items in it
+  // OR the user clicks "Select" in the header. Keeping the set in
+  // state means we can clear it after a successful delete + leave
+  // the page in non-selection mode.
+  function toggleBulkSelect(id) {
+    setBulkSelected(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }
+  async function bulkDeleteSelected() {
+    const ids = [...bulkSelected]
+    if (ids.length === 0) return
+    if (!confirm(`Delete ${ids.length} item${ids.length === 1 ? '' : 's'} from your Smashlist?`)) return
+    let ok = 0
+    for (const id of ids) {
+      try {
+        await new Promise((resolve, reject) => del.mutate(id, { onSuccess: resolve, onError: reject }))
+        ok++
+      } catch (_) { /* keep going */ }
+    }
+    setBulkSelected(new Set())
+    toast.success(`Deleted ${ok}/${ids.length}`)
+  }
+
   // Group filteredOwn by store_name for the "By store" view. Items
   // without a known store fall into 'Any store' so they're not dropped.
   // Order: stores with the most items first.
@@ -640,6 +667,31 @@ export default function ShoppingPage() {
           <span className="text-xs text-gray-500">
             {filteredOwn.length} item{filteredOwn.length === 1 ? '' : 's'} ready to grab
           </span>
+
+          {/* Bulk-delete affordance — only shows when at least one row
+              is selected via its row-level checkbox. */}
+          {bulkSelected.size > 0 && (
+            <div className="inline-flex items-center gap-2 ml-2">
+              <span className="text-xs font-semibold text-rose-700">
+                {bulkSelected.size} selected
+              </span>
+              <button
+                type="button"
+                onClick={bulkDeleteSelected}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold shadow-sm"
+              >
+                <Trash2 size={12} /> Delete
+              </button>
+              <button
+                type="button"
+                onClick={() => setBulkSelected(new Set())}
+                className="text-xs text-gray-500 hover:text-gray-700 font-semibold"
+              >
+                Clear
+              </button>
+            </div>
+          )}
+
           {/* View toggle — by Smashlist bucket OR by store */}
           <div className="ml-auto inline-flex items-center bg-emerald-50 border border-emerald-100 rounded-full p-0.5 text-[11px] font-bold">
             <button
@@ -707,14 +759,39 @@ export default function ShoppingPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 border-b text-xs text-gray-500 uppercase tracking-wide">
-                  <tr>{['Item','Store','SKU','Qty','Price','Frequency','Status','Actions'].map(h =>
-                    <th key={h} className="px-4 py-3 text-left font-semibold">{h}</th>
-                  )}</tr>
+                  <tr>
+                    <th className="px-3 py-3 w-8">
+                      {/* Header checkbox toggles all visible rows on/off
+                          for fast 'select everything → delete' flows. */}
+                      <input
+                        type="checkbox"
+                        className="w-4 h-4 accent-rose-500 cursor-pointer"
+                        checked={filteredOwn.length > 0 && filteredOwn.every(it => bulkSelected.has(it.id))}
+                        onChange={(e) => {
+                          if (e.target.checked) setBulkSelected(new Set(filteredOwn.map(it => it.id)))
+                          else setBulkSelected(new Set())
+                        }}
+                        title="Select / deselect all"
+                      />
+                    </th>
+                    {['Item','Store','SKU','Qty','Price','Frequency','Status','Actions'].map(h =>
+                      <th key={h} className="px-4 py-3 text-left font-semibold">{h}</th>
+                    )}
+                  </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
                   {filteredOwn.map(item => {
                     return (
-                      <tr key={item.id} className="hover:bg-gray-50/50">
+                      <tr key={item.id} className={`hover:bg-gray-50/50 ${bulkSelected.has(item.id) ? 'bg-rose-50/60' : ''}`}>
+                        <td className="px-3 py-3 w-8">
+                          <input
+                            type="checkbox"
+                            className="w-4 h-4 accent-rose-500 cursor-pointer"
+                            checked={bulkSelected.has(item.id)}
+                            onChange={() => toggleBulkSelect(item.id)}
+                            aria-label={`Select ${item.item_name}`}
+                          />
+                        </td>
                         <td className="px-4 py-3">
                           {/* List pill + 'Predicted' badge removed per
                               UX feedback — the tab filter already tells

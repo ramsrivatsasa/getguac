@@ -16,7 +16,14 @@ class ReceiptsScreen extends StatefulWidget {
   /// tapping a bar on the dashboard's Spending-by-Store chart lands the
   /// user on a pre-filtered list.
   final String? initialStoreFilter;
-  const ReceiptsScreen({super.key, this.initialStoreFilter});
+
+  /// Optional initial period chip from /receipts?period=3M. When set,
+  /// the chip row opens scoped to that window instead of the default 1M.
+  /// Accepts: '1M' | '3M' | '6M' | '1Y' | 'All'. Anything else falls
+  /// back to 1M.
+  final String? initialPeriod;
+
+  const ReceiptsScreen({super.key, this.initialStoreFilter, this.initialPeriod});
   @override
   State<ReceiptsScreen> createState() => _ReceiptsScreenState();
 }
@@ -34,18 +41,37 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
   /// when the dashboard already has data in memory. We only call
   /// loadReceipts when the cache genuinely can't cover the requested
   /// period (cold start, or user taps a wider chip than cached).
-  ReceiptPeriod _selectedPeriod = ReceiptPeriod.month;
+  late ReceiptPeriod _selectedPeriod;
+
+  /// Parse the ?period= query param value into a ReceiptPeriod. Used
+  /// when the dashboard chart deep-links here with the user's current
+  /// time window. Unrecognized values fall back to 1M.
+  static ReceiptPeriod _parseChipId(String? id) {
+    switch (id) {
+      case '1M':  return ReceiptPeriod.month;
+      case '3M':  return ReceiptPeriod.threeMonth;
+      case '6M':  return ReceiptPeriod.sixMonth;
+      case '1Y':  return ReceiptPeriod.year;
+      case 'All': return ReceiptPeriod.all;
+      default:    return ReceiptPeriod.month;
+    }
+  }
 
   @override
   void initState() {
     super.initState();
+    _selectedPeriod = _parseChipId(widget.initialPeriod);
     if (context.read<AppAuthProvider>().currentUser?.id != null) {
       final p = context.read<ReceiptProvider>();
       // Only fetch on cold start. If the dashboard (or any other surface)
       // pre-fetched a superset of 1M, the data is already in memory and
       // we render instantly via client-side filtering — no network wait.
+      // If the deep-link asked for a wider scope than what's cached,
+      // trigger a fetch for that wider period right away.
       if (p.receipts.isEmpty) {
-        p.loadReceipts(period: ReceiptPeriod.month);
+        p.loadReceipts(period: _selectedPeriod);
+      } else if (!_periodCovers(p.currentPeriod, _selectedPeriod)) {
+        p.loadReceipts(period: _selectedPeriod);
       }
     }
     // Apply the deep-link store filter (if any) by pre-filling both the
@@ -54,6 +80,26 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
     if (initial != null && initial.isNotEmpty) {
       _filter = initial;
       _search.text = initial;
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant ReceiptsScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Handle the case where the user is already on /receipts and taps
+    // a DIFFERENT bar on the dashboard (re-enters with new params). Reset
+    // the chip + filter to match the fresh deep link.
+    if (oldWidget.initialPeriod != widget.initialPeriod && widget.initialPeriod != null) {
+      final newPeriod = _parseChipId(widget.initialPeriod);
+      if (newPeriod != _selectedPeriod) setState(() => _selectedPeriod = newPeriod);
+    }
+    if (oldWidget.initialStoreFilter != widget.initialStoreFilter
+        && widget.initialStoreFilter != null
+        && widget.initialStoreFilter!.isNotEmpty) {
+      setState(() {
+        _filter = widget.initialStoreFilter!;
+        _search.text = widget.initialStoreFilter!;
+      });
     }
   }
 

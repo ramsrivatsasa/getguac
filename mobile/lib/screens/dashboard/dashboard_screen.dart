@@ -70,6 +70,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  /// Map the dashboard's free-form (period, count) into the nearest
+  /// Receipts-screen chip id (1M / 3M / 6M / 1Y / All). Used when the
+  /// user taps a Spending-by-Store bar so the receipts page opens
+  /// scoped to the SAME time window. We round UP to the next chip so
+  /// nothing the user just saw on the dashboard disappears on arrival.
+  String _periodToReceiptsChip() {
+    int days;
+    switch (_period) {
+      case _Period.daily:   days = _periodCount;          break;
+      case _Period.weekly:  days = _periodCount * 7;      break;
+      case _Period.monthly: days = _periodCount * 30;     break;
+      case _Period.yearly:  days = _periodCount * 365;    break;
+    }
+    if (days <= 30)  return '1M';
+    if (days <= 90)  return '3M';
+    if (days <= 180) return '6M';
+    if (days <= 365) return '1Y';
+    return 'All';
+  }
+
   void _selectPeriod(_Period p) {
     setState(() {
       _period = p;
@@ -518,7 +538,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   if (idx < 0 || idx >= topData.length) return;
                   final store = topData[idx].name;
                   if (store.isEmpty) return;
-                  context.go('/receipts?store=${Uri.encodeQueryComponent(store)}');
+                  // Carry the dashboard's current time window into the
+                  // receipts screen so the user lands on the same period
+                  // they were just viewing, not the default 1M.
+                  final chip = _periodToReceiptsChip();
+                  context.go('/receipts'
+                    '?store=${Uri.encodeQueryComponent(store)}'
+                    '&period=$chip');
                 },
               ),
               barGroups: topData.asMap().entries.map((e) => BarChartGroupData(

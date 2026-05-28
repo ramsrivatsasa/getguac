@@ -10,6 +10,28 @@ import '../../utils/date_format.dart';
 const _kBrand = Color(0xFF15803d);
 const _kTripCols = 'id, start_date, end_date, total_miles, description, category, from_address, to_address';
 
+// Per-category icon + tint for the trip list. Matches the IRS-
+// recognised mileage categories surfaced in the dropdown.
+IconData _categoryIcon(String? category) {
+  switch (category) {
+    case 'Business': return Icons.business_center;
+    case 'Charity':  return Icons.volunteer_activism;
+    case 'Medical':  return Icons.medical_services;
+    case 'Personal':
+    default:         return Icons.directions_car;
+  }
+}
+
+Color _categoryColor(String? category) {
+  switch (category) {
+    case 'Business': return _kBrand;
+    case 'Charity':  return const Color(0xFFe11d48); // rose-600
+    case 'Medical':  return const Color(0xFFd97706); // amber-600
+    case 'Personal':
+    default:         return Colors.blueGrey;
+  }
+}
+
 class CarMilesScreen extends StatefulWidget {
   const CarMilesScreen({super.key});
   @override
@@ -168,8 +190,14 @@ class _CarMilesScreenState extends State<CarMilesScreen> {
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
                 value: category,
+                // Full IRS-recognised mileage categories so the year-end
+                // tax export covers volunteer miles + medical visits, not
+                // just business + personal. Mirrors the web /car-miles
+                // dropdown character-for-character.
                 items: const [
                   DropdownMenuItem(value: 'Business', child: Text('Business')),
+                  DropdownMenuItem(value: 'Charity',  child: Text('Charity')),
+                  DropdownMenuItem(value: 'Medical',  child: Text('Medical')),
                   DropdownMenuItem(value: 'Personal', child: Text('Personal')),
                 ],
                 onChanged: (v) => setSt(() => category = v ?? category),
@@ -266,8 +294,8 @@ class _CarMilesScreenState extends State<CarMilesScreen> {
                     return Card(
                       child: ListTile(
                         leading: Icon(
-                          t.category == 'Business' ? Icons.business_center : Icons.directions_car,
-                          color: t.category == 'Business' ? _kBrand : Colors.blueGrey,
+                          _categoryIcon(t.category),
+                          color: _categoryColor(t.category),
                         ),
                         title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis),
                         subtitle: Column(

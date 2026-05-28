@@ -56,6 +56,7 @@ final appRouter = GoRouter(
           path: '/receipts',
           builder: (_, state) => ReceiptsScreen(
             initialStoreFilter: state.uri.queryParameters['store'],
+            initialPeriod: state.uri.queryParameters['period'],
           ),
         ),
         GoRoute(path: '/receipts/:id', builder: (_, state) => ReceiptDetailScreen(id: state.pathParameters['id']!)),

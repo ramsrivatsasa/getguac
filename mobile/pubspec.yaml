@@ -1,7 +1,7 @@
 name: getguac
 description: GetGuac — Smart receipt & rewards management
 publish_to: 'none'
-version: 0.2.77+87
+version: 0.2.78+88
 
 environment:
   sdk: '>=3.0.0 <4.0.0'

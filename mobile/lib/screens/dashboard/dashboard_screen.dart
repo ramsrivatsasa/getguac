@@ -11,6 +11,7 @@ import '../../widgets/guac_mascot.dart';
 import '../../widgets/anomalies_card.dart';
 import '../../utils/date_format.dart';
 import '../../store_name_normalize.dart';
+import '../../payment_rows.dart';
 
 const _kEmerald700 = Color(0xFF15803d);
 const _kEmerald800 = Color(0xFF166534);
@@ -132,7 +133,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     // as strings, so mobile must too — otherwise the two dashboards
     // disagree on which rows fall inside "Last 3 months".
     final cutoffStr = _periodCutoffStr();
-    final filtered = receipts.where((r) {
+    // Drop card-payment + inter-account-transfer rows BEFORE any spending
+    // math runs — same pre-filter web/dashboard does. Without this the
+    // mobile Total Spent / Transactions stats include [card payment]
+    // entries from statement imports, and the two dashboards disagree
+    // for the same time window.
+    final spendingReceipts = receipts.where((r) => !isPaymentReceipt(r)).toList();
+    final filtered = spendingReceipts.where((r) {
       final d = (r.date).toString();
       // Empty-date receipts (parse failures) drop out via the empty
       // string being lexicographically smaller than any real date.

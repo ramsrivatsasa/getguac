@@ -1,18 +1,20 @@
-// Spending-anomaly detector — mobile port (lightweight).
+// Spending-anomaly detector — Dart mirror of
+// web/src/lib/spending-anomalies.js. Three detector classes, sorted by
+// severity then dollar impact. Used by AnomaliesCard on /dashboard.
 //
-// Dart mirror of web/src/lib/spending-anomalies.js, intentionally trimmed
-// for mobile:
-//   - Skips category-spike (too noisy for a small dashboard card)
-//   - Skips the full store-alias normalization table; uses lowercase+trim
-//     as the grouping key (sufficient for "Costco" vs "COSTCO" but won't
-//     merge "Costco" with "Costco Wholesale" — acceptable for v1)
-//   - No payment-row exclusion lib; filters bank-fees + misc by category
-//
-// Pure function — pass it the receipts already in memory on the
-// dashboard, get back a sorted list of anomalies. Used by the
-// AnomaliesCard widget on /dashboard.
+// Parity choices vs web (now in lockstep, was diverging in v0.2.75):
+//   - Uses storeGroupKey() so "Costco" / "COSTCO WHSE" / "Costco #218"
+//     all bucket together, matching the dashboard chart and the web
+//     anomaly count.
+//   - Uses isPaymentReceipt() to skip [card payment] rows (same as web).
+//   - Includes category-spike detection. Was disabled in v0.2.75 in
+//     the name of "lightweight"; the result was 4 anomalies on web
+//     showing as 1 on mobile, which is worse than a slightly busier
+//     card. Re-enabled with the same NOISE_CATS skip-set as web.
 
 import '../models/receipt_model.dart';
+import '../payment_rows.dart';
+import '../store_name_normalize.dart';
 
 const double _kSpikeThreshold     = 2.0;
 const double _kMinAmount          = 25.0;
@@ -21,7 +23,9 @@ const int    _kMissingGapDays     = 40;
 const int    _kMinMissingHistory  = 3;
 const double _kSeverityFlagMult   = 3.0;
 
-enum AnomalyKind { merchantSpike, missingRecurring }
+const Set<String> _kNoiseCategories = {'misc', 'bank-fees'};
+
+enum AnomalyKind { merchantSpike, categorySpike, missingRecurring }
 enum AnomalySeverity { watch, flag }
 
 class Anomaly {
@@ -33,6 +37,7 @@ class Anomaly {
   final double priorAvg;
   final double? multiple;
   final String? merchant;
+  final String? category;
 
   const Anomaly({
     required this.kind,
@@ -43,16 +48,15 @@ class Anomaly {
     required this.priorAvg,
     required this.multiple,
     required this.merchant,
+    required this.category,
   });
 }
 
-String _groupKey(String? raw) {
-  if (raw == null) return '';
-  return raw.trim().toLowerCase();
-}
-
 String _displayName(String raw) {
-  return raw.trim().toUpperCase();
+  // Prefer the canonical alias-mapped name so the bubble matches the
+  // dashboard chart bar label. Web uses canonicalStoreName the same way.
+  final canon = canonicalStoreName(raw);
+  return canon.toUpperCase();
 }
 
 String _dayString(DateTime d) {
@@ -68,38 +72,54 @@ List<Anomaly> detectAnomalies(List<Receipt> receipts, {int windowDays = 30}) {
   final currentStart = _dayString(now.subtract(Duration(days: windowDays)));
   final priorStart   = _dayString(now.subtract(Duration(days: windowDays * (_kPriorWindows + 1))));
 
-  // Aggregations: per merchant.
-  final merchant       = <String, _MerchantAgg>{};
-  final merchantHist   = <String, List<_HistPoint>>{};
-  final merchantLastDt = <String, String>{};
+  // Aggregations:
+  //   merchant: per storeGroupKey → { name, category, current, prior }
+  //   category: per category slug → { current, prior }
+  //   merchantHist: per storeGroupKey → list of {date, amount}
+  final merchant     = <String, _MerchantAgg>{};
+  final category     = <String, _CategoryAgg>{};
+  final merchantHist = <String, List<_HistPoint>>{};
+  final merchantLast = <String, String>{};
 
   for (final r in receipts) {
     if (r.isReturn) continue;
     if (r.totalAmount <= 0) continue;
-    final cat = (r.category ?? '').toLowerCase();
-    if (cat == 'bank-fees' || cat == 'misc') continue;
+    if (isPaymentReceipt(r)) continue;
     final d = r.date;
     if (d.length < 10) continue;
 
-    final key = _groupKey(r.storeName);
-    if (key.isEmpty) continue;
+    final skey = storeGroupKey(r.storeName);
+    final cat  = (r.category ?? 'misc').toLowerCase();
 
-    var me = merchant[key];
-    if (me == null) {
-      me = _MerchantAgg(key: key, name: r.storeName);
-      merchant[key] = me;
-    }
-    final last = merchantLastDt[key];
-    if (last == null || d.compareTo(last) > 0) {
-      merchantLastDt[key] = d;
-      me.name = r.storeName;
-    }
-    (merchantHist[key] ??= <_HistPoint>[]).add(_HistPoint(d, r.totalAmount));
+    if (skey.isNotEmpty) {
+      var me = merchant[skey];
+      if (me == null) {
+        me = _MerchantAgg(key: skey, name: r.storeName, category: cat);
+        merchant[skey] = me;
+      }
+      final last = merchantLast[skey];
+      if (last == null || d.compareTo(last) > 0) {
+        merchantLast[skey] = d;
+        me.name = r.storeName;
+      }
+      (merchantHist[skey] ??= <_HistPoint>[]).add(_HistPoint(d, r.totalAmount));
 
+      if (d.compareTo(currentStart) >= 0) {
+        me.current += r.totalAmount;
+      } else if (d.compareTo(priorStart) >= 0) {
+        me.prior += r.totalAmount;
+      }
+    }
+
+    var ce = category[cat];
+    if (ce == null) {
+      ce = _CategoryAgg(slug: cat);
+      category[cat] = ce;
+    }
     if (d.compareTo(currentStart) >= 0) {
-      me.current += r.totalAmount;
+      ce.current += r.totalAmount;
     } else if (d.compareTo(priorStart) >= 0) {
-      me.prior += r.totalAmount;
+      ce.prior += r.totalAmount;
     }
   }
 
@@ -123,10 +143,33 @@ List<Anomaly> detectAnomalies(List<Receipt> receipts, {int windowDays = 30}) {
       priorAvg: priorAvg,
       multiple: multiple,
       merchant: nice,
+      category: me.category,
     ));
   }
 
-  // 2. Missing-recurring
+  // 2. Category-spike (skip misc + bank-fees: too vague / surfaced elsewhere)
+  for (final ce in category.values) {
+    if (_kNoiseCategories.contains(ce.slug)) continue;
+    if (ce.current < _kMinAmount) continue;
+    final priorAvg = ce.prior / _kPriorWindows;
+    if (priorAvg <= 0) continue;
+    final multiple = ce.current / priorAvg;
+    if (multiple < _kSpikeThreshold) continue;
+    final severity = multiple >= _kSeverityFlagMult ? AnomalySeverity.flag : AnomalySeverity.watch;
+    out.add(Anomaly(
+      kind: AnomalyKind.categorySpike,
+      severity: severity,
+      title: '${ce.slug.toUpperCase()} category is ${multiple.toStringAsFixed(1)}× your usual',
+      body: '\$${ce.current.toStringAsFixed(2)} this period vs avg \$${priorAvg.toStringAsFixed(2)} prior.',
+      amount: ce.current,
+      priorAvg: priorAvg,
+      multiple: multiple,
+      merchant: null,
+      category: ce.slug,
+    ));
+  }
+
+  // 3. Missing-recurring — monthly-cadence merchants gone silent
   for (final entry in merchantHist.entries) {
     final rows = entry.value;
     if (rows.length < _kMinMissingHistory) continue;
@@ -158,6 +201,7 @@ List<Anomaly> detectAnomalies(List<Receipt> receipts, {int windowDays = 30}) {
       priorAvg: avgAmt,
       multiple: null,
       merchant: nice,
+      category: me?.category,
     ));
   }
 
@@ -175,9 +219,17 @@ List<Anomaly> detectAnomalies(List<Receipt> receipts, {int windowDays = 30}) {
 class _MerchantAgg {
   final String key;
   String name;
+  String category;
   double current = 0;
   double prior = 0;
-  _MerchantAgg({required this.key, required this.name});
+  _MerchantAgg({required this.key, required this.name, required this.category});
+}
+
+class _CategoryAgg {
+  final String slug;
+  double current = 0;
+  double prior = 0;
+  _CategoryAgg({required this.slug});
 }
 
 class _HistPoint {

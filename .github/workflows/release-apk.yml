@@ -81,7 +81,7 @@ jobs:
             echo "---"
             echo ""
             echo "Recent commits:"
-            git log -10 --pretty=format:'- %s' --no-decorate
+            git log -10 --pretty=tformat:'- %s' --no-decorate
             echo "__EOF__"
           } >> "$GITHUB_OUTPUT"
 

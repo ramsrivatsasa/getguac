@@ -23,7 +23,15 @@ class ReceiptsScreen extends StatefulWidget {
   /// back to 1M.
   final String? initialPeriod;
 
-  const ReceiptsScreen({super.key, this.initialStoreFilter, this.initialPeriod});
+  /// Optional explicit cutoff (YYYY-MM-DD) from /receipts?dateFrom=...
+  /// When set, takes precedence over initialPeriod for client-side
+  /// filtering. Used by the dashboard so the two screens never disagree
+  /// on which receipts fall inside "Last 3 months" — the dashboard
+  /// computes the cutoff once (calendar math) and hands it through
+  /// verbatim instead of forcing a day-bucket roundtrip.
+  final String? initialDateFrom;
+
+  const ReceiptsScreen({super.key, this.initialStoreFilter, this.initialPeriod, this.initialDateFrom});
   @override
   State<ReceiptsScreen> createState() => _ReceiptsScreenState();
 }
@@ -42,6 +50,10 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
   /// loadReceipts when the cache genuinely can't cover the requested
   /// period (cold start, or user taps a wider chip than cached).
   late ReceiptPeriod _selectedPeriod;
+  /// Mirrors the dashboard's exact cutoff date when the deep link
+  /// supplies one. Cleared as soon as the user taps a different chip
+  /// (their explicit choice wins over the dashboard's carryover).
+  String? _deepLinkCutoff;
 
   /// Parse the ?period= query param value into a ReceiptPeriod. Used
   /// when the dashboard chart deep-links here with the user's current
@@ -61,6 +73,7 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
   void initState() {
     super.initState();
     _selectedPeriod = _parseChipId(widget.initialPeriod);
+    _deepLinkCutoff = widget.initialDateFrom;
     if (context.read<AppAuthProvider>().currentUser?.id != null) {
       final p = context.read<ReceiptProvider>();
       // Only fetch on cold start. If the dashboard (or any other surface)
@@ -93,6 +106,9 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
       final newPeriod = _parseChipId(widget.initialPeriod);
       if (newPeriod != _selectedPeriod) setState(() => _selectedPeriod = newPeriod);
     }
+    if (oldWidget.initialDateFrom != widget.initialDateFrom) {
+      setState(() => _deepLinkCutoff = widget.initialDateFrom);
+    }
     if (oldWidget.initialStoreFilter != widget.initialStoreFilter
         && widget.initialStoreFilter != null
         && widget.initialStoreFilter!.isNotEmpty) {
@@ -114,7 +130,11 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
   /// User tapped a chip. Update local state; only hit the network if the
   /// cached data can't cover the new period.
   void _selectPeriod(ReceiptPeriod p) {
-    setState(() => _selectedPeriod = p);
+    setState(() {
+      _selectedPeriod = p;
+      // User picked a chip explicitly — drop the dashboard's carryover.
+      _deepLinkCutoff = null;
+    });
     final prov = context.read<ReceiptProvider>();
     if (prov.receipts.isEmpty || !_periodCovers(prov.currentPeriod, p)) {
       prov.loadReceipts(period: p);
@@ -126,6 +146,12 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
   /// timezone differences can't shift the boundary (same approach as
   /// the dashboard chart).
   List<Receipt> _scopeToPeriod(List<Receipt> all) {
+    // Deep-link cutoff wins: the dashboard hands us the EXACT date
+    // string it used to compute its chart, so chart and list can't
+    // disagree on which receipts fall inside "Last N months".
+    if (_deepLinkCutoff != null && _deepLinkCutoff!.length >= 10) {
+      return all.where((r) => r.date.compareTo(_deepLinkCutoff!) >= 0).toList();
+    }
     if (_selectedPeriod.duration == null) return all;
     final cutoff = DateTime.now().subtract(_selectedPeriod.duration!);
     final mm = cutoff.month.toString().padLeft(2, '0');

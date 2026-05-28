@@ -76,6 +76,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
   /// user taps a Spending-by-Store bar so the receipts page opens
   /// scoped to the SAME time window. We round UP to the next chip so
   /// nothing the user just saw on the dashboard disappears on arrival.
+  /// Build a /receipts deep link that carries the dashboard's current
+  /// period as both an exact cutoff (`dateFrom=YYYY-MM-DD`) AND the
+  /// approximate chip (`period=3M`). The receipts screen prefers the
+  /// cutoff (no day-bucket roundtrip drift) and uses the chip only to
+  /// highlight the matching chip in its UI.
+  String _receiptsDeepLink({String? store}) {
+    final params = <String, String>{};
+    if (store != null && store.isNotEmpty) {
+      params['store'] = store;
+    }
+    params['dateFrom'] = _periodCutoffStr();
+    params['period']   = _periodToReceiptsChip();
+    final qs = params.entries
+        .map((e) => '${e.key}=${Uri.encodeQueryComponent(e.value)}')
+        .join('&');
+    return '/receipts?$qs';
+  }
+
   String _periodToReceiptsChip() {
     int days;
     switch (_period) {
@@ -165,7 +183,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 emoji: '🥑',
                 title: 'Worth It?',
                 subtitle: 'Rate every purchase',
-                onTap: () => context.go('/receipts'),
+                onTap: () => context.go(_receiptsDeepLink()),
               )),
               const SizedBox(width: 10),
               Expanded(child: _ctaPill(
@@ -463,7 +481,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           icon: Icons.receipt_long,
           iconBg: const Color(0xFFd1fae5),
           iconColor: _kEmerald700,
-          onTap: () => context.go('/receipts'),
+          onTap: () => context.go(_receiptsDeepLink()),
         )),
       ]),
       const SizedBox(height: 10),
@@ -542,13 +560,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   if (idx < 0 || idx >= topData.length) return;
                   final store = topData[idx].name;
                   if (store.isEmpty) return;
-                  // Carry the dashboard's current time window into the
-                  // receipts screen so the user lands on the same period
-                  // they were just viewing, not the default 1M.
-                  final chip = _periodToReceiptsChip();
-                  context.go('/receipts'
-                    '?store=${Uri.encodeQueryComponent(store)}'
-                    '&period=$chip');
+                  // Carry the dashboard's EXACT cutoff date into the
+                  // receipts screen so chart-aggregated bars and the
+                  // filtered receipts list can't disagree on which rows
+                  // fall inside "Last N months" — the chip-bucket
+                  // (1M/3M/6M/1Y) is too coarse for calendar-month math.
+                  context.go(_receiptsDeepLink(store: store));
                 },
               ),
               barGroups: topData.asMap().entries.map((e) => BarChartGroupData(
@@ -597,7 +614,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         Row(children: [
           const Expanded(child: Text('Recent Transactions', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14))),
           InkWell(
-            onTap: () => context.go('/receipts'),
+            onTap: () => context.go(_receiptsDeepLink()),
             child: const Padding(padding: EdgeInsets.all(4), child: Icon(Icons.arrow_forward, size: 16, color: _kEmerald700)),
           ),
         ]),

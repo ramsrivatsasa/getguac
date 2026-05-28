@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { DollarSign, Receipt, Gift, TrendingUp, ArrowRight, Sparkles } from 'lucide-react'
 import GuacoScoreCard from '../../../components/GuacoScoreCard'
+import UpcomingReturnsBanner from '../../../components/UpcomingReturnsBanner'
 import { subDays, subWeeks, subMonths, subYears } from 'date-fns'
 import { normalizeStoreName, canonicalStoreName, displayStoreName, storeGroupKey } from '../../../lib/store-name-normalize'
 import { periodToReceiptsChip, buildReceiptsUrl } from '../../../lib/receipts-deeplink'
@@ -186,6 +187,11 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
         </div>
         <span className="text-xs text-gray-400">{filtered.length} transaction{filtered.length === 1 ? '' : 's'} • {rangeLabel}</span>
       </div>
+
+      {/* Return-window banner — surfaces items expiring within 7
+          days so the user can act before the window closes. Self-
+          hides when nothing is urgent; session-dismissable. */}
+      <UpcomingReturnsBanner />
 
       {/* Stats — GuacScore first, then the spend tiles. Total Spent
           gets an inline trend badge ("up 18% vs prior 3 windows")

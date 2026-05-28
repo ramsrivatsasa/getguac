@@ -220,6 +220,73 @@ export default function ShoppingPage() {
   //   2. run the smashlist predictor
   // No need for a separate "Embed" button — the user shouldn't have to
   // know about the embedding step.
+  // Bulk-approve every Buy Again suggestion in one click. The criteria
+  // controls which store_name_id we record on each row (so future
+  // suggestions remember the choice) — 'cheapest' picks the user's
+  // historical min-price store, 'frequent' picks the most-used store,
+  // 'asis' keeps whatever the predictor wrote.
+  async function autoAddAll(criteria = 'asis') {
+    const targets = filteredSuggestions
+    if (targets.length === 0) {
+      toast('Nothing to add')
+      return
+    }
+    const sb = createClient()
+    let ok = 0
+    let pickStoreFor = null  // resolved per criteria
+    if (criteria === 'cheapest' || criteria === 'frequent') {
+      // Fetch per-item per-store history once for all target items.
+      const names = targets.map(t => t.item_name)
+      try {
+        const { data } = await sb
+          .from('receipt_items')
+          .select('item_name, price, receipts!inner(store_id, store_name)')
+          .in('item_name', names)
+          .limit(2000)
+        const perItem = new Map()  // item_name -> store_id -> {count, min_price}
+        for (const r of data || []) {
+          const k = r.item_name
+          if (!perItem.has(k)) perItem.set(k, new Map())
+          const m = perItem.get(k)
+          const sid = r.receipts?.store_id
+          if (!sid) continue
+          if (!m.has(sid)) m.set(sid, { id: sid, count: 0, min_price: null })
+          const e = m.get(sid)
+          e.count++
+          const p = r.price != null ? Number(r.price) : null
+          if (p != null && (e.min_price == null || p < e.min_price)) e.min_price = p
+        }
+        pickStoreFor = (itemName) => {
+          const m = perItem.get(itemName)
+          if (!m || m.size === 0) return null
+          const arr = [...m.values()]
+          arr.sort(criteria === 'cheapest'
+            ? (a, b) => (a.min_price ?? Infinity) - (b.min_price ?? Infinity)
+            : (a, b) => b.count - a.count)
+          return arr[0]?.id || null
+        }
+      } catch (e) {
+        toast.error('Auto-Add lookup failed: ' + e.message)
+        return
+      }
+    }
+    for (const t of targets) {
+      const patch = { ...t, approved: true }
+      if (pickStoreFor) {
+        const sid = pickStoreFor(t.item_name)
+        if (sid) patch.store_name_id = String(sid)
+      }
+      try {
+        await new Promise((resolve, reject) => upsert.mutate(patch, { onSuccess: resolve, onError: reject }))
+        ok++
+      } catch (_) { /* keep going on per-item failures */ }
+    }
+    const label = criteria === 'cheapest' ? 'cheapest store'
+                : criteria === 'frequent' ? 'most-used store'
+                : 'Smashlist'
+    toast.success(`Added ${ok}/${targets.length} via ${label} ✓`)
+  }
+
   async function predictNow() {
     setPredicting(true)
     try {
@@ -360,6 +427,10 @@ export default function ShoppingPage() {
               'Buy Again'
             }
           </button>
+          <AutoAddMenu
+            count={filteredSuggestions.length}
+            onPick={(criteria) => autoAddAll(criteria)}
+          />
           <ShareMenu
             buildText={() => buildShareText(
               [...filteredOwn, ...filteredSuggestions],
@@ -652,6 +723,56 @@ export default function ShoppingPage() {
           )}
         </div>
       </section>
+    </div>
+  )
+}
+
+// Auto-Add dropdown — bulk-approves every Buy Again suggestion with a
+// criterion (cheapest store / most-used store / as-is). Sits next to
+// the Buy Again button so the user can run predict THEN one-tap to
+// fill their Smashlist without manually tapping each card.
+function AutoAddMenu({ count, onPick }) {
+  const [open, setOpen] = useState(false)
+  function handleBlur(e) {
+    if (!e.currentTarget.contains(e.relatedTarget)) setOpen(false)
+  }
+  const disabled = count === 0
+  return (
+    <div className="relative inline-block" onBlur={handleBlur}>
+      <button
+        type="button"
+        onClick={() => !disabled && setOpen(v => !v)}
+        disabled={disabled}
+        className="btn-secondary inline-flex items-center gap-1.5 text-sm disabled:opacity-50"
+        title={disabled ? 'Run Buy Again first to see suggestions' : 'Bulk-add all Buy Again items to your Smashlist'}
+      >
+        <ShoppingCart size={14} /> Auto-Add ({count}) <ChevronDown size={12} />
+      </button>
+      {open && (
+        <div className="absolute right-0 mt-1 w-64 rounded-xl bg-white shadow-xl ring-1 ring-gray-200 z-50 overflow-hidden">
+          <div className="px-3 py-2 border-b border-gray-100 text-[10px] uppercase tracking-wider text-gray-500 font-bold">
+            Pick the store for each item
+          </div>
+          {[
+            { key: 'cheapest', icon: '💰', label: 'Cheapest store',  sub: 'Lowest historical price per item' },
+            { key: 'frequent', icon: '🏪', label: 'Most-used store',  sub: 'Where you buy this item most often' },
+            { key: 'asis',     icon: '⚡', label: 'Whatever predictor picked', sub: 'Skip the store optimization' },
+          ].map(opt => (
+            <button
+              key={opt.key}
+              type="button"
+              onClick={() => { onPick(opt.key); setOpen(false) }}
+              className="w-full flex items-start gap-3 px-3 py-2 text-sm text-gray-800 hover:bg-emerald-50 text-left"
+            >
+              <span className="text-base leading-none mt-0.5">{opt.icon}</span>
+              <span className="flex-1 min-w-0">
+                <span className="block font-semibold">{opt.label}</span>
+                <span className="block text-[10px] text-gray-500">{opt.sub}</span>
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

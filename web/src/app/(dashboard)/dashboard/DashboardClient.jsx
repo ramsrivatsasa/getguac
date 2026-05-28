@@ -8,6 +8,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { DollarSign, Receipt, Gift, TrendingUp, ArrowRight, Sparkles } from 'lucide-react'
 import GuacoScoreCard from '../../../components/GuacoScoreCard'
 import UpcomingReturnsBanner from '../../../components/UpcomingReturnsBanner'
+import AnomaliesPanel from '../../../components/AnomaliesPanel'
 import { subDays, subWeeks, subMonths, subYears } from 'date-fns'
 import { normalizeStoreName, canonicalStoreName, displayStoreName, storeGroupKey } from '../../../lib/store-name-normalize'
 import { periodToReceiptsChip, buildReceiptsUrl } from '../../../lib/receipts-deeplink'
@@ -192,6 +193,11 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
           days so the user can act before the window closes. Self-
           hides when nothing is urgent; session-dismissable. */}
       <UpcomingReturnsBanner />
+
+      {/* Spending anomalies — surfaces merchants/categories spiking
+          ≥2× their usual + any monthly recurring that stopped showing
+          up. Self-hides when nothing's off; session-dismissable. */}
+      <AnomaliesPanel receipts={spendingReceipts} />
 
       {/* Stats — GuacScore first, then the spend tiles. Total Spent
           gets an inline trend badge ("up 18% vs prior 3 windows")

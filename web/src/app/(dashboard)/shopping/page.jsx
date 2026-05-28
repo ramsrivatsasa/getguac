@@ -100,10 +100,10 @@ export default function ShoppingPage() {
       const { inserted = 0, predictions = 0, aliases_added = 0 } = json
       toast.success(
         inserted > 0
-          ? `${inserted} new suggestion${inserted === 1 ? '' : 's'} added 🪄`
+          ? `${inserted} item${inserted === 1 ? '' : 's'} added to Buy Again 🛒`
           : predictions > 0
-            ? `${predictions} ready — already in your list`
-            : 'No suggestions right now'
+            ? `${predictions} already in Buy Again — scroll up`
+            : 'Nothing due to buy again yet'
       )
       if (aliases_added > 0) toast.success(`${aliases_added} item${aliases_added === 1 ? '' : 's'} grouped together`)
       refetch()
@@ -165,12 +165,12 @@ export default function ShoppingPage() {
             onClick={predictNow}
             disabled={predicting}
             className="btn-secondary inline-flex items-center gap-1.5 text-sm disabled:opacity-50"
-            title="Refresh suggestions from your purchase history (auto-embeds new items)"
+            title="Find items you usually buy that are due for a restock"
           >
             <Wand2 size={16} /> {
               embedding ? 'Embedding…' :
-              predicting ? 'Predicting…' :
-              'Predict now'
+              predicting ? 'Finding…' :
+              'Buy Again'
             }
           </button>
           <button onClick={() => setShowForm(v => !v)} className="btn-primary">
@@ -279,13 +279,15 @@ export default function ShoppingPage() {
         </section>
       )}
 
-      {/* Suggestions section — only renders when there are predicted items */}
+      {/* Buy Again section — items the predictor thinks are due for a
+          restock. Renders below the Errand Plan, above the curated list,
+          so it's the first thing the user sees inside the Smashlist tabs. */}
       {filteredSuggestions.length > 0 && (
         <section className="space-y-2">
           <div className="flex items-center gap-2">
             <Sparkles size={16} className="text-violet-500" />
-            <h2 className="font-semibold text-gray-800">Suggestions for you</h2>
-            <span className="text-xs text-gray-500">Based on your purchase history. Approve to add, dismiss to hide forever.</span>
+            <h2 className="font-semibold text-gray-800">Buy Again</h2>
+            <span className="text-xs text-gray-500">Items you usually buy that look due for a restock. ✓ to add, ✕ to hide.</span>
           </div>
           <div className="card p-0 overflow-hidden border-violet-200">
             <div className="overflow-x-auto">
@@ -308,7 +310,7 @@ export default function ShoppingPage() {
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-violet-100 text-violet-700">
-                              <Sparkles size={10} /> Suggested
+                              <Sparkles size={10} /> Buy Again
                             </span>
                             <span className="font-medium">{item.item_name}</span>
                           </div>
@@ -359,7 +361,7 @@ export default function ShoppingPage() {
               <p className="text-gray-500 max-w-sm">
                 {activeList === 'all'
                   ? (filteredSuggestions.length > 0
-                      ? 'No items in your list yet — approve a suggestion above to start.'
+                      ? 'No items in your list yet — tick one from Buy Again above to start.'
                       : 'Smashlist is empty. Drop items from receipts or pick from your Stash.')
                   : `${activeList} list is empty.`}
               </p>

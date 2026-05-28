@@ -479,18 +479,9 @@ export default function ShoppingPage() {
                           ) : (item.predicted_reason || '—')}
                         </td>
                         <td className="px-4 py-3 text-gray-500">
-                          {storeName ? (
-                            <span className="inline-flex items-center gap-1">
-                              <StoreIcon size={12} className="text-gray-400" />
-                              {storeName}
-                            </span>
-                          ) : '—'}
-                        </td>
-                        <td className="px-4 py-3">
-                          {/* Frequency badge — prefer the explicit
-                              item.frequency (Weekly / Biweekly / Monthly)
-                              that the predictor sets; fall back to the
-                              raw cadence in days when only that's known. */}
+                          {/* Frequency comes BEFORE Store to match the
+                              column header order (List | Item | Restock |
+                              Frequency | Store | Qty | Price | Actions). */}
                           {item.frequency ? (
                             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-violet-50 text-violet-700 ring-1 ring-violet-200">
                               {item.frequency}
@@ -501,7 +492,22 @@ export default function ShoppingPage() {
                             </span>
                           ) : '—'}
                         </td>
-                        <td className="px-4 py-3">{item.qty}</td>
+                        <td className="px-4 py-3 text-gray-500">
+                          {storeName ? (
+                            <span className="inline-flex items-center gap-1">
+                              <StoreIcon size={12} className="text-gray-400" />
+                              {storeName}
+                            </span>
+                          ) : '—'}
+                        </td>
+                        <td className="px-4 py-3">
+                          <QtyInput
+                            value={item.qty || 1}
+                            onSave={(qty) => upsert.mutate({ ...item, qty }, {
+                              onError: (err) => toast.error(err.message),
+                            })}
+                          />
+                        </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             <span>{item.price ? `$${item.price}` : '—'}</span>
@@ -608,7 +614,14 @@ export default function ShoppingPage() {
                         </td>
                         <td className="px-4 py-3 text-gray-400 text-xs">{item.sku || '—'}</td>
                         <td className="px-4 py-3 text-gray-500">{item.store?.store_name ? displayStoreName(item.store.store_name) : '—'}</td>
-                        <td className="px-4 py-3">{item.qty}</td>
+                        <td className="px-4 py-3">
+                          <QtyInput
+                            value={item.qty || 1}
+                            onSave={(qty) => upsert.mutate({ ...item, qty }, {
+                              onError: (err) => toast.error(err.message),
+                            })}
+                          />
+                        </td>
                         <td className="px-4 py-3">{item.price ? `$${item.price}` : '—'}</td>
                         <td className="px-4 py-3"><span className="badge-gray">{item.frequency}</span></td>
                         <td className="px-4 py-3">
@@ -634,6 +647,46 @@ export default function ShoppingPage() {
           )}
         </div>
       </section>
+    </div>
+  )
+}
+
+// Compact inline qty editor. Internal state so typing doesn't fire
+// onSave on every keystroke; commits on blur AND on Enter. ± buttons
+// step the value (touch users don't have to invoke the number keyboard).
+function QtyInput({ value, onSave }) {
+  const [local, setLocal] = useState(String(value))
+  // Keep local state in sync if the row's qty is updated elsewhere.
+  useMemo(() => setLocal(String(value)), [value])
+  function commit() {
+    const n = parseInt(local, 10)
+    const safe = Number.isFinite(n) && n > 0 ? n : 1
+    if (safe !== value) onSave(safe)
+    setLocal(String(safe))
+  }
+  return (
+    <div className="inline-flex items-center gap-1">
+      <button
+        type="button"
+        onClick={() => { const n = Math.max(1, parseInt(local, 10) - 1); setLocal(String(n)); onSave(n) }}
+        className="w-6 h-6 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-bold leading-none"
+        aria-label="Decrease"
+      >−</button>
+      <input
+        type="number"
+        min="1"
+        value={local}
+        onChange={(e) => setLocal(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => { if (e.key === 'Enter') { e.currentTarget.blur() } }}
+        className="w-12 text-center text-sm font-semibold border border-gray-200 rounded px-1 py-0.5"
+      />
+      <button
+        type="button"
+        onClick={() => { const n = (parseInt(local, 10) || 0) + 1; setLocal(String(n)); onSave(n) }}
+        className="w-6 h-6 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-bold leading-none"
+        aria-label="Increase"
+      >+</button>
     </div>
   )
 }

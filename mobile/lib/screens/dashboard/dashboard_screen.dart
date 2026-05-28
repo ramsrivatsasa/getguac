@@ -12,6 +12,8 @@ import '../../widgets/anomalies_card.dart';
 import '../../utils/date_format.dart';
 import '../../store_name_normalize.dart';
 import '../../payment_rows.dart';
+import '../../services/spending_trends_service.dart';
+import '../../widgets/subscriptions_card.dart';
 
 const _kEmerald700 = Color(0xFF15803d);
 const _kEmerald800 = Color(0xFF166534);
@@ -148,6 +150,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     final totalSpend = filtered.fold<double>(0, (s, r) => s + r.totalAmount);
     final totalTax   = filtered.fold<double>(0, (s, r) => s + r.taxPaid);
+
+    // Period-over-period trend chip for the Total Spent tile. Computed
+    // off `spendingReceipts` (payment-rows already excluded) so the
+    // delta matches what's totalled above.
+    final periodKey = _period == _Period.daily   ? 'daily'
+                    : _period == _Period.weekly  ? 'weekly'
+                    : _period == _Period.yearly  ? 'yearly'
+                    :                              'monthly';
+    final trend = computeSpendingTrend(spendingReceipts, periodKey, _periodCount);
+    final trendFmt = formatTrend(trend.deltaPct);
     final rangeLabel = 'Last $_periodCount ${_kUnitLabel[_period]}${_periodCount == 1 ? '' : 's'}';
 
     return Scaffold(
@@ -178,6 +190,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             // Spending alerts (auto-hides when none). Reads receipts already
             // loaded by ReceiptProvider — no extra fetch.
             AnomaliesCard(receipts: receipts),
+            // Recurring-charge summary. Same auto-hide behaviour.
+            SubscriptionsCard(receipts: spendingReceipts),
             const SizedBox(height: 18),
 
             // CTA pills — primary actions
@@ -274,7 +288,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 16),
 
             // Stat tiles
-            _statGrid(filtered, totalSpend, totalTax, rewards.length),
+            _statGrid(filtered, totalSpend, totalTax, rewards.length, trendFmt),
             const SizedBox(height: 20),
 
             // Spending chart
@@ -450,7 +464,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ]);
   }
 
-  Widget _statGrid(List<Receipt> filtered, double totalSpend, double totalTax, int rewardCount) {
+  Widget _statGrid(List<Receipt> filtered, double totalSpend, double totalTax, int rewardCount, TrendFormat? spendTrend) {
     return Column(children: [
       Row(children: [
         Expanded(child: _StatTile(
@@ -470,6 +484,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           icon: Icons.attach_money,
           iconGradient: const LinearGradient(colors: [Color(0xFFfb7185), Color(0xFFe11d48), Color(0xFF9f1239)]),
           iconColor: Colors.white,
+          trendLabel: spendTrend?.label,
+          trendTone:  spendTrend?.tone,
         )),
       ]),
       const SizedBox(height: 10),
@@ -689,10 +705,15 @@ class _StatTile extends StatelessWidget {
   final Color? valueColor;
   final bool isLeader;
   final VoidCallback? onTap;
+  /// Tiny period-over-period trend chip rendered just below `value`.
+  /// Optional. e.g. label='+18%', tone='up' | 'down' | 'flat'.
+  final String? trendLabel;
+  final String? trendTone;
   const _StatTile({
     required this.label, required this.value,
     this.icon, this.iconBg, this.iconGradient, this.iconColor, this.iconChild,
     this.valueColor, this.isLeader = false, this.onTap,
+    this.trendLabel, this.trendTone,
   });
 
   @override
@@ -729,6 +750,21 @@ class _StatTile extends StatelessWidget {
               ),
               maxLines: 1, overflow: TextOverflow.ellipsis,
             ),
+            if (trendLabel != null) ...[
+              const SizedBox(height: 2),
+              Text(
+                '$trendLabel vs prior',
+                style: TextStyle(
+                  fontSize: 9.5,
+                  fontWeight: FontWeight.w800,
+                  color: trendTone == 'up'
+                    ? const Color(0xFFb91c1c)   // red — spending more
+                    : trendTone == 'down'
+                      ? const Color(0xFF15803d) // green — spending less
+                      : Colors.black45,
+                ),
+              ),
+            ],
           ])),
         ]),
       ),

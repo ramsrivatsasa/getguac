@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { createClient } from '../../../lib/supabase/client'
 import toast from 'react-hot-toast'
 import GuacMascot from '../../../components/GuacMascot'
+import { Eye, EyeOff } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -14,6 +15,7 @@ export default function LoginPage() {
   const [resetOpen, setResetOpen] = useState(false)
   const [resetEmail, setResetEmail] = useState('')
   const [resetting, setResetting] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -128,8 +130,24 @@ export default function LoginPage() {
                   Forgot password?
                 </button>
               </div>
-              <input type="password" required autoComplete="current-password" className="input" placeholder="••••••••"
-                value={form.password} onChange={e => setForm(p => ({ ...p, password: e.target.value }))} />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required autoComplete="current-password"
+                  className="input pr-10"
+                  placeholder="••••••••"
+                  value={form.password}
+                  onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(v => !v)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  className="absolute inset-y-0 right-0 px-3 text-gray-400 hover:text-emerald-700"
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
             </div>
             <button type="submit" disabled={loading} className="btn-primary w-full justify-center py-2.5 mt-1">
               {loading ? 'Signing in…' : 'Sign In'}

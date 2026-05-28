@@ -5,7 +5,7 @@ import Link from 'next/link'
 import toast from 'react-hot-toast'
 import GuacMascot from '../../../components/GuacMascot'
 import PrivacyNote from '../../../components/PrivacyNote'
-import { Check, X, Loader2, AlertCircle, AtSign } from 'lucide-react'
+import { Check, X, Loader2, AlertCircle, AtSign, Eye, EyeOff } from 'lucide-react'
 const VALID_USERNAME_RE = /^[a-z0-9]([a-z0-9._-]{1,30}[a-z0-9])?$/
 
 export default function RegisterPage() {
@@ -20,6 +20,27 @@ export default function RegisterPage() {
     username: '', firstName: '', lastName: '', email: '', password: '', confirmPassword: '',
     birthDate: '', age: '', alternativeEmail: '', mobileNo: ''
   })
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [acceptTerms, setAcceptTerms] = useState(false)
+
+  // Auto-derive age from birth date so the two fields can't disagree.
+  // Years between today and birthDate, rounded down at the month/day boundary.
+  useEffect(() => {
+    if (!form.birthDate) {
+      if (form.age !== '') setForm(p => ({ ...p, age: '' }))
+      return
+    }
+    const bd = new Date(form.birthDate)
+    if (Number.isNaN(bd.getTime())) return
+    const today = new Date()
+    let age = today.getFullYear() - bd.getFullYear()
+    const m = today.getMonth() - bd.getMonth()
+    if (m < 0 || (m === 0 && today.getDate() < bd.getDate())) age--
+    if (age < 0 || age > 150) return
+    const next = String(age)
+    if (form.age !== next) setForm(p => ({ ...p, age: next }))
+  }, [form.birthDate])
 
   // Live availability check for username
   const [usernameStatus, setUsernameStatus] = useState(null)  // 'available' | 'taken' | 'reserved' | 'invalid' | null
@@ -52,6 +73,7 @@ export default function RegisterPage() {
     e.preventDefault()
     if (form.password !== form.confirmPassword) { toast.error('Passwords do not match'); return }
     if (usernameStatus !== 'available') { toast.error('Pick an available username first'); return }
+    if (!acceptTerms) { toast.error('Please accept the Terms & Privacy Policy'); return }
     setLoading(true)
     try {
       const res = await fetch('/api/auth/sign-up', {
@@ -201,18 +223,93 @@ export default function RegisterPage() {
               <p className="text-[11px] text-gray-400 mt-1">Used for password resets — never shown publicly.</p>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div><label className="label">Password</label><input type="password" required minLength={10} autoComplete="new-password" className="input" placeholder="Min 10 chars" value={form.password} onChange={s('password')} /></div>
-              <div><label className="label">Confirm Password</label><input type="password" required autoComplete="new-password" className="input" value={form.confirmPassword} onChange={s('confirmPassword')} /></div>
+              <div>
+                <label className="label">Password</label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    required minLength={10} autoComplete="new-password"
+                    className="input pr-10"
+                    placeholder="Min 10 chars"
+                    value={form.password}
+                    onChange={s('password')}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(v => !v)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    className="absolute inset-y-0 right-0 px-3 text-gray-400 hover:text-emerald-700"
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="label">Confirm Password</label>
+                <div className="relative">
+                  <input
+                    type={showConfirm ? 'text' : 'password'}
+                    required autoComplete="new-password"
+                    className="input pr-10"
+                    value={form.confirmPassword}
+                    onChange={s('confirmPassword')}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirm(v => !v)}
+                    aria-label={showConfirm ? 'Hide password' : 'Show password'}
+                    className="absolute inset-y-0 right-0 px-3 text-gray-400 hover:text-emerald-700"
+                  >
+                    {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div><label className="label">Birth Date</label><input type="date" className="input" value={form.birthDate} onChange={s('birthDate')} /></div>
-              <div><label className="label">Age</label><input type="number" className="input" placeholder="25" value={form.age} onChange={s('age')} /></div>
+              <div>
+                <label className="label">Birth Date</label>
+                <input
+                  type="date"
+                  className="input"
+                  max={new Date().toISOString().slice(0, 10)}
+                  value={form.birthDate}
+                  onChange={s('birthDate')}
+                />
+              </div>
+              <div>
+                <label className="label">Age <span className="text-gray-400 normal-case font-normal">(auto)</span></label>
+                <input
+                  type="number"
+                  readOnly
+                  tabIndex={-1}
+                  className="input bg-gray-50 text-gray-600 cursor-not-allowed"
+                  placeholder="—"
+                  value={form.age}
+                />
+              </div>
             </div>
             <div><label className="label">Alternative Email</label><input type="email" className="input" value={form.alternativeEmail} onChange={s('alternativeEmail')} /></div>
             <div><label className="label">Mobile No <span className="text-gray-400 normal-case font-normal">(Optional)</span></label><input type="tel" className="input" value={form.mobileNo} onChange={s('mobileNo')} /></div>
+
+            <label className="flex items-start gap-2 pt-1 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                required
+                checked={acceptTerms}
+                onChange={e => setAcceptTerms(e.target.checked)}
+                className="mt-0.5 w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+              />
+              <span className="text-xs text-gray-600 leading-snug">
+                I agree to the{' '}
+                <Link href="/terms" target="_blank" className="text-emerald-700 font-semibold hover:underline">Terms of Service</Link>
+                {' '}and{' '}
+                <Link href="/privacy" target="_blank" className="text-emerald-700 font-semibold hover:underline">Privacy Policy</Link>.
+              </span>
+            </label>
+
             <button
               type="submit"
-              disabled={loading || usernameStatus !== 'available'}
+              disabled={loading || usernameStatus !== 'available' || !acceptTerms}
               className="btn-primary w-full justify-center py-2.5 mt-1"
             >
               {loading ? 'Creating account…' : 'Create Account'}

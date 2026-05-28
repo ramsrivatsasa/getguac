@@ -38,8 +38,10 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
     _load();
   }
 
+  String? _loadError;
+
   Future<void> _load() async {
-    setState(() => _loading = true);
+    setState(() { _loading = true; _loadError = null; });
     try {
       final rows = await _sb
           .from('shopping_list')
@@ -53,8 +55,13 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
         (r['list_name'] ?? 'Pantry').toString(),
         r['approved'] == true,
       )).toList();
-    } catch (_) {
-      // ignore — empty list rendered
+    } catch (e) {
+      // Surface the error so we don't silently render empty when RLS or
+      // a missing column is the real cause. Previously this catch was
+      // bare and swallowed everything — users saw an empty list with
+      // no signal that anything had gone wrong.
+      _loadError = e.toString();
+      _items = const [];
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -105,13 +112,39 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
         Expanded(
           child: _loading
             ? const Center(child: CircularProgressIndicator())
-            : inList.isEmpty
+            : _loadError != null
+              ? Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
+                    const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                    const SizedBox(height: 8),
+                    const Text('Could not load Smashlist',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.red)),
+                    const SizedBox(height: 6),
+                    Text(_loadError!,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 12, color: Colors.black54)),
+                    const SizedBox(height: 12),
+                    FilledButton.icon(
+                      onPressed: _load,
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Retry'),
+                    ),
+                  ])),
+                )
+              : inList.isEmpty
               ? Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
                   Text(_kListEmoji[_activeList] ?? '🛒', style: const TextStyle(fontSize: 60)),
                   const SizedBox(height: 12),
                   Text('$_activeList is empty', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 4),
-                  const Text('Add items from the web app or by parsing a receipt.', style: TextStyle(color: Colors.black54)),
+                  Text(
+                    _items.isEmpty
+                      ? 'No items in any list yet. Add some via web or by parsing a receipt.'
+                      : 'Nothing in $_activeList. Check the other tabs above.',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.black54),
+                  ),
                 ]))
               : RefreshIndicator(
                   onRefresh: _load,

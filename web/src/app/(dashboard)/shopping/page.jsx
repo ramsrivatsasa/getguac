@@ -502,17 +502,19 @@ export default function ShoppingPage() {
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => toggleApproved(item)}
-                              className="px-2 py-1 rounded bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-medium inline-flex items-center gap-1"
-                              title="Add to your Smashlist"
+                              className="w-8 h-8 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white inline-flex items-center justify-center"
+                              aria-label="Add to Smashlist"
+                              title="Add to Smashlist"
                             >
-                              <ShoppingCart size={12} /> Add to Smashlist
+                              <ShoppingCart size={14} />
                             </button>
                             <button
                               onClick={() => dismissPredicted(item)}
-                              className="px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium inline-flex items-center gap-1"
-                              title="Never suggest this again"
+                              className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 inline-flex items-center justify-center"
+                              aria-label="Dismiss — never suggest again"
+                              title="Dismiss — never suggest again"
                             >
-                              <X size={12} /> Dismiss
+                              <X size={14} />
                             </button>
                           </div>
                         </td>

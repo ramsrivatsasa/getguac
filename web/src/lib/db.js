@@ -337,7 +337,25 @@ export async function getShoppingList() {
 
 export async function upsertShoppingItem(item) {
   const sb = createClient()
-  const { data, error } = await sb.from('shopping_list').upsert(item).select().single()
+  // Strip client-side joined fields that aren't real columns. getShoppingList
+  // stitches a `store: {...}` object onto each row for display purposes;
+  // sending it back to Supabase upsert would 400 ("could not find the
+  // 'store' column"). The mutation then rolled back and the UI looked
+  // like nothing happened.
+  // Allow-list the actual columns. Any future shopping_list column we
+  // want to write needs to be added here.
+  const SHOPPING_LIST_COLS = [
+    'id', 'user_id', 'sku', 'item_name', 'order_date', 'qty', 'price',
+    'store_name_id', 'comments', 'frequency', 'list_name', 'approved',
+    'sent_to_store', 'predicted', 'predicted_reason',
+    'predicted_avg_cadence_days', 'predicted_last_purchase_date',
+    'predicted_at', 'household_id',
+  ]
+  const clean = {}
+  for (const k of SHOPPING_LIST_COLS) {
+    if (item[k] !== undefined) clean[k] = item[k]
+  }
+  const { data, error } = await sb.from('shopping_list').upsert(clean).select().single()
   if (error) throw error
   return data
 }

@@ -37,10 +37,12 @@ function urgencyForItem(item) {
   }
 }
 
-// Human-friendly "runs out" label. Negative days = already past.
+// Human-friendly restock label. Negative days = already past the
+// typical reorder point, so we say "Low in stock" instead of the
+// clinical "out 5d ago" phrasing.
 function formatRunsOut(daysToRunOut, isoDate) {
   if (daysToRunOut == null) return ''
-  if (daysToRunOut < 0) return `out ${-daysToRunOut}d ago`
+  if (daysToRunOut < 0) return 'Low in stock'
   if (daysToRunOut === 0) return 'today'
   if (daysToRunOut === 1) return 'tomorrow'
   if (daysToRunOut < 7) return `in ${daysToRunOut}d`
@@ -429,7 +431,7 @@ export default function ShoppingPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-violet-50/50 border-b text-xs text-violet-700 uppercase tracking-wide">
-                  <tr>{['List','Item','Why','Store','Qty','Price','Actions'].map(h =>
+                  <tr>{['List','Item','Restock *','Store','Qty','Price','Actions'].map(h =>
                     <th key={h} className="px-4 py-3 text-left font-semibold">{h}</th>
                   )}</tr>
                 </thead>
@@ -525,6 +527,9 @@ export default function ShoppingPage() {
               </table>
             </div>
           </div>
+          <p className="text-[11px] text-gray-400 px-1">
+            * Calculated based on your purchase dates.
+          </p>
         </section>
       )}
 

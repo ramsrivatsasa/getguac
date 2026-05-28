@@ -37,9 +37,31 @@ declare
   i int;
   d date;
   rcpt_id uuid;
+  -- Store ids so receipts.store_id + shopping_list.store_name_id can
+  -- point to real rows; without these the Store column on the Buy
+  -- Again strip shows '—' even when the predictor knows the merchant.
+  costco_id uuid;
+  walmart_id uuid;
+  target_id uuid;
 begin
   if uid is null then
     raise exception 'auth.uid() is null — sign in via Supabase before running this seed';
+  end if;
+
+  -- ─── -1. STORES (find-or-create the three rotating merchants) ──────────
+  -- public.stores is shared across users (no user_id column). Use existing
+  -- row if one exists with the same display name; otherwise insert.
+  select id into costco_id from public.stores where lower(store_name) = lower('Costco Wholesale') limit 1;
+  if costco_id is null then
+    insert into public.stores (store_name) values ('Costco Wholesale') returning id into costco_id;
+  end if;
+  select id into walmart_id from public.stores where lower(store_name) = lower('Walmart') limit 1;
+  if walmart_id is null then
+    insert into public.stores (store_name) values ('Walmart') returning id into walmart_id;
+  end if;
+  select id into target_id from public.stores where lower(store_name) = lower('Target') limit 1;
+  if target_id is null then
+    insert into public.stores (store_name) values ('Target') returning id into target_id;
   end if;
 
   -- ─── 0. WIPE prior seed rows for this user (idempotent re-run) ─────────
@@ -70,7 +92,7 @@ begin
   for i in 0..23 loop
     d := today - (i * 7 + 6);
     insert into public.receipts (
-      user_id, store_name, date, total_amount, tax_paid,
+      user_id, store_name, store_id, date, total_amount, tax_paid,
       category, rating, is_return, business_purchase, validation_comment, processed
     ) values (
       uid,
@@ -78,6 +100,11 @@ begin
         when 0 then 'Costco Wholesale'
         when 1 then 'Walmart'
         else        'Target'
+      end,
+      case (i % 3)
+        when 0 then costco_id
+        when 1 then walmart_id
+        else        target_id
       end,
       d,
       35.00 + (i % 5) * 3.50,                                -- $35–$49
@@ -112,10 +139,10 @@ begin
   for i in 0..11 loop
     d := today - (i * 14 + 12);
     insert into public.receipts (
-      user_id, store_name, date, total_amount, tax_paid,
+      user_id, store_name, store_id, date, total_amount, tax_paid,
       category, rating, validation_comment, processed
     ) values (
-      uid, 'Target', d, 22.50, 22.50 * 0.082,
+      uid, 'Target', target_id, d, 22.50, 22.50 * 0.082,
       'household', 4, '[SEED v2 SQL]', true
     ) returning id into rcpt_id;
     insert into public.receipt_items (receipt_id, item_name, qty, price, category, purchase_date) values
@@ -133,10 +160,10 @@ begin
   for i in 0..5 loop
     d := today - (i * 30 + 25);
     insert into public.receipts (
-      user_id, store_name, date, total_amount, tax_paid,
+      user_id, store_name, store_id, date, total_amount, tax_paid,
       category, rating, validation_comment, processed
     ) values (
-      uid, 'Costco Wholesale', d, 89.99, 89.99 * 0.082,
+      uid, 'Costco Wholesale', costco_id, d, 89.99, 89.99 * 0.082,
       'household', 5, '[SEED v2 SQL]', true
     ) returning id into rcpt_id;
     insert into public.receipt_items (receipt_id, item_name, qty, price, category, purchase_date) values
@@ -269,31 +296,32 @@ begin
   -- the rest sit just under the reorder point so they appear as plain
   -- rows. Mix exists so the UI demo shows every tier.
   insert into public.shopping_list (
-    user_id, item_name, qty, frequency, list_name,
+    user_id, item_name, qty, frequency, list_name, store_name_id,
     predicted, predicted_reason, predicted_avg_cadence_days, predicted_last_purchase_date,
     approved, sent_to_store, comments
   ) values
-    -- Pantry
-    (uid, 'Whole Milk',     1, 'Weekly',   'Pantry',
+    -- Pantry — store_name_id points to a real stores row so the
+    -- Store column on the Buy Again strip shows a name, not '—'.
+    (uid, 'Whole Milk',     1, 'Weekly',   'Pantry', costco_id::text,
       true, 'Avg every 7d, last bought 9d ago',  7,  today - 9,  false, false, '[SEED v2 SQL]'),
-    (uid, 'Paper Towels',   1, 'Biweekly', 'Pantry',
+    (uid, 'Paper Towels',   1, 'Biweekly', 'Pantry', target_id::text,
       true, 'Avg every 14d, last bought 13d ago', 14, today - 13, false, false, '[SEED v2 SQL]'),
-    (uid, 'Dog Food',       1, 'Monthly',  'Pantry',
+    (uid, 'Dog Food',       1, 'Monthly',  'Pantry', costco_id::text,
       true, 'Avg every 30d, last bought 28d ago', 30, today - 28, false, false, '[SEED v2 SQL]'),
     -- Cravings
-    (uid, 'Cold Brew Coffee', 1, 'Weekly',   'Cravings',
+    (uid, 'Cold Brew Coffee', 1, 'Weekly',   'Cravings', costco_id::text,
       true, 'Avg every 7d, last bought 6d ago',  7,  today - 6,  false, false, '[SEED v2 SQL]'),
-    (uid, 'Sparkling Water 12pk', 1, 'Biweekly', 'Cravings',
+    (uid, 'Sparkling Water 12pk', 1, 'Biweekly', 'Cravings', target_id::text,
       true, 'Avg every 14d, last bought 18d ago', 14, today - 18, false, false, '[SEED v2 SQL]'),
     -- Snack Stack
-    (uid, 'Tortilla Chips', 1, 'Weekly',  'Snack Stack',
+    (uid, 'Tortilla Chips', 1, 'Weekly',  'Snack Stack', walmart_id::text,
       true, 'Avg every 7d, last bought 8d ago',  7,  today - 8,  false, false, '[SEED v2 SQL]'),
-    (uid, 'Trail Mix',      1, 'Biweekly', 'Snack Stack',
+    (uid, 'Trail Mix',      1, 'Biweekly', 'Snack Stack', target_id::text,
       true, 'Avg every 14d, last bought 12d ago', 14, today - 12, false, false, '[SEED v2 SQL]'),
     -- Grub & Grab (no predictor route; pre-populated only)
-    (uid, 'Frozen Pizza',   1, 'Biweekly', 'Grub & Grab',
+    (uid, 'Frozen Pizza',   1, 'Biweekly', 'Grub & Grab', walmart_id::text,
       true, 'Avg every 14d, last bought 17d ago', 14, today - 17, false, false, '[SEED v2 SQL]'),
-    (uid, 'Ready Meals',    1, 'Weekly',   'Grub & Grab',
+    (uid, 'Ready Meals',    1, 'Weekly',   'Grub & Grab', target_id::text,
       true, 'Avg every 7d, last bought 6d ago',  7,  today - 6,  false, false, '[SEED v2 SQL]');
 
   -- Curated (non-predicted) rows so each bucket also has something the

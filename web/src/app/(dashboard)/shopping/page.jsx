@@ -84,6 +84,13 @@ export default function ShoppingPage() {
   // 'list' (default) groups by Smashlist bucket; 'store' groups by
   // store name so the curated list reads as a per-merchant trip plan.
   const [viewMode, setViewMode] = useState('list')
+  // Bulk-add by store modal — open state. When set to a store_id, the
+  // modal renders historical items from that store and the user picks
+  // which ones to add to their Smashlist.
+  const [bulkAddOpen, setBulkAddOpen] = useState(false)
+  // Bulk-select set for the curated Your Smashlist. Empty set = no
+  // selection mode; non-empty = checkboxes visible + bulk-delete CTA.
+  const [bulkSelected, setBulkSelected] = useState(() => new Set())
 
   const { data: items = [], isLoading, refetch } = useShoppingList()
   const upsert = useUpsertShoppingItem()
@@ -249,7 +256,7 @@ export default function ShoppingPage() {
   async function autoAddAll(criteria = 'asis') {
     const targets = filteredSuggestions
     if (targets.length === 0) {
-      toast('Nothing to add — no Buy Again suggestions yet. Check back tomorrow once the cron has run.')
+      toast('No items available — please check the shopping list.')
       return
     }
     const sb = createClient()
@@ -691,36 +698,42 @@ export default function ShoppingPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 border-b text-xs text-gray-500 uppercase tracking-wide">
-                  <tr>{['List','Item','SKU','Store','Qty','Price','Frequency','Status','Actions'].map(h =>
+                  <tr>{['Item','Store','SKU','Qty','Price','Frequency','Status','Actions'].map(h =>
                     <th key={h} className="px-4 py-3 text-left font-semibold">{h}</th>
                   )}</tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
                   {filteredOwn.map(item => {
-                    const meta = SHOPPING_LIST_META[item.list_name || 'Pantry'] || {}
                     return (
                       <tr key={item.id} className="hover:bg-gray-50/50">
                         <td className="px-4 py-3">
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 border border-emerald-200 text-emerald-800">
-                            {meta.emoji} {item.list_name || 'Pantry'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
+                          {/* List pill + 'Predicted' badge removed per
+                              UX feedback — the tab filter already tells
+                              the user which bucket they're viewing, and
+                              the predicted source isn't actionable on
+                              the curated list. */}
+                          <div className="flex flex-col">
                             <span className="font-medium">{item.item_name}</span>
-                            {item.predicted && (
-                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-violet-100 text-violet-700"
-                                title={item.predicted_reason || 'Predicted from purchase history'}>
-                                <Sparkles size={10} /> Predicted
-                              </span>
+                            {item.predicted && item.predicted_reason && (
+                              <span className="text-[11px] text-gray-400">{item.predicted_reason}</span>
                             )}
                           </div>
-                          {item.predicted && item.predicted_reason && (
-                            <div className="text-[11px] text-gray-400 mt-0.5">{item.predicted_reason}</div>
+                        </td>
+                        <td className="px-4 py-3 text-gray-700">
+                          {/* Store moved to the second column (was 4th)
+                              so the merchant context sits next to the
+                              item name — that's the question the user
+                              asks ("which Walmart trip does this go on?"). */}
+                          {item.store?.store_name ? (
+                            <span className="inline-flex items-center gap-1">
+                              <StoreIcon size={12} className="text-emerald-700" />
+                              <span className="font-semibold">{displayStoreName(item.store.store_name)}</span>
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">Any store</span>
                           )}
                         </td>
                         <td className="px-4 py-3 text-gray-400 text-xs">{item.sku || '—'}</td>
-                        <td className="px-4 py-3 text-gray-500">{item.store?.store_name ? displayStoreName(item.store.store_name) : '—'}</td>
                         <td className="px-4 py-3">
                           <QtyInput
                             value={item.qty || 1}

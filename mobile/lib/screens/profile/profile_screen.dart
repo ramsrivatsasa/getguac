@@ -197,13 +197,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profile'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Sign out',
-            onPressed: () => _signOut(context),
-          ),
-        ],
+        // Sign-out IconButton removed — the slim OutlinedButton at the
+        // bottom of the body is the single source of truth now. AppBar
+        // was redundant + made the chrome feel cluttered.
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),

@@ -22,6 +22,7 @@ import CameraCapture from '../../../components/CameraCapture'
 import ScreenshotCapture from '../../../components/ScreenshotCapture'
 import GuacMascot from '../../../components/GuacMascot'
 import CategoryPicker from '../../../components/CategoryPicker'
+import PreTripPanel from '../../../components/PreTripPanel'
 
 const EMPTY = { store_name: '', date: '', total_amount: '', tax_paid: '', reward_no: '', business_purchase: false }
 
@@ -1052,6 +1053,11 @@ export default function ReceiptsPage() {
           </form>
         </div>
       )}
+
+      {/* Pre-trip prompt — surfaces pending Smashlist predictions
+          grouped by store so the user can glance before walking
+          in. Self-hides when nothing pending; session-dismissable. */}
+      <PreTripPanel />
 
       {/* Period chips — mirrors mobile's chip row. 1M default; wider on tap. */}
       <div className="flex items-center gap-1.5 flex-wrap">

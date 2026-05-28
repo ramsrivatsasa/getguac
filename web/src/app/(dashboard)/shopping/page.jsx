@@ -3,7 +3,7 @@ import { useState, useMemo } from 'react'
 import { useShoppingList, useUpsertShoppingItem, useDeleteShoppingItem } from '../../../hooks/useShopping'
 import { SHOPPING_LISTS, SHOPPING_LIST_META } from '../../../lib/db'
 import toast from 'react-hot-toast'
-import { Trash2, CheckCircle, Circle, X, Sparkles, Wand2, Zap, Store as StoreIcon, MapPin, Star } from 'lucide-react'
+import { Trash2, CheckCircle, Circle, X, Sparkles, Wand2, Zap, Store as StoreIcon, MapPin, Star, Share2, ShoppingCart } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
 import { groupPredictionsByStore } from '../../../lib/prediction-feedback'
 import { displayStoreName } from '../../../lib/store-name-normalize'
@@ -80,6 +80,64 @@ export default function ShoppingPage() {
     upsert.mutate({ ...item, approved: !item.approved }, {
       onSuccess: () => toast.success(item.approved ? 'Unapproved' : 'Approved')
     })
+  }
+
+  // Build a human-friendly, dated, grouped text representation of the
+  // current Smashlist (curated + Buy Again together). Used by both the
+  // native share sheet on phones AND the clipboard fallback on desktop.
+  function buildShareText(items, activeListLabel = 'all') {
+    const today = new Date().toLocaleDateString('en-US', {
+      weekday: 'long', month: 'long', day: 'numeric',
+    })
+    const header = activeListLabel === 'all'
+      ? `🥑 GetGuac Smashlist · ${today}`
+      : `🥑 GetGuac ${activeListLabel} · ${today}`
+    if (!items.length) return `${header}\n\n(empty list)`
+    // Group by list_name so each section is its own header.
+    const byList = new Map()
+    for (const it of items) {
+      const name = it.list_name || 'Pantry'
+      if (!byList.has(name)) byList.set(name, [])
+      byList.get(name).push(it)
+    }
+    const sections = []
+    for (const [name, rows] of byList) {
+      const meta = SHOPPING_LIST_META[name] || {}
+      const emoji = meta.emoji || '🛒'
+      sections.push(`\n${emoji} ${name.toUpperCase()}`)
+      for (const it of rows) {
+        const qty = it.qty && it.qty !== 1 ? ` (×${it.qty})` : ''
+        sections.push(`  □ ${it.item_name}${qty}`)
+      }
+    }
+    return `${header}${sections.join('\n')}\n\n— shared from getguac.app`
+  }
+
+  async function shareSmashlist(items, listLabel = 'all') {
+    const text = buildShareText(items, listLabel)
+    const shareData = {
+      title: 'My GetGuac Smashlist',
+      text,
+    }
+    // Phones (Chrome/Safari iOS+Android) expose navigator.share — opens
+    // the native share sheet with WhatsApp, Messages, Mail, etc.
+    if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+      try {
+        await navigator.share(shareData)
+        return
+      } catch (e) {
+        // User cancelled or share denied — fall through to clipboard.
+        if (e?.name !== 'AbortError') console.warn('[share] failed:', e.message)
+      }
+    }
+    // Desktop fallback: copy the dated list to clipboard so the user can
+    // paste it anywhere (Slack, email, message).
+    try {
+      await navigator.clipboard.writeText(text)
+      toast.success('Smashlist copied to clipboard — paste anywhere 🛒')
+    } catch (e) {
+      toast.error('Copy failed: ' + e.message)
+    }
   }
 
   async function dismissPredicted(item) {
@@ -229,6 +287,18 @@ export default function ShoppingPage() {
               predicting ? 'Finding…' :
               'Buy Again'
             }
+          </button>
+          <button
+            onClick={() => {
+              // Share the currently-visible items (current tab's ownList +
+              // its Buy Again suggestions) as a dated, grouped text block.
+              const visible = [...filteredOwn, ...filteredSuggestions]
+              shareSmashlist(visible, activeList === 'all' ? 'all' : activeList)
+            }}
+            className="btn-secondary inline-flex items-center gap-1.5 text-sm"
+            title="Share this list — phone opens the native share sheet, desktop copies to clipboard"
+          >
+            <Share2 size={16} /> Share
           </button>
           <button onClick={() => setShowForm(v => !v)} className="btn-primary">
             <GuacMascot expression="happy" size={22} /> Add Item
@@ -424,9 +494,9 @@ export default function ShoppingPage() {
                             <button
                               onClick={() => toggleApproved(item)}
                               className="px-2 py-1 rounded bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-medium inline-flex items-center gap-1"
-                              title="Add to my list"
+                              title="Add to your Smashlist"
                             >
-                              <CheckCircle size={12} /> Approve
+                              <ShoppingCart size={12} /> Add to Smashlist
                             </button>
                             <button
                               onClick={() => dismissPredicted(item)}

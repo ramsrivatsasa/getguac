@@ -37,6 +37,12 @@ const ALIASES = {
   'target':                  'Target',
   'costco':                  'Costco',
   'costco wholesale':        'Costco',
+  'costco whse':             'Costco',
+  'costco gas':              'Costco',
+  'costco gasoline':         'Costco',
+  'costco fuel':             'Costco',
+  'costco pharmacy':         'Costco',
+  'costco wholesale corp':   'Costco',
   'bjs':                     "BJ's Wholesale",
   'bjs wholesale':           "BJ's Wholesale",
   'bjs wholesale club':      "BJ's Wholesale",
@@ -96,10 +102,33 @@ export function normalizeStoreName(raw) {
   // Strip leading "the " ("The Home Depot" -> "home depot")
   s = s.replace(/^the\s+/, '')
 
+  // Strip trailing store-number suffixes ("costco #218" -> "costco",
+  // "walmart 1234" -> "walmart"). Common on POS-printed names and bank
+  // statement merchant strings. Anchored to the end so we don't strip
+  // numbers that are part of the brand (e.g. "7-Eleven" / "7 11").
+  s = s.replace(/\s+#?\d{2,}\s*$/g, '')
+
   // Collapse whitespace
   s = s.replace(/\s+/g, ' ').trim()
 
   return s
+}
+
+/**
+ * Bucket key for grouping — used by dashboard charts, /stores rollups,
+ * any aggregation that should treat "Costco", "Costco Wholesale", and
+ * "COSTCO WHSE" as the same merchant.
+ *
+ * Differs from normalizeStoreName: this returns the LOWERCASED CANONICAL
+ * display name when an alias exists, so all variants that resolve to the
+ * same display name collapse into one bucket. Falls back to the normalized
+ * form when no alias is known.
+ */
+export function storeGroupKey(raw) {
+  const norm = normalizeStoreName(raw)
+  if (!norm) return ''
+  if (ALIASES[norm]) return ALIASES[norm].toLowerCase()
+  return norm
 }
 
 /**

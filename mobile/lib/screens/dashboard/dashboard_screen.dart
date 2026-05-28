@@ -468,7 +468,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     for (final r in filtered) {
       final raw = r.storeName.trim();
       if (raw.isEmpty) continue;
-      final key = normalizeStoreName(raw);
+      // Bucket by canonical display name (lowercased) — not just normalized
+      // form. Without this, "Costco" and "Costco Wholesale" hash to
+      // different keys but both DISPLAY as "Costco" via the alias map,
+      // producing two separate bars that look like duplicates to the user.
+      final key = storeGroupKey(raw);
       if (key.isEmpty) continue;
       final entry = byStore[key] ?? _StoreSpend(name: canonicalStoreName(raw), amount: 0, count: 0);
       entry.amount += r.totalAmount;

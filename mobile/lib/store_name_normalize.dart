@@ -22,6 +22,12 @@ const Map<String, String> _aliases = {
   'target':                  'Target',
   'costco':                  'Costco',
   'costco wholesale':        'Costco',
+  'costco whse':             'Costco',
+  'costco gas':              'Costco',
+  'costco gasoline':         'Costco',
+  'costco fuel':             'Costco',
+  'costco pharmacy':         'Costco',
+  'costco wholesale corp':   'Costco',
   'bjs':                     "BJ's Wholesale",
   'bjs wholesale':           "BJ's Wholesale",
   'bjs wholesale club':      "BJ's Wholesale",
@@ -71,6 +77,10 @@ String normalizeStoreName(String? raw) {
   s = s.replaceAll(RegExp(r'[-/_]+'), ' ');
   // Strip leading "the ".
   s = s.replaceAll(RegExp(r'^the\s+'), '');
+  // Strip trailing store-number suffixes ("costco #218" -> "costco",
+  // "walmart 1234" -> "walmart"). Common on POS-printed names and bank
+  // statement merchant strings. Mirrors the web normalizer.
+  s = s.replaceAll(RegExp(r'\s+#?\d{2,}\s*$'), '');
   // Collapse whitespace.
   s = s.replaceAll(RegExp(r'\s+'), ' ').trim();
   return s;
@@ -83,6 +93,19 @@ String canonicalStoreName(String? raw) {
   final key = normalizeStoreName(raw);
   if (_aliases.containsKey(key)) return _aliases[key]!;
   return raw.trim();
+}
+
+/// Bucket key for grouping — used by dashboard charts and any aggregation
+/// that should treat "Costco", "Costco Wholesale", and "COSTCO WHSE" as
+/// the same merchant. Returns the lowercased canonical display name when
+/// an alias is known, so all variants that share a display name collapse
+/// into ONE bucket. Falls back to the normalized form otherwise.
+String storeGroupKey(String? raw) {
+  final norm = normalizeStoreName(raw);
+  if (norm.isEmpty) return '';
+  final alias = _aliases[norm];
+  if (alias != null) return alias.toLowerCase();
+  return norm;
 }
 
 /// Two store names refer to the same merchant?

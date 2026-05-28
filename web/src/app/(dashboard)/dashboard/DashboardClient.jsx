@@ -8,7 +8,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { DollarSign, Receipt, Gift, TrendingUp, ArrowRight, Sparkles } from 'lucide-react'
 import GuacoScoreCard from '../../../components/GuacoScoreCard'
 import { subDays, subWeeks, subMonths, subYears } from 'date-fns'
-import { normalizeStoreName, canonicalStoreName } from '../../../lib/store-name-normalize'
+import { normalizeStoreName, canonicalStoreName, storeGroupKey } from '../../../lib/store-name-normalize'
 const PERIODS = ['daily', 'weekly', 'monthly', 'yearly']
 
 // Dropdown options for "how many <period>s back to include"
@@ -79,7 +79,11 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
     for (const r of filtered) {
       const raw = (r.store_name || '').trim()
       if (!raw) continue
-      const key = normalizeStoreName(raw)
+      // Bucket by CANONICAL display name (lowercased) — not just normalized
+      // form. Without this, "Costco" and "Costco Wholesale" hash to different
+      // keys but both DISPLAY as "Costco" via the alias map, producing two
+      // separate bars that look like duplicates to the user.
+      const key = storeGroupKey(raw)
       if (!key) continue
       const amount = parseFloat(r.total_amount || 0)
       const entry = byStore.get(key) || { name: canonicalStoreName(raw), amount: 0, count: 0, samples: [] }

@@ -24,7 +24,11 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
-      "connect-src 'self' https://*.supabase.co https://*.supabase.in https://api.migadu.com https://dns.google",
+      // wss://*.supabase.co required for Supabase Realtime channels
+      // (households realtime in HouseholdPanel.jsx). CSP treats wss: as
+      // a distinct scheme from https:, so the wildcard https entry above
+      // does not cover it — must be listed explicitly.
+      "connect-src 'self' https://*.supabase.co https://*.supabase.in wss://*.supabase.co wss://*.supabase.in https://api.migadu.com https://dns.google",
       "frame-ancestors 'self'",
       "base-uri 'self'",
       "form-action 'self'",

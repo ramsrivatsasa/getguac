@@ -1,10 +1,17 @@
-// Embedding helpers — calls Google's text-embedding-004 model (free tier, no
-// extra setup beyond the GEMINI_API_KEY you already have).
+// Embedding helpers — calls Google's gemini-embedding-001 model (free tier,
+// no extra setup beyond the GEMINI_API_KEY you already have).
 //
 // One canonical text per receipt_item: "<item_name>. SKU: <sku>. Category: <category>"
 // — gives the model context across all 3 fields so semantic search works on any of them.
+//
+// Model history: text-embedding-004 was deprecated by Google early 2025
+// and removed from the v1beta endpoint mid-2025. gemini-embedding-001 is
+// the GA replacement. It defaults to 3072 dimensions but supports an
+// outputDimensionality parameter — we pin to 768 so the vectors stay
+// drop-in compatible with the pgvector(768) column from migration 014.
 
-const EMBED_MODEL = process.env.EMBED_MODEL || 'text-embedding-004'
+const EMBED_MODEL = process.env.EMBED_MODEL || 'gemini-embedding-001'
+const EMBED_DIMS  = Number(process.env.EMBED_DIMS || 768)
 
 export function buildItemEmbedText(item) {
   const parts = []
@@ -19,12 +26,12 @@ export async function embedTexts(texts, apiKey) {
   if (!texts || texts.length === 0) return []
   if (!apiKey) throw new Error('GEMINI_API_KEY required for embeddings')
 
-  // Gemini batch-embed endpoint
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${EMBED_MODEL}:batchEmbedContents?key=${encodeURIComponent(apiKey)}`
   const body = {
     requests: texts.map(text => ({
       model: `models/${EMBED_MODEL}`,
       content: { parts: [{ text: text || ' ' }] },
+      outputDimensionality: EMBED_DIMS,
     })),
   }
   const res = await fetch(url, {

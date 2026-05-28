@@ -18,6 +18,7 @@ import { isPaymentReceipt } from '../../../lib/payment-rows'
 import { displayStoreName } from '../../../lib/store-name-normalize'
 import { computeTaxSummary, buildTaxExportCsv } from '../../../lib/tax-summary'
 import { detectSubscriptions, summarizeSubscriptions } from '../../../lib/subscription-tracker'
+import { computeSpendingTrend, formatTrend } from '../../../lib/spending-trends'
 import { formatDateShort } from '../../../lib/dateFormat'
 import { BarChart3, PieChart as PieIcon, Repeat, Award, Store as StoreIcon, X, Receipt as ReceiptIcon, Download, HeartHandshake, Briefcase, Percent, RotateCw, TrendingUp } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
@@ -51,7 +52,11 @@ async function getReportsData({ dateFrom }) {
   const { data: { user } } = await sb.auth.getUser()
   if (!user) throw new Error('Not signed in')
   let q = sb.from('receipts')
-    .select('id, store_name, store_id, date, total_amount, tax_paid, category, is_return, from_statement, receipt_items(id, item_name, sku, qty, price, returned, category)')
+    // business_purchase + validation_comment are needed by the tax-
+    // summary panel (lib/tax-summary.js) — without business_purchase
+    // every receipt looks personal and the Business column reads $0
+    // even when the user has tagged rows.
+    .select('id, store_name, store_id, date, total_amount, tax_paid, category, is_return, from_statement, business_purchase, validation_comment, receipt_items(id, item_name, sku, qty, price, returned, category)')
     .eq('user_id', user.id)
     .order('date', { ascending: false })
     .limit(5000)
@@ -147,6 +152,18 @@ export default function ReportsPage() {
   const subscriptions = useMemo(() => detectSubscriptions(subsReceipts), [subsReceipts])
   const subsSummary   = useMemo(() => summarizeSubscriptions(subscriptions), [subscriptions])
 
+  // Per-category trend: this period's spend vs avg of prior 3 windows
+  // of the same length. Reuses the 12-month subscription dataset so
+  // the detector has prior data to compare against. We only surface
+  // the badge when the chip period is <= 3 months (1M/3M) — beyond
+  // that the prior-window math needs more history than the 12-month
+  // window provides and the % would mis-report.
+  const trendsShown = period.days != null && period.days <= 90
+  const categoryTrends = useMemo(() => {
+    if (!trendsShown) return {}
+    return computeSpendingTrend(subsReceipts, 'daily', period.days).byCategory
+  }, [trendsShown, subsReceipts, period.days])
+
   // Build the CSV on-click (client-side, no endpoint). Triggers a
   // download via a synthetic anchor.
   function downloadTaxCsv() {
@@ -220,16 +237,33 @@ export default function ReportsPage() {
             </div>
             <div className="flex flex-col lg:flex-row gap-6 items-start">
               <CategoryDonut data={byCategory} total={totalSpent} colors={CATEGORY_COLORS} />
-              {/* Right column: a 3-col grid so the amount + % columns line up
-                  vertically. The category chip lives in the first (auto) col
-                  and absorbs the variable label width. First grid row is the
-                  column headers (Category / Amount / Share). */}
-              <div className="flex-1 min-w-0 text-xs grid gap-y-1 w-full" style={{ gridTemplateColumns: 'minmax(0,1fr) auto auto', columnGap: '12px' }}>
+              {/* Right column: grid for the breakdown. 3 cols on long-
+                  period views (Category/Amount/Share), 4 cols when
+                  per-category trend is available (1M / 3M chips).
+                  The trend badge uses the same +/-% formatter as the
+                  Dashboard's Total Spent badge — items first, rose for
+                  up, emerald for down. */}
+              <div
+                className="flex-1 min-w-0 text-xs grid gap-y-1 w-full"
+                style={{
+                  gridTemplateColumns: trendsShown
+                    ? 'minmax(0,1fr) auto auto auto'
+                    : 'minmax(0,1fr) auto auto',
+                  columnGap: '12px',
+                }}
+              >
                 <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400 pb-1 border-b border-gray-100">Category</span>
                 <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400 pb-1 border-b border-gray-100 text-right">Amount</span>
                 <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400 pb-1 border-b border-gray-100 text-right w-10">Share</span>
+                {trendsShown && (
+                  <span
+                    className="text-[10px] uppercase tracking-wider font-bold text-gray-400 pb-1 border-b border-gray-100 text-right w-12"
+                    title={`vs avg of prior 3 ${period.label.toLowerCase()} windows`}
+                  >Trend</span>
+                )}
                 {byCategory.slice(0, 10).map(c => {
                   const isSelected = selectedCategory === c.slug
+                  const trend = trendsShown ? formatTrend(categoryTrends[c.slug]?.deltaPct) : null
                   return (
                     <Fragment key={c.slug}>
                       <button
@@ -251,6 +285,18 @@ export default function ReportsPage() {
                         onClick={() => toggleCategory(c.slug)}
                         className={`self-center text-right tabular-nums w-10 hover:text-emerald-600 ${isSelected ? 'text-emerald-600' : 'text-gray-400'}`}
                       >{((c.amount / totalSpent) * 100).toFixed(0)}%</button>
+                      {trendsShown && trend && (
+                        <span
+                          className={`self-center text-right text-[10px] font-bold px-1.5 py-0.5 rounded-full justify-self-end whitespace-nowrap ${
+                            trend.tone === 'up'
+                              ? 'bg-rose-50 text-rose-700 border border-rose-100'
+                              : trend.tone === 'down'
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                                : 'bg-gray-50 text-gray-400 border border-gray-100'
+                          }`}
+                          title={`vs avg of prior 3 ${period.label.toLowerCase()} windows`}
+                        >{trend.label}</span>
+                      )}
                     </Fragment>
                   )
                 })}

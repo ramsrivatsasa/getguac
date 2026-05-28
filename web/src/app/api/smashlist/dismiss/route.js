@@ -13,6 +13,7 @@
 import { createClient } from '../../../../lib/supabase/server'
 import { rateLimit, userRateKey, validate, v } from '../../../../lib/apiGuard'
 import { _internals } from '../../../../lib/predict-smashlist'
+import { recordPredictionOutcome } from '../../../../lib/prediction-feedback'
 
 export const runtime = 'nodejs'
 
@@ -29,9 +30,10 @@ export async function POST(request) {
     const checked = validate(body, { id: v.requiredString({ max: 64 }) })
     if (!checked.ok) return Response.json({ error: checked.error }, { status: 400 })
 
-    // Fetch the row to get item_name. RLS already restricts to the owner.
+    // Fetch the row to get item_name + telemetry context. RLS already
+    // restricts to the owner.
     const { data: row, error: rowErr } = await sb.from('shopping_list')
-      .select('id, item_name, predicted')
+      .select('id, item_name, predicted, predicted_at')
       .eq('id', checked.data.id)
       .single()
     if (rowErr || !row) return Response.json({ error: 'Item not found' }, { status: 404 })
@@ -52,6 +54,17 @@ export async function POST(request) {
     if (delErr) {
       console.error('[smashlist/dismiss] delete failed', delErr.message)
       return Response.json({ error: delErr.message }, { status: 500 })
+    }
+
+    // Record the dismissal in prediction_outcomes so we can measure
+    // the predictor's accuracy over time. Soft-fails if migration 045
+    // hasn't been applied yet — the user-facing dismiss is already
+    // complete by this point, telemetry is best-effort.
+    if (row.predicted) {
+      await recordPredictionOutcome(sb, user.id, row.id, 'dismissed', {
+        itemKey,
+        predictedAt: row.predicted_at,
+      })
     }
 
     return Response.json({ ok: true, item_key: itemKey })

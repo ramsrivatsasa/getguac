@@ -3,8 +3,10 @@ import { useState, useMemo } from 'react'
 import { useShoppingList, useUpsertShoppingItem, useDeleteShoppingItem } from '../../../hooks/useShopping'
 import { SHOPPING_LISTS, SHOPPING_LIST_META } from '../../../lib/db'
 import toast from 'react-hot-toast'
-import { Trash2, CheckCircle, Circle, X, Sparkles, Wand2, Zap } from 'lucide-react'
+import { Trash2, CheckCircle, Circle, X, Sparkles, Wand2, Zap, Store as StoreIcon, MapPin } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
+import { groupPredictionsByStore } from '../../../lib/prediction-feedback'
+import { displayStoreName } from '../../../lib/store-name-normalize'
 
 const EMPTY = { sku: '', item_name: '', order_date: '', qty: '1', price: '', store_name_id: '', comments: '', frequency: 'Monthly', list_name: 'Pantry', approved: false, sent_to_store: false }
 
@@ -122,6 +124,13 @@ export default function ShoppingPage() {
     return suggestions.filter(i => (i.list_name || 'Pantry') === activeList)
   }, [suggestions, activeList])
 
+  // Errand Plan — group predictions by store so the user can plan "one
+  // trip to Costco for these 4 items" instead of N separate trips.
+  // Uses the central groupPredictionsByStore helper in
+  // lib/prediction-feedback so future surfaces (mobile dashboard,
+  // weekly digest email) get the same shape.
+  const errandPlan = useMemo(() => groupPredictionsByStore(filteredSuggestions), [filteredSuggestions])
+
   const counts = useMemo(() => {
     const m = { all: ownList.length }
     for (const n of SHOPPING_LISTS) m[n] = 0
@@ -218,6 +227,50 @@ export default function ShoppingPage() {
         </div>
       )}
 
+      {/* Errand Plan — predictions grouped by store. Only renders when
+          there are 2+ stores with predictions (1 store doesn't need a
+          "plan"). Click-through filters the Smashlist to that store. */}
+      {errandPlan.length >= 2 && (
+        <section className="space-y-2">
+          <div className="flex items-center gap-2">
+            <MapPin size={16} className="text-emerald-700" />
+            <h2 className="font-semibold text-gray-800">Errand plan</h2>
+            <span className="text-xs text-gray-500">
+              {errandPlan.length} stores · {filteredSuggestions.length} items · combine the trip
+            </span>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {errandPlan.map(group => {
+              const storeName = group.items[0]?.store?.store_name
+              const display = storeName ? displayStoreName(storeName) : 'NO STORE TAGGED'
+              return (
+                <div key={group.storeId || 'nostore'} className="card border-emerald-100 hover:border-emerald-300 hover:shadow-sm transition-all">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
+                      <StoreIcon size={15} className="text-emerald-700" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-bold text-gray-900 truncate text-sm">{display}</p>
+                      <p className="text-[11px] text-emerald-700/80">
+                        {group.itemCount} item{group.itemCount === 1 ? '' : 's'}
+                      </p>
+                    </div>
+                  </div>
+                  <ul className="text-xs text-gray-600 space-y-0.5 ml-1">
+                    {group.items.slice(0, 5).map(it => (
+                      <li key={it.id} className="truncate">• {it.item_name}</li>
+                    ))}
+                    {group.items.length > 5 && (
+                      <li className="text-[10px] text-gray-400">+{group.items.length - 5} more</li>
+                    )}
+                  </ul>
+                </div>
+              )
+            })}
+          </div>
+        </section>
+      )}
+
       {/* Suggestions section — only renders when there are predicted items */}
       {filteredSuggestions.length > 0 && (
         <section className="space-y-2">
@@ -253,7 +306,7 @@ export default function ShoppingPage() {
                           </div>
                         </td>
                         <td className="px-4 py-3 text-xs text-gray-500 max-w-xs">{item.predicted_reason || '—'}</td>
-                        <td className="px-4 py-3 text-gray-500">{item.store_name_id || '—'}</td>
+                        <td className="px-4 py-3 text-gray-500">{item.store?.store_name ? displayStoreName(item.store.store_name) : '—'}</td>
                         <td className="px-4 py-3">{item.qty}</td>
                         <td className="px-4 py-3">{item.price ? `$${item.price}` : '—'}</td>
                         <td className="px-4 py-3">
@@ -336,7 +389,7 @@ export default function ShoppingPage() {
                           )}
                         </td>
                         <td className="px-4 py-3 text-gray-400 text-xs">{item.sku || '—'}</td>
-                        <td className="px-4 py-3 text-gray-500">{item.store_name_id || '—'}</td>
+                        <td className="px-4 py-3 text-gray-500">{item.store?.store_name ? displayStoreName(item.store.store_name) : '—'}</td>
                         <td className="px-4 py-3">{item.qty}</td>
                         <td className="px-4 py-3">{item.price ? `$${item.price}` : '—'}</td>
                         <td className="px-4 py-3"><span className="badge-gray">{item.frequency}</span></td>

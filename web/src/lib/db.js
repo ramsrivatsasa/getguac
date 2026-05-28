@@ -300,7 +300,14 @@ export async function deleteReward(id) {
 // Shopping list
 export async function getShoppingList() {
   const sb = createClient()
-  const { data, error } = await sb.from('shopping_list').select('*').order('created_at', { ascending: false })
+  // Join stores so the UI shows "COSTCO" instead of a raw store UUID,
+  // and so the Errand Plan panel can group predictions by merchant
+  // display name. Aliased to `store` to avoid the awkward stores[0]
+  // / stores.store_name nesting in components.
+  const { data, error } = await sb
+    .from('shopping_list')
+    .select('*, store:store_name_id(id, store_name)')
+    .order('created_at', { ascending: false })
   if (error) throw error
   return data
 }

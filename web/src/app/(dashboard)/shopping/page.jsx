@@ -78,6 +78,9 @@ export default function ShoppingPage() {
   const [activeList, setActiveList] = useState('all')
   const [predicting, setPredicting] = useState(false)
   const [embedding, setEmbedding] = useState(false)
+  // 'list' (default) groups by Smashlist bucket; 'store' groups by
+  // store name so the curated list reads as a per-merchant trip plan.
+  const [viewMode, setViewMode] = useState('list')
 
   const { data: items = [], isLoading, refetch } = useShoppingList()
   const upsert = useUpsertShoppingItem()
@@ -278,6 +281,21 @@ export default function ShoppingPage() {
     if (activeList === 'all') return ownList
     return ownList.filter(i => (i.list_name || 'Pantry') === activeList)
   }, [ownList, activeList])
+
+  // Group filteredOwn by store_name for the "By store" view. Items
+  // without a known store fall into 'Any store' so they're not dropped.
+  // Order: stores with the most items first.
+  const ownByStore = useMemo(() => {
+    const m = new Map()
+    for (const it of filteredOwn) {
+      const key = it.store?.store_name ? displayStoreName(it.store.store_name) : 'Any store'
+      if (!m.has(key)) m.set(key, [])
+      m.get(key).push(it)
+    }
+    return [...m.entries()]
+      .map(([store, items]) => ({ store, items }))
+      .sort((a, b) => b.items.length - a.items.length)
+  }, [filteredOwn])
 
   const filteredSuggestions = useMemo(() => {
     const filtered = activeList === 'all'
@@ -496,12 +514,29 @@ export default function ShoppingPage() {
           buying. Renders below the Buy Again strip, always with a
           visible header so the user can find where Approved items go. */}
       <section className="space-y-2">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <ShoppingCart size={16} className="text-emerald-700" />
           <h2 className="font-semibold text-gray-800">Your Smashlist</h2>
           <span className="text-xs text-gray-500">
             {filteredOwn.length} item{filteredOwn.length === 1 ? '' : 's'} ready to grab
           </span>
+          {/* View toggle — by Smashlist bucket OR by store */}
+          <div className="ml-auto inline-flex items-center bg-emerald-50 border border-emerald-100 rounded-full p-0.5 text-[11px] font-bold">
+            <button
+              type="button"
+              onClick={() => setViewMode('list')}
+              className={`px-3 py-1 rounded-full transition-all ${viewMode === 'list' ? 'bg-white text-emerald-900 shadow-sm' : 'text-emerald-700/70 hover:text-emerald-900'}`}
+            >
+              By list
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('store')}
+              className={`px-3 py-1 rounded-full transition-all ${viewMode === 'store' ? 'bg-white text-emerald-900 shadow-sm' : 'text-emerald-700/70 hover:text-emerald-900'}`}
+            >
+              By store
+            </button>
+          </div>
         </div>
         <div className="card p-0 overflow-hidden">
           {isLoading ? (
@@ -516,6 +551,37 @@ export default function ShoppingPage() {
                       : 'Smashlist is empty. Drop items from receipts or pick from your Stash.')
                   : `Nothing in ${activeList} yet.`}
               </p>
+            </div>
+          ) : viewMode === 'store' ? (
+            <div className="divide-y divide-gray-100">
+              {ownByStore.map(({ store, items: rows }) => (
+                <div key={store} className="p-3">
+                  <div className="flex items-center gap-2 mb-2 px-1">
+                    <StoreIcon size={14} className="text-emerald-700" />
+                    <h3 className="font-bold text-emerald-900 text-sm">{store}</h3>
+                    <span className="text-[10px] text-gray-500 font-semibold">{rows.length} item{rows.length === 1 ? '' : 's'}</span>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50 border-b text-xs text-gray-500 uppercase tracking-wide">
+                        <tr>{['List','Item','SKU','Qty','Price','Frequency','Status','Actions'].map(h =>
+                          <th key={h} className="px-3 py-2 text-left font-semibold">{h}</th>
+                        )}</tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50">
+                        {rows.map(item => <SmashRow
+                          key={item.id}
+                          item={item}
+                          omitStoreCol
+                          onQty={(qty) => upsert.mutate({ ...item, qty }, { onError: (err) => toast.error(err.message) })}
+                          onToggleApproved={() => toggleApproved(item)}
+                          onDelete={() => del.mutate(item.id, { onSuccess: () => toast.success('Removed') })}
+                        />)}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ))}
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -633,6 +699,59 @@ function ShareMenu({ buildText, handlers }) {
         </div>
       )}
     </div>
+  )
+}
+
+// Curated Smashlist row — used by both view modes. The `omitStoreCol`
+// flag skips the Store cell when the parent renders rows grouped under
+// a per-store header (since the header already carries the store name).
+function SmashRow({ item, omitStoreCol = false, onQty, onToggleApproved, onDelete }) {
+  const meta = SHOPPING_LIST_META[item.list_name || 'Pantry'] || {}
+  return (
+    <tr className="hover:bg-gray-50/50">
+      <td className={omitStoreCol ? 'px-3 py-2' : 'px-4 py-3'}>
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 border border-emerald-200 text-emerald-800">
+          {meta.emoji} {item.list_name || 'Pantry'}
+        </span>
+      </td>
+      <td className={omitStoreCol ? 'px-3 py-2' : 'px-4 py-3'}>
+        <div className="flex items-center gap-2">
+          <span className="font-medium">{item.item_name}</span>
+          {item.predicted && (
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-violet-100 text-violet-700"
+              title={item.predicted_reason || 'Predicted from purchase history'}>
+              <Sparkles size={10} /> Predicted
+            </span>
+          )}
+        </div>
+        {item.predicted && item.predicted_reason && (
+          <div className="text-[11px] text-gray-400 mt-0.5">{item.predicted_reason}</div>
+        )}
+      </td>
+      <td className={`text-gray-400 text-xs ${omitStoreCol ? 'px-3 py-2' : 'px-4 py-3'}`}>{item.sku || '—'}</td>
+      {!omitStoreCol && (
+        <td className="px-4 py-3 text-gray-500">{item.store?.store_name ? displayStoreName(item.store.store_name) : '—'}</td>
+      )}
+      <td className={omitStoreCol ? 'px-3 py-2' : 'px-4 py-3'}>
+        <QtyInput value={item.qty || 1} onSave={onQty} />
+      </td>
+      <td className={omitStoreCol ? 'px-3 py-2' : 'px-4 py-3'}>{item.price ? `$${item.price}` : '—'}</td>
+      <td className={omitStoreCol ? 'px-3 py-2' : 'px-4 py-3'}><span className="badge-gray">{item.frequency}</span></td>
+      <td className={omitStoreCol ? 'px-3 py-2' : 'px-4 py-3'}>
+        <button onClick={onToggleApproved} className="flex items-center gap-1 text-xs font-medium">
+          {item.approved
+            ? <><CheckCircle size={14} className="text-green-500" /> <span className="text-green-600">Approved</span></>
+            : <><Circle size={14} className="text-yellow-400" /> <span className="text-yellow-600">Pending</span></>
+          }
+        </button>
+      </td>
+      <td className={omitStoreCol ? 'px-3 py-2' : 'px-4 py-3'}>
+        <button onClick={onDelete}
+          className="w-8 h-8 rounded-full bg-rose-100 text-rose-600 hover:bg-rose-200 hover:scale-110 active:scale-95 transition-all flex items-center justify-center shadow-sm">
+          <Trash2 size={14} />
+        </button>
+      </td>
+    </tr>
   )
 }
 

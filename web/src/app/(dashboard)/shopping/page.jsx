@@ -221,14 +221,19 @@ export default function ShoppingPage() {
   // No need for a separate "Embed" button — the user shouldn't have to
   // know about the embedding step.
   // Bulk-approve every Buy Again suggestion in one click. The criteria
-  // controls which store_name_id we record on each row (so future
-  // suggestions remember the choice) — 'cheapest' picks the user's
-  // historical min-price store, 'frequent' picks the most-used store,
-  // 'asis' keeps whatever the predictor wrote.
+  // controls which store_name_id we record on each row — 'cheapest'
+  // picks the user's historical min-price store, 'frequent' picks the
+  // most-used store, 'asis' keeps whatever the predictor wrote.
+  //
+  // Note: the predictor itself does NOT cost AI (just cosine math on
+  // already-embedded vectors). The cron runs it nightly at 06:00 UTC
+  // for every active user, so the suggestions visible here are at
+  // most a day old. Re-running predict on every Auto-Add click would
+  // be safe but wasteful — we just bulk-approve what's already here.
   async function autoAddAll(criteria = 'asis') {
     const targets = filteredSuggestions
     if (targets.length === 0) {
-      toast('Nothing to add')
+      toast('Nothing to add — no Buy Again suggestions yet. Check back tomorrow once the cron has run.')
       return
     }
     const sb = createClient()
@@ -731,17 +736,15 @@ function AutoAddMenu({ count, onPick }) {
   function handleBlur(e) {
     if (!e.currentTarget.contains(e.relatedTarget)) setOpen(false)
   }
-  const disabled = count === 0
   return (
     <div className="relative inline-block" onBlur={handleBlur}>
       <button
         type="button"
-        onClick={() => !disabled && setOpen(v => !v)}
-        disabled={disabled}
-        className="btn-secondary inline-flex items-center gap-1.5 text-sm disabled:opacity-50"
-        title={disabled ? 'Run Buy Again first to see suggestions' : 'Bulk-add all Buy Again items to your Smashlist'}
+        onClick={() => setOpen(v => !v)}
+        className="btn-secondary inline-flex items-center gap-1.5 text-sm"
+        title="Refresh predictions, then bulk-add the items the system thinks you should buy"
       >
-        <ShoppingCart size={14} /> Auto-Add ({count}) <ChevronDown size={12} />
+        <ShoppingCart size={14} /> Auto-Add{count > 0 ? ` (${count})` : ''} <ChevronDown size={12} />
       </button>
       {open && (
         <div className="absolute right-0 mt-1 w-64 rounded-xl bg-white shadow-xl ring-1 ring-gray-200 z-50 overflow-hidden">

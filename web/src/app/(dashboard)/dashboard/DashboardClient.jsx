@@ -10,6 +10,7 @@ import GuacoScoreCard from '../../../components/GuacoScoreCard'
 import { subDays, subWeeks, subMonths, subYears } from 'date-fns'
 import { normalizeStoreName, canonicalStoreName, storeGroupKey } from '../../../lib/store-name-normalize'
 import { periodToReceiptsChip, buildReceiptsUrl } from '../../../lib/receipts-deeplink'
+import { isPaymentReceipt } from '../../../lib/payment-rows'
 const PERIODS = ['daily', 'weekly', 'monthly', 'yearly']
 
 // Dropdown options for "how many <period>s back to include"
@@ -60,7 +61,11 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
     })
   }
 
-  const filtered = filterByPeriod(initialReceipts)
+  // Drop card-payment + transfer rows BEFORE any spending math runs. These
+  // came from statement imports (pre-v0.2.71) and aren't actual purchases
+  // — they're paying down the card balance. They live in /bank instead.
+  const spendingReceipts = initialReceipts.filter(r => !isPaymentReceipt(r))
+  const filtered = filterByPeriod(spendingReceipts)
   const rangeLabel = `Last ${periodCount} ${UNIT_LABEL[period]}${periodCount === 1 ? '' : 's'}`
   const totalSpend = filtered.reduce((s, r) => s + parseFloat(r.total_amount || 0), 0)
   const totalTax = filtered.reduce((s, r) => s + parseFloat(r.tax_paid || 0), 0)

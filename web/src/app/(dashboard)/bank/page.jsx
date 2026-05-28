@@ -727,7 +727,9 @@ export default function BankPage() {
                   <p className="font-bold text-rose-700">${b.totalPurchases.toFixed(2)}</p>
                 </div>
                 <div className="rounded-lg bg-sky-50 border border-sky-100 px-2 py-1.5">
-                  <p className="text-[9px] uppercase tracking-wider text-sky-700 font-semibold">Payments made</p>
+                  <p className="text-[9px] uppercase tracking-wider text-sky-700 font-semibold">
+                    Payments made{b.paymentCount > 0 ? ` (${b.paymentCount})` : ''}
+                  </p>
                   <p className="font-bold text-sky-800">${b.totalPayments.toFixed(2)}</p>
                 </div>
                 <div className="rounded-lg bg-amber-50 border border-amber-100 px-2 py-1.5">

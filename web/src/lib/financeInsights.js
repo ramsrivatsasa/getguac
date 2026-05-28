@@ -47,6 +47,7 @@ export function bankAccountTotals({ statements, fees, transactions }, periodKey 
       totalInterest: 0,
       totalFees: 0,
       totalPayments: 0,
+      paymentCount: 0,
       totalPurchases: 0,
       totalRefunds: 0,
       latestApr: null,
@@ -88,15 +89,18 @@ export function bankAccountTotals({ statements, fees, transactions }, periodKey 
     const sumAbs = (a) => a.reduce((n, x) => n + Math.abs(Number(x.amount || 0)), 0)
     const sumPos = (a) => a.reduce((n, x) => n + Number(x.amount || 0), 0)
 
+    const paymentRows = txnRows.filter(t => t.is_payment)
     const cInterest = sumAbs(feeRows.filter(f => f.kind === 'interest')) + sumAbs(txnRows.filter(t => t.is_interest))
     const cFees     = sumAbs(feeRows.filter(f => f.kind === 'fee' || f.kind === 'penalty')) + sumAbs(txnRows.filter(t => t.is_fee))
-    const cPayments = sumAbs(txnRows.filter(t => t.is_payment))
+    const cPayments = sumAbs(paymentRows)
+    const cPaymentCount = paymentRows.length
     const cPurchases = sumPos(txnRows.filter(t => !t.is_payment && !t.is_fee && !t.is_interest && !t.is_refund && t.amount > 0))
     const cRefunds   = sumAbs(txnRows.filter(t => t.is_refund || (t.amount < 0 && !t.is_payment && !t.is_fee && !t.is_interest)))
 
     b.totalInterest  = Math.max(b.totalInterest,  cInterest)
     b.totalFees      = Math.max(b.totalFees,      cFees)
     b.totalPayments  = Math.max(b.totalPayments,  cPayments)
+    b.paymentCount   = Math.max(b.paymentCount,   cPaymentCount)
     b.totalPurchases = Math.max(b.totalPurchases, cPurchases)
     b.totalRefunds   = Math.max(b.totalRefunds,   cRefunds)
   }

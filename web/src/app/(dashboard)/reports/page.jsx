@@ -14,6 +14,7 @@ import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '../../../lib/supabase/client'
 import { CATEGORIES, categoryLabel, categoryClass } from '../../../lib/categories'
+import { isPaymentReceipt } from '../../../lib/payment-rows'
 import { formatDateShort } from '../../../lib/dateFormat'
 import { BarChart3, PieChart as PieIcon, Repeat, Award, Store as StoreIcon, X } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
@@ -79,6 +80,7 @@ export default function ReportsPage() {
     let sum = 0
     for (const r of receipts) {
       if (r.is_return) continue                      // refunds don't count as spend
+      if (isPaymentReceipt(r)) continue              // CC payments move money between accounts; not spending
       const amt = parseFloat(r.total_amount || 0)
       if (amt <= 0) continue                         // skip $0 / negative-but-not-marked-return rows so they don't drag category totals negative (was producing "Misc -169%" on the donut)
       sum += amt
@@ -113,7 +115,7 @@ export default function ReportsPage() {
       byStore: [...store.values()].sort((a, b) => b.spent - a.spent),
       itemHistory: [...items.values()].map(it => ({ ...it, stores: [...it.stores] })),
       totalSpent: sum,
-      totalReceipts: receipts.filter(r => !r.is_return).length,
+      totalReceipts: receipts.filter(r => !r.is_return && !isPaymentReceipt(r)).length,
     }
   }, [receipts])
 

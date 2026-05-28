@@ -100,11 +100,22 @@ export async function POST(request) {
     }
 
     // ── 1. Receipts first (only opted-in rows) ───────────────────────────
-    const receiptInserts = optedRows.map(t => {
+    //
+    // Card-payment rows (is_payment=true) are NOT inserted as receipts.
+    // They were polluting the spending charts ("Chase Bank" showing as a
+    // top spender, when it's actually you PAYING the card balance — not
+    // spending at all). They still land in `bank_transactions` below with
+    // kind='payment', and the /bank page surfaces them per issuer per
+    // time-frame. See lib/payment-rows.js for the central detection rule.
+    //
+    // For receiptInserts we keep a position-aligned `null` for skipped
+    // payment rows so the receipt_id linking step below still maps the
+    // remaining inserts to the right transactions.
+    const receiptInsertSlots = optedRows.map(t => {
+      if (t.is_payment) return null  // skip — handled in bank_transactions only
       const amount = Number(t.amount || 0)
       const flagLabel = t.is_fee     ? (t.fee_kind || 'Fee')
                       : t.is_interest ? (t.fee_kind || 'Interest')
-                      : t.is_payment  ? 'Card payment'
                       : null
       const merchant = flagLabel
         ? `[${flagLabel}] ${t.merchant || issuer || 'Charge'}`.slice(0, 120)
@@ -120,12 +131,9 @@ export async function POST(request) {
         total_amount:      amount,
         tax_paid:          0,
         // Bank-issued charges (interest, finance fees, late fees, balance
-        // transfer fees, etc.) all route to the dedicated 'bank-fees' slug
-        // so the donut + reports don't dump them into Misc. Card-payment
-        // rows stay in 'misc' — they're audit-only ledger entries, not
-        // expenses.
+        // transfer fees) route to 'bank-fees' so the donut + reports
+        // don't lump them into Misc.
         category:          (t.is_fee || t.is_interest) ? 'bank-fees'
-                          : t.is_payment ? 'misc'
                           : (t.category || 'misc'),
         business_purchase: isBusiness,
         payment_method:    issuer ? `${issuer} card` : 'Card',
@@ -136,6 +144,7 @@ export async function POST(request) {
         receipt_link:      linkParts.length ? `Statement row — ${linkParts.join(' · ')}`.slice(0, 500) : null,
       }
     })
+    const receiptInserts = receiptInsertSlots.filter(Boolean)
 
     let receiptIds = []
     if (receiptInserts.length > 0) {
@@ -145,6 +154,15 @@ export async function POST(request) {
         return Response.json({ error: `Receipts insert failed: ${error.message}` }, { status: 500 })
       }
       receiptIds = data.map(r => r.id)
+    }
+
+    // Build an optedRow-index -> receiptId map so the bank_transactions
+    // linking step below can still find the right receipt for each tx
+    // (payment rows have no receipt, so their slot stays null).
+    const receiptIdByOptedIdx = []
+    let receiptIdsCursor = 0
+    for (const slot of receiptInsertSlots) {
+      receiptIdByOptedIdx.push(slot ? receiptIds[receiptIdsCursor++] : null)
     }
 
     // ── 2. Best-effort: bank_statements ──────────────────────────────────
@@ -239,7 +257,9 @@ export async function POST(request) {
         let linkedReceiptId = null
         if (opted) {
           const optedIdx = optedRows.indexOf(t)
-          if (optedIdx >= 0 && receiptIds[optedIdx]) linkedReceiptId = receiptIds[optedIdx]
+          // Use the slot-aware map so payment rows (which we no longer
+          // insert as receipts) correctly resolve to null.
+          if (optedIdx >= 0 && receiptIdByOptedIdx[optedIdx]) linkedReceiptId = receiptIdByOptedIdx[optedIdx]
         }
         let linkedFeeId = null
         if (isFee || isInt) {

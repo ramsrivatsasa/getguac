@@ -78,7 +78,16 @@ export default function ShoppingPage() {
 
   function toggleApproved(item) {
     upsert.mutate({ ...item, approved: !item.approved }, {
-      onSuccess: () => toast.success(item.approved ? 'Unapproved' : 'Approved')
+      onSuccess: () => {
+        if (item.approved) {
+          // Was approved → now back to "pending"; goes back into Buy Again.
+          toast.success('Moved back to Buy Again')
+        } else {
+          // Was a Buy Again suggestion → now on the curated Smashlist.
+          const list = item.list_name || 'Pantry'
+          toast.success(`Added to ${list} ✓`)
+        }
+      }
     })
   }
 
@@ -517,11 +526,17 @@ export default function ShoppingPage() {
         </section>
       )}
 
-      {/* Main list */}
+      {/* Your Smashlist — the items the user has actually committed to
+          buying. Renders below the Buy Again strip, always with a
+          visible header so the user can find where Approved items go. */}
       <section className="space-y-2">
-        {filteredSuggestions.length > 0 && (
-          <h2 className="font-semibold text-gray-800">Your list</h2>
-        )}
+        <div className="flex items-center gap-2">
+          <ShoppingCart size={16} className="text-emerald-700" />
+          <h2 className="font-semibold text-gray-800">Your Smashlist</h2>
+          <span className="text-xs text-gray-500">
+            {filteredOwn.length} item{filteredOwn.length === 1 ? '' : 's'} ready to grab
+          </span>
+        </div>
         <div className="card p-0 overflow-hidden">
           {isLoading ? (
             <div className="py-12 text-center text-gray-400">Loading…</div>
@@ -531,9 +546,9 @@ export default function ShoppingPage() {
               <p className="text-gray-500 max-w-sm">
                 {activeList === 'all'
                   ? (filteredSuggestions.length > 0
-                      ? 'No items in your list yet — tick one from Buy Again above to start.'
+                      ? 'Nothing on your Smashlist yet — tap "Add to Smashlist" on any Buy Again row above to start.'
                       : 'Smashlist is empty. Drop items from receipts or pick from your Stash.')
-                  : `${activeList} list is empty.`}
+                  : `Nothing in ${activeList} yet.`}
               </p>
             </div>
           ) : (

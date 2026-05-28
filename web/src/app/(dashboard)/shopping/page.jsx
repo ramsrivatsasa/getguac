@@ -435,7 +435,7 @@ export default function ShoppingPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-violet-50/50 border-b text-xs text-violet-700 uppercase tracking-wide">
-                  <tr>{['List','Item','Restock *','Frequency','Store','Qty','Price','Actions'].map(h =>
+                  <tr>{['List','Item','Restock *','Your Purchase Frequency','Store','Qty','Price'].map(h =>
                     <th key={h} className="px-4 py-3 text-left font-semibold">{h}</th>
                   )}</tr>
                 </thead>
@@ -449,33 +449,55 @@ export default function ShoppingPage() {
                     // best price") is one tap away and free. Future surface
                     // can swap in the real /steals AI price hunt.
                     const priceSearchUrl = `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(item.item_name + ' best price')}`
+                    // Urgency-tier color for the asterisk after the item
+                    // name. Red = urgent restock, amber = due now,
+                    // violet = coming up, gray = no urgency data.
+                    const asteriskColor = u?.isUrgent
+                      ? 'text-rose-500'
+                      : u?.isOverdue
+                        ? 'text-amber-500'
+                        : u
+                          ? 'text-violet-500'
+                          : 'text-gray-300'
                     return (
-                      <tr key={item.id} className="hover:bg-violet-50/30">
+                      <tr
+                        key={item.id}
+                        className="hover:bg-violet-50/30 cursor-pointer"
+                        onClick={() => toggleApproved(item)}
+                        title="Click to add to your Smashlist"
+                      >
                         <td className="px-4 py-3">
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 border border-emerald-200 text-emerald-800">
                             {meta.emoji} {item.list_name || 'Pantry'}
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            {u?.isUrgent && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 ring-1 ring-rose-200">
-                                <Star size={10} className="fill-rose-500 text-rose-500" /> Restock
-                              </span>
-                            )}
-                            {u?.isOverdue && !u.isUrgent && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
-                                Due now
-                              </span>
-                            )}
+                          <div className="flex items-center justify-between gap-2">
                             <span className="font-medium">{item.item_name}</span>
+                            {u && (
+                              <span
+                                className={`text-lg font-black leading-none ${asteriskColor}`}
+                                title={u.isUrgent ? 'Restock urgently' : u.isOverdue ? 'Due now' : 'Coming up'}
+                              >*</span>
+                            )}
                           </div>
                         </td>
                         <td className="px-4 py-3 text-xs max-w-xs">
                           {u ? (
-                            <span className={u.isOverdue ? 'text-rose-700 font-semibold' : 'text-gray-700'}>
-                              {formatRunsOut(u.daysToRunOut, u.runsOutISO)}
-                            </span>
+                            <div className="flex flex-col gap-0.5">
+                              {u.isUrgent ? (
+                                <span className="inline-flex items-center gap-1 self-start px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 ring-1 ring-rose-200">
+                                  <Star size={10} className="fill-rose-500 text-rose-500" /> Restock
+                                </span>
+                              ) : u.isOverdue ? (
+                                <span className="inline-flex items-center gap-1 self-start px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
+                                  Due now
+                                </span>
+                              ) : null}
+                              <span className={u.isOverdue ? 'text-rose-700 font-semibold' : 'text-gray-700'}>
+                                {formatRunsOut(u.daysToRunOut, u.runsOutISO)}
+                              </span>
+                            </div>
                           ) : (item.predicted_reason || '—')}
                         </td>
                         <td className="px-4 py-3 text-gray-500">
@@ -500,7 +522,7 @@ export default function ShoppingPage() {
                             </span>
                           ) : '—'}
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                           <QtyInput
                             value={item.qty || 1}
                             onSave={(qty) => upsert.mutate({ ...item, qty }, {
@@ -508,7 +530,7 @@ export default function ShoppingPage() {
                             })}
                           />
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center gap-2">
                             <span>{item.price ? `$${item.price}` : '—'}</span>
                             <a
@@ -520,26 +542,6 @@ export default function ShoppingPage() {
                             >
                               best price ↗
                             </a>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => toggleApproved(item)}
-                              className="w-8 h-8 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white inline-flex items-center justify-center"
-                              aria-label="Add to Smashlist"
-                              title="Add to Smashlist"
-                            >
-                              <ShoppingCart size={14} />
-                            </button>
-                            <button
-                              onClick={() => dismissPredicted(item)}
-                              className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 inline-flex items-center justify-center"
-                              aria-label="Dismiss — never suggest again"
-                              title="Dismiss — never suggest again"
-                            >
-                              <X size={14} />
-                            </button>
                           </div>
                         </td>
                       </tr>

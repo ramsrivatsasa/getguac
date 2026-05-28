@@ -168,16 +168,19 @@ export async function saveReceipt(sb, userId, parsed, opts = {}) {
     return { receipt_id: existingId, merged: true }
   }
 
-  // 4. Ensure a rewards row for this (user, store) so the receipt list
-  // shows a reward placeholder. Used to be a web-only post-step in
-  // useAddReceipt; without it, mobile-captured receipts (and post-
-  // centralization web receipts) had a blank Reward No column. Moving
-  // it into the central pipeline restores parity for every platform.
-  // Best-effort: a rewards failure must NEVER block the receipt insert.
+  // 4. Ensure a rewards row for this (user, store) so the receipt
+  // list shows a reward number. If the receipt itself printed a
+  // membership / loyalty number (Costco Member, CVS ExtraCare,
+  // Kroger Plus, ...) we pass it through so the rewards row gets
+  // the REAL number rather than a "GG-XXXXXXXX" placeholder. The
+  // helper upgrades any existing placeholder when a real number
+  // finally arrives. Best-effort: a rewards failure must NEVER
+  // block the receipt insert.
   let rewardNo = ''
   if (flatParsed.store_name) {
-    rewardNo = await _ensureStoreRewardServer(sb, userId, flatParsed.store_name)
-      .catch((e) => { console.warn('[save-receipt] ensureStoreReward skipped:', e.message); return '' })
+    rewardNo = await _ensureStoreRewardServer(
+      sb, userId, flatParsed.store_name, flatParsed.member_number || null,
+    ).catch((e) => { console.warn('[save-receipt] ensureStoreReward skipped:', e.message); return '' })
   }
 
   // 5. INSERT new row.
@@ -285,40 +288,100 @@ function flattenParsed(p) {
   return p
 }
 
-// Server-side mirror of lib/db.js#ensureStoreReward. Takes the supabase
-// client as a parameter so the central save pipeline (which serves web,
-// mobile, iOS) can ensure a rewards row regardless of which auth flavor
-// the caller has — the db.js version uses createClient() which only
-// works in browser contexts. Best-effort: returns '' on any failure so
-// receipt save never blocks on the rewards table.
-async function _ensureStoreRewardServer(sb, userId, storeName) {
+// Placeholder reward_no shape this helper writes when no real number
+// is known yet ("GG-" prefix + 8 base36 chars). The same pattern is
+// the trigger for the upgrade-on-detection path below.
+const PLACEHOLDER_REWARD_RE = /^GG-[A-Z0-9]{8}$/
+
+function _isPlaceholderReward(n) {
+  return !n || PLACEHOLDER_REWARD_RE.test(String(n))
+}
+
+/**
+ * Server-side mirror of lib/db.js#ensureStoreReward. Takes the supabase
+ * client as a parameter so the central save pipeline (which serves web,
+ * mobile, iOS) can ensure a rewards row regardless of which auth flavor
+ * the caller has — the db.js version uses createClient() which only
+ * works in browser contexts.
+ *
+ * Behaviour (one source of truth for "what reward_no does this receipt
+ * get?"):
+ *
+ *   1. If the receipt printed a real member_number AND we have an
+ *      existing rewards row with a PLACEHOLDER, UPGRADE the row to the
+ *      real number. The user finally taught us the real one.
+ *   2. If the receipt printed a real member_number AND we have NO
+ *      row yet, INSERT with the real number directly.
+ *   3. If the receipt printed a real member_number AND the existing
+ *      row already has a (different) real number, leave it alone.
+ *      The user has already curated this entry — never clobber a
+ *      user pick with an AI parse.
+ *   4. If no member_number on this receipt AND no existing row,
+ *      INSERT a placeholder ("GG-XXXXXXXX") so the receipts list
+ *      shows something instead of blank.
+ *   5. If no member_number on this receipt AND we already have a
+ *      row (placeholder or real), return its existing reward_no.
+ *
+ * Best-effort: returns '' on any failure so receipt save never blocks
+ * on the rewards table.
+ */
+async function _ensureStoreRewardServer(sb, userId, storeName, parsedMemberNumber = null) {
   if (!sb || !userId || !storeName) return ''
+  const parsed = (parsedMemberNumber && String(parsedMemberNumber).trim()) || null
+
   const { data: existing } = await sb
     .from('rewards')
-    .select('reward_no')
+    .select('id, reward_no')
     .eq('user_id', userId)
     .ilike('store_name', storeName)
     .limit(1)
     .maybeSingle()
-  if (existing?.reward_no) return existing.reward_no
 
-  const placeholder = `GG-${Math.random().toString(36).slice(2, 10).toUpperCase()}`
+  // Case 1 + 3: existing row, receipt printed a number.
+  if (existing && parsed) {
+    if (_isPlaceholderReward(existing.reward_no)) {
+      // UPGRADE: placeholder → real. Also bump the title from
+      // "(placeholder)" to remove the marker.
+      const { error: upErr } = await sb.from('rewards').update({
+        reward_no: parsed,
+        reward_title: storeName,
+        description: 'Auto-detected from a receipt. Edit if needed.',
+      }).eq('id', existing.id)
+      if (upErr) {
+        console.warn('[save-receipt] reward upgrade failed:', upErr.message)
+        return existing.reward_no
+      }
+      return parsed
+    }
+    // Real number already on file — never clobber user-curated data.
+    return existing.reward_no
+  }
+
+  // Case 5: existing row, no new info — keep what's there.
+  if (existing) return existing.reward_no
+
+  // Case 2 + 4: no row yet. Use the parsed number if we have one,
+  // else mint a placeholder.
+  const numberToWrite = parsed || `GG-${Math.random().toString(36).slice(2, 10).toUpperCase()}`
+  const isPlaceholder = !parsed
   const oneYear = new Date(); oneYear.setFullYear(oneYear.getFullYear() + 1)
   const { error } = await sb.from('rewards').insert({
-    user_id: userId,
-    reward_no: placeholder,
-    expiry_date: oneYear.toISOString().slice(0, 10),
-    reward_type: 'Loyalty',
-    reward_title: `${storeName} (placeholder)`,
-    description: 'Auto-created by receipt scan. Replace with your real loyalty number.',
-    store_name: storeName,
+    user_id:      userId,
+    reward_no:    numberToWrite,
+    expiry_date:  oneYear.toISOString().slice(0, 10),
+    reward_type:  'Loyalty',
+    reward_title: isPlaceholder ? `${storeName} (placeholder)` : storeName,
+    description:  isPlaceholder
+      ? 'Auto-created by receipt scan. Replace with your real loyalty number.'
+      : 'Auto-detected from a receipt. Edit if needed.',
+    store_name:   storeName,
     reward_points: 0,
   })
   if (error) {
     console.warn('[save-receipt] ensureStoreReward insert failed:', error.message)
-    return placeholder
+    return numberToWrite
   }
-  return placeholder
+  return numberToWrite
 }
 
 // Server-side store_items upsert. Mirrors lib/db.js#upsertStoreItem but

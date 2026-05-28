@@ -47,6 +47,7 @@ Return ONLY a single JSON object. No prose, no markdown fences. Schema:
   "tax_paid": number,                      // negative on returns
   "payment_method": string|null,
   "payment_last4": string|null,
+  "member_number": string|null,            // Store loyalty / membership / rewards account number printed on the receipt (Costco "Member:", CVS ExtraCare, Kroger Plus, Sephora Beauty Insider, etc.). Return digits/chars as printed. EXCLUDE the credit-card last-4 (already captured in payment_last4). Null when no membership identifier is printed.
   "is_return": boolean,
   "is_receipt": boolean,                   // TRUE for any receipt / invoice / order confirmation. FALSE for non-receipt images (selfie, pet, landscape, blank paper, screenshot of unrelated content).
   "non_receipt_subject": string|null,      // When is_receipt=false: short 2-3 word lowercase description of what you DID see ("a person", "a cat", "a sunset", "a blank page", "a screenshot"). When is_receipt=true: null.
@@ -150,6 +151,7 @@ function normalizeResult(parsed, provider, model, usage) {
     tax_paid: Number(parsed.tax_paid ?? 0),
     payment_method: parsed.payment_method || '',
     payment_last4: parsed.payment_last4 || '',
+    member_number: parsed.member_number || '',
     is_return: Boolean(parsed.is_return),
     is_receipt: parsed.is_receipt === false ? false : true,
     non_receipt_subject: parsed.non_receipt_subject || null,

@@ -41,6 +41,7 @@ Return ONLY a single JSON object. No prose, no markdown fences. Schema:
   "tax_paid": number,                    // negative on returns
   "payment_method": string|null,
   "payment_last4": string|null,
+  "member_number": string|null,           // The store loyalty / membership / rewards account number printed on the receipt (Costco "Member:", CVS ExtraCare, Kroger Plus, Sephora Beauty Insider, gas-station rewards, etc.). EXCLUDE the credit-card number (already captured as payment_last4). Return null when no membership identifier is printed.
   "is_return": boolean,
   "is_receipt": boolean,                 // TRUE for any receipt / invoice / order confirmation. FALSE for non-receipt photos (selfie, cat, landscape, blank paper, screenshot of something else).
   "non_receipt_subject": string|null,    // When is_receipt=false: short 2-3 word description of what you DID see, lowercase ("a person", "a cat", "a sunset", "a blank page", "a screenshot of a chat"). When is_receipt=true: null.
@@ -59,6 +60,17 @@ Rules:
 - Home Depot "4@3.33 13.32" → qty: 4, price: 13.32 (the line total, not per-unit).
 - For returns, all money is negative AND is_return true AND each returned line has returned: true.
 - date = transaction date printed on the receipt (NOT email forward date).
+
+MEMBER NUMBER — capture any loyalty / membership / rewards / account identifier printed on the receipt that ties the user to this merchant's program. Examples (return the digits/characters as printed, no labels):
+  "MEMBER: 111222333"                     → "111222333"
+  "Member# 111222333"                     → "111222333"
+  "ExtraCare Card 1234567890"             → "1234567890"
+  "Kroger Plus Card xxx-xxx-1234"         → "xxx-xxx-1234"
+  "Sephora Beauty Insider 12345"          → "12345"
+  "Shell Fuel Rewards 555-555-1234"       → "555-555-1234"
+  "Costco Executive Member 1234 5678 9012"→ "1234 5678 9012"
+  "Marriott Bonvoy 9876543"               → "9876543"
+DO NOT return the credit-card last-4 here (already captured in payment_last4). DO NOT invent a number — return null if nothing membership-shaped is printed.
 
 NOT-A-RECEIPT — if the input is clearly NOT a receipt (a selfie / portrait, a pet, a landscape, a screenshot of a chat, a blank piece of paper, an unrelated product photo, etc.), set:
   is_receipt: false
@@ -299,6 +311,7 @@ export async function POST(request) {
         tax_paid: multiParsed.tax_paid,
         payment_method: multiParsed.payment_method,
         payment_last4: multiParsed.payment_last4,
+        member_number: multiParsed.member_number || '',
         is_return: multiParsed.is_return,
         category: multiParsed.category,
         items: autoCategorize(multiParsed.items || []),
@@ -400,6 +413,10 @@ export async function POST(request) {
       tax_paid: Number(parsed.tax_paid ?? 0),
       payment_method: parsed.payment_method || '',
       payment_last4: parsed.payment_last4 || '',
+      // Loyalty / membership / rewards identifier parsed off the
+      // receipt. The save pipeline uses this to upgrade any
+      // placeholder reward_no to the real number.
+      member_number: parsed.member_number || '',
       is_return: Boolean(parsed.is_return),
       category: parsed.category || null,
       items: autoCategorize(Array.isArray(parsed.items) ? parsed.items.map(it => ({

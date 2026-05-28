@@ -91,6 +91,10 @@ export default function ShoppingPage() {
   // Bulk-select set for the curated Your Smashlist. Empty set = no
   // selection mode; non-empty = checkboxes visible + bulk-delete CTA.
   const [bulkSelected, setBulkSelected] = useState(() => new Set())
+  // Modal-style alert for actions that deserve more attention than a
+  // toast (empty-state explanations, blocked operations, etc.). Set
+  // the title + body to show; null = closed.
+  const [alertMsg, setAlertMsg] = useState(null)
 
   const { data: items = [], isLoading, refetch } = useShoppingList()
   const upsert = useUpsertShoppingItem()
@@ -256,7 +260,12 @@ export default function ShoppingPage() {
   async function autoAddAll(criteria = 'asis') {
     const targets = filteredSuggestions
     if (targets.length === 0) {
-      toast('No items available — please check the shopping list.')
+      // Modal instead of a toast so the user actually sees and reads
+      // the message — the empty-state is informative, not transient.
+      setAlertMsg({
+        title: 'Nothing to add yet',
+        body: 'No Buy Again suggestions yet. The predictor runs nightly at 06:00 UTC — check back tomorrow, or add items manually from the form below.',
+      })
       return
     }
     const sb = createClient()
@@ -767,6 +776,47 @@ export default function ShoppingPage() {
           )}
         </div>
       </section>
+
+      {/* Alert modal — for empty-state explanations + errors that need
+          to be visible (not transient toasts). Click outside or OK to
+          dismiss. */}
+      {alertMsg && (
+        <AlertModal
+          title={alertMsg.title}
+          body={alertMsg.body}
+          onClose={() => setAlertMsg(null)}
+        />
+      )}
+    </div>
+  )
+}
+
+// Alert modal — fires for empty-state explanations and errors that
+// deserve more attention than a toast. Click outside the white panel
+// or hit OK to dismiss. Escapes the overflow:hidden on the page via
+// fixed positioning + z-index above all card content.
+function AlertModal({ title, body, onClose }) {
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 ring-1 ring-gray-200"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h3 className="text-lg font-black text-gray-900 mb-2">{title}</h3>
+        <p className="text-sm text-gray-700 leading-relaxed">{body}</p>
+        <div className="mt-5 flex justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold"
+          >
+            OK
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

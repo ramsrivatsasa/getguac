@@ -190,15 +190,25 @@ export default function ShoppingPage() {
   // weekly digest email) get the same shape.
   const errandPlan = useMemo(() => groupPredictionsByStore(filteredSuggestions), [filteredSuggestions])
 
+  // Tab badge counts include BOTH the user's curated rows AND the
+  // Buy Again suggestions sitting in that list, because users were
+  // seeing "Pantry 0" next to a Pantry tab packed with 12 Buy Again
+  // items. The count should answer "how many things are on this
+  // list?" — suggestions count too.
   const counts = useMemo(() => {
-    const m = { all: ownList.length }
+    const total = ownList.length + suggestions.length
+    const m = { all: total }
     for (const n of SHOPPING_LISTS) m[n] = 0
     for (const i of ownList) {
       const n = i.list_name || 'Pantry'
       m[n] = (m[n] || 0) + 1
     }
+    for (const i of suggestions) {
+      const n = i.list_name || 'Pantry'
+      m[n] = (m[n] || 0) + 1
+    }
     return m
-  }, [ownList])
+  }, [ownList, suggestions])
 
   return (
     <div className="space-y-5 max-w-7xl font-sans">
@@ -363,17 +373,14 @@ export default function ShoppingPage() {
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2 flex-wrap">
-                            {u?.isUrgent ? (
+                            {u?.isUrgent && (
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 ring-1 ring-rose-200">
                                 <Star size={10} className="fill-rose-500 text-rose-500" /> Restock
                               </span>
-                            ) : u?.isOverdue ? (
+                            )}
+                            {u?.isOverdue && !u.isUrgent && (
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
                                 Due now
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-violet-100 text-violet-700">
-                                <Sparkles size={10} /> Buy Again
                               </span>
                             )}
                             <span className="font-medium">{item.item_name}</span>

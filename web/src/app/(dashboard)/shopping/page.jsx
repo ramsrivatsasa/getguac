@@ -234,47 +234,108 @@ export default function ShoppingPage() {
     return `${header}${sections.join('\n')}\n\n— shared from getguac.app`
   }
 
+  // Build a JSON snapshot payload for the public /share/<token> page
+  // when the user shares their whole Smashlist. Shape matches what
+  // ShareListLayout reads — stores[] with items[] per store, plus
+  // top-line totals so the landing page header has accurate counts
+  // without recomputing.
+  function buildListPayload(itemsToShare, activeListLabel = 'all') {
+    const byStore = new Map()
+    for (const it of itemsToShare) {
+      const key = it.store?.store_name
+        ? displayStoreName(it.store.store_name)
+        : 'Any store'
+      if (!byStore.has(key)) byStore.set(key, [])
+      byStore.get(key).push({
+        item_name: it.item_name,
+        qty: it.qty || 1,
+        price: it.price != null ? Number(it.price) : null,
+        list_name: it.list_name || 'Pantry',
+      })
+    }
+    const stores = [...byStore.entries()].map(([name, items]) => ({ name, items }))
+    const total_items = itemsToShare.length
+    const total_cost = itemsToShare.reduce((n, it) => n + (Number(it.price) || 0), 0)
+    return {
+      kind: 'list',
+      title: activeListLabel === 'all' ? 'GetGuac Smashlist' : `GetGuac ${activeListLabel}`,
+      stores,
+      store_count: stores.length,
+      total_items,
+      total_cost,
+    }
+  }
+
+  // Mint a public share URL by calling /api/share/create with the
+  // current Smashlist payload. Returns the URL the user can hand to a
+  // recipient via any channel. On failure we return null so the share
+  // helpers fall back to a text-only share (no broken UX).
+  async function createListShareUrl(channel) {
+    try {
+      const merged = [...filteredOwn, ...filteredSuggestions]
+      const payload = buildListPayload(merged, activeList === 'all' ? 'all' : activeList)
+      const res = await fetch('/api/share/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kind: 'list', payload, channel }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data?.error || 'Share-link creation failed')
+      return data.url
+    } catch (e) {
+      console.warn('[shopping] createListShareUrl failed, falling back to text-only:', e.message)
+      toast.error('Could not create share link — sharing as plain text')
+      return null
+    }
+  }
+
   // Direct share-channel handlers — bypass the native share sheet so
   // the user picks WhatsApp / Messages / Mail without a second tap.
-  // Each opens a URL the system already knows how to route.
-  function shareViaWhatsApp(text) {
-    // wa.me works on web, Android, and iOS; opens the WhatsApp app
-    // pre-filled when installed, otherwise the WhatsApp web client.
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer')
+  // Each accepts an optional `url` param — when present the URL is
+  // appended (channels that can't carry it as structured data still
+  // auto-linkify trailing URLs).
+  function shareViaWhatsApp(text, url) {
+    const msg = url ? `${text}\n\n${url}` : text
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank', 'noopener,noreferrer')
   }
-  function shareViaSMS(text) {
-    // sms: URI scheme works on mobile (opens Messages); on desktop most
-    // browsers do nothing, so we fall back to clipboard.
+  function shareViaSMS(text, url) {
+    const msg = url ? `${text}\n\n${url}` : text
     const isPhone = /iPhone|iPad|Android/i.test(typeof navigator !== 'undefined' ? navigator.userAgent : '')
     if (isPhone) {
-      // iOS uses & for the body separator; Android uses ?body=. The
-      // ?body= form is widely supported on iOS too, so use it.
-      window.location.href = `sms:?body=${encodeURIComponent(text)}`
+      window.location.href = `sms:?body=${encodeURIComponent(msg)}`
     } else {
-      navigator.clipboard.writeText(text).then(
+      navigator.clipboard.writeText(msg).then(
         () => toast.success('SMS not supported on desktop — copied so you can paste'),
         () => toast.error('Copy failed'),
       )
     }
   }
-  function shareViaEmail(text) {
+  function shareViaEmail(text, url) {
     const subject = 'My GetGuac Smashlist'
-    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`
+    const body = url ? `${text}\n\n${url}` : text
+    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
   }
-  function shareViaClipboard(text) {
-    navigator.clipboard.writeText(text).then(
+  function shareViaClipboard(text, url) {
+    const msg = url ? `${text}\n\n${url}` : text
+    navigator.clipboard.writeText(msg).then(
       () => toast.success('Copied — paste anywhere 🛒'),
       (e) => toast.error('Copy failed: ' + e.message),
     )
   }
-  // Original native share sheet — kept as the "More" affordance for
-  // surfaces the explicit channels can't cover (Slack, Telegram, etc).
-  async function shareNative(text) {
+  // Native share sheet — passes `url` as a separate field so iOS / Android
+  // render a rich preview card pulled from getguac.app's og tags rather
+  // than treating it as plain text. Falls back to clipboard if the API
+  // isn't available (most desktop browsers).
+  async function shareNative(text, url) {
     if (typeof navigator?.share === 'function') {
-      try { await navigator.share({ title: 'My GetGuac Smashlist', text }); return }
-      catch (e) { if (e?.name !== 'AbortError') console.warn('[share] native failed:', e.message) }
+      try {
+        const payload = { title: 'My GetGuac Smashlist', text }
+        if (url) payload.url = url
+        await navigator.share(payload)
+        return
+      } catch (e) { if (e?.name !== 'AbortError') console.warn('[share] native failed:', e.message) }
     }
-    shareViaClipboard(text)
+    shareViaClipboard(text, url)
   }
   // Convenience used by the Share button to fall through to native on
   // phones, clipboard on desktop. Kept for keyboard-tab speed.
@@ -651,6 +712,7 @@ export default function ShoppingPage() {
               [...filteredOwn, ...filteredSuggestions],
               activeList === 'all' ? 'all' : activeList,
             )}
+            getShareUrl={(channel) => createListShareUrl(channel)}
             handlers={{
               whatsapp: shareViaWhatsApp,
               sms:      shareViaSMS,
@@ -1238,11 +1300,28 @@ function AutoAddMenu({ count, stores = [], onPick }) {
 // phones); secondary buttons send directly to WhatsApp / Messages /
 // Mail / clipboard. The dropdown closes when the user clicks anywhere
 // outside it.
-function ShareMenu({ buildText, handlers }) {
+//
+// When `getShareUrl` is provided, the menu calls it before invoking each
+// channel handler. The handler then receives (text, url) and embeds the
+// URL appropriately for the channel — native share sheet gets it as a
+// separate `url` field for rich previews, the rest get it appended.
+function ShareMenu({ buildText, getShareUrl, handlers }) {
   const [open, setOpen] = useState(false)
+  const [busyChannel, setBusyChannel] = useState(null)
   // Click-outside: close when the focus leaves the menu container.
   function handleBlur(e) {
     if (!e.currentTarget.contains(e.relatedTarget)) setOpen(false)
+  }
+  async function pick(channelKey) {
+    setBusyChannel(channelKey)
+    try {
+      const text = buildText()
+      const url = getShareUrl ? await getShareUrl(channelKey) : null
+      handlers[channelKey](text, url)
+      setOpen(false)
+    } finally {
+      setBusyChannel(null)
+    }
   }
   return (
     <div className="relative inline-block" onBlur={handleBlur}>
@@ -1269,11 +1348,12 @@ function ShareMenu({ buildText, handlers }) {
             <button
               key={opt.key}
               type="button"
-              onClick={() => { handlers[opt.key](buildText()); setOpen(false) }}
-              className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-800 ${opt.tone}`}
+              onClick={() => pick(opt.key)}
+              disabled={busyChannel != null}
+              className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-800 disabled:opacity-50 ${opt.tone}`}
             >
               {opt.icon}
-              <span>{opt.label}</span>
+              <span>{busyChannel === opt.key ? 'Generating…' : opt.label}</span>
             </button>
           ))}
         </div>
@@ -1599,22 +1679,167 @@ function BuyAgainCard({ item, selected = false, onToggleSelect, onAdd, onQty }) 
           </div>
         )}
 
-        {/* Footer — qty stepper + Add to Smashlist CTA */}
+        {/* Footer — qty stepper + Share + Add to Smashlist CTA */}
         <div className="flex items-center justify-between mt-4 pt-3 border-t border-white/50 gap-2">
           <div className="flex items-center gap-2">
             <span className="text-[9px] uppercase tracking-wider text-gray-500 font-bold">Qty</span>
             <QtyInput value={item.qty || 1} onSave={onQty} />
           </div>
-          <button
-            type="button"
-            onClick={onAdd}
-            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold shadow-sm hover:shadow-md transition-all"
-            title="Add to Smashlist"
-          >
-            <ShoppingCart size={13} /> Add
-          </button>
+          <div className="flex items-center gap-1.5">
+            <ShareItemButton item={item} yourStores={yourStores} />
+            <button
+              type="button"
+              onClick={onAdd}
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold shadow-sm hover:shadow-md transition-all"
+              title="Add to Smashlist"
+            >
+              <ShoppingCart size={13} /> Add
+            </button>
+          </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+// Per-card Share button — creates a public /share/<token> URL via
+// /api/share/create then routes the user through their preferred
+// channel (WhatsApp / SMS / Email / Copy / native sheet). The payload
+// snapshot includes the per-store price tiles already loaded by the
+// expanded Compare Stores panel; if the card hasn't been expanded
+// yet we fall back to a single-tile share (the user's own store +
+// last price).
+function ShareItemButton({ item, yourStores }) {
+  const [open, setOpen] = useState(false)
+  const [busy, setBusy] = useState(false)
+
+  function handleBlur(e) {
+    if (!e.currentTarget.contains(e.relatedTarget)) setOpen(false)
+  }
+
+  async function buildShareUrl(channel) {
+    setBusy(true)
+    try {
+      const meta = SHOPPING_LIST_META[item.list_name || 'Pantry'] || {}
+      const tiles = (yourStores && yourStores.length > 0 ? yourStores : []).map(s => ({
+        store: s.name || 'Store',
+        location: '',
+        title: item.item_name,
+        price: s.min_price || s.last_price || 0,
+        rating: null,
+        review_count: null,
+        sale: false,
+      }))
+      // Fall back to a single-tile share when no store history loaded.
+      if (tiles.length === 0) {
+        tiles.push({
+          store: item.store?.store_name || 'Your store',
+          location: '',
+          title: item.item_name,
+          price: Number(item.price) || 0,
+          rating: null, review_count: null, sale: false,
+        })
+      }
+      const payload = {
+        kind: 'item',
+        item_title: item.item_name,
+        category_emoji: meta.emoji || '🛒',
+        rating: null,
+        best_price_callout: tiles.length > 1
+          ? `Cheapest at ${tiles[0].store} — $${Number(tiles[0].price).toFixed(2)}`
+          : null,
+        tiles,
+      }
+      const res = await fetch('/api/share/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kind: 'item', payload, channel }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data?.error || 'Share failed')
+      return data.url
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  // Channel handlers — mirror the Smashlist top-level ShareMenu so the
+  // user experience is consistent across "share whole list" and
+  // "share this item".
+  async function go(channel) {
+    setOpen(false)
+    try {
+      const url = await buildShareUrl(channel)
+      const text = `🥑 Check out "${item.item_name}" on GetGuac:`
+      if (channel === 'whatsapp') {
+        window.open(`https://wa.me/?text=${encodeURIComponent(`${text} ${url}`)}`, '_blank', 'noopener,noreferrer')
+      } else if (channel === 'sms') {
+        const isPhone = /iPhone|iPad|Android/i.test(typeof navigator !== 'undefined' ? navigator.userAgent : '')
+        if (isPhone) {
+          window.location.href = `sms:?body=${encodeURIComponent(`${text} ${url}`)}`
+        } else {
+          await navigator.clipboard.writeText(`${text} ${url}`)
+          toast.success('SMS not supported on desktop — copied so you can paste')
+        }
+      } else if (channel === 'email') {
+        const subject = `Check out ${item.item_name} on GetGuac`
+        window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(`${text}\n\n${url}`)}`
+      } else if (channel === 'copy') {
+        await navigator.clipboard.writeText(`${text} ${url}`)
+        toast.success('Copied — paste anywhere 🛒')
+      } else if (channel === 'native') {
+        if (typeof navigator?.share === 'function') {
+          try {
+            await navigator.share({ title: item.item_name, text, url })
+            return
+          } catch (e) {
+            if (e?.name === 'AbortError') return
+          }
+        }
+        await navigator.clipboard.writeText(`${text} ${url}`)
+        toast.success('Copied — paste anywhere 🛒')
+      }
+    } catch (e) {
+      toast.error(e.message || 'Share failed')
+    }
+  }
+
+  return (
+    <div className="relative inline-block" onBlur={handleBlur}>
+      <button
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        disabled={busy}
+        title="Share this item"
+        className="w-8 h-8 rounded-xl bg-white/70 hover:bg-white text-emerald-700 hover:text-emerald-900 ring-1 ring-emerald-200 shadow-sm hover:shadow-md active:scale-95 transition-all flex items-center justify-center"
+      >
+        <Share2 size={13} />
+      </button>
+      {open && (
+        <div className="absolute right-0 mt-1 w-52 rounded-xl bg-white shadow-xl ring-1 ring-gray-200 z-50 overflow-hidden">
+          <div className="px-3 py-2 border-b border-gray-100 text-[10px] uppercase tracking-wider text-gray-500 font-bold">
+            Share this item via…
+          </div>
+          {[
+            { key: 'whatsapp', icon: <MessageCircle size={14} className="text-emerald-600" />, label: 'WhatsApp', tone: 'hover:bg-emerald-50' },
+            { key: 'sms',      icon: <Phone size={14} className="text-sky-600" />,            label: 'Text / SMS', tone: 'hover:bg-sky-50' },
+            { key: 'email',    icon: <Mail size={14} className="text-amber-600" />,           label: 'Email',     tone: 'hover:bg-amber-50' },
+            { key: 'copy',     icon: <Copy size={14} className="text-gray-600" />,            label: 'Copy link', tone: 'hover:bg-gray-50' },
+            { key: 'native',   icon: <Share2 size={14} className="text-violet-600" />,        label: 'More…',     tone: 'hover:bg-violet-50' },
+          ].map(opt => (
+            <button
+              key={opt.key}
+              type="button"
+              onClick={() => go(opt.key)}
+              disabled={busy}
+              className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-800 disabled:opacity-50 ${opt.tone}`}
+            >
+              {opt.icon}
+              <span>{opt.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

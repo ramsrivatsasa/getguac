@@ -160,13 +160,21 @@ export default function SharePreviewPage() {
           <h2 className="text-xl sm:text-2xl font-black text-gray-900 leading-snug">
             See prices like this for <span className="text-emerald-700">your</span> grocery list ✨
           </h2>
-          <ul className="mt-3 grid sm:grid-cols-3 gap-3 text-sm text-gray-800">
+          <ul className="mt-3 grid sm:grid-cols-2 gap-3 text-sm text-gray-800">
             {[
-              ['📸', 'Scan any receipt'],
-              ['🏬', 'Auto-picks the cheapest store per item'],
-              ['🛒', 'Buy Again list when stock runs low'],
-            ].map(([emoji, text]) => (
-              <li key={text} className="flex items-start gap-2.5 bg-white/70 rounded-xl px-3 py-2">
+              ['📧', <>Your own <span className="font-bold">GetGuac inbox</span> — forward any e-receipt</>, true],
+              ['📸', 'Scan any paper receipt', false],
+              ['🏬', 'Auto-picks the cheapest store per item', false],
+              ['🛒', 'Buy Again list when stock runs low', false],
+            ].map(([emoji, text, hero]) => (
+              <li
+                key={typeof text === 'string' ? text : 'inbox'}
+                className={`flex items-start gap-2.5 rounded-xl px-3 py-2 ${
+                  hero
+                    ? 'bg-emerald-100 ring-1 ring-emerald-300'
+                    : 'bg-white/70'
+                }`}
+              >
                 <span className="text-lg leading-none mt-0.5">{emoji}</span>
                 <span className="font-medium">{text}</span>
               </li>

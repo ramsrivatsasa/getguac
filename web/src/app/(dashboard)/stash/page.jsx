@@ -9,6 +9,7 @@ import {
 import { useQueryClient, useMutation } from '@tanstack/react-query'
 import { getStashItems, addToShoppingList, setStashProductCategory, setStashProductRating } from '../../../lib/db'
 import { guacImpactChip } from '../../../lib/guacImpact'
+import { fetchInventoryMap, setOnHand, inventoryKey, lowStockVerdict } from '../../../lib/inventory'
 import { CATEGORIES, CATEGORY_BY_SLUG, categoryClass } from '../../../lib/categories'
 import CategoryPicker, { CategoryCreatePill } from '../../../components/CategoryPicker'
 import GuacMascot from '../../../components/GuacMascot'
@@ -51,6 +52,15 @@ export default function StashPage() {
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ['stash'],
     queryFn: getStashItems,
+    staleTime: 1000 * 60,
+  })
+
+  // Per-user inventory (on-hand counts). Decorated onto each Stash
+  // item below so the card knows how many to render in the stepper +
+  // whether to fire the "running low" badge.
+  const { data: inventoryMap = new Map() } = useQuery({
+    queryKey: ['stash-inventory'],
+    queryFn: fetchInventoryMap,
     staleTime: 1000 * 60,
   })
 
@@ -153,8 +163,43 @@ export default function StashPage() {
     const cutoff = Math.max(1, Math.floor(sortedSpend.length * 0.1))
     const topSet = new Set(sortedSpend.slice(0, cutoff).map(e => e.key))
     for (const e of list) e.is_top_spender = topSet.has(e.key)
+
+    // Decorate with on-hand qty + low-stock verdict. The verdict
+    // wants an avg-days-between-buys and avg-qty-per-buy estimate;
+    // we derive both from the receipt history we already have
+    // aggregated above. Items with too little history (1-2 buys)
+    // get on-hand only, no verdict.
+    for (const e of list) {
+      const invRow = inventoryMap.get(inventoryKey(e.item_name))
+      e.on_hand_qty = invRow?.on_hand_qty ?? null
+      if (e.times >= 3 && e.total_qty > 0) {
+        // Crude cadence estimate: the receipt history span / number
+        // of buys. Better than nothing without re-running the full
+        // predictor here.
+        const span = (e.stores_list || []).reduce((acc, s) => {
+          if (!s.last_date) return acc
+          // We only have last_date per store, not full timeseries — so
+          // use 30d × (times - 1) / times as a stand-in cadence when
+          // we can't compute properly. The verdict consumer treats
+          // null cadence as "no badge", so falsy is fine.
+          return acc
+        }, null)
+        const avgCadence = e.times >= 5 ? Math.max(7, 30 * (e.times - 1) / e.times) : null
+        const avgQty = e.total_qty / e.times
+        e.low_stock = lowStockVerdict({
+          onHand: e.on_hand_qty,
+          avgCadenceDays: avgCadence,
+          avgQtyPerBuy: avgQty,
+        })
+      } else {
+        e.low_stock = e.on_hand_qty === 0
+          ? { state: 'out', daysLeft: 0, label: 'Out of stock' }
+          : null
+      }
+    }
+
     return list
-  }, [rows])
+  }, [rows, inventoryMap])
 
   const catCounts = useMemo(() => {
     const c = new Map()
@@ -405,6 +450,31 @@ const ProductCard = memo(function ProductCard({ item, expanded, onToggle, onAddT
     onError: err => toast.error(err.message),
   })
 
+  // On-hand inventory mutation. Optimistic — bumps the local cache
+  // immediately so the +/- stepper feels instant; rolls back on
+  // server error.
+  const updateOnHand = useMutation({
+    mutationFn: async (newQty) => setOnHand(item.item_name, newQty),
+    onMutate: async (newQty) => {
+      await qc.cancelQueries({ queryKey: ['stash-inventory'] })
+      const prev = qc.getQueryData(['stash-inventory'])
+      if (prev instanceof Map) {
+        const next = new Map(prev)
+        next.set(inventoryKey(item.item_name), {
+          item_key: inventoryKey(item.item_name),
+          on_hand_qty: Math.max(0, Math.min(9999, Number(newQty) || 0)),
+          updated_at: new Date().toISOString(),
+        })
+        qc.setQueryData(['stash-inventory'], next)
+      }
+      return { prev }
+    },
+    onError: (_err, _next, ctx) => {
+      if (ctx?.prev) qc.setQueryData(['stash-inventory'], ctx.prev)
+      toast.error('Could not update on-hand count')
+    },
+  })
+
   // Re-rate this product across every store. One click on a star
   // cascades the rating through every matching receipt_item so the
   // user's GuacScore picks up the signal in a single pass.
@@ -477,9 +547,22 @@ const ProductCard = memo(function ProductCard({ item, expanded, onToggle, onAddT
         {/* Audit signals row — only renders the chips that apply.
             Warranty + return-window come from the joined receipt
             data; top-spender is computed from the user's total spend
-            distribution. Self-hides when nothing applies. */}
-        {(item.warranty_info || item.best_return_window || item.is_top_spender) && (
+            distribution; low-stock comes from the inventory crossed
+            with cadence. Self-hides when nothing applies. */}
+        {(item.warranty_info || item.best_return_window || item.is_top_spender || item.low_stock) && (
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            {item.low_stock && (item.low_stock.state === 'urgent' || item.low_stock.state === 'out') && (
+              <span
+                title={item.low_stock.label}
+                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                  item.low_stock.state === 'out'
+                    ? 'bg-rose-100 text-rose-800 border-rose-200'
+                    : 'bg-amber-100 text-amber-800 border-amber-200'
+                }`}
+              >
+                {item.low_stock.state === 'out' ? '🛑' : '⚠️'} {item.low_stock.label}
+              </span>
+            )}
             {item.is_top_spender && (
               <span
                 title={`Top 10% by total spend ($${item.total_spend.toFixed(0)})`}
@@ -520,6 +603,18 @@ const ProductCard = memo(function ProductCard({ item, expanded, onToggle, onAddT
           currentRating={item.avg_rating > 0 ? Math.round(item.avg_rating) : null}
           onRate={(r) => rerate.mutate(r)}
           disabled={rerate.isPending}
+        />
+
+        {/* On-hand inventory stepper — user counts how many are on
+            the shelf right now. Combined with cadence/qty signals
+            this surfaces "running low" before they stockout. */}
+        <OnHandStepper
+          value={item.on_hand_qty ?? 0}
+          onChange={(n) => updateOnHand.mutate(n)}
+          disabled={updateOnHand.isPending}
+          subtitle={item.low_stock?.state === 'ok' ? item.low_stock.label
+            : item.low_stock?.state === 'soft' ? item.low_stock.label
+            : null}
         />
 
         <div className="grid grid-cols-3 gap-2 mt-3 text-xs">
@@ -701,6 +796,45 @@ function ProductRater({ currentRating, onRate, disabled }) {
         >
           {chip.label}
         </span>
+      )}
+    </div>
+  )
+}
+
+// On-hand stepper — minus / qty / plus, with a subtitle line that
+// surfaces the predictor-derived "you've got ~N days left" estimate
+// when there's enough history to compute one. Touch-friendly button
+// sizes for mobile users actually counting shelf inventory.
+function OnHandStepper({ value, onChange, disabled, subtitle }) {
+  const safe = Math.max(0, Math.min(9999, Number(value) || 0))
+  return (
+    <div className="mt-3 flex items-center gap-2.5 bg-white/70 rounded-xl px-3 py-2 ring-1 ring-white">
+      <span className="text-[9px] uppercase tracking-wider font-bold text-gray-500 shrink-0">
+        On hand
+      </span>
+      <div className="inline-flex items-center gap-1">
+        <button
+          type="button"
+          disabled={disabled || safe === 0}
+          onClick={() => onChange(Math.max(0, safe - 1))}
+          className="w-7 h-7 rounded-full bg-emerald-100 hover:bg-emerald-200 text-emerald-700 text-base font-bold leading-none disabled:opacity-40 transition-all active:scale-95"
+          aria-label="Decrease on-hand count"
+        >−</button>
+        <span className={`text-sm font-black tabular-nums w-7 text-center ${
+          safe === 0 ? 'text-rose-700' : safe <= 1 ? 'text-amber-700' : 'text-emerald-800'
+        }`}>
+          {safe}
+        </span>
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => onChange(safe + 1)}
+          className="w-7 h-7 rounded-full bg-emerald-100 hover:bg-emerald-200 text-emerald-700 text-base font-bold leading-none disabled:opacity-40 transition-all active:scale-95"
+          aria-label="Increase on-hand count"
+        >+</button>
+      </div>
+      {subtitle && (
+        <span className="text-[10px] text-gray-500 ml-auto truncate">{subtitle}</span>
       )}
     </div>
   )

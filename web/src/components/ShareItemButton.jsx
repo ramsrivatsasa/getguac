@@ -104,8 +104,13 @@ export function ShareItemButton({ item, buildPayload, triggerClassName }) {
         const subject = `Check out ${title} on GetGuac`
         window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(`${text}\n\n${url}`)}`
       } else if (channel === 'copy') {
-        await navigator.clipboard.writeText(`${text} ${url}`)
-        toast.success('Copied — paste anywhere 🛒')
+        // "Copy link" means JUST the URL — clean paste into a chat /
+        // doc / browser. The pre-formatted "🥑 Check out…" intro
+        // belongs on the channels that send a message body
+        // (WhatsApp / SMS / Email / native sheet), not on a raw link
+        // copy.
+        await navigator.clipboard.writeText(url)
+        toast.success('Link copied 🔗')
       } else if (channel === 'native') {
         if (typeof navigator?.share === 'function') {
           try {

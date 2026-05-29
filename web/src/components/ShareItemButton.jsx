@@ -88,39 +88,43 @@ export function ShareItemButton({ item, buildPayload, triggerClassName }) {
     setOpen(false)
     try {
       const url = await mintShareUrl(channel)
-      const title = item?.item_name || 'Check this out on GetGuac'
-      const text = `🥑 Check out "${title}" on GetGuac:`
+      const title = item?.item_name || 'this find'
+      // Amazon-style share text: "Deal: <product name> <URL>". Clean,
+      // no emoji prefix that messes with URL bar parsing or unfurl
+      // previews, but still clearly framed as a deal so recipients
+      // understand the share intent at a glance.
+      const body = `Deal: ${title} ${url}`
+      const subject = 'Check this deal out on GetGuac'
       if (channel === 'whatsapp') {
-        window.open(`https://wa.me/?text=${encodeURIComponent(`${text} ${url}`)}`, '_blank', 'noopener,noreferrer')
+        window.open(`https://wa.me/?text=${encodeURIComponent(body)}`, '_blank', 'noopener,noreferrer')
       } else if (channel === 'sms') {
         const isPhone = /iPhone|iPad|Android/i.test(typeof navigator !== 'undefined' ? navigator.userAgent : '')
         if (isPhone) {
-          window.location.href = `sms:?body=${encodeURIComponent(`${text} ${url}`)}`
+          window.location.href = `sms:?body=${encodeURIComponent(body)}`
         } else {
-          await navigator.clipboard.writeText(`${text} ${url}`)
+          await navigator.clipboard.writeText(body)
           toast.success('SMS not supported on desktop — copied so you can paste')
         }
       } else if (channel === 'email') {
-        const subject = `Check out ${title} on GetGuac`
-        window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(`${text}\n\n${url}`)}`
+        const emailBody = `Deal: ${title}\n\n${url}`
+        window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBody)}`
       } else if (channel === 'copy') {
         // "Copy link" means JUST the URL — clean paste into a chat /
-        // doc / browser. The pre-formatted "🥑 Check out…" intro
-        // belongs on the channels that send a message body
-        // (WhatsApp / SMS / Email / native sheet), not on a raw link
-        // copy.
+        // doc / browser. The pre-formatted "Deal:" intro belongs on
+        // the channels that send a message body (WhatsApp / SMS /
+        // Email / native sheet), not on a raw link copy.
         await navigator.clipboard.writeText(url)
         toast.success('Link copied 🔗')
       } else if (channel === 'native') {
         if (typeof navigator?.share === 'function') {
           try {
-            await navigator.share({ title, text, url })
+            await navigator.share({ title, text: `Deal: ${title}`, url })
             return
           } catch (e) {
             if (e?.name === 'AbortError') return
           }
         }
-        await navigator.clipboard.writeText(`${text} ${url}`)
+        await navigator.clipboard.writeText(body)
         toast.success('Copied — paste anywhere 🛒')
       }
     } catch (e) {

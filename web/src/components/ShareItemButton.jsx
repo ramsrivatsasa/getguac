@@ -26,18 +26,28 @@ import { Share2, MessageCircle, Phone, Mail, Copy } from 'lucide-react'
 export function ShareItemButton({ item, buildPayload, triggerClassName }) {
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
-  const [pos, setPos] = useState(null)  // { top, right } in viewport coords
+  const [pos, setPos] = useState(null)  // { top? / bottom?, right } in viewport coords
   const btnRef = useRef(null)
   const menuRef = useRef(null)
+
+  // Approximate menu height — header + 5 rows × ~36px each + a bit
+  // of padding. Used to decide whether to open down or flip up.
+  const MENU_HEIGHT_PX = 220
 
   // Measure the trigger button when the menu opens so we know where
   // to render the floating panel. useLayoutEffect runs synchronously
   // so the panel doesn't flash at (0,0) before the position lands.
+  // When the button is close to the viewport bottom, flip the menu
+  // to open ABOVE the button so it doesn't run off-screen.
   useLayoutEffect(() => {
     if (!open || !btnRef.current) return
     const rect = btnRef.current.getBoundingClientRect()
+    const spaceBelow = window.innerHeight - rect.bottom
+    const flipUp = spaceBelow < MENU_HEIGHT_PX + 16
     setPos({
-      top: rect.bottom + 6,
+      ...(flipUp
+        ? { bottom: window.innerHeight - rect.top + 6 }
+        : { top: rect.bottom + 6 }),
       right: window.innerWidth - rect.right,
     })
   }, [open])
@@ -118,7 +128,8 @@ export function ShareItemButton({ item, buildPayload, triggerClassName }) {
       ref={menuRef}
       style={{
         position: 'fixed',
-        top: pos.top,
+        ...(pos.top != null ? { top: pos.top } : {}),
+        ...(pos.bottom != null ? { bottom: pos.bottom } : {}),
         right: pos.right,
         zIndex: 9999,
       }}

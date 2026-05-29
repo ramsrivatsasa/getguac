@@ -7,7 +7,8 @@ import {
   Search, ShoppingCart, ExternalLink, Star, Store as StoreIcon, ChevronDown, ChevronRight, BadgeDollarSign, LayoutGrid, List
 } from 'lucide-react'
 import { useQueryClient, useMutation } from '@tanstack/react-query'
-import { getStashItems, addToShoppingList, setStashProductCategory } from '../../../lib/db'
+import { getStashItems, addToShoppingList, setStashProductCategory, setStashProductRating } from '../../../lib/db'
+import { guacImpactChip } from '../../../lib/guacImpact'
 import { CATEGORIES, CATEGORY_BY_SLUG, categoryClass } from '../../../lib/categories'
 import CategoryPicker, { CategoryCreatePill } from '../../../components/CategoryPicker'
 import GuacMascot from '../../../components/GuacMascot'
@@ -371,6 +372,29 @@ const ProductCard = memo(function ProductCard({ item, expanded, onToggle, onAddT
     onError: err => toast.error(err.message),
   })
 
+  // Re-rate this product across every store. One click on a star
+  // cascades the rating through every matching receipt_item so the
+  // user's GuacScore picks up the signal in a single pass.
+  const rerate = useMutation({
+    mutationFn: async (rating) => {
+      const calls = [...item.stores.values()].map(s =>
+        s.id ? setStashProductRating({ storeId: s.id, sku: item.sku, item_name: item.item_name, rating }) : null
+      ).filter(Boolean)
+      return Promise.allSettled(calls)
+    },
+    onSuccess: (_data, rating) => {
+      const chip = guacImpactChip(rating)
+      toast.success(chip?.delta > 0
+        ? `Worth it ⭐ — ${chip.label}`
+        : chip?.delta < 0
+          ? `Noted — ${chip.label}`
+          : 'Rating saved')
+      qc.invalidateQueries({ queryKey: ['stash'] })
+      qc.invalidateQueries({ queryKey: ['receipts'] })
+    },
+    onError: err => toast.error(err.message),
+  })
+
   return (
     <div className={`relative bg-gradient-to-br ${tone.from} ${tone.to} rounded-2xl border-2 border-transparent shadow-sm hover:shadow-xl hover:border-emerald-300 hover:scale-[1.02] hover:-translate-y-0.5 transition-all duration-200 overflow-hidden ring-1 ${tone.ring} group`}>
       {/* Color stripe header */}
@@ -414,6 +438,17 @@ const ProductCard = memo(function ProductCard({ item, expanded, onToggle, onAddT
             )}
           </div>
         </div>
+
+        {/* Quick-rate row — one tap on a star applies the rating to
+            every receipt_item of this product and the user's
+            GuacScore picks up the signal. The chip on the right
+            shows the directional impact so the user can see how the
+            rating moves the score before committing. */}
+        <ProductRater
+          currentRating={item.avg_rating > 0 ? Math.round(item.avg_rating) : null}
+          onRate={(r) => rerate.mutate(r)}
+          disabled={rerate.isPending}
+        />
 
         <div className="grid grid-cols-3 gap-2 mt-3 text-xs">
           <div className="rounded-xl bg-white/80 px-2 py-1 text-center ring-1 ring-white">
@@ -523,6 +558,54 @@ const TONE_GRADIENT = {
   fuchsia: 'from-fuchsia-400 to-pink-600',   rose:   'from-rose-400 to-red-600',
   red:     'from-red-400 to-rose-600',       violet: 'from-violet-400 to-purple-600',
   pink:    'from-pink-300 to-rose-500',      gray:   'from-gray-300 to-gray-500',
+}
+
+// Quick rater — five inline stars + a hover preview + the GuacScore
+// impact chip on the right. Click a star to commit the rating; the
+// useMutation in the parent fans it out across every receipt_item of
+// this product. Hovering shows the rating you're about to commit so
+// it's clear what 4★ vs 5★ will do BEFORE the click.
+function ProductRater({ currentRating, onRate, disabled }) {
+  const [hover, setHover] = useState(0)
+  const shown = hover || currentRating || 0
+  const chip = guacImpactChip(shown || null)
+  return (
+    <div className="mt-3 flex items-center gap-2 bg-white/70 rounded-xl px-3 py-1.5 ring-1 ring-white">
+      <span className="text-[9px] uppercase tracking-wider font-bold text-gray-500 shrink-0">Worth it?</span>
+      <div
+        className="flex items-center gap-0.5"
+        onMouseLeave={() => setHover(0)}
+      >
+        {[1, 2, 3, 4, 5].map(n => (
+          <button
+            key={n}
+            type="button"
+            disabled={disabled}
+            onClick={() => onRate(n)}
+            onMouseEnter={() => setHover(n)}
+            title={`Rate ${n}★`}
+            className="p-0.5 hover:scale-125 active:scale-95 transition-transform disabled:opacity-50"
+          >
+            <Star
+              size={14}
+              className={n <= shown ? 'text-amber-500 fill-amber-500' : 'text-gray-300'}
+            />
+          </button>
+        ))}
+      </div>
+      {chip && (
+        <span
+          className={`ml-auto inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+            chip.tone === 'emerald' ? 'bg-emerald-100 text-emerald-800' :
+            chip.tone === 'rose'    ? 'bg-rose-100 text-rose-800' :
+                                       'bg-gray-100 text-gray-600'
+          }`}
+        >
+          {chip.label}
+        </span>
+      )}
+    </div>
+  )
 }
 
 function CatChip({ active, onClick, emoji, label, count, tone }) {

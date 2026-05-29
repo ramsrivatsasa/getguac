@@ -216,6 +216,46 @@ export async function setStashProductCategory({ storeId, storeName, sku, item_na
   return data || []
 }
 
+// Bulk-rate every receipt_item belonging to the same product across all
+// stores. Mirrors setStashProductCategory but writes `rating` instead
+// of `category`. Used by the per-product star rater on the Stash card
+// so one click stamps the score across the user's full history of
+// that item — and the aggregate GuacScore updates in one pass.
+export async function setStashProductRating({ storeId, storeName, sku, item_name, rating }) {
+  if (rating == null || !(rating >= 1 && rating <= 5)) {
+    throw new Error('rating must be 1-5')
+  }
+  const sb = createClient()
+  let q = sb.from('receipt_items')
+    .update({
+      rating,
+      validated_at: new Date().toISOString(),
+    })
+    .select('id')
+  if (sku) q = q.ilike('sku', sku)
+  else     q = q.ilike('item_name', item_name)
+
+  // Cross-receipt updates must be scoped to ONE store to avoid colliding
+  // with same-named items at other stores (e.g. "MILK" at Costco vs
+  // "MILK" at Walmart are different products in the user's mental
+  // model). Match the existing pattern from setStashProductCategory.
+  let receiptQuery = sb.from('receipts').select('id')
+  if (storeId) {
+    receiptQuery = receiptQuery.eq('store_id', storeId)
+  } else if (storeName) {
+    receiptQuery = receiptQuery.eq('store_name', storeName)
+  } else {
+    return []
+  }
+  const { data: receiptIds } = await receiptQuery
+  const ids = (receiptIds || []).map(r => r.id)
+  if (ids.length === 0) return []
+  q = q.in('receipt_id', ids)
+  const { data, error } = await q
+  if (error) throw error
+  return data || []
+}
+
 // Per-item Worth It? validation
 export async function setItemValidation(id, { rating, validation_tags, validation_comment }) {
   const sb = createClient()

@@ -686,9 +686,20 @@ export async function getAllStoreItems() {
 // something you actually own.
 export async function getStashItems() {
   const sb = createClient()
+  // Pulls warranty_info on the item (powers the "Warranty" badge) and
+  // the parent receipt's refund policies (powers the "Returnable till X"
+  // badge). Both are nullable — the Stash card hides them when absent
+  // rather than rendering empty chrome.
   const { data, error } = await sb
     .from('receipt_items')
-    .select('id, sku, model, item_name, qty, price, category, rating, returned, receipt_id, store_item_id, receipts!inner(id, store_id, store_name, date, category)')
+    .select(`
+      id, sku, model, item_name, qty, price, category, rating,
+      returned, receipt_id, store_item_id, warranty_info,
+      receipts!inner(
+        id, store_id, store_name, date, category,
+        receipt_refund_policies(policy_id, days, expiry_date, eligible)
+      )
+    `)
     .eq('returned', false)
     .order('id', { ascending: false })
     .limit(5000)

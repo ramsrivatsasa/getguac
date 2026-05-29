@@ -56,6 +56,7 @@ export default function StashPage() {
   // Aggregate by product (sku-or-name, case-insensitive) across ALL stores.
   // Each product knows every store that carries it, with that store's best/last price.
   const items = useMemo(() => {
+    const todayIso = new Date().toISOString().slice(0, 10)
     const m = new Map()
     for (const r of rows) {
       const storeId   = r.receipts?.store_id || ''
@@ -78,6 +79,8 @@ export default function StashPage() {
           last_store: '',
           rating_sum: 0,
           rating_count: 0,
+          warranty_info: null,
+          best_return_window: null,   // { expiry_date, days_left }
           stores: new Map(),   // store_id → { id, name, last_price, last_date, last_receipt_id, count }
         })
       }
@@ -95,6 +98,27 @@ export default function StashPage() {
         e.last_store = storeName
       }
       if (r.rating != null) { e.rating_sum += r.rating; e.rating_count += 1 }
+      // Warranty: first non-null wins (newest receipt). Cap the
+      // string length so a multi-sentence policy doesn't blow up
+      // the card layout.
+      if (!e.warranty_info && r.warranty_info) {
+        e.warranty_info = String(r.warranty_info).slice(0, 120)
+      }
+      // Return window: pick the most-eligible-policy on the parent
+      // receipt that's still in window (expiry > today). Keep the
+      // most distant expiry so the chip reads as "you've got til X"
+      // rather than "you've got til the soonest-expiring policy".
+      const policies = r.receipts?.receipt_refund_policies || []
+      for (const pol of policies) {
+        if (pol.eligible === false) continue
+        if (!pol.expiry_date || pol.expiry_date <= todayIso) continue
+        if (!e.best_return_window || pol.expiry_date > e.best_return_window.expiry_date) {
+          e.best_return_window = {
+            expiry_date: pol.expiry_date,
+            days_left: Math.ceil((new Date(pol.expiry_date) - new Date(todayIso)) / 86400_000),
+          }
+        }
+      }
 
       const storeKey = storeId || storeName
       if (!e.stores.has(storeKey)) {
@@ -109,7 +133,7 @@ export default function StashPage() {
         s.last_receipt_id = r.receipts?.id || ''
       }
     }
-    return [...m.values()].map(e => {
+    const list = [...m.values()].map(e => {
       const storeList = [...e.stores.values()].map(s => ({ ...s, min_price: s.min_price === Infinity ? s.last_price : s.min_price }))
       const sortedByPrice = [...storeList].filter(s => s.min_price > 0).sort((a, b) => a.min_price - b.min_price)
       return {
@@ -121,6 +145,14 @@ export default function StashPage() {
         worst: sortedByPrice[sortedByPrice.length - 1] || null,
       }
     })
+    // Top-spender flag — products in the top 10% by total_spend get
+    // the "Top spender" highlight. Threshold based on the list so the
+    // signal is meaningful regardless of household size.
+    const sortedSpend = [...list].sort((a, b) => b.total_spend - a.total_spend)
+    const cutoff = Math.max(1, Math.floor(sortedSpend.length * 0.1))
+    const topSet = new Set(sortedSpend.slice(0, cutoff).map(e => e.key))
+    for (const e of list) e.is_top_spender = topSet.has(e.key)
+    return list
   }, [rows])
 
   const catCounts = useMemo(() => {
@@ -438,6 +470,43 @@ const ProductCard = memo(function ProductCard({ item, expanded, onToggle, onAddT
             )}
           </div>
         </div>
+
+        {/* Audit signals row — only renders the chips that apply.
+            Warranty + return-window come from the joined receipt
+            data; top-spender is computed from the user's total spend
+            distribution. Self-hides when nothing applies. */}
+        {(item.warranty_info || item.best_return_window || item.is_top_spender) && (
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            {item.is_top_spender && (
+              <span
+                title={`Top 10% by total spend ($${item.total_spend.toFixed(0)})`}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200"
+              >
+                💸 Top spender
+              </span>
+            )}
+            {item.best_return_window && (
+              <span
+                title={`Return window closes ${item.best_return_window.expiry_date}`}
+                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                  item.best_return_window.days_left <= 7
+                    ? 'bg-amber-100 text-amber-800 border-amber-200'
+                    : 'bg-sky-100 text-sky-800 border-sky-200'
+                }`}
+              >
+                ↩ Returnable {item.best_return_window.days_left}d
+              </span>
+            )}
+            {item.warranty_info && (
+              <span
+                title={item.warranty_info}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 max-w-[200px] truncate"
+              >
+                🛡 Warranty
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Quick-rate row — one tap on a star applies the rating to
             every receipt_item of this product and the user's

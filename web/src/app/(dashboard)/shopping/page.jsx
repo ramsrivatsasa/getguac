@@ -524,32 +524,6 @@ export default function ShoppingPage() {
     return ownList.filter(i => (i.list_name || 'Pantry') === activeList)
   }, [ownList, activeList])
 
-  // Stores where AT LEAST ONE of the currently-selected (or, when no
-  // selection, all filtered) Buy Again items has been purchased. Drives
-  // the "Send to" dropdown so the user can't accidentally route bananas
-  // to Micro Center. While the history query is loading we fall back
-  // to the full knownStores list to avoid a confusing empty dropdown.
-  function relevantStoresFor(items) {
-    if (!itemStoreHistory || itemStoreHistory.size === 0) return knownStores
-    const allowed = new Set()
-    for (const it of items) {
-      const key = String(it.item_name || '').toLowerCase().trim()
-      const stores = itemStoreHistory.get(key)
-      if (!stores) continue
-      for (const sid of stores) allowed.add(sid)
-    }
-    if (allowed.size === 0) return []
-    return knownStores.filter(st => allowed.has(st.id))
-  }
-  const eligibleStoresForSelected = useMemo(() => {
-    const targets = filteredSuggestions.filter(it => selectedSuggestions.has(it.id))
-    return relevantStoresFor(targets)
-  }, [filteredSuggestions, selectedSuggestions, itemStoreHistory, knownStores])
-  const eligibleStoresForAll = useMemo(
-    () => relevantStoresFor(filteredSuggestions),
-    [filteredSuggestions, itemStoreHistory, knownStores],
-  )
-
   // Buy Again card selection helpers.
   function toggleSuggestionSelect(id) {
     setSelectedSuggestions(prev => {
@@ -660,6 +634,38 @@ export default function ShoppingPage() {
   // lib/prediction-feedback so future surfaces (mobile dashboard,
   // weekly digest email) get the same shape.
   const errandPlan = useMemo(() => groupPredictionsByStore(filteredSuggestions), [filteredSuggestions])
+
+  // Stores where AT LEAST ONE of the currently-selected (or, when no
+  // selection, all filtered) Buy Again items has been purchased. Drives
+  // the "Send to" dropdown so the user can't accidentally route bananas
+  // to Micro Center. While the history query is loading we fall back
+  // to the full knownStores list to avoid a confusing empty dropdown.
+  //
+  // ORDER NOTE: must live AFTER filteredSuggestions — referencing it
+  // earlier in the function body puts filteredSuggestions in the
+  // temporal-dead-zone for const declarations and the whole page
+  // crashes on render with "Cannot access 'ef' before initialization".
+  // Production has been hit by this twice; do not move these earlier.
+  function relevantStoresFor(items) {
+    if (!itemStoreHistory || itemStoreHistory.size === 0) return knownStores
+    const allowed = new Set()
+    for (const it of items) {
+      const key = String(it.item_name || '').toLowerCase().trim()
+      const stores = itemStoreHistory.get(key)
+      if (!stores) continue
+      for (const sid of stores) allowed.add(sid)
+    }
+    if (allowed.size === 0) return []
+    return knownStores.filter(st => allowed.has(st.id))
+  }
+  const eligibleStoresForSelected = useMemo(() => {
+    const targets = filteredSuggestions.filter(it => selectedSuggestions.has(it.id))
+    return relevantStoresFor(targets)
+  }, [filteredSuggestions, selectedSuggestions, itemStoreHistory, knownStores])
+  const eligibleStoresForAll = useMemo(
+    () => relevantStoresFor(filteredSuggestions),
+    [filteredSuggestions, itemStoreHistory, knownStores],
+  )
 
   // Tab badge counts include BOTH the user's curated rows AND the
   // Buy Again suggestions sitting in that list, because users were

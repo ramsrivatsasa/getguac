@@ -7,6 +7,8 @@ import { getStashItems, getReceipts, getRewards } from '../../../lib/db'
 import { predictReplenishItems, expiringRewards } from '../../../lib/userProfile'
 import BestPricesModal from '../../../components/BestPricesModal'
 import GuacMascot from '../../../components/GuacMascot'
+import { StoreLogo } from '../../../components/StoreLogo'
+import { ShareItemButton } from '../../../components/ShareItemButton'
 import { displayStoreName } from '../../../lib/store-name-normalize'
 
 export default function StealsPage() {
@@ -101,27 +103,17 @@ export default function StealsPage() {
               <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 mb-1.5 flex items-center gap-1">
                 <RefreshCw size={10} /> Likely due for a restock
               </p>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {replenish.map(r => (
-                  <button key={r.key}
-                    onClick={() => setPicked({ item_name: r.item_name, sku: r.sku, category: r.category })}
-                    className="text-left rounded-xl bg-white border border-emerald-200 hover:border-emerald-400 hover:shadow-md transition-all px-3 py-2 flex items-center gap-2">
-                    <span className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-base ${
-                      r.tag === 'stale' ? 'bg-rose-100 text-rose-700'
-                      : r.tag === 'overdue' ? 'bg-amber-100 text-amber-700'
-                      : 'bg-emerald-100 text-emerald-700'
-                    }`}>
-                      <RefreshCw size={14} />
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold text-gray-800 truncate">{r.item_name}</p>
-                      <p className="text-[10px] text-gray-500">
-                        {r.times_bought}× · last {r.days_since_last}d ago
-                        {r.store_name && <> · usually {displayStoreName(r.store_name)}</>}
-                      </p>
-                    </div>
-                    <span className="text-[10px] font-bold uppercase text-gray-500 shrink-0">Steal&nbsp;it</span>
-                  </button>
+                  <StealCard
+                    key={r.key}
+                    item={r}
+                    badge={r.tag === 'stale' ? '🔴 Long overdue'
+                          : r.tag === 'overdue' ? '🟠 Overdue'
+                          : '🟢 Due soon'}
+                    subtitle={`${r.times_bought}× · last ${r.days_since_last}d ago${r.store_name ? ` · ${displayStoreName(r.store_name)}` : ''}`}
+                    onFindSteals={() => setPicked({ item_name: r.item_name, sku: r.sku, category: r.category })}
+                  />
                 ))}
               </div>
             </div>
@@ -137,23 +129,14 @@ export default function StealsPage() {
           </p>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {topItems.map((it, i) => (
-              <button
+              <StealCard
                 key={i}
-                onClick={() => setPicked(it)}
-                className="group text-left rounded-2xl border border-emerald-100 bg-white p-3 hover:shadow-lg hover:border-emerald-400 hover:scale-[1.03] hover:-translate-y-0.5 active:scale-[0.98] transition-all">
-                <div className="flex items-start gap-2">
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-300 via-rose-500 to-fuchsia-600 text-white shadow-md flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                    <Crown size={15} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-800 leading-tight line-clamp-2">{it.item_name}</p>
-                    <p className="text-[10px] text-gray-500 mt-1">
-                      {it.sku ? <span className="font-mono">SKU {it.sku}</span> : 'no SKU'}
-                      {it.last_price > 0 && <span className="ml-2">last <span className="font-bold text-emerald-700">${it.last_price.toFixed(2)}</span></span>}
-                    </p>
-                  </div>
-                </div>
-              </button>
+                item={it}
+                badge={it.last_price > 0 ? `last $${it.last_price.toFixed(2)}` : 'top spender'}
+                subtitle={it.sku ? `SKU ${it.sku}` : (it.category || 'no SKU')}
+                onFindSteals={() => setPicked(it)}
+                compact
+              />
             ))}
           </div>
         </div>
@@ -173,6 +156,79 @@ export default function StealsPage() {
       </div>
 
       <BestPricesModal open={!!picked} onClose={() => setPicked(null)} item={picked} />
+    </div>
+  )
+}
+
+// Steal card — same visual language as the Stash + Buy Again cards
+// the user already knows: brand logo avatar, item title, status
+// badge, "Find Steals" CTA, and a Share button that mints a
+// /share/<token> URL pointing at the deal page. Consistent with
+// the rest of the app so deal-hunting feels like part of the same
+// surface, not a separate tool.
+function StealCard({ item, badge, subtitle, onFindSteals, compact = false }) {
+  // Build a share payload from whatever shape the caller has. Both
+  // replenish picks AND topItems flow through here, so the keys
+  // diverge — fall back gracefully.
+  function buildSharePayload() {
+    const lastPrice = Number(item.last_price) || 0
+    const store = item.store_name || ''
+    return {
+      kind: 'item',
+      item_title: item.item_name,
+      category_emoji: '💎',
+      best_price_callout: store ? `Usually at ${displayStoreName(store)}` : null,
+      tiles: [{
+        store: store ? displayStoreName(store) : 'Search the web',
+        location: '',
+        title: item.item_name,
+        price: lastPrice,
+        rating: null,
+        review_count: null,
+        sale: false,
+      }],
+    }
+  }
+
+  return (
+    <div className="group relative rounded-2xl border-2 border-amber-100 bg-gradient-to-br from-white via-amber-50/40 to-rose-50/40 p-3 shadow-sm hover:shadow-lg hover:border-amber-300 hover:-translate-y-0.5 transition-all">
+      <div className="flex items-start gap-2.5">
+        <StoreLogo
+          storeName={item.store_name}
+          fallbackEmoji="💎"
+          size={40}
+          emojiClassName="bg-gradient-to-br from-amber-300 via-rose-500 to-fuchsia-600 text-white shadow-md"
+        />
+        <div className="flex-1 min-w-0">
+          <p className={`font-bold text-amber-950 leading-tight ${compact ? 'text-sm line-clamp-2' : 'text-sm line-clamp-2'}`}>
+            {item.item_name}
+          </p>
+          <p className="text-[10px] text-amber-800/70 mt-0.5 truncate">{subtitle}</p>
+          {badge && (
+            <span className="inline-flex items-center gap-1 mt-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+              {badge}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Footer row — Find Steals CTA + Share. Same shape as the
+          Stash ProductCard footer so users hit the same buttons in
+          the same place. */}
+      <div className="flex items-center justify-between mt-3 pt-2 border-t border-amber-100/70 gap-2">
+        <button
+          type="button"
+          onClick={onFindSteals}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-br from-amber-400 to-yellow-500 text-white text-xs font-bold shadow-sm hover:shadow-md hover:scale-[1.03] active:scale-95 transition-all"
+        >
+          <BadgeDollarSign size={13} /> Find Steals
+        </button>
+        <ShareItemButton
+          item={{ item_name: item.item_name }}
+          buildPayload={buildSharePayload}
+          triggerClassName="relative w-8 h-8 rounded-full bg-gradient-to-br from-sky-300 to-emerald-500 text-white shadow-sm hover:shadow-md hover:scale-110 active:scale-95 transition-all flex items-center justify-center ring-1 ring-white"
+        />
+      </div>
     </div>
   )
 }

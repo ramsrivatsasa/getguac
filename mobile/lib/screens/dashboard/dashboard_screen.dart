@@ -14,6 +14,7 @@ import '../../store_name_normalize.dart';
 import '../../payment_rows.dart';
 import '../../services/spending_trends_service.dart';
 import '../../services/smash_days_service.dart';
+import '../../services/guac_money_service.dart';
 import '../../utils/country_flag.dart';
 import '../../widgets/subscriptions_card.dart';
 
@@ -487,6 +488,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
           onTap: () => context.go('/guacscore'),
         )),
         const SizedBox(width: 10),
+        // GuacMoney tile — pulls the user's lifetime accumulated saved
+        // dollars via the guac_money_total SQL aggregate. Live-loaded
+        // via a FutureBuilder so it ticks up when the user comes back
+        // from /shopping after a Cheapest-routing.
+        Expanded(child: FutureBuilder<double>(
+          future: fetchGuacMoneyTotal(),
+          builder: (ctx, snap) {
+            final total = snap.data ?? 0;
+            return _StatTile(
+              label: 'GuacMoney 🥑',
+              value: snap.connectionState == ConnectionState.waiting && total == 0
+                  ? '—'
+                  : formatGuacMoney(total),
+              icon: Icons.savings_outlined,
+              iconGradient: total > 0
+                ? const LinearGradient(colors: [Color(0xFF34d399), Color(0xFF10b981), Color(0xFF65a30d)])
+                : null,
+              iconBg: total > 0 ? null : const Color(0xFFd1fae5),
+              iconColor: total > 0 ? Colors.white : _kEmerald700,
+              trendLabel: total > 0 ? 'saved' : 'tap Cheapest',
+              trendTone: total > 0 ? 'down' : null,
+            );
+          },
+        )),
+      ]),
+      const SizedBox(height: 10),
+      Row(children: [
         Expanded(child: _StatTile(
           label: 'Total Spent',
           value: '\$${totalSpend.toStringAsFixed(2)}',
@@ -496,9 +524,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           trendLabel: spendTrend?.label,
           trendTone:  spendTrend?.tone,
         )),
-      ]),
-      const SizedBox(height: 10),
-      Row(children: [
+        const SizedBox(width: 10),
         Expanded(child: _StatTile(
           label: 'Tax Paid',
           value: '\$${totalTax.toStringAsFixed(2)}',
@@ -506,7 +532,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           iconBg: const Color(0xFFfef3c7),
           iconColor: const Color(0xFFb45309),
         )),
-        const SizedBox(width: 10),
+      ]),
+      const SizedBox(height: 10),
+      Row(children: [
         Expanded(child: _StatTile(
           label: 'Transactions',
           value: '${filtered.length}',
@@ -515,9 +543,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           iconColor: _kEmerald700,
           onTap: () => context.go(_receiptsDeepLink()),
         )),
-      ]),
-      const SizedBox(height: 10),
-      Row(children: [
+        const SizedBox(width: 10),
         Expanded(child: _StatTile(
           label: 'Rewards',
           value: '$rewardCount',
@@ -526,7 +552,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           iconColor: const Color(0xFF65a30d),
           onTap: () => context.go('/rewards'),
         )),
-        const SizedBox(width: 10),
+      ]),
+      const SizedBox(height: 10),
+      Row(children: [
         // Smash days — consecutive-day receipt activity counter.
         // Mirrors the web /dashboard tile. Tile turns warm-yellow when
         // the streak is alive (animate-pulse on web becomes a static
@@ -546,6 +574,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             trendTone: smash > 0 ? 'up' : null,
           );
         }()),
+        const SizedBox(width: 10),
+        const Expanded(child: SizedBox()),
       ]),
     ]);
   }

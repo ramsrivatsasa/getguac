@@ -1,10 +1,28 @@
-// Smashlist — lightweight shopping-list screen. Reads only the columns the
-// list view actually shows, groups by list_name, supports add/check/delete.
+// Smashlist — shopping-list screen with Buy Again predictions on top
+// + curated list below. Tap Auto-Add Cheapest to bulk-approve every
+// Buy Again suggestion to its cheapest historical store, logging
+// the per-item savings as GuacMoney events that show up on the
+// dashboard tile.
+//
+// v0.3.x mobile-parity push: brand logos via StoreLogo widget, Auto-
+// Add Cheapest with GuacMoney write-side, Refresh List button.
+// Per-item Share, store accordion, and Compare Stores panel arrive
+// in later phases.
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../services/guac_money_service.dart';
+import '../../widgets/store_logo.dart';
+import '../../widgets/top_app_bar_actions.dart';
 
 const _kBrand = Color(0xFF15803d);
-const _kListCols = 'id, item_name, qty, list_name, frequency, approved, sent_to_store';
+
+// Pulling more columns now — `predicted` + `price` + `store_name_id`
+// drive the Buy Again section and the Auto-Add Cheapest math. The web
+// query reads the same shape.
+const _kListCols =
+    'id, item_name, qty, price, list_name, frequency, approved, sent_to_store, '
+    'predicted, predicted_reason, predicted_avg_cadence_days, store_name_id';
 
 const _kLists = ['Pantry', 'Cravings', 'Snack Stack', 'Grub & Grab'];
 const Map<String, String> _kListEmoji = {
@@ -21,16 +39,31 @@ class _Item {
   final String id;
   final String name;
   final int qty;
+  final double price;
   final String listName;
   bool approved;
-  _Item(this.id, this.name, this.qty, this.listName, this.approved);
+  final bool predicted;
+  final String? storeNameId;
+  String? storeNameDisplay;  // resolved from joined stores table
+  _Item({
+    required this.id,
+    required this.name,
+    required this.qty,
+    required this.price,
+    required this.listName,
+    required this.approved,
+    required this.predicted,
+    required this.storeNameId,
+  });
 }
 
 class _ShoppingListScreenState extends State<ShoppingListScreen> {
   final _sb = Supabase.instance.client;
   bool _loading = true;
+  bool _autoAdding = false;
   List<_Item> _items = [];
   String _activeList = 'Pantry';
+  String? _loadError;
 
   @override
   void initState() {
@@ -38,28 +71,56 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
     _load();
   }
 
-  String? _loadError;
-
   Future<void> _load() async {
     setState(() { _loading = true; _loadError = null; });
     try {
+      // Two-step fetch matches the web getShoppingList(): shopping_list
+      // rows first, then resolve store_name_id to a display name via
+      // stores. RLS gates both reads to the current user.
       final rows = await _sb
           .from('shopping_list')
           .select(_kListCols)
           .order('order_date', ascending: false)
           .limit(500);
-      _items = (rows as List).map((r) => _Item(
-        (r['id'] ?? '').toString(),
-        (r['item_name'] ?? '').toString(),
-        (r['qty'] is int) ? r['qty'] as int : int.tryParse(r['qty']?.toString() ?? '1') ?? 1,
-        (r['list_name'] ?? 'Pantry').toString(),
-        r['approved'] == true,
+      final items = (rows as List).map((r) => _Item(
+        id: (r['id'] ?? '').toString(),
+        name: (r['item_name'] ?? '').toString(),
+        qty: (r['qty'] is int) ? r['qty'] as int : int.tryParse(r['qty']?.toString() ?? '1') ?? 1,
+        price: double.tryParse(r['price']?.toString() ?? '0') ?? 0,
+        listName: (r['list_name'] ?? 'Pantry').toString(),
+        approved: r['approved'] == true,
+        predicted: r['predicted'] == true,
+        storeNameId: r['store_name_id']?.toString(),
       )).toList();
+
+      // Resolve store names — single batched query.
+      final storeIds = items
+          .map((i) => i.storeNameId)
+          .whereType<String>()
+          .where((s) => s.isNotEmpty)
+          .toSet()
+          .toList();
+      if (storeIds.isNotEmpty) {
+        try {
+          final stores = await _sb
+              .from('stores')
+              .select('id, store_name')
+              .inFilter('id', storeIds);
+          final byId = <String, String>{};
+          for (final s in (stores as List)) {
+            byId[(s['id'] ?? '').toString()] = (s['store_name'] ?? '').toString();
+          }
+          for (final it in items) {
+            final sid = it.storeNameId;
+            if (sid != null && byId.containsKey(sid)) {
+              it.storeNameDisplay = byId[sid];
+            }
+          }
+        } catch (_) { /* best-effort; missing names just leaves them null */ }
+      }
+
+      _items = items;
     } catch (e) {
-      // Surface the error so we don't silently render empty when RLS or
-      // a missing column is the real cause. Previously this catch was
-      // bare and swallowed everything — users saw an empty list with
-      // no signal that anything had gone wrong.
       _loadError = e.toString();
       _items = const [];
     } finally {
@@ -72,35 +133,138 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
     try {
       await _sb.from('shopping_list').update({'approved': it.approved}).eq('id', it.id);
     } catch (_) {
-      if (mounted) setState(() => it.approved = !it.approved);  // rollback
+      if (mounted) setState(() => it.approved = !it.approved);
     }
   }
 
   Future<void> _delete(_Item it) async {
-    // Optimistic remove from list. If the DB delete fails we put it back
-    // and surface the error — previously the catch was bare, so a failed
-    // delete left a "deleted" row that reappeared on next load with no
-    // explanation.
     setState(() => _items.removeWhere((x) => x.id == it.id));
     try {
       await _sb.from('shopping_list').delete().eq('id', it.id);
     } catch (e) {
       if (mounted) {
         setState(() => _items.add(it));
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not delete: $e')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not delete: $e')));
       }
+    }
+  }
+
+  // Auto-Add Cheapest — the GuacMoney engagement loop. For every
+  // predicted-and-not-approved item, pull per-store price history,
+  // pick the store with the lowest min_price, log a GuacMoney event
+  // for the dollars saved vs the average of other stores. Then mark
+  // each item as approved so it drops out of Buy Again.
+  Future<void> _autoAddCheapest() async {
+    final targets = _items.where((i) => i.predicted && !i.approved).toList();
+    if (targets.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Nothing to add yet — wait for the nightly predictor or add items manually."),
+      ));
+      return;
+    }
+    setState(() => _autoAdding = true);
+    try {
+      // Pull all receipt_items × receipts.store for these item names
+      // in ONE query, then build a per-item store map client-side.
+      final names = targets.map((t) => t.name).toList();
+      final rows = await _sb
+          .from('receipt_items')
+          .select('item_name, price, receipts!inner(store_id, store_name)')
+          .inFilter('item_name', names)
+          .limit(2000);
+      final perItem = <String, Map<String, _StoreStat>>{};
+      for (final r in (rows as List)) {
+        final iname = (r['item_name'] ?? '').toString();
+        final price = double.tryParse(r['price']?.toString() ?? '');
+        final sid = (r['receipts'] as Map?)?['store_id']?.toString();
+        final sname = (r['receipts'] as Map?)?['store_name']?.toString();
+        if (iname.isEmpty || sid == null || sid.isEmpty || price == null) continue;
+        final m = perItem.putIfAbsent(iname, () => <String, _StoreStat>{});
+        final s = m.putIfAbsent(sid, () => _StoreStat(sid, sname ?? ''));
+        s.count++;
+        if (s.minPrice == null || price < s.minPrice!) s.minPrice = price;
+      }
+
+      double totalSaved = 0;
+      int okCount = 0;
+      for (final t in targets) {
+        final m = perItem[t.name];
+        if (m == null || m.isEmpty) continue;
+        final stores = m.values.toList();
+        stores.sort((a, b) => (a.minPrice ?? double.infinity).compareTo(b.minPrice ?? double.infinity));
+        final chosen = stores.first;
+        if (chosen.minPrice == null) continue;
+
+        // Compute savings: avg of OTHER stores' min_price minus chosen.
+        final others = stores.skip(1).where((s) => s.minPrice != null).toList();
+        double saved = 0;
+        if (others.isNotEmpty) {
+          final avgOther = others.fold<double>(0, (s, x) => s + x.minPrice!) / others.length;
+          saved = (avgOther - chosen.minPrice!) * t.qty;
+          if (saved < 0) saved = 0;
+        }
+
+        // Update the shopping_list row: approved=true + store_name_id=chosen.
+        try {
+          await _sb.from('shopping_list').update({
+            'approved': true,
+            'store_name_id': chosen.id,
+          }).eq('id', t.id);
+          okCount++;
+          if (saved > 0) {
+            totalSaved += saved;
+            // Best-effort GuacMoney write — never block the flow.
+            await logGuacMoney(
+              source: GuacMoneySource.autoAddCheapest,
+              amount: saved,
+              itemName: t.name,
+              storeName: chosen.name,
+              metadata: {
+                'chosen_price': chosen.minPrice,
+                'other_count': others.length,
+                'qty': t.qty,
+              },
+            );
+          }
+        } catch (_) { /* keep going on per-item failures */ }
+      }
+
+      if (mounted) {
+        final msg = totalSaved > 0
+          ? 'Added $okCount/${targets.length} via cheapest store · +\$${totalSaved.toStringAsFixed(2)} GuacMoney 🥑'
+          : 'Added $okCount/${targets.length} via cheapest store ✓';
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg), duration: const Duration(seconds: 4)));
+      }
+      await _load();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Auto-Add failed: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _autoAdding = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final inList = _items.where((i) => i.listName == _activeList).toList();
+    final buyAgain = inList.where((i) => i.predicted && !i.approved).toList();
+    final approved = inList.where((i) => !i.predicted || i.approved).toList();
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Smashlist')),
-      // FAB removed in v0.2.69. The web/email flows feed this list now;
-      // mobile is read-only (check off + swipe to delete still work).
+      appBar: AppBar(
+        title: const Text('Smashlist'),
+        actions: [
+          // Refresh — re-fetches the list. Same affordance the web
+          // page has as "Refresh list" button next to Auto-Add.
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            tooltip: 'Refresh list',
+            onPressed: _loading ? null : _load,
+          ),
+          ...topAppBarActions(context),
+        ],
+      ),
       body: Column(children: [
         // List tabs
         Container(
@@ -122,70 +286,155 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
             }).toList()),
           ),
         ),
+
+        // Auto-Add Cheapest — visible only when Buy Again has items.
+        // Same engagement loop the web Smashlist has; logs GuacMoney
+        // events per item routed to its historical-cheapest store.
+        if (buyAgain.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+            child: SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: _autoAdding ? null : _autoAddCheapest,
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF10b981),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                icon: _autoAdding
+                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : const Icon(Icons.savings_outlined),
+                label: Text(_autoAdding ? 'Adding…' : '💰 Auto-Add ${buyAgain.length} via cheapest store',
+                  style: const TextStyle(fontWeight: FontWeight.w800)),
+              ),
+            ),
+          ),
+
         Expanded(
           child: _loading
             ? const Center(child: CircularProgressIndicator())
             : _loadError != null
-              ? Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
-                    const Icon(Icons.error_outline, color: Colors.red, size: 48),
-                    const SizedBox(height: 8),
-                    const Text('Could not load Smashlist',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.red)),
-                    const SizedBox(height: 6),
-                    Text(_loadError!,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 12, color: Colors.black54)),
-                    const SizedBox(height: 12),
-                    FilledButton.icon(
-                      onPressed: _load,
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Retry'),
-                    ),
-                  ])),
-                )
+              ? _errorView()
               : inList.isEmpty
-              ? Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
-                  Text(_kListEmoji[_activeList] ?? '🛒', style: const TextStyle(fontSize: 60)),
-                  const SizedBox(height: 12),
-                  Text('$_activeList is empty', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-                  const SizedBox(height: 4),
-                  Text(
-                    _items.isEmpty
-                      ? 'No items in any list yet. Add some via web or by parsing a receipt.'
-                      : 'Nothing in $_activeList. Check the other tabs above.',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.black54),
+                ? _emptyView()
+                : RefreshIndicator(
+                    onRefresh: _load,
+                    child: ListView(
+                      padding: const EdgeInsets.fromLTRB(0, 0, 0, 24),
+                      children: [
+                        if (buyAgain.isNotEmpty) ...[
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
+                            child: Row(children: [
+                              const Icon(Icons.auto_awesome, size: 14, color: Color(0xFF7c3aed)),
+                              const SizedBox(width: 4),
+                              Text('Buy Again · ${buyAgain.length}',
+                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.5, color: Color(0xFF6b21a8))),
+                            ]),
+                          ),
+                          ...buyAgain.map((it) => _itemTile(it, isPredicted: true)),
+                          const SizedBox(height: 8),
+                        ],
+                        if (approved.isNotEmpty) ...[
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
+                            child: Row(children: [
+                              const Icon(Icons.shopping_cart_outlined, size: 14, color: _kBrand),
+                              const SizedBox(width: 4),
+                              Text('Your Smashlist · ${approved.length}',
+                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.5, color: _kBrand)),
+                            ]),
+                          ),
+                          ...approved.map((it) => _itemTile(it, isPredicted: false)),
+                        ],
+                      ],
+                    ),
                   ),
-                ]))
-              : RefreshIndicator(
-                  onRefresh: _load,
-                  child: ListView.builder(
-                    itemCount: inList.length,
-                    itemBuilder: (_, i) {
-                      final it = inList[i];
-                      return Dismissible(
-                        key: ValueKey(it.id),
-                        background: Container(color: Colors.red, alignment: Alignment.centerRight, padding: const EdgeInsets.only(right: 20), child: const Icon(Icons.delete, color: Colors.white)),
-                        direction: DismissDirection.endToStart,
-                        onDismissed: (_) => _delete(it),
-                        child: CheckboxListTile(
-                          value: it.approved,
-                          onChanged: (_) => _toggle(it),
-                          activeColor: _kBrand,
-                          title: Text(it.name, style: TextStyle(
-                            decoration: it.approved ? TextDecoration.lineThrough : null,
-                            color: it.approved ? Colors.black54 : null,
-                          )),
-                          subtitle: Text('×${it.qty}'),
-                        ),
-                      );
-                    },
-                  ),
-                ),
         ),
       ]),
     );
   }
+
+  Widget _itemTile(_Item it, {required bool isPredicted}) {
+    return Dismissible(
+      key: ValueKey(it.id),
+      background: Container(color: Colors.red, alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20), child: const Icon(Icons.delete, color: Colors.white)),
+      direction: DismissDirection.endToStart,
+      onDismissed: (_) => _delete(it),
+      child: ListTile(
+        leading: StoreLogo(
+          storeName: it.storeNameDisplay,
+          fallbackEmoji: isPredicted ? '🪄' : '🛒',
+          size: 36,
+          emojiBg: isPredicted ? const Color(0xFF7c3aed) : _kBrand,
+        ),
+        title: Text(it.name, style: TextStyle(
+          fontWeight: FontWeight.w600,
+          decoration: it.approved ? TextDecoration.lineThrough : null,
+          color: it.approved ? Colors.black54 : null,
+        )),
+        subtitle: Row(children: [
+          Text('×${it.qty}', style: const TextStyle(fontSize: 12, color: Colors.black54)),
+          if (it.storeNameDisplay != null && it.storeNameDisplay!.isNotEmpty) ...[
+            const SizedBox(width: 6),
+            const Text('·', style: TextStyle(color: Colors.black38)),
+            const SizedBox(width: 6),
+            Flexible(child: Text(it.storeNameDisplay!, overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 12, color: _kBrand, fontWeight: FontWeight.w600))),
+          ],
+        ]),
+        trailing: isPredicted
+          ? IconButton(
+              icon: const Icon(Icons.add_circle, color: _kBrand),
+              tooltip: 'Add to Smashlist',
+              onPressed: () => _toggle(it),
+            )
+          : Checkbox(
+              value: it.approved,
+              onChanged: (_) => _toggle(it),
+              activeColor: _kBrand,
+            ),
+      ),
+    );
+  }
+
+  Widget _emptyView() => Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
+    Text(_kListEmoji[_activeList] ?? '🛒', style: const TextStyle(fontSize: 60)),
+    const SizedBox(height: 12),
+    Text('$_activeList is empty', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+    const SizedBox(height: 4),
+    Text(
+      _items.isEmpty
+        ? 'No items yet. Add some via web or by parsing a receipt.'
+        : 'Nothing in $_activeList. Check the other tabs.',
+      textAlign: TextAlign.center,
+      style: const TextStyle(color: Colors.black54),
+    ),
+  ]));
+
+  Widget _errorView() => Padding(
+    padding: const EdgeInsets.all(20),
+    child: Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
+      const Icon(Icons.error_outline, color: Colors.red, size: 48),
+      const SizedBox(height: 8),
+      const Text('Could not load Smashlist',
+        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.red)),
+      const SizedBox(height: 6),
+      Text(_loadError!, textAlign: TextAlign.center,
+        style: const TextStyle(fontSize: 12, color: Colors.black54)),
+      const SizedBox(height: 12),
+      FilledButton.icon(onPressed: _load, icon: const Icon(Icons.refresh), label: const Text('Retry')),
+    ])),
+  );
+}
+
+class _StoreStat {
+  final String id;
+  final String name;
+  int count = 0;
+  double? minPrice;
+  _StoreStat(this.id, this.name);
 }

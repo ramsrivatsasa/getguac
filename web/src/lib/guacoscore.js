@@ -5,12 +5,18 @@
 // a $500 regret hurts the score more than a $5 regret. Unrated items are
 // excluded — you have to rate to score.
 
+// Tones stay positive and forward-looking across the whole range.
+// The user opens their dashboard to whatever this label says — we
+// never want it to read like a scolding. Even the lowest band reads
+// as "fresh start" rather than "you blew it." Colors slide warm-to-
+// cool for visual differentiation, but the lowest band borrows lime
+// (not rose) so a low score doesn't paint the page red.
 export const GUACOSCORE_GRADES = [
-  { min: 90, key: 'master',  label: 'Smash Master',  emoji: '🥑',  desc: 'Every dollar earning its smash.',     color: 'emerald' },
-  { min: 75, key: 'solid',   label: 'Solid Smasher', emoji: '✨', desc: 'Mostly essentials. Keep it up.',       color: 'lime' },
-  { min: 60, key: 'steady',  label: 'Steady Guac',   emoji: '🙂', desc: 'Doing fine. Some room to tighten.',    color: 'amber' },
-  { min: 40, key: 'splurgy', label: 'Splurgy',       emoji: '🍿', desc: 'Treat-yourself mode. Watch the drift.', color: 'orange' },
-  { min: 0,  key: 'mushy',   label: 'Mushy',         emoji: '🙈', desc: 'Lots of regret. Reset incoming.',      color: 'rose' },
+  { min: 90, key: 'master',  label: 'Smash Master',  emoji: '🥑',  desc: 'Every dollar earning its smash.',         color: 'emerald' },
+  { min: 75, key: 'solid',   label: 'Solid Smasher', emoji: '✨',  desc: 'Mostly essentials. Keep it up.',           color: 'lime' },
+  { min: 60, key: 'steady',  label: 'Steady Guac',   emoji: '🙂',  desc: 'Doing fine. Small tweaks bump you up.',    color: 'amber' },
+  { min: 40, key: 'splurgy', label: 'Treat Mode',    emoji: '🍿',  desc: 'Enjoy mode. Plenty of room to climb.',     color: 'orange' },
+  { min: 0,  key: 'mushy',   label: 'Just Starting', emoji: '🌱',  desc: 'Fresh start — every smart buy lifts you.', color: 'lime' },
 ]
 
 export function gradeFor(score) {

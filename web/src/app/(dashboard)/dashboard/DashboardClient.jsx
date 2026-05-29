@@ -149,15 +149,9 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
   return (
     <div className="space-y-6 max-w-7xl">
       <div className="flex items-start justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-4 flex-wrap">
-          <div>
-            <h1 className="page-title">Good day, {firstName} 👋</h1>
-            <p className="text-sm text-gray-500 mt-0.5">Here's your financial snapshot</p>
-          </div>
-          {/* GuacScore renders inline with the greeting so the score
-              is the first number the user sees, not a tile competing
-              for attention with the rest of the stat row. */}
-          <GuacoScoreCard receipts={filtered} size="sm" className="!min-w-[200px]" />
+        <div>
+          <h1 className="page-title">Good day, {firstName} 👋</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Here's your financial snapshot</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <Link href="/validate"
@@ -228,12 +222,11 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
           tiles (rewards / GuacMoney), with Smash days at the end as
           requested. Eight tiles total — flows 4×2 on lg, 2×4 on
           mobile. */}
-      {/* Stat tiles — GuacScore now lives in the header beside the
-          greeting, so the row leads with GuacWizard. Ordering per
-          user request: GuacWizard → GuacMoney → financial tiles
-          (Transactions / Spent / Tax / Bank Fees / Rewards) →
-          Smash days last. */}
+      {/* Stat tiles — GuacScore leads, then GuacWizard right next
+          to it (paired engagement scores), then GuacMoney, then
+          financial tiles, then Smash days last per user request. */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
+        <GuacoScoreCard receipts={filtered} size="sm" />
         <GuacWizardTile />
         <GuacMoneyTile />
         {[

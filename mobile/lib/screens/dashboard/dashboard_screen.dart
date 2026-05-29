@@ -14,6 +14,7 @@ import '../../store_name_normalize.dart';
 import '../../payment_rows.dart';
 import '../../services/spending_trends_service.dart';
 import '../../services/smash_days_service.dart';
+import '../../utils/country_flag.dart';
 import '../../widgets/subscriptions_card.dart';
 
 const _kEmerald700 = Color(0xFF15803d);
@@ -342,6 +343,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
           style: TextStyle(color: Color(0xFFa3e635), fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 1)),
       ]),
       actions: [
+        // Region flag — pulled from the OS-level locale. Lightweight
+        // precursor to real i18n (currency, locale-aware dates,
+        // region-specific store catalog). Hidden when the device locale
+        // has no country code.
+        Builder(builder: (ctx) {
+          final code = detectDeviceCountry();
+          final flag = flagForCountry(code);
+          if (flag == null) return const SizedBox.shrink();
+          return Tooltip(
+            message: 'Region: ${countryName(code)}',
+            child: Container(
+              margin: const EdgeInsets.only(right: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Text(flag, style: const TextStyle(fontSize: 14, height: 1)),
+                const SizedBox(width: 4),
+                Text(
+                  code!.toUpperCase(),
+                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800),
+                ),
+              ]),
+            ),
+          );
+        }),
         // Chat lives in the dashboard appbar so it's one tap from anywhere.
         // Was previously buried under the Profile-tab long-press menu, which
         // most users didn't discover. Sign-out moved to /profile where it

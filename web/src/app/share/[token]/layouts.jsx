@@ -175,12 +175,12 @@ export function ShareListLayout({ share }) {
 
 // ─── Shared sub-components ──────────────────────────────────────────
 
-// Social-proof chips — sharer's lifetime savings and current scan
-// streak rendered under the from-line. Pulled from the share's
-// payload so the page renders without an extra DB trip; the API
-// can be enriched later to compute these server-side.
-export function SharerSocialProof({ sharedBy, totalSaved, streakDays }) {
-  if (totalSaved == null && streakDays == null) return null
+// Social-proof chips — sharer's lifetime savings and active
+// smash-day count rendered under the from-line. Pulled from the
+// share's payload so the page renders without an extra DB trip;
+// the API can be enriched later to compute these server-side.
+export function SharerSocialProof({ sharedBy, totalSaved, smashDays }) {
+  if (totalSaved == null && smashDays == null) return null
   return (
     <div className="flex flex-wrap items-center gap-2 mb-3">
       {totalSaved != null && (
@@ -188,9 +188,9 @@ export function SharerSocialProof({ sharedBy, totalSaved, streakDays }) {
           💰 {sharedBy} saved <span className="tabular-nums">${Number(totalSaved).toFixed(0)}</span> on GetGuac
         </span>
       )}
-      {streakDays != null && streakDays > 0 && (
+      {smashDays != null && smashDays > 0 && (
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-900 text-xs font-bold border border-amber-300">
-          🔥 {streakDays}-day streak
+          🔥 {smashDays} smash day{smashDays === 1 ? '' : 's'}
         </span>
       )}
     </div>

@@ -138,7 +138,29 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
     }
   }
 
+  // Smart-delete: predicted items get sent back to Buy Again (set
+  // approved=false), non-predicted items are removed from the table
+  // entirely. Mirrors web's removeFromSmashlist — feedback that the
+  // user wanted the curated row off the list without losing the
+  // prediction's history.
   Future<void> _delete(_Item it) async {
+    if (it.predicted) {
+      setState(() => it.approved = false);
+      try {
+        await _sb.from('shopping_list').update({'approved': false}).eq('id', it.id);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Sent back to Buy Again ↩'), duration: Duration(seconds: 2)),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() => it.approved = true);
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not move: $e')));
+        }
+      }
+      return;
+    }
     setState(() => _items.removeWhere((x) => x.id == it.id));
     try {
       await _sb.from('shopping_list').delete().eq('id', it.id);
@@ -366,7 +388,16 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                                   letterSpacing: 0.5, color: _kBrand)),
                             ]),
                           ),
-                          ...approved.map((it) => _itemTile(it, isPredicted: false)),
+                          // Group curated rows by store so each header
+                          // doubles as a per-store trip plan. Mirrors the
+                          // web Smashlist's ownByStore accordion. Items
+                          // without a routed store fall under "Any Store".
+                          ..._groupByStore(approved).entries.map((g) =>
+                            _StoreAccordion(
+                              storeName: g.key,
+                              items: g.value,
+                              buildTile: (it) => _itemTile(it, isPredicted: false),
+                            )),
                         ],
                       ],
                     ),
@@ -429,6 +460,21 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
     );
   }
 
+  // Bucket curated items by store. Stable-iteration LinkedHashMap so
+  // groups render in insertion order (which is name-sorted from _load).
+  // Items with no routed store get bucketed under "Any Store" — matches
+  // web's "(Any store)" group key.
+  Map<String, List<_Item>> _groupByStore(List<_Item> items) {
+    final groups = <String, List<_Item>>{};
+    for (final it in items) {
+      final key = (it.storeNameDisplay != null && it.storeNameDisplay!.isNotEmpty)
+        ? it.storeNameDisplay!
+        : 'Any Store';
+      groups.putIfAbsent(key, () => <_Item>[]).add(it);
+    }
+    return groups;
+  }
+
   Widget _emptyView() => Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
     Text(_kListEmoji[_activeList] ?? '🛒', style: const TextStyle(fontSize: 60)),
     const SizedBox(height: 12),
@@ -457,6 +503,68 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
       FilledButton.icon(onPressed: _load, icon: const Icon(Icons.refresh), label: const Text('Retry')),
     ])),
   );
+}
+
+// Per-store accordion section in the curated Smashlist. Expanded by
+// default — first-time users see their whole list without tapping each
+// header. Header shows store name + brand favicon + item count; body
+// renders each item via the passed-in builder.
+class _StoreAccordion extends StatefulWidget {
+  final String storeName;
+  final List<_Item> items;
+  final Widget Function(_Item) buildTile;
+  const _StoreAccordion({
+    required this.storeName,
+    required this.items,
+    required this.buildTile,
+  });
+  @override
+  State<_StoreAccordion> createState() => _StoreAccordionState();
+}
+
+class _StoreAccordionState extends State<_StoreAccordion> {
+  bool _expanded = true;
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        border: Border(top: BorderSide(color: Color(0xFFf3f4f6))),
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        InkWell(
+          onTap: () => setState(() => _expanded = !_expanded),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+            child: Row(children: [
+              StoreLogo(
+                storeName: widget.storeName == 'Any Store' ? null : widget.storeName,
+                fallbackEmoji: '🏬',
+                size: 28,
+                emojiBg: const Color(0xFF15803d),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(widget.storeName,
+                  style: const TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF064e3b))),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFf3f4f6),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text('${widget.items.length}',
+                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.black54)),
+              ),
+              const SizedBox(width: 4),
+              Icon(_expanded ? Icons.expand_less : Icons.expand_more, color: Colors.black54),
+            ]),
+          ),
+        ),
+        if (_expanded) ...widget.items.map(widget.buildTile),
+      ]),
+    );
+  }
 }
 
 class _StoreStat {

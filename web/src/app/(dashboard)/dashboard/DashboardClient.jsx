@@ -201,12 +201,6 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
           up. Self-hides when nothing's off; session-dismissable. */}
       <AnomaliesPanel receipts={spendingReceipts} />
 
-      {/* Recent activity — the "what just happened" feed that
-          stitches receipts + Smashlist adds into one chronological
-          rail. Empty state self-renders when the user has nothing
-          yet, so the dashboard never looks blank for new accounts. */}
-      <ActivityFeed receipts={spendingReceipts} />
-
       {/* Stats — GuacScore first, then Smash days, then the spend
           tiles. Total Spent gets an inline trend badge ("up 18% vs
           prior 3 windows") using the central spending-trends lib.
@@ -384,6 +378,14 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
           </table>
         )}
       </div>
+
+      {/* Recent activity — chronological "what just happened" rail.
+          Lives at the bottom so the dashboard's primary signals
+          (GuacScore, spend tiles, charts, recent receipts table)
+          read first. Empty state self-renders when the user has
+          nothing yet, so the dashboard never looks blank for new
+          accounts. */}
+      <ActivityFeed receipts={spendingReceipts} />
     </div>
   )
 }

@@ -9,6 +9,7 @@ import { DollarSign, Receipt, Gift, TrendingUp, ArrowRight, Sparkles, Flame } fr
 import GuacoScoreCard from '../../../components/GuacoScoreCard'
 import UpcomingReturnsBanner from '../../../components/UpcomingReturnsBanner'
 import AnomaliesPanel from '../../../components/AnomaliesPanel'
+import { ActivityFeed } from '../../../components/ActivityFeed'
 import { computeSmashDays } from '../../../lib/smashDays'
 import { subDays, subWeeks, subMonths, subYears } from 'date-fns'
 import { normalizeStoreName, canonicalStoreName, displayStoreName, storeGroupKey } from '../../../lib/store-name-normalize'
@@ -199,6 +200,12 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
           ≥2× their usual + any monthly recurring that stopped showing
           up. Self-hides when nothing's off; session-dismissable. */}
       <AnomaliesPanel receipts={spendingReceipts} />
+
+      {/* Recent activity — the "what just happened" feed that
+          stitches receipts + Smashlist adds into one chronological
+          rail. Empty state self-renders when the user has nothing
+          yet, so the dashboard never looks blank for new accounts. */}
+      <ActivityFeed receipts={spendingReceipts} />
 
       {/* Stats — GuacScore first, then Smash days, then the spend
           tiles. Total Spent gets an inline trend badge ("up 18% vs

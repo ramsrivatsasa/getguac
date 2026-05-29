@@ -12,6 +12,7 @@ import { createClient } from '../../../lib/supabase/client'
 import { StoreList } from '../../../components/StoreList'
 import { StoreLogo } from '../../../components/StoreLogo'
 import { ShareItemButton as SharedShareItemButton } from '../../../components/ShareItemButton'
+import { fireConfetti } from '../../../lib/confetti'
 
 // Same tone palette as /stash so Buy Again cards visually rhyme with
 // the Stash grid. Maps the per-Smashlist color (Pantry=emerald,
@@ -460,6 +461,10 @@ export default function ShoppingPage() {
       : criteria === 'frequent' ? 'most-used store'
       : 'Smashlist'
     toast.success(`Added ${ok}/${targets.length} via ${label} ✓`)
+    // Celebration burst — fires from the page header area on any
+    // successful Auto-Add (cheapest/frequent/asis or per-card to a
+    // chosen store). Reduced-motion users are skipped by fireConfetti.
+    if (ok > 0) fireConfetti({ count: 60 + ok * 4 })
   }
 
   async function predictNow() {

@@ -11,6 +11,7 @@ import { displayStoreName } from '../../../lib/store-name-normalize'
 import { createClient } from '../../../lib/supabase/client'
 import { StoreList } from '../../../components/StoreList'
 import { StoreLogo } from '../../../components/StoreLogo'
+import { ShareItemButton as SharedShareItemButton } from '../../../components/ShareItemButton'
 
 // Same tone palette as /stash so Buy Again cards visually rhyme with
 // the Stash grid. Maps the per-Smashlist color (Pantry=emerald,
@@ -1701,7 +1702,7 @@ function BuyAgainCard({ item, selected = false, onToggleSelect, onAdd, onQty }) 
             <QtyInput value={item.qty || 1} onSave={onQty} />
           </div>
           <div className="flex items-center gap-1.5">
-            <ShareItemButton item={item} yourStores={yourStores} />
+            <BuyAgainShareButton item={item} yourStores={yourStores} />
             <button
               type="button"
               onClick={onAdd}
@@ -1717,146 +1718,44 @@ function BuyAgainCard({ item, selected = false, onToggleSelect, onAdd, onQty }) 
   )
 }
 
-// Per-card Share button — creates a public /share/<token> URL via
-// /api/share/create then routes the user through their preferred
-// channel (WhatsApp / SMS / Email / Copy / native sheet). The payload
-// snapshot includes the per-store price tiles already loaded by the
-// expanded Compare Stores panel; if the card hasn't been expanded
-// yet we fall back to a single-tile share (the user's own store +
-// last price).
-function ShareItemButton({ item, yourStores }) {
-  const [open, setOpen] = useState(false)
-  const [busy, setBusy] = useState(false)
-
-  function handleBlur(e) {
-    if (!e.currentTarget.contains(e.relatedTarget)) setOpen(false)
-  }
-
-  async function buildShareUrl(channel) {
-    setBusy(true)
-    try {
-      const meta = SHOPPING_LIST_META[item.list_name || 'Pantry'] || {}
-      const tiles = (yourStores && yourStores.length > 0 ? yourStores : []).map(s => ({
-        store: s.name || 'Store',
+// Per-card Share trigger — small wrapper around the shared
+// ShareItemButton that builds the item-share payload from the Buy
+// Again row's data. Uses already-loaded Compare Stores history when
+// available so the share carries the full price grid; falls back to
+// a single-tile share otherwise.
+function BuyAgainShareButton({ item, yourStores }) {
+  function buildPayload() {
+    const meta = SHOPPING_LIST_META[item.list_name || 'Pantry'] || {}
+    const tiles = (yourStores && yourStores.length > 0 ? yourStores : []).map(s => ({
+      store: s.name || 'Store',
+      location: '',
+      title: item.item_name,
+      price: s.min_price || s.last_price || 0,
+      rating: null,
+      review_count: null,
+      sale: false,
+    }))
+    if (tiles.length === 0) {
+      tiles.push({
+        store: item.store?.store_name || 'Your store',
         location: '',
         title: item.item_name,
-        price: s.min_price || s.last_price || 0,
-        rating: null,
-        review_count: null,
-        sale: false,
-      }))
-      // Fall back to a single-tile share when no store history loaded.
-      if (tiles.length === 0) {
-        tiles.push({
-          store: item.store?.store_name || 'Your store',
-          location: '',
-          title: item.item_name,
-          price: Number(item.price) || 0,
-          rating: null, review_count: null, sale: false,
-        })
-      }
-      const payload = {
-        kind: 'item',
-        item_title: item.item_name,
-        category_emoji: meta.emoji || '🛒',
-        rating: null,
-        best_price_callout: tiles.length > 1
-          ? `Cheapest at ${tiles[0].store} — $${Number(tiles[0].price).toFixed(2)}`
-          : null,
-        tiles,
-      }
-      const res = await fetch('/api/share/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ kind: 'item', payload, channel }),
+        price: Number(item.price) || 0,
+        rating: null, review_count: null, sale: false,
       })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data?.error || 'Share failed')
-      return data.url
-    } finally {
-      setBusy(false)
+    }
+    return {
+      kind: 'item',
+      item_title: item.item_name,
+      category_emoji: meta.emoji || '🛒',
+      rating: null,
+      best_price_callout: tiles.length > 1
+        ? `Cheapest at ${tiles[0].store} — $${Number(tiles[0].price).toFixed(2)}`
+        : null,
+      tiles,
     }
   }
-
-  // Channel handlers — mirror the Smashlist top-level ShareMenu so the
-  // user experience is consistent across "share whole list" and
-  // "share this item".
-  async function go(channel) {
-    setOpen(false)
-    try {
-      const url = await buildShareUrl(channel)
-      const text = `🥑 Check out "${item.item_name}" on GetGuac:`
-      if (channel === 'whatsapp') {
-        window.open(`https://wa.me/?text=${encodeURIComponent(`${text} ${url}`)}`, '_blank', 'noopener,noreferrer')
-      } else if (channel === 'sms') {
-        const isPhone = /iPhone|iPad|Android/i.test(typeof navigator !== 'undefined' ? navigator.userAgent : '')
-        if (isPhone) {
-          window.location.href = `sms:?body=${encodeURIComponent(`${text} ${url}`)}`
-        } else {
-          await navigator.clipboard.writeText(`${text} ${url}`)
-          toast.success('SMS not supported on desktop — copied so you can paste')
-        }
-      } else if (channel === 'email') {
-        const subject = `Check out ${item.item_name} on GetGuac`
-        window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(`${text}\n\n${url}`)}`
-      } else if (channel === 'copy') {
-        await navigator.clipboard.writeText(`${text} ${url}`)
-        toast.success('Copied — paste anywhere 🛒')
-      } else if (channel === 'native') {
-        if (typeof navigator?.share === 'function') {
-          try {
-            await navigator.share({ title: item.item_name, text, url })
-            return
-          } catch (e) {
-            if (e?.name === 'AbortError') return
-          }
-        }
-        await navigator.clipboard.writeText(`${text} ${url}`)
-        toast.success('Copied — paste anywhere 🛒')
-      }
-    } catch (e) {
-      toast.error(e.message || 'Share failed')
-    }
-  }
-
-  return (
-    <div className="relative inline-block" onBlur={handleBlur}>
-      <button
-        type="button"
-        onClick={() => setOpen(v => !v)}
-        disabled={busy}
-        title="Share this item"
-        className="w-8 h-8 rounded-xl bg-white/70 hover:bg-white text-emerald-700 hover:text-emerald-900 ring-1 ring-emerald-200 shadow-sm hover:shadow-md active:scale-95 transition-all flex items-center justify-center"
-      >
-        <Share2 size={13} />
-      </button>
-      {open && (
-        <div className="absolute right-0 mt-1 w-52 rounded-xl bg-white shadow-xl ring-1 ring-gray-200 z-50 overflow-hidden">
-          <div className="px-3 py-2 border-b border-gray-100 text-[10px] uppercase tracking-wider text-gray-500 font-bold">
-            Share this item via…
-          </div>
-          {[
-            { key: 'whatsapp', icon: <MessageCircle size={14} className="text-emerald-600" />, label: 'WhatsApp', tone: 'hover:bg-emerald-50' },
-            { key: 'sms',      icon: <Phone size={14} className="text-sky-600" />,            label: 'Text / SMS', tone: 'hover:bg-sky-50' },
-            { key: 'email',    icon: <Mail size={14} className="text-amber-600" />,           label: 'Email',     tone: 'hover:bg-amber-50' },
-            { key: 'copy',     icon: <Copy size={14} className="text-gray-600" />,            label: 'Copy link', tone: 'hover:bg-gray-50' },
-            { key: 'native',   icon: <Share2 size={14} className="text-violet-600" />,        label: 'More…',     tone: 'hover:bg-violet-50' },
-          ].map(opt => (
-            <button
-              key={opt.key}
-              type="button"
-              onClick={() => go(opt.key)}
-              disabled={busy}
-              className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-800 disabled:opacity-50 ${opt.tone}`}
-            >
-              {opt.icon}
-              <span>{opt.label}</span>
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  )
+  return <SharedShareItemButton item={item} buildPayload={buildPayload} />
 }
 
 // Compact inline qty editor. Internal state so typing doesn't fire

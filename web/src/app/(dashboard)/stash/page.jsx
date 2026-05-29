@@ -15,6 +15,7 @@ import GuacMascot from '../../../components/GuacMascot'
 import { StoreList } from '../../../components/StoreList'
 import BestPricesModal from '../../../components/BestPricesModal'
 import { StoreLogo } from '../../../components/StoreLogo'
+import { ShareItemButton } from '../../../components/ShareItemButton'
 
 const SORTS = [
   { key: 'recent',     label: 'Most recent' },
@@ -592,6 +593,32 @@ const ProductCard = memo(function ProductCard({ item, expanded, onToggle, onAddT
             Last receipt <ExternalLink size={10} />
           </Link>
           <div className="flex items-center gap-1.5">
+            {/* Share — mints a /share/<token> URL with the item's
+                per-store price tiles baked in, routes through any
+                channel. Same reusable component used on the Buy
+                Again card so muscle memory transfers. */}
+            <ShareItemButton
+              item={item}
+              buildPayload={() => ({
+                kind: 'item',
+                item_title: item.item_name,
+                category_emoji: cat?.emoji || '🛒',
+                rating: item.avg_rating > 0 ? Math.round(item.avg_rating) : null,
+                best_price_callout: item.store_count > 1 && item.best
+                  ? `Cheapest at ${item.best.name} — $${Number(item.best.min_price).toFixed(2)}`
+                  : null,
+                tiles: (item.stores_list || []).map(s => ({
+                  store: s.name || 'Store',
+                  location: '',
+                  title: item.item_name,
+                  price: s.min_price || s.last_price || 0,
+                  rating: null,
+                  review_count: null,
+                  sale: false,
+                })),
+              })}
+              triggerClassName="relative w-10 h-10 rounded-full bg-gradient-to-br from-sky-300 to-emerald-500 text-white shadow-md hover:shadow-xl hover:scale-110 active:scale-95 transition-all flex items-center justify-center ring-2 ring-white"
+            />
             <button
               type="button"
               onClick={onFindDeals}

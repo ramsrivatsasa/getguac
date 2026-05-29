@@ -140,12 +140,34 @@ export async function POST(request) {
       }
     } catch {}
 
+    // Community rating — cross-user aggregate for this item name.
+    // Anonymous (no user_ids in the result), gated by a SECURITY
+    // DEFINER SQL function so we don't leak any individual rating.
+    // Only included for item-kind shares (lists have many items;
+    // we'd need a different aggregation shape).
+    let communityRating = null
+    if (kind === 'item' && payload?.item_title) {
+      try {
+        const { data: ratingRows } = await sb.rpc('community_rating_for_item', {
+          target_item_name: payload.item_title,
+        })
+        const row = Array.isArray(ratingRows) ? ratingRows[0] : ratingRows
+        if (row && Number(row.rating_count) >= 2) {
+          communityRating = {
+            avg: Number(row.avg_rating) || 0,
+            count: Number(row.rating_count) || 0,
+          }
+        }
+      } catch {}
+    }
+
     const enrichedPayload = {
       kind,
       ...payload,
       kind,
       guac_money_total: guacMoneyTotal,
       smash_days: smashDays,
+      community_rating: communityRating,
     }
 
     const expiresAt = new Date(Date.now() + TTL_DAYS * 86400_000).toISOString()

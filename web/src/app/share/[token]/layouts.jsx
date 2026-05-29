@@ -9,6 +9,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { MapPin, Star, Play, ShoppingCart, BadgeDollarSign } from 'lucide-react'
 import { logoUrlForStore } from '../../../lib/store-logo'
+import GuacMascot from '../../../components/GuacMascot'
 
 // ─── Item layout ────────────────────────────────────────────────────
 // Two visual modes depending on how many stores the payload carries:
@@ -62,7 +63,8 @@ export function ShareItemLayout({ share }) {
             category_emoji={p.category_emoji || '🛒'}
             sharedBy={sharedBy}
           />
-        ) : (
+        ) : null}
+        {!isSingle && (
           <>
             {/* Filter chips — only render real ones when the data
                 supports them. Drops "Under $20" / "On sale" when
@@ -96,8 +98,16 @@ export function ShareItemLayout({ share }) {
           </>
         )}
 
+        {/* Rating Wizard — aggregate community rating for this item.
+            Self-hides when there's no signal (the SQL function only
+            returns rows with rating_count >= 2). */}
+        {p.community_rating && (
+          <RatingWizardChip rating={p.community_rating} item={p.item_title} />
+        )}
+
         <CTASection />
-        <WalkthroughVideo />
+        <WatchTeaserCard />
+        <MascotFooter />
         <ShareFooter share={share} />
       </div>
     </main>
@@ -146,6 +156,106 @@ function HeroSingleTile({ tile, category_emoji, sharedBy }) {
             </p>
           )}
         </div>
+      </div>
+    </div>
+  )
+}
+
+// Rating Wizard chip — cross-user aggregate rating for this item.
+// Anonymous (no user identities exposed). Lifted from the
+// receipt_items.rating column via community_rating_for_item RPC.
+function RatingWizardChip({ rating, item }) {
+  const avg = Number(rating?.avg) || 0
+  const count = Number(rating?.count) || 0
+  if (!avg || count < 2) return null
+  return (
+    <div className="mt-6 rounded-2xl border-2 border-amber-200 bg-gradient-to-br from-amber-50 to-yellow-50 p-4 sm:p-5 flex items-center gap-4 flex-wrap">
+      <div className="flex items-center gap-1 shrink-0">
+        {[1, 2, 3, 4, 5].map(n => (
+          <Star
+            key={n}
+            size={20}
+            className={n <= Math.round(avg) ? 'text-amber-500 fill-amber-500' : 'text-amber-200'}
+          />
+        ))}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-[10px] uppercase tracking-wider text-amber-700 font-bold flex items-center gap-1.5">
+          ✨ Rating Wizard
+        </p>
+        <p className="text-sm text-amber-900 mt-0.5">
+          GetGuac customers rate <span className="font-bold">{item || 'this product'}</span>
+          {' '}<span className="font-black tabular-nums">{avg.toFixed(1)}</span> / 5
+          <span className="text-amber-700/80"> · {count} rating{count === 1 ? '' : 's'}</span>
+        </p>
+      </div>
+    </div>
+  )
+}
+
+// Big "Watch how GetGuac works" teaser block — mirrors the homepage
+// hero card design (lime play-badge, auto-narrated chip, topic
+// chips). Links to /how-it-works where the full 13-slide narrated
+// presentation lives.
+function WatchTeaserCard() {
+  return (
+    <Link
+      href="/how-it-works"
+      className="group block mt-10 rounded-3xl bg-gradient-to-br from-emerald-700 via-emerald-600 to-lime-600 p-1 shadow-xl hover:shadow-2xl hover:scale-[1.005] transition-all"
+    >
+      <div className="rounded-[1.4rem] bg-white/5 backdrop-blur-sm p-6 sm:p-8 flex items-center gap-5 flex-wrap">
+        <div className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-lime-400 text-emerald-900 flex items-center justify-center shadow-lg group-hover:scale-105 transition">
+          <Play size={28} className="ml-1 fill-emerald-900" />
+        </div>
+        <div className="flex-1 min-w-[220px]">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/20 text-white text-[10px] font-bold uppercase tracking-wider">
+            Auto-narrated · 13 slides · ~7 min
+          </span>
+          <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white mt-2 leading-tight">
+            Watch how GetGuac works
+          </h2>
+          <p className="text-emerald-50/90 mt-1.5 max-w-2xl text-xs sm:text-sm">
+            Capture → parse → dedup → categorize → score → coach. The whole flow under eight minutes.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {['Email inbox', 'Returns', 'GuacWizard', 'Car Miles', 'Security', 'Privacy'].map(t => (
+              <span key={t} className="px-2 py-0.5 rounded-full bg-white/15 text-white text-[10px] font-semibold">
+                {t}
+              </span>
+            ))}
+          </div>
+        </div>
+        <div className="hidden sm:flex items-center text-white/80 group-hover:text-white group-hover:translate-x-1 transition text-sm font-bold">
+          Play →
+        </div>
+      </div>
+    </Link>
+  )
+}
+
+// Final mascot panel — GuacMascot (rich expression, holding cash)
+// with a tagline that ties the share page back to the brand. Lives
+// at the very bottom of the page above the legal footer.
+function MascotFooter() {
+  return (
+    <div className="mt-10 flex flex-col sm:flex-row items-center gap-4 sm:gap-6 bg-emerald-50/60 border border-emerald-100 rounded-3xl px-6 py-6 sm:py-5">
+      <div className="shrink-0">
+        <GuacMascot expression="rich" size={120} />
+      </div>
+      <div className="flex-1 min-w-0 text-center sm:text-left">
+        <p className="text-lg sm:text-xl font-black text-emerald-900 leading-snug">
+          Money&apos;s wingman 🥑
+        </p>
+        <p className="text-sm text-emerald-800/80 mt-1">
+          GetGuac tracks every save across every store you shop. Sign up free and
+          start stacking <span className="font-bold">GuacMoney</span> of your own.
+        </p>
+        <Link
+          href="/register"
+          className="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold shadow hover:shadow-md transition-all"
+        >
+          Start tracking — free →
+        </Link>
       </div>
     </div>
   )
@@ -291,7 +401,8 @@ export function ShareListLayout({ share }) {
         )}
 
         <CTASection />
-        <WalkthroughVideo />
+        <WatchTeaserCard />
+        <MascotFooter />
         <ShareFooter share={share} />
       </div>
     </main>

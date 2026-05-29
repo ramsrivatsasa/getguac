@@ -19,30 +19,21 @@ export default function GuacoScoreCard({ receipts = [], bankBite = null, size = 
   const { score, grade, ratedCount, bankPenalty } = calculateGuacoScore(receipts, { bankBite })
   const small = size === 'sm'
 
-  if (score == null) {
-    return (
-      <div className={`${small ? 'stat-card' : 'card'} ${className}`}>
-        <div className={small ? 'p-3 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center' : ''}>
-          <GuacMascot expression="sleepy" size={small ? 28 : 60} />
-        </div>
-        <div className="min-w-0">
-          <p className="text-xs text-gray-500 font-medium">GuacScore</p>
-          <p className={`${small ? 'text-sm' : 'text-base'} font-bold text-gray-900 mt-0.5`}>Rate to unlock</p>
-          {!small && (
-            <Link href="/validate" className="text-[11px] text-emerald-700 font-semibold hover:underline">
-              Start rating →
-            </Link>
-          )}
-        </div>
-      </div>
-    )
-  }
+  // Pre-rating users get the same gauge with a starter score of 0
+  // and a friendly "happy" framing instead of the old "Rate to unlock"
+  // placeholder. The chip still nudges to /validate but doesn't gate
+  // the whole tile behind it.
+  const isPreRating = score == null
+  const displayScore = isPreRating ? 0 : score
+  const displayGrade = isPreRating
+    ? { color: 'emerald', emoji: '🥑', label: 'Fresh start' }
+    : grade
 
-  const tint = GRADE_TINT[grade.color] || GRADE_TINT.emerald
+  const tint = GRADE_TINT[displayGrade.color] || GRADE_TINT.emerald
   const R = small ? 22 : 56
   const STROKE = small ? 5 : 9
   const C = 2 * Math.PI * R
-  const offset = C * (1 - score / 100)
+  const offset = C * (1 - displayScore / 100)
   const svgSize = (R + STROKE) * 2 + 4
 
   if (small) {
@@ -61,14 +52,14 @@ export default function GuacoScoreCard({ receipts = [], bankBite = null, size = 
             />
           </svg>
           <div className="absolute inset-0 flex items-center justify-center">
-            <p className={`font-extrabold tabular-nums ${tint.text} text-sm`}>{score}</p>
+            <p className={`font-extrabold tabular-nums ${tint.text} text-sm`}>{displayScore}</p>
           </div>
         </div>
         <div className="min-w-0">
           <p className="text-xs text-gray-500 font-medium">GuacScore</p>
           <p className={`text-xl font-bold ${tint.text} flex items-center gap-1`}>
-            <span className="text-base">{grade.emoji}</span>
-            <span className="truncate">{grade.label}</span>
+            <span className="text-base">{displayGrade.emoji}</span>
+            <span className="truncate">{displayGrade.label}</span>
           </p>
         </div>
       </div>
@@ -91,7 +82,7 @@ export default function GuacoScoreCard({ receipts = [], bankBite = null, size = 
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <p className={`font-extrabold tabular-nums ${tint.text} text-3xl`}>{score}</p>
+            <p className={`font-extrabold tabular-nums ${tint.text} text-3xl`}>{displayScore}</p>
             <p className="text-[9px] uppercase tracking-wider font-bold text-gray-500 -mt-1">/ 100</p>
           </div>
         </div>
@@ -99,10 +90,10 @@ export default function GuacoScoreCard({ receipts = [], bankBite = null, size = 
         <div className="flex-1 min-w-0">
           <p className="text-[10px] uppercase tracking-wider font-bold text-gray-500">GuacScore™</p>
           <p className={`font-extrabold mt-0.5 flex items-center gap-1.5 text-xl ${tint.text}`}>
-            <span className="text-xl">{grade.emoji}</span>
-            {grade.label}
+            <span className="text-xl">{displayGrade.emoji}</span>
+            {displayGrade.label}
           </p>
-          <p className="text-[11px] text-gray-600 mt-0.5 leading-snug">{grade.desc}</p>
+          <p className="text-[11px] text-gray-600 mt-0.5 leading-snug">{displayGrade.desc || ''}</p>
           <p className="text-[10px] text-gray-400 mt-1">
             From {ratedCount} rated purchase{ratedCount === 1 ? '' : 's'}
             {bankPenalty > 0 && (

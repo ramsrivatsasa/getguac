@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useStore } from '../../../store'
 import Link from 'next/link'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { DollarSign, Receipt, Gift, TrendingUp, ArrowRight, Sparkles, Flame, PiggyBank, Wand2 } from 'lucide-react'
+import { DollarSign, Receipt, Gift, TrendingUp, TrendingDown, ArrowRight, Sparkles, Flame, PiggyBank, Wand2, CreditCard, Percent, AlertTriangle } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import GuacoScoreCard from '../../../components/GuacoScoreCard'
 import UpcomingReturnsBanner from '../../../components/UpcomingReturnsBanner'
@@ -149,9 +149,15 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
   return (
     <div className="space-y-6 max-w-7xl">
       <div className="flex items-start justify-between gap-3 flex-wrap">
-        <div>
-          <h1 className="page-title">Good day, {firstName} 👋</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Here's your financial snapshot</p>
+        <div className="flex items-center gap-4 flex-wrap">
+          <div>
+            <h1 className="page-title">Good day, {firstName} 👋</h1>
+            <p className="text-sm text-gray-500 mt-0.5">Here's your financial snapshot</p>
+          </div>
+          {/* GuacScore lives inline with the greeting — same row as
+              "Good day, Ramya 👋" so the score is the first thing
+              the user reads, not a tile competing with five others. */}
+          <GuacoScoreCard receipts={filtered} size="sm" className="!min-w-[200px]" />
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <Link href="/validate"
@@ -222,9 +228,14 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
           tiles (rewards / GuacMoney), with Smash days at the end as
           requested. Eight tiles total — flows 4×2 on lg, 2×4 on
           mobile. */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
-        <GuacoScoreCard receipts={filtered} size="sm" />
+      {/* Stat tiles — GuacScore now lives in the header beside the
+          greeting, so the row leads with GuacWizard. Ordering per
+          user request: GuacWizard → GuacMoney → financial tiles
+          (Transactions / Spent / Tax / Bank Fees / Rewards) →
+          Smash days last. */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
         <GuacWizardTile />
+        <GuacMoneyTile />
         {[
           { label: 'Transactions', value: filtered.length, icon: Receipt, color: 'bg-emerald-100 text-emerald-700' },
           { label: 'Total Spent', value: `$${totalSpend.toFixed(2)}`, icon: DollarSign, color: 'bg-gradient-to-br from-rose-400 via-rose-600 to-rose-800 text-white shadow-sm', trend: trendBadge },
@@ -254,7 +265,6 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
             </div>
           </div>
         ))}
-        <GuacMoneyTile />
         {(() => {
           const { smashDays } = computeSmashDays(filtered)
           return (
@@ -275,6 +285,13 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
           )
         })()}
       </div>
+
+      {/* Bank summary row — payments / interest / fees / purchases /
+          refunds across all the user's bank statements. Mirrors the
+          row on /guacwizard so the user sees the same five numbers
+          without leaving the dashboard. Self-hides when no bank
+          data exists yet. */}
+      <BankSummaryRow />
 
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Spending chart */}
@@ -414,6 +431,61 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
 // (guac_money_total) so we don't fetch every event row. Loading
 // state shows a subtle dash, empty state shows "$0" + a "start
 // saving" prompt.
+// Bank summary row — five tiles aggregated across all bank
+// statements: payments made, interest paid, fees paid, purchases,
+// refunds. Re-uses the same TanStack Query keys the GuacWizardTile
+// uses so we don't fire duplicate fetches; TanStack dedups by key.
+// Self-hides entirely when the user has no bank data yet.
+const TILE_TONE = {
+  sky:     { bg: 'bg-sky-50',     text: 'text-sky-800',     icon: 'text-sky-600',     border: 'border-sky-100' },
+  orange:  { bg: 'bg-orange-50',  text: 'text-orange-800',  icon: 'text-orange-600',  border: 'border-orange-200' },
+  amber:   { bg: 'bg-amber-50',   text: 'text-amber-800',   icon: 'text-amber-600',   border: 'border-amber-200' },
+  rose:    { bg: 'bg-rose-50',    text: 'text-rose-800',    icon: 'text-rose-600',    border: 'border-rose-100' },
+  emerald: { bg: 'bg-emerald-50', text: 'text-emerald-800', icon: 'text-emerald-600', border: 'border-emerald-100' },
+}
+function BankTile({ icon: Icon, tone, label, value }) {
+  const t = TILE_TONE[tone] || TILE_TONE.sky
+  return (
+    <div className={`stat-card border ${t.border} ${t.bg}`}>
+      <div className={`p-2 rounded-lg bg-white shadow-sm`}><Icon size={16} className={t.icon} /></div>
+      <div className="min-w-0">
+        <p className={`text-[10px] uppercase tracking-wider font-bold ${t.text} opacity-80`}>{label}</p>
+        <p className={`text-base font-bold ${t.text} tabular-nums`}>${Number(value || 0).toFixed(2)}</p>
+      </div>
+    </div>
+  )
+}
+function BankSummaryRow() {
+  const sb = createSbClient()
+  const { data: statements = [] } = useQuery({
+    queryKey: ['bank_statements'],
+    queryFn: async () => { const { data } = await sb.from('bank_statements').select('*'); return data || [] },
+    staleTime: 5 * 60_000,
+  })
+  const { data: fees = [] } = useQuery({
+    queryKey: ['bank_fees'],
+    queryFn: async () => { const { data } = await sb.from('bank_fees').select('*'); return data || [] },
+    staleTime: 5 * 60_000,
+  })
+  const { data: transactions = [] } = useQuery({
+    queryKey: ['bank_transactions'],
+    queryFn: async () => { const { data } = await sb.from('bank_transactions').select('*'); return data || [] },
+    staleTime: 5 * 60_000,
+  })
+  const hasData = statements.length > 0 || fees.length > 0 || transactions.length > 0
+  if (!hasData) return null
+  const { summary } = generateInsights({ statements, fees, transactions }, 'ytd')
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      <BankTile icon={CreditCard}     tone="sky"     label="Payments made" value={summary.totalPayments} />
+      <BankTile icon={Percent}        tone="orange"  label="Interest paid" value={summary.totalInterest} />
+      <BankTile icon={AlertTriangle}  tone="amber"   label="Fees paid"     value={summary.totalFees} />
+      <BankTile icon={TrendingUp}     tone="rose"    label="Purchases"     value={summary.totalPurch} />
+      <BankTile icon={TrendingDown}   tone="emerald" label="Refunds"       value={summary.totalRefunds} />
+    </div>
+  )
+}
+
 // GuacWizard health-score tile — same 0-100 score the /guacwizard
 // page renders, distilled into a single tile. Pulls bank_statements
 // + bank_fees + bank_transactions (only the user's own rows via

@@ -98,6 +98,9 @@ export default function ShoppingPage() {
   // Bulk-select set for the curated Your Smashlist. Empty set = no
   // selection mode; non-empty = checkboxes visible + bulk-delete CTA.
   const [bulkSelected, setBulkSelected] = useState(() => new Set())
+  // Per-card selection on the Buy Again grid — drives the "Add selected
+  // to <store>" picker that appears once at least one card is ticked.
+  const [selectedSuggestions, setSelectedSuggestions] = useState(() => new Set())
   // Modal-style alert for actions that deserve more attention than a
   // toast (empty-state explanations, blocked operations, etc.). Set
   // the title + body to show; null = closed.
@@ -285,8 +288,16 @@ export default function ShoppingPage() {
   // for every active user, so the suggestions visible here are at
   // most a day old. Re-running predict on every Auto-Add click would
   // be safe but wasteful — we just bulk-approve what's already here.
-  async function autoAddAll(criteria = 'asis') {
-    const targets = filteredSuggestions
+  // criteria can be:
+  //   'cheapest'      - per-item lowest historical price
+  //   'frequent'      - per-item most-used store
+  //   'asis'          - leave whatever the predictor wrote
+  //   { kind: 'fixed', storeId } - send every item to the SAME store
+  //                                (the "Pick a store…" dropdown flow)
+  // `overrideTargets` lets the per-card selection flow run autoAddAll on
+  // a hand-picked subset instead of all filtered suggestions.
+  async function autoAddAll(criteria = 'asis', overrideTargets = null) {
+    const targets = overrideTargets || filteredSuggestions
     if (targets.length === 0) {
       // Modal instead of a toast so the user actually sees and reads
       // the message — the empty-state is informative, not transient.
@@ -299,7 +310,12 @@ export default function ShoppingPage() {
     const sb = createClient()
     let ok = 0
     let pickStoreFor = null  // resolved per criteria
-    if (criteria === 'cheapest' || criteria === 'frequent') {
+    // "Pick a store" flow — every suggestion lands at the chosen store,
+    // no lookup needed. Short-circuits the per-item history fetch.
+    if (criteria && typeof criteria === 'object' && criteria.kind === 'fixed') {
+      const fixedId = String(criteria.storeId)
+      pickStoreFor = () => fixedId
+    } else if (criteria === 'cheapest' || criteria === 'frequent') {
       // Fetch per-item per-store history once for all target items.
       const names = targets.map(t => t.item_name)
       try {
@@ -346,9 +362,13 @@ export default function ShoppingPage() {
         ok++
       } catch (_) { /* keep going on per-item failures */ }
     }
-    const label = criteria === 'cheapest' ? 'cheapest store'
-                : criteria === 'frequent' ? 'most-used store'
-                : 'Smashlist'
+    const label = criteria && typeof criteria === 'object' && criteria.kind === 'fixed'
+      ? (knownStores.find(s => String(s.id) === String(criteria.storeId))?.store_name
+          ? displayStoreName(knownStores.find(s => String(s.id) === String(criteria.storeId)).store_name)
+          : 'chosen store')
+      : criteria === 'cheapest' ? 'cheapest store'
+      : criteria === 'frequent' ? 'most-used store'
+      : 'Smashlist'
     toast.success(`Added ${ok}/${targets.length} via ${label} ✓`)
   }
 
@@ -415,6 +435,21 @@ export default function ShoppingPage() {
     if (activeList === 'all') return ownList
     return ownList.filter(i => (i.list_name || 'Pantry') === activeList)
   }, [ownList, activeList])
+
+  // Buy Again card selection helpers.
+  function toggleSuggestionSelect(id) {
+    setSelectedSuggestions(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }
+  async function addSelectedToStore(storeId) {
+    const targets = filteredSuggestions.filter(it => selectedSuggestions.has(it.id))
+    if (targets.length === 0) return
+    await autoAddAll({ kind: 'fixed', storeId }, targets)
+    setSelectedSuggestions(new Set())
+  }
 
   // Bulk-select toggle for a single row + bulk-delete handler. The
   // checkbox column only appears when bulkSelected has items in it
@@ -555,6 +590,7 @@ export default function ShoppingPage() {
           </button>
           <AutoAddMenu
             count={filteredSuggestions.length}
+            stores={knownStores}
             onPick={(criteria) => autoAddAll(criteria)}
           />
           <ShareMenu
@@ -696,11 +732,77 @@ export default function ShoppingPage() {
           so it's the first thing the user sees inside the Smashlist tabs. */}
       {filteredSuggestions.length > 0 && (
         <section className="space-y-2">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Sparkles size={16} className="text-violet-500" />
             <h2 className="font-semibold text-gray-800">Buy Again</h2>
             <span className="text-xs text-gray-500">Items you usually buy that look due for a restock. ✓ to add, ✕ to hide.</span>
+            {/* Selection toggle — fast "select all visible" / "clear"
+                action. The per-card checkbox handles fine-grained
+                picking. */}
+            <div className="ml-auto flex items-center gap-1 text-[11px] font-semibold">
+              {selectedSuggestions.size === 0 ? (
+                <button
+                  type="button"
+                  onClick={() => setSelectedSuggestions(new Set(filteredSuggestions.map(s => s.id)))}
+                  className="text-emerald-700 hover:text-emerald-900 px-2 py-1"
+                >
+                  Select all
+                </button>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedSuggestions(new Set(filteredSuggestions.map(s => s.id)))}
+                    className="text-emerald-700 hover:text-emerald-900 px-2 py-1"
+                  >
+                    Select all
+                  </button>
+                  <span className="text-gray-300">·</span>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedSuggestions(new Set())}
+                    className="text-gray-600 hover:text-gray-800 px-2 py-1"
+                  >
+                    Clear
+                  </button>
+                </>
+              )}
+            </div>
           </div>
+
+          {/* Sticky action bar — appears once any card is selected.
+              Drives the "Add selected to <store>" picker which sends
+              the chosen items to one specific store in a single click. */}
+          {selectedSuggestions.size > 0 && (
+            <div className="card bg-emerald-50/70 border border-emerald-200 flex items-center gap-3 py-2 px-3 flex-wrap">
+              <span className="text-sm font-bold text-emerald-900">
+                {selectedSuggestions.size} selected
+              </span>
+              <span className="text-xs text-emerald-700/80">Send to:</span>
+              <select
+                className="input font-sans h-9 text-sm w-auto"
+                defaultValue=""
+                onChange={(e) => {
+                  const sid = e.target.value
+                  if (sid) addSelectedToStore(sid)
+                  e.target.value = ''  // reset so re-picking the same store re-fires
+                }}
+              >
+                <option value="" disabled>Pick a store…</option>
+                {knownStores.map(st => (
+                  <option key={st.id} value={st.id}>{displayStoreName(st.store_name)}</option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => setSelectedSuggestions(new Set())}
+                className="text-xs text-gray-600 hover:text-gray-800 font-semibold ml-auto"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+
           {/* Card grid — Stash-style: gradient background per list tone,
               color stripe header, emoji avatar, 3 stat tiles, expandable
               best-price hunter, and Qty + Add to Smashlist footer. Mirrors
@@ -711,6 +813,8 @@ export default function ShoppingPage() {
               <BuyAgainCard
                 key={item.id}
                 item={item}
+                selected={selectedSuggestions.has(item.id)}
+                onToggleSelect={() => toggleSuggestionSelect(item.id)}
                 onAdd={() => toggleApproved(item)}
                 onQty={(qty) => upsert.mutate({ ...item, qty }, {
                   onError: (err) => toast.error(err.message),
@@ -981,28 +1085,37 @@ function AlertModal({ title, body, onClose }) {
 }
 
 // Auto-Add dropdown — bulk-approves every Buy Again suggestion with a
-// criterion (cheapest store / most-used store / as-is). Sits next to
-// the Buy Again button so the user can run predict THEN one-tap to
+// criterion (cheapest store / most-used store / as-is) OR sends them
+// all to a single store the user picks from a sublist. Sits next to
+// the Refresh List button so the user can refresh then one-tap to
 // fill their Smashlist without manually tapping each card.
-function AutoAddMenu({ count, onPick }) {
+function AutoAddMenu({ count, stores = [], onPick }) {
   const [open, setOpen] = useState(false)
+  // When the user clicks "Pick a store…" we slide the dropdown into a
+  // store-list view instead of opening a second popover. Keeps focus
+  // inside the same element so the blur-to-close handler still works.
+  const [pickStoreMode, setPickStoreMode] = useState(false)
   function handleBlur(e) {
-    if (!e.currentTarget.contains(e.relatedTarget)) setOpen(false)
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+      setOpen(false)
+      setPickStoreMode(false)
+    }
   }
+  function close() { setOpen(false); setPickStoreMode(false) }
   return (
     <div className="relative inline-block" onBlur={handleBlur}>
       <button
         type="button"
-        onClick={() => setOpen(v => !v)}
+        onClick={() => { setOpen(v => !v); setPickStoreMode(false) }}
         className="btn-secondary inline-flex items-center gap-1.5 text-sm"
-        title="Refresh predictions, then bulk-add the items the system thinks you should buy"
+        title="Bulk-add the items the system thinks you should buy"
       >
         <ShoppingCart size={14} /> Auto-Add{count > 0 ? ` (${count})` : ''} <ChevronDown size={12} />
       </button>
-      {open && (
+      {open && !pickStoreMode && (
         <div className="absolute right-0 mt-1 w-64 rounded-xl bg-white shadow-xl ring-1 ring-gray-200 z-50 overflow-hidden">
           <div className="px-3 py-2 border-b border-gray-100 text-[10px] uppercase tracking-wider text-gray-500 font-bold">
-            Pick the store for each item
+            How should we tag the store?
           </div>
           {[
             { key: 'cheapest', icon: '💰', label: 'Cheapest store',  sub: 'Each item lands at ITS cheapest store — your list may span several stores' },
@@ -1012,7 +1125,7 @@ function AutoAddMenu({ count, onPick }) {
             <button
               key={opt.key}
               type="button"
-              onClick={() => { onPick(opt.key); setOpen(false) }}
+              onClick={() => { onPick(opt.key); close() }}
               className="w-full flex items-start gap-3 px-3 py-2 text-sm text-gray-800 hover:bg-emerald-50 text-left"
             >
               <span className="text-base leading-none mt-0.5">{opt.icon}</span>
@@ -1022,6 +1135,55 @@ function AutoAddMenu({ count, onPick }) {
               </span>
             </button>
           ))}
+          {/* Pick a store — fixed-store mode: every suggestion lands
+              at the store the user picks next. Disabled when there
+              are no known stores so we don't open an empty sublist. */}
+          <button
+            type="button"
+            onClick={() => setPickStoreMode(true)}
+            disabled={stores.length === 0}
+            className="w-full flex items-start gap-3 px-3 py-2 text-sm text-gray-800 hover:bg-emerald-50 text-left border-t border-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+            title={stores.length === 0 ? 'No stores on file yet — add receipts to populate' : 'Send every item to one specific store'}
+          >
+            <span className="text-base leading-none mt-0.5">🛒</span>
+            <span className="flex-1 min-w-0 flex items-center justify-between gap-2">
+              <span>
+                <span className="block font-semibold">Pick a store…</span>
+                <span className="block text-[10px] text-gray-500">Send every suggestion to one chosen store</span>
+              </span>
+              <ChevronRight size={12} className="text-gray-400 shrink-0" />
+            </span>
+          </button>
+        </div>
+      )}
+      {open && pickStoreMode && (
+        <div className="absolute right-0 mt-1 w-64 rounded-xl bg-white shadow-xl ring-1 ring-gray-200 z-50 overflow-hidden">
+          <div className="px-3 py-2 border-b border-gray-100 flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setPickStoreMode(false)}
+              className="text-gray-400 hover:text-gray-700"
+              title="Back"
+            >
+              <ChevronRight size={12} className="rotate-180" />
+            </button>
+            <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">
+              Send all to which store?
+            </span>
+          </div>
+          <div className="max-h-64 overflow-y-auto">
+            {stores.map(st => (
+              <button
+                key={st.id}
+                type="button"
+                onClick={() => { onPick({ kind: 'fixed', storeId: st.id }); close() }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-800 hover:bg-emerald-50 text-left"
+              >
+                <StoreIcon size={12} className="text-emerald-700 shrink-0" />
+                <span className="truncate font-medium">{displayStoreName(st.store_name)}</span>
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </div>
@@ -1144,8 +1306,9 @@ function SmashRow({ item, omitStoreCol = false, selected = false, onToggleSelect
 // Buy Again card — Stash-styled visual: gradient background by list
 // tone, color stripe header, emoji avatar, 3 stat tiles, expandable
 // best-price hunter (calls /api/best-price with geolocation), and a
-// Qty + Add to Smashlist footer.
-function BuyAgainCard({ item, onAdd, onQty }) {
+// Qty + Add to Smashlist footer. The optional checkbox in the top-left
+// drives the per-card selection flow ("Add selected to <store>").
+function BuyAgainCard({ item, selected = false, onToggleSelect, onAdd, onQty }) {
   const meta = SHOPPING_LIST_META[item.list_name || 'Pantry'] || {}
   const tone = TONE_TINT[meta.color] || TONE_TINT.gray
   const u = urgencyForItem(item)
@@ -1232,12 +1395,26 @@ function BuyAgainCard({ item, onAdd, onQty }) {
   }, [item.item_name, getLocation])
 
   return (
-    <div className={`relative bg-gradient-to-br ${tone.from} ${tone.to} rounded-2xl border-2 border-transparent shadow-sm hover:shadow-xl hover:border-emerald-300 hover:scale-[1.01] hover:-translate-y-0.5 transition-all duration-200 overflow-hidden ring-1 ${tone.ring}`}>
+    <div className={`relative bg-gradient-to-br ${tone.from} ${tone.to} rounded-2xl border-2 ${selected ? 'border-emerald-500 ring-2 ring-emerald-300' : 'border-transparent'} shadow-sm hover:shadow-xl hover:border-emerald-300 hover:scale-[1.01] hover:-translate-y-0.5 transition-all duration-200 overflow-hidden ring-1 ${tone.ring}`}>
       <div className={`h-1 ${tone.accent}`} />
+      {/* Top-left checkbox — sits over the gradient so it's discoverable
+          without taking grid space from the rest of the card. The label
+          covers the area so the touch target is comfortable on mobile. */}
+      {onToggleSelect && (
+        <label className="absolute top-2 left-2 z-10 cursor-pointer p-1 -m-1" title={selected ? 'Deselect' : 'Select to bulk-add'}>
+          <input
+            type="checkbox"
+            className="w-4 h-4 accent-emerald-600 cursor-pointer"
+            checked={selected}
+            onChange={onToggleSelect}
+            aria-label={`Select ${item.item_name}`}
+          />
+        </label>
+      )}
       <div className="p-3 flex flex-col">
         {/* Header — emoji avatar + name + urgency badge */}
         <div className="flex items-start gap-2.5">
-          <div className={`w-10 h-10 rounded-2xl ${tone.accent} text-white shadow-md flex items-center justify-center text-xl ring-2 ring-white shrink-0`}>
+          <div className={`w-10 h-10 rounded-2xl ${tone.accent} text-white shadow-md flex items-center justify-center text-xl ring-2 ring-white shrink-0 ${onToggleSelect ? 'ml-5' : ''}`}>
             {meta.emoji || '🛒'}
           </div>
           <div className="flex-1 min-w-0">

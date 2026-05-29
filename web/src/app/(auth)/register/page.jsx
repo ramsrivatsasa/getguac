@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
+import Script from 'next/script'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
@@ -7,6 +8,11 @@ import GuacMascot from '../../../components/GuacMascot'
 import PrivacyNote from '../../../components/PrivacyNote'
 import { Check, X, Loader2, AlertCircle, AtSign, Eye, EyeOff } from 'lucide-react'
 const VALID_USERNAME_RE = /^[a-z0-9]([a-z0-9._-]{1,30}[a-z0-9])?$/
+// Cloudflare Turnstile site key — public, safe to ship in the client
+// bundle. When unset (local dev / before keys are provisioned in
+// Vercel), the widget renders nothing and the server-side verify is
+// also silently skipped, so the signup path still works.
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ''
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -23,6 +29,14 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const [acceptTerms, setAcceptTerms] = useState(false)
+  // Honeypot field — real users never see / touch this. Bots that
+  // auto-fill every input on the page will populate it and get
+  // bounced by the server-side check.
+  const [honeypot, setHoneypot] = useState('')
+  // Cloudflare Turnstile token — populated by the widget on success.
+  // Server-side verify treats a missing token as a failed CAPTCHA
+  // (unless TURNSTILE_SECRET_KEY isn't set, in which case it skips).
+  const [turnstileToken, setTurnstileToken] = useState('')
 
   // Auto-derive age from birth date so the two fields can't disagree.
   // Years between today and birthDate, rounded down at the month/day boundary.
@@ -41,6 +55,17 @@ export default function RegisterPage() {
     const next = String(age)
     if (form.age !== next) setForm(p => ({ ...p, age: next }))
   }, [form.birthDate])
+
+  // Listen for the Turnstile success callback (the global JS handlers
+  // dispatch a CustomEvent because Next.js's <Script> can't reference
+  // React setState directly). Same listener handles success + error +
+  // expiry (error/expiry pass an empty string → disables submit).
+  useEffect(() => {
+    if (!TURNSTILE_SITE_KEY) return
+    function onToken(e) { setTurnstileToken(e?.detail || '') }
+    window.addEventListener('turnstile-token', onToken)
+    return () => window.removeEventListener('turnstile-token', onToken)
+  }, [])
 
   // Live availability check for username
   const [usernameStatus, setUsernameStatus] = useState(null)  // 'available' | 'taken' | 'reserved' | 'invalid' | null
@@ -88,6 +113,10 @@ export default function RegisterPage() {
           birth_date: form.birthDate || null,
           age: form.age || null,
           mobile_no: form.mobileNo || null,
+          // Bot-prevention payload — honeypot must be empty, Turnstile
+          // token comes from the widget (or empty if no key configured).
+          website: honeypot,
+          turnstile_token: turnstileToken,
         }),
       })
       const data = await res.json()
@@ -305,9 +334,59 @@ export default function RegisterPage() {
               </span>
             </label>
 
+            {/* Honeypot — invisible to real users, irresistible to
+                form-fillers. aria-hidden + tabindex=-1 means
+                screen-readers + keyboard users also skip it. Anything
+                non-empty on submit = a bot, server rejects. */}
+            <div
+              aria-hidden="true"
+              style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, overflow: 'hidden' }}
+            >
+              <label htmlFor="website">Website (leave blank)</label>
+              <input
+                type="text"
+                id="website"
+                name="website"
+                tabIndex={-1}
+                autoComplete="off"
+                value={honeypot}
+                onChange={(e) => setHoneypot(e.target.value)}
+              />
+            </div>
+
+            {/* Cloudflare Turnstile CAPTCHA — invisible most of the
+                time; falls back to a micro-challenge for suspicious
+                traffic. Self-hides when no site key is configured so
+                local-dev signups still work. */}
+            {TURNSTILE_SITE_KEY && (
+              <>
+                <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" strategy="lazyOnload" />
+                <div
+                  className="cf-turnstile flex justify-center"
+                  data-sitekey={TURNSTILE_SITE_KEY}
+                  data-callback="onTurnstileSuccess"
+                  data-error-callback="onTurnstileError"
+                  data-expired-callback="onTurnstileExpired"
+                />
+                <Script id="turnstile-callbacks" strategy="lazyOnload">
+                  {`
+                    window.onTurnstileSuccess = function(token) {
+                      window.dispatchEvent(new CustomEvent('turnstile-token', { detail: token }))
+                    }
+                    window.onTurnstileError = function() {
+                      window.dispatchEvent(new CustomEvent('turnstile-token', { detail: '' }))
+                    }
+                    window.onTurnstileExpired = function() {
+                      window.dispatchEvent(new CustomEvent('turnstile-token', { detail: '' }))
+                    }
+                  `}
+                </Script>
+              </>
+            )}
+
             <button
               type="submit"
-              disabled={loading || usernameStatus !== 'available' || !acceptTerms}
+              disabled={loading || usernameStatus !== 'available' || !acceptTerms || (TURNSTILE_SITE_KEY && !turnstileToken)}
               className="btn-primary w-full justify-center py-2.5 mt-1"
             >
               {loading ? 'Creating account…' : 'Create Account'}

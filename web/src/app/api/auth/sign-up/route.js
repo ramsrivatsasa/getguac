@@ -11,6 +11,8 @@ import { rateLimit, rateKey } from '../../../../lib/apiGuard'
 import { createMailbox, mailboxExists } from '../../../../lib/migadu'
 import { encryptSecret, generateMailboxPassword } from '../../../../lib/crypto'
 import { validatePassword } from '../../../../lib/passwordStrength'
+import { isDisposableEmail } from '../../../../lib/disposable-emails'
+import { verifyTurnstile } from '../../../../lib/turnstile'
 export const runtime = 'nodejs'
 
 // Best-effort: provision the Migadu mailbox at signup so the user's
@@ -57,6 +59,36 @@ export async function POST(request) {
 
     const body = await request.json().catch(() => null)
     if (!body) return Response.json({ error: 'Invalid request' }, { status: 400 })
+
+    // ── Bot prevention layer ────────────────────────────────────────
+    // Honeypot: hidden form field real users never see. Any non-empty
+    // value = a bot auto-filling every field on the page. Returns a
+    // generic 400 so the bot can't fingerprint the gate.
+    if (body.website && String(body.website).trim() !== '') {
+      return Response.json({ error: 'Invalid request' }, { status: 400 })
+    }
+    // Disposable email blocklist: most spam signups use throwaway
+    // inboxes since they don't intend to confirm the email anyway.
+    if (isDisposableEmail(body.email)) {
+      return Response.json({
+        error: 'Please use a permanent email address (disposable inboxes are not allowed).',
+        status: 'disposable_email',
+      }, { status: 400 })
+    }
+    // Cloudflare Turnstile CAPTCHA token verification. Silently
+    // skipped when TURNSTILE_SECRET_KEY isn't configured so the
+    // signup path still works in local dev / before keys are
+    // provisioned in Vercel.
+    const remoteIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+                  || request.headers.get('x-real-ip')
+                  || null
+    const turnstile = await verifyTurnstile(body.turnstile_token, remoteIp)
+    if (!turnstile.ok) {
+      return Response.json({
+        error: 'CAPTCHA verification failed. Please try again.',
+        status: 'captcha_failed',
+      }, { status: 400 })
+    }
 
     const username = String(body.username || '').toLowerCase().trim()
     const email    = String(body.email || '').trim()

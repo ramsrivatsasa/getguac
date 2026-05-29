@@ -89,7 +89,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
       final rows = await _sb
           .from('shopping_list')
           .select(_kListCols)
-          .order('order_date', ascending: false)
+          .order('created_at', ascending: false)
           .limit(500);
       final items = (rows as List).map((r) => _Item(
         id: (r['id'] ?? '').toString(),

@@ -28,8 +28,7 @@ export function StoreList({ stores, best, onAddToSmashlist }) {
               <span className="text-gray-700 truncate">{s.name}</span>
             )}
             {s.notes && <span className="text-[9px] text-amber-700 italic truncate max-w-[80px]">{s.notes}</span>}
-            <span className="ml-auto text-gray-500 shrink-0">{s.count ? `${s.count}×` : ''}</span>
-            <span className={`font-bold tabular-nums w-16 text-right shrink-0 ${s.web ? 'text-fuchsia-700' : 'text-emerald-700'}`}>
+            <span className={`ml-auto font-bold tabular-nums w-16 text-right shrink-0 ${s.web ? 'text-fuchsia-700' : 'text-emerald-700'}`}>
               ${(s.min_price || s.last_price || 0).toFixed(2)}
             </span>
             {isBest && <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-600 shrink-0">Best</span>}

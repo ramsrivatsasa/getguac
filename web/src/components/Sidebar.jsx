@@ -28,11 +28,25 @@ const sections = [
     title: 'Money',
     items: [
       { href: '/receipts', icon: Receipt,        label: 'Receipts', emoji: '🧾', hoverMascot: 'happy' },
-      { href: '/inbox',    icon: Mail,           label: 'Inbox',    emoji: '📬', hoverMascot: 'eating' },
       { href: '/reports',  icon: BarChart3,      label: 'Reports',  emoji: '📊', hoverMascot: 'celebrating' },
       { href: '/bank',     icon: Banknote,       label: 'Bank',     emoji: '🏦', hoverMascot: 'rich' },
       { href: '/returns',  icon: Undo2,          label: 'Returns',  emoji: '↩️', hoverMascot: 'surprised' },
       { href: '/rewards',  icon: Gift,           label: 'Rewards',  emoji: '🎁', hoverMascot: 'celebrating' },
+      { href: '/stores',   icon: Store,          label: 'Stores',   emoji: '🏪', hoverMascot: 'happy' },
+    ],
+  },
+  {
+    // Chatter — the communication surfaces. Inbox (where forwarded
+    // e-receipts land) + Chat (in-app assistant). Pulled out of Money
+    // + More so users see them as one category instead of buried in
+    // two unrelated places. "Chatter" picked over "Messages" / "Mail"
+    // to stay on the Guac brand voice (Smashlist / Stash / Guac...)
+    // without colliding with competitor vocabulary (Fetch's "Inbox"
+    // means something different).
+    title: 'Chatter',
+    items: [
+      { href: '/inbox', icon: Mail,           label: 'Inbox', emoji: '📬', hoverMascot: 'eating' },
+      { href: '/chat',  icon: MessageSquare,  label: 'Chat',  emoji: '💬', hoverMascot: 'happy' },
     ],
   },
   {
@@ -40,19 +54,16 @@ const sections = [
     items: [
       { href: '/stash',    icon: Package,        label: 'Stash',     emoji: '📦', hoverMascot: 'sitting' },
       { href: '/bites',    icon: Utensils,       label: 'Bites',     emoji: '🍽️', hoverMascot: 'eating' },
-      { href: '/shopping',    icon: ShoppingCart,   label: 'Smashlist',   emoji: '🛒', hoverMascot: 'thumbsup' },
-      { href: '/predictions', icon: Sparkles,       label: 'Predictions', emoji: '🪄', hoverMascot: 'celebrating' },
-      { href: '/steals',      icon: BadgeDollarSign, label: 'Steals',     emoji: '💎', hoverMascot: 'rich' },
+      { href: '/shopping', icon: ShoppingCart,   label: 'Smashlist', emoji: '🛒', hoverMascot: 'thumbsup' },
+      { href: '/steals',   icon: BadgeDollarSign, label: 'Steals',    emoji: '💎', hoverMascot: 'rich' },
     ],
   },
   {
     title: 'More',
     items: [
-      { href: '/stores',    icon: Store, label: 'Stores',    emoji: '🏪', hoverMascot: 'happy' },
       { href: '/car-miles', icon: Car,   label: 'Car Miles', emoji: '🚗', hoverMascot: 'relaxing' },
       { href: '/profile',   icon: User,  label: 'Profile',   emoji: '👤', hoverMascot: 'sitting' },
-      { href: '/profile#household', icon: Home,         label: 'House', emoji: '🏡', hoverMascot: 'happy' },
-      { href: '/chat',              icon: MessageSquare, label: 'Chat', emoji: '💬', hoverMascot: 'happy' },
+      { href: '/profile#household', icon: Home, label: 'House', emoji: '🏡', hoverMascot: 'happy' },
     ],
   },
 ]

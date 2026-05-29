@@ -17,6 +17,7 @@ import '../../services/smash_days_service.dart';
 import '../../services/guac_money_service.dart';
 import '../../utils/country_flag.dart';
 import '../../widgets/subscriptions_card.dart';
+import '../../widgets/top_app_bar_actions.dart';
 
 const _kEmerald700 = Color(0xFF15803d);
 const _kEmerald800 = Color(0xFF166534);
@@ -374,15 +375,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           );
         }),
-        // Chat lives in the dashboard appbar so it's one tap from anywhere.
-        // Was previously buried under the Profile-tab long-press menu, which
-        // most users didn't discover. Sign-out moved to /profile where it
-        // sits next to the other account-management controls.
-        IconButton(
-          icon: const Icon(Icons.chat_bubble_outline),
-          tooltip: 'Chat',
-          onPressed: () => context.go('/chat'),
-        ),
+        // Notifications + Chat + Sign Out from the shared
+        // topAppBarActions helper — any new screen that drops the
+        // same helper in its appBar inherits the same row, so the
+        // user always finds Sign Out in the same place.
+        ...topAppBarActions(context),
       ],
     );
   }

@@ -344,12 +344,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
           style: TextStyle(color: Color(0xFFa3e635), fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 1)),
       ]),
       actions: [
-        // Region flag — pulled from the OS-level locale. Lightweight
-        // precursor to real i18n (currency, locale-aware dates,
-        // region-specific store catalog). Hidden when the device locale
-        // has no country code.
+        // Region flag — pinned to US while the app is in US-only
+        // mode. The tester runs from India hitting prod for the US
+        // version; without this override they'd see a 🇮🇳 IN chip on
+        // a US-branded experience. Replace `'US'` with
+        // detectDeviceCountry() when we're ready to actually
+        // localize per region.
         Builder(builder: (ctx) {
-          final code = detectDeviceCountry();
+          const code = 'US';
           final flag = flagForCountry(code);
           if (flag == null) return const SizedBox.shrink();
           return Tooltip(
@@ -364,9 +366,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Row(mainAxisSize: MainAxisSize.min, children: [
                 Text(flag, style: const TextStyle(fontSize: 14, height: 1)),
                 const SizedBox(width: 4),
-                Text(
-                  code!.toUpperCase(),
-                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800),
+                const Text(
+                  'US',
+                  style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800),
                 ),
               ]),
             ),

@@ -17,11 +17,12 @@ export default async function DashboardPage() {
     sb.from('profiles').select('first_name').eq('id', user?.id || '').single(),
   ])
 
-  // Region detection — Vercel sets `x-vercel-ip-country` automatically
-  // for any deployed request, derived from the requesting IP. Falls
-  // back to null in local dev (no Vercel header set), which renders
-  // no flag — strictly progressive enhancement.
-  const country = headers().get('x-vercel-ip-country') || null
+  // Region — pinned to US while the app is in US-only mode. The
+  // tester is in India hitting prod for the US version; without this
+  // override they'd see a 🇮🇳 IN chip on a US-branded experience. Flip
+  // back to `headers().get('x-vercel-ip-country')` when we're ready
+  // to actually localize per region.
+  const country = 'US'
 
   return (
     <DashboardClient

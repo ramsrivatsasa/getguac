@@ -13,6 +13,7 @@ import '../../utils/date_format.dart';
 import '../../store_name_normalize.dart';
 import '../../payment_rows.dart';
 import '../../services/spending_trends_service.dart';
+import '../../services/smash_days_service.dart';
 import '../../widgets/subscriptions_card.dart';
 
 const _kEmerald700 = Color(0xFF15803d);
@@ -497,7 +498,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
           onTap: () => context.go('/rewards'),
         )),
         const SizedBox(width: 10),
-        const Expanded(child: SizedBox()),  // keep grid alignment
+        // Smash days — consecutive-day receipt activity counter.
+        // Mirrors the web /dashboard tile. Tile turns warm-yellow when
+        // the streak is alive (animate-pulse on web becomes a static
+        // flame icon on mobile — same color signal without the spin).
+        Expanded(child: () {
+          final smash = computeSmashDays(filtered).smashDays;
+          return _StatTile(
+            label: 'Smash days',
+            value: smash == 0 ? '0' : '$smash',
+            icon: Icons.local_fire_department,
+            iconGradient: smash > 0
+              ? const LinearGradient(colors: [Color(0xFFfb923c), Color(0xFFf59e0b), Color(0xFFeab308)])
+              : null,
+            iconBg: smash > 0 ? null : const Color(0xFFf3f4f6),
+            iconColor: smash > 0 ? Colors.white : const Color(0xFF9ca3af),
+            trendLabel: smash == 0 ? 'scan to start' : (smash == 1 ? 'day' : 'days'),
+            trendTone: smash > 0 ? 'up' : null,
+          );
+        }()),
       ]),
     ]);
   }

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useStore } from '../../../store'
 import Link from 'next/link'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { DollarSign, Receipt, Gift, TrendingUp, ArrowRight, Sparkles, Flame, PiggyBank } from 'lucide-react'
+import { DollarSign, Receipt, Gift, TrendingUp, ArrowRight, Sparkles, Flame, PiggyBank, Wand2 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import GuacoScoreCard from '../../../components/GuacoScoreCard'
 import UpcomingReturnsBanner from '../../../components/UpcomingReturnsBanner'
@@ -13,6 +13,9 @@ import AnomaliesPanel from '../../../components/AnomaliesPanel'
 import { ActivityFeed } from '../../../components/ActivityFeed'
 import { computeSmashDays } from '../../../lib/smashDays'
 import { fetchTotal as fetchGuacMoneyTotal, formatGuacMoney } from '../../../lib/guacMoney'
+import { generateInsights } from '../../../lib/financeInsights'
+import { computeWizardScore } from '../../../lib/wizardScore'
+import { createClient as createSbClient } from '../../../lib/supabase/client'
 import { subDays, subWeeks, subMonths, subYears } from 'date-fns'
 import { normalizeStoreName, canonicalStoreName, displayStoreName, storeGroupKey } from '../../../lib/store-name-normalize'
 import { periodToReceiptsChip, buildReceiptsUrl } from '../../../lib/receipts-deeplink'
@@ -76,6 +79,12 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
   const rangeLabel = `Last ${periodCount} ${UNIT_LABEL[period]}${periodCount === 1 ? '' : 's'}`
   const totalSpend = filtered.reduce((s, r) => s + parseFloat(r.total_amount || 0), 0)
   const totalTax = filtered.reduce((s, r) => s + parseFloat(r.tax_paid || 0), 0)
+  // Bank fees — interest charges, annual / late / ATM fees, etc.
+  // Categorized as 'bank-fees' by auto-categorize.js. Surfaces the
+  // hidden cost most users never tally on their own.
+  const bankFees = filtered
+    .filter(r => r.category === 'bank-fees')
+    .reduce((s, r) => s + parseFloat(r.total_amount || 0), 0)
   const today = new Date().toISOString().split('T')[0]
 
   // Period-over-period trend: total spend vs the avg of the prior 3
@@ -208,40 +217,27 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
           prior 3 windows") using the central spending-trends lib.
           The Smash-days chip pulses when active to reward consistent
           engagement and goes flat-gray once it breaks. */}
-      <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
+      {/* Stat grid — reordered: GuacScore first, financial tiles
+          (transactions / spend / tax / bank fees), then engagement
+          tiles (rewards / GuacMoney), with Smash days at the end as
+          requested. Eight tiles total — flows 4×2 on lg, 2×4 on
+          mobile. */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
         <GuacoScoreCard receipts={filtered} size="sm" />
-        <GuacMoneyTile />
-        {(() => {
-          const { smashDays } = computeSmashDays(filtered)
-          return (
-            <div className="stat-card">
-              <div className={`p-3 rounded-xl ${smashDays > 0 ? 'bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500 text-white shadow-sm' : 'bg-gray-100 text-gray-400'}`}>
-                <Flame size={20} className={smashDays > 0 ? 'animate-pulse' : ''} />
-              </div>
-              <div>
-                <p className="text-xs text-gray-500 font-medium">Smash days</p>
-                <div className="flex items-baseline gap-2">
-                  <p className="text-xl font-bold text-gray-900 tabular-nums">{smashDays}</p>
-                  <span className="text-xs text-gray-500">
-                    {smashDays === 0 ? 'scan one to start' : `day${smashDays === 1 ? '' : 's'}`}
-                  </span>
-                </div>
-              </div>
-            </div>
-          )
-        })()}
+        <GuacWizardTile />
         {[
+          { label: 'Transactions', value: filtered.length, icon: Receipt, color: 'bg-emerald-100 text-emerald-700' },
           { label: 'Total Spent', value: `$${totalSpend.toFixed(2)}`, icon: DollarSign, color: 'bg-gradient-to-br from-rose-400 via-rose-600 to-rose-800 text-white shadow-sm', trend: trendBadge },
           { label: 'Tax Paid', value: `$${totalTax.toFixed(2)}`, icon: TrendingUp, color: 'bg-amber-100 text-amber-700' },
-          { label: 'Transactions', value: filtered.length, icon: Receipt, color: 'bg-emerald-100 text-emerald-700' },
+          { label: 'Bank Fees', value: `$${bankFees.toFixed(2)}`, icon: TrendingUp, color: bankFees > 0 ? 'bg-rose-100 text-rose-700' : 'bg-gray-100 text-gray-400' },
           { label: 'Rewards', value: initialRewards.length, icon: Gift, color: 'bg-lime-100 text-lime-700' },
         ].map(({ label, value, icon: Icon, color, trend }) => (
           <div key={label} className="stat-card">
-            <div className={`p-3 rounded-xl ${color}`}><Icon size={20} /></div>
-            <div>
-              <p className="text-xs text-gray-500 font-medium">{label}</p>
-              <div className="flex items-baseline gap-2">
-                <p className="text-xl font-bold text-gray-900">{value}</p>
+            <div className={`p-2 rounded-lg ${color}`}><Icon size={16} /></div>
+            <div className="min-w-0">
+              <p className="text-[11px] text-gray-500 font-medium leading-tight">{label}</p>
+              <div className="flex items-baseline gap-1.5">
+                <p className="text-base font-bold text-gray-900">{value}</p>
                 {trend && trend.label !== '—' && (
                   <span
                     className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
@@ -258,6 +254,26 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
             </div>
           </div>
         ))}
+        <GuacMoneyTile />
+        {(() => {
+          const { smashDays } = computeSmashDays(filtered)
+          return (
+            <div className="stat-card">
+              <div className={`p-2 rounded-lg ${smashDays > 0 ? 'bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500 text-white shadow-sm' : 'bg-gray-100 text-gray-400'}`}>
+                <Flame size={16} className={smashDays > 0 ? 'animate-pulse' : ''} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[11px] text-gray-500 font-medium leading-tight">Smash days</p>
+                <div className="flex items-baseline gap-1.5">
+                  <p className="text-base font-bold text-gray-900 tabular-nums">{smashDays}</p>
+                  <span className="text-[10px] text-gray-500">
+                    {smashDays === 0 ? 'scan to start' : `day${smashDays === 1 ? '' : 's'}`}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )
+        })()}
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
@@ -398,6 +414,56 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
 // (guac_money_total) so we don't fetch every event row. Loading
 // state shows a subtle dash, empty state shows "$0" + a "start
 // saving" prompt.
+// GuacWizard health-score tile — same 0-100 score the /guacwizard
+// page renders, distilled into a single tile. Pulls bank_statements
+// + bank_fees + bank_transactions (only the user's own rows via
+// RLS); when no bank data exists yet the tile shows "Set up →" and
+// links to /guacwizard so the user can connect statements.
+function GuacWizardTile() {
+  const sb = createSbClient()
+  const { data: statements = [] } = useQuery({
+    queryKey: ['bank_statements'],
+    queryFn: async () => { const { data } = await sb.from('bank_statements').select('*'); return data || [] },
+    staleTime: 5 * 60_000,
+  })
+  const { data: fees = [] } = useQuery({
+    queryKey: ['bank_fees'],
+    queryFn: async () => { const { data } = await sb.from('bank_fees').select('*'); return data || [] },
+    staleTime: 5 * 60_000,
+  })
+  const { data: transactions = [] } = useQuery({
+    queryKey: ['bank_transactions'],
+    queryFn: async () => { const { data } = await sb.from('bank_transactions').select('*'); return data || [] },
+    staleTime: 5 * 60_000,
+  })
+  const score = (() => {
+    const hasData = statements.length > 0 || fees.length > 0 || transactions.length > 0
+    if (!hasData) return null
+    const result = generateInsights({ statements, fees, transactions }, 'ytd')
+    return computeWizardScore(result).score
+  })()
+  return (
+    <Link href="/guacwizard" className="stat-card hover:bg-emerald-50/40 transition-colors" title="GuacWizard health score">
+      <div className={`p-2 rounded-lg ${score != null && score >= 65 ? 'bg-gradient-to-br from-emerald-400 to-lime-500 text-white shadow-sm' : score != null && score >= 35 ? 'bg-gradient-to-br from-amber-300 to-orange-500 text-white shadow-sm' : score != null ? 'bg-gradient-to-br from-rose-400 to-red-600 text-white shadow-sm' : 'bg-violet-100 text-violet-700'}`}>
+        <Wand2 size={16} />
+      </div>
+      <div className="min-w-0">
+        <p className="text-[11px] text-gray-500 font-medium leading-tight">GuacWizard 🧙‍♂️</p>
+        <div className="flex items-baseline gap-1.5">
+          {score != null ? (
+            <>
+              <p className="text-base font-bold text-gray-900 tabular-nums">{score}</p>
+              <span className="text-[10px] text-gray-500">/ 100</span>
+            </>
+          ) : (
+            <p className="text-xs text-violet-700 font-bold">Set up →</p>
+          )}
+        </div>
+      </div>
+    </Link>
+  )
+}
+
 function GuacMoneyTile() {
   const { data: total = 0, isLoading } = useQuery({
     queryKey: ['guac-money-total'],
@@ -406,17 +472,17 @@ function GuacMoneyTile() {
   })
   return (
     <div className="stat-card">
-      <div className={`p-3 rounded-xl ${total > 0 ? 'bg-gradient-to-br from-emerald-400 via-emerald-500 to-lime-600 text-white shadow-sm' : 'bg-emerald-50 text-emerald-700'}`}>
-        <PiggyBank size={20} />
+      <div className={`p-2 rounded-lg ${total > 0 ? 'bg-gradient-to-br from-emerald-400 via-emerald-500 to-lime-600 text-white shadow-sm' : 'bg-emerald-50 text-emerald-700'}`}>
+        <PiggyBank size={16} />
       </div>
-      <div>
-        <p className="text-xs text-gray-500 font-medium">GuacMoney 🥑</p>
-        <div className="flex items-baseline gap-2">
-          <p className="text-xl font-bold text-emerald-700 tabular-nums">
+      <div className="min-w-0">
+        <p className="text-[11px] text-gray-500 font-medium leading-tight">GuacMoney 🥑</p>
+        <div className="flex items-baseline gap-1.5">
+          <p className="text-base font-bold text-emerald-700 tabular-nums">
             {isLoading ? '—' : formatGuacMoney(total)}
           </p>
           <span className="text-[10px] text-gray-500">
-            {total > 0 ? 'saved' : 'tap Cheapest →'}
+            {total > 0 ? 'saved' : 'tap Cheapest'}
           </span>
         </div>
       </div>

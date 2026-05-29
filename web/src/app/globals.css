@@ -30,6 +30,6 @@
   .badge-gray   { @apply badge bg-gray-100 text-gray-600; }
   .badge-purple { @apply badge bg-amber-100 text-amber-800; }
 
-  .stat-card  { @apply card flex items-center gap-3 p-3 sm:p-4 hover:shadow transition-shadow; }
+  .stat-card  { @apply card flex items-center gap-2 p-2 sm:p-2.5 hover:shadow transition-shadow; }
   .page-title { @apply text-xl sm:text-2xl font-extrabold text-gray-900 tracking-tight; }
 }

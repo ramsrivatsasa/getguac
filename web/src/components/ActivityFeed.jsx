@@ -11,15 +11,17 @@
 import { useMemo } from 'react'
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
-import { Receipt, ShoppingCart, Star, Clock } from 'lucide-react'
+import { Receipt, ShoppingCart, Star, Clock, PiggyBank } from 'lucide-react'
 import { getShoppingList } from '../lib/db'
 import { displayStoreName } from '../lib/store-name-normalize'
 import { logoUrlForStore } from '../lib/store-logo'
+import { fetchRecent as fetchRecentGuacMoney, sourceLabel as guacMoneySourceLabel } from '../lib/guacMoney'
 
 const ICONS = {
   receipt: <Receipt size={13} className="text-emerald-700" />,
   smashlist: <ShoppingCart size={13} className="text-rose-700" />,
   rating: <Star size={13} className="text-amber-600 fill-amber-500" />,
+  guacmoney: <PiggyBank size={13} className="text-emerald-700" />,
 }
 
 const ROW_LIMIT = 10
@@ -29,6 +31,14 @@ export function ActivityFeed({ receipts = [] }) {
     queryKey: ['shopping'],
     queryFn: getShoppingList,
     staleTime: 1000 * 60,
+  })
+
+  // GuacMoney earn events — separate query so the feed picks up
+  // recent saves as soon as the user does an Auto-Add Cheapest.
+  const { data: guacMoneyEvents = [] } = useQuery({
+    queryKey: ['guac-money-recent'],
+    queryFn: () => fetchRecentGuacMoney(20),
+    staleTime: 30_000,
   })
 
   const events = useMemo(() => {
@@ -62,12 +72,27 @@ export function ActivityFeed({ receipts = [] }) {
         href: '/shopping',
       })
     }
+    // GuacMoney earn events — most prominent in the feed when present
+    // since "you saved real $X" is the win-state the user actively
+    // wants to see.
+    for (const ev of guacMoneyEvents) {
+      out.push({
+        kind: 'guacmoney',
+        ts: ev.created_at,
+        label: guacMoneySourceLabel(ev.source),
+        title: ev.item_name || 'Save',
+        amount: Number(ev.amount) || 0,
+        store: ev.store_name,
+        moneyEarn: true,
+        href: '/shopping',
+      })
+    }
     // Sort merged feed descending by timestamp, cap at ROW_LIMIT.
     return out
       .filter(e => e.ts)
       .sort((a, b) => String(b.ts).localeCompare(String(a.ts)))
       .slice(0, ROW_LIMIT)
-  }, [receipts, shopping])
+  }, [receipts, shopping, guacMoneyEvents])
 
   if (events.length === 0) {
     return (
@@ -119,8 +144,9 @@ function ActivityRow({ event }) {
       </div>
       <div className="text-right shrink-0">
         {event.amount != null && (
-          <p className="font-bold text-emerald-700 tabular-nums text-sm">
-            ${event.amount.toFixed(2)}
+          <p className={`font-bold tabular-nums text-sm ${event.moneyEarn ? 'text-emerald-600' : 'text-emerald-700'}`}>
+            {event.moneyEarn ? '+' : ''}${event.amount.toFixed(2)}
+            {event.moneyEarn && <span className="text-[10px] ml-1">🥑</span>}
           </p>
         )}
         <p className="text-[10px] text-gray-400">{date}</p>

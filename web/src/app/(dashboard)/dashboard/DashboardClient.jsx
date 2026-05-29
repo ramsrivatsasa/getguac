@@ -5,12 +5,14 @@ import { useRouter } from 'next/navigation'
 import { useStore } from '../../../store'
 import Link from 'next/link'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { DollarSign, Receipt, Gift, TrendingUp, ArrowRight, Sparkles, Flame } from 'lucide-react'
+import { DollarSign, Receipt, Gift, TrendingUp, ArrowRight, Sparkles, Flame, PiggyBank } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
 import GuacoScoreCard from '../../../components/GuacoScoreCard'
 import UpcomingReturnsBanner from '../../../components/UpcomingReturnsBanner'
 import AnomaliesPanel from '../../../components/AnomaliesPanel'
 import { ActivityFeed } from '../../../components/ActivityFeed'
 import { computeSmashDays } from '../../../lib/smashDays'
+import { fetchTotal as fetchGuacMoneyTotal, formatGuacMoney } from '../../../lib/guacMoney'
 import { subDays, subWeeks, subMonths, subYears } from 'date-fns'
 import { normalizeStoreName, canonicalStoreName, displayStoreName, storeGroupKey } from '../../../lib/store-name-normalize'
 import { periodToReceiptsChip, buildReceiptsUrl } from '../../../lib/receipts-deeplink'
@@ -208,6 +210,7 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
           engagement and goes flat-gray once it breaks. */}
       <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
         <GuacoScoreCard receipts={filtered} size="sm" />
+        <GuacMoneyTile />
         {(() => {
           const { smashDays } = computeSmashDays(filtered)
           return (
@@ -386,6 +389,37 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
           nothing yet, so the dashboard never looks blank for new
           accounts. */}
       <ActivityFeed receipts={spendingReceipts} />
+    </div>
+  )
+}
+
+// GuacMoney tile — total dollars NOT spent because GetGuac routed
+// the user to a cheaper option. Pulls from the SQL aggregate
+// (guac_money_total) so we don't fetch every event row. Loading
+// state shows a subtle dash, empty state shows "$0" + a "start
+// saving" prompt.
+function GuacMoneyTile() {
+  const { data: total = 0, isLoading } = useQuery({
+    queryKey: ['guac-money-total'],
+    queryFn: fetchGuacMoneyTotal,
+    staleTime: 60_000,
+  })
+  return (
+    <div className="stat-card">
+      <div className={`p-3 rounded-xl ${total > 0 ? 'bg-gradient-to-br from-emerald-400 via-emerald-500 to-lime-600 text-white shadow-sm' : 'bg-emerald-50 text-emerald-700'}`}>
+        <PiggyBank size={20} />
+      </div>
+      <div>
+        <p className="text-xs text-gray-500 font-medium">GuacMoney 🥑</p>
+        <div className="flex items-baseline gap-2">
+          <p className="text-xl font-bold text-emerald-700 tabular-nums">
+            {isLoading ? '—' : formatGuacMoney(total)}
+          </p>
+          <span className="text-[10px] text-gray-500">
+            {total > 0 ? 'saved' : 'tap Cheapest →'}
+          </span>
+        </div>
+      </div>
     </div>
   )
 }

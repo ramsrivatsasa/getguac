@@ -38,6 +38,11 @@ export function ShareItemLayout({ share }) {
           <span className="font-bold text-emerald-800">{sharedBy}</span>
           {' '}shared a product with you 💌
         </p>
+        <SharerSocialProof
+          sharedBy={sharedBy}
+          guacMoneyTotal={p.guac_money_total}
+          smashDays={p.smash_days}
+        />
         <h1 className="text-2xl sm:text-3xl font-black mb-4 leading-tight">
           {p.item_title || 'A product'}
         </h1>
@@ -116,6 +121,11 @@ export function ShareListLayout({ share }) {
             <span className="font-bold text-emerald-800">{sharedBy}</span>
             {' '}shared a shopping list with you 💌
           </p>
+          <SharerSocialProof
+            sharedBy={sharedBy}
+            guacMoneyTotal={p.guac_money_total}
+            smashDays={p.smash_days}
+          />
           <h1 className="text-2xl sm:text-3xl font-black leading-tight">
             {p.title || 'Shopping list'}
           </h1>
@@ -181,13 +191,13 @@ export function ShareListLayout({ share }) {
 // smash-day count rendered under the from-line. Pulled from the
 // share's payload so the page renders without an extra DB trip;
 // the API can be enriched later to compute these server-side.
-export function SharerSocialProof({ sharedBy, totalSaved, smashDays }) {
-  if (totalSaved == null && smashDays == null) return null
+export function SharerSocialProof({ sharedBy, guacMoneyTotal, smashDays }) {
+  if (guacMoneyTotal == null && smashDays == null) return null
   return (
     <div className="flex flex-wrap items-center gap-2 mb-3">
-      {totalSaved != null && (
+      {guacMoneyTotal != null && guacMoneyTotal > 0 && (
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-900 text-xs font-bold border border-emerald-300">
-          💰 {sharedBy} saved <span className="tabular-nums">${Number(totalSaved).toFixed(0)}</span> on GetGuac
+          🥑 {sharedBy} earned <span className="tabular-nums">${Number(guacMoneyTotal).toFixed(0)}</span> in GuacMoney
         </span>
       )}
       {smashDays != null && smashDays > 0 && (

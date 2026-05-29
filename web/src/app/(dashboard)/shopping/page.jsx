@@ -13,6 +13,7 @@ import { StoreList } from '../../../components/StoreList'
 import { StoreLogo } from '../../../components/StoreLogo'
 import { ShareItemButton as SharedShareItemButton } from '../../../components/ShareItemButton'
 import { fireConfetti } from '../../../lib/confetti'
+import { logAutoAddCheapest, formatGuacMoney } from '../../../lib/guacMoney'
 
 // Same tone palette as /stash so Buy Again cards visually rhyme with
 // the Stash grid. Maps the per-Smashlist color (Pantry=emerald,
@@ -401,6 +402,7 @@ export default function ShoppingPage() {
     const sb = createClient()
     let ok = 0
     let pickStoreFor = null  // resolved per criteria
+    let perItem = null       // exposed for GuacMoney savings logging
     // "Pick a store" flow — every suggestion lands at the chosen store,
     // no lookup needed. Short-circuits the per-item history fetch.
     if (criteria && typeof criteria === 'object' && criteria.kind === 'fixed') {
@@ -415,14 +417,19 @@ export default function ShoppingPage() {
           .select('item_name, price, receipts!inner(store_id, store_name)')
           .in('item_name', names)
           .limit(2000)
-        const perItem = new Map()  // item_name -> store_id -> {count, min_price}
+        perItem = new Map()  // item_name -> store_id -> {id, name, count, min_price}
         for (const r of data || []) {
           const k = r.item_name
           if (!perItem.has(k)) perItem.set(k, new Map())
           const m = perItem.get(k)
           const sid = r.receipts?.store_id
           if (!sid) continue
-          if (!m.has(sid)) m.set(sid, { id: sid, count: 0, min_price: null })
+          if (!m.has(sid)) m.set(sid, {
+            id: sid,
+            name: r.receipts?.store_name || '',
+            count: 0,
+            min_price: null,
+          })
           const e = m.get(sid)
           e.count++
           const p = r.price != null ? Number(r.price) : null
@@ -460,11 +467,34 @@ export default function ShoppingPage() {
       : criteria === 'cheapest' ? 'cheapest store'
       : criteria === 'frequent' ? 'most-used store'
       : 'Smashlist'
-    toast.success(`Added ${ok}/${targets.length} via ${label} ✓`)
+
+    // GuacMoney accounting — only "cheapest" routing actually proves a
+    // save. For "frequent" / "asis" / fixed-store flows we still added
+    // items, just not in a way that demonstrates dollars-not-spent.
+    let savedTotal = 0
+    if (ok > 0 && criteria === 'cheapest' && perItem) {
+      try {
+        const { total } = await logAutoAddCheapest({
+          targets: targets.slice(0, ok),
+          perItem,
+          getChosenStoreId: pickStoreFor,
+        })
+        savedTotal = total
+      } catch (e) {
+        // Telemetry write failure is non-fatal — the add itself succeeded.
+        if (typeof console !== 'undefined') console.warn('[guacMoney] log failed:', e.message)
+      }
+    }
+
+    const baseMsg = `Added ${ok}/${targets.length} via ${label} ✓`
+    const moneyMsg = savedTotal > 0
+      ? ` · +${formatGuacMoney(savedTotal)} GuacMoney 🥑`
+      : ''
+    toast.success(baseMsg + moneyMsg)
     // Celebration burst — fires from the page header area on any
-    // successful Auto-Add (cheapest/frequent/asis or per-card to a
-    // chosen store). Reduced-motion users are skipped by fireConfetti.
-    if (ok > 0) fireConfetti({ count: 60 + ok * 4 })
+    // successful Auto-Add. Bigger burst when there's a real savings
+    // moment worth celebrating.
+    if (ok > 0) fireConfetti({ count: 60 + ok * 4 + (savedTotal > 0 ? 40 : 0) })
   }
 
   async function predictNow() {

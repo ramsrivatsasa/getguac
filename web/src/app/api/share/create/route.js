@@ -96,11 +96,58 @@ export async function POST(request) {
       return Response.json({ error: `channel must be one of ${[...ALLOWED_CHANNELS].join(',')}` }, { status: 400 })
     }
 
-    // Stamp the kind into the payload so the public page can branch
-    // even if the caller forgot to include it inside payload.
-    const enrichedPayload = { kind, ...payload, kind }
-
     const sb = admin()
+
+    // Enrich the payload with the sharer's lifetime stats (GuacMoney
+    // total + smash-day count) so the public landing page can render
+    // the SharerSocialProof chips without a follow-up DB call from
+    // the anon client (which has no read permission on either table
+    // anyway). Best-effort — failures here just mean the chips
+    // self-hide on the landing.
+    let guacMoneyTotal = null
+    let smashDays = null
+    try {
+      const { data: gmTotal } = await sb.rpc('guac_money_total', {
+        target_user_id: user.id,
+      })
+      if (gmTotal != null) guacMoneyTotal = Number(gmTotal)
+    } catch {}
+    try {
+      // Smash days computed from the user's receipts — pull a 180-day
+      // window of dates and walk backward (same logic as lib/smashDays.js).
+      const { data: rcpts } = await sb
+        .from('receipts')
+        .select('date')
+        .eq('user_id', user.id)
+        .order('date', { ascending: false })
+        .limit(180)
+      if (rcpts && rcpts.length > 0) {
+        const days = new Set(rcpts.map(r => String(r.date || '').slice(0, 10)).filter(d => d.length === 10))
+        const today = new Date().toISOString().slice(0, 10)
+        const yest = new Date(Date.now() - 86400_000).toISOString().slice(0, 10)
+        const cursorIso = days.has(today) ? today : days.has(yest) ? yest : null
+        if (cursorIso) {
+          let count = 0
+          const cursor = new Date(cursorIso + 'T00:00:00Z')
+          while (true) {
+            const iso = cursor.toISOString().slice(0, 10)
+            if (!days.has(iso)) break
+            count++
+            cursor.setUTCDate(cursor.getUTCDate() - 1)
+          }
+          smashDays = count
+        }
+      }
+    } catch {}
+
+    const enrichedPayload = {
+      kind,
+      ...payload,
+      kind,
+      guac_money_total: guacMoneyTotal,
+      smash_days: smashDays,
+    }
+
     const expiresAt = new Date(Date.now() + TTL_DAYS * 86400_000).toISOString()
 
     // Retry on the (vanishingly unlikely) token collision.

@@ -1562,8 +1562,8 @@ function BuyAgainCard({ item, selected = false, onToggleSelect, onAdd, onQty }) 
   }, [item.item_name, getLocation])
 
   return (
-    <div className={`relative bg-gradient-to-br ${tone.from} ${tone.to} rounded-2xl border-2 ${selected ? 'border-emerald-500 ring-2 ring-emerald-300' : 'border-transparent'} shadow-sm hover:shadow-xl hover:border-emerald-300 hover:scale-[1.01] hover:-translate-y-0.5 transition-all duration-200 overflow-hidden ring-1 ${tone.ring}`}>
-      <div className={`h-1 ${tone.accent}`} />
+    <div className={`relative bg-gradient-to-br ${tone.from} ${tone.to} rounded-2xl border-2 ${selected ? 'border-emerald-500 ring-2 ring-emerald-300' : 'border-transparent'} shadow-sm hover:shadow-xl hover:border-emerald-300 hover:scale-[1.01] hover:-translate-y-0.5 transition-all duration-200 ring-1 ${tone.ring}`}>
+      <div className={`h-1 ${tone.accent} rounded-t-2xl`} />
       {/* Top-left checkbox — sits over the gradient so it's discoverable
           without taking grid space from the rest of the card. The label
           covers the area so the touch target is comfortable on mobile. */}

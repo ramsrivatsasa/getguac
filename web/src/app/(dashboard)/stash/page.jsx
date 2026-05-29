@@ -429,9 +429,11 @@ const ProductCard = memo(function ProductCard({ item, expanded, onToggle, onAddT
   })
 
   return (
-    <div className={`relative bg-gradient-to-br ${tone.from} ${tone.to} rounded-2xl border-2 border-transparent shadow-sm hover:shadow-xl hover:border-emerald-300 hover:scale-[1.02] hover:-translate-y-0.5 transition-all duration-200 overflow-hidden ring-1 ${tone.ring} group`}>
-      {/* Color stripe header */}
-      <div className={`h-1 ${tone.accent}`} />
+    <div className={`relative bg-gradient-to-br ${tone.from} ${tone.to} rounded-2xl border-2 border-transparent shadow-sm hover:shadow-xl hover:border-emerald-300 hover:scale-[1.02] hover:-translate-y-0.5 transition-all duration-200 ring-1 ${tone.ring} group`}>
+      {/* Color stripe header — explicit rounded-t-2xl now that the
+          card no longer overflow-hidden's (so the Share dropdown can
+          escape the card boundary). */}
+      <div className={`h-1 ${tone.accent} rounded-t-2xl`} />
       <div className="p-3 flex flex-col">
         {/* Header: brand logo (with category-emoji fallback) + name +
             badges all on one row. Real wordmarks land for known

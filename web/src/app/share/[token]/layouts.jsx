@@ -11,8 +11,16 @@ import { MapPin, Star, Play, ShoppingCart, BadgeDollarSign } from 'lucide-react'
 import { logoUrlForStore } from '../../../lib/store-logo'
 
 // ─── Item layout ────────────────────────────────────────────────────
-// Google-Shopping-style grid for a single shared product. Same shape
-// as /share/preview but reads from share.payload instead of DUMMY.
+// Two visual modes depending on how many stores the payload carries:
+//   - Single tile  → hero card (centered, big, no grid). Most Stash
+//                    shares look like this since most products only
+//                    exist at one store in the user's history.
+//   - Multiple     → Google-Shopping-style tile grid with the hero
+//                    tile marked as the sharer's pick, sale badges,
+//                    location chips, and the savings callout.
+// Either way the page leads with "Ramya shared a product with you",
+// the social-proof chips, and the product title; closes with the
+// soft signup CTA + walkthrough video.
 export function ShareItemLayout({ share }) {
   const p = share.payload || {}
   const sharedBy = share.sharedByName || 'A friend'
@@ -27,14 +35,15 @@ export function ShareItemLayout({ share }) {
         sale: false,
         rating: p.rating || null,
         review_count: null,
-        badge: 'Shared pick',
+        badge: "Shared pick",
       }]
+  const isSingle = tiles.length === 1
 
   return (
-    <main className="min-h-screen bg-white font-sans text-gray-900">
+    <main className="min-h-screen bg-gradient-to-b from-white via-emerald-50/30 to-white font-sans text-gray-900">
       <ShareHeader />
-      <div className="max-w-6xl mx-auto px-5 py-6">
-        <p className="text-sm text-gray-500 mb-1">
+      <div className={`mx-auto px-5 py-6 ${isSingle ? 'max-w-2xl' : 'max-w-6xl'}`}>
+        <p className="text-sm text-gray-500 mb-2">
           <span className="font-bold text-emerald-800">{sharedBy}</span>
           {' '}shared a product with you 💌
         </p>
@@ -43,49 +52,48 @@ export function ShareItemLayout({ share }) {
           guacMoneyTotal={p.guac_money_total}
           smashDays={p.smash_days}
         />
-        <h1 className="text-2xl sm:text-3xl font-black mb-4 leading-tight">
+        <h1 className="text-2xl sm:text-3xl font-black mb-5 leading-tight">
           {p.item_title || 'A product'}
         </h1>
 
-        <div className="flex gap-2 overflow-x-auto pb-3 mb-4 border-b border-gray-100">
-          {[`🥑 ${sharedBy}'s pick`, '📍 Nearby', 'Under $20', 'On sale'].map((chip, i) => (
-            <button
-              key={chip}
-              type="button"
-              className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold border whitespace-nowrap ${
-                i === 0
-                  ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
-                  : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              {chip}
-            </button>
-          ))}
-        </div>
+        {isSingle ? (
+          <HeroSingleTile
+            tile={tiles[0]}
+            category_emoji={p.category_emoji || '🛒'}
+            sharedBy={sharedBy}
+          />
+        ) : (
+          <>
+            {/* Filter chips — only render real ones when the data
+                supports them. Drops "Under $20" / "On sale" when
+                nothing matches so the rail isn't decorative noise. */}
+            <FilterChips tiles={tiles} sharedBy={sharedBy} />
 
-        <p className="text-xs uppercase tracking-wider text-gray-500 font-bold mb-3">
-          Showing prices near you
-        </p>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          {tiles.map((t, i) => (
-            <ProductTile
-              key={i}
-              tile={t}
-              hero={i === 0}
-              category_emoji={p.category_emoji || '🛒'}
-              sharedBy={sharedBy}
-            />
-          ))}
-        </div>
-
-        {p.best_price_callout && (
-          <div className="mt-5 flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-            <span className="text-2xl shrink-0">💰</span>
-            <p className="text-sm text-amber-900">
-              <span className="font-bold">{p.best_price_callout}</span>
+            <p className="text-xs uppercase tracking-wider text-gray-500 font-bold mb-3">
+              Showing {tiles.length} price{tiles.length === 1 ? '' : 's'} near you
             </p>
-          </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+              {tiles.map((t, i) => (
+                <ProductTile
+                  key={i}
+                  tile={t}
+                  hero={i === 0}
+                  category_emoji={p.category_emoji || '🛒'}
+                  sharedBy={sharedBy}
+                />
+              ))}
+            </div>
+
+            {p.best_price_callout && (
+              <div className="mt-5 flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                <span className="text-2xl shrink-0">💰</span>
+                <p className="text-sm text-amber-900">
+                  <span className="font-bold">{p.best_price_callout}</span>
+                </p>
+              </div>
+            )}
+          </>
         )}
 
         <CTASection />
@@ -93,6 +101,111 @@ export function ShareItemLayout({ share }) {
         <ShareFooter share={share} />
       </div>
     </main>
+  )
+}
+
+// Big hero card for single-tile shares. Centers a real product visual
+// (brand logo when resolvable, category emoji otherwise) above the
+// store + price block with extra context: how many times the sharer
+// bought it, when they last saw it, store address line.
+function HeroSingleTile({ tile, category_emoji, sharedBy }) {
+  return (
+    <div className="rounded-3xl border-2 border-emerald-300 bg-white ring-1 ring-emerald-200 shadow-md overflow-hidden">
+      {/* Large visual block — brand logo centered on a soft tint */}
+      <div className="relative aspect-[16/9] sm:aspect-[16/7] bg-gradient-to-br from-emerald-50 to-lime-50 flex items-center justify-center">
+        <HeroVisual category_emoji={category_emoji} store={tile.store} />
+        <span className="absolute top-3 right-3 bg-emerald-600 text-white text-[11px] font-bold px-2.5 py-1 rounded-md shadow">
+          🥑 {sharedBy}&apos;s pick
+        </span>
+      </div>
+      <div className="p-5 sm:p-6 flex flex-col sm:flex-row sm:items-end gap-4">
+        <div className="flex-1 min-w-0">
+          <div className="inline-flex items-center gap-1.5 text-xs text-gray-700 mb-2">
+            <MapPin size={12} className="text-blue-600" />
+            <span className="font-semibold">{tile.location || 'Nearby'}</span>
+            <span className="text-gray-300">·</span>
+            <span className="font-bold text-emerald-800 truncate">{tile.store}</span>
+          </div>
+          <p className="text-base sm:text-lg font-bold leading-snug text-gray-900">
+            {tile.title}
+          </p>
+          {(tile.times_bought || tile.last_date) && (
+            <p className="text-xs text-gray-500 mt-1">
+              {tile.times_bought ? `Bought ${tile.times_bought}× · ` : ''}
+              {tile.last_date ? `last seen ${tile.last_date}` : ''}
+            </p>
+          )}
+        </div>
+        <div className="text-left sm:text-right shrink-0">
+          <p className="text-3xl sm:text-4xl font-black text-emerald-700 tabular-nums leading-none">
+            ${Number(tile.price || 0).toFixed(2)}
+          </p>
+          {tile.original && (
+            <p className="text-sm text-gray-400 line-through tabular-nums mt-1">
+              ${Number(tile.original).toFixed(0)}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Big-tile visual: brand logo if we can resolve, otherwise a large
+// emoji bubble. Keeps proportions intentional instead of stretching
+// a tiny favicon to fill 16:9.
+function HeroVisual({ category_emoji, store }) {
+  const [errored, setErrored] = useState(false)
+  const logo = logoUrlForStore(store)
+  return (
+    <div className="flex items-center justify-center gap-4">
+      <div className="text-7xl sm:text-8xl leading-none drop-shadow-sm">
+        {category_emoji}
+      </div>
+      {logo && !errored && (
+        <div className="hidden sm:flex w-20 h-20 rounded-2xl bg-white shadow-md ring-2 ring-white items-center justify-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={logo}
+            alt={store || ''}
+            loading="lazy"
+            onError={() => setErrored(true)}
+            className="w-12 h-12 object-contain"
+          />
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Filter chips for multi-tile shares — only renders the ones that
+// actually correspond to data in the tiles array. Avoids decorative
+// "Under $20" / "On sale" buttons when nothing matches.
+function FilterChips({ tiles, sharedBy }) {
+  const anySale = tiles.some(t => t.sale)
+  const anyUnder20 = tiles.some(t => Number(t.price) > 0 && Number(t.price) < 20)
+  const nearby = tiles.some(t => t.location && t.location !== 'Online')
+  const chips = [{ label: `🥑 ${sharedBy}'s pick`, active: true }]
+  if (nearby) chips.push({ label: '📍 Nearby' })
+  if (anyUnder20) chips.push({ label: 'Under $20' })
+  if (anySale) chips.push({ label: 'On sale' })
+  if (chips.length === 1) return null
+  return (
+    <div className="flex gap-2 overflow-x-auto pb-3 mb-4 border-b border-gray-100">
+      {chips.map((c, i) => (
+        <button
+          key={c.label}
+          type="button"
+          className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold border whitespace-nowrap ${
+            c.active
+              ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
+              : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
+          }`}
+        >
+          {c.label}
+        </button>
+      ))}
+    </div>
   )
 }
 

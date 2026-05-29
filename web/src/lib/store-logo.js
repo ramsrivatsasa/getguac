@@ -87,13 +87,18 @@ function guessDomain(name) {
 
 // Return a logo URL for the given store name. Returns null when we
 // can't guess anything — caller should render its emoji avatar.
+//
+// Provider note: we used Clearbit's /logo.png endpoint originally,
+// but HubSpot acquired Clearbit and retired the free tier in 2024.
+// Google's favicon-fetch endpoint is the most reliable replacement
+// (free, 200s for any real domain, served from Google's CDN). The
+// image is smaller than a Clearbit wordmark — typically 32-64px
+// square — but it renders consistently and there's no rate limit.
 export function logoUrlForStore(storeName) {
   if (!storeName) return null
   const key = normalizeKey(storeName)
   if (!key) return null
   const domain = KNOWN_DOMAINS[key] || guessDomain(storeName)
   if (!domain) return null
-  // Clearbit's logo CDN. The `size=128` query gets a reasonably sharp
-  // image without blowing the page weight up.
-  return `https://logo.clearbit.com/${domain}?size=128`
+  return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`
 }

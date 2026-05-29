@@ -5,10 +5,11 @@ import { useRouter } from 'next/navigation'
 import { useStore } from '../../../store'
 import Link from 'next/link'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { DollarSign, Receipt, Gift, TrendingUp, ArrowRight, Sparkles } from 'lucide-react'
+import { DollarSign, Receipt, Gift, TrendingUp, ArrowRight, Sparkles, Flame } from 'lucide-react'
 import GuacoScoreCard from '../../../components/GuacoScoreCard'
 import UpcomingReturnsBanner from '../../../components/UpcomingReturnsBanner'
 import AnomaliesPanel from '../../../components/AnomaliesPanel'
+import { computeReceiptStreak } from '../../../lib/streak'
 import { subDays, subWeeks, subMonths, subYears } from 'date-fns'
 import { normalizeStoreName, canonicalStoreName, displayStoreName, storeGroupKey } from '../../../lib/store-name-normalize'
 import { periodToReceiptsChip, buildReceiptsUrl } from '../../../lib/receipts-deeplink'
@@ -199,11 +200,32 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
           up. Self-hides when nothing's off; session-dismissable. */}
       <AnomaliesPanel receipts={spendingReceipts} />
 
-      {/* Stats — GuacScore first, then the spend tiles. Total Spent
-          gets an inline trend badge ("up 18% vs prior 3 windows")
-          using the central spending-trends lib. */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+      {/* Stats — GuacScore first, then scan streak, then the spend
+          tiles. Total Spent gets an inline trend badge ("up 18% vs
+          prior 3 windows") using the central spending-trends lib.
+          The streak chip pulses when active to reward daily engagement
+          and goes flat-gray when the user has fallen off the streak. */}
+      <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
         <GuacoScoreCard receipts={filtered} size="sm" />
+        {(() => {
+          const { streak, lastScanIso } = computeReceiptStreak(filtered)
+          return (
+            <div className="stat-card">
+              <div className={`p-3 rounded-xl ${streak > 0 ? 'bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500 text-white shadow-sm' : 'bg-gray-100 text-gray-400'}`}>
+                <Flame size={20} className={streak > 0 ? 'animate-pulse' : ''} />
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 font-medium">Scan streak</p>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-xl font-bold text-gray-900 tabular-nums">{streak}</p>
+                  <span className="text-xs text-gray-500">
+                    {streak === 0 ? 'scan one to start' : `day${streak === 1 ? '' : 's'}`}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )
+        })()}
         {[
           { label: 'Total Spent', value: `$${totalSpend.toFixed(2)}`, icon: DollarSign, color: 'bg-gradient-to-br from-rose-400 via-rose-600 to-rose-800 text-white shadow-sm', trend: trendBadge },
           { label: 'Tax Paid', value: `$${totalTax.toFixed(2)}`, icon: TrendingUp, color: 'bg-amber-100 text-amber-700' },

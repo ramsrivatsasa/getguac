@@ -175,10 +175,10 @@ export function ShareListLayout({ share }) {
 
 // ─── Shared sub-components ──────────────────────────────────────────
 
-// Fetch-style social proof — sharer's lifetime savings and current
-// streak rendered as bright stat chips under the from-line. Pulled
-// from the share's payload so the page renders without an extra DB
-// trip; the API can be enriched later to compute these server-side.
+// Social-proof chips — sharer's lifetime savings and current scan
+// streak rendered under the from-line. Pulled from the share's
+// payload so the page renders without an extra DB trip; the API
+// can be enriched later to compute these server-side.
 export function SharerSocialProof({ sharedBy, totalSaved, streakDays }) {
   if (totalSaved == null && streakDays == null) return null
   return (

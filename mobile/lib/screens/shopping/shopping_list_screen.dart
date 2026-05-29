@@ -12,6 +12,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../services/guac_money_service.dart';
+import '../../services/share_service.dart';
 import '../../widgets/store_logo.dart';
 import '../../widgets/top_app_bar_actions.dart';
 
@@ -146,6 +147,24 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
         setState(() => _items.add(it));
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not delete: $e')));
       }
+    }
+  }
+
+  // Mint a /share/<token> link via the web API and pop the OS share
+  // sheet. The web endpoint handles GuacMoney-total + smash-day
+  // enrichment, so the landing page renders the same on web and mobile.
+  Future<void> _share(_Item it) async {
+    final url = await ShareService.shareItem(
+      context: context,
+      itemName: it.name,
+      storeName: it.storeNameDisplay,
+      lastPrice: it.price > 0 ? it.price : null,
+    );
+    if (!mounted) return;
+    if (url == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not create share link. Try again later.')),
+      );
     }
   }
 
@@ -387,11 +406,20 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
           ],
         ]),
         trailing: isPredicted
-          ? IconButton(
-              icon: const Icon(Icons.add_circle, color: _kBrand),
-              tooltip: 'Add to Smashlist',
-              onPressed: () => _toggle(it),
-            )
+          ? Row(mainAxisSize: MainAxisSize.min, children: [
+              IconButton(
+                icon: const Icon(Icons.ios_share, size: 20, color: Color(0xFF0ea5e9)),
+                tooltip: 'Share',
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                constraints: const BoxConstraints(),
+                onPressed: () => _share(it),
+              ),
+              IconButton(
+                icon: const Icon(Icons.add_circle, color: _kBrand),
+                tooltip: 'Add to Smashlist',
+                onPressed: () => _toggle(it),
+              ),
+            ])
           : Checkbox(
               value: it.approved,
               onChanged: (_) => _toggle(it),

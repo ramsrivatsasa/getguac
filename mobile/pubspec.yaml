@@ -41,6 +41,10 @@ dependencies:
   # Receive shared URLs/text from other apps (Google Maps → "Share to GetGuac")
   # so users can log a trip from a Maps destination with one tap.
   receive_sharing_intent: ^1.8.0
+  # Outbound share — invokes the OS share sheet so users can hand off a
+  # GetGuac /share/<token> URL to WhatsApp / SMS / email / etc. Used by
+  # the Buy Again per-item Share button on the Smashlist.
+  share_plus: ^10.0.0
 
   # Utils
   intl: ^0.19.0

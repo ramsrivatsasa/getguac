@@ -16,6 +16,7 @@ import { fetchTotal as fetchGuacMoneyTotal, formatGuacMoney } from '../../../lib
 import { generateInsights } from '../../../lib/financeInsights'
 import { computeWizardScore } from '../../../lib/wizardScore'
 import { createClient as createSbClient } from '../../../lib/supabase/client'
+import { flagForCountry, countryName } from '../../../lib/countryFlag'
 import { subDays, subWeeks, subMonths, subYears } from 'date-fns'
 import { normalizeStoreName, canonicalStoreName, displayStoreName, storeGroupKey } from '../../../lib/store-name-normalize'
 import { periodToReceiptsChip, buildReceiptsUrl } from '../../../lib/receipts-deeplink'
@@ -42,7 +43,7 @@ function periodStart(period, count) {
   return now
 }
 
-export default function DashboardClient({ initialReceipts, initialRewards, firstName }) {
+export default function DashboardClient({ initialReceipts, initialRewards, firstName, country }) {
   const { spendingPeriod, setSpendingPeriod } = useStore()
   const router = useRouter()
   const period = PERIODS.includes(spendingPeriod) ? spendingPeriod : 'monthly'
@@ -154,6 +155,18 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
           <p className="text-sm text-gray-500 mt-0.5">Here's your financial snapshot</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
+          {/* Region flag — populated server-side from Vercel's
+              x-vercel-ip-country header. Self-hides outside of a
+              Vercel deploy (local dev = no header = no flag). */}
+          {country && flagForCountry(country) && (
+            <span
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-emerald-100 shadow-sm text-sm font-bold text-emerald-900"
+              title={`Region: ${countryName(country)}`}
+            >
+              <span className="text-base leading-none">{flagForCountry(country)}</span>
+              <span className="text-xs">{country.toUpperCase()}</span>
+            </span>
+          )}
           <Link href="/validate"
             className="flex items-center gap-3 px-4 py-2.5 rounded-full bg-gradient-to-br from-amber-400 via-amber-500 to-rose-500 text-white shadow-md hover:shadow-lg hover:scale-[1.02] transition-all group">
             <span className="text-xl leading-none">🥑</span>

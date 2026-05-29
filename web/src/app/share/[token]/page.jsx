@@ -8,11 +8,14 @@
 //
 // Fire-and-forget view_count bump after render (best-effort, no-await).
 
+import { cache } from 'react'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { notFound } from 'next/navigation'
 import { ShareItemLayout, ShareListLayout } from './layouts'
 
-// Server-side anon client. RLS gates reads to live tokens only.
+// Server-side anon client. The anon role no longer has direct access
+// to `shared_items` (see migration 059 — it was a security hole). All
+// reads go through the SECURITY DEFINER RPCs.
 function anonSupabase() {
   return createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -21,34 +24,35 @@ function anonSupabase() {
   )
 }
 
-// Fetch the row + the sharer's display name (so we can say "Ramya shared…").
-async function fetchShare(token) {
+// Per-request cached so generateMetadata + the page component share
+// the same fetch instead of double-querying the DB. React's cache()
+// dedupes by argument shape within a single request.
+const fetchShare = cache(async (token) => {
   const sb = anonSupabase()
-  const { data, error } = await sb
-    .from('shared_items')
-    .select('token, payload, shared_by_user_id, created_at, view_count, expires_at')
-    .eq('token', token)
-    .maybeSingle()
-  if (error || !data) return null
+  const { data: rows, error } = await sb.rpc('get_share_by_token', {
+    target_token: token,
+  })
+  const row = Array.isArray(rows) ? rows[0] : rows
+  if (error || !row) return null
 
   let sharedByName = null
-  if (data.shared_by_user_id) {
+  if (row.shared_by_user_id) {
     const { data: prof } = await sb
       .from('profiles')
       .select('display_name')
-      .eq('id', data.shared_by_user_id)
+      .eq('id', row.shared_by_user_id)
       .maybeSingle()
     sharedByName = prof?.display_name || null
   }
+  return { ...row, sharedByName }
+})
 
-  // Fire-and-forget view-count bump. RLS allows anon updates of
-  // view_count on live rows, so this just works without auth.
-  sb.from('shared_items')
-    .update({ view_count: (data.view_count || 0) + 1 })
-    .eq('token', token)
-    .then(() => {}, () => {})
-
-  return { ...data, sharedByName }
+// Atomic view-count bump. Called once from the page component (not
+// generateMetadata) so we don't double-count when the metadata
+// generator and the render both hit the function.
+async function bumpView(token) {
+  const sb = anonSupabase()
+  sb.rpc('bump_share_view_count', { target_token: token }).then(() => {}, () => {})
 }
 
 // Build OpenGraph metadata so WhatsApp / iMessage / Slack render a rich
@@ -86,6 +90,10 @@ export async function generateMetadata({ params }) {
 export default async function SharePage({ params }) {
   const share = await fetchShare(params.token)
   if (!share) notFound()
+
+  // Fire-and-forget atomic increment. Only runs in the page component
+  // path so generateMetadata doesn't double-bump the counter.
+  bumpView(params.token)
 
   const kind = share.payload?.kind || 'item'
   return kind === 'list'

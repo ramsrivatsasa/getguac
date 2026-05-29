@@ -8,8 +8,10 @@
 // Lives OUTSIDE (dashboard) so it renders without a login — the whole
 // point of a public share page.
 'use client'
+import { useState } from 'react'
 import Link from 'next/link'
 import { MapPin, Star, ExternalLink, ShoppingCart, Play } from 'lucide-react'
+import { logoUrlForStore } from '../../../lib/store-logo'
 
 const DUMMY_SHARED = {
   shared_by_name: 'Ramya',
@@ -250,6 +252,29 @@ export default function SharePreviewPage() {
   )
 }
 
+// Visual block at the top of each tile — store logo when known,
+// emoji fallback otherwise. Same pattern as the live /share/[token]
+// layout so previews and real shares look identical.
+function PreviewVisual({ category_emoji, store }) {
+  const [errored, setErrored] = useState(false)
+  const logo = logoUrlForStore(store)
+  if (logo && !errored) {
+    return (
+      <div className="w-full h-full flex items-center justify-center p-6 bg-white">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={logo}
+          alt={store || 'Store logo'}
+          loading="lazy"
+          onError={() => setErrored(true)}
+          className="max-w-full max-h-full object-contain"
+        />
+      </div>
+    )
+  }
+  return <span className="text-6xl">{category_emoji}</span>
+}
+
 // Single product tile — mimics the Google Shopping result card.
 // `hero` tile gets the "Ramya's pick" sash + a brighter outline so it
 // stands out from the comparison tiles.
@@ -262,9 +287,10 @@ function ProductTile({ tile, hero, category_emoji }) {
           : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
       }`}
     >
-      {/* Image area — placeholder gray block with category emoji */}
+      {/* Image area — store wordmark when we can resolve one,
+          otherwise the category emoji placeholder. */}
       <div className="relative aspect-square bg-gray-50 flex items-center justify-center text-6xl">
-        {category_emoji}
+        <PreviewVisual category_emoji={category_emoji} store={tile.store} />
         {tile.sale && (
           <span className="absolute top-2 left-2 bg-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-sm uppercase tracking-wide text-gray-700">
             Sale

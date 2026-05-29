@@ -7,8 +7,11 @@
 //   - Optional add-to-Smashlist button per row
 //   - Optional "web" badge + external URL for live web-price hits
 
+'use client'
+import { useState } from 'react'
 import Link from 'next/link'
 import { Store as StoreIcon, ShoppingCart } from 'lucide-react'
+import { logoUrlForStore } from '../lib/store-logo'
 
 export function StoreList({ stores, best, onAddToSmashlist }) {
   const sorted = [...stores].sort((a, b) => (a.min_price || 999999) - (b.min_price || 999999))
@@ -19,7 +22,7 @@ export function StoreList({ stores, best, onAddToSmashlist }) {
         return (
           <div key={`${s.id || s.name}-${s.web ? 'web' : 'own'}`}
             className={`flex items-center gap-2 text-xs px-2 py-1.5 rounded-lg hover:bg-emerald-50/60 transition-colors ${isBest ? 'bg-emerald-100/70 font-semibold' : ''}`}>
-            <StoreIcon size={11} className={s.web ? 'text-fuchsia-500' : isBest ? 'text-emerald-700' : 'text-gray-400'} />
+            <StoreMini name={s.name} web={s.web} isBest={isBest} />
             {s.web && s.url ? (
               <a href={s.url} target="_blank" rel="noreferrer" className="text-fuchsia-700 hover:underline truncate">{s.name}</a>
             ) : s.id ? (
@@ -45,5 +48,31 @@ export function StoreList({ stores, best, onAddToSmashlist }) {
         )
       })}
     </div>
+  )
+}
+
+// Tiny store icon — uses the brand logo when we can resolve one,
+// otherwise the generic StoreIcon glyph. Kept inline because the
+// visual is small enough that the full StoreLogo avatar component
+// would be overkill here.
+function StoreMini({ name, web, isBest }) {
+  const [errored, setErrored] = useState(false)
+  const url = logoUrlForStore(name)
+  if (url && !errored) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={url}
+        alt=""
+        width={14}
+        height={14}
+        loading="lazy"
+        onError={() => setErrored(true)}
+        className="w-3.5 h-3.5 object-contain shrink-0 rounded-sm bg-white"
+      />
+    )
+  }
+  return (
+    <StoreIcon size={11} className={web ? 'text-fuchsia-500' : isBest ? 'text-emerald-700' : 'text-gray-400'} />
   )
 }

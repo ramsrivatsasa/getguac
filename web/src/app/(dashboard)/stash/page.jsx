@@ -13,6 +13,7 @@ import CategoryPicker, { CategoryCreatePill } from '../../../components/Category
 import GuacMascot from '../../../components/GuacMascot'
 import { StoreList } from '../../../components/StoreList'
 import BestPricesModal from '../../../components/BestPricesModal'
+import { StoreLogo } from '../../../components/StoreLogo'
 
 const SORTS = [
   { key: 'recent',     label: 'Most recent' },
@@ -375,11 +376,16 @@ const ProductCard = memo(function ProductCard({ item, expanded, onToggle, onAddT
       {/* Color stripe header */}
       <div className={`h-1 ${tone.accent}`} />
       <div className="p-3 flex flex-col">
-        {/* Header: icon + name + badges all on one row */}
+        {/* Header: brand logo (with category-emoji fallback) + name +
+            badges all on one row. Real wordmarks land for known
+            grocers; unknown stores get the tone-accent emoji chip. */}
         <div className="flex items-start gap-2.5">
-          <div className={`w-10 h-10 rounded-2xl ${tone.accent} text-white shadow-md flex items-center justify-center text-xl ring-2 ring-white shrink-0`}>
-            {cat.emoji}
-          </div>
+          <StoreLogo
+            storeName={item.last_store}
+            fallbackEmoji={cat.emoji}
+            size={40}
+            emojiClassName={`${tone.accent} text-white`}
+          />
           <div className="flex-1 min-w-0">
             <p className={`font-bold text-sm leading-tight line-clamp-2 ${tone.text}`}>{item.item_name}</p>
             <div className="text-[10px] text-gray-500 mt-0.5 space-x-2 truncate">

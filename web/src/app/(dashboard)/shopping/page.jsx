@@ -10,6 +10,7 @@ import { groupPredictionsByStore } from '../../../lib/prediction-feedback'
 import { displayStoreName } from '../../../lib/store-name-normalize'
 import { createClient } from '../../../lib/supabase/client'
 import { StoreList } from '../../../components/StoreList'
+import { StoreLogo } from '../../../components/StoreLogo'
 
 // Same tone palette as /stash so Buy Again cards visually rhyme with
 // the Stash grid. Maps the per-Smashlist color (Pantry=emerald,
@@ -1542,10 +1543,18 @@ function BuyAgainCard({ item, selected = false, onToggleSelect, onAdd, onQty }) 
         </label>
       )}
       <div className="p-3 flex flex-col">
-        {/* Header — emoji avatar + name + urgency badge */}
+        {/* Header — brand logo (with emoji fallback) + name + urgency
+            badge. The avatar uses the store's real wordmark when we can
+            resolve it, falling back to the per-list emoji + tone accent
+            so unknown stores still get a coloured chip. */}
         <div className="flex items-start gap-2.5">
-          <div className={`w-10 h-10 rounded-2xl ${tone.accent} text-white shadow-md flex items-center justify-center text-xl ring-2 ring-white shrink-0 ${onToggleSelect ? 'ml-5' : ''}`}>
-            {meta.emoji || '🛒'}
+          <div className={onToggleSelect ? 'ml-5' : ''}>
+            <StoreLogo
+              storeName={storeName}
+              fallbackEmoji={meta.emoji || '🛒'}
+              size={40}
+              emojiClassName={`${tone.accent} text-white`}
+            />
           </div>
           <div className="flex-1 min-w-0">
             <p className={`font-bold text-sm leading-tight line-clamp-2 ${tone.text}`}>{item.item_name}</p>

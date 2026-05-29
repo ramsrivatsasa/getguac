@@ -122,16 +122,25 @@ begin
     -- receipt_item with a null purchase_date — without this column,
     -- 100% of the seed items get filtered out and the Buy Again strip
     -- stays empty regardless of how many items you embed.
+    --
+    -- Prices vary by store (i % 3: 0=Costco, 1=Walmart, 2=Target) so
+    -- the Compare Stores panel on Buy Again cards shows a real spread
+    -- and the "Best" badge actually points to a winner. Each item has
+    -- a different cheapest store so no single merchant runs the table.
     insert into public.receipt_items (receipt_id, item_name, qty, price, category, purchase_date) values
       -- Pantry (category 'grub')
-      (rcpt_id, 'MILK',    1, 5.49, 'grub', d),
-      (rcpt_id, 'EGGS',    1, 4.99, 'grub', d),
-      (rcpt_id, 'BANANAS', 1, 1.29, 'grub', d),
-      (rcpt_id, 'BREAD',   1, 3.79, 'grub', d),
+      --   Costco wins MILK (bulk price), Walmart wins BANANAS,
+      --   Target sometimes mid; price spread is ~30%.
+      (rcpt_id, 'MILK',    1, case (i % 3) when 0 then 3.99 when 1 then 4.79 else 5.49 end, 'grub', d),
+      (rcpt_id, 'EGGS',    1, case (i % 3) when 0 then 3.99 when 1 then 4.29 else 4.99 end, 'grub', d),
+      (rcpt_id, 'BANANAS', 1, case (i % 3) when 0 then 1.19 when 1 then 0.59 else 0.79 end, 'grub', d),
+      (rcpt_id, 'BREAD',   1, case (i % 3) when 0 then 3.49 when 1 then 2.99 else 3.79 end, 'grub', d),
       -- Cravings (category 'drinks' → bucket Cravings)
-      (rcpt_id, 'COFFEE',  1, 12.99, 'drinks', d),
+      --   Costco wins COFFEE on bulk pricing.
+      (rcpt_id, 'COFFEE',  1, case (i % 3) when 0 then 9.99 when 1 then 11.99 else 13.49 end, 'drinks', d),
       -- Snack Stack (category 'snacks' → bucket Snack Stack)
-      (rcpt_id, 'CHIPS',   1, 3.99, 'snacks', d);
+      --   Walmart wins CHIPS, Costco multipack is per-bag higher.
+      (rcpt_id, 'CHIPS',   1, case (i % 3) when 0 then 4.49 when 1 then 2.99 else 3.49 end, 'snacks', d);
   end loop;
 
   -- ─── 2. BI-WEEKLY HOUSEHOLD (12 buys) ──────────────────────────────────

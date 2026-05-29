@@ -130,6 +130,33 @@ export default function ShoppingPage() {
     staleTime: 5 * 60_000,
   })
 
+  // Per-item store history — item_name (lowercase) → Set<store_id>.
+  // Used to filter the "Send to" dropdown: we only show stores where
+  // the user has actually bought at least one of the selected items.
+  // Stops weird routes like BANANAS → Micro Center; if the user wants
+  // a brand-new store for an item they can still add it manually via
+  // the Add Item form below.
+  const { data: itemStoreHistory = null } = useQuery({
+    queryKey: ['item-store-history'],
+    queryFn: async () => {
+      const sb = createClient()
+      const { data } = await sb
+        .from('receipt_items')
+        .select('item_name, receipts!inner(store_id)')
+        .limit(5000)
+      const m = new Map()
+      for (const row of data || []) {
+        const name = String(row.item_name || '').toLowerCase().trim()
+        const sid = row.receipts?.store_id
+        if (!name || !sid) continue
+        if (!m.has(name)) m.set(name, new Set())
+        m.get(name).add(sid)
+      }
+      return m
+    },
+    staleTime: 5 * 60_000,
+  })
+
   // Lookup: store_name → { address, phone_no, website }. Used by the
   // accordion header to enrich the store group with contact info.
   // Predictor-populated items only carry store_name on the joined row,
@@ -436,6 +463,32 @@ export default function ShoppingPage() {
     return ownList.filter(i => (i.list_name || 'Pantry') === activeList)
   }, [ownList, activeList])
 
+  // Stores where AT LEAST ONE of the currently-selected (or, when no
+  // selection, all filtered) Buy Again items has been purchased. Drives
+  // the "Send to" dropdown so the user can't accidentally route bananas
+  // to Micro Center. While the history query is loading we fall back
+  // to the full knownStores list to avoid a confusing empty dropdown.
+  function relevantStoresFor(items) {
+    if (!itemStoreHistory || itemStoreHistory.size === 0) return knownStores
+    const allowed = new Set()
+    for (const it of items) {
+      const key = String(it.item_name || '').toLowerCase().trim()
+      const stores = itemStoreHistory.get(key)
+      if (!stores) continue
+      for (const sid of stores) allowed.add(sid)
+    }
+    if (allowed.size === 0) return []
+    return knownStores.filter(st => allowed.has(st.id))
+  }
+  const eligibleStoresForSelected = useMemo(() => {
+    const targets = filteredSuggestions.filter(it => selectedSuggestions.has(it.id))
+    return relevantStoresFor(targets)
+  }, [filteredSuggestions, selectedSuggestions, itemStoreHistory, knownStores])
+  const eligibleStoresForAll = useMemo(
+    () => relevantStoresFor(filteredSuggestions),
+    [filteredSuggestions, itemStoreHistory, knownStores],
+  )
+
   // Buy Again card selection helpers.
   function toggleSuggestionSelect(id) {
     setSelectedSuggestions(prev => {
@@ -590,7 +643,7 @@ export default function ShoppingPage() {
           </button>
           <AutoAddMenu
             count={filteredSuggestions.length}
-            stores={knownStores}
+            stores={eligibleStoresForAll}
             onPick={(criteria) => autoAddAll(criteria)}
           />
           <ShareMenu
@@ -779,20 +832,18 @@ export default function ShoppingPage() {
                 {selectedSuggestions.size} selected
               </span>
               <span className="text-xs text-emerald-700/80">Send to:</span>
-              <select
-                className="input font-sans h-9 text-sm w-auto"
-                defaultValue=""
-                onChange={(e) => {
-                  const sid = e.target.value
-                  if (sid) addSelectedToStore(sid)
-                  e.target.value = ''  // reset so re-picking the same store re-fires
-                }}
-              >
-                <option value="" disabled>Pick a store…</option>
-                {knownStores.map(st => (
-                  <option key={st.id} value={st.id}>{displayStoreName(st.store_name)}</option>
-                ))}
-              </select>
+              {/* Typeable picker — narrow the list as you type. Restricted
+                  to stores where the user has bought at least one of the
+                  selected items. For sending an item to a brand-new store,
+                  they should use the Add Item form below. */}
+              <StorePicker
+                stores={eligibleStoresForSelected}
+                onPick={(sid) => addSelectedToStore(sid)}
+                placeholder={eligibleStoresForSelected.length === 0
+                  ? 'No matching store history'
+                  : 'Pick a store…'}
+                disabled={eligibleStoresForSelected.length === 0}
+              />
               <button
                 type="button"
                 onClick={() => setSelectedSuggestions(new Set())}
@@ -1171,19 +1222,12 @@ function AutoAddMenu({ count, stores = [], onPick }) {
               Send all to which store?
             </span>
           </div>
-          <div className="max-h-64 overflow-y-auto">
-            {stores.map(st => (
-              <button
-                key={st.id}
-                type="button"
-                onClick={() => { onPick({ kind: 'fixed', storeId: st.id }); close() }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-800 hover:bg-emerald-50 text-left"
-              >
-                <StoreIcon size={12} className="text-emerald-700 shrink-0" />
-                <span className="truncate font-medium">{displayStoreName(st.store_name)}</span>
-              </button>
-            ))}
-          </div>
+          {/* Inline filter — type to narrow the list. Same shape as the
+              per-card "Send to" picker so muscle memory transfers. */}
+          <StoreFilterList
+            stores={stores}
+            onPick={(sid) => { onPick({ kind: 'fixed', storeId: sid }); close() }}
+          />
         </div>
       )}
     </div>
@@ -1578,6 +1622,105 @@ function BuyAgainCard({ item, selected = false, onToggleSelect, onAdd, onQty }) 
 // Compact inline qty editor. Internal state so typing doesn't fire
 // onSave on every keystroke; commits on blur AND on Enter. ± buttons
 // step the value (touch users don't have to invoke the number keyboard).
+// Typeable store picker — inline text input with a filtered list below.
+// Used as the "Send to" combobox on the Buy Again action bar so users
+// can type to narrow Costco / Walmart / Target instead of scrolling a
+// raw <select>. Calls onPick(storeId) when the user clicks a result.
+function StorePicker({ stores, onPick, placeholder = 'Pick a store…', disabled = false }) {
+  const [query, setQuery] = useState('')
+  const [open, setOpen] = useState(false)
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    if (!q) return stores
+    return stores.filter(s => displayStoreName(s.store_name).toLowerCase().includes(q))
+  }, [stores, query])
+  function pick(st) {
+    onPick(st.id)
+    setQuery('')
+    setOpen(false)
+  }
+  function handleBlur(e) {
+    if (!e.currentTarget.contains(e.relatedTarget)) setOpen(false)
+  }
+  return (
+    <div className="relative inline-block" onBlur={handleBlur}>
+      <input
+        type="text"
+        value={query}
+        onChange={(e) => { setQuery(e.target.value); setOpen(true) }}
+        onFocus={() => setOpen(true)}
+        placeholder={placeholder}
+        disabled={disabled}
+        className="input font-sans h-9 text-sm w-48 disabled:bg-gray-50 disabled:text-gray-400"
+      />
+      {open && !disabled && filtered.length > 0 && (
+        <div className="absolute left-0 mt-1 w-56 max-h-56 overflow-y-auto rounded-xl bg-white shadow-xl ring-1 ring-gray-200 z-50">
+          {filtered.map(st => (
+            <button
+              key={st.id}
+              type="button"
+              onClick={() => pick(st)}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-emerald-50"
+            >
+              <StoreIcon size={12} className="text-emerald-700 shrink-0" />
+              <span className="truncate font-medium">{displayStoreName(st.store_name)}</span>
+            </button>
+          ))}
+        </div>
+      )}
+      {open && !disabled && filtered.length === 0 && query.trim() && (
+        <div className="absolute left-0 mt-1 w-56 rounded-xl bg-white shadow-xl ring-1 ring-gray-200 z-50 px-3 py-2 text-xs text-gray-500">
+          No match — try a different name
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Filtered list used inside the AutoAddMenu's "Pick a store…" sub-panel.
+// Splits out from StorePicker so the parent popover stays responsible
+// for the back chevron / title — this component owns only the search
+// input + filtered button list.
+function StoreFilterList({ stores, onPick }) {
+  const [query, setQuery] = useState('')
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    if (!q) return stores
+    return stores.filter(s => displayStoreName(s.store_name).toLowerCase().includes(q))
+  }, [stores, query])
+  return (
+    <div>
+      <div className="px-3 py-2 border-b border-gray-100">
+        <input
+          type="text"
+          autoFocus
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Type to filter…"
+          className="w-full px-2 py-1 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-emerald-400"
+        />
+      </div>
+      <div className="max-h-64 overflow-y-auto">
+        {filtered.length === 0 ? (
+          <div className="px-3 py-3 text-xs text-gray-500 text-center">No match</div>
+        ) : (
+          filtered.map(st => (
+            <button
+              key={st.id}
+              type="button"
+              onClick={() => onPick(st.id)}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-800 hover:bg-emerald-50 text-left"
+            >
+              <StoreIcon size={12} className="text-emerald-700 shrink-0" />
+              <span className="truncate font-medium">{displayStoreName(st.store_name)}</span>
+            </button>
+          ))
+        )}
+      </div>
+    </div>
+  )
+}
+
 function QtyInput({ value, onSave }) {
   const [local, setLocal] = useState(String(value))
   // Keep local state in sync if the row's qty is updated elsewhere.

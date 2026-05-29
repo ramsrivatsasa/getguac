@@ -65,6 +65,14 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
   List<_Item> _items = [];
   String _activeList = 'Pantry';
   String? _loadError;
+  // Compare Stores selection — IDs of Buy Again items the user has
+  // ticked. Drives the bottom action bar and the "Send to <store>"
+  // picker.
+  final Set<String> _selectedBuyAgain = <String>{};
+  // All stores the user has shopped at — populated in _load() once so
+  // the Send-to-store picker has the full menu, not just the stores
+  // already referenced by the current Smashlist.
+  List<_StoreLite> _knownStores = const [];
 
   @override
   void initState() {
@@ -121,6 +129,23 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
       }
 
       _items = items;
+
+      // Load the full list of known stores in parallel — used by the
+      // Send-to-store picker in the Compare Stores bottom bar. Best-
+      // effort: a failure here just leaves the picker empty.
+      try {
+        final allStores = await _sb
+            .from('stores')
+            .select('id, store_name')
+            .order('store_name');
+        _knownStores = (allStores as List)
+          .map((r) => _StoreLite(
+                id: (r['id'] ?? '').toString(),
+                name: (r['store_name'] ?? '').toString(),
+              ))
+          .where((s) => s.id.isNotEmpty && s.name.isNotEmpty)
+          .toList();
+      } catch (_) {}
     } catch (e) {
       _loadError = e.toString();
       _items = const [];
@@ -135,6 +160,32 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
       await _sb.from('shopping_list').update({'approved': it.approved}).eq('id', it.id);
     } catch (_) {
       if (mounted) setState(() => it.approved = !it.approved);
+    }
+  }
+
+  // Bulk-add: send every checked Buy Again item to one specific store
+  // and mark approved. Mirrors web's addSelectedToStore() — the same
+  // affordance for users who already know "I'm hitting Costco today,
+  // route this whole pile there." Refreshes the list after success.
+  Future<void> _addSelectedToStore(_StoreLite store) async {
+    final ids = _selectedBuyAgain.toList();
+    if (ids.isEmpty) return;
+    try {
+      await _sb.from('shopping_list')
+        .update({'approved': true, 'store_name_id': store.id})
+        .inFilter('id', ids);
+      setState(() => _selectedBuyAgain.clear());
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Added ${ids.length} to ${store.name}'),
+          duration: const Duration(seconds: 2),
+        ));
+      }
+      await _load();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Send-to-store failed: $e')));
+      }
     }
   }
 
@@ -306,6 +357,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
           ...topAppBarActions(context),
         ],
       ),
+      bottomNavigationBar: _selectedBuyAgain.isEmpty ? null : _compareStoresBar(),
       body: Column(children: [
         // List tabs
         Container(
@@ -408,6 +460,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
   }
 
   Widget _itemTile(_Item it, {required bool isPredicted}) {
+    final picked = isPredicted && _selectedBuyAgain.contains(it.id);
     return Dismissible(
       key: ValueKey(it.id),
       background: Container(color: Colors.red, alignment: Alignment.centerRight,
@@ -415,12 +468,37 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
       direction: DismissDirection.endToStart,
       onDismissed: (_) => _delete(it),
       child: ListTile(
-        leading: StoreLogo(
-          storeName: it.storeNameDisplay,
-          fallbackEmoji: isPredicted ? '🪄' : '🛒',
-          size: 36,
-          emojiBg: isPredicted ? const Color(0xFF7c3aed) : _kBrand,
-        ),
+        // Per-card checkbox only shows for Buy Again rows. Lets the user
+        // hand-pick which suggestions get routed to one specific store
+        // via the bottom action bar (Compare Stores flow).
+        leading: isPredicted
+          ? Row(mainAxisSize: MainAxisSize.min, children: [
+              Checkbox(
+                value: picked,
+                onChanged: (v) => setState(() {
+                  if (v == true) {
+                    _selectedBuyAgain.add(it.id);
+                  } else {
+                    _selectedBuyAgain.remove(it.id);
+                  }
+                }),
+                activeColor: const Color(0xFF7c3aed),
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: VisualDensity.compact,
+              ),
+              StoreLogo(
+                storeName: it.storeNameDisplay,
+                fallbackEmoji: '🪄',
+                size: 32,
+                emojiBg: const Color(0xFF7c3aed),
+              ),
+            ])
+          : StoreLogo(
+              storeName: it.storeNameDisplay,
+              fallbackEmoji: '🛒',
+              size: 36,
+              emojiBg: _kBrand,
+            ),
         title: Text(it.name, style: TextStyle(
           fontWeight: FontWeight.w600,
           decoration: it.approved ? TextDecoration.lineThrough : null,
@@ -458,6 +536,75 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
             ),
       ),
     );
+  }
+
+  // Compare Stores bottom bar — appears once the user has ticked at
+  // least one Buy Again item. Opens a modal store picker; on pick,
+  // every selected item gets approved=true + store_name_id=<picked>
+  // in a single Supabase update. Same affordance the web sticky bar
+  // provides ("Add selected to <store>").
+  Widget _compareStoresBar() {
+    final count = _selectedBuyAgain.length;
+    return SafeArea(
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+        decoration: const BoxDecoration(
+          color: Color(0xFFf5f3ff),
+          border: Border(top: BorderSide(color: Color(0xFFddd6fe), width: 1)),
+        ),
+        child: Row(children: [
+          Text('$count selected',
+            style: const TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF5b21b6))),
+          const SizedBox(width: 10),
+          Expanded(
+            child: FilledButton.icon(
+              onPressed: _knownStores.isEmpty ? null : _pickStoreAndSend,
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFF7c3aed),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+              icon: const Icon(Icons.store_outlined, size: 18),
+              label: const Text('Send to store…',
+                style: TextStyle(fontWeight: FontWeight.w800)),
+            ),
+          ),
+          const SizedBox(width: 8),
+          TextButton(
+            onPressed: () => setState(() => _selectedBuyAgain.clear()),
+            child: const Text('Cancel'),
+          ),
+        ]),
+      ),
+    );
+  }
+
+  Future<void> _pickStoreAndSend() async {
+    final picked = await showModalBottomSheet<_StoreLite>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(20, 16, 20, 4),
+              child: Text('Send to store', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+            ),
+            const Divider(height: 1),
+            ..._knownStores.map((s) => ListTile(
+              leading: StoreLogo(storeName: s.name, size: 32, fallbackEmoji: '🏬', emojiBg: _kBrand),
+              title: Text(s.name),
+              onTap: () => Navigator.pop(ctx, s),
+            )),
+          ],
+        ),
+      ),
+    );
+    if (picked != null) {
+      await _addSelectedToStore(picked);
+    }
   }
 
   // Bucket curated items by store. Stable-iteration LinkedHashMap so
@@ -565,6 +712,12 @@ class _StoreAccordionState extends State<_StoreAccordion> {
       ]),
     );
   }
+}
+
+class _StoreLite {
+  final String id;
+  final String name;
+  const _StoreLite({required this.id, required this.name});
 }
 
 class _StoreStat {

@@ -1,0 +1,103 @@
+date,store_name,item_name,qty,price,category,is_subscription,is_return,payment_method,notes
+2026-05-28,Costco Wholesale,MILK,1,3.99,grub,N,N,Visa ending 4242,Weekly grocery — exercises predictor / Buy Again
+2026-05-28,Costco Wholesale,EGGS,1,3.99,grub,N,N,Visa ending 4242,Weekly grocery
+2026-05-28,Costco Wholesale,BANANAS,1,1.19,grub,N,N,Visa ending 4242,Weekly grocery
+2026-05-28,Costco Wholesale,BREAD,1,3.49,grub,N,N,Visa ending 4242,Weekly grocery
+2026-05-28,Costco Wholesale,COFFEE,1,9.99,drinks,N,N,Visa ending 4242,Cheapest store at Costco — Auto-Add test
+2026-05-28,Costco Wholesale,CHIPS,1,4.49,snacks,N,N,Visa ending 4242,Weekly snack
+2026-05-21,Walmart,MILK,1,4.79,grub,N,N,Visa ending 4242,Same item different store — Compare Stores test
+2026-05-21,Walmart,EGGS,1,4.29,grub,N,N,Visa ending 4242,Multi-store
+2026-05-21,Walmart,BANANAS,1,0.59,grub,N,N,Visa ending 4242,Cheapest BANANAS — Walmart wins
+2026-05-21,Walmart,BREAD,1,2.99,grub,N,N,Visa ending 4242,Cheapest BREAD — Walmart wins
+2026-05-21,Walmart,CHIPS,1,2.99,snacks,N,N,Visa ending 4242,Cheapest CHIPS — Walmart wins
+2026-05-14,Target,MILK,1,5.49,grub,N,N,Visa ending 4242,Most-expensive MILK
+2026-05-14,Target,EGGS,1,4.99,grub,N,N,Visa ending 4242,Multi-store
+2026-05-14,Target,BANANAS,1,0.79,grub,N,N,Visa ending 4242,Multi-store
+2026-05-14,Target,BREAD,1,3.79,grub,N,N,Visa ending 4242,Multi-store
+2026-05-14,Target,COFFEE,1,13.49,drinks,N,N,Visa ending 4242,Most-expensive COFFEE
+2026-05-07,Costco Wholesale,MILK,1,3.99,grub,N,N,Visa ending 4242,Predictor builds weekly cadence
+2026-05-07,Costco Wholesale,EGGS,1,3.99,grub,N,N,Visa ending 4242,Predictor
+2026-05-07,Costco Wholesale,BANANAS,1,1.19,grub,N,N,Visa ending 4242,Predictor
+2026-04-30,Walmart,MILK,1,4.79,grub,N,N,Visa ending 4242,Predictor cadence
+2026-04-30,Walmart,EGGS,1,4.29,grub,N,N,Visa ending 4242,Predictor cadence
+2026-04-23,Target,MILK,1,5.49,grub,N,N,Visa ending 4242,Predictor cadence
+2026-04-23,Target,COFFEE,1,13.49,drinks,N,N,Visa ending 4242,Predictor cadence
+2026-04-16,Costco Wholesale,MILK,1,3.99,grub,N,N,Visa ending 4242,Predictor cadence
+2026-04-16,Costco Wholesale,PAPER TOWELS 12 ROLL,1,22.99,household,N,N,Visa ending 4242,Bulk household
+2026-04-16,Costco Wholesale,TIDE HE LIQUID 170 LOADS,1,24.99,household,N,N,Visa ending 4242,Bulk household
+2026-04-09,Walmart,BOUNTY SELECT-A-SIZE 6 PK,1,17.84,household,N,N,Visa ending 4242,Web price hunt test
+2026-04-09,Walmart,DAWN ULTRA ORIGINAL,1,4.66,household,N,N,Visa ending 4242,Household
+2026-04-02,Target,GREEN TEA,1,4.49,drinks,N,N,Visa ending 4242,Tea — drinks category
+2026-04-02,Target,GRANOLA BARS,1,5.99,snacks,N,N,Visa ending 4242,Snacks
+2026-05-29,Netflix,Premium Plan,1,22.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription — subscription tracker test
+2026-04-29,Netflix,Premium Plan,1,22.99,subscriptions,Y,N,Visa ending 4242,Sub recurrence
+2026-03-29,Netflix,Premium Plan,1,19.99,subscriptions,Y,N,Visa ending 4242,Sub PRICE INCREASE — anomaly alert
+2026-02-28,Netflix,Premium Plan,1,19.99,subscriptions,Y,N,Visa ending 4242,Sub history
+2026-05-25,Spotify,Family Plan,1,16.99,subscriptions,Y,N,Visa ending 4242,Monthly sub
+2026-04-25,Spotify,Family Plan,1,16.99,subscriptions,Y,N,Visa ending 4242,Sub history
+2026-03-25,Spotify,Family Plan,1,16.99,subscriptions,Y,N,Visa ending 4242,Sub history
+2026-05-15,NYTimes,Digital Subscription,1,17.00,subscriptions,Y,N,Visa ending 4242,Print sub
+2026-04-15,NYTimes,Digital Subscription,1,17.00,subscriptions,Y,N,Visa ending 4242,Sub history
+2026-05-10,Adobe,Creative Cloud All Apps,1,59.99,subscriptions,Y,N,Amex ending 1001,Annual-billed sub
+2026-04-10,Adobe,Creative Cloud All Apps,1,59.99,subscriptions,Y,N,Amex ending 1001,Sub history
+2026-05-05,Chipotle,Chicken Burrito Bowl,1,11.50,eats,N,N,Visa ending 4242,Restaurant — Bites tab test
+2026-05-12,Chipotle,Steak Burrito,1,12.95,eats,N,N,Visa ending 4242,Restaurant
+2026-05-08,Starbucks,Venti Caramel Macchiato,1,6.75,eats,N,N,Visa ending 4242,Restaurant
+2026-05-15,Starbucks,Pumpkin Spice Latte,1,7.25,eats,N,N,Visa ending 4242,Restaurant
+2026-05-22,McDonalds,Big Mac Meal,1,12.99,eats,N,N,Cash,Restaurant — cash payment
+2026-05-04,DoorDash,Order from Olive Garden,1,42.50,eats,N,N,Visa ending 4242,Delivery — high total
+2026-05-11,Uber Eats,Order from Sushi Place,1,38.75,eats,N,N,Visa ending 4242,Delivery
+2026-05-18,Olive Garden,Lunch for 2,1,48.20,eats,N,N,Visa ending 4242,Sit-down restaurant
+2026-05-26,Shell,Premium Unleaded 11.5 gal,1,53.18,gas,N,N,Shell Fleet Card,Gas fill-up — fuel category
+2026-05-19,Costco Wholesale Gas,Regular Unleaded 14 gal,1,46.20,gas,N,N,Costco Anywhere Visa,Cheaper Costco gas
+2026-05-12,Exxon,Premium Unleaded 12 gal,1,55.92,gas,N,N,Visa ending 4242,Gas
+2026-05-05,Shell,Regular Unleaded 10.8 gal,1,42.66,gas,N,N,Shell Fleet Card,Gas
+2026-04-28,Costco Wholesale Gas,Regular Unleaded 13 gal,1,43.16,gas,N,N,Costco Anywhere Visa,Gas
+2026-05-27,CVS,Tylenol Extra Strength 100ct,1,12.99,health,N,N,Visa ending 4242,Pharmacy
+2026-05-20,CVS,Vitamin D3 1000IU 250ct,1,14.49,health,N,N,Visa ending 4242,Vitamins
+2026-05-13,Walgreens,Allergy Pills 24-hr 30ct,1,18.99,health,N,N,Visa ending 4242,Pharmacy
+2026-05-06,Rite Aid,Hand Sanitizer 32oz,1,8.99,health,N,N,Cash,Health
+2026-05-23,Home Depot,Drill Bit Set Cobalt,1,32.50,tech,N,N,Home Depot Card,Home improvement
+2026-05-16,Lowes,Paint - 1 Gallon Sherwin White,1,42.00,household,N,N,Visa ending 4242,Big-ticket — return-window test
+2026-05-09,Best Buy,USB-C Cable 6ft,1,24.99,tech,N,N,Visa ending 4242,Electronics
+2026-05-02,Micro Center,LOBELIA CARDINALIS 1Q,1,10.99,garden,N,N,Visa ending 4242,Specialty item — single-tile share test
+2026-04-25,Merrifield Garden Center,Tomato Plant 1G,1,8.99,garden,N,N,Visa ending 4242,Garden
+2026-04-18,Home Depot,Mulch Premium 2cuft,1,5.99,garden,N,N,Home Depot Card,Garden
+2026-05-29,Big Bank,Interest Charge - Purchase,1,42.85,bank-fees,N,N,Statement,Bank fee — GuacWizard test
+2026-05-29,Big Bank,Foreign Transaction Fee,1,2.50,bank-fees,N,N,Statement,Travel fee
+2026-04-29,Big Bank,Interest Charge - Purchase,1,38.20,bank-fees,N,N,Statement,Recurring interest
+2026-04-15,Chase,ATM Fee,1,3.00,bank-fees,N,N,Statement,ATM
+2026-03-15,Chase,Late Payment Fee,1,29.00,bank-fees,N,N,Statement,Late fee — big penalty
+2026-05-27,Amazon,Bluetooth Headphones,1,89.99,tech,N,N,Amazon Visa,Online — og:image test
+2026-05-20,Amazon,USB Hub 7-Port,1,32.99,tech,N,N,Amazon Visa,Online tech
+2026-05-13,Amazon,Kitchen Scale Digital,1,18.49,household,N,N,Amazon Visa,Online household
+2026-05-06,eBay,Vintage Camera Lens,1,145.00,tech,N,N,PayPal,Marketplace
+2026-05-23,Uber,Ride from SFO to home,1,38.50,transport,N,N,Visa ending 4242,Rideshare
+2026-05-16,Lyft,Ride to airport,1,27.85,transport,N,N,Visa ending 4242,Rideshare
+2026-05-10,Parking Garage,Downtown Parking 3hr,1,18.00,transport,N,N,Cash,Parking
+2026-05-25,AMC Theatres,Movie ticket Avengers,2,28.50,entertainment,N,N,Visa ending 4242,Movies
+2026-05-18,Apple iTunes,Album Download,1,11.99,entertainment,N,N,Visa ending 4242,Digital media
+2026-05-11,BookMyShow,Concert Ticket Coldplay,1,150.00,entertainment,N,N,Visa ending 4242,Big-ticket entertainment
+2026-05-04,Steam,Game - Cyberpunk 2077,1,29.99,entertainment,N,N,Visa ending 4242,Digital game
+2026-05-26,Trader Joes,Frozen Pizza,2,9.98,grub,N,N,Visa ending 4242,Trader Joe's
+2026-05-19,Whole Foods Market,Organic Avocados 4ct,1,7.96,grub,N,N,Amazon Visa,Whole Foods
+2026-05-12,Sprouts Farmers Market,Organic Spinach,1,3.49,grub,N,N,Visa ending 4242,Grocery
+2026-05-05,Aldi,Frozen Vegetables Variety,3,8.97,grub,N,N,Cash,Aldi
+2026-05-15,Bed Bath Beyond,RETURN - Comforter King,1,-85.99,household,N,Y,Visa ending 4242,Return — negative amount test
+2026-05-08,Best Buy,RETURN - Defective Headphones,1,-149.99,tech,N,Y,Visa ending 4242,Return
+2026-04-30,Amazon,RETURN - Wrong Size Shirt,1,-24.99,grub,N,Y,Amazon Visa,Online return
+2026-04-22,Target,RETURN - Open Box Kitchen Mixer,1,-189.00,household,N,Y,Visa ending 4242,Big return
+2026-05-28,Costco Wholesale,KS WHOLE MILK Gallon,1,3.79,grub,N,N,Visa ending 4242,Variant name — embedding merge test
+2026-05-28,Walmart,GREAT VALUE 2% MILK Gallon,1,3.48,grub,N,N,Visa ending 4242,Variant name — embedding merge
+2026-04-28,Target,KS WHOLE MILK Gallon,1,3.79,grub,N,N,Visa ending 4242,Variant
+2026-05-23,IKEA,BILLY Bookcase White,1,99.00,household,N,N,Visa ending 4242,Furniture — long lifespan
+2026-05-23,IKEA,KALLAX Shelf 4x4,1,129.00,household,N,N,Visa ending 4242,Furniture
+2026-05-17,Apple Store,iPhone 17 Pro 256GB,1,1199.00,tech,N,N,Apple Card,Big-ticket — warranty test
+2026-05-04,Sephora,Mascara Black,1,29.00,health,N,N,Visa ending 4242,Beauty
+2026-04-27,Sephora,Lipstick Red,1,32.00,health,N,N,Visa ending 4242,Beauty
+2026-05-21,Pet Smart,Dog Food Premium 30lb,1,68.99,grub,N,N,Visa ending 4242,Pet food
+2026-05-14,Pet Smart,Cat Litter 40lb,1,24.99,household,N,N,Visa ending 4242,Pet supplies
+2026-05-07,Costco Wholesale,KS ADULT CHICKEN&RICE 40LB,1,39.99,grub,N,N,Visa ending 4242,Pet
+2026-04-30,Costco Wholesale,KS DAILY MULTI 365CT,1,11.99,health,N,N,Visa ending 4242,Vitamins
+2026-05-30,Mom & Pop Coffee Shop,Latte + Croissant,1,9.50,eats,N,N,Cash,Unknown store — no logo test
+2026-05-29,That Indian Place,Lunch Special,1,14.95,eats,N,N,Cash,Unknown store

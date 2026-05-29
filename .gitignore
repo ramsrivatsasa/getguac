@@ -81,3 +81,6 @@ supabase/.temp/
 
 .git-commit-msg.tmp
 .backup_pre_centralization/
+
+# ── Test bundle (large binaries don't belong in git) ───────────────
+test/*.apk

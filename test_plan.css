@@ -1,0 +1,129 @@
+/* Print-friendly stylesheet for the GetGuac beginner-tester guide.
+   Higher readability than md-to-pdf's defaults: more line height,
+   wider tables, color-coded callouts. */
+
+@page {
+  size: Letter;
+  margin: 0.6in 0.7in;
+}
+
+html, body {
+  font-family: -apple-system, "Segoe UI", "Inter", Arial, sans-serif;
+  font-size: 11.5pt;
+  line-height: 1.55;
+  color: #1a202c;
+}
+
+h1 {
+  font-size: 22pt;
+  color: #14532d;
+  margin-bottom: 0;
+  border-bottom: 3px solid #10b981;
+  padding-bottom: 6pt;
+}
+
+h2 {
+  font-size: 16pt;
+  color: #047857;
+  margin-top: 22pt;
+  border-left: 5px solid #84cc16;
+  padding-left: 10pt;
+  page-break-after: avoid;
+}
+
+h3 {
+  font-size: 13pt;
+  color: #065f46;
+  margin-top: 14pt;
+  page-break-after: avoid;
+}
+
+h4 { font-size: 12pt; color: #064e3b; }
+
+p, ul, ol { margin: 8pt 0; }
+ul li, ol li { margin-bottom: 4pt; }
+
+blockquote {
+  border-left: 4px solid #a3e635;
+  background: #f7fee7;
+  padding: 8pt 14pt;
+  margin: 12pt 0;
+  color: #365314;
+  border-radius: 4pt;
+}
+
+code {
+  background: #f1f5f9;
+  color: #334155;
+  padding: 1pt 5pt;
+  border-radius: 3pt;
+  font-family: "Consolas", "Menlo", monospace;
+  font-size: 10pt;
+}
+
+pre {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid #14b8a6;
+  border-radius: 4pt;
+  padding: 10pt 14pt;
+  font-family: "Consolas", "Menlo", monospace;
+  font-size: 9.5pt;
+  overflow-x: auto;
+  page-break-inside: avoid;
+}
+
+pre code {
+  background: none;
+  padding: 0;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12pt 0;
+  font-size: 10.5pt;
+  page-break-inside: avoid;
+}
+
+table th {
+  background: #d1fae5;
+  color: #065f46;
+  text-align: left;
+  font-weight: 700;
+  padding: 6pt 9pt;
+  border-bottom: 2px solid #10b981;
+}
+
+table td {
+  padding: 5pt 9pt;
+  border-bottom: 1px solid #e5e7eb;
+  vertical-align: top;
+}
+
+table tr:nth-child(even) td {
+  background: #f9fafb;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 22pt 0;
+}
+
+a {
+  color: #047857;
+  text-decoration: none;
+  border-bottom: 1px dotted #10b981;
+}
+
+strong {
+  color: #064e3b;
+}
+
+/* Make every section start fresh enough — but not strict
+   page-break-before, otherwise short sections waste paper. */
+h1, h2 { page-break-after: avoid; }
+
+/* Bullet emojis stand on their own line */
+ul li > strong:first-child { display: inline-block; min-width: 130pt; }

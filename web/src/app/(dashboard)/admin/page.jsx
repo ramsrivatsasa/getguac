@@ -1,7 +1,8 @@
 'use client'
 import { useState } from 'react'
+import toast from 'react-hot-toast'
 import { createClient } from '../../../lib/supabase/client'
-import { ShieldCheck, Search } from 'lucide-react'
+import { ShieldCheck, Search, Upload, Trash2 } from 'lucide-react'
 import { displayStoreName } from '../../../lib/store-name-normalize'
 export default function AdminPage() {
   const [type, setType] = useState('receipts')
@@ -85,6 +86,132 @@ export default function AdminPage() {
           <strong>Note:</strong> Full cross-user admin search requires a Next.js API route using <code>SUPABASE_SERVICE_ROLE_KEY</code>.
           Add <code>src/app/api/admin/search/route.js</code> with the service role client for production.
         </p>
+      </div>
+
+      <TestDataImporter />
+    </div>
+  )
+}
+
+// QA tester onboarding helper — paste-or-upload a CSV (we ship one at
+// getguac/test/TEST_DATA.csv) and the server bulk-creates receipts +
+// line items in YOUR own account. Tagged `[TEST IMPORT]` so the
+// Clear button below can wipe them all in one shot when QA is done.
+//
+// Designed to be removed cleanly once we're past tester onboarding:
+//   1. Delete this component
+//   2. Delete src/app/api/admin/import-test-data/route.js
+//   3. Delete src/app/api/admin/clear-test-data/route.js
+// (Nothing else depends on them.)
+function TestDataImporter() {
+  const [csv, setCsv] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [result, setResult] = useState(null)
+
+  async function handleFile(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 1_000_000) { toast.error('CSV too large (max 1MB)'); return }
+    const text = await file.text()
+    setCsv(text)
+    toast.success(`Loaded ${file.name} (${text.split('\n').length - 1} rows)`)
+  }
+
+  async function runImport() {
+    if (!csv.trim()) { toast.error('Paste a CSV or pick a file first'); return }
+    setBusy(true)
+    setResult(null)
+    try {
+      const res = await fetch('/api/admin/import-test-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ csv }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Import failed')
+      setResult(data)
+      toast.success(`Imported ${data.receipts_created} receipts · ${data.items_created} items`)
+    } catch (e) {
+      toast.error(e.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function runClear() {
+    if (!confirm('Wipe ALL test-imported receipts (tagged [TEST IMPORT])? Your real receipts stay.')) return
+    setBusy(true)
+    try {
+      const res = await fetch('/api/admin/clear-test-data', { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Clear failed')
+      toast.success(`Cleared ${data.deleted} test receipts`)
+      setResult({ deleted: data.deleted, cleared: true })
+    } catch (e) {
+      toast.error(e.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="card border-emerald-200 bg-emerald-50/40 space-y-4">
+      <div className="flex items-start gap-3">
+        <div className="p-2 bg-emerald-100 rounded-lg shrink-0">
+          <Upload className="text-emerald-800" size={18} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="font-bold text-emerald-900">Tester data importer</h3>
+          <p className="text-xs text-emerald-800/80 mt-0.5">
+            Bulk-import the QA fixture from <code className="px-1 py-0.5 bg-white rounded text-[11px]">getguac/test/TEST_DATA.csv</code> into your own account.
+            Tagged <code className="px-1 py-0.5 bg-white rounded text-[11px]">[TEST IMPORT]</code> so you can wipe them in one click.
+            <span className="block mt-1 text-amber-800 font-semibold">Remove this whole section before going live to real users.</span>
+          </p>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <input
+          type="file"
+          accept=".csv,text/csv"
+          onChange={handleFile}
+          className="block text-sm"
+        />
+        <details className="text-xs text-gray-600">
+          <summary className="cursor-pointer font-semibold">Or paste CSV directly</summary>
+          <textarea
+            value={csv}
+            onChange={(e) => setCsv(e.target.value)}
+            rows={8}
+            placeholder="date,store_name,item_name,qty,price,category,..."
+            className="w-full mt-2 font-mono text-[11px] p-2 border border-gray-200 rounded-lg"
+          />
+        </details>
+
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={runImport}
+            disabled={busy || !csv.trim()}
+            className="btn-primary inline-flex items-center gap-1.5 text-sm disabled:opacity-50"
+          >
+            <Upload size={14} /> {busy ? 'Importing…' : 'Import to my account'}
+          </button>
+          <button
+            type="button"
+            onClick={runClear}
+            disabled={busy}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-rose-500 hover:bg-rose-600 text-white text-sm font-bold disabled:opacity-50"
+          >
+            <Trash2 size={14} /> Clear all test data
+          </button>
+        </div>
+
+        {result && (
+          <div className="text-xs bg-white border border-emerald-200 rounded-lg p-3 font-mono whitespace-pre-wrap break-all">
+            {JSON.stringify(result, null, 2)}
+          </div>
+        )}
       </div>
     </div>
   )

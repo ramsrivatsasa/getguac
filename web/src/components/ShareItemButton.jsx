@@ -10,24 +10,52 @@
 //   - Buy Again card on /shopping
 //   - Stash ProductCard on /stash
 //
-// Props:
-//   item                    — the row being shared (powers the toast +
-//                             share-text title; not part of the payload)
-//   buildPayload()          — async, returns the kind='item' payload
-//                             the public /share/[token] page renders
-//   triggerClassName        — optional override for the button styling
+// Why the dropdown goes through createPortal:
+//   Both cards live in a CSS grid where every card has `transform:
+//   scale` for hover effects — each one is its own stacking context.
+//   An absolute-positioned dropdown inside a card can't z-index above
+//   a sibling card (they're not in the same stacking context). The
+//   portal renders the menu directly under document.body so it
+//   floats above every card unconditionally.
 'use client'
-import { useState } from 'react'
+import { useState, useRef, useEffect, useLayoutEffect } from 'react'
+import { createPortal } from 'react-dom'
 import toast from 'react-hot-toast'
 import { Share2, MessageCircle, Phone, Mail, Copy } from 'lucide-react'
 
 export function ShareItemButton({ item, buildPayload, triggerClassName }) {
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [pos, setPos] = useState(null)  // { top, right } in viewport coords
+  const btnRef = useRef(null)
+  const menuRef = useRef(null)
 
-  function handleBlur(e) {
-    if (!e.currentTarget.contains(e.relatedTarget)) setOpen(false)
-  }
+  // Measure the trigger button when the menu opens so we know where
+  // to render the floating panel. useLayoutEffect runs synchronously
+  // so the panel doesn't flash at (0,0) before the position lands.
+  useLayoutEffect(() => {
+    if (!open || !btnRef.current) return
+    const rect = btnRef.current.getBoundingClientRect()
+    setPos({
+      top: rect.bottom + 6,
+      right: window.innerWidth - rect.right,
+    })
+  }, [open])
+
+  // Click-outside: close when a click lands outside both the trigger
+  // and the menu. Listening on `mousedown` (not click) so the menu
+  // closes on the same tick the user starts interacting elsewhere.
+  useEffect(() => {
+    if (!open) return
+    function onDown(e) {
+      const t = e.target
+      if (btnRef.current?.contains(t)) return
+      if (menuRef.current?.contains(t)) return
+      setOpen(false)
+    }
+    document.addEventListener('mousedown', onDown)
+    return () => document.removeEventListener('mousedown', onDown)
+  }, [open])
 
   async function mintShareUrl(channel) {
     setBusy(true)
@@ -85,9 +113,46 @@ export function ShareItemButton({ item, buildPayload, triggerClassName }) {
     }
   }
 
+  const menu = open && pos && typeof window !== 'undefined' && createPortal(
+    <div
+      ref={menuRef}
+      style={{
+        position: 'fixed',
+        top: pos.top,
+        right: pos.right,
+        zIndex: 9999,
+      }}
+      className="w-52 rounded-xl bg-white shadow-2xl ring-1 ring-gray-200 overflow-hidden"
+    >
+      <div className="px-3 py-2 border-b border-gray-100 text-[10px] uppercase tracking-wider text-gray-500 font-bold">
+        Share this item via…
+      </div>
+      {[
+        { key: 'whatsapp', icon: <MessageCircle size={14} className="text-emerald-600" />, label: 'WhatsApp', tone: 'hover:bg-emerald-50' },
+        { key: 'sms',      icon: <Phone size={14} className="text-sky-600" />,            label: 'Text / SMS', tone: 'hover:bg-sky-50' },
+        { key: 'email',    icon: <Mail size={14} className="text-amber-600" />,           label: 'Email',     tone: 'hover:bg-amber-50' },
+        { key: 'copy',     icon: <Copy size={14} className="text-gray-600" />,            label: 'Copy link', tone: 'hover:bg-gray-50' },
+        { key: 'native',   icon: <Share2 size={14} className="text-violet-600" />,        label: 'More…',     tone: 'hover:bg-violet-50' },
+      ].map(opt => (
+        <button
+          key={opt.key}
+          type="button"
+          onClick={() => go(opt.key)}
+          disabled={busy}
+          className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-800 disabled:opacity-50 ${opt.tone}`}
+        >
+          {opt.icon}
+          <span>{opt.label}</span>
+        </button>
+      ))}
+    </div>,
+    document.body,
+  )
+
   return (
-    <div className="relative inline-block" onBlur={handleBlur}>
+    <>
       <button
+        ref={btnRef}
         type="button"
         onClick={() => setOpen(v => !v)}
         disabled={busy}
@@ -96,31 +161,7 @@ export function ShareItemButton({ item, buildPayload, triggerClassName }) {
       >
         <Share2 size={13} />
       </button>
-      {open && (
-        <div className="absolute right-0 mt-1 w-52 rounded-xl bg-white shadow-xl ring-1 ring-gray-200 z-50 overflow-hidden">
-          <div className="px-3 py-2 border-b border-gray-100 text-[10px] uppercase tracking-wider text-gray-500 font-bold">
-            Share this item via…
-          </div>
-          {[
-            { key: 'whatsapp', icon: <MessageCircle size={14} className="text-emerald-600" />, label: 'WhatsApp', tone: 'hover:bg-emerald-50' },
-            { key: 'sms',      icon: <Phone size={14} className="text-sky-600" />,            label: 'Text / SMS', tone: 'hover:bg-sky-50' },
-            { key: 'email',    icon: <Mail size={14} className="text-amber-600" />,           label: 'Email',     tone: 'hover:bg-amber-50' },
-            { key: 'copy',     icon: <Copy size={14} className="text-gray-600" />,            label: 'Copy link', tone: 'hover:bg-gray-50' },
-            { key: 'native',   icon: <Share2 size={14} className="text-violet-600" />,        label: 'More…',     tone: 'hover:bg-violet-50' },
-          ].map(opt => (
-            <button
-              key={opt.key}
-              type="button"
-              onClick={() => go(opt.key)}
-              disabled={busy}
-              className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-800 disabled:opacity-50 ${opt.tone}`}
-            >
-              {opt.icon}
-              <span>{opt.label}</span>
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
+      {menu}
+    </>
   )
 }

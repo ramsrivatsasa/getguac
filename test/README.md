@@ -8,7 +8,13 @@ Everything a beginner tester needs to validate v0.3.0 of the app, in one folder.
 |---|---|
 | **TEST_PLAN.pdf** | Step-by-step playbook covering signup → receipts → dashboard → Smashlist → Stash → mobile → edge cases. ~25 pages, formatted for printing. Start here. |
 | **TEST_PLAN.md** | The same plan in markdown — handy if you'd rather read in an editor. |
-| **TEST_DATA.csv** | 100 rows of realistic test transactions (groceries, subscriptions, restaurants, bank fees, returns, etc). Lets you exercise every feature without scanning 100 paper receipts. See "Importing the test data" below. |
+| **TEST_DATA.csv** | 100 rows — a curated minimal fixture for quick smoke tests. |
+| **TEST_DATA_1000.csv** | **1000 rows** — full-volume fixture spanning ~18 months of realistic shopping cadences. Exercises subscriptions, multi-store Compare-Stores, GuacMoney, predictor, anomalies, return-window, etc. Use this for thorough testing. |
+| **receipts/*.png** | **20 synthetic receipt images** in thermal-printer format. Upload via the photo-flow on web or mobile to exercise the OCR pipeline end-to-end (parse-receipt → categorize → predictor → embeddings). |
+| **statements/*.pdf** | **20 synthetic credit-card statement PDFs** spanning ~20 months. Each carries random purchases + an interest charge + occasional fee + a payment. Upload via the bank-statement-import flow to exercise GuacWizard's fee/interest detection. |
+| **generate_test_data.js** | Node script that regenerated TEST_DATA_1000.csv. Re-run any time. |
+| **generate_receipts.js** | Node script that regenerated the 20 receipt PNGs. |
+| **generate_statements.js** | Node script that regenerated the 20 statement PDFs. |
 | **getguac-v0.3.0-arm64-v8a.apk** | Android release APK for v0.3.0. Sideload this onto a modern Android phone (arm64) to test the mobile app. |
 | **test_plan.css** | Stylesheet used to render the PDF. Ignore unless you want to regenerate it. |
 

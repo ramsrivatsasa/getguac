@@ -1,0 +1,461 @@
+<!DOCTYPE html><html><head><title></title><meta charset="utf-8"><style>* {
+	box-sizing: border-box;
+}
+
+html {
+	font-size: 100%;
+}
+
+body {
+	font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
+		'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+	line-height: 1.6;
+	font-size: 0.6875em; /* 11 pt */
+	color: #111;
+	margin: 0;
+}
+
+body > :first-child {
+	padding-top: 0;
+	margin-top: 0;
+}
+
+body > :last-child {
+	margin-bottom: 0;
+	padding-bottom: 0;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	margin: 0;
+	padding: 0.5em 0 0.25em;
+}
+
+h5,
+h6 {
+	padding: 0;
+}
+
+h5 {
+	font-size: 1em;
+}
+
+h6 {
+	font-size: 0.875em;
+	text-transform: uppercase;
+}
+
+p {
+	margin: 0.25em 0 1em;
+}
+
+blockquote {
+	margin: 0.5em 0 1em;
+	padding-left: 0.5em;
+	padding-right: 1em;
+	border-left: 4px solid gainsboro;
+	font-style: italic;
+}
+
+ul,
+ol {
+	margin: 0;
+	margin-left: 1em;
+	padding: 0 1.5em 0.5em;
+}
+
+pre {
+	white-space: pre-wrap;
+}
+
+h1 code,
+h2 code,
+h3 code,
+h4 code,
+h5 code,
+h6 code,
+p code,
+li code,
+pre code {
+	background-color: #f8f8f8;
+	padding: 0.1em 0.375em;
+	border: 1px solid #f8f8f8;
+	border-radius: 0.25em;
+	font-family: monospace;
+	font-size: 1.2em;
+}
+
+pre code {
+	display: block;
+	padding: 0.5em;
+}
+
+.page-break {
+	page-break-after: always;
+}
+
+img {
+	max-width: 100%;
+	margin: 1em 0;
+}
+
+table {
+	border-spacing: 0;
+	border-collapse: collapse;
+	display: block;
+	margin: 0 0 1em;
+	width: 100%;
+	overflow: auto;
+}
+
+table th,
+table td {
+	padding: 0.5em 1em;
+	border: 1px solid gainsboro;
+}
+
+table th {
+	font-weight: 600;
+}
+
+table tr {
+	background-color: white;
+	border-top: 1px solid gainsboro;
+}
+
+table tr:nth-child(2n) {
+	background-color: whitesmoke;
+}
+/*# sourceURL=C:\Money\getguac\node_modules\md-to-pdf\markdown.css*/</style><style>pre code.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 1em
+}
+code.hljs {
+  padding: 3px 5px
+}
+/*!
+  Theme: GitHub
+  Description: Light theme as seen on github.com
+  Author: github.com
+  Maintainer: @Hirse
+  Updated: 2021-05-15
+
+  Outdated base version: https://github.com/primer/github-syntax-light
+  Current colors taken from GitHub's CSS
+*/
+.hljs {
+  color: #24292e;
+  background: #ffffff
+}
+.hljs-doctag,
+.hljs-keyword,
+.hljs-meta .hljs-keyword,
+.hljs-template-tag,
+.hljs-template-variable,
+.hljs-type,
+.hljs-variable.language_ {
+  /* prettylights-syntax-keyword */
+  color: #d73a49
+}
+.hljs-title,
+.hljs-title.class_,
+.hljs-title.class_.inherited__,
+.hljs-title.function_ {
+  /* prettylights-syntax-entity */
+  color: #6f42c1
+}
+.hljs-attr,
+.hljs-attribute,
+.hljs-literal,
+.hljs-meta,
+.hljs-number,
+.hljs-operator,
+.hljs-variable,
+.hljs-selector-attr,
+.hljs-selector-class,
+.hljs-selector-id {
+  /* prettylights-syntax-constant */
+  color: #005cc5
+}
+.hljs-regexp,
+.hljs-string,
+.hljs-meta .hljs-string {
+  /* prettylights-syntax-string */
+  color: #032f62
+}
+.hljs-built_in,
+.hljs-symbol {
+  /* prettylights-syntax-variable */
+  color: #e36209
+}
+.hljs-comment,
+.hljs-code,
+.hljs-formula {
+  /* prettylights-syntax-comment */
+  color: #6a737d
+}
+.hljs-name,
+.hljs-quote,
+.hljs-selector-tag,
+.hljs-selector-pseudo {
+  /* prettylights-syntax-entity-tag */
+  color: #22863a
+}
+.hljs-subst {
+  /* prettylights-syntax-storage-modifier-import */
+  color: #24292e
+}
+.hljs-section {
+  /* prettylights-syntax-markup-heading */
+  color: #005cc5;
+  font-weight: bold
+}
+.hljs-bullet {
+  /* prettylights-syntax-markup-list */
+  color: #735c0f
+}
+.hljs-emphasis {
+  /* prettylights-syntax-markup-italic */
+  color: #24292e;
+  font-style: italic
+}
+.hljs-strong {
+  /* prettylights-syntax-markup-bold */
+  color: #24292e;
+  font-weight: bold
+}
+.hljs-addition {
+  /* prettylights-syntax-markup-inserted */
+  color: #22863a;
+  background-color: #f0fff4
+}
+.hljs-deletion {
+  /* prettylights-syntax-markup-deleted */
+  color: #b31d28;
+  background-color: #ffeef0
+}
+.hljs-char.escape_,
+.hljs-link,
+.hljs-params,
+.hljs-property,
+.hljs-punctuation,
+.hljs-tag {
+  /* purposely ignored */
+  
+}/*# sourceURL=C:\Money\getguac\node_modules\highlight.js\styles\github.css*/</style></head>
+	<body class="">
+		
+<meta charset="utf-8"><title>Statement 2025-03</title>
+<style>
+  @page { size: Letter; margin: 0.5in 0.6in; }
+  body { font-family: -apple-system, "Segoe UI", Arial, sans-serif; font-size: 10pt; color: #1a202c; }
+  .banner { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #1e40af; padding-bottom: 8pt; margin-bottom: 14pt; }
+  .bank-name { font-size: 18pt; font-weight: 900; color: #1e3a8a; letter-spacing: -0.5pt; }
+  .acct { font-size: 9pt; color: #64748b; text-align: right; }
+  .summary { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10pt; margin-bottom: 18pt; }
+  .summary > div { background: #f1f5f9; padding: 8pt 10pt; border-radius: 6pt; border-left: 3px solid #1e40af; }
+  .summary .label { font-size: 8pt; color: #64748b; text-transform: uppercase; letter-spacing: 0.5pt; font-weight: 700; }
+  .summary .value { font-size: 14pt; font-weight: 800; color: #0f172a; margin-top: 2pt; tabular-nums: 1; font-variant-numeric: tabular-nums; }
+  h2 { font-size: 11pt; color: #1e40af; border-bottom: 1px solid #cbd5e1; padding-bottom: 4pt; margin-top: 14pt; }
+  table { width: 100%; border-collapse: collapse; font-size: 9pt; }
+  th { text-align: left; padding: 5pt 8pt; background: #e0e7ff; color: #1e3a8a; border-bottom: 2px solid #1e40af; font-size: 8pt; text-transform: uppercase; letter-spacing: 0.4pt; }
+  td { padding: 4pt 8pt; border-bottom: 1px solid #f1f5f9; }
+  td.amount { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+  td.amount.credit { color: #059669; }
+  tr:nth-child(even) td { background: #fafafa; }
+  .footer-note { font-size: 8pt; color: #64748b; margin-top: 18pt; line-height: 1.6; }
+  .due-due { font-weight: 800; color: #b91c1c; }
+</style>
+
+  <div class="banner">
+    <div>
+      <div class="bank-name">PRIME CARD VISA</div>
+      <div style="font-size:9pt;color:#64748b;margin-top:2pt;">Issued by Big Bank N.A.</div>
+    </div>
+    <div class="acct">
+      Account ending in <strong>4242</strong><br>
+      Statement Date: <strong>3/28/2025</strong><br>
+      Cycle: 2/28/2025 – 3/28/2025
+    </div>
+  </div>
+
+  <div class="summary">
+    <div><div class="label">Previous balance</div><div class="value">$939.91</div></div>
+    <div><div class="label">Payments / credits</div><div class="value">-$466.92</div></div>
+    <div><div class="label">Purchases + fees</div><div class="value">$1276.24</div></div>
+    <div><div class="label">New balance</div><div class="value">$1749.23</div></div>
+  </div>
+
+  <div class="summary">
+    <div style="background:#fef2f2;border-left-color:#b91c1c;">
+      <div class="label">Minimum payment due</div>
+      <div class="value due-due">$43.73</div>
+    </div>
+    <div style="background:#fef2f2;border-left-color:#b91c1c;">
+      <div class="label">Payment due date</div>
+      <div class="value due-due">4/25/2025</div>
+    </div>
+    <div><div class="label">Credit limit</div><div class="value">$15,000.00</div></div>
+    <div><div class="label">Available credit</div><div class="value">$13250.77</div></div>
+  </div>
+
+  <h2>Transactions — March 2025</h2>
+  <pre><code>&lt;tr&gt;
+  &lt;td&gt;03/01&lt;/td&gt;
+  &lt;td&gt;SEPHORA&lt;/td&gt;
+  &lt;td class="amount "&gt;$57.02&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+  &lt;td&gt;03/03&lt;/td&gt;
+  &lt;td&gt;MCDONALDS&lt;/td&gt;
+  &lt;td class="amount "&gt;$8.62&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+  &lt;td&gt;03/08&lt;/td&gt;
+  &lt;td&gt;SEPHORA&lt;/td&gt;
+  &lt;td class="amount "&gt;$71.73&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+  &lt;td&gt;03/08&lt;/td&gt;
+  &lt;td&gt;ADOBE INC&lt;/td&gt;
+  &lt;td class="amount "&gt;$59.99&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+  &lt;td&gt;03/09&lt;/td&gt;
+  &lt;td&gt;IKEA&lt;/td&gt;
+  &lt;td class="amount "&gt;$83.59&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+  &lt;td&gt;03/09&lt;/td&gt;
+  &lt;td&gt;WALMART&lt;/td&gt;
+  &lt;td class="amount "&gt;$88.26&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+  &lt;td&gt;03/10&lt;/td&gt;
+  &lt;td&gt;APPLE.COM/BILL&lt;/td&gt;
+  &lt;td class="amount "&gt;$190.61&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+  &lt;td&gt;03/11&lt;/td&gt;
+  &lt;td&gt;STARBUCKS&lt;/td&gt;
+  &lt;td class="amount "&gt;$13.28&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+  &lt;td&gt;03/16&lt;/td&gt;
+  &lt;td&gt;NETFLIX.COM&lt;/td&gt;
+  &lt;td class="amount "&gt;$20.10&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+  &lt;td&gt;03/17&lt;/td&gt;
+  &lt;td&gt;MCDONALDS&lt;/td&gt;
+  &lt;td class="amount "&gt;$11.60&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+  &lt;td&gt;03/17&lt;/td&gt;
+  &lt;td&gt;TRADER JOES&lt;/td&gt;
+  &lt;td class="amount "&gt;$35.60&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+  &lt;td&gt;03/19&lt;/td&gt;
+  &lt;td&gt;CHICK-FIL-A&lt;/td&gt;
+  &lt;td class="amount "&gt;$13.28&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+  &lt;td&gt;03/20&lt;/td&gt;
+  &lt;td&gt;DOORDASH&lt;/td&gt;
+  &lt;td class="amount "&gt;$28.29&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+  &lt;td&gt;03/22&lt;/td&gt;
+  &lt;td&gt;CHICK-FIL-A&lt;/td&gt;
+  &lt;td class="amount "&gt;$21.61&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+  &lt;td&gt;03/22&lt;/td&gt;
+  &lt;td&gt;DOORDASH&lt;/td&gt;
+  &lt;td class="amount "&gt;$30.95&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+  &lt;td&gt;03/22&lt;/td&gt;
+  &lt;td&gt;ADOBE INC&lt;/td&gt;
+  &lt;td class="amount "&gt;$59.99&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+  &lt;td&gt;03/23&lt;/td&gt;
+  &lt;td&gt;WALMART&lt;/td&gt;
+  &lt;td class="amount "&gt;$39.33&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+  &lt;td&gt;03/24&lt;/td&gt;
+  &lt;td&gt;HULU LLC&lt;/td&gt;
+  &lt;td class="amount "&gt;$18.99&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+  &lt;td&gt;03/25&lt;/td&gt;
+  &lt;td&gt;IKEA&lt;/td&gt;
+  &lt;td class="amount "&gt;$245.48&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+  &lt;td&gt;03/25&lt;/td&gt;
+  &lt;td&gt;ADOBE INC&lt;/td&gt;
+  &lt;td class="amount "&gt;$59.99&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+  &lt;td&gt;03/27&lt;/td&gt;
+  &lt;td&gt;EXXON&lt;/td&gt;
+  &lt;td class="amount "&gt;$48.71&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+  &lt;td&gt;03/28&lt;/td&gt;
+  &lt;td&gt;PURCHASE INTEREST CHARGE&lt;/td&gt;
+  &lt;td class="amount "&gt;$69.22&lt;/td&gt;
+&lt;/tr&gt;
+</code></pre><table>
+    <thead><tr><th style="width:60pt;">Date</th><th>Description</th><th style="width:80pt;text-align:right;">Amount</th></tr></thead>
+    <tbody>
+    <tr>
+      <td>03/03</td>
+      <td>AUTOPAY THANK YOU</td>
+      <td class="amount credit">-$466.92</td>
+    </tr>
+  
+
+  </tbody>
+  </table>
+
+  <div class="footer-note">
+    Annual Percentage Rate (APR): 19.74% variable on purchases · 25.99% on cash advances · 29.99% penalty APR after any late payment.
+    <br>Pay by the due date to avoid interest. If you make only the minimum payment, you'll pay more in interest and it will take longer to pay off the balance.
+    <br><br>Synthetic statement generated for QA testing — not a real account.
+  </div>
+
+
+	
+
+</body></html>

@@ -1,0 +1,1001 @@
+date,store_name,item_name,qty,price,category,is_subscription,is_return,payment_method,notes
+2024-11-29,Walmart,POPCORN,1,3.15,snacks,N,N,Cash,Weekly grocery — Walmart
+2024-11-29,Walmart,PASTA,1,1.87,grub,N,N,Cash,Weekly grocery — Walmart
+2024-11-29,Walmart,ICE CREAM,1,5.75,snacks,N,N,Cash,Weekly grocery — Walmart
+2024-11-29,Walmart,GRANOLA BARS,1,5.25,snacks,N,N,Amex ending 1001,Weekly grocery — Walmart
+2024-11-29,Walmart,BREAD,1,3.09,grub,N,N,Visa ending 4242,Weekly grocery — Walmart
+2024-11-29,Walmart,RICE 2LB,1,4.57,grub,N,N,Cash,Weekly grocery — Walmart
+2024-11-29,Walmart,COFFEE,1,10.8,drinks,N,N,Visa ending 4242,Weekly grocery — Walmart
+2024-11-29,Walmart,MILK,1,3.61,grub,N,N,Amex ending 1001,Weekly grocery — Walmart
+2024-12-04,Costco Wholesale,ICE CREAM,1,4.88,snacks,N,N,Visa ending 4242,Weekly grocery — Costco Wholesale
+2024-12-04,Costco Wholesale,APPLES 3LB,1,4.23,grub,N,N,Visa ending 4242,Weekly grocery — Costco Wholesale
+2024-12-04,Costco Wholesale,COFFEE,1,10,drinks,N,N,Visa ending 4242,Weekly grocery — Costco Wholesale
+2024-12-04,Costco Wholesale,CEREAL,1,4.06,grub,N,N,Amex ending 1001,Weekly grocery — Costco Wholesale
+2024-12-04,Costco Wholesale,POPCORN,1,3,snacks,N,N,Cash,Weekly grocery — Costco Wholesale
+2024-12-11,Sprouts Farmers Market,PASTA,1,2.24,grub,N,N,Cash,Weekly grocery — Sprouts Farmers Market
+2024-12-11,Sprouts Farmers Market,TOMATO SAUCE,1,2.79,grub,N,N,Amex ending 1001,Weekly grocery — Sprouts Farmers Market
+2024-12-11,Sprouts Farmers Market,COFFEE,1,12.75,drinks,N,N,Amex ending 1001,Weekly grocery — Sprouts Farmers Market
+2024-12-11,Sprouts Farmers Market,EGGS,1,5,grub,N,N,Visa ending 4242,Weekly grocery — Sprouts Farmers Market
+2024-12-11,Sprouts Farmers Market,GRANOLA BARS,1,6.68,snacks,N,N,Amex ending 1001,Weekly grocery — Sprouts Farmers Market
+2024-12-11,Sprouts Farmers Market,GROUND BEEF 1LB,1,7.79,grub,N,N,Amex ending 1001,Weekly grocery — Sprouts Farmers Market
+2024-12-11,Sprouts Farmers Market,POPCORN,1,4.01,snacks,N,N,Visa ending 4242,Weekly grocery — Sprouts Farmers Market
+2024-12-18,Aldi,BREAD,1,2.59,grub,N,N,Cash,Weekly grocery — Aldi
+2024-12-18,Aldi,APPLES 3LB,1,3.72,grub,N,N,Visa ending 4242,Weekly grocery — Aldi
+2024-12-18,Aldi,ORANGE JUICE,1,3.49,drinks,N,N,Amex ending 1001,Weekly grocery — Aldi
+2024-12-18,Aldi,YOGURT 6PK,1,5.28,grub,N,N,Cash,Weekly grocery — Aldi
+2024-12-18,Aldi,GROUND BEEF 1LB,1,5.57,grub,N,N,Amex ending 1001,Weekly grocery — Aldi
+2024-12-18,Aldi,MILK,1,3.15,grub,N,N,Amex ending 1001,Weekly grocery — Aldi
+2024-12-18,Aldi,CHICKEN BREAST,1,7.56,grub,N,N,Visa ending 4242,Weekly grocery — Aldi
+2024-12-18,Aldi,RICE 2LB,1,3.94,grub,N,N,Cash,Weekly grocery — Aldi
+2024-12-26,Whole Foods Market,CHIPS,1,4.71,snacks,N,N,Visa ending 4242,Weekly grocery — Whole Foods Market
+2024-12-26,Whole Foods Market,BREAD,1,4.64,grub,N,N,Cash,Weekly grocery — Whole Foods Market
+2024-12-26,Whole Foods Market,PASTA,1,2.53,grub,N,N,Visa ending 4242,Weekly grocery — Whole Foods Market
+2024-12-26,Whole Foods Market,EGGS,1,5.58,grub,N,N,Cash,Weekly grocery — Whole Foods Market
+2024-12-26,Whole Foods Market,TOMATO SAUCE,1,3.14,grub,N,N,Visa ending 4242,Weekly grocery — Whole Foods Market
+2024-12-26,Whole Foods Market,CEREAL,1,6.52,grub,N,N,Visa ending 4242,Weekly grocery — Whole Foods Market
+2024-12-26,Whole Foods Market,GROUND BEEF 1LB,1,9.14,grub,N,N,Amex ending 1001,Weekly grocery — Whole Foods Market
+2024-12-26,Whole Foods Market,RICE 2LB,1,6.49,grub,N,N,Visa ending 4242,Weekly grocery — Whole Foods Market
+2025-01-02,Trader Joes,ORANGE JUICE,1,4.42,drinks,N,N,Cash,Weekly grocery — Trader Joes
+2025-01-02,Trader Joes,OLIVE OIL,1,9.49,grub,N,N,Cash,Weekly grocery — Trader Joes
+2025-01-02,Trader Joes,GROUND BEEF 1LB,1,6.8,grub,N,N,Visa ending 4242,Weekly grocery — Trader Joes
+2025-01-02,Trader Joes,ICE CREAM,1,6.38,snacks,N,N,Amex ending 1001,Weekly grocery — Trader Joes
+2025-01-02,Trader Joes,GRANOLA BARS,1,6.13,snacks,N,N,Cash,Weekly grocery — Trader Joes
+2025-01-09,Target,COFFEE,1,12.27,drinks,N,N,Amex ending 1001,Weekly grocery — Target
+2025-01-09,Target,GROUND BEEF 1LB,1,7.37,grub,N,N,Visa ending 4242,Weekly grocery — Target
+2025-01-09,Target,CEREAL,1,5.29,grub,N,N,Amex ending 1001,Weekly grocery — Target
+2025-01-09,Target,GRANOLA BARS,1,6.42,snacks,N,N,Visa ending 4242,Weekly grocery — Target
+2025-01-09,Target,CHIPS,1,4.06,snacks,N,N,Amex ending 1001,Weekly grocery — Target
+2025-01-09,Target,ICE CREAM,1,6.13,snacks,N,N,Visa ending 4242,Weekly grocery — Target
+2025-01-16,Walmart,GRANOLA BARS,1,5.36,snacks,N,N,Amex ending 1001,Weekly grocery — Walmart
+2025-01-16,Walmart,COFFEE,1,10.26,drinks,N,N,Cash,Weekly grocery — Walmart
+2025-01-16,Walmart,CEREAL,1,4.57,grub,N,N,Visa ending 4242,Weekly grocery — Walmart
+2025-01-16,Walmart,EGGS,1,4.28,grub,N,N,Visa ending 4242,Weekly grocery — Walmart
+2025-01-16,Walmart,CHIPS,1,3.62,snacks,N,N,Amex ending 1001,Weekly grocery — Walmart
+2025-01-16,Walmart,ICE CREAM,1,5.26,snacks,N,N,Amex ending 1001,Weekly grocery — Walmart
+2025-01-16,Walmart,POPCORN,1,3.16,snacks,N,N,Amex ending 1001,Weekly grocery — Walmart
+2025-01-23,Costco Wholesale,EGGS,1,3.92,grub,N,N,Visa ending 4242,Weekly grocery — Costco Wholesale
+2025-01-23,Costco Wholesale,OLIVE OIL,1,7.42,grub,N,N,Visa ending 4242,Weekly grocery — Costco Wholesale
+2025-01-23,Costco Wholesale,TOMATO SAUCE,1,2.03,grub,N,N,Visa ending 4242,Weekly grocery — Costco Wholesale
+2025-01-23,Costco Wholesale,RICE 2LB,1,4.28,grub,N,N,Visa ending 4242,Weekly grocery — Costco Wholesale
+2025-01-23,Costco Wholesale,CHICKEN BREAST,1,8.74,grub,N,N,Cash,Weekly grocery — Costco Wholesale
+2025-01-23,Costco Wholesale,MILK,1,3.29,grub,N,N,Cash,Weekly grocery — Costco Wholesale
+2025-01-31,Sprouts Farmers Market,PASTA,1,2.19,grub,N,N,Visa ending 4242,Weekly grocery — Sprouts Farmers Market
+2025-01-31,Sprouts Farmers Market,CHICKEN BREAST,1,10.77,grub,N,N,Amex ending 1001,Weekly grocery — Sprouts Farmers Market
+2025-01-31,Sprouts Farmers Market,RICE 2LB,1,5.75,grub,N,N,Cash,Weekly grocery — Sprouts Farmers Market
+2025-01-31,Sprouts Farmers Market,ICE CREAM,1,6.82,snacks,N,N,Visa ending 4242,Weekly grocery — Sprouts Farmers Market
+2025-01-31,Sprouts Farmers Market,POPCORN,1,3.66,snacks,N,N,Visa ending 4242,Weekly grocery — Sprouts Farmers Market
+2025-01-31,Sprouts Farmers Market,MILK,1,4.23,grub,N,N,Cash,Weekly grocery — Sprouts Farmers Market
+2025-01-31,Sprouts Farmers Market,ORANGE JUICE,1,4.77,drinks,N,N,Visa ending 4242,Weekly grocery — Sprouts Farmers Market
+2025-01-31,Sprouts Farmers Market,CHIPS,1,4.17,snacks,N,N,Visa ending 4242,Weekly grocery — Sprouts Farmers Market
+2025-02-07,Aldi,BREAD,1,2.76,grub,N,N,Visa ending 4242,Weekly grocery — Aldi
+2025-02-07,Aldi,OLIVE OIL,1,6.79,grub,N,N,Visa ending 4242,Weekly grocery — Aldi
+2025-02-07,Aldi,GRANOLA BARS,1,4.56,snacks,N,N,Amex ending 1001,Weekly grocery — Aldi
+2025-02-07,Aldi,TOMATO SAUCE,1,1.91,grub,N,N,Cash,Weekly grocery — Aldi
+2025-02-07,Aldi,ORANGE JUICE,1,3.64,drinks,N,N,Amex ending 1001,Weekly grocery — Aldi
+2025-02-14,Whole Foods Market,YOGURT 6PK,1,7.94,grub,N,N,Visa ending 4242,Weekly grocery — Whole Foods Market
+2025-02-14,Whole Foods Market,ICE CREAM,1,7.4,snacks,N,N,Visa ending 4242,Weekly grocery — Whole Foods Market
+2025-02-14,Whole Foods Market,APPLES 3LB,1,6.29,grub,N,N,Cash,Weekly grocery — Whole Foods Market
+2025-02-14,Whole Foods Market,OLIVE OIL,1,11.8,grub,N,N,Cash,Weekly grocery — Whole Foods Market
+2025-02-14,Whole Foods Market,POPCORN,1,4.57,snacks,N,N,Amex ending 1001,Weekly grocery — Whole Foods Market
+2025-02-19,Trader Joes,CHICKEN BREAST,1,10.4,grub,N,N,Cash,Weekly grocery — Trader Joes
+2025-02-19,Trader Joes,ORANGE JUICE,1,4.65,drinks,N,N,Visa ending 4242,Weekly grocery — Trader Joes
+2025-02-19,Trader Joes,GROUND BEEF 1LB,1,6.95,grub,N,N,Cash,Weekly grocery — Trader Joes
+2025-02-19,Trader Joes,PASTA,1,1.94,grub,N,N,Visa ending 4242,Weekly grocery — Trader Joes
+2025-02-19,Trader Joes,YOGURT 6PK,1,6.75,grub,N,N,Cash,Weekly grocery — Trader Joes
+2025-02-19,Trader Joes,BANANAS,1,0.81,grub,N,N,Amex ending 1001,Weekly grocery — Trader Joes
+2025-02-19,Trader Joes,CHEESE BLOCK,1,5.91,grub,N,N,Visa ending 4242,Weekly grocery — Trader Joes
+2025-02-19,Trader Joes,POPCORN,1,3.56,snacks,N,N,Cash,Weekly grocery — Trader Joes
+2025-02-28,Target,GROUND BEEF 1LB,1,7.41,grub,N,N,Amex ending 1001,Weekly grocery — Target
+2025-02-28,Target,OLIVE OIL,1,9.43,grub,N,N,Amex ending 1001,Weekly grocery — Target
+2025-02-28,Target,COFFEE,1,11.73,drinks,N,N,Cash,Weekly grocery — Target
+2025-02-28,Target,ICE CREAM,1,6.5,snacks,N,N,Visa ending 4242,Weekly grocery — Target
+2025-02-28,Target,GRANOLA BARS,1,6.21,snacks,N,N,Cash,Weekly grocery — Target
+2025-03-05,Walmart,BANANAS,1,0.72,grub,N,N,Amex ending 1001,Weekly grocery — Walmart
+2025-03-05,Walmart,CHIPS,1,3.49,snacks,N,N,Cash,Weekly grocery — Walmart
+2025-03-05,Walmart,GROUND BEEF 1LB,1,6.42,grub,N,N,Visa ending 4242,Weekly grocery — Walmart
+2025-03-05,Walmart,COFFEE,1,10.41,drinks,N,N,Cash,Weekly grocery — Walmart
+2025-03-05,Walmart,MILK,1,3.5,grub,N,N,Amex ending 1001,Weekly grocery — Walmart
+2025-03-05,Walmart,EGGS,1,4.02,grub,N,N,Visa ending 4242,Weekly grocery — Walmart
+2025-03-05,Walmart,APPLES 3LB,1,4.81,grub,N,N,Visa ending 4242,Weekly grocery — Walmart
+2025-03-12,Costco Wholesale,RICE 2LB,1,4.1,grub,N,N,Amex ending 1001,Weekly grocery — Costco Wholesale
+2025-03-12,Costco Wholesale,EGGS,1,3.87,grub,N,N,Cash,Weekly grocery — Costco Wholesale
+2025-03-12,Costco Wholesale,OLIVE OIL,1,7.29,grub,N,N,Cash,Weekly grocery — Costco Wholesale
+2025-03-12,Costco Wholesale,ICE CREAM,1,4.89,snacks,N,N,Visa ending 4242,Weekly grocery — Costco Wholesale
+2025-03-12,Costco Wholesale,POPCORN,1,3.03,snacks,N,N,Visa ending 4242,Weekly grocery — Costco Wholesale
+2025-03-12,Costco Wholesale,ORANGE JUICE,1,3.68,drinks,N,N,Visa ending 4242,Weekly grocery — Costco Wholesale
+2025-03-19,Sprouts Farmers Market,MILK,1,4.41,grub,N,N,Cash,Weekly grocery — Sprouts Farmers Market
+2025-03-19,Sprouts Farmers Market,CHICKEN BREAST,1,10.78,grub,N,N,Cash,Weekly grocery — Sprouts Farmers Market
+2025-03-19,Sprouts Farmers Market,EGGS,1,4.77,grub,N,N,Amex ending 1001,Weekly grocery — Sprouts Farmers Market
+2025-03-19,Sprouts Farmers Market,APPLES 3LB,1,5.64,grub,N,N,Cash,Weekly grocery — Sprouts Farmers Market
+2025-03-19,Sprouts Farmers Market,GROUND BEEF 1LB,1,7.86,grub,N,N,Visa ending 4242,Weekly grocery — Sprouts Farmers Market
+2025-03-19,Sprouts Farmers Market,OLIVE OIL,1,9.99,grub,N,N,Amex ending 1001,Weekly grocery — Sprouts Farmers Market
+2025-03-19,Sprouts Farmers Market,GRANOLA BARS,1,6.59,snacks,N,N,Amex ending 1001,Weekly grocery — Sprouts Farmers Market
+2025-03-26,Aldi,BANANAS,1,0.62,grub,N,N,Cash,Weekly grocery — Aldi
+2025-03-26,Aldi,COFFEE,1,8.66,drinks,N,N,Visa ending 4242,Weekly grocery — Aldi
+2025-03-26,Aldi,APPLES 3LB,1,4.08,grub,N,N,Cash,Weekly grocery — Aldi
+2025-03-26,Aldi,OLIVE OIL,1,6.85,grub,N,N,Visa ending 4242,Weekly grocery — Aldi
+2025-03-26,Aldi,GRANOLA BARS,1,4.75,snacks,N,N,Cash,Weekly grocery — Aldi
+2025-03-26,Aldi,MILK,1,2.99,grub,N,N,Visa ending 4242,Weekly grocery — Aldi
+2025-03-26,Aldi,BREAD,1,2.73,grub,N,N,Cash,Weekly grocery — Aldi
+2025-03-26,Aldi,CHEESE BLOCK,1,4.75,grub,N,N,Cash,Weekly grocery — Aldi
+2025-04-03,Whole Foods Market,RICE 2LB,1,6.58,grub,N,N,Visa ending 4242,Weekly grocery — Whole Foods Market
+2025-04-03,Whole Foods Market,POPCORN,1,4.5,snacks,N,N,Cash,Weekly grocery — Whole Foods Market
+2025-04-03,Whole Foods Market,ORANGE JUICE,1,5.48,drinks,N,N,Amex ending 1001,Weekly grocery — Whole Foods Market
+2025-04-03,Whole Foods Market,BANANAS,1,1.02,grub,N,N,Visa ending 4242,Weekly grocery — Whole Foods Market
+2025-04-03,Whole Foods Market,CEREAL,1,6.6,grub,N,N,Visa ending 4242,Weekly grocery — Whole Foods Market
+2025-04-03,Whole Foods Market,OLIVE OIL,1,11.49,grub,N,N,Visa ending 4242,Weekly grocery — Whole Foods Market
+2025-04-11,Trader Joes,APPLES 3LB,1,4.9,grub,N,N,Amex ending 1001,Weekly grocery — Trader Joes
+2025-04-11,Trader Joes,COFFEE,1,11.58,drinks,N,N,Amex ending 1001,Weekly grocery — Trader Joes
+2025-04-11,Trader Joes,CHIPS,1,3.87,snacks,N,N,Cash,Weekly grocery — Trader Joes
+2025-04-11,Trader Joes,TOMATO SAUCE,1,2.65,grub,N,N,Cash,Weekly grocery — Trader Joes
+2025-04-11,Trader Joes,GROUND BEEF 1LB,1,6.82,grub,N,N,Amex ending 1001,Weekly grocery — Trader Joes
+2025-04-11,Trader Joes,ICE CREAM,1,5.99,snacks,N,N,Visa ending 4242,Weekly grocery — Trader Joes
+2025-04-11,Trader Joes,BREAD,1,3.51,grub,N,N,Cash,Weekly grocery — Trader Joes
+2025-04-17,Target,BREAD,1,3.76,grub,N,N,Amex ending 1001,Weekly grocery — Target
+2025-04-17,Target,BANANAS,1,0.81,grub,N,N,Visa ending 4242,Weekly grocery — Target
+2025-04-17,Target,CHEESE BLOCK,1,6.29,grub,N,N,Amex ending 1001,Weekly grocery — Target
+2025-04-17,Target,CHIPS,1,3.8,snacks,N,N,Amex ending 1001,Weekly grocery — Target
+2025-04-17,Target,ICE CREAM,1,6.39,snacks,N,N,Visa ending 4242,Weekly grocery — Target
+2025-04-17,Target,GROUND BEEF 1LB,1,7.63,grub,N,N,Cash,Weekly grocery — Target
+2025-04-17,Target,COFFEE,1,12.27,drinks,N,N,Amex ending 1001,Weekly grocery — Target
+2025-04-17,Target,YOGURT 6PK,1,6.67,grub,N,N,Cash,Weekly grocery — Target
+2025-04-24,Walmart,EGGS,1,4.27,grub,N,N,Amex ending 1001,Weekly grocery — Walmart
+2025-04-24,Walmart,COFFEE,1,10.06,drinks,N,N,Cash,Weekly grocery — Walmart
+2025-04-24,Walmart,GRANOLA BARS,1,5.7,snacks,N,N,Amex ending 1001,Weekly grocery — Walmart
+2025-04-24,Walmart,POPCORN,1,3.31,snacks,N,N,Cash,Weekly grocery — Walmart
+2025-04-24,Walmart,CHIPS,1,3.53,snacks,N,N,Visa ending 4242,Weekly grocery — Walmart
+2025-05-02,Costco Wholesale,CEREAL,1,4.06,grub,N,N,Amex ending 1001,Weekly grocery — Costco Wholesale
+2025-05-02,Costco Wholesale,EGGS,1,3.69,grub,N,N,Visa ending 4242,Weekly grocery — Costco Wholesale
+2025-05-02,Costco Wholesale,ICE CREAM,1,4.97,snacks,N,N,Visa ending 4242,Weekly grocery — Costco Wholesale
+2025-05-02,Costco Wholesale,YOGURT 6PK,1,5.39,grub,N,N,Amex ending 1001,Weekly grocery — Costco Wholesale
+2025-05-02,Costco Wholesale,GRANOLA BARS,1,5,snacks,N,N,Cash,Weekly grocery — Costco Wholesale
+2025-05-02,Costco Wholesale,BANANAS,1,0.66,grub,N,N,Cash,Weekly grocery — Costco Wholesale
+2025-05-02,Costco Wholesale,RICE 2LB,1,4.43,grub,N,N,Amex ending 1001,Weekly grocery — Costco Wholesale
+2025-05-07,Sprouts Farmers Market,BANANAS,1,0.9,grub,N,N,Cash,Weekly grocery — Sprouts Farmers Market
+2025-05-07,Sprouts Farmers Market,EGGS,1,4.74,grub,N,N,Cash,Weekly grocery — Sprouts Farmers Market
+2025-05-07,Sprouts Farmers Market,YOGURT 6PK,1,7.15,grub,N,N,Visa ending 4242,Weekly grocery — Sprouts Farmers Market
+2025-05-07,Sprouts Farmers Market,POPCORN,1,3.67,snacks,N,N,Visa ending 4242,Weekly grocery — Sprouts Farmers Market
+2025-05-07,Sprouts Farmers Market,CEREAL,1,5.73,grub,N,N,Visa ending 4242,Weekly grocery — Sprouts Farmers Market
+2025-05-16,Aldi,CEREAL,1,4.02,grub,N,N,Visa ending 4242,Weekly grocery — Aldi
+2025-05-16,Aldi,EGGS,1,3.36,grub,N,N,Amex ending 1001,Weekly grocery — Aldi
+2025-05-16,Aldi,PASTA,1,1.49,grub,N,N,Amex ending 1001,Weekly grocery — Aldi
+2025-05-16,Aldi,GRANOLA BARS,1,4.55,snacks,N,N,Visa ending 4242,Weekly grocery — Aldi
+2025-05-16,Aldi,OLIVE OIL,1,6.67,grub,N,N,Cash,Weekly grocery — Aldi
+2025-05-16,Aldi,RICE 2LB,1,3.82,grub,N,N,Cash,Weekly grocery — Aldi
+2025-05-22,Whole Foods Market,OLIVE OIL,1,11,grub,N,N,Cash,Weekly grocery — Whole Foods Market
+2025-05-22,Whole Foods Market,PASTA,1,2.52,grub,N,N,Amex ending 1001,Weekly grocery — Whole Foods Market
+2025-05-22,Whole Foods Market,ICE CREAM,1,7.38,snacks,N,N,Visa ending 4242,Weekly grocery — Whole Foods Market
+2025-05-22,Whole Foods Market,COFFEE,1,14.86,drinks,N,N,Amex ending 1001,Weekly grocery — Whole Foods Market
+2025-05-22,Whole Foods Market,POPCORN,1,4.49,snacks,N,N,Cash,Weekly grocery — Whole Foods Market
+2025-05-22,Whole Foods Market,ORANGE JUICE,1,5.51,drinks,N,N,Amex ending 1001,Weekly grocery — Whole Foods Market
+2025-05-22,Whole Foods Market,CEREAL,1,6.69,grub,N,N,Visa ending 4242,Weekly grocery — Whole Foods Market
+2025-05-22,Whole Foods Market,APPLES 3LB,1,6.21,grub,N,N,Visa ending 4242,Weekly grocery — Whole Foods Market
+2025-05-30,Trader Joes,EGGS,1,4.68,grub,N,N,Amex ending 1001,Weekly grocery — Trader Joes
+2025-05-30,Trader Joes,APPLES 3LB,1,5.19,grub,N,N,Amex ending 1001,Weekly grocery — Trader Joes
+2025-05-30,Trader Joes,GRANOLA BARS,1,6.06,snacks,N,N,Visa ending 4242,Weekly grocery — Trader Joes
+2025-05-30,Trader Joes,BANANAS,1,0.82,grub,N,N,Visa ending 4242,Weekly grocery — Trader Joes
+2025-05-30,Trader Joes,MILK,1,3.94,grub,N,N,Amex ending 1001,Weekly grocery — Trader Joes
+2025-05-30,Trader Joes,BREAD,1,3.7,grub,N,N,Visa ending 4242,Weekly grocery — Trader Joes
+2025-06-06,Target,CHICKEN BREAST,1,10.46,grub,N,N,Visa ending 4242,Weekly grocery — Target
+2025-06-06,Target,RICE 2LB,1,5.36,grub,N,N,Cash,Weekly grocery — Target
+2025-06-06,Target,CHEESE BLOCK,1,6.13,grub,N,N,Cash,Weekly grocery — Target
+2025-06-06,Target,PASTA,1,2.11,grub,N,N,Cash,Weekly grocery — Target
+2025-06-06,Target,GRANOLA BARS,1,6.06,snacks,N,N,Cash,Weekly grocery — Target
+2025-06-06,Target,BANANAS,1,0.81,grub,N,N,Visa ending 4242,Weekly grocery — Target
+2025-06-06,Target,ICE CREAM,1,6.44,snacks,N,N,Amex ending 1001,Weekly grocery — Target
+2025-06-12,Walmart,APPLES 3LB,1,4.56,grub,N,N,Cash,Weekly grocery — Walmart
+2025-06-12,Walmart,ICE CREAM,1,5.43,snacks,N,N,Visa ending 4242,Weekly grocery — Walmart
+2025-06-12,Walmart,BANANAS,1,0.74,grub,N,N,Visa ending 4242,Weekly grocery — Walmart
+2025-06-12,Walmart,EGGS,1,4.32,grub,N,N,Amex ending 1001,Weekly grocery — Walmart
+2025-06-12,Walmart,CHEESE BLOCK,1,5.46,grub,N,N,Amex ending 1001,Weekly grocery — Walmart
+2025-06-12,Walmart,OLIVE OIL,1,8.32,grub,N,N,Cash,Weekly grocery — Walmart
+2025-06-20,Costco Wholesale,CHIPS,1,3.3,snacks,N,N,Amex ending 1001,Weekly grocery — Costco Wholesale
+2025-06-20,Costco Wholesale,COFFEE,1,9.47,drinks,N,N,Visa ending 4242,Weekly grocery — Costco Wholesale
+2025-06-20,Costco Wholesale,CEREAL,1,4.37,grub,N,N,Amex ending 1001,Weekly grocery — Costco Wholesale
+2025-06-20,Costco Wholesale,MILK,1,3.43,grub,N,N,Visa ending 4242,Weekly grocery — Costco Wholesale
+2025-06-20,Costco Wholesale,ORANGE JUICE,1,3.86,drinks,N,N,Amex ending 1001,Weekly grocery — Costco Wholesale
+2025-06-25,Sprouts Farmers Market,ICE CREAM,1,6.87,snacks,N,N,Visa ending 4242,Weekly grocery — Sprouts Farmers Market
+2025-06-25,Sprouts Farmers Market,BREAD,1,3.81,grub,N,N,Amex ending 1001,Weekly grocery — Sprouts Farmers Market
+2025-06-25,Sprouts Farmers Market,OLIVE OIL,1,9.8,grub,N,N,Visa ending 4242,Weekly grocery — Sprouts Farmers Market
+2025-06-25,Sprouts Farmers Market,RICE 2LB,1,5.65,grub,N,N,Amex ending 1001,Weekly grocery — Sprouts Farmers Market
+2025-06-25,Sprouts Farmers Market,CHIPS,1,4.27,snacks,N,N,Visa ending 4242,Weekly grocery — Sprouts Farmers Market
+2025-06-25,Sprouts Farmers Market,ORANGE JUICE,1,4.91,drinks,N,N,Cash,Weekly grocery — Sprouts Farmers Market
+2025-06-25,Sprouts Farmers Market,GROUND BEEF 1LB,1,7.64,grub,N,N,Cash,Weekly grocery — Sprouts Farmers Market
+2025-06-25,Sprouts Farmers Market,CEREAL,1,5.25,grub,N,N,Cash,Weekly grocery — Sprouts Farmers Market
+2025-07-03,Aldi,CEREAL,1,3.71,grub,N,N,Visa ending 4242,Weekly grocery — Aldi
+2025-07-03,Aldi,YOGURT 6PK,1,5.29,grub,N,N,Visa ending 4242,Weekly grocery — Aldi
+2025-07-03,Aldi,TOMATO SAUCE,1,2,grub,N,N,Amex ending 1001,Weekly grocery — Aldi
+2025-07-03,Aldi,GROUND BEEF 1LB,1,5.28,grub,N,N,Cash,Weekly grocery — Aldi
+2025-07-03,Aldi,POPCORN,1,2.79,snacks,N,N,Cash,Weekly grocery — Aldi
+2025-07-03,Aldi,OLIVE OIL,1,7.11,grub,N,N,Cash,Weekly grocery — Aldi
+2025-07-03,Aldi,CHIPS,1,2.97,snacks,N,N,Cash,Weekly grocery — Aldi
+2025-07-03,Aldi,BANANAS,1,0.63,grub,N,N,Amex ending 1001,Weekly grocery — Aldi
+2025-07-10,Whole Foods Market,YOGURT 6PK,1,8.63,grub,N,N,Visa ending 4242,Weekly grocery — Whole Foods Market
+2025-07-10,Whole Foods Market,BANANAS,1,1.04,grub,N,N,Cash,Weekly grocery — Whole Foods Market
+2025-07-10,Whole Foods Market,EGGS,1,5.47,grub,N,N,Visa ending 4242,Weekly grocery — Whole Foods Market
+2025-07-10,Whole Foods Market,CHICKEN BREAST,1,12.25,grub,N,N,Visa ending 4242,Weekly grocery — Whole Foods Market
+2025-07-10,Whole Foods Market,POPCORN,1,4.36,snacks,N,N,Visa ending 4242,Weekly grocery — Whole Foods Market
+2025-07-16,Trader Joes,GRANOLA BARS,1,6.3,snacks,N,N,Amex ending 1001,Weekly grocery — Trader Joes
+2025-07-16,Trader Joes,ICE CREAM,1,6.13,snacks,N,N,Visa ending 4242,Weekly grocery — Trader Joes
+2025-07-16,Trader Joes,YOGURT 6PK,1,6.39,grub,N,N,Cash,Weekly grocery — Trader Joes
+2025-07-16,Trader Joes,CHEESE BLOCK,1,6.09,grub,N,N,Cash,Weekly grocery — Trader Joes
+2025-07-16,Trader Joes,OLIVE OIL,1,8.92,grub,N,N,Amex ending 1001,Weekly grocery — Trader Joes
+2025-07-23,Target,POPCORN,1,3.58,snacks,N,N,Cash,Weekly grocery — Target
+2025-07-23,Target,BREAD,1,3.55,grub,N,N,Amex ending 1001,Weekly grocery — Target
+2025-07-23,Target,BANANAS,1,0.85,grub,N,N,Cash,Weekly grocery — Target
+2025-07-23,Target,PASTA,1,2.16,grub,N,N,Cash,Weekly grocery — Target
+2025-07-23,Target,MILK,1,4.1,grub,N,N,Cash,Weekly grocery — Target
+2025-07-23,Target,EGGS,1,4.61,grub,N,N,Cash,Weekly grocery — Target
+2025-07-23,Target,CEREAL,1,5.12,grub,N,N,Visa ending 4242,Weekly grocery — Target
+2025-07-23,Target,GRANOLA BARS,1,6.04,snacks,N,N,Cash,Weekly grocery — Target
+2025-08-01,Walmart,EGGS,1,4.17,grub,N,N,Cash,Weekly grocery — Walmart
+2025-08-01,Walmart,BANANAS,1,0.7,grub,N,N,Amex ending 1001,Weekly grocery — Walmart
+2025-08-01,Walmart,POPCORN,1,3.33,snacks,N,N,Cash,Weekly grocery — Walmart
+2025-08-01,Walmart,APPLES 3LB,1,4.49,grub,N,N,Cash,Weekly grocery — Walmart
+2025-08-01,Walmart,YOGURT 6PK,1,5.81,grub,N,N,Amex ending 1001,Weekly grocery — Walmart
+2025-08-06,Costco Wholesale,OLIVE OIL,1,7.34,grub,N,N,Cash,Weekly grocery — Costco Wholesale
+2025-08-06,Costco Wholesale,CHICKEN BREAST,1,8.64,grub,N,N,Amex ending 1001,Weekly grocery — Costco Wholesale
+2025-08-06,Costco Wholesale,POPCORN,1,3.11,snacks,N,N,Amex ending 1001,Weekly grocery — Costco Wholesale
+2025-08-06,Costco Wholesale,BREAD,1,2.91,grub,N,N,Amex ending 1001,Weekly grocery — Costco Wholesale
+2025-08-06,Costco Wholesale,GROUND BEEF 1LB,1,5.67,grub,N,N,Visa ending 4242,Weekly grocery — Costco Wholesale
+2025-08-06,Costco Wholesale,RICE 2LB,1,4.44,grub,N,N,Cash,Weekly grocery — Costco Wholesale
+2025-08-14,Sprouts Farmers Market,GRANOLA BARS,1,6.26,snacks,N,N,Amex ending 1001,Weekly grocery — Sprouts Farmers Market
+2025-08-14,Sprouts Farmers Market,BREAD,1,3.84,grub,N,N,Amex ending 1001,Weekly grocery — Sprouts Farmers Market
+2025-08-14,Sprouts Farmers Market,ORANGE JUICE,1,5.16,drinks,N,N,Visa ending 4242,Weekly grocery — Sprouts Farmers Market
+2025-08-14,Sprouts Farmers Market,EGGS,1,4.85,grub,N,N,Cash,Weekly grocery — Sprouts Farmers Market
+2025-08-14,Sprouts Farmers Market,PASTA,1,2.11,grub,N,N,Amex ending 1001,Weekly grocery — Sprouts Farmers Market
+2025-08-14,Sprouts Farmers Market,COFFEE,1,12.26,drinks,N,N,Amex ending 1001,Weekly grocery — Sprouts Farmers Market
+2025-08-14,Sprouts Farmers Market,BANANAS,1,0.83,grub,N,N,Visa ending 4242,Weekly grocery — Sprouts Farmers Market
+2025-08-22,Aldi,ICE CREAM,1,4.54,snacks,N,N,Amex ending 1001,Weekly grocery — Aldi
+2025-08-22,Aldi,POPCORN,1,2.71,snacks,N,N,Visa ending 4242,Weekly grocery — Aldi
+2025-08-22,Aldi,BREAD,1,2.81,grub,N,N,Amex ending 1001,Weekly grocery — Aldi
+2025-08-22,Aldi,MILK,1,3.12,grub,N,N,Visa ending 4242,Weekly grocery — Aldi
+2025-08-22,Aldi,PASTA,1,1.62,grub,N,N,Amex ending 1001,Weekly grocery — Aldi
+2025-08-22,Aldi,CEREAL,1,3.73,grub,N,N,Visa ending 4242,Weekly grocery — Aldi
+2025-08-22,Aldi,YOGURT 6PK,1,5.2,grub,N,N,Cash,Weekly grocery — Aldi
+2025-08-27,Whole Foods Market,CHEESE BLOCK,1,7.47,grub,N,N,Cash,Weekly grocery — Whole Foods Market
+2025-08-27,Whole Foods Market,ORANGE JUICE,1,5.5,drinks,N,N,Amex ending 1001,Weekly grocery — Whole Foods Market
+2025-08-27,Whole Foods Market,MILK,1,4.98,grub,N,N,Amex ending 1001,Weekly grocery — Whole Foods Market
+2025-08-27,Whole Foods Market,BANANAS,1,1,grub,N,N,Visa ending 4242,Weekly grocery — Whole Foods Market
+2025-08-27,Whole Foods Market,OLIVE OIL,1,11.73,grub,N,N,Cash,Weekly grocery — Whole Foods Market
+2025-09-05,Trader Joes,COFFEE,1,11.16,drinks,N,N,Cash,Weekly grocery — Trader Joes
+2025-09-05,Trader Joes,YOGURT 6PK,1,6.54,grub,N,N,Cash,Weekly grocery — Trader Joes
+2025-09-05,Trader Joes,GROUND BEEF 1LB,1,7.14,grub,N,N,Amex ending 1001,Weekly grocery — Trader Joes
+2025-09-05,Trader Joes,CHEESE BLOCK,1,6.41,grub,N,N,Cash,Weekly grocery — Trader Joes
+2025-09-05,Trader Joes,MILK,1,4.18,grub,N,N,Cash,Weekly grocery — Trader Joes
+2025-09-05,Trader Joes,BANANAS,1,0.77,grub,N,N,Visa ending 4242,Weekly grocery — Trader Joes
+2025-09-05,Trader Joes,PASTA,1,2.12,grub,N,N,Cash,Weekly grocery — Trader Joes
+2025-09-12,Target,BANANAS,1,0.86,grub,N,N,Cash,Weekly grocery — Target
+2025-09-12,Target,GRANOLA BARS,1,6.39,snacks,N,N,Amex ending 1001,Weekly grocery — Target
+2025-09-12,Target,APPLES 3LB,1,5.34,grub,N,N,Cash,Weekly grocery — Target
+2025-09-12,Target,RICE 2LB,1,5.06,grub,N,N,Amex ending 1001,Weekly grocery — Target
+2025-09-12,Target,CHIPS,1,3.88,snacks,N,N,Cash,Weekly grocery — Target
+2025-09-12,Target,YOGURT 6PK,1,6.73,grub,N,N,Visa ending 4242,Weekly grocery — Target
+2025-09-12,Target,ICE CREAM,1,6.1,snacks,N,N,Cash,Weekly grocery — Target
+2025-09-12,Target,CEREAL,1,5.22,grub,N,N,Visa ending 4242,Weekly grocery — Target
+2025-09-17,Walmart,PASTA,1,1.9,grub,N,N,Visa ending 4242,Weekly grocery — Walmart
+2025-09-17,Walmart,RICE 2LB,1,4.57,grub,N,N,Amex ending 1001,Weekly grocery — Walmart
+2025-09-17,Walmart,GROUND BEEF 1LB,1,6.53,grub,N,N,Amex ending 1001,Weekly grocery — Walmart
+2025-09-17,Walmart,BANANAS,1,0.75,grub,N,N,Visa ending 4242,Weekly grocery — Walmart
+2025-09-17,Walmart,CHEESE BLOCK,1,5.42,grub,N,N,Amex ending 1001,Weekly grocery — Walmart
+2025-09-17,Walmart,BREAD,1,3.07,grub,N,N,Visa ending 4242,Weekly grocery — Walmart
+2025-09-25,Costco Wholesale,APPLES 3LB,1,4.07,grub,N,N,Visa ending 4242,Weekly grocery — Costco Wholesale
+2025-09-25,Costco Wholesale,MILK,1,3.49,grub,N,N,Visa ending 4242,Weekly grocery — Costco Wholesale
+2025-09-25,Costco Wholesale,PASTA,1,1.72,grub,N,N,Cash,Weekly grocery — Costco Wholesale
+2025-09-25,Costco Wholesale,CEREAL,1,4.07,grub,N,N,Visa ending 4242,Weekly grocery — Costco Wholesale
+2025-09-25,Costco Wholesale,YOGURT 6PK,1,5.76,grub,N,N,Cash,Weekly grocery — Costco Wholesale
+2025-09-25,Costco Wholesale,OLIVE OIL,1,7.27,grub,N,N,Amex ending 1001,Weekly grocery — Costco Wholesale
+2025-09-25,Costco Wholesale,EGGS,1,3.95,grub,N,N,Visa ending 4242,Weekly grocery — Costco Wholesale
+2025-09-25,Costco Wholesale,CHEESE BLOCK,1,4.85,grub,N,N,Visa ending 4242,Weekly grocery — Costco Wholesale
+2025-10-02,Sprouts Farmers Market,CHEESE BLOCK,1,6.75,grub,N,N,Amex ending 1001,Weekly grocery — Sprouts Farmers Market
+2025-10-02,Sprouts Farmers Market,ORANGE JUICE,1,4.72,drinks,N,N,Amex ending 1001,Weekly grocery — Sprouts Farmers Market
+2025-10-02,Sprouts Farmers Market,COFFEE,1,12.66,drinks,N,N,Cash,Weekly grocery — Sprouts Farmers Market
+2025-10-02,Sprouts Farmers Market,TOMATO SAUCE,1,2.64,grub,N,N,Visa ending 4242,Weekly grocery — Sprouts Farmers Market
+2025-10-02,Sprouts Farmers Market,CHICKEN BREAST,1,11.16,grub,N,N,Amex ending 1001,Weekly grocery — Sprouts Farmers Market
+2025-10-02,Sprouts Farmers Market,BANANAS,1,0.86,grub,N,N,Amex ending 1001,Weekly grocery — Sprouts Farmers Market
+2025-10-02,Sprouts Farmers Market,CHIPS,1,4.17,snacks,N,N,Amex ending 1001,Weekly grocery — Sprouts Farmers Market
+2025-10-02,Sprouts Farmers Market,OLIVE OIL,1,10.04,grub,N,N,Cash,Weekly grocery — Sprouts Farmers Market
+2025-10-08,Aldi,CHICKEN BREAST,1,7.92,grub,N,N,Cash,Weekly grocery — Aldi
+2025-10-08,Aldi,MILK,1,3.11,grub,N,N,Cash,Weekly grocery — Aldi
+2025-10-08,Aldi,ORANGE JUICE,1,3.6,drinks,N,N,Cash,Weekly grocery — Aldi
+2025-10-08,Aldi,BREAD,1,2.82,grub,N,N,Visa ending 4242,Weekly grocery — Aldi
+2025-10-08,Aldi,CEREAL,1,3.78,grub,N,N,Amex ending 1001,Weekly grocery — Aldi
+2025-10-16,Whole Foods Market,COFFEE,1,14.62,drinks,N,N,Visa ending 4242,Weekly grocery — Whole Foods Market
+2025-10-16,Whole Foods Market,CHIPS,1,4.94,snacks,N,N,Amex ending 1001,Weekly grocery — Whole Foods Market
+2025-10-16,Whole Foods Market,CHEESE BLOCK,1,8.04,grub,N,N,Visa ending 4242,Weekly grocery — Whole Foods Market
+2025-10-16,Whole Foods Market,CHICKEN BREAST,1,13.37,grub,N,N,Cash,Weekly grocery — Whole Foods Market
+2025-10-16,Whole Foods Market,OLIVE OIL,1,11.84,grub,N,N,Amex ending 1001,Weekly grocery — Whole Foods Market
+2025-10-23,Trader Joes,GRANOLA BARS,1,5.93,snacks,N,N,Visa ending 4242,Weekly grocery — Trader Joes
+2025-10-23,Trader Joes,COFFEE,1,12.07,drinks,N,N,Cash,Weekly grocery — Trader Joes
+2025-10-23,Trader Joes,YOGURT 6PK,1,6.58,grub,N,N,Cash,Weekly grocery — Trader Joes
+2025-10-23,Trader Joes,BANANAS,1,0.77,grub,N,N,Visa ending 4242,Weekly grocery — Trader Joes
+2025-10-23,Trader Joes,ORANGE JUICE,1,4.48,drinks,N,N,Cash,Weekly grocery — Trader Joes
+2025-10-23,Trader Joes,TOMATO SAUCE,1,2.58,grub,N,N,Cash,Weekly grocery — Trader Joes
+2025-10-23,Trader Joes,EGGS,1,4.76,grub,N,N,Visa ending 4242,Weekly grocery — Trader Joes
+2025-10-30,Target,TOMATO SAUCE,1,2.63,grub,N,N,Amex ending 1001,Weekly grocery — Target
+2025-10-30,Target,GRANOLA BARS,1,6.41,snacks,N,N,Amex ending 1001,Weekly grocery — Target
+2025-10-30,Target,COFFEE,1,12.12,drinks,N,N,Amex ending 1001,Weekly grocery — Target
+2025-10-30,Target,ORANGE JUICE,1,4.82,drinks,N,N,Cash,Weekly grocery — Target
+2025-10-30,Target,OLIVE OIL,1,9.06,grub,N,N,Cash,Weekly grocery — Target
+2025-11-07,Walmart,MILK,1,3.84,grub,N,N,Visa ending 4242,Weekly grocery — Walmart
+2025-11-07,Walmart,CHICKEN BREAST,1,8.97,grub,N,N,Visa ending 4242,Weekly grocery — Walmart
+2025-11-07,Walmart,CEREAL,1,4.55,grub,N,N,Amex ending 1001,Weekly grocery — Walmart
+2025-11-07,Walmart,ORANGE JUICE,1,4.24,drinks,N,N,Amex ending 1001,Weekly grocery — Walmart
+2025-11-07,Walmart,COFFEE,1,10.43,drinks,N,N,Cash,Weekly grocery — Walmart
+2025-11-07,Walmart,YOGURT 6PK,1,5.91,grub,N,N,Visa ending 4242,Weekly grocery — Walmart
+2025-11-13,Costco Wholesale,CHEESE BLOCK,1,5.08,grub,N,N,Cash,Weekly grocery — Costco Wholesale
+2025-11-13,Costco Wholesale,CEREAL,1,4.4,grub,N,N,Cash,Weekly grocery — Costco Wholesale
+2025-11-13,Costco Wholesale,OLIVE OIL,1,7.46,grub,N,N,Cash,Weekly grocery — Costco Wholesale
+2025-11-13,Costco Wholesale,ICE CREAM,1,4.9,snacks,N,N,Amex ending 1001,Weekly grocery — Costco Wholesale
+2025-11-13,Costco Wholesale,CHICKEN BREAST,1,8.38,grub,N,N,Visa ending 4242,Weekly grocery — Costco Wholesale
+2025-11-13,Costco Wholesale,ORANGE JUICE,1,3.96,drinks,N,N,Visa ending 4242,Weekly grocery — Costco Wholesale
+2025-11-13,Costco Wholesale,BREAD,1,3.05,grub,N,N,Amex ending 1001,Weekly grocery — Costco Wholesale
+2025-11-21,Sprouts Farmers Market,GROUND BEEF 1LB,1,7.74,grub,N,N,Cash,Weekly grocery — Sprouts Farmers Market
+2025-11-21,Sprouts Farmers Market,OLIVE OIL,1,9.84,grub,N,N,Visa ending 4242,Weekly grocery — Sprouts Farmers Market
+2025-11-21,Sprouts Farmers Market,TOMATO SAUCE,1,2.74,grub,N,N,Cash,Weekly grocery — Sprouts Farmers Market
+2025-11-21,Sprouts Farmers Market,GRANOLA BARS,1,6.42,snacks,N,N,Visa ending 4242,Weekly grocery — Sprouts Farmers Market
+2025-11-21,Sprouts Farmers Market,CHIPS,1,4.38,snacks,N,N,Visa ending 4242,Weekly grocery — Sprouts Farmers Market
+2025-11-21,Sprouts Farmers Market,YOGURT 6PK,1,6.84,grub,N,N,Cash,Weekly grocery — Sprouts Farmers Market
+2025-11-27,Aldi,OLIVE OIL,1,6.85,grub,N,N,Cash,Weekly grocery — Aldi
+2025-11-27,Aldi,RICE 2LB,1,3.84,grub,N,N,Amex ending 1001,Weekly grocery — Aldi
+2025-11-27,Aldi,BANANAS,1,0.62,grub,N,N,Visa ending 4242,Weekly grocery — Aldi
+2025-11-27,Aldi,YOGURT 6PK,1,5.04,grub,N,N,Visa ending 4242,Weekly grocery — Aldi
+2025-11-27,Aldi,PASTA,1,1.54,grub,N,N,Cash,Weekly grocery — Aldi
+2025-11-27,Aldi,CHIPS,1,2.85,snacks,N,N,Visa ending 4242,Weekly grocery — Aldi
+2025-12-03,Whole Foods Market,PASTA,1,2.51,grub,N,N,Cash,Weekly grocery — Whole Foods Market
+2025-12-03,Whole Foods Market,POPCORN,1,4.31,snacks,N,N,Cash,Weekly grocery — Whole Foods Market
+2025-12-03,Whole Foods Market,BREAD,1,4.62,grub,N,N,Visa ending 4242,Weekly grocery — Whole Foods Market
+2025-12-03,Whole Foods Market,CHIPS,1,4.96,snacks,N,N,Amex ending 1001,Weekly grocery — Whole Foods Market
+2025-12-03,Whole Foods Market,YOGURT 6PK,1,8.31,grub,N,N,Visa ending 4242,Weekly grocery — Whole Foods Market
+2025-12-03,Whole Foods Market,MILK,1,5.08,grub,N,N,Visa ending 4242,Weekly grocery — Whole Foods Market
+2025-12-03,Whole Foods Market,ICE CREAM,1,7.48,snacks,N,N,Amex ending 1001,Weekly grocery — Whole Foods Market
+2025-12-10,Trader Joes,PASTA,1,2.09,grub,N,N,Visa ending 4242,Weekly grocery — Trader Joes
+2025-12-10,Trader Joes,MILK,1,4.19,grub,N,N,Cash,Weekly grocery — Trader Joes
+2025-12-10,Trader Joes,CEREAL,1,5.2,grub,N,N,Amex ending 1001,Weekly grocery — Trader Joes
+2025-12-10,Trader Joes,ORANGE JUICE,1,4.38,drinks,N,N,Visa ending 4242,Weekly grocery — Trader Joes
+2025-12-10,Trader Joes,TOMATO SAUCE,1,2.53,grub,N,N,Cash,Weekly grocery — Trader Joes
+2025-12-10,Trader Joes,ICE CREAM,1,5.88,snacks,N,N,Cash,Weekly grocery — Trader Joes
+2025-12-19,Target,RICE 2LB,1,5.13,grub,N,N,Amex ending 1001,Weekly grocery — Target
+2025-12-19,Target,TOMATO SAUCE,1,2.72,grub,N,N,Visa ending 4242,Weekly grocery — Target
+2025-12-19,Target,GRANOLA BARS,1,6.19,snacks,N,N,Visa ending 4242,Weekly grocery — Target
+2025-12-19,Target,ORANGE JUICE,1,4.63,drinks,N,N,Cash,Weekly grocery — Target
+2025-12-19,Target,CEREAL,1,4.99,grub,N,N,Visa ending 4242,Weekly grocery — Target
+2025-12-19,Target,EGGS,1,4.59,grub,N,N,Cash,Weekly grocery — Target
+2025-12-19,Target,ICE CREAM,1,6,snacks,N,N,Cash,Weekly grocery — Target
+2025-12-19,Target,YOGURT 6PK,1,6.63,grub,N,N,Amex ending 1001,Weekly grocery — Target
+2025-12-25,Walmart,GROUND BEEF 1LB,1,6.59,grub,N,N,Amex ending 1001,Weekly grocery — Walmart
+2025-12-25,Walmart,PASTA,1,1.91,grub,N,N,Cash,Weekly grocery — Walmart
+2025-12-25,Walmart,YOGURT 6PK,1,5.82,grub,N,N,Cash,Weekly grocery — Walmart
+2025-12-25,Walmart,BREAD,1,3.33,grub,N,N,Cash,Weekly grocery — Walmart
+2025-12-25,Walmart,POPCORN,1,3.21,snacks,N,N,Cash,Weekly grocery — Walmart
+2025-12-25,Walmart,CEREAL,1,4.8,grub,N,N,Visa ending 4242,Weekly grocery — Walmart
+2025-12-25,Walmart,TOMATO SAUCE,1,2.33,grub,N,N,Visa ending 4242,Weekly grocery — Walmart
+2026-01-02,Costco Wholesale,GROUND BEEF 1LB,1,5.87,grub,N,N,Amex ending 1001,Weekly grocery — Costco Wholesale
+2026-01-02,Costco Wholesale,BANANAS,1,0.7,grub,N,N,Visa ending 4242,Weekly grocery — Costco Wholesale
+2026-01-02,Costco Wholesale,PASTA,1,1.73,grub,N,N,Visa ending 4242,Weekly grocery — Costco Wholesale
+2026-01-02,Costco Wholesale,CHIPS,1,3.27,snacks,N,N,Cash,Weekly grocery — Costco Wholesale
+2026-01-02,Costco Wholesale,EGGS,1,4,grub,N,N,Cash,Weekly grocery — Costco Wholesale
+2026-01-02,Costco Wholesale,POPCORN,1,3.11,snacks,N,N,Cash,Weekly grocery — Costco Wholesale
+2026-01-02,Costco Wholesale,BREAD,1,2.86,grub,N,N,Cash,Weekly grocery — Costco Wholesale
+2026-01-02,Costco Wholesale,COFFEE,1,9.77,drinks,N,N,Amex ending 1001,Weekly grocery — Costco Wholesale
+2026-01-08,Sprouts Farmers Market,TOMATO SAUCE,1,2.75,grub,N,N,Visa ending 4242,Weekly grocery — Sprouts Farmers Market
+2026-01-08,Sprouts Farmers Market,PASTA,1,2.14,grub,N,N,Cash,Weekly grocery — Sprouts Farmers Market
+2026-01-08,Sprouts Farmers Market,MILK,1,4.25,grub,N,N,Cash,Weekly grocery — Sprouts Farmers Market
+2026-01-08,Sprouts Farmers Market,YOGURT 6PK,1,6.9,grub,N,N,Visa ending 4242,Weekly grocery — Sprouts Farmers Market
+2026-01-08,Sprouts Farmers Market,POPCORN,1,4,snacks,N,N,Amex ending 1001,Weekly grocery — Sprouts Farmers Market
+2026-01-08,Sprouts Farmers Market,ORANGE JUICE,1,4.99,drinks,N,N,Visa ending 4242,Weekly grocery — Sprouts Farmers Market
+2026-01-08,Sprouts Farmers Market,CHICKEN BREAST,1,11,grub,N,N,Amex ending 1001,Weekly grocery — Sprouts Farmers Market
+2026-01-15,Aldi,BREAD,1,2.67,grub,N,N,Amex ending 1001,Weekly grocery — Aldi
+2026-01-15,Aldi,POPCORN,1,2.71,snacks,N,N,Cash,Weekly grocery — Aldi
+2026-01-15,Aldi,YOGURT 6PK,1,4.97,grub,N,N,Cash,Weekly grocery — Aldi
+2026-01-15,Aldi,TOMATO SAUCE,1,1.88,grub,N,N,Amex ending 1001,Weekly grocery — Aldi
+2026-01-15,Aldi,APPLES 3LB,1,3.76,grub,N,N,Visa ending 4242,Weekly grocery — Aldi
+2026-01-23,Whole Foods Market,CHIPS,1,5.03,snacks,N,N,Cash,Weekly grocery — Whole Foods Market
+2026-01-23,Whole Foods Market,APPLES 3LB,1,6.39,grub,N,N,Visa ending 4242,Weekly grocery — Whole Foods Market
+2026-01-23,Whole Foods Market,OLIVE OIL,1,11.18,grub,N,N,Amex ending 1001,Weekly grocery — Whole Foods Market
+2026-01-23,Whole Foods Market,MILK,1,5.01,grub,N,N,Amex ending 1001,Weekly grocery — Whole Foods Market
+2026-01-23,Whole Foods Market,EGGS,1,5.9,grub,N,N,Amex ending 1001,Weekly grocery — Whole Foods Market
+2026-01-30,Trader Joes,GROUND BEEF 1LB,1,6.96,grub,N,N,Visa ending 4242,Weekly grocery — Trader Joes
+2026-01-30,Trader Joes,EGGS,1,4.38,grub,N,N,Cash,Weekly grocery — Trader Joes
+2026-01-30,Trader Joes,YOGURT 6PK,1,6.73,grub,N,N,Cash,Weekly grocery — Trader Joes
+2026-01-30,Trader Joes,CHICKEN BREAST,1,10.35,grub,N,N,Cash,Weekly grocery — Trader Joes
+2026-01-30,Trader Joes,TOMATO SAUCE,1,2.55,grub,N,N,Amex ending 1001,Weekly grocery — Trader Joes
+2026-02-04,Target,ORANGE JUICE,1,4.85,drinks,N,N,Amex ending 1001,Weekly grocery — Target
+2026-02-04,Target,CEREAL,1,5.04,grub,N,N,Amex ending 1001,Weekly grocery — Target
+2026-02-04,Target,OLIVE OIL,1,9.6,grub,N,N,Visa ending 4242,Weekly grocery — Target
+2026-02-04,Target,APPLES 3LB,1,5.04,grub,N,N,Cash,Weekly grocery — Target
+2026-02-04,Target,BREAD,1,3.82,grub,N,N,Amex ending 1001,Weekly grocery — Target
+2026-02-13,Walmart,OLIVE OIL,1,8.27,grub,N,N,Cash,Weekly grocery — Walmart
+2026-02-13,Walmart,RICE 2LB,1,4.41,grub,N,N,Visa ending 4242,Weekly grocery — Walmart
+2026-02-13,Walmart,ORANGE JUICE,1,4.07,drinks,N,N,Cash,Weekly grocery — Walmart
+2026-02-13,Walmart,BANANAS,1,0.72,grub,N,N,Visa ending 4242,Weekly grocery — Walmart
+2026-02-13,Walmart,PASTA,1,1.87,grub,N,N,Visa ending 4242,Weekly grocery — Walmart
+2026-02-13,Walmart,COFFEE,1,10.53,drinks,N,N,Visa ending 4242,Weekly grocery — Walmart
+2026-02-20,Costco Wholesale,RICE 2LB,1,4.06,grub,N,N,Visa ending 4242,Weekly grocery — Costco Wholesale
+2026-02-20,Costco Wholesale,PASTA,1,1.73,grub,N,N,Amex ending 1001,Weekly grocery — Costco Wholesale
+2026-02-20,Costco Wholesale,CHIPS,1,3.38,snacks,N,N,Amex ending 1001,Weekly grocery — Costco Wholesale
+2026-02-20,Costco Wholesale,CHEESE BLOCK,1,4.87,grub,N,N,Amex ending 1001,Weekly grocery — Costco Wholesale
+2026-02-20,Costco Wholesale,GRANOLA BARS,1,5.09,snacks,N,N,Cash,Weekly grocery — Costco Wholesale
+2026-02-20,Costco Wholesale,COFFEE,1,9.69,drinks,N,N,Cash,Weekly grocery — Costco Wholesale
+2026-02-20,Costco Wholesale,APPLES 3LB,1,4.05,grub,N,N,Amex ending 1001,Weekly grocery — Costco Wholesale
+2026-02-26,Sprouts Farmers Market,COFFEE,1,12.49,drinks,N,N,Cash,Weekly grocery — Sprouts Farmers Market
+2026-02-26,Sprouts Farmers Market,PASTA,1,2.23,grub,N,N,Amex ending 1001,Weekly grocery — Sprouts Farmers Market
+2026-02-26,Sprouts Farmers Market,ICE CREAM,1,6.34,snacks,N,N,Amex ending 1001,Weekly grocery — Sprouts Farmers Market
+2026-02-26,Sprouts Farmers Market,BANANAS,1,0.9,grub,N,N,Amex ending 1001,Weekly grocery — Sprouts Farmers Market
+2026-02-26,Sprouts Farmers Market,BREAD,1,3.8,grub,N,N,Amex ending 1001,Weekly grocery — Sprouts Farmers Market
+2026-02-26,Sprouts Farmers Market,CEREAL,1,5.41,grub,N,N,Cash,Weekly grocery — Sprouts Farmers Market
+2026-02-26,Sprouts Farmers Market,CHEESE BLOCK,1,6.42,grub,N,N,Amex ending 1001,Weekly grocery — Sprouts Farmers Market
+2026-03-06,Aldi,RICE 2LB,1,3.8,grub,N,N,Cash,Weekly grocery — Aldi
+2026-03-06,Aldi,YOGURT 6PK,1,5.1,grub,N,N,Visa ending 4242,Weekly grocery — Aldi
+2026-03-06,Aldi,GRANOLA BARS,1,4.74,snacks,N,N,Amex ending 1001,Weekly grocery — Aldi
+2026-03-06,Aldi,CEREAL,1,3.85,grub,N,N,Cash,Weekly grocery — Aldi
+2026-03-06,Aldi,CHIPS,1,3.1,snacks,N,N,Cash,Weekly grocery — Aldi
+2026-03-06,Aldi,COFFEE,1,8.98,drinks,N,N,Amex ending 1001,Weekly grocery — Aldi
+2026-03-11,Whole Foods Market,PASTA,1,2.59,grub,N,N,Cash,Weekly grocery — Whole Foods Market
+2026-03-11,Whole Foods Market,GROUND BEEF 1LB,1,9.26,grub,N,N,Amex ending 1001,Weekly grocery — Whole Foods Market
+2026-03-11,Whole Foods Market,BREAD,1,4.33,grub,N,N,Visa ending 4242,Weekly grocery — Whole Foods Market
+2026-03-11,Whole Foods Market,ICE CREAM,1,7.53,snacks,N,N,Amex ending 1001,Weekly grocery — Whole Foods Market
+2026-03-11,Whole Foods Market,CHEESE BLOCK,1,7.96,grub,N,N,Amex ending 1001,Weekly grocery — Whole Foods Market
+2026-03-11,Whole Foods Market,CEREAL,1,6.14,grub,N,N,Visa ending 4242,Weekly grocery — Whole Foods Market
+2026-03-19,Trader Joes,PASTA,1,1.94,grub,N,N,Cash,Weekly grocery — Trader Joes
+2026-03-19,Trader Joes,MILK,1,4.26,grub,N,N,Amex ending 1001,Weekly grocery — Trader Joes
+2026-03-19,Trader Joes,GROUND BEEF 1LB,1,7.33,grub,N,N,Visa ending 4242,Weekly grocery — Trader Joes
+2026-03-19,Trader Joes,COFFEE,1,11.64,drinks,N,N,Amex ending 1001,Weekly grocery — Trader Joes
+2026-03-19,Trader Joes,CHIPS,1,3.9,snacks,N,N,Amex ending 1001,Weekly grocery — Trader Joes
+2026-03-19,Trader Joes,RICE 2LB,1,5.12,grub,N,N,Cash,Weekly grocery — Trader Joes
+2026-03-19,Trader Joes,APPLES 3LB,1,4.85,grub,N,N,Amex ending 1001,Weekly grocery — Trader Joes
+2026-03-26,Target,OLIVE OIL,1,9.56,grub,N,N,Visa ending 4242,Weekly grocery — Target
+2026-03-26,Target,BREAD,1,3.63,grub,N,N,Visa ending 4242,Weekly grocery — Target
+2026-03-26,Target,POPCORN,1,3.56,snacks,N,N,Visa ending 4242,Weekly grocery — Target
+2026-03-26,Target,TOMATO SAUCE,1,2.56,grub,N,N,Visa ending 4242,Weekly grocery — Target
+2026-03-26,Target,ORANGE JUICE,1,4.91,drinks,N,N,Visa ending 4242,Weekly grocery — Target
+2026-03-26,Target,COFFEE,1,12.61,drinks,N,N,Cash,Weekly grocery — Target
+2026-03-26,Target,RICE 2LB,1,5.39,grub,N,N,Visa ending 4242,Weekly grocery — Target
+2026-04-01,Walmart,RICE 2LB,1,4.65,grub,N,N,Cash,Weekly grocery — Walmart
+2026-04-01,Walmart,PASTA,1,1.91,grub,N,N,Cash,Weekly grocery — Walmart
+2026-04-01,Walmart,GRANOLA BARS,1,5.6,snacks,N,N,Visa ending 4242,Weekly grocery — Walmart
+2026-04-01,Walmart,COFFEE,1,10.79,drinks,N,N,Visa ending 4242,Weekly grocery — Walmart
+2026-04-01,Walmart,OLIVE OIL,1,8.04,grub,N,N,Amex ending 1001,Weekly grocery — Walmart
+2026-04-01,Walmart,BANANAS,1,0.7,grub,N,N,Cash,Weekly grocery — Walmart
+2026-04-01,Walmart,CEREAL,1,4.53,grub,N,N,Cash,Weekly grocery — Walmart
+2026-04-01,Walmart,CHEESE BLOCK,1,5.4,grub,N,N,Cash,Weekly grocery — Walmart
+2026-04-09,Costco Wholesale,CHEESE BLOCK,1,4.89,grub,N,N,Visa ending 4242,Weekly grocery — Costco Wholesale
+2026-04-09,Costco Wholesale,CEREAL,1,4.27,grub,N,N,Visa ending 4242,Weekly grocery — Costco Wholesale
+2026-04-09,Costco Wholesale,TOMATO SAUCE,1,2.04,grub,N,N,Cash,Weekly grocery — Costco Wholesale
+2026-04-09,Costco Wholesale,ORANGE JUICE,1,3.87,drinks,N,N,Visa ending 4242,Weekly grocery — Costco Wholesale
+2026-04-09,Costco Wholesale,BREAD,1,3.05,grub,N,N,Visa ending 4242,Weekly grocery — Costco Wholesale
+2026-04-17,Sprouts Farmers Market,CHIPS,1,4.33,snacks,N,N,Visa ending 4242,Weekly grocery — Sprouts Farmers Market
+2026-04-17,Sprouts Farmers Market,GRANOLA BARS,1,6.69,snacks,N,N,Visa ending 4242,Weekly grocery — Sprouts Farmers Market
+2026-04-17,Sprouts Farmers Market,RICE 2LB,1,5.35,grub,N,N,Amex ending 1001,Weekly grocery — Sprouts Farmers Market
+2026-04-17,Sprouts Farmers Market,CEREAL,1,5.28,grub,N,N,Cash,Weekly grocery — Sprouts Farmers Market
+2026-04-17,Sprouts Farmers Market,ICE CREAM,1,6.71,snacks,N,N,Visa ending 4242,Weekly grocery — Sprouts Farmers Market
+2026-04-17,Sprouts Farmers Market,OLIVE OIL,1,9.65,grub,N,N,Cash,Weekly grocery — Sprouts Farmers Market
+2026-04-24,Aldi,RICE 2LB,1,3.83,grub,N,N,Cash,Weekly grocery — Aldi
+2026-04-24,Aldi,PASTA,1,1.58,grub,N,N,Amex ending 1001,Weekly grocery — Aldi
+2026-04-24,Aldi,TOMATO SAUCE,1,1.96,grub,N,N,Cash,Weekly grocery — Aldi
+2026-04-24,Aldi,BREAD,1,2.76,grub,N,N,Amex ending 1001,Weekly grocery — Aldi
+2026-04-24,Aldi,BANANAS,1,0.59,grub,N,N,Cash,Weekly grocery — Aldi
+2026-04-24,Aldi,OLIVE OIL,1,7.23,grub,N,N,Amex ending 1001,Weekly grocery — Aldi
+2026-04-24,Aldi,CHEESE BLOCK,1,4.88,grub,N,N,Cash,Weekly grocery — Aldi
+2026-04-24,Aldi,GRANOLA BARS,1,4.53,snacks,N,N,Amex ending 1001,Weekly grocery — Aldi
+2026-04-29,Whole Foods Market,GROUND BEEF 1LB,1,9.12,grub,N,N,Cash,Weekly grocery — Whole Foods Market
+2026-04-29,Whole Foods Market,MILK,1,5.01,grub,N,N,Amex ending 1001,Weekly grocery — Whole Foods Market
+2026-04-29,Whole Foods Market,BREAD,1,4.43,grub,N,N,Cash,Weekly grocery — Whole Foods Market
+2026-04-29,Whole Foods Market,GRANOLA BARS,1,7.91,snacks,N,N,Cash,Weekly grocery — Whole Foods Market
+2026-04-29,Whole Foods Market,CEREAL,1,6.32,grub,N,N,Amex ending 1001,Weekly grocery — Whole Foods Market
+2026-04-29,Whole Foods Market,PASTA,1,2.55,grub,N,N,Cash,Weekly grocery — Whole Foods Market
+2026-04-29,Whole Foods Market,TOMATO SAUCE,1,3.15,grub,N,N,Amex ending 1001,Weekly grocery — Whole Foods Market
+2026-04-29,Whole Foods Market,BANANAS,1,1.01,grub,N,N,Amex ending 1001,Weekly grocery — Whole Foods Market
+2026-05-08,Trader Joes,MILK,1,3.96,grub,N,N,Amex ending 1001,Weekly grocery — Trader Joes
+2026-05-08,Trader Joes,ORANGE JUICE,1,4.52,drinks,N,N,Visa ending 4242,Weekly grocery — Trader Joes
+2026-05-08,Trader Joes,COFFEE,1,11.93,drinks,N,N,Visa ending 4242,Weekly grocery — Trader Joes
+2026-05-08,Trader Joes,APPLES 3LB,1,4.89,grub,N,N,Visa ending 4242,Weekly grocery — Trader Joes
+2026-05-08,Trader Joes,TOMATO SAUCE,1,2.52,grub,N,N,Visa ending 4242,Weekly grocery — Trader Joes
+2026-05-08,Trader Joes,POPCORN,1,3.59,snacks,N,N,Amex ending 1001,Weekly grocery — Trader Joes
+2026-05-14,Target,BANANAS,1,0.82,grub,N,N,Amex ending 1001,Weekly grocery — Target
+2026-05-14,Target,YOGURT 6PK,1,6.6,grub,N,N,Cash,Weekly grocery — Target
+2026-05-14,Target,COFFEE,1,12.35,drinks,N,N,Amex ending 1001,Weekly grocery — Target
+2026-05-14,Target,CHEESE BLOCK,1,6.16,grub,N,N,Visa ending 4242,Weekly grocery — Target
+2026-05-14,Target,ORANGE JUICE,1,4.8,drinks,N,N,Cash,Weekly grocery — Target
+2026-05-21,Walmart,MILK,1,3.84,grub,N,N,Amex ending 1001,Weekly grocery — Walmart
+2026-05-21,Walmart,CHIPS,1,3.61,snacks,N,N,Visa ending 4242,Weekly grocery — Walmart
+2026-05-21,Walmart,YOGURT 6PK,1,6.21,grub,N,N,Visa ending 4242,Weekly grocery — Walmart
+2026-05-21,Walmart,COFFEE,1,10.22,drinks,N,N,Cash,Weekly grocery — Walmart
+2026-05-21,Walmart,GROUND BEEF 1LB,1,6.16,grub,N,N,Visa ending 4242,Weekly grocery — Walmart
+2026-05-21,Walmart,BANANAS,1,0.71,grub,N,N,Cash,Weekly grocery — Walmart
+2026-05-21,Walmart,POPCORN,1,3.23,snacks,N,N,Cash,Weekly grocery — Walmart
+2026-05-21,Walmart,CHEESE BLOCK,1,5.63,grub,N,N,Amex ending 1001,Weekly grocery — Walmart
+2026-05-27,Costco Wholesale,CHICKEN BREAST,1,8.66,grub,N,N,Cash,Weekly grocery — Costco Wholesale
+2026-05-27,Costco Wholesale,BANANAS,1,0.7,grub,N,N,Cash,Weekly grocery — Costco Wholesale
+2026-05-27,Costco Wholesale,CHIPS,1,3.18,snacks,N,N,Visa ending 4242,Weekly grocery — Costco Wholesale
+2026-05-27,Costco Wholesale,CHEESE BLOCK,1,4.97,grub,N,N,Amex ending 1001,Weekly grocery — Costco Wholesale
+2026-05-27,Costco Wholesale,GRANOLA BARS,1,4.94,snacks,N,N,Cash,Weekly grocery — Costco Wholesale
+2026-05-27,Costco Wholesale,CEREAL,1,4.45,grub,N,N,Amex ending 1001,Weekly grocery — Costco Wholesale
+2026-05-27,Costco Wholesale,OLIVE OIL,1,7.68,grub,N,N,Visa ending 4242,Weekly grocery — Costco Wholesale
+2026-05-27,Costco Wholesale,TRASH BAGS 80CT,1,8.26,household,N,N,Visa ending 4242,Bi-weekly household
+2026-05-27,Costco Wholesale,BOUNTY SELECT-A-SIZE 6PK,1,15.16,household,N,N,Visa ending 4242,Bi-weekly household
+2026-05-27,Costco Wholesale,DISHWASHER PODS 80CT,1,12.32,household,N,N,Visa ending 4242,Bi-weekly household
+2026-05-14,Walmart,LAUNDRY DETERGENT,1,11.5,household,N,N,Visa ending 4242,Bi-weekly household
+2026-05-14,Walmart,TRASH BAGS 80CT,1,9.28,household,N,N,Visa ending 4242,Bi-weekly household
+2026-05-14,Walmart,DISHWASHER PODS 80CT,1,13.77,household,N,N,Visa ending 4242,Bi-weekly household
+2026-04-29,Target,LAUNDRY DETERGENT,1,13.56,household,N,N,Visa ending 4242,Bi-weekly household
+2026-04-29,Target,TOILET PAPER 24CT,1,20.9,household,N,N,Visa ending 4242,Bi-weekly household
+2026-04-29,Target,PAPER TOWELS 12 ROLL,1,23.53,household,N,N,Visa ending 4242,Bi-weekly household
+2026-04-16,Costco Wholesale,TRASH BAGS 80CT,1,8.51,household,N,N,Visa ending 4242,Bi-weekly household
+2026-04-16,Costco Wholesale,TOILET PAPER 24CT,1,16.1,household,N,N,Visa ending 4242,Bi-weekly household
+2026-04-16,Costco Wholesale,DAWN ULTRA ORIGINAL,1,4.06,household,N,N,Visa ending 4242,Bi-weekly household
+2026-04-16,Costco Wholesale,PAPER TOWELS 12 ROLL,1,20.2,household,N,N,Visa ending 4242,Bi-weekly household
+2026-03-31,Walmart,DAWN ULTRA ORIGINAL,1,4.19,household,N,N,Visa ending 4242,Bi-weekly household
+2026-03-31,Walmart,TOILET PAPER 24CT,1,16.8,household,N,N,Visa ending 4242,Bi-weekly household
+2026-03-31,Walmart,TIDE HE LIQUID 170 LOADS,1,24.13,household,N,N,Visa ending 4242,Bi-weekly household
+2026-03-31,Walmart,BOUNTY SELECT-A-SIZE 6PK,1,17.17,household,N,N,Visa ending 4242,Bi-weekly household
+2026-03-19,Target,TRASH BAGS 80CT,1,10.04,household,N,N,Visa ending 4242,Bi-weekly household
+2026-03-19,Target,BOUNTY SELECT-A-SIZE 6PK,1,19.47,household,N,N,Visa ending 4242,Bi-weekly household
+2026-03-06,Costco Wholesale,TRASH BAGS 80CT,1,8.64,household,N,N,Visa ending 4242,Bi-weekly household
+2026-03-06,Costco Wholesale,TIDE HE LIQUID 170 LOADS,1,21.73,household,N,N,Visa ending 4242,Bi-weekly household
+2026-02-20,Walmart,BOUNTY SELECT-A-SIZE 6PK,1,16.19,household,N,N,Visa ending 4242,Bi-weekly household
+2026-02-20,Walmart,DAWN ULTRA ORIGINAL,1,4.31,household,N,N,Visa ending 4242,Bi-weekly household
+2026-02-20,Walmart,TOILET PAPER 24CT,1,17.22,household,N,N,Visa ending 4242,Bi-weekly household
+2026-02-20,Walmart,DISHWASHER PODS 80CT,1,13.86,household,N,N,Visa ending 4242,Bi-weekly household
+2026-02-06,Target,DAWN ULTRA ORIGINAL,1,5.04,household,N,N,Visa ending 4242,Bi-weekly household
+2026-02-06,Target,BOUNTY SELECT-A-SIZE 6PK,1,19.48,household,N,N,Visa ending 4242,Bi-weekly household
+2026-02-06,Target,DISHWASHER PODS 80CT,1,15.11,household,N,N,Visa ending 4242,Bi-weekly household
+2026-01-20,Costco Wholesale,LAUNDRY DETERGENT,1,11.15,household,N,N,Visa ending 4242,Bi-weekly household
+2026-01-20,Costco Wholesale,TOILET PAPER 24CT,1,16.77,household,N,N,Visa ending 4242,Bi-weekly household
+2026-01-08,Walmart,DISHWASHER PODS 80CT,1,13.73,household,N,N,Visa ending 4242,Bi-weekly household
+2026-01-08,Walmart,LAUNDRY DETERGENT,1,11.64,household,N,N,Visa ending 4242,Bi-weekly household
+2026-01-08,Walmart,TIDE HE LIQUID 170 LOADS,1,22.98,household,N,N,Visa ending 4242,Bi-weekly household
+2026-01-08,Walmart,PAPER TOWELS 12 ROLL,1,22.03,household,N,N,Visa ending 4242,Bi-weekly household
+2025-12-26,Target,LAUNDRY DETERGENT,1,13.14,household,N,N,Visa ending 4242,Bi-weekly household
+2025-12-26,Target,BOUNTY SELECT-A-SIZE 6PK,1,18.9,household,N,N,Visa ending 4242,Bi-weekly household
+2025-12-11,Costco Wholesale,LAUNDRY DETERGENT,1,11.1,household,N,N,Visa ending 4242,Bi-weekly household
+2025-12-11,Costco Wholesale,BOUNTY SELECT-A-SIZE 6PK,1,15.69,household,N,N,Visa ending 4242,Bi-weekly household
+2025-12-11,Costco Wholesale,DISHWASHER PODS 80CT,1,12.25,household,N,N,Visa ending 4242,Bi-weekly household
+2025-12-11,Costco Wholesale,TIDE HE LIQUID 170 LOADS,1,20.84,household,N,N,Visa ending 4242,Bi-weekly household
+2025-11-25,Walmart,LAUNDRY DETERGENT,1,12.22,household,N,N,Visa ending 4242,Bi-weekly household
+2025-11-25,Walmart,DAWN ULTRA ORIGINAL,1,4.18,household,N,N,Visa ending 4242,Bi-weekly household
+2025-11-25,Walmart,TOILET PAPER 24CT,1,17.32,household,N,N,Visa ending 4242,Bi-weekly household
+2025-11-14,Target,PAPER TOWELS 12 ROLL,1,23.14,household,N,N,Visa ending 4242,Bi-weekly household
+2025-11-14,Target,TIDE HE LIQUID 170 LOADS,1,26.21,household,N,N,Visa ending 4242,Bi-weekly household
+2025-11-14,Target,TOILET PAPER 24CT,1,19.3,household,N,N,Visa ending 4242,Bi-weekly household
+2025-10-31,Costco Wholesale,PAPER TOWELS 12 ROLL,1,18.79,household,N,N,Visa ending 4242,Bi-weekly household
+2025-10-31,Costco Wholesale,TOILET PAPER 24CT,1,16.02,household,N,N,Visa ending 4242,Bi-weekly household
+2025-10-31,Costco Wholesale,TRASH BAGS 80CT,1,8.76,household,N,N,Visa ending 4242,Bi-weekly household
+2025-10-14,Walmart,BOUNTY SELECT-A-SIZE 6PK,1,16.81,household,N,N,Visa ending 4242,Bi-weekly household
+2025-10-14,Walmart,PAPER TOWELS 12 ROLL,1,21.3,household,N,N,Visa ending 4242,Bi-weekly household
+2025-09-30,Target,TRASH BAGS 80CT,1,10.3,household,N,N,Visa ending 4242,Bi-weekly household
+2025-09-30,Target,LAUNDRY DETERGENT,1,13.23,household,N,N,Visa ending 4242,Bi-weekly household
+2025-09-30,Target,TIDE HE LIQUID 170 LOADS,1,26.16,household,N,N,Visa ending 4242,Bi-weekly household
+2025-09-30,Target,DAWN ULTRA ORIGINAL,1,4.72,household,N,N,Visa ending 4242,Bi-weekly household
+2025-09-19,Costco Wholesale,TOILET PAPER 24CT,1,15.4,household,N,N,Visa ending 4242,Bi-weekly household
+2025-09-19,Costco Wholesale,DISHWASHER PODS 80CT,1,13.09,household,N,N,Visa ending 4242,Bi-weekly household
+2025-09-19,Costco Wholesale,DAWN ULTRA ORIGINAL,1,3.79,household,N,N,Visa ending 4242,Bi-weekly household
+2025-09-19,Costco Wholesale,TRASH BAGS 80CT,1,8.91,household,N,N,Visa ending 4242,Bi-weekly household
+2025-09-03,Walmart,LAUNDRY DETERGENT,1,11.41,household,N,N,Visa ending 4242,Bi-weekly household
+2025-09-03,Walmart,DAWN ULTRA ORIGINAL,1,4.22,household,N,N,Visa ending 4242,Bi-weekly household
+2025-09-03,Walmart,PAPER TOWELS 12 ROLL,1,21.26,household,N,N,Visa ending 4242,Bi-weekly household
+2025-08-19,Target,LAUNDRY DETERGENT,1,13.17,household,N,N,Visa ending 4242,Bi-weekly household
+2025-08-19,Target,DAWN ULTRA ORIGINAL,1,4.97,household,N,N,Visa ending 4242,Bi-weekly household
+2025-08-19,Target,TIDE HE LIQUID 170 LOADS,1,25.94,household,N,N,Visa ending 4242,Bi-weekly household
+2025-08-06,Costco Wholesale,DISHWASHER PODS 80CT,1,13.17,household,N,N,Visa ending 4242,Bi-weekly household
+2025-08-06,Costco Wholesale,LAUNDRY DETERGENT,1,11.41,household,N,N,Visa ending 4242,Bi-weekly household
+2025-08-06,Costco Wholesale,TOILET PAPER 24CT,1,15.42,household,N,N,Visa ending 4242,Bi-weekly household
+2025-08-06,Costco Wholesale,TIDE HE LIQUID 170 LOADS,1,21.4,household,N,N,Visa ending 4242,Bi-weekly household
+2025-07-22,Walmart,DISHWASHER PODS 80CT,1,13.99,household,N,N,Visa ending 4242,Bi-weekly household
+2025-07-22,Walmart,BOUNTY SELECT-A-SIZE 6PK,1,16.81,household,N,N,Visa ending 4242,Bi-weekly household
+2025-07-22,Walmart,PAPER TOWELS 12 ROLL,1,21.02,household,N,N,Visa ending 4242,Bi-weekly household
+2025-07-22,Walmart,TIDE HE LIQUID 170 LOADS,1,22.12,household,N,N,Visa ending 4242,Bi-weekly household
+2025-07-08,Target,TOILET PAPER 24CT,1,20.44,household,N,N,Visa ending 4242,Bi-weekly household
+2025-07-08,Target,TRASH BAGS 80CT,1,10.34,household,N,N,Visa ending 4242,Bi-weekly household
+2025-07-08,Target,BOUNTY SELECT-A-SIZE 6PK,1,18.83,household,N,N,Visa ending 4242,Bi-weekly household
+2025-06-27,Costco Wholesale,LAUNDRY DETERGENT,1,11.32,household,N,N,Visa ending 4242,Bi-weekly household
+2025-06-27,Costco Wholesale,TRASH BAGS 80CT,1,8.47,household,N,N,Visa ending 4242,Bi-weekly household
+2025-06-10,Walmart,TIDE HE LIQUID 170 LOADS,1,22.73,household,N,N,Visa ending 4242,Bi-weekly household
+2025-06-10,Walmart,TOILET PAPER 24CT,1,17.29,household,N,N,Visa ending 4242,Bi-weekly household
+2025-05-30,Target,DISHWASHER PODS 80CT,1,16.16,household,N,N,Visa ending 4242,Bi-weekly household
+2025-05-30,Target,TOILET PAPER 24CT,1,19.31,household,N,N,Visa ending 4242,Bi-weekly household
+2025-05-30,Target,BOUNTY SELECT-A-SIZE 6PK,1,18.98,household,N,N,Visa ending 4242,Bi-weekly household
+2025-05-30,Target,TIDE HE LIQUID 170 LOADS,1,26.74,household,N,N,Visa ending 4242,Bi-weekly household
+2025-05-16,Costco Wholesale,TIDE HE LIQUID 170 LOADS,1,21.86,household,N,N,Visa ending 4242,Bi-weekly household
+2025-05-16,Costco Wholesale,BOUNTY SELECT-A-SIZE 6PK,1,14.66,household,N,N,Visa ending 4242,Bi-weekly household
+2025-05-16,Costco Wholesale,TRASH BAGS 80CT,1,8.17,household,N,N,Visa ending 4242,Bi-weekly household
+2025-05-16,Costco Wholesale,LAUNDRY DETERGENT,1,10.55,household,N,N,Visa ending 4242,Bi-weekly household
+2025-05-01,Walmart,DISHWASHER PODS 80CT,1,13.87,household,N,N,Visa ending 4242,Bi-weekly household
+2025-05-01,Walmart,TRASH BAGS 80CT,1,9.29,household,N,N,Visa ending 4242,Bi-weekly household
+2025-05-01,Walmart,PAPER TOWELS 12 ROLL,1,21.7,household,N,N,Visa ending 4242,Bi-weekly household
+2025-04-15,Target,BOUNTY SELECT-A-SIZE 6PK,1,18.65,household,N,N,Visa ending 4242,Bi-weekly household
+2025-04-15,Target,TIDE HE LIQUID 170 LOADS,1,26.13,household,N,N,Visa ending 4242,Bi-weekly household
+2025-04-01,Costco Wholesale,DAWN ULTRA ORIGINAL,1,3.97,household,N,N,Visa ending 4242,Bi-weekly household
+2025-04-01,Costco Wholesale,PAPER TOWELS 12 ROLL,1,19.68,household,N,N,Visa ending 4242,Bi-weekly household
+2025-04-01,Costco Wholesale,TOILET PAPER 24CT,1,16.5,household,N,N,Visa ending 4242,Bi-weekly household
+2025-04-01,Costco Wholesale,TIDE HE LIQUID 170 LOADS,1,21.39,household,N,N,Visa ending 4242,Bi-weekly household
+2025-03-19,Walmart,BOUNTY SELECT-A-SIZE 6PK,1,16.62,household,N,N,Visa ending 4242,Bi-weekly household
+2025-03-19,Walmart,DAWN ULTRA ORIGINAL,1,4.26,household,N,N,Visa ending 4242,Bi-weekly household
+2025-03-19,Walmart,TIDE HE LIQUID 170 LOADS,1,22.64,household,N,N,Visa ending 4242,Bi-weekly household
+2025-03-19,Walmart,DISHWASHER PODS 80CT,1,14.15,household,N,N,Visa ending 4242,Bi-weekly household
+2025-03-06,Target,BOUNTY SELECT-A-SIZE 6PK,1,18.88,household,N,N,Visa ending 4242,Bi-weekly household
+2025-03-06,Target,LAUNDRY DETERGENT,1,14.03,household,N,N,Visa ending 4242,Bi-weekly household
+2025-03-06,Target,DISHWASHER PODS 80CT,1,15.29,household,N,N,Visa ending 4242,Bi-weekly household
+2025-02-18,Costco Wholesale,TIDE HE LIQUID 170 LOADS,1,21.43,household,N,N,Visa ending 4242,Bi-weekly household
+2025-02-18,Costco Wholesale,BOUNTY SELECT-A-SIZE 6PK,1,15.85,household,N,N,Visa ending 4242,Bi-weekly household
+2025-02-04,Walmart,TOILET PAPER 24CT,1,17.81,household,N,N,Visa ending 4242,Bi-weekly household
+2025-02-04,Walmart,PAPER TOWELS 12 ROLL,1,21.89,household,N,N,Visa ending 4242,Bi-weekly household
+2025-02-04,Walmart,BOUNTY SELECT-A-SIZE 6PK,1,15.81,household,N,N,Visa ending 4242,Bi-weekly household
+2025-01-24,Target,PAPER TOWELS 12 ROLL,1,23.34,household,N,N,Visa ending 4242,Bi-weekly household
+2025-01-24,Target,DISHWASHER PODS 80CT,1,15.96,household,N,N,Visa ending 4242,Bi-weekly household
+2025-01-24,Target,TOILET PAPER 24CT,1,20.64,household,N,N,Visa ending 4242,Bi-weekly household
+2025-01-10,Costco Wholesale,BOUNTY SELECT-A-SIZE 6PK,1,14.94,household,N,N,Visa ending 4242,Bi-weekly household
+2025-01-10,Costco Wholesale,DISHWASHER PODS 80CT,1,13.09,household,N,N,Visa ending 4242,Bi-weekly household
+2025-01-10,Costco Wholesale,PAPER TOWELS 12 ROLL,1,19.13,household,N,N,Visa ending 4242,Bi-weekly household
+2025-01-10,Costco Wholesale,TRASH BAGS 80CT,1,8.08,household,N,N,Visa ending 4242,Bi-weekly household
+2024-12-26,Walmart,LAUNDRY DETERGENT,1,11.62,household,N,N,Visa ending 4242,Bi-weekly household
+2024-12-26,Walmart,BOUNTY SELECT-A-SIZE 6PK,1,17.1,household,N,N,Visa ending 4242,Bi-weekly household
+2024-12-26,Walmart,TIDE HE LIQUID 170 LOADS,1,23.35,household,N,N,Visa ending 4242,Bi-weekly household
+2024-12-26,Walmart,TRASH BAGS 80CT,1,8.94,household,N,N,Visa ending 4242,Bi-weekly household
+2024-12-12,Target,DISHWASHER PODS 80CT,1,15.28,household,N,N,Visa ending 4242,Bi-weekly household
+2024-12-12,Target,PAPER TOWELS 12 ROLL,1,24.54,household,N,N,Visa ending 4242,Bi-weekly household
+2024-12-12,Target,LAUNDRY DETERGENT,1,13.03,household,N,N,Visa ending 4242,Bi-weekly household
+2024-12-12,Target,DAWN ULTRA ORIGINAL,1,4.66,household,N,N,Visa ending 4242,Bi-weekly household
+2024-11-26,Costco Wholesale,LAUNDRY DETERGENT,1,11.08,household,N,N,Visa ending 4242,Bi-weekly household
+2024-11-26,Costco Wholesale,TIDE HE LIQUID 170 LOADS,1,21.31,household,N,N,Visa ending 4242,Bi-weekly household
+2024-11-26,Costco Wholesale,TOILET PAPER 24CT,1,15.88,household,N,N,Visa ending 4242,Bi-weekly household
+2024-11-26,Costco Wholesale,TRASH BAGS 80CT,1,8.71,household,N,N,Visa ending 4242,Bi-weekly household
+2024-12-02,Netflix,Premium Plan,1,19.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2024-12-02,Spotify,Family Plan,1,16.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2024-12-02,NYTimes,Digital Subscription,1,17,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2024-12-02,Adobe,Creative Cloud All Apps,1,59.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2024-12-02,Hulu,No Ads,1,18.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2024-12-02,Disney+,Premium,1,13.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2024-12-02,Audible,Premium Plus,1,14.95,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2024-12-02,NYTimes Cooking,Recipe Box,1,5,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2024-12-02,iCloud,2TB Storage,1,9.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2024-12-02,Patreon,Creator pledge,1,8,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-01-05,Netflix,Premium Plan,1,19.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-01-05,Spotify,Family Plan,1,16.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-01-05,NYTimes,Digital Subscription,1,17,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-01-05,Adobe,Creative Cloud All Apps,1,59.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-01-05,Hulu,No Ads,1,18.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-01-05,Disney+,Premium,1,13.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-01-05,Audible,Premium Plus,1,14.95,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-01-05,NYTimes Cooking,Recipe Box,1,5,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-01-05,iCloud,2TB Storage,1,9.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-01-05,Patreon,Creator pledge,1,8,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-02-03,Netflix,Premium Plan,1,19.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-02-03,Spotify,Family Plan,1,16.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-02-03,NYTimes,Digital Subscription,1,17,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-02-03,Adobe,Creative Cloud All Apps,1,59.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-02-03,Hulu,No Ads,1,18.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-02-03,Disney+,Premium,1,13.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-02-03,Audible,Premium Plus,1,14.95,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-02-03,NYTimes Cooking,Recipe Box,1,5,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-02-03,iCloud,2TB Storage,1,9.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-02-03,Patreon,Creator pledge,1,8,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-03-02,Netflix,Premium Plan,1,19.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-03-02,Spotify,Family Plan,1,16.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-03-02,NYTimes,Digital Subscription,1,17,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-03-02,Adobe,Creative Cloud All Apps,1,59.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-03-02,Hulu,No Ads,1,18.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-03-02,Disney+,Premium,1,13.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-03-02,Audible,Premium Plus,1,14.95,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-03-02,NYTimes Cooking,Recipe Box,1,5,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-03-02,iCloud,2TB Storage,1,9.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-03-02,Patreon,Creator pledge,1,8,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-04-06,Netflix,Premium Plan,1,19.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-04-06,Spotify,Family Plan,1,16.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-04-06,NYTimes,Digital Subscription,1,17,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-04-06,Adobe,Creative Cloud All Apps,1,59.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-04-06,Hulu,No Ads,1,18.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-04-06,Disney+,Premium,1,13.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-04-06,Audible,Premium Plus,1,14.95,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-04-06,NYTimes Cooking,Recipe Box,1,5,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-04-06,iCloud,2TB Storage,1,9.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-04-06,Patreon,Creator pledge,1,8,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-05-02,Netflix,Premium Plan,1,19.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-05-02,Spotify,Family Plan,1,16.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-05-02,NYTimes,Digital Subscription,1,17,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-05-02,Adobe,Creative Cloud All Apps,1,59.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-05-02,Hulu,No Ads,1,18.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-05-02,Disney+,Premium,1,13.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-05-02,Audible,Premium Plus,1,14.95,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-05-02,NYTimes Cooking,Recipe Box,1,5,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-05-02,iCloud,2TB Storage,1,9.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-05-02,Patreon,Creator pledge,1,8,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-06-02,Netflix,Premium Plan,1,19.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-06-02,Spotify,Family Plan,1,16.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-06-02,NYTimes,Digital Subscription,1,17,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-06-02,Adobe,Creative Cloud All Apps,1,59.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-06-02,Hulu,No Ads,1,18.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-06-02,Disney+,Premium,1,13.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-06-02,Audible,Premium Plus,1,14.95,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-06-02,NYTimes Cooking,Recipe Box,1,5,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-06-02,iCloud,2TB Storage,1,9.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-06-02,Patreon,Creator pledge,1,8,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-07-02,Netflix,Premium Plan,1,19.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-07-02,Spotify,Family Plan,1,16.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-07-02,NYTimes,Digital Subscription,1,17,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-07-02,Adobe,Creative Cloud All Apps,1,59.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-07-02,Hulu,No Ads,1,18.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-07-02,Disney+,Premium,1,13.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-07-02,Audible,Premium Plus,1,14.95,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-07-02,NYTimes Cooking,Recipe Box,1,5,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-07-02,iCloud,2TB Storage,1,9.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-07-02,Patreon,Creator pledge,1,8,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-08-03,Netflix,Premium Plan,1,19.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-08-03,Spotify,Family Plan,1,16.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-08-03,NYTimes,Digital Subscription,1,17,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-08-03,Adobe,Creative Cloud All Apps,1,59.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-08-03,Hulu,No Ads,1,18.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-08-03,Disney+,Premium,1,13.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-08-03,Audible,Premium Plus,1,14.95,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-08-03,NYTimes Cooking,Recipe Box,1,5,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-08-03,iCloud,2TB Storage,1,9.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-08-03,Patreon,Creator pledge,1,8,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-09-01,Netflix,Premium Plan,1,19.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-09-01,Spotify,Family Plan,1,16.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-09-01,NYTimes,Digital Subscription,1,17,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-09-01,Adobe,Creative Cloud All Apps,1,59.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-09-01,Hulu,No Ads,1,18.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-09-01,Disney+,Premium,1,13.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-09-01,Audible,Premium Plus,1,14.95,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-09-01,NYTimes Cooking,Recipe Box,1,5,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-09-01,iCloud,2TB Storage,1,9.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-09-01,Patreon,Creator pledge,1,8,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-10-02,Netflix,Premium Plan,1,19.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-10-02,Spotify,Family Plan,1,16.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-10-02,NYTimes,Digital Subscription,1,17,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-10-02,Adobe,Creative Cloud All Apps,1,59.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-10-02,Hulu,No Ads,1,18.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-10-02,Disney+,Premium,1,13.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-10-02,Audible,Premium Plus,1,14.95,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-10-02,NYTimes Cooking,Recipe Box,1,5,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-10-02,iCloud,2TB Storage,1,9.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-10-02,Patreon,Creator pledge,1,8,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-11-02,Netflix,Premium Plan,1,19.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-11-02,Spotify,Family Plan,1,16.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-11-02,NYTimes,Digital Subscription,1,17,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-11-02,Adobe,Creative Cloud All Apps,1,59.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-11-02,Hulu,No Ads,1,18.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-11-02,Disney+,Premium,1,13.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-11-02,Audible,Premium Plus,1,14.95,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-11-02,NYTimes Cooking,Recipe Box,1,5,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-11-02,iCloud,2TB Storage,1,9.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-11-02,Patreon,Creator pledge,1,8,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-12-06,Netflix,Premium Plan,1,19.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-12-06,Spotify,Family Plan,1,16.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-12-06,NYTimes,Digital Subscription,1,17,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-12-06,Adobe,Creative Cloud All Apps,1,59.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-12-06,Hulu,No Ads,1,18.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-12-06,Disney+,Premium,1,13.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-12-06,Audible,Premium Plus,1,14.95,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-12-06,NYTimes Cooking,Recipe Box,1,5,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-12-06,iCloud,2TB Storage,1,9.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2025-12-06,Patreon,Creator pledge,1,8,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-01-03,Netflix,Premium Plan,1,22.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-01-03,Spotify,Family Plan,1,16.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-01-03,NYTimes,Digital Subscription,1,17,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-01-03,Adobe,Creative Cloud All Apps,1,59.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-01-03,Hulu,No Ads,1,18.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-01-03,Disney+,Premium,1,13.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-01-03,Audible,Premium Plus,1,14.95,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-01-03,NYTimes Cooking,Recipe Box,1,5,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-01-03,iCloud,2TB Storage,1,9.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-01-03,Patreon,Creator pledge,1,8,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-02-04,Netflix,Premium Plan,1,22.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-02-04,Spotify,Family Plan,1,16.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-02-04,NYTimes,Digital Subscription,1,17,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-02-04,Adobe,Creative Cloud All Apps,1,59.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-02-04,Hulu,No Ads,1,18.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-02-04,Disney+,Premium,1,13.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-02-04,Audible,Premium Plus,1,14.95,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-02-04,NYTimes Cooking,Recipe Box,1,5,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-02-04,iCloud,2TB Storage,1,9.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-02-04,Patreon,Creator pledge,1,8,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-03-05,Netflix,Premium Plan,1,22.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-03-05,Spotify,Family Plan,1,16.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-03-05,NYTimes,Digital Subscription,1,17,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-03-05,Adobe,Creative Cloud All Apps,1,59.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-03-05,Hulu,No Ads,1,18.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-03-05,Disney+,Premium,1,13.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-03-05,Audible,Premium Plus,1,14.95,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-03-05,NYTimes Cooking,Recipe Box,1,5,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-03-05,iCloud,2TB Storage,1,9.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-03-05,Patreon,Creator pledge,1,8,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-04-03,Netflix,Premium Plan,1,22.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-04-03,Spotify,Family Plan,1,16.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-04-03,NYTimes,Digital Subscription,1,17,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-04-03,Adobe,Creative Cloud All Apps,1,59.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-04-03,Hulu,No Ads,1,18.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-04-03,Disney+,Premium,1,13.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-04-03,Audible,Premium Plus,1,14.95,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-04-03,NYTimes Cooking,Recipe Box,1,5,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-04-03,iCloud,2TB Storage,1,9.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-04-03,Patreon,Creator pledge,1,8,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-05-05,Netflix,Premium Plan,1,22.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-05-05,Spotify,Family Plan,1,16.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-05-05,NYTimes,Digital Subscription,1,17,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-05-05,Adobe,Creative Cloud All Apps,1,59.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-05-05,Hulu,No Ads,1,18.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-05-05,Disney+,Premium,1,13.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-05-05,Audible,Premium Plus,1,14.95,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-05-05,NYTimes Cooking,Recipe Box,1,5,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-05-05,iCloud,2TB Storage,1,9.99,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2026-05-05,Patreon,Creator pledge,1,8,subscriptions,Y,N,Visa ending 4242,Monthly subscription
+2024-11-24,DoorDash,Order from Olive Garden,1,44.15,eats,N,N,Visa ending 4242,Restaurant visit 78.0
+2024-11-23,McDonalds,Big Mac Meal,1,13.44,eats,N,N,Cash,Restaurant visit 78.1
+2024-11-27,Olive Garden,Lunch for 2,1,47.12,eats,N,N,Visa ending 4242,Restaurant visit 78.2
+2024-12-05,Chick-fil-A,#1 Spicy Chicken Meal,1,12.11,eats,N,N,Amex ending 1001,Restaurant visit 77.0
+2024-12-02,McDonalds,Quarter Pounder Meal,1,12.93,eats,N,N,Amex ending 1001,Restaurant visit 77.1
+2024-12-06,DoorDash,Order from Olive Garden,1,41.1,eats,N,N,Amex ending 1001,Restaurant visit 77.2
+2024-12-12,DoorDash,Order from Olive Garden,1,44.49,eats,N,N,Cash,Restaurant visit 76.0
+2024-12-11,Chipotle,Steak Burrito,1,13.3,eats,N,N,Amex ending 1001,Restaurant visit 76.1
+2024-12-18,Starbucks,Venti Latte,1,6.5,eats,N,N,Cash,Restaurant visit 75.0
+2024-12-15,McDonalds,Big Mac Meal,1,13.24,eats,N,N,Cash,Restaurant visit 75.1
+2024-12-14,Olive Garden,Lunch for 2,1,47.84,eats,N,N,Visa ending 4242,Restaurant visit 75.2
+2024-12-23,DoorDash,Order from Sushi Roku,1,56.14,eats,N,N,Visa ending 4242,Restaurant visit 74.0
+2024-12-26,Olive Garden,Lunch for 2,1,46.61,eats,N,N,Visa ending 4242,Restaurant visit 74.1
+2024-12-31,Chipotle,Chicken Burrito Bowl,1,11.22,eats,N,N,Cash,Restaurant visit 73.0
+2025-01-03,Chipotle,Chicken Burrito Bowl,1,11.68,eats,N,N,Cash,Restaurant visit 73.1
+2024-12-29,Starbucks,Venti Latte,1,6.41,eats,N,N,Visa ending 4242,Restaurant visit 73.2
+2025-01-07,Starbucks,Pumpkin Spice Latte,1,7.39,eats,N,N,Cash,Restaurant visit 72.0
+2025-01-05,Olive Garden,Lunch for 2,1,47.37,eats,N,N,Cash,Restaurant visit 72.1
+2025-01-11,McDonalds,Quarter Pounder Meal,1,14.06,eats,N,N,Cash,Restaurant visit 71.0
+2025-01-14,Olive Garden,Lunch for 2,1,48.47,eats,N,N,Amex ending 1001,Restaurant visit 71.1
+2025-01-18,DoorDash,Order from Olive Garden,1,40.53,eats,N,N,Visa ending 4242,Restaurant visit 70.0
+2025-01-20,PF Changs,Dinner for 2,1,82.15,eats,N,N,Amex ending 1001,Restaurant visit 70.1
+2025-01-30,Olive Garden,Lunch for 2,1,47.13,eats,N,N,Amex ending 1001,Restaurant visit 69.0
+2025-01-29,DoorDash,Order from Sushi Roku,1,58.52,eats,N,N,Cash,Restaurant visit 69.1
+2025-02-07,Chipotle,Steak Burrito,1,12.45,eats,N,N,Visa ending 4242,Restaurant visit 68.0
+2025-02-04,Starbucks,Venti Latte,1,6.24,eats,N,N,Cash,Restaurant visit 68.1
+2025-02-11,Chick-fil-A,#1 Spicy Chicken Meal,1,11.37,eats,N,N,Amex ending 1001,Restaurant visit 67.0
+2025-02-11,Starbucks,Pumpkin Spice Latte,1,7.09,eats,N,N,Cash,Restaurant visit 67.1
+2025-02-16,DoorDash,Order from Olive Garden,1,40.82,eats,N,N,Cash,Restaurant visit 66.0
+2025-02-20,Olive Garden,Lunch for 2,1,47.82,eats,N,N,Visa ending 4242,Restaurant visit 66.1
+2025-02-28,McDonalds,Big Mac Meal,1,13.45,eats,N,N,Cash,Restaurant visit 65.0
+2025-02-22,DoorDash,Order from Sushi Roku,1,57.25,eats,N,N,Cash,Restaurant visit 65.1
+2025-03-07,Olive Garden,Lunch for 2,1,46.78,eats,N,N,Visa ending 4242,Restaurant visit 64.0
+2025-03-04,DoorDash,Order from Olive Garden,1,40.82,eats,N,N,Cash,Restaurant visit 64.1
+2025-03-10,McDonalds,Big Mac Meal,1,12.86,eats,N,N,Visa ending 4242,Restaurant visit 63.0
+2025-03-08,Starbucks,Pumpkin Spice Latte,1,6.99,eats,N,N,Amex ending 1001,Restaurant visit 63.1
+2025-03-20,Starbucks,Pumpkin Spice Latte,1,7.55,eats,N,N,Amex ending 1001,Restaurant visit 62.0
+2025-03-16,Starbucks,Venti Latte,1,6.61,eats,N,N,Amex ending 1001,Restaurant visit 62.1
+2025-03-22,PF Changs,Dinner for 2,1,76.69,eats,N,N,Visa ending 4242,Restaurant visit 61.0
+2025-03-22,Chipotle,Chicken Burrito Bowl,1,11.22,eats,N,N,Cash,Restaurant visit 61.1
+2025-04-01,Olive Garden,Lunch for 2,1,47.47,eats,N,N,Visa ending 4242,Restaurant visit 60.0
+2025-04-04,DoorDash,Order from Sushi Roku,1,57.1,eats,N,N,Amex ending 1001,Restaurant visit 60.1
+2025-03-29,McDonalds,Big Mac Meal,1,12.42,eats,N,N,Amex ending 1001,Restaurant visit 60.2
+2025-04-07,Chipotle,Steak Burrito,1,12.41,eats,N,N,Amex ending 1001,Restaurant visit 59.0
+2025-04-09,Uber Eats,Order from Wendys,1,19.31,eats,N,N,Cash,Restaurant visit 59.1
+2025-04-08,DoorDash,Order from Olive Garden,1,43.42,eats,N,N,Visa ending 4242,Restaurant visit 59.2
+2025-04-13,McDonalds,Big Mac Meal,1,12.56,eats,N,N,Cash,Restaurant visit 58.0
+2025-04-12,Uber Eats,Order from Wendys,1,18.01,eats,N,N,Visa ending 4242,Restaurant visit 58.1
+2025-04-23,DoorDash,Order from Sushi Roku,1,59,eats,N,N,Visa ending 4242,Restaurant visit 57.0
+2025-04-21,Starbucks,Venti Latte,1,6.51,eats,N,N,Visa ending 4242,Restaurant visit 57.1
+2025-04-22,DoorDash,Order from Olive Garden,1,40.46,eats,N,N,Cash,Restaurant visit 57.2
+2025-05-02,Chipotle,Steak Burrito,1,13.42,eats,N,N,Cash,Restaurant visit 56.0
+2025-04-30,Chick-fil-A,#1 Spicy Chicken Meal,1,11.37,eats,N,N,Amex ending 1001,Restaurant visit 56.1
+2025-05-08,DoorDash,Order from Olive Garden,1,40.64,eats,N,N,Cash,Restaurant visit 55.0
+2025-05-06,Olive Garden,Lunch for 2,1,48.65,eats,N,N,Cash,Restaurant visit 55.1
+2025-05-16,Chipotle,Chicken Burrito Bowl,1,11.99,eats,N,N,Amex ending 1001,Restaurant visit 54.0
+2025-05-16,Chipotle,Steak Burrito,1,12.84,eats,N,N,Visa ending 4242,Restaurant visit 54.1
+2025-05-14,PF Changs,Dinner for 2,1,81.96,eats,N,N,Visa ending 4242,Restaurant visit 54.2
+2025-05-18,McDonalds,Big Mac Meal,1,13.51,eats,N,N,Cash,Restaurant visit 53.0
+2025-05-22,DoorDash,Order from Olive Garden,1,40.92,eats,N,N,Cash,Restaurant visit 53.1
+2025-05-23,Uber Eats,Order from Wendys,1,17.57,eats,N,N,Cash,Restaurant visit 53.2
+2025-05-30,McDonalds,Big Mac Meal,1,13.38,eats,N,N,Visa ending 4242,Restaurant visit 52.0
+2025-05-28,Chipotle,Chicken Burrito Bowl,1,11.07,eats,N,N,Cash,Restaurant visit 52.1
+2025-05-28,Starbucks,Venti Latte,1,6.56,eats,N,N,Visa ending 4242,Restaurant visit 52.2
+2025-06-02,Chipotle,Chicken Burrito Bowl,1,11.03,eats,N,N,Visa ending 4242,Restaurant visit 51.0
+2025-05-31,DoorDash,Order from Olive Garden,1,42.87,eats,N,N,Cash,Restaurant visit 51.1
+2025-06-12,McDonalds,Quarter Pounder Meal,1,13.52,eats,N,N,Amex ending 1001,Restaurant visit 50.0
+2025-06-12,Chipotle,Chicken Burrito Bowl,1,11.43,eats,N,N,Visa ending 4242,Restaurant visit 50.1
+2025-06-14,McDonalds,Big Mac Meal,1,12.99,eats,N,N,Cash,Restaurant visit 49.0
+2025-06-20,McDonalds,Big Mac Meal,1,12.51,eats,N,N,Visa ending 4242,Restaurant visit 49.1
+2025-06-15,Starbucks,Pumpkin Spice Latte,1,7.12,eats,N,N,Cash,Restaurant visit 49.2
+2025-06-26,Chipotle,Chicken Burrito Bowl,1,11.92,eats,N,N,Cash,Restaurant visit 48.0
+2025-06-21,Starbucks,Pumpkin Spice Latte,1,6.94,eats,N,N,Amex ending 1001,Restaurant visit 48.1
+2025-06-28,DoorDash,Order from Sushi Roku,1,54.14,eats,N,N,Amex ending 1001,Restaurant visit 47.0
+2025-07-04,McDonalds,Big Mac Meal,1,13.43,eats,N,N,Cash,Restaurant visit 47.1
+2025-07-05,DoorDash,Order from Sushi Roku,1,55.56,eats,N,N,Amex ending 1001,Restaurant visit 46.0
+2025-07-11,Chipotle,Chicken Burrito Bowl,1,11.02,eats,N,N,Visa ending 4242,Restaurant visit 46.1
+2025-07-15,PF Changs,Dinner for 2,1,75.69,eats,N,N,Cash,Restaurant visit 45.0
+2025-07-15,McDonalds,Quarter Pounder Meal,1,12.98,eats,N,N,Cash,Restaurant visit 45.1
+2025-07-24,Starbucks,Venti Latte,1,6.4,eats,N,N,Amex ending 1001,Restaurant visit 44.0
+2025-07-19,Chick-fil-A,#1 Spicy Chicken Meal,1,12.11,eats,N,N,Cash,Restaurant visit 44.1
+2025-07-23,McDonalds,Big Mac Meal,1,12.72,eats,N,N,Cash,Restaurant visit 44.2
+2025-07-30,Starbucks,Venti Latte,1,6.25,eats,N,N,Visa ending 4242,Restaurant visit 43.0
+2025-07-31,DoorDash,Order from Sushi Roku,1,54.33,eats,N,N,Amex ending 1001,Restaurant visit 43.1
+2025-08-03,DoorDash,Order from Sushi Roku,1,54.57,eats,N,N,Amex ending 1001,Restaurant visit 42.0
+2025-08-07,Starbucks,Venti Latte,1,6.74,eats,N,N,Visa ending 4242,Restaurant visit 42.1
+2025-08-15,DoorDash,Order from Olive Garden,1,41.43,eats,N,N,Amex ending 1001,Restaurant visit 41.0
+2025-08-12,Starbucks,Pumpkin Spice Latte,1,7.11,eats,N,N,Amex ending 1001,Restaurant visit 41.1
+2025-08-09,McDonalds,Quarter Pounder Meal,1,12.91,eats,N,N,Visa ending 4242,Restaurant visit 41.2
+2025-08-18,McDonalds,Quarter Pounder Meal,1,13.96,eats,N,N,Visa ending 4242,Restaurant visit 40.0
+2025-08-18,Chick-fil-A,#1 Spicy Chicken Meal,1,11.52,eats,N,N,Amex ending 1001,Restaurant visit 40.1
+2025-08-29,Starbucks,Venti Latte,1,6.28,eats,N,N,Amex ending 1001,Restaurant visit 39.0
+2025-08-27,Olive Garden,Lunch for 2,1,47.12,eats,N,N,Cash,Restaurant visit 39.1
+2025-08-23,Chipotle,Chicken Burrito Bowl,1,11.21,eats,N,N,Cash,Restaurant visit 39.2
+2025-09-02,McDonalds,Quarter Pounder Meal,1,13.99,eats,N,N,Visa ending 4242,Restaurant visit 38.0
+2025-09-01,McDonalds,Quarter Pounder Meal,1,13.57,eats,N,N,Cash,Restaurant visit 38.1
+2025-09-10,Starbucks,Pumpkin Spice Latte,1,7.06,eats,N,N,Amex ending 1001,Restaurant visit 37.0
+2025-09-11,PF Changs,Dinner for 2,1,79.76,eats,N,N,Cash,Restaurant visit 37.1
+2025-09-11,DoorDash,Order from Olive Garden,1,43.95,eats,N,N,Visa ending 4242,Restaurant visit 37.2
+2025-09-15,PF Changs,Dinner for 2,1,74.6,eats,N,N,Visa ending 4242,Restaurant visit 36.0
+2025-09-14,PF Changs,Dinner for 2,1,75.35,eats,N,N,Cash,Restaurant visit 36.1
+2025-09-17,Chipotle,Steak Burrito,1,13.56,eats,N,N,Cash,Restaurant visit 36.2
+2025-09-26,McDonalds,Big Mac Meal,1,12.91,eats,N,N,Amex ending 1001,Restaurant visit 35.0
+2025-09-22,Olive Garden,Lunch for 2,1,48.16,eats,N,N,Amex ending 1001,Restaurant visit 35.1
+2025-09-20,Starbucks,Pumpkin Spice Latte,1,7.15,eats,N,N,Amex ending 1001,Restaurant visit 35.2
+2025-10-03,Olive Garden,Lunch for 2,1,47.07,eats,N,N,Amex ending 1001,Restaurant visit 34.0
+2025-09-28,DoorDash,Order from Olive Garden,1,43.12,eats,N,N,Visa ending 4242,Restaurant visit 34.1
+2025-10-06,Chipotle,Steak Burrito,1,13.59,eats,N,N,Amex ending 1001,Restaurant visit 33.0
+2025-10-09,McDonalds,Big Mac Meal,1,12.97,eats,N,N,Visa ending 4242,Restaurant visit 33.1
+2025-10-06,Starbucks,Pumpkin Spice Latte,1,7.52,eats,N,N,Amex ending 1001,Restaurant visit 33.2
+2025-10-13,Olive Garden,Lunch for 2,1,46.66,eats,N,N,Cash,Restaurant visit 32.0
+2025-10-17,McDonalds,Big Mac Meal,1,12.86,eats,N,N,Visa ending 4242,Restaurant visit 32.1
+2025-10-18,Starbucks,Venti Latte,1,6.37,eats,N,N,Amex ending 1001,Restaurant visit 31.0
+2025-10-22,DoorDash,Order from Sushi Roku,1,56.69,eats,N,N,Visa ending 4242,Restaurant visit 31.1
+2025-10-20,Chipotle,Steak Burrito,1,12.72,eats,N,N,Amex ending 1001,Restaurant visit 31.2
+2025-10-28,Starbucks,Pumpkin Spice Latte,1,7.19,eats,N,N,Visa ending 4242,Restaurant visit 30.0
+2025-10-31,Starbucks,Venti Latte,1,6.51,eats,N,N,Visa ending 4242,Restaurant visit 30.1
+2025-11-01,McDonalds,Big Mac Meal,1,13.63,eats,N,N,Cash,Restaurant visit 29.0
+2025-11-07,PF Changs,Dinner for 2,1,74.6,eats,N,N,Visa ending 4242,Restaurant visit 29.1
+2025-11-01,Starbucks,Pumpkin Spice Latte,1,7.41,eats,N,N,Cash,Restaurant visit 29.2
+2025-11-12,DoorDash,Order from Olive Garden,1,43.72,eats,N,N,Visa ending 4242,Restaurant visit 28.0
+2025-11-14,Uber Eats,Order from Wendys,1,19.17,eats,N,N,Amex ending 1001,Restaurant visit 28.1
+2025-11-19,McDonalds,Big Mac Meal,1,12.56,eats,N,N,Cash,Restaurant visit 27.0
+2025-11-21,DoorDash,Order from Sushi Roku,1,53.52,eats,N,N,Cash,Restaurant visit 27.1
+2025-11-23,DoorDash,Order from Olive Garden,1,40.91,eats,N,N,Cash,Restaurant visit 26.0
+2025-11-22,Chipotle,Steak Burrito,1,13.41,eats,N,N,Cash,Restaurant visit 26.1
+2025-11-22,Starbucks,Venti Latte,1,6.36,eats,N,N,Amex ending 1001,Restaurant visit 26.2
+2025-12-01,McDonalds,Big Mac Meal,1,12.64,eats,N,N,Cash,Restaurant visit 25.0
+2025-12-04,Chipotle,Steak Burrito,1,13.44,eats,N,N,Cash,Restaurant visit 25.1
+2025-12-01,Chick-fil-A,#1 Spicy Chicken Meal,1,12.39,eats,N,N,Visa ending 4242,Restaurant visit 25.2
+2025-12-09,DoorDash,Order from Sushi Roku,1,56.85,eats,N,N,Amex ending 1001,Restaurant visit 24.0
+2025-12-10,Chick-fil-A,#1 Spicy Chicken Meal,1,12.01,eats,N,N,Visa ending 4242,Restaurant visit 24.1
+2025-12-10,Chipotle,Steak Burrito,1,12.64,eats,N,N,Amex ending 1001,Restaurant visit 24.2
+2025-12-16,DoorDash,Order from Olive Garden,1,41.9,eats,N,N,Visa ending 4242,Restaurant visit 23.0
+2025-12-15,Starbucks,Venti Latte,1,6.63,eats,N,N,Visa ending 4242,Restaurant visit 23.1
+2025-12-26,Olive Garden,Lunch for 2,1,47.27,eats,N,N,Visa ending 4242,Restaurant visit 22.0
+2025-12-21,Uber Eats,Order from Wendys,1,19.03,eats,N,N,Visa ending 4242,Restaurant visit 22.1
+2025-12-26,Chipotle,Steak Burrito,1,12.54,eats,N,N,Visa ending 4242,Restaurant visit 22.2
+2026-01-01,Chipotle,Chicken Burrito Bowl,1,12,eats,N,N,Amex ending 1001,Restaurant visit 21.0
+2025-12-30,Uber Eats,Order from Wendys,1,18.51,eats,N,N,Amex ending 1001,Restaurant visit 21.1
+2025-12-30,DoorDash,Order from Olive Garden,1,42.05,eats,N,N,Visa ending 4242,Restaurant visit 21.2
+2026-01-05,Olive Garden,Lunch for 2,1,46.4,eats,N,N,Amex ending 1001,Restaurant visit 20.0
+2026-01-09,Olive Garden,Lunch for 2,1,50.37,eats,N,N,Amex ending 1001,Restaurant visit 20.1
+2026-01-08,Chipotle,Chicken Burrito Bowl,1,11.02,eats,N,N,Amex ending 1001,Restaurant visit 20.2
+2026-01-14,Uber Eats,Order from Wendys,1,17.91,eats,N,N,Amex ending 1001,Restaurant visit 19.0
+2026-01-12,PF Changs,Dinner for 2,1,79.78,eats,N,N,Amex ending 1001,Restaurant visit 19.1
+2026-01-15,Starbucks,Pumpkin Spice Latte,1,6.9,eats,N,N,Cash,Restaurant visit 19.2
+2026-01-20,Olive Garden,Lunch for 2,1,48.22,eats,N,N,Cash,Restaurant visit 18.0
+2026-01-17,Chipotle,Steak Burrito,1,13.49,eats,N,N,Cash,Restaurant visit 18.1
+2026-01-30,DoorDash,Order from Sushi Roku,1,54.18,eats,N,N,Amex ending 1001,Restaurant visit 17.0
+2026-01-27,McDonalds,Quarter Pounder Meal,1,13.43,eats,N,N,Cash,Restaurant visit 17.1
+2026-02-04,McDonalds,Quarter Pounder Meal,1,13.91,eats,N,N,Amex ending 1001,Restaurant visit 16.0
+2026-02-05,Chipotle,Chicken Burrito Bowl,1,11.05,eats,N,N,Visa ending 4242,Restaurant visit 16.1
+2026-01-31,Olive Garden,Lunch for 2,1,45.9,eats,N,N,Cash,Restaurant visit 16.2
+2026-02-09,DoorDash,Order from Olive Garden,1,43.63,eats,N,N,Cash,Restaurant visit 15.0
+2026-02-12,PF Changs,Dinner for 2,1,79.88,eats,N,N,Cash,Restaurant visit 15.1
+2026-02-11,DoorDash,Order from Olive Garden,1,42.04,eats,N,N,Visa ending 4242,Restaurant visit 15.2
+2026-02-19,DoorDash,Order from Olive Garden,1,40.77,eats,N,N,Amex ending 1001,Restaurant visit 14.0
+2026-02-15,Starbucks,Pumpkin Spice Latte,1,7,eats,N,N,Cash,Restaurant visit 14.1
+2026-02-26,Olive Garden,Lunch for 2,1,45.93,eats,N,N,Cash,Restaurant visit 13.0
+2026-02-23,Chipotle,Chicken Burrito Bowl,1,10.97,eats,N,N,Cash,Restaurant visit 13.1
+2026-02-24,DoorDash,Order from Sushi Roku,1,54.52,eats,N,N,Visa ending 4242,Restaurant visit 13.2
+2026-03-04,Starbucks,Venti Latte,1,6.7,eats,N,N,Amex ending 1001,Restaurant visit 12.0
+2026-03-01,Olive Garden,Lunch for 2,1,49.06,eats,N,N,Amex ending 1001,Restaurant visit 12.1
+2026-03-09,DoorDash,Order from Olive Garden,1,44.36,eats,N,N,Visa ending 4242,Restaurant visit 11.0
+2026-03-12,DoorDash,Order from Sushi Roku,1,53.75,eats,N,N,Cash,Restaurant visit 11.1
+2026-03-11,PF Changs,Dinner for 2,1,75.94,eats,N,N,Visa ending 4242,Restaurant visit 11.2
+2026-03-17,Chipotle,Steak Burrito,1,12.99,eats,N,N,Amex ending 1001,Restaurant visit 10.0
+2026-03-15,Starbucks,Venti Latte,1,6.21,eats,N,N,Visa ending 4242,Restaurant visit 10.1
+2026-03-19,Chipotle,Steak Burrito,1,12.65,eats,N,N,Cash,Restaurant visit 10.2
+2026-03-22,Chipotle,Chicken Burrito Bowl,1,11.77,eats,N,N,Visa ending 4242,Restaurant visit 9.0
+2026-03-22,Chick-fil-A,#1 Spicy Chicken Meal,1,11.49,eats,N,N,Amex ending 1001,Restaurant visit 9.1
+2026-03-29,Chipotle,Chicken Burrito Bowl,1,11.36,eats,N,N,Cash,Restaurant visit 8.0
+2026-04-03,McDonalds,Big Mac Meal,1,13.59,eats,N,N,Visa ending 4242,Restaurant visit 8.1
+2026-04-05,DoorDash,Order from Sushi Roku,1,55.14,eats,N,N,Cash,Restaurant visit 7.0
+2026-04-07,Olive Garden,Lunch for 2,1,48.66,eats,N,N,Amex ending 1001,Restaurant visit 7.1
+2026-04-09,DoorDash,Order from Olive Garden,1,42.13,eats,N,N,Amex ending 1001,Restaurant visit 7.2
+2026-04-12,PF Changs,Dinner for 2,1,75.88,eats,N,N,Visa ending 4242,Restaurant visit 6.0
+2026-04-11,Chipotle,Chicken Burrito Bowl,1,11.3,eats,N,N,Amex ending 1001,Restaurant visit 6.1

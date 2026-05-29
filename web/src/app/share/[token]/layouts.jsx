@@ -5,7 +5,7 @@
 // usual lucide icons / Link / interactivity without polluting the
 // metadata generator.
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { MapPin, Star, Play, ShoppingCart, BadgeDollarSign } from 'lucide-react'
 import { logoUrlForStore } from '../../../lib/store-logo'
@@ -195,41 +195,92 @@ function RatingWizardChip({ rating, item }) {
 
 // Big "Watch how GetGuac works" teaser block — mirrors the homepage
 // hero card design (lime play-badge, auto-narrated chip, topic
-// chips). Links to /how-it-works where the full 13-slide narrated
-// presentation lives.
+// chips). On click, opens an inline fullscreen modal that iframes
+// /how-it-works so the recipient watches the presentation without
+// leaving the share landing. ESC + the close button both dismiss.
 function WatchTeaserCard() {
+  const [open, setOpen] = useState(false)
+
+  // ESC closes the modal — purely an a11y nicety so the iframe
+  // doesn't trap focus when the visitor wants to bail.
+  useEffect(() => {
+    if (!open) return
+    function onKey(e) { if (e.key === 'Escape') setOpen(false) }
+    document.addEventListener('keydown', onKey)
+    // Lock body scroll so the iframe drives motion, not the page.
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prevOverflow
+    }
+  }, [open])
+
   return (
-    <Link
-      href="/how-it-works"
-      className="group block mt-10 rounded-3xl bg-gradient-to-br from-emerald-700 via-emerald-600 to-lime-600 p-1 shadow-xl hover:shadow-2xl hover:scale-[1.005] transition-all"
-    >
-      <div className="rounded-[1.4rem] bg-white/5 backdrop-blur-sm p-6 sm:p-8 flex items-center gap-5 flex-wrap">
-        <div className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-lime-400 text-emerald-900 flex items-center justify-center shadow-lg group-hover:scale-105 transition">
-          <Play size={28} className="ml-1 fill-emerald-900" />
-        </div>
-        <div className="flex-1 min-w-[220px]">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/20 text-white text-[10px] font-bold uppercase tracking-wider">
-            Auto-narrated · 13 slides · ~7 min
-          </span>
-          <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white mt-2 leading-tight">
-            Watch how GetGuac works
-          </h2>
-          <p className="text-emerald-50/90 mt-1.5 max-w-2xl text-xs sm:text-sm">
-            Capture → parse → dedup → categorize → score → coach. The whole flow under eight minutes.
-          </p>
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {['Email inbox', 'Returns', 'GuacWizard', 'Car Miles', 'Security', 'Privacy'].map(t => (
-              <span key={t} className="px-2 py-0.5 rounded-full bg-white/15 text-white text-[10px] font-semibold">
-                {t}
-              </span>
-            ))}
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="group block w-full mt-10 rounded-3xl bg-gradient-to-br from-emerald-700 via-emerald-600 to-lime-600 p-1 shadow-xl hover:shadow-2xl hover:scale-[1.005] transition-all text-left"
+      >
+        <div className="rounded-[1.4rem] bg-white/5 backdrop-blur-sm p-6 sm:p-8 flex items-center gap-5 flex-wrap">
+          <div className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-lime-400 text-emerald-900 flex items-center justify-center shadow-lg group-hover:scale-105 transition">
+            <Play size={28} className="ml-1 fill-emerald-900" />
+          </div>
+          <div className="flex-1 min-w-[220px]">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/20 text-white text-[10px] font-bold uppercase tracking-wider">
+              Auto-narrated · 13 slides · ~7 min
+            </span>
+            <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white mt-2 leading-tight">
+              Watch how GetGuac works
+            </h2>
+            <p className="text-emerald-50/90 mt-1.5 max-w-2xl text-xs sm:text-sm">
+              Capture → parse → dedup → categorize → score → coach. The whole flow under eight minutes.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {['Email inbox', 'Returns', 'GuacWizard', 'Car Miles', 'Security', 'Privacy'].map(t => (
+                <span key={t} className="px-2 py-0.5 rounded-full bg-white/15 text-white text-[10px] font-semibold">
+                  {t}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div className="hidden sm:flex items-center text-white/80 group-hover:text-white group-hover:translate-x-1 transition text-sm font-bold">
+            Play →
           </div>
         </div>
-        <div className="hidden sm:flex items-center text-white/80 group-hover:text-white group-hover:translate-x-1 transition text-sm font-bold">
-          Play →
+      </button>
+      {open && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/85 backdrop-blur-sm flex items-stretch justify-center p-2 sm:p-6"
+          onClick={() => setOpen(false)}
+        >
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            className="absolute top-3 right-3 z-10 w-10 h-10 rounded-full bg-white/15 hover:bg-white/30 text-white text-2xl font-bold flex items-center justify-center backdrop-blur transition-colors"
+            aria-label="Close walkthrough"
+          >
+            ×
+          </button>
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* iframe to /how-it-works — that page is already a
+                self-contained, auto-scrolling, narrated presentation
+                with its own play / pause / skip / mute controls. We
+                don't have to rebuild anything; we just embed it. */}
+            <iframe
+              src="/how-it-works"
+              title="How GetGuac works"
+              className="w-full h-full min-h-[80vh] border-0"
+              allow="autoplay; fullscreen"
+            />
+          </div>
         </div>
-      </div>
-    </Link>
+      )}
+    </>
   )
 }
 

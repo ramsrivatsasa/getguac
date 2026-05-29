@@ -154,9 +154,9 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
             <h1 className="page-title">Good day, {firstName} 👋</h1>
             <p className="text-sm text-gray-500 mt-0.5">Here's your financial snapshot</p>
           </div>
-          {/* GuacScore lives inline with the greeting — same row as
-              "Good day, Ramya 👋" so the score is the first thing
-              the user reads, not a tile competing with five others. */}
+          {/* GuacScore renders inline with the greeting so the score
+              is the first number the user sees, not a tile competing
+              for attention with the rest of the stat row. */}
           <GuacoScoreCard receipts={filtered} size="sm" className="!min-w-[200px]" />
         </div>
         <div className="flex items-center gap-2 flex-wrap">

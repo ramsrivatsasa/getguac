@@ -4,6 +4,7 @@ import { useTrips, useUpsertTrip, useDeleteTrip } from '../../../hooks/useTrips'
 import toast from 'react-hot-toast'
 import { Trash2, Car, Pencil, MapPin, Calculator, Loader2, Crosshair } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
+import { useConfirm } from '../../../components/ConfirmDialog'
 import { getStores } from '../../../lib/db'
 import AddressInput from '../../../components/AddressInput'
 import GuacMascot from '../../../components/GuacMascot'
@@ -36,6 +37,7 @@ export default function CarMilesPage() {
   const { data: trips = [], isLoading } = useTrips()
   const upsert = useUpsertTrip()
   const del = useDeleteTrip()
+  const confirm = useConfirm()
   const s = k => e => setForm(p => ({ ...p, [k]: e.target.value }))
 
   function startEdit(t) {
@@ -173,7 +175,7 @@ export default function CarMilesPage() {
   }
   async function handleDeleteSelected() {
     if (selected.size === 0) return
-    if (!confirm(`Delete ${selected.size} trip${selected.size === 1 ? '' : 's'}?`)) return
+    if (!(await confirm({ title: `Delete ${selected.size} trip${selected.size === 1 ? '' : 's'}?`, confirmText: 'Delete', danger: true }))) return
     const ids = [...selected]
     const results = await Promise.allSettled(ids.map(id => del.mutateAsync(id)))
     const failed = results.filter(r => r.status === 'rejected').length

@@ -6,6 +6,7 @@ import toast from 'react-hot-toast'
 import { Trash2, Eye } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
 import { displayStoreName } from '../../../lib/store-name-normalize'
+import { useConfirm } from '../../../components/ConfirmDialog'
 
 const EMPTY = { reward_no: '', expiry_date: '', reward_type: '', reward_title: '', description: '', store_name: '' }
 const today = new Date().toISOString().split('T')[0]
@@ -17,6 +18,7 @@ export default function RewardsPage() {
   const { data: rewards = [], isLoading } = useRewards()
   const upsert = useUpsertReward()
   const del = useDeleteReward()
+  const confirm = useConfirm()
   const s = k => e => setForm(p => ({ ...p, [k]: e.target.value }))
 
   function handleSave(e) {
@@ -27,8 +29,8 @@ export default function RewardsPage() {
     })
   }
 
-  function handleDelete(id) {
-    if (!confirm('Delete this reward?')) return
+  async function handleDelete(id) {
+    if (!(await confirm({ title: 'Delete this reward?', body: 'This removes the reward from your list.', confirmText: 'Delete', danger: true }))) return
     del.mutate(id, { onSuccess: () => toast.success('Deleted'), onError: err => toast.error(err.message) })
   }
 
@@ -41,7 +43,7 @@ export default function RewardsPage() {
   }
   async function handleDeleteSelected() {
     if (selected.size === 0) return
-    if (!confirm(`Delete ${selected.size} reward${selected.size === 1 ? '' : 's'}?`)) return
+    if (!(await confirm({ title: `Delete ${selected.size} reward${selected.size === 1 ? '' : 's'}?`, confirmText: 'Delete all', danger: true }))) return
     const ids = [...selected]
     const results = await Promise.allSettled(ids.map(id => del.mutateAsync(id)))
     const failed = results.filter(r => r.status === 'rejected').length

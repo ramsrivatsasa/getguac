@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
 import { displayStoreName } from '../../../lib/store-name-normalize'
+import { useConfirm } from '../../../components/ConfirmDialog'
 
 const FILTERS = [
   { value: '',         label: 'All' },
@@ -27,6 +28,7 @@ export default function InboxPage() {
   const qc = useQueryClient()
   const router = useRouter()
   const searchParams = useSearchParams()
+  const confirm = useConfirm()
   // Folder + filter live in URL search params now (sidebar sub-nav drives them).
   // ?folder=sent  ?filter=unread, etc. Missing param = default ('inbox' / 'All').
   const folder = searchParams.get('folder') || 'inbox'
@@ -265,7 +267,7 @@ export default function InboxPage() {
                 <MessagePreview
                   m={message.data.message}
                   onStar={() => patch.mutate({ id: selectedId, starred: !message.data.message.starred })}
-                  onTrash={() => { if (confirm('Move to Trash?')) trash.mutate(selectedId) }}
+                  onTrash={async () => { if (await confirm({ title: 'Move to Trash?', confirmText: 'Move to Trash', danger: true })) trash.mutate(selectedId) }}
                   onReply={() => {
                     const m = message.data.message
                     setComposePrefill({
@@ -340,7 +342,7 @@ export default function InboxPage() {
               <MessagePreview
                 m={message.data.message}
                 onStar={() => patch.mutate({ id: selectedId, starred: !message.data.message.starred })}
-                onTrash={() => { if (confirm('Move to Trash?')) trash.mutate(selectedId) }}
+                onTrash={async () => { if (await confirm({ title: 'Move to Trash?', confirmText: 'Move to Trash', danger: true })) trash.mutate(selectedId) }}
                 onReply={() => {
                   const m = message.data.message
                   setComposePrefill({

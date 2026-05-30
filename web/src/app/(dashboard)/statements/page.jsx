@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
 import { CATEGORIES, CATEGORY_BY_SLUG } from '../../../lib/categories'
+import { useConfirm } from '../../../components/ConfirmDialog'
 // Sections used to group rows in the preview. Each kind picks a section.
 const SECTIONS = [
   { key: 'purchase', label: 'Spending',      icon: ShoppingBag,   tone: 'rose',    desc: 'Merchant purchases — these become receipts and feed your analytics.' },
@@ -36,6 +37,7 @@ const TONE = {
 }
 
 export default function StatementsPage() {
+  const confirm = useConfirm()
   const [file, setFile] = useState(null)
   const [parsing, setParsing] = useState(false)
   const [importing, setImporting] = useState(false)
@@ -151,7 +153,12 @@ export default function StatementsPage() {
   async function handleReplaceExisting() {
     const dup = parsed?.duplicate_of
     if (!dup?.id) return
-    if (!confirm(`Delete the previously uploaded statement (${dup.period_start} → ${dup.period_end}) and re-import? This removes its bank_fees and bank_transactions; receipts that came from it stay.`)) return
+    if (!(await confirm({
+      title: 'Replace the existing statement?',
+      body: `Delete the previously uploaded statement (${dup.period_start} → ${dup.period_end}) and re-import?\n\nThis removes its bank_fees and bank_transactions. Receipts that came from it stay.`,
+      confirmText: 'Replace',
+      danger: true,
+    }))) return
     try {
       const sb = createClient()
       const { error } = await sb.from('bank_statements').delete().eq('id', dup.id)

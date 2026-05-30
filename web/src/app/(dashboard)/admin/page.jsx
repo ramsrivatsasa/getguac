@@ -4,7 +4,9 @@ import toast from 'react-hot-toast'
 import { createClient } from '../../../lib/supabase/client'
 import { ShieldCheck, Search, Upload, Trash2 } from 'lucide-react'
 import { displayStoreName } from '../../../lib/store-name-normalize'
+import { useConfirm } from '../../../components/ConfirmDialog'
 export default function AdminPage() {
+  const confirm = useConfirm()
   const [type, setType] = useState('receipts')
   const [userName, setUserName] = useState('')
   const [store, setStore] = useState('')
@@ -23,7 +25,12 @@ export default function AdminPage() {
       if (error) throw error
       setResults(data ?? [])
     } catch (err) {
-      alert('Search requires admin RLS or service role key: ' + err.message)
+      await confirm({
+        title: 'Search failed',
+        body: 'Search requires admin RLS or service role key:\n\n' + err.message,
+        confirmText: 'OK',
+        cancelText: null,
+      })
     } finally {
       setLoading(false)
     }
@@ -139,7 +146,12 @@ function TestDataImporter() {
   }
 
   async function runClear() {
-    if (!confirm('Wipe ALL test-imported receipts (tagged [TEST IMPORT])? Your real receipts stay.')) return
+    if (!(await confirm({
+      title: 'Wipe all test-imported receipts?',
+      body: 'Removes every receipt tagged [TEST IMPORT]. Your real receipts stay.',
+      confirmText: 'Wipe test data',
+      danger: true,
+    }))) return
     setBusy(true)
     try {
       const res = await fetch('/api/admin/clear-test-data', { method: 'POST' })

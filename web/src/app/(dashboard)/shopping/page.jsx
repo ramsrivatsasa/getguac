@@ -14,6 +14,7 @@ import { StoreLogo } from '../../../components/StoreLogo'
 import { ShareItemButton as SharedShareItemButton } from '../../../components/ShareItemButton'
 import { fireConfetti } from '../../../lib/confetti'
 import { logAutoAddCheapest, formatGuacMoney } from '../../../lib/guacMoney'
+import { useConfirm } from '../../../components/ConfirmDialog'
 
 // Same tone palette as /stash so Buy Again cards visually rhyme with
 // the Stash grid. Maps the per-Smashlist color (Pantry=emerald,
@@ -80,6 +81,7 @@ const LIST_TONE = {
 }
 
 export default function ShoppingPage() {
+  const confirm = useConfirm()
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState(EMPTY)
   const [activeList, setActiveList] = useState('all')
@@ -618,7 +620,7 @@ export default function ShoppingPage() {
       : predictedCount
         ? `Move ${predictedCount} item${predictedCount === 1 ? '' : 's'} back to Buy Again?`
         : `Delete ${deletedCount} item${deletedCount === 1 ? '' : 's'} from your Smashlist?`
-    if (!confirm(msg)) return
+    if (!(await confirm({ title: 'Bulk delete?', body: msg, confirmText: 'Confirm', danger: true }))) return
     let ok = 0
     for (const t of targets) {
       try {

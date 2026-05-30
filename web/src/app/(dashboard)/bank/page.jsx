@@ -7,6 +7,7 @@ import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { formatDateShort } from '../../../lib/dateFormat'
 import { createClient } from '../../../lib/supabase/client'
+import { useConfirm } from '../../../components/ConfirmDialog'
 import { useStore } from '../../../store'
 import {
   Banknote, FileText, AlertTriangle, Percent, CreditCard, Trash2, ExternalLink, ChevronDown, ChevronRight, Sparkles, ArrowLeft, Upload, Calendar, Clock, Wand2, Loader2, RefreshCw
@@ -37,6 +38,7 @@ export default function BankPage() {
   const qc = useQueryClient()
   const router = useRouter()
   const setPendingFile = useStore(s => s.setPendingStatementFile)
+  const confirm = useConfirm()
   const [view, setView] = useState('banks')
   const [pickedIssuer, setPickedIssuer] = useState(null)
   const [pickedStatementId, setPickedStatementId] = useState(null)
@@ -594,7 +596,15 @@ export default function BankPage() {
                   <td className="px-3 py-3 text-right text-xs text-gray-500">{new Date(s.uploaded_at).toLocaleDateString()}</td>
                   <td className="px-3 py-3 text-right" onClick={e => e.stopPropagation()}>
                     <button
-                      onClick={() => { if (confirm('Remove this statement + its fee log? (Receipts stay.)')) deleteStatement.mutate(s.id) }}
+                      onClick={async () => {
+                        if (!(await confirm({
+                          title: 'Remove this statement?',
+                          body: 'The statement and its fee log are deleted. Receipts that came from it stay.',
+                          confirmText: 'Remove',
+                          danger: true,
+                        }))) return
+                        deleteStatement.mutate(s.id)
+                      }}
                       className="text-gray-300 hover:text-rose-500 transition-colors"
                       title="Remove statement + fee log"
                     >

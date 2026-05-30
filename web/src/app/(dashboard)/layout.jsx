@@ -4,6 +4,7 @@ import Sidebar from '../../components/Sidebar'
 import TopBar from '../../components/TopBar'
 import QuickAddReceipt from '../../components/QuickAddReceipt'
 import OutboxFlusher from '../../components/OutboxFlusher'
+import { ConfirmProvider } from '../../components/ConfirmDialog'
 
 export default async function DashboardLayout({ children }) {
   const sb = createClient()
@@ -15,16 +16,18 @@ export default async function DashboardLayout({ children }) {
   const isAdmin = profile?.is_admin ?? false
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
-      <Sidebar isAdmin={isAdmin} />
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <TopBar user={user} />
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
-          {children}
-        </main>
+    <ConfirmProvider>
+      <div className="flex h-screen bg-gray-50 overflow-hidden">
+        <Sidebar isAdmin={isAdmin} />
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          <TopBar user={user} />
+          <main className="flex-1 overflow-y-auto p-4 lg:p-6">
+            {children}
+          </main>
+        </div>
+        <QuickAddReceipt />
+        <OutboxFlusher />
       </div>
-      <QuickAddReceipt />
-      <OutboxFlusher />
-    </div>
+    </ConfirmProvider>
   )
 }

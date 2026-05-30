@@ -7,6 +7,7 @@ import { useReceipts, useReceipt, useAddReceipt, useDeleteReceipt, useUpdateRece
 import { addToShoppingList } from '../../../lib/db'
 import { uploadReceiptForParse } from '../../../lib/parse-receipt-upload'
 import { createClient } from '../../../lib/supabase/client'
+import { useConfirm } from '../../../components/ConfirmDialog'
 import { useQuery } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { formatDateShort } from '../../../lib/dateFormat'
@@ -103,6 +104,7 @@ export default function ReceiptsPage() {
   }
   const addReceipt = useAddReceipt()
   const deleteReceipt = useDeleteReceipt()
+  const confirm = useConfirm()
 
   // Resizable column state — widths persist in localStorage so a user's
   // preferred layout survives reloads. Drag the 1px handle on the right edge
@@ -263,7 +265,7 @@ export default function ReceiptsPage() {
   }
 
   async function handleDelete(id) {
-    if (!confirm('Delete this receipt?')) return
+    if (!(await confirm({ title: 'Delete this receipt?', body: 'The line items are removed too.', confirmText: 'Delete', danger: true }))) return
     deleteReceipt.mutate(id, {
       onSuccess: () => toast.success('Deleted'),
       onError: err => toast.error(err.message),
@@ -757,7 +759,7 @@ export default function ReceiptsPage() {
   }
   async function handleDeleteSelected() {
     if (selected.size === 0) return
-    if (!confirm(`Delete ${selected.size} receipt${selected.size === 1 ? '' : 's'}?`)) return
+    if (!(await confirm({ title: `Delete ${selected.size} receipt${selected.size === 1 ? '' : 's'}?`, confirmText: 'Delete all', danger: true }))) return
     const ids = [...selected]
     const results = await Promise.allSettled(ids.map(id => deleteReceipt.mutateAsync(id)))
     const failed = results.filter(r => r.status === 'rejected').length

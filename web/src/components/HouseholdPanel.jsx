@@ -11,6 +11,7 @@ import {
 } from '../lib/households'
 import { openThreadWith } from '../lib/dms'
 import { getDisplayNames, formatName, initialFor } from '../lib/displayNames'
+import { useConfirm } from './ConfirmDialog'
 
 // Single Profile-page component that handles every household
 // interaction: create / invite / member list / leave / chat. Reads +
@@ -23,6 +24,7 @@ import { getDisplayNames, formatName, initialFor } from '../lib/displayNames'
 export default function HouseholdPanel() {
   const qc = useQueryClient()
   const sb = createClient()
+  const confirm = useConfirm()
   const { data: household, isLoading, refetch } = useQuery({
     queryKey: ['household'],
     queryFn: getMyHousehold,
@@ -149,10 +151,11 @@ function Header({ household, onChanged }) {
   const isOwner = household.my_role === 'owner'
   async function handleLeave() {
     const solo = household.members.length <= 1
-    const msg = solo
-      ? `Leaving "${household.name}" will delete it — you're the only member. Continue?`
-      : `Leave "${household.name}"? Other members keep the list.`
-    if (!confirm(msg)) return
+    const title = solo ? `Delete "${household.name}"?` : `Leave "${household.name}"?`
+    const body = solo
+      ? `You're the only member, so leaving deletes the household.`
+      : `Other members keep the list.`
+    if (!(await confirm({ title, body, confirmText: solo ? 'Delete' : 'Leave', danger: true }))) return
     try {
       await leaveHousehold(household.id)
       toast.success(solo ? 'Household deleted' : 'You left the household')
@@ -224,7 +227,7 @@ function Members({ household, onChanged }) {
   }
 
   async function handleRemove(userId) {
-    if (!confirm('Remove this person from the household?')) return
+    if (!(await confirm({ title: 'Remove this member?', body: 'They lose access to this household.', confirmText: 'Remove', danger: true }))) return
     try {
       await removeMember(household.id, userId)
       toast.success('Removed')

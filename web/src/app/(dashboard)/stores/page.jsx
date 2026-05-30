@@ -6,6 +6,7 @@ import toast from 'react-hot-toast'
 import { Store, Phone, Globe, MapPin, ChevronRight, ChevronDown, Search, Trash2, AlertTriangle, Shield, ExternalLink } from 'lucide-react'
 import { getStores, deleteStore, getAllStoreDefaultPolicies } from '../../../lib/db'
 import { normalizeStoreName, displayStoreName } from '../../../lib/store-name-normalize'
+import { useConfirm } from '../../../components/ConfirmDialog'
 function normalizePhone(p) {
   if (!p) return ''
   return String(p).replace(/\D+/g, '')
@@ -86,6 +87,7 @@ export default function StoresPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['stores'] }),
     onError: (err) => toast.error(err.message),
   })
+  const confirm = useConfirm()
 
   const filtered = stores.filter(s =>
     s.store_name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -124,7 +126,7 @@ export default function StoresPage() {
   }
   async function handleDeleteSelected() {
     if (selected.size === 0) return
-    if (!confirm(`Delete ${selected.size} store${selected.size === 1 ? '' : 's'}? Their receipts will be kept but unlinked from the store.`)) return
+    if (!(await confirm({ title: `Delete ${selected.size} store${selected.size === 1 ? '' : 's'}?`, body: 'Their receipts will be kept but unlinked from the store.', confirmText: 'Delete', danger: true }))) return
     const ids = [...selected]
     const results = await Promise.allSettled(ids.map(id => del.mutateAsync(id)))
     const failures = results.filter(r => r.status === 'rejected')
@@ -191,7 +193,7 @@ export default function StoresPage() {
                       <button
                         type="button"
                         onClick={async () => {
-                          if (!confirm(`Delete "${s.store_name}"? Receipts pointing to this store will be unlinked but kept.`)) return
+                          if (!(await confirm({ title: `Delete "${s.store_name}"?`, body: 'Receipts pointing to this store will be unlinked but kept.', confirmText: 'Delete', danger: true }))) return
                           try { await del.mutateAsync(s.id); toast.success('Deleted') }
                           catch (e) { toast.error(e.message) }
                         }}

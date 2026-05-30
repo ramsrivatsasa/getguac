@@ -82,16 +82,21 @@ export default function DiscoverStrip({ navigate }) {
           <span className="text-xs text-gray-500">Quick GuacMoney wins 🥑</span>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {QUESTS.map(q => (
-            <QuestTile
+          {QUESTS.map((q, i) => (
+            <div
               key={q.id}
-              emoji={q.emoji}
-              tint={q.tint}
-              title={q.title}
-              subtitle={q.subtitle}
-              rewardLabel={q.rewardLabel}
-              onClick={() => go(q.href)}
-            />
+              className="discover-fly-in"
+              style={{ animationDelay: `${i * 80}ms` }}
+            >
+              <QuestTile
+                emoji={q.emoji}
+                tint={q.tint}
+                title={q.title}
+                subtitle={q.subtitle}
+                rewardLabel={q.rewardLabel}
+                onClick={() => go(q.href)}
+              />
+            </div>
           ))}
         </div>
       </div>
@@ -103,11 +108,34 @@ export default function DiscoverStrip({ navigate }) {
           <a href="/stash" className="text-xs font-semibold text-emerald-700 hover:text-emerald-900">See all</a>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {CATEGORIES.map(c => (
-            <CategoryTile key={c.slug} slug={c.slug} label={c.label} emoji={c.emoji} />
+          {CATEGORIES.map((c, i) => (
+            <div
+              key={c.slug}
+              className="discover-fly-in"
+              style={{ animationDelay: `${(QUESTS.length + i) * 80}ms` }}
+            >
+              <CategoryTile slug={c.slug} label={c.label} emoji={c.emoji} />
+            </div>
           ))}
         </div>
       </div>
+
+      {/* Card mount animation — fly in from 8px below with a small
+          fade. Staggered by index above so the strip lands tile-by-tile
+          instead of all at once. */}
+      <style jsx>{`
+        .discover-fly-in {
+          animation: discover-fly-in 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+          will-change: transform, opacity;
+        }
+        @keyframes discover-fly-in {
+          from { opacity: 0; transform: translateY(8px) scale(0.97); }
+          to   { opacity: 1; transform: translateY(0)   scale(1); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .discover-fly-in { animation: none; }
+        }
+      `}</style>
     </section>
   )
 }

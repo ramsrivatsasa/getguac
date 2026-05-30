@@ -9,6 +9,7 @@ import { useAddReceipt } from '../hooks/useReceipts'
 import { uploadReceiptForParse } from '../lib/parse-receipt-upload'
 import CameraCapture from './CameraCapture'
 import ReceiptScanAnimation from './ReceiptScanAnimation'
+import ReceiptCapturedModal from './ReceiptCapturedModal'
 
 // Floating "Add Receipt" widget. Lives in the dashboard layout, visible on every
 // page. Provides:
@@ -23,6 +24,10 @@ export default function QuickAddReceipt() {
   const [cameraOpen, setCameraOpen] = useState(false)
   const [busy, setBusy] = useState(0)
   const [pageDragging, setPageDragging] = useState(false)
+  // After a successful single-file capture, hold the parsed data so we
+  // can show the celebration modal before routing the user anywhere.
+  // Cleared by the modal's onClose. Null = modal hidden.
+  const [captured, setCaptured] = useState(null)
   const fileInputRef = useRef(null)
 
   const { data: user } = useQuery({
@@ -66,20 +71,30 @@ export default function QuickAddReceipt() {
     if (!files?.length) return
     if (!user?.id) { toast.error('Sign in first'); return }
     setBusy(files.length)
-    let lastId = null
+    let lastResult = null
     for (const f of files) {
       try {
         const r = await processFile(f)
-        lastId = r._savedId || lastId
-        toast.success(`${r.store_name} • $${Number(r.total_amount || 0).toFixed(2)} saved (${r.items?.length || 0} items)`)
+        lastResult = r
+        // For bulk uploads we still toast each — the modal only pops
+        // for single-file captures so the celebration doesn't fight
+        // with a queue of 10 toasts.
+        if (files.length > 1) {
+          toast.success(`${r.store_name} • $${Number(r.total_amount || 0).toFixed(2)} saved (${r.items?.length || 0} items)`)
+        }
       } catch (err) {
         toast.error(`${f.name}: ${err.message}`)
       } finally {
         setBusy(n => Math.max(0, n - 1))
       }
     }
-    if (files.length === 1 && lastId) router.push(`/receipts/${lastId}`)
-  }, [user?.id, processFile, router])
+    if (files.length === 1 && lastResult) {
+      // Show the celebration modal — user can then choose "Snap
+      // another" or "View receipt". Replaces the immediate
+      // router.push() the page used to do.
+      setCaptured({ ...lastResult, id: lastResult._savedId })
+    }
+  }, [user?.id, processFile])
 
   // Window-level drag handlers — show overlay & swallow browser default file-open.
   useEffect(() => {
@@ -172,6 +187,16 @@ export default function QuickAddReceipt() {
           with a much more delightful "mascot + receipt + scan line"
           ceremony while the parse runs. */}
       <ReceiptScanAnimation count={busy} />
+
+      {/* Celebration modal after a single-file capture — emerald hero
+          with the GuacMoney earned, store + total, item preview, and
+          Snap-another / View-receipt CTAs. */}
+      <ReceiptCapturedModal
+        open={!!captured}
+        receipt={captured}
+        onClose={() => setCaptured(null)}
+        onSnapAnother={() => { setCaptured(null); setCameraOpen(true) }}
+      />
 
       {/* Floating Action Button */}
       <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-2">

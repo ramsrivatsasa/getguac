@@ -166,7 +166,15 @@ export default function LoginPage() {
               <Link href="/register" className="text-emerald-700 font-semibold hover:underline">Create account</Link>
             </p>
             <button type="button"
-              onClick={() => { setResetEmail(form.email); setResetOpen(true) }}
+              onClick={() => {
+                // form.email doesn't exist — the state shape is
+                // { identifier, password }. Pre-fill the reset email
+                // from identifier only if it looks like an email; the
+                // earlier prompt-trigger at the top of the form does
+                // the same thing.
+                setResetEmail(form.identifier?.includes('@') ? form.identifier : '')
+                setResetOpen(true)
+              }}
               className="text-xs text-gray-500 hover:text-emerald-700 hover:underline">
               Trouble logging in?
             </button>

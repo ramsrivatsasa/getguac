@@ -37,8 +37,18 @@ void main() async {
     FlutterError.presentError(details); // keep the default behaviour
   };
   PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
-    DebugLog.event('zone-error', error.toString(),
-      level: 'error',
+    // Some Supabase-side conditions throw at the zone level even though
+    // the surrounding flow is handling them correctly (router sends the
+    // user to /login on missing session, etc.). Downgrade those from
+    // 'error' to 'info' so the audit log isn't drowning in expected
+    // sign-out / token-rotation events.
+    final msg = error.toString();
+    final isExpectedAuth = error is AuthException &&
+        (msg.contains('refresh_token_not_found') ||
+         msg.contains('Invalid Refresh Token') ||
+         msg.contains('Auth session missing'));
+    DebugLog.event('zone-error', msg,
+      level: isExpectedAuth ? 'info' : 'error',
       meta: {
         'stack': stack.toString().split('\n').take(20).join('\n'),
       });

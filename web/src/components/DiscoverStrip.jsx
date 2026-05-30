@@ -75,17 +75,19 @@ export default function DiscoverStrip({ navigate }) {
 
   return (
     <section className="space-y-4">
-      {/* Quest strip */}
+      {/* Quest strip — horizontal scroll on mobile, wraps to a row on
+          desktop. Matches the Fetch quest-carousel pattern: tiles
+          sized so 2.5 are visible at once, drag/swipe to reveal more. */}
       <div>
         <div className="flex items-baseline justify-between mb-2">
           <h2 className="text-base font-extrabold text-gray-900">Start earning</h2>
           <span className="text-xs text-gray-500">Quick GuacMoney wins 🥑</span>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 hide-scrollbar">
           {QUESTS.map((q, i) => (
             <div
               key={q.id}
-              className="discover-fly-in"
+              className="discover-fly-in shrink-0 snap-start w-[42vw] max-w-[180px] sm:w-44"
               style={{ animationDelay: `${i * 80}ms` }}
             >
               <QuestTile
@@ -101,17 +103,19 @@ export default function DiscoverStrip({ navigate }) {
         </div>
       </div>
 
-      {/* Category grid */}
+      {/* Category strip — also horizontal-scrolling. Tiles auto-size
+          so 1.5 are visible per swipe on mobile, full grid on wider
+          viewports. */}
       <div>
         <div className="flex items-baseline justify-between mb-2">
           <h2 className="text-base font-extrabold text-gray-900">Shop by category</h2>
           <a href="/stash" className="text-xs font-semibold text-emerald-700 hover:text-emerald-900">See all</a>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 hide-scrollbar">
           {CATEGORIES.map((c, i) => (
             <div
               key={c.slug}
-              className="discover-fly-in"
+              className="discover-fly-in shrink-0 snap-start w-[58vw] max-w-[260px] sm:w-56"
               style={{ animationDelay: `${(QUESTS.length + i) * 80}ms` }}
             >
               <CategoryTile slug={c.slug} label={c.label} emoji={c.emoji} />
@@ -135,6 +139,10 @@ export default function DiscoverStrip({ navigate }) {
         @media (prefers-reduced-motion: reduce) {
           .discover-fly-in { animation: none; }
         }
+        /* Hide scrollbars on the horizontal carousels but keep the
+           native scroll/swipe behavior. */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
     </section>
   )

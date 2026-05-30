@@ -11,6 +11,7 @@ import GuacoScoreCard from '../../../components/GuacoScoreCard'
 import UpcomingReturnsBanner from '../../../components/UpcomingReturnsBanner'
 import AnomaliesPanel from '../../../components/AnomaliesPanel'
 import { ActivityFeed } from '../../../components/ActivityFeed'
+import DiscoverStrip from '../../../components/DiscoverStrip'
 import { computeSmashDays } from '../../../lib/smashDays'
 import { fetchTotal as fetchGuacMoneyTotal, formatGuacMoney } from '../../../lib/guacMoney'
 import { generateInsights } from '../../../lib/financeInsights'
@@ -149,6 +150,11 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
 
   return (
     <div className="space-y-6 max-w-7xl">
+      {/* Discover strip — quest tiles + shop-by-category. Sits above
+          the financial snapshot so first-time users see something
+          actionable before the dense charts. */}
+      <DiscoverStrip navigate={(href) => router.push(href)} />
+
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
           <h1 className="page-title">Good day, {firstName} 👋</h1>

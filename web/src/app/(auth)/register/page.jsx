@@ -7,6 +7,7 @@ import toast from 'react-hot-toast'
 import GuacMascot from '../../../components/GuacMascot'
 import PrivacyNote from '../../../components/PrivacyNote'
 import { Check, X, Loader2, AlertCircle, AtSign, Eye, EyeOff } from 'lucide-react'
+import { createClient as createBrowserClient } from '../../../lib/supabase/client'
 const VALID_USERNAME_RE = /^[a-z0-9]([a-z0-9._-]{1,30}[a-z0-9])?$/
 // Cloudflare Turnstile site key — public, safe to ship in the client
 // bundle. When unset (local dev / before keys are provisioned in
@@ -17,6 +18,28 @@ const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ''
 export default function RegisterPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
+
+  // Same Google OAuth path as /login. Lands on /auth/callback which
+  // exchanges the code for a session cookie, then drops the user on
+  // the dashboard. The profile-row trigger in Supabase fills the
+  // first_name / last_name from Google's name fields.
+  async function signInWithGoogle() {
+    setGoogleLoading(true)
+    try {
+      const sb = createBrowserClient()
+      const { error } = await sb.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
+        },
+      })
+      if (error) { toast.error(error.message); setGoogleLoading(false) }
+    } catch (e) {
+      toast.error(e.message || 'Could not start Google sign in')
+      setGoogleLoading(false)
+    }
+  }
   // When the server returns needs_email_confirmation we render an in-place
   // "Check your inbox" panel instead of redirecting away — the user is more
   // likely to actually go look for the email if we hold them on this page.
@@ -391,6 +414,26 @@ export default function RegisterPage() {
             >
               {loading ? 'Creating account…' : 'Create Account'}
             </button>
+
+            {/* Google OAuth shortcut — bypass the entire long form for
+                anyone who'd rather just connect Google. The profile
+                trigger handles first/last name; username is generated
+                by the Supabase signup trigger and editable from
+                /profile after they land. */}
+            <div className="mt-3 flex items-center gap-3">
+              <div className="h-px flex-1 bg-gray-200" />
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">or</span>
+              <div className="h-px flex-1 bg-gray-200" />
+            </div>
+            <button
+              type="button"
+              onClick={signInWithGoogle}
+              disabled={googleLoading || loading}
+              className="mt-3 w-full inline-flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl border-2 border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 disabled:opacity-60 font-semibold text-gray-700 shadow-sm transition"
+            >
+              <RegisterGoogleLogo />
+              {googleLoading ? 'Opening Google…' : 'Sign up with Google'}
+            </button>
           </form>
           <p className="text-center text-sm text-gray-500 mt-4">
             Already have an account?{' '}
@@ -408,5 +451,19 @@ export default function RegisterPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+// Same multi-color G mark as the /login button. Duplicated rather than
+// extracted to a shared component because both auth pages live in their
+// own route folders and this keeps the bundle leaner.
+function RegisterGoogleLogo() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.17-1.84H9v3.49h4.84c-.21 1.13-.84 2.09-1.79 2.73v2.27h2.9c1.7-1.57 2.69-3.87 2.69-6.65z"/>
+      <path fill="#34A853" d="M9 18c2.43 0 4.47-.81 5.96-2.18l-2.9-2.27c-.81.54-1.84.86-3.06.86-2.35 0-4.34-1.59-5.05-3.72H.96v2.34A9 9 0 0 0 9 18z"/>
+      <path fill="#FBBC05" d="M3.95 10.69A5.41 5.41 0 0 1 3.66 9c0-.59.1-1.16.29-1.69V4.97H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.03l2.99-2.34z"/>
+      <path fill="#EA4335" d="M9 3.58c1.32 0 2.51.45 3.44 1.35l2.58-2.58A9 9 0 0 0 9 0 9 9 0 0 0 .96 4.97L3.95 7.3C4.66 5.17 6.65 3.58 9 3.58z"/>
+    </svg>
   )
 }

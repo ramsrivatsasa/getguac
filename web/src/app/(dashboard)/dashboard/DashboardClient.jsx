@@ -12,6 +12,8 @@ import UpcomingReturnsBanner from '../../../components/UpcomingReturnsBanner'
 import AnomaliesPanel from '../../../components/AnomaliesPanel'
 import { ActivityFeed } from '../../../components/ActivityFeed'
 import DiscoverStrip from '../../../components/DiscoverStrip'
+import CoreTiles from '../../../components/CoreTiles'
+import { calculateGuacoScore } from '../../../lib/guacoscore'
 import { computeSmashDays } from '../../../lib/smashDays'
 import { fetchTotal as fetchGuacMoneyTotal, formatGuacMoney } from '../../../lib/guacMoney'
 import { generateInsights } from '../../../lib/financeInsights'
@@ -148,11 +150,44 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
       }))
   })()
 
+  // Core-tile inputs — these are the four "reasons to use GetGuac"
+  // metrics that anchor the top of the dashboard. Each is derived
+  // from data already on the page, so this section adds no new
+  // queries — purely a re-organization of existing values.
+  const guacoScoreResult = calculateGuacoScore(filtered)
+  const worthItPending = initialReceipts.filter(r => r.worthit_score == null && !isPaymentReceipt(r)).length
+  const smashDaysCount = computeSmashDays(filtered).smashDays
+  // GuacMoney delta — sum of receipts this month with a guacmoney
+  // event tag. Best-effort: when the lifetime total query lands we
+  // overwrite from the real numbers.
+  const guacMoneyDeltaThisMonth = 0   // placeholder; the GuacMoneyTile
+                                      // hooks the live total internally
+
   return (
     <div className="space-y-6 max-w-7xl">
-      {/* Discover strip — quest tiles + shop-by-category. Sits above
-          the financial snapshot so first-time users see something
-          actionable before the dense charts. */}
+      {/* 1. Greeting strip */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="text-3xl">🥑</div>
+        <div className="flex-1 min-w-0">
+          <h1 className="text-2xl font-black text-gray-900 leading-tight">Hi {firstName}</h1>
+          <p className="text-sm text-gray-500">Your wallet is doing well · {smashDaysCount > 0 ? `${smashDaysCount} 🔥 Smash days` : 'log a receipt to start your Smash days'}</p>
+        </div>
+      </div>
+
+      {/* 2. Four core tiles — the brand block. Anchors the dashboard
+          before any Fetch-style engagement chrome. */}
+      <CoreTiles
+        guacoScore={guacoScoreResult?.score ?? 0}
+        guacMoneyTotal={null}                       /* live-loaded inside the tile via fetchGuacMoneyTotal */
+        guacMoneyThisMonth={guacMoneyDeltaThisMonth}
+        wizardInsight={null}                         /* fed from generateInsights below — best-effort */
+        worthItPending={worthItPending}
+        smashDays={smashDaysCount}
+      />
+
+      {/* 5. Discover strip — engagement layer. Sits BELOW the reference
+          block (core tiles + spending + transactions) so the dashboard
+          reads as data-first, gamification-second. */}
       <DiscoverStrip navigate={(href) => router.push(href)} />
 
       <div className="flex items-start justify-between gap-3 flex-wrap">

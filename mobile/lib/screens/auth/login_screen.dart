@@ -180,6 +180,61 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  // Prompts for an email and asks Supabase to send a reset link.
+  // The email lands the user on getguac.app/reset-password — the
+  // mobile app does not handle the reset flow itself because the
+  // recovery token is bound to a browser session.
+  Future<void> _showForgotPasswordDialog() async {
+    final ctrl = TextEditingController(text: _identifierCtrl.text.trim());
+    final email = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Reset your password'),
+        content: Column(mainAxisSize: MainAxisSize.min, children: [
+          const Text(
+            "Enter your email and we'll send a reset link. Open it on any device to choose a new password.",
+            style: TextStyle(fontSize: 13, color: Colors.black54),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: ctrl,
+            keyboardType: TextInputType.emailAddress,
+            autofocus: true,
+            decoration: const InputDecoration(
+              labelText: 'Email',
+              border: OutlineInputBorder(),
+            ),
+          ),
+        ]),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          FilledButton(
+            onPressed: () {
+              final v = ctrl.text.trim();
+              if (v.isNotEmpty && v.contains('@')) Navigator.pop(ctx, v);
+            },
+            child: const Text('Send link'),
+          ),
+        ],
+      ),
+    );
+    if (email == null || !mounted) return;
+    try {
+      await context.read<AppAuthProvider>().resetPassword(email);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Reset link sent to $email — check your inbox 🥑'),
+        duration: const Duration(seconds: 4),
+      ));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Could not send reset link: $e'),
+      ));
+    }
+  }
+
   Future<void> _unlockWithBio() async {
     DebugLog.event('login-screen', 'unlockWithBio start');
     final creds = await BiometricService.authenticate();
@@ -502,6 +557,17 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ],
                             const SizedBox(height: 4),
+                            TextButton(
+                              onPressed: _loading ? null : _showForgotPasswordDialog,
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 4),
+                                minimumSize: const Size(0, 30),
+                              ),
+                              child: const Text(
+                                'Forgot password?',
+                                style: TextStyle(color: Color(0xFF6b7280), fontWeight: FontWeight.w600, fontSize: 13),
+                              ),
+                            ),
                             TextButton(
                               onPressed: () => context.go('/register'),
                               style: TextButton.styleFrom(

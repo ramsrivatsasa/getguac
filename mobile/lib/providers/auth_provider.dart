@@ -84,7 +84,13 @@ class AppAuthProvider extends ChangeNotifier {
   }
 
   Future<void> resetPassword(String email) async {
-    await _sb.auth.resetPasswordForEmail(email);
+    // redirectTo lands the user on the branded getguac.app/reset-password
+    // route after they click the email link — without it the browser
+    // bounces through *.supabase.co which looks untrustworthy.
+    await _sb.auth.resetPasswordForEmail(
+      email,
+      redirectTo: 'https://getguac.app/reset-password',
+    );
   }
 
   bool get isAdmin => userProfile?['is_admin'] == true;

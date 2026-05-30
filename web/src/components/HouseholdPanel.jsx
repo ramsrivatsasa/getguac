@@ -33,22 +33,37 @@ export default function HouseholdPanel() {
   // changes so the UI updates the moment someone else adds/removes/chats.
   useEffect(() => {
     if (!household?.id) return
-    const ch = sb
-      .channel(`household:${household.id}`)
-      .on('postgres_changes', {
-        event: '*', schema: 'public', table: 'household_members',
-        filter: `household_id=eq.${household.id}`,
-      }, () => refetch())
-      .on('postgres_changes', {
-        event: 'INSERT', schema: 'public', table: 'household_messages',
-        filter: `household_id=eq.${household.id}`,
-      }, () => qc.invalidateQueries({ queryKey: ['household-messages', household.id] }))
-      .on('postgres_changes', {
-        event: '*', schema: 'public', table: 'shopping_list',
-        filter: `household_id=eq.${household.id}`,
-      }, () => qc.invalidateQueries({ queryKey: ['shopping'] }))
-      .subscribe()
-    return () => { sb.removeChannel(ch) }
+    // Guard the subscribe + teardown — realtime-js can throw inside
+    // transportConnect when the WS handshake fails (e.g. table missing
+    // from the supabase_realtime publication). Without try/catch, that
+    // exception bubbles up during dashboard render and triggers React
+    // hydration errors #418/#423/#425 on every page that mounts this
+    // component. See migration_060_realtime_publication.sql.
+    let ch = null
+    try {
+      ch = sb
+        .channel(`household:${household.id}`)
+        .on('postgres_changes', {
+          event: '*', schema: 'public', table: 'household_members',
+          filter: `household_id=eq.${household.id}`,
+        }, () => refetch())
+        .on('postgres_changes', {
+          event: 'INSERT', schema: 'public', table: 'household_messages',
+          filter: `household_id=eq.${household.id}`,
+        }, () => qc.invalidateQueries({ queryKey: ['household-messages', household.id] }))
+        .on('postgres_changes', {
+          event: '*', schema: 'public', table: 'shopping_list',
+          filter: `household_id=eq.${household.id}`,
+        }, () => qc.invalidateQueries({ queryKey: ['shopping'] }))
+        .subscribe()
+    } catch (err) {
+      console.warn('[household] realtime subscribe failed', err)
+    }
+    return () => {
+      if (ch) {
+        try { sb.removeChannel(ch) } catch {}
+      }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [household?.id])
 

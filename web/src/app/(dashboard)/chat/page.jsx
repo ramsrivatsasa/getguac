@@ -55,22 +55,39 @@ export default function ChatPage() {
   // list for that thread. We subscribe at the user level so the broadcast
   // covers every thread without one channel per thread.
   useEffect(() => {
-    let userId
+    // The cleanup return inside a .then(...) used to be silently dropped
+    // (useEffect only consumes a synchronous return), so the channel
+    // leaked on every unmount. Hold the channel in a closure-scoped ref
+    // and tear it down from the useEffect's own cleanup. Also defend
+    // against realtime-js' transportConnect throwing a misleading
+    // `.get is not a function` when the WS handshake fails — production
+    // tester hit that on the dashboard before migration_060 added the
+    // missing tables to the supabase_realtime publication.
+    let channel = null
+    let cancelled = false
     sb.auth.getUser().then(({ data }) => {
-      userId = data?.user?.id
+      if (cancelled) return
+      const userId = data?.user?.id
       if (!userId) return
-      const ch = sb.channel(`dm-user:${userId}`)
-        .on('postgres_changes', {
-          event: 'INSERT', schema: 'public', table: 'dm_messages',
-        }, (payload) => {
-          // RLS already filters to my threads — any insert that gets
-          // through is one I care about.
-          qc.invalidateQueries({ queryKey: ['dm-messages', payload.new.thread_id] })
-          refetchThreads()
-        })
-        .subscribe()
-      return () => { sb.removeChannel(ch) }
+      try {
+        channel = sb.channel(`dm-user:${userId}`)
+          .on('postgres_changes', {
+            event: 'INSERT', schema: 'public', table: 'dm_messages',
+          }, (payload) => {
+            qc.invalidateQueries({ queryKey: ['dm-messages', payload.new.thread_id] })
+            refetchThreads()
+          })
+          .subscribe()
+      } catch (err) {
+        console.warn('[chat] realtime subscribe failed', err)
+      }
     })
+    return () => {
+      cancelled = true
+      if (channel) {
+        try { sb.removeChannel(channel) } catch {}
+      }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 

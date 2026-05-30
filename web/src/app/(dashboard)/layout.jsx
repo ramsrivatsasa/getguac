@@ -5,6 +5,7 @@ import TopBar from '../../components/TopBar'
 import QuickAddReceipt from '../../components/QuickAddReceipt'
 import OutboxFlusher from '../../components/OutboxFlusher'
 import { ConfirmProvider } from '../../components/ConfirmDialog'
+import CommandPalette from '../../components/CommandPalette'
 
 export default async function DashboardLayout({ children }) {
   const sb = createClient()
@@ -27,6 +28,7 @@ export default async function DashboardLayout({ children }) {
         </div>
         <QuickAddReceipt />
         <OutboxFlusher />
+        <CommandPalette />
       </div>
     </ConfirmProvider>
   )

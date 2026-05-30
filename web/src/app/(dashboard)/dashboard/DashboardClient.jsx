@@ -271,25 +271,6 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
             </div>
           </div>
         ))}
-        {(() => {
-          const { smashDays } = computeSmashDays(filtered)
-          return (
-            <div className="stat-card">
-              <div className={`p-2 rounded-lg ${smashDays > 0 ? 'bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500 text-white shadow-sm' : 'bg-gray-100 text-gray-400'}`}>
-                <Flame size={16} className={smashDays > 0 ? 'animate-pulse' : ''} />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[11px] text-gray-500 font-medium leading-tight">Smash days</p>
-                <div className="flex items-baseline gap-1.5">
-                  <p className="text-base font-bold text-gray-900 tabular-nums">{smashDays}</p>
-                  <span className="text-[10px] text-gray-500">
-                    {smashDays === 0 ? 'scan to start' : `day${smashDays === 1 ? '' : 's'}`}
-                  </span>
-                </div>
-              </div>
-            </div>
-          )
-        })()}
       </div>
 
       {/* Bank summary row — payments / interest / fees / purchases /

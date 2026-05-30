@@ -79,8 +79,14 @@ export default function LoginPage() {
     if (!resetEmail.trim()) return
     setResetting(true)
     const sb = createClient()
+    // Land on our branded /reset-password route. The Supabase email
+    // template should be configured to use {{ .TokenHash }} in a
+    // getguac.app/reset-password?token_hash=...&type=recovery link —
+    // when the user clicks, that route verifies the OTP and lets
+    // them set a new password without ever bouncing through a
+    // *.supabase.co URL.
     const redirectTo = typeof window !== 'undefined'
-      ? `${window.location.origin}/login`
+      ? `${window.location.origin}/reset-password`
       : undefined
     const { error } = await sb.auth.resetPasswordForEmail(resetEmail.trim(), { redirectTo })
     setResetting(false)

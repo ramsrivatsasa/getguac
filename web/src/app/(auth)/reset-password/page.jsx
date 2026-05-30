@@ -13,14 +13,31 @@
 // untrustworthy in some mail clients. Routing through getguac.app
 // keeps every user-facing URL on our domain.
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '../../../lib/supabase/client'
 import toast from 'react-hot-toast'
 import { KeyRound, Loader2, CheckCircle2 } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
 
+// useSearchParams() requires a Suspense boundary above it for Next 14's
+// static page generation. Without this wrapper the production build
+// fails with "Export encountered errors on /reset-password" and Vercel
+// rolls back the entire deploy — production has been hit by this
+// once; do not unwrap.
 export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-900 via-green-800 to-lime-700">
+        <Loader2 className="animate-spin text-white" size={32} />
+      </div>
+    }>
+      <ResetPasswordInner />
+    </Suspense>
+  )
+}
+
+function ResetPasswordInner() {
   const router = useRouter()
   const search = useSearchParams()
   const [stage, setStage] = useState('verifying') // verifying | ready | saving | done | error

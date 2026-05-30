@@ -12,12 +12,14 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { ArrowLeft, ShoppingCart, MapPin, Receipt, ExternalLink, X } from 'lucide-react'
+import { ArrowLeft, ShoppingCart, MapPin, Receipt, ExternalLink, X, Share2, Heart, ChevronDown, ChevronUp } from 'lucide-react'
 import { displayStoreName } from '../../../../lib/store-name-normalize'
 import { createClient } from '../../../../lib/supabase/client'
 import { updateReceiptItem, setStashProductCategory, addToShoppingList } from '../../../../lib/db'
 import { formatDateShort } from '../../../../lib/dateFormat'
 import CategoryPicker from '../../../../components/CategoryPicker'
+import { StoreLogo } from '../../../../components/StoreLogo'
+import { tintForCategory } from '../../../../components/ProductCard'
 
 // Pull the item + its parent receipt + store in a single round-trip.
 async function getItem(id) {
@@ -152,26 +154,19 @@ export default function ItemDetailPage() {
 
   return (
     <div className="space-y-5 max-w-4xl">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <button onClick={() => router.back()} className="btn-ghost p-1.5"><ArrowLeft size={20} /></button>
-        <h1 className="page-title flex-1 min-w-0 truncate">{item.item_name || 'Item'}</h1>
-        {!isCharity && !isReturn && (
-          <button onClick={handleAddToSmashlist}
-            className="btn-secondary flex items-center gap-2 text-sm"
-            title="Add to Smashlist">
-            <ShoppingCart size={14} /> Add to Smashlist
-          </button>
-        )}
-        <button
-          onClick={() => router.back()}
-          className="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center transition-colors shrink-0"
-          title="Close"
-          aria-label="Close"
-        >
-          <X size={18} />
-        </button>
-      </div>
+      {/* Hero banner — colored category-tinted backdrop, floating
+          back + share buttons, large centered product photo,
+          brand-logo badge, social-proof chip + quest-style progress
+          bar. Mirrors the Fetch item-detail hero so an item page
+          feels like an offer page, not a database row. */}
+      <ItemDetailHero
+        item={item}
+        history={history}
+        totalQty={totalQty}
+        onBack={() => router.back()}
+        onAddToSmashlist={handleAddToSmashlist}
+        canAdd={!isCharity && !isReturn}
+      />
 
       {/* Core fields */}
       <div className="card space-y-3">
@@ -284,4 +279,137 @@ function Field({ label, value }) {
       <p className="text-gray-800 mt-0.5">{value}</p>
     </div>
   )
+}
+
+// Big colored hero at the top of the item-detail page.
+//
+// Visual reference is Fetch's offer page: sky/pastel backdrop, large
+// centered product photo, floating Back + Share, brand-circle badge
+// peeking off the bottom-right, urgency chip + title + reward chip
+// + progress bar showing how many of this item you still need to hit
+// the next earn tier.
+//
+// We don't have product-image URLs for every item yet, so the
+// fallback is a brand-colored category emoji.
+function ItemDetailHero({ item, history, totalQty, onBack, onAddToSmashlist, canAdd }) {
+  const tint = tintForCategory(item.category)
+  const storeName = item.receipt?.store_name || ''
+  const purchaseCount = (history?.length || 0) + 1
+  const target = 6   // earn-tier target — "Buy 6 more like this" matches the Fetch quest copy
+  const progress = Math.min(totalQty / target, 1)
+  const remaining = Math.max(target - totalQty, 0)
+
+  async function handleShare() {
+    const url = typeof window !== 'undefined' ? window.location.href : ''
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try { await navigator.share({ title: item.item_name, url }); return } catch {}
+    }
+    try { await navigator.clipboard.writeText(url); toast.success('Link copied') } catch {
+      toast('Copy this URL: ' + url)
+    }
+  }
+
+  return (
+    <div className="relative rounded-3xl overflow-hidden">
+      {/* Tinted backdrop — drives the entire hero color. */}
+      <div className="relative px-6 pt-4 pb-12" style={{ background: tint }}>
+        <div className="flex items-center justify-between">
+          <button
+            onClick={onBack}
+            className="w-10 h-10 rounded-full bg-white/70 backdrop-blur hover:bg-white text-gray-700 flex items-center justify-center shadow-sm"
+            aria-label="Back"
+          >
+            <ArrowLeft size={18} />
+          </button>
+          <button
+            onClick={handleShare}
+            className="w-10 h-10 rounded-full bg-white/70 backdrop-blur hover:bg-white text-gray-700 flex items-center justify-center shadow-sm"
+            aria-label="Share"
+          >
+            <Share2 size={16} />
+          </button>
+        </div>
+        <div className="flex items-center justify-center min-h-[180px] mt-2">
+          {/* Product image if present, otherwise a category emoji. */}
+          <div className="text-7xl drop-shadow-md">{categoryEmoji(item.category)}</div>
+        </div>
+      </div>
+
+      {/* Footer band — heart + count on left, brand badge peeking. */}
+      <div className="relative bg-white px-5 pt-4 pb-5 -mt-4 rounded-t-3xl">
+        <div className="absolute -top-7 right-5">
+          <StoreLogo storeName={storeName} size={56} fallbackEmoji="🏬" emojiBg="#15803d" />
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            className="w-8 h-8 flex items-center justify-center rounded-full bg-white border border-gray-200 text-gray-400 hover:text-rose-500 hover:border-rose-200 transition"
+            aria-label="Save"
+          >
+            <Heart size={15} />
+          </button>
+          <span className="text-xs font-semibold text-gray-500 tabular-nums">{purchaseCount}× purchased</span>
+        </div>
+
+        {/* Urgency / quest chip — "Buy N more" reads as a tier nudge. */}
+        {remaining > 0 ? (
+          <span className="inline-flex mt-3 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-violet-100 text-violet-700 border border-violet-200">
+            Buy {remaining} more
+          </span>
+        ) : (
+          <span className="inline-flex mt-3 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-700 border border-emerald-200">
+            Tier hit 🥑
+          </span>
+        )}
+        <h1 className="text-2xl font-black text-gray-900 mt-1 leading-tight">{item.item_name || 'Item'}</h1>
+        <p className="text-sm text-gray-500">
+          {storeName ? displayStoreName(storeName) : 'Receipt item'}
+          {item.sku ? ` · SKU ${item.sku}` : ''}
+        </p>
+
+        <div className="flex items-center gap-3 mt-3">
+          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-sm font-extrabold tabular-nums">
+            🥑 ${(item.price || 0).toFixed(2)}
+          </span>
+          <span className="text-xs text-gray-500 ml-auto tabular-nums">
+            {remaining > 0 ? `${remaining} to go` : 'Complete'}
+          </span>
+        </div>
+
+        {/* Six-segment progress bar — same shape as Fetch's reward
+            tier indicator. Filled segments = remaining items needed. */}
+        <div className="mt-2 grid grid-cols-6 gap-1">
+          {Array.from({ length: target }).map((_, i) => (
+            <div
+              key={i}
+              className={`h-1.5 rounded-full ${
+                i < Math.round(progress * target)
+                  ? 'bg-gradient-to-r from-emerald-400 to-lime-500'
+                  : 'bg-gray-200'
+              }`}
+            />
+          ))}
+        </div>
+
+        {canAdd && (
+          <button
+            onClick={onAddToSmashlist}
+            className="mt-4 w-full inline-flex items-center justify-center gap-2 py-3 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 text-white font-bold shadow hover:shadow-lg transition"
+          >
+            <ShoppingCart size={15} /> Add to Smashlist
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// Lightweight category → emoji map (no external lib dep) so the hero
+// can render a stand-in product mark when there's no real photo.
+function categoryEmoji(slug) {
+  const map = {
+    grocery: '🥦', beverages: '🧃', alcohol: '🍷', pet: '🐶',
+    household: '🧴', health: '💊', restaurant: '🍴', clothing: '👕',
+    electronics: '📱', toys: '🧸', baby: '👶', fuel: '⛽', auto: '🚗',
+  }
+  return map[slug] || '🛒'
 }

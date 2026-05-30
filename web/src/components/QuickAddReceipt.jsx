@@ -8,6 +8,7 @@ import { createClient } from '../lib/supabase/client'
 import { useAddReceipt } from '../hooks/useReceipts'
 import { uploadReceiptForParse } from '../lib/parse-receipt-upload'
 import CameraCapture from './CameraCapture'
+import ReceiptScanAnimation from './ReceiptScanAnimation'
 
 // Floating "Add Receipt" widget. Lives in the dashboard layout, visible on every
 // page. Provides:
@@ -166,6 +167,11 @@ export default function QuickAddReceipt() {
           </div>
         </div>
       )}
+
+      {/* Full-screen scan animation — covers the dim toast pill below
+          with a much more delightful "mascot + receipt + scan line"
+          ceremony while the parse runs. */}
+      <ReceiptScanAnimation count={busy} />
 
       {/* Floating Action Button */}
       <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-2">

@@ -415,10 +415,25 @@ export default function RegisterPage() {
               {loading ? 'Creating account…' : 'Create Account'}
             </button>
 
-            {/* Google sign-up temporarily removed — Supabase Auth →
-                Providers → Google isn't enabled on the project yet.
-                signInWithGoogle() remains defined above so flipping
-                this back on is uncomment-only. */}
+            {/* Google OAuth shortcut — bypass the entire long form for
+                anyone who'd rather just connect Google. The profile
+                trigger handles first/last name; username is generated
+                by the Supabase signup trigger and editable from
+                /profile after they land. */}
+            <div className="mt-3 flex items-center gap-3">
+              <div className="h-px flex-1 bg-gray-200" />
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">or</span>
+              <div className="h-px flex-1 bg-gray-200" />
+            </div>
+            <button
+              type="button"
+              onClick={signInWithGoogle}
+              disabled={googleLoading || loading}
+              className="mt-3 w-full inline-flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl border-2 border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 disabled:opacity-60 font-semibold text-gray-700 shadow-sm transition"
+            >
+              <RegisterGoogleLogo />
+              {googleLoading ? 'Opening Google…' : 'Sign up with Google'}
+            </button>
           </form>
           <p className="text-center text-sm text-gray-500 mt-4">
             Already have an account?{' '}

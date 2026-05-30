@@ -210,13 +210,22 @@ function LoginPageInner() {
             </button>
           </form>
 
-          {/* Google sign in temporarily removed — Supabase Auth →
-              Providers → Google isn't enabled on the project yet, so
-              the OAuth flow 400s with "Unsupported provider: provider
-              is not enabled". Add the button back once the dashboard
-              config is in place. signInWithGoogle() + GoogleLogo
-              remain defined below so re-enabling is a one-line
-              uncomment. */}
+          {/* OAuth divider + Google sign in. Hidden when the email-reset
+              modal is open so we don't crowd the screen. */}
+          <div className="mt-5 flex items-center gap-3">
+            <div className="h-px flex-1 bg-gray-200" />
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">or</span>
+            <div className="h-px flex-1 bg-gray-200" />
+          </div>
+          <button
+            type="button"
+            onClick={signInWithGoogle}
+            disabled={googleLoading || loading}
+            className="mt-4 w-full inline-flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl border-2 border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 disabled:opacity-60 font-semibold text-gray-700 shadow-sm transition"
+          >
+            <GoogleLogo />
+            {googleLoading ? 'Opening Google…' : 'Continue with Google'}
+          </button>
 
           <div className="mt-5 text-center space-y-1.5">
             <p className="text-sm text-gray-500">

@@ -131,6 +131,55 @@ export default function DiscoverPreview() {
         />
       </div>
 
+      {/* 6. Popular at Costco — vertical list of horizontal row-cards.
+          Mirrors the Fetch "Popular at Walmart" pattern. */}
+      <div className="flex items-center gap-2 mt-6">
+        <button className="w-8 h-8 rounded-full bg-white border border-gray-200 hover:border-emerald-300 flex items-center justify-center" aria-label="Back">
+          <span className="text-gray-700">←</span>
+        </button>
+        <h2 className="text-xl font-extrabold text-gray-900">Popular at Costco</h2>
+      </div>
+      <div className="space-y-3">
+        <RowCard
+          tint="#e0f2fe"
+          emoji="🥨"
+          urgency="Buy 2"
+          urgencyTone="violet"
+          title="Smartfood Popcorn"
+          subtitle="Select varieties"
+          social="67k"
+          progress={0.3}
+          guacMoney={15}
+        />
+        <RowCard
+          tint="#fef3c7"
+          emoji="🪒"
+          urgency="533 left"
+          urgencyTone="rose"
+          title="Bic Soleil 3 Razors at Costco"
+          subtitle="4 count"
+          social="22k"
+          guacMoney={10}
+          brandBadge="🏪"
+        />
+        <RowCard
+          tint="#d1fae5"
+          emoji="💊"
+          title="Bactine First Aid Essentials"
+          subtitle="Select varieties"
+          social="48k"
+          guacMoney={10}
+        />
+        <RowCard
+          tint="#fef9c3"
+          emoji="🥚"
+          title="Eggland's Best Eggs"
+          subtitle="Dozen large"
+          social="165k"
+          guacMoney={0.6}
+        />
+      </div>
+
       <div className="h-6" />
     </div>
   )
@@ -170,6 +219,59 @@ function QuestCard({ reward, title, subtitle, progress }) {
           className="h-full bg-gradient-to-r from-emerald-400 to-lime-500 transition-all"
           style={{ width: `${Math.round(progress * 100)}%` }}
         />
+      </div>
+    </div>
+  )
+}
+
+function RowCard({ tint, emoji, urgency, urgencyTone = 'violet', title, subtitle, social, progress, guacMoney, brandBadge }) {
+  const urgencyClass = urgencyTone === 'rose'
+    ? 'bg-rose-100 text-rose-700 border-rose-200'
+    : 'bg-violet-100 text-violet-700 border-violet-200'
+  return (
+    <div className="flex bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all overflow-hidden">
+      {/* Left thumbnail tile */}
+      <div
+        className="relative shrink-0 flex items-center justify-center text-5xl"
+        style={{ backgroundColor: tint, width: 120, height: 120 }}
+      >
+        <span style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))' }}>{emoji}</span>
+        {brandBadge && (
+          <span className="absolute -bottom-2 -right-2 w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center text-base border-2 border-white shadow">
+            {brandBadge}
+          </span>
+        )}
+      </div>
+      {/* Right content */}
+      <div className="flex-1 min-w-0 p-3 flex flex-col justify-between">
+        <div>
+          {urgency && (
+            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider border ${urgencyClass} mb-1`}>
+              {urgencyTone === 'rose' && <span>⚡</span>}
+              {urgency}
+            </span>
+          )}
+          <p className="text-base font-extrabold text-gray-900 leading-tight">{title}</p>
+          <p className="text-xs text-gray-500">{subtitle}</p>
+        </div>
+        <div className="flex items-center justify-between mt-2">
+          <div className="flex items-center gap-2">
+            <button className="w-7 h-7 rounded-full bg-white border border-gray-200 text-gray-400 hover:text-rose-500 hover:border-rose-200 flex items-center justify-center">
+              <Heart size={13} />
+            </button>
+            {social && (
+              <span className="text-[11px] font-semibold text-gray-500 tabular-nums">{social}</span>
+            )}
+            {typeof progress === 'number' && (
+              <div className="ml-1 flex-1 max-w-[100px] h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-emerald-400 to-lime-500" style={{ width: `${Math.round(progress * 100)}%` }} />
+              </div>
+            )}
+          </div>
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-sm font-extrabold tabular-nums">
+            🥑 ${guacMoney < 1 ? guacMoney.toFixed(2) : guacMoney}
+          </span>
+        </div>
       </div>
     </div>
   )

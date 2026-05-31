@@ -26,6 +26,7 @@
 //   />
 
 import { Heart } from 'lucide-react'
+import './emoji-floats.css'
 
 // Default pastel palette for category-tinted thumbs. Keyed against the
 // GetGuac category slugs in lib/categories.js so the same product gets
@@ -93,7 +94,7 @@ export default function ProductCard({
             onError={(e) => { e.currentTarget.style.display = 'none' }}
           />
         ) : (
-          <span className="text-4xl opacity-50">🛒</span>
+          <span className="emoji-floats text-6xl">🛒</span>
         )}
       </div>
 

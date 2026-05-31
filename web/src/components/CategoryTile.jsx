@@ -9,6 +9,7 @@
 
 import Link from 'next/link'
 import { tintForCategory } from './ProductCard'
+import './emoji-floats.css'
 
 export default function CategoryTile({ slug, label, emoji = '🛒', href }) {
   const target = href || `/stash?category=${encodeURIComponent(slug || '')}`
@@ -22,10 +23,10 @@ export default function CategoryTile({ slug, label, emoji = '🛒', href }) {
         <p className="font-bold text-gray-900 text-sm">{label}</p>
       </div>
       <div
-        className="absolute top-0 right-0 h-full w-20 flex items-center justify-center text-3xl"
+        className="group absolute top-0 right-0 h-full w-20 flex items-center justify-center text-4xl"
         style={{ backgroundColor: tintForCategory(slug) }}
       >
-        <span style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.06))' }}>{emoji}</span>
+        <span className="emoji-floats">{emoji}</span>
       </div>
     </Link>
   )

@@ -1,0 +1,40 @@
+/* Shared emoji styling — used by ProductCard, QuestTile, CategoryTile,
+   ItemRowCard, DiscoverStrip, and the preview pages.
+
+   Goal: make native emoji on pastel tiles feel like Fetch's 3D floating
+   illustrations. Modern OS emoji (Apple Color, Noto Color, Segoe UI
+   Emoji) are already shaded and 3D; the polish that sells the look is
+   a stronger drop-shadow + a faint idle bob + a hover lift.
+*/
+
+.emoji-floats {
+  display: inline-block;
+  line-height: 1;
+  filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.18))
+          drop-shadow(0 2px 3px rgba(0, 0, 0, 0.08));
+  transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
+              filter    220ms ease-out;
+  animation: emoji-idle-bob 4s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+
+.emoji-floats:hover,
+.group:hover .emoji-floats,
+button:hover .emoji-floats,
+a:hover .emoji-floats {
+  transform: translateY(-4px) scale(1.06) rotate(-2deg);
+  filter: drop-shadow(0 14px 16px rgba(0, 0, 0, 0.22))
+          drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+}
+
+@keyframes emoji-idle-bob {
+  0%, 100% { transform: translateY(0) rotate(-0.5deg); }
+  50%      { transform: translateY(-3px) rotate(0.5deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .emoji-floats {
+    animation: none;
+    transition: none;
+  }
+}

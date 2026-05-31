@@ -1,4 +1,5 @@
 'use client'
+import './emoji-floats.css'
 // Quest tile — used on the Discover dashboard hero strip.
 //
 // Each tile is a single onboarding-style nudge: "Connect a store",
@@ -25,10 +26,10 @@ export default function QuestTile({
       className="text-left bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-md hover:border-violet-200 hover:-translate-y-0.5 transition-all w-full"
     >
       <div
-        className="flex items-center justify-center text-5xl"
+        className="group flex items-center justify-center text-6xl"
         style={{ backgroundColor: tint, aspectRatio: '1.6 / 1' }}
       >
-        <span style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.08))' }}>{emoji}</span>
+        <span className="emoji-floats">{emoji}</span>
       </div>
       <div className="p-3 space-y-1">
         {rewardLabel && (

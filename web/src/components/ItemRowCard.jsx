@@ -26,6 +26,7 @@
 //   />
 
 import { Heart } from 'lucide-react'
+import './emoji-floats.css'
 
 const URGENCY_TONES = {
   violet: 'bg-violet-100 text-violet-700 border-violet-200',
@@ -75,7 +76,7 @@ export default function ItemRowCard({
           // eslint-disable-next-line @next/next/no-img-element
           <img src={thumb} alt={title} className="max-h-24 max-w-[80%] object-contain" onError={(e) => { e.currentTarget.style.display = 'none' }} />
         ) : (
-          <span className="text-5xl" style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))' }}>{emoji || '🛒'}</span>
+          <span className="emoji-floats text-6xl">{emoji || '🛒'}</span>
         )}
         {brandBadge && (
           <span className="absolute -bottom-2 -right-2 w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center text-base border-2 border-white shadow">

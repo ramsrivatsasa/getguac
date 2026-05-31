@@ -17,6 +17,7 @@
 
 import Link from 'next/link'
 import { Search, Heart, Gamepad2, Sparkles, Camera, Flame, Link as LinkIcon } from 'lucide-react'
+import '../../../../components/emoji-floats.css'
 
 export default function DiscoverPreview() {
   return (
@@ -193,7 +194,7 @@ function PeekingTile({ bg, emoji }) {
       className="rounded-t-2xl aspect-square flex items-center justify-center text-5xl"
       style={{ backgroundColor: bg, marginBottom: '-30%' }}
     >
-      <span style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))' }}>{emoji}</span>
+      <span className="emoji-floats">{emoji}</span>
     </div>
   )
 }
@@ -235,7 +236,7 @@ function RowCard({ tint, emoji, urgency, urgencyTone = 'violet', title, subtitle
         className="relative shrink-0 flex items-center justify-center text-5xl"
         style={{ backgroundColor: tint, width: 120, height: 120 }}
       >
-        <span style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))' }}>{emoji}</span>
+        <span className="emoji-floats">{emoji}</span>
         {brandBadge && (
           <span className="absolute -bottom-2 -right-2 w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center text-base border-2 border-white shadow">
             {brandBadge}
@@ -284,7 +285,7 @@ function ProductCard({ tint, emoji, title, subtitle, guacMoney, saved, social })
         className="flex items-center justify-center text-5xl"
         style={{ backgroundColor: tint, aspectRatio: '1 / 1' }}
       >
-        <span style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))' }}>{emoji}</span>
+        <span className="emoji-floats">{emoji}</span>
       </div>
       <div className="p-2.5">
         <p className="text-sm font-extrabold text-gray-900 leading-tight line-clamp-1">{title}</p>

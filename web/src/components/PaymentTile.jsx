@@ -23,17 +23,21 @@ const TONE = {
   green:   { chip: 'bg-gradient-to-br from-green-500 to-emerald-600',    stroke: '#22c55e' },
 }
 
-function EmojiMark({ emoji, pos }) {
+function EmojiMark({ emoji, pos, kind }) {
   if (!emoji || !pos) return null
+  // The watermark's base rotation is passed as a CSS variable so the
+  // keyframe drift can compose with it (`rotate(calc(var(--wm-rot) +
+  // 6deg))`) instead of overwriting it. `kind` picks the avocado vs.
+  // theme animation curve so the two marks don't move in lockstep.
   return (
     <span
       aria-hidden
-      className="absolute select-none pointer-events-none leading-none"
+      className={`absolute select-none pointer-events-none leading-none ${kind === 'avocado' ? 'tile-watermark-avocado' : 'tile-watermark-theme'}`}
       style={{
         top: pos.top, right: pos.right, bottom: pos.bottom, left: pos.left,
-        transform: `rotate(${pos.rotate || '0deg'})`,
         fontSize: pos.size || '28px',
         opacity: pos.opacity ?? 0.18,
+        '--wm-rot': pos.rotate || '0deg',
       }}
     >
       {emoji}
@@ -148,9 +152,9 @@ export default function PaymentTile({
   return (
     <div className="payment-tile-card snap-start shrink-0 w-56 relative overflow-hidden flex items-center gap-3 bg-white rounded-2xl border border-gray-200 shadow-sm p-3 hover:shadow-md transition-all">
       <VectorPattern pattern={pattern} stroke={t.stroke} pos={d.patternPos} />
-      <EmojiMark emoji="🥑" pos={d.avocadoPos} />
-      <EmojiMark emoji={d.themeEmoji} pos={d.themePos} />
-      <div className={`shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center relative z-10 shadow-md ${t.chip}`}>
+      <EmojiMark emoji="🥑" pos={d.avocadoPos} kind="avocado" />
+      <EmojiMark emoji={d.themeEmoji} pos={d.themePos} kind="theme" />
+      <div className={`tile-chip-host shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center relative z-10 shadow-md ${t.chip}`} style={{ color: t.stroke }}>
         <span className="tile-chip-icon text-2xl drop-shadow-sm">{emoji}</span>
       </div>
       <div className="min-w-0 flex-1 relative z-10">

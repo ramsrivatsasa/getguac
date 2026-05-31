@@ -594,9 +594,9 @@ function GuacWizardTile() {
       {/* 🥑 brand watermark + 🧙‍♂️ theme watermark — same proportions
           as the PaymentTile row so the engagement strip and the
           financial scroll feel like one design system. */}
-      <span aria-hidden className="absolute select-none pointer-events-none leading-none" style={{ top: '-4px', right: '6px', transform: 'rotate(-12deg)', fontSize: '30px', opacity: 0.22 }}>🥑</span>
-      <span aria-hidden className="absolute select-none pointer-events-none leading-none" style={{ bottom: '4px', right: '8px', transform: 'rotate(8deg)', fontSize: '18px', opacity: 0.26 }}>🧙‍♂️</span>
-      <div className={`shrink-0 w-11 h-11 rounded-xl flex items-center justify-center relative z-10 bg-gradient-to-br ${tone.chip} shadow-md`}>
+      <span aria-hidden className="tile-watermark-avocado absolute select-none pointer-events-none leading-none" style={{ top: '-4px', right: '6px', '--wm-rot': '-12deg', fontSize: '30px', opacity: 0.22 }}>🥑</span>
+      <span aria-hidden className="tile-watermark-theme absolute select-none pointer-events-none leading-none" style={{ bottom: '4px', right: '8px', '--wm-rot': '8deg', fontSize: '18px', opacity: 0.26 }}>🧙‍♂️</span>
+      <div className={`tile-chip-host shrink-0 w-11 h-11 rounded-xl flex items-center justify-center relative z-10 bg-gradient-to-br ${tone.chip} shadow-md text-white`}>
         <Wand2 size={20} className="tile-chip-icon text-white" />
       </div>
       <div className="min-w-0 flex-1 relative z-10">
@@ -626,9 +626,9 @@ function GuacMoneyTile() {
   const active = total > 0
   return (
     <div className={`payment-tile-card stat-card relative overflow-hidden bg-gradient-to-br ${active ? 'from-emerald-50 to-lime-100' : 'from-emerald-50/60 to-lime-50/60'} ring-1 ring-emerald-200 hover:shadow-md transition-all`}>
-      <span aria-hidden className="absolute select-none pointer-events-none leading-none" style={{ top: '-4px', left: '52px', transform: 'rotate(16deg)', fontSize: '30px', opacity: 0.22 }}>🥑</span>
-      <span aria-hidden className="absolute select-none pointer-events-none leading-none" style={{ top: '2px', right: '6px', transform: 'rotate(-8deg)', fontSize: '20px', opacity: 0.28 }}>💰</span>
-      <div className={`shrink-0 w-11 h-11 rounded-xl flex items-center justify-center relative z-10 bg-gradient-to-br ${active ? 'from-emerald-400 via-emerald-500 to-lime-600' : 'from-emerald-200 to-lime-300'} shadow-md`}>
+      <span aria-hidden className="tile-watermark-avocado absolute select-none pointer-events-none leading-none" style={{ top: '-4px', left: '52px', '--wm-rot': '16deg', fontSize: '30px', opacity: 0.22 }}>🥑</span>
+      <span aria-hidden className="tile-watermark-theme absolute select-none pointer-events-none leading-none" style={{ top: '2px', right: '6px', '--wm-rot': '-8deg', fontSize: '20px', opacity: 0.28 }}>💰</span>
+      <div className={`tile-chip-host shrink-0 w-11 h-11 rounded-xl flex items-center justify-center relative z-10 bg-gradient-to-br ${active ? 'from-emerald-400 via-emerald-500 to-lime-600' : 'from-emerald-200 to-lime-300'} shadow-md text-white`}>
         <PiggyBank size={20} className="tile-chip-icon text-white" />
       </div>
       <div className="min-w-0 flex-1 relative z-10">
@@ -655,9 +655,9 @@ function RewardsTile({ count }) {
       className={`payment-tile-card stat-card relative overflow-hidden bg-gradient-to-br ${active ? 'from-lime-50 to-emerald-100' : 'from-gray-50 to-gray-100/40'} ring-1 ${active ? 'ring-lime-300' : 'ring-gray-200'} hover:shadow-md transition-all`}
       title="Rewards available"
     >
-      <span aria-hidden className="absolute select-none pointer-events-none leading-none" style={{ bottom: '-4px', right: '4px', transform: 'rotate(-18deg)', fontSize: '30px', opacity: 0.22 }}>🥑</span>
-      <span aria-hidden className="absolute select-none pointer-events-none leading-none" style={{ top: '2px', right: '6px', transform: 'rotate(12deg)', fontSize: '20px', opacity: 0.28 }}>🎁</span>
-      <div className={`shrink-0 w-11 h-11 rounded-xl flex items-center justify-center relative z-10 bg-gradient-to-br ${active ? 'from-lime-400 to-emerald-500' : 'from-gray-300 to-gray-400'} shadow-md`}>
+      <span aria-hidden className="tile-watermark-avocado absolute select-none pointer-events-none leading-none" style={{ bottom: '-4px', right: '4px', '--wm-rot': '-18deg', fontSize: '30px', opacity: 0.22 }}>🥑</span>
+      <span aria-hidden className="tile-watermark-theme absolute select-none pointer-events-none leading-none" style={{ top: '2px', right: '6px', '--wm-rot': '12deg', fontSize: '20px', opacity: 0.28 }}>🎁</span>
+      <div className={`tile-chip-host shrink-0 w-11 h-11 rounded-xl flex items-center justify-center relative z-10 bg-gradient-to-br ${active ? 'from-lime-400 to-emerald-500' : 'from-gray-300 to-gray-400'} shadow-md text-white`}>
         <Gift size={20} className="tile-chip-icon text-white" />
       </div>
       <div className="min-w-0 flex-1 relative z-10">

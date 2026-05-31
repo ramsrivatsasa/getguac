@@ -21,6 +21,7 @@ import { displayStoreName, storeGroupKey } from '../../../lib/store-name-normali
 import { periodToReceiptsChip, buildReceiptsUrl } from '../../../lib/receipts-deeplink'
 import { isPaymentReceipt } from '../../../lib/payment-rows'
 import PaymentTile, { PAYMENT_TILE_CONFIGS } from '../../../components/PaymentTile'
+import { computeDashboardAnalysis } from '../../../lib/analysisEngine'
 const PERIODS = ['daily', 'weekly', 'monthly', 'yearly']
 
 // Dropdown options for "how many <period>s back to include"
@@ -249,16 +250,15 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
           dismissable; collapsed-by-default. */}
       <AnomaliesPanel receipts={spendingReceipts} />
 
-      {/* Financial-tile horizontal scroll — combines the period-
-          window receipt totals (transactions / total spent / tax /
-          bank fees) and the bank-statement totals (purchases /
-          payments / interest / fees) into one row with left/right
-          arrow controls and a hidden native scrollbar. */}
+      {/* Financial-tile horizontal scroll — eight tiles driven by
+          the centralized analysisEngine (web/src/lib/analysisEngine).
+          Each tile shows current value + a delta vs the prior
+          time-frame of the same shape. Same engine powers the
+          /api/analysis endpoint that mobile consumes. */}
       <AllPaymentsScroll
-        txCount={filtered.length}
-        totalSpend={totalSpend}
-        totalTax={totalTax}
-        bankFees={bankFees}
+        spendingReceipts={spendingReceipts}
+        period={period}
+        periodCount={periodCount}
       />
 
       <div className="grid lg:grid-cols-3 gap-6">
@@ -405,7 +405,32 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
 // here via the same useQuery keys as BankTile so cache is shared.
 // Bank tiles silently render as $0 when no statements exist — the
 // row still shows transactions/spend/tax so it never disappears.
-function AllPaymentsScroll({ txCount, totalSpend, totalTax, bankFees }) {
+// 8-tile financial scroll. Pulls bank data via the same useQuery
+// keys the rest of the dashboard uses (TanStack dedups by key, so
+// this doesn't fire duplicate fetches) and hands the raw rows + the
+// receipts + the current period to `computeDashboardAnalysis`. The
+// engine does all the math; we just render. Same engine runs server-
+// side at /api/analysis for mobile consumption.
+//
+// Each metric carries a `deltaGoodWhen` hint that drives the color
+// of the delta chip:
+//   - 'down' for cost metrics (Total Spent, Tax, Interest, Bank Fees,
+//      Fees Paid) — green when the number went DOWN
+//   - 'up' for income-shaped metrics (Payments) — green when UP
+//   - 'neutral' for purely informational metrics (Transactions,
+//      Purchases) — chip stays gray regardless of direction
+const METRIC_DIRECTIONS = {
+  transactions: 'neutral',
+  totalSpent:   'down',
+  taxPaid:      'down',
+  purchases:    'neutral',
+  payments:     'up',
+  interestPaid: 'down',
+  feesPaid:     'down',
+  bankFees:     'down',
+}
+
+function AllPaymentsScroll({ spendingReceipts, period, periodCount }) {
   const sb = createSbClient()
   const scrollRef = useRef(null)
   const { data: statements = [] } = useQuery({
@@ -423,50 +448,65 @@ function AllPaymentsScroll({ txCount, totalSpend, totalTax, bankFees }) {
     queryFn: async () => { const { data } = await sb.from('bank_transactions').select('*'); return data || [] },
     staleTime: 5 * 60_000,
   })
-  const hasBank = statements.length > 0 || fees.length > 0 || transactions.length > 0
-  const summary = hasBank
-    ? generateInsights({ statements, fees, transactions }, 'ytd').summary
-    : { totalPayments: 0, totalInterest: 0, totalFees: 0, totalPurch: 0 }
-  const money = (n) => `$${Number(n || 0).toFixed(2)}`
 
-  // Smooth-scroll the row by roughly one tile (~220px = w-52 + gap).
+  const analysis = computeDashboardAnalysis({
+    receipts: spendingReceipts,
+    statements,
+    fees,
+    transactions,
+    period,
+    periodCount,
+  })
+
+  const money = (n) => `$${Number(n || 0).toFixed(2)}`
+  // Tiles in user's requested order. Each entry: config-key, value
+  // formatter, metric-key (used to look up current + delta).
+  const TILES = [
+    { key: 'transactions', value: analysis.metrics.transactions.current,            format: (v) => v },
+    { key: 'totalSpent',   value: analysis.metrics.totalSpent.current,              format: money },
+    { key: 'taxPaid',      value: analysis.metrics.taxPaid.current,                 format: money },
+    { key: 'purchases',    value: analysis.metrics.purchases.current,               format: money },
+    { key: 'payments',     value: analysis.metrics.payments.current,                format: money },
+    { key: 'interestPaid', value: analysis.metrics.interestPaid.current,            format: money },
+    { key: 'feesPaid',     value: analysis.metrics.feesPaid.current,                format: money },
+    { key: 'bankFees',     value: analysis.metrics.bankFees.current,                format: money },
+  ]
+
+  // Smooth-scroll the row by roughly one tile (~172px = w-40 + gap).
   // Multiplied by 3 so each click moves a meaningful chunk on wide
-  // screens. behavior:'smooth' = the "auto"-feeling slide the user
-  // asked for.
+  // screens. behavior:'smooth' = the "auto"-feeling slide.
   const scrollBy = (dir) => {
     const el = scrollRef.current
     if (!el) return
-    el.scrollBy({ left: dir * 220 * 3, behavior: 'smooth' })
+    el.scrollBy({ left: dir * 172 * 3, behavior: 'smooth' })
   }
 
   return (
-    <div className="relative -mx-2 px-2 group">
-      {/* Hidden-scrollbar utility: hides the native bar on every
-          modern browser while keeping overflow scrollable, so the
-          arrows are the only scroll affordance the user sees. */}
+    // Outer wrapper has px-12 padding so the absolutely-positioned
+    // arrows sit *outside* the scroll area instead of on top of the
+    // first/last tile (which was the original overlap bug).
+    <div className="relative group px-12">
       <style jsx>{`
         .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
       `}</style>
-      <div
-        ref={scrollRef}
-        className="no-scrollbar overflow-x-auto scroll-smooth pb-1"
-      >
+      <div ref={scrollRef} className="no-scrollbar overflow-x-auto scroll-smooth pb-1">
         <div className="flex gap-3 min-w-max">
-          <PaymentTile {...PAYMENT_TILE_CONFIGS.transactions} value={txCount} />
-          <PaymentTile {...PAYMENT_TILE_CONFIGS.totalSpent}   value={money(totalSpend)} />
-          <PaymentTile {...PAYMENT_TILE_CONFIGS.taxPaid}      value={money(totalTax)} />
-          <PaymentTile {...PAYMENT_TILE_CONFIGS.purchases}    value={money(summary.totalPurch)} />
-          <PaymentTile {...PAYMENT_TILE_CONFIGS.payments}     value={money(summary.totalPayments)} />
-          <PaymentTile {...PAYMENT_TILE_CONFIGS.interestPaid} value={money(summary.totalInterest)} />
-          <PaymentTile {...PAYMENT_TILE_CONFIGS.feesPaid}     value={money(summary.totalFees)} />
-          <PaymentTile {...PAYMENT_TILE_CONFIGS.bankFees}     value={money(bankFees)} />
+          {TILES.map(({ key, value, format }) => {
+            const m = analysis.metrics[key]
+            return (
+              <PaymentTile
+                key={key}
+                {...PAYMENT_TILE_CONFIGS[key]}
+                value={format(value)}
+                deltaLabel={m.deltaLabel}
+                deltaArrow={m.deltaArrow}
+                deltaGoodWhen={METRIC_DIRECTIONS[key]}
+              />
+            )
+          })}
         </div>
       </div>
-      {/* Edge arrows — float over the row's left/right edges. Always
-          present, but soften the opacity when the mouse isn't over
-          the section so they don't dominate the chrome. The fade
-          mask underneath each one hints there's more off-screen. */}
       <button
         type="button"
         aria-label="Scroll left"

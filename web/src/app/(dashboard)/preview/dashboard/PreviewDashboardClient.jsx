@@ -130,34 +130,40 @@ export default function PreviewDashboardClient({ receipts, rewards, firstName })
           <span className="text-xs text-gray-500">Lifetime</span>
         </div>
         <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 hide-scrollbar">
-          {/* 4 different tile shapes, same width, each keeps a vibrant
-              gradient. No two tiles laid out the same. */}
-          <PaymentTileFullGradient
+          {/* All 4 tiles share the same full-gradient body + corner
+              emoji shape (matches the user's reference). Each has a
+              WHITE PILL CHIP for the label so white shows up cleanly
+              against the vibrant gradient. */}
+          <PaymentTile
             emoji="🧾"
             gradient="linear-gradient(135deg, #0ea5e9 0%, #2563eb 55%, #4f46e5 100%)"
             haloColor="#7dd3fc"
             label="Transactions"
+            labelColor="#1d4ed8"
             value={receipts.length}
           />
-          <PaymentTileSplit
+          <PaymentTile
             emoji="💸"
             gradient="linear-gradient(135deg, #f97316 0%, #ef4444 55%, #ec4899 100%)"
             haloColor="#fdba74"
             label="Total Spent"
+            labelColor="#b91c1c"
             value={`$${totalSpend.toFixed(2)}`}
           />
-          <PaymentTileTopBand
+          <PaymentTile
             emoji="📈"
             gradient="linear-gradient(135deg, #fbbf24 0%, #f59e0b 55%, #d97706 100%)"
             haloColor="#fde68a"
             label="Tax Paid"
+            labelColor="#92400e"
             value={`$${totalTax.toFixed(2)}`}
           />
-          <PaymentTileDiagonal
+          <PaymentTile
             emoji="🏦"
             gradient="linear-gradient(135deg, #f43f5e 0%, #be185d 55%, #9d174d 100%)"
             haloColor="#fda4af"
             label="Bank Fees"
+            labelColor="#9d174d"
             value={`$${bankFees.toFixed(2)}`}
           />
         </div>
@@ -318,89 +324,30 @@ function CategoryWhiteCard({ label, emoji, accent }) {
   )
 }
 
-// Shared sizing so all four shapes line up perfectly in the strip.
-const PAYMENT_TILE_BASE = 'snap-start shrink-0 w-52 sm:w-56 h-28 relative overflow-hidden rounded-2xl border-2 border-white shadow-lg ring-1 ring-black/5 hover:shadow-xl hover:-translate-y-1 transition-all'
-
-// Shape 1 — Full vibrant gradient body. Label/value top-left in white,
-// big floating emoji bottom-right with a soft halo blob behind.
-function PaymentTileFullGradient({ emoji, gradient, haloColor, label, value }) {
+// Full-gradient tile with a WHITE PILL CHIP for the label.
+// White-pill on vibrant gradient is the splash of white the user
+// asked for; everything else (body color, emoji-corner placement,
+// halo glow) matches the reference screenshot.
+function PaymentTile({ emoji, gradient, haloColor, label, labelColor = '#1f2937', value }) {
   return (
-    <div className={`${PAYMENT_TILE_BASE} text-white`} style={{ background: gradient }}>
+    <div
+      className="snap-start shrink-0 w-52 sm:w-56 h-28 relative overflow-hidden rounded-2xl border-2 border-white shadow-lg ring-1 ring-black/5 hover:shadow-xl hover:-translate-y-1 transition-all text-white"
+      style={{ background: gradient }}
+    >
       <span aria-hidden className="absolute -bottom-8 -right-4 w-32 h-32 rounded-full opacity-50 blur-2xl pointer-events-none" style={{ backgroundColor: haloColor }} />
-      <span aria-hidden className="emoji-floats absolute bottom-1 right-1 text-6xl opacity-95 select-none">{emoji}</span>
-      <div className="absolute top-3 left-3.5 right-12">
-        <p className="text-[10px] font-extrabold uppercase tracking-widest text-white/90 drop-shadow">{label}</p>
-        <p className="text-2xl font-black tabular-nums mt-1 drop-shadow">{value}</p>
-      </div>
-    </div>
-  )
-}
+      <span aria-hidden className="emoji-floats absolute -bottom-1 -right-1 text-6xl opacity-95 select-none">{emoji}</span>
 
-// Shape 2 — White body with a gradient pill chip at the top + emoji
-// to the left of the value. Reads like a "score card with a badge".
-function PaymentTileSplit({ emoji, gradient, haloColor, label, value }) {
-  return (
-    <div className={`${PAYMENT_TILE_BASE} bg-white`}>
-      <span aria-hidden className="absolute -top-6 -right-6 w-20 h-20 rounded-full opacity-50 blur-2xl pointer-events-none" style={{ backgroundColor: haloColor }} />
-      <div className="px-3.5 pt-3 pb-3 flex flex-col h-full justify-between">
-        <span
-          className="self-start inline-block px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest text-white shadow-sm"
-          style={{ background: gradient }}
-        >
-          {label}
-        </span>
-        <div className="flex items-end gap-2">
-          <span className="emoji-floats text-4xl shrink-0">{emoji}</span>
-          <p className="text-2xl font-black text-gray-900 tabular-nums leading-none">{value}</p>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// Shape 3 — Gradient top band (~45%) with the emoji centered inside,
-// white body below with label + value. Looks like a Fetch reward
-// claim card.
-function PaymentTileTopBand({ emoji, gradient, haloColor, label, value }) {
-  return (
-    <div className={`${PAYMENT_TILE_BASE} bg-white`}>
-      <div
-        className="relative h-12 flex items-center justify-center"
-        style={{ background: gradient }}
+      {/* White pill chip — the splash of white inside the gradient */}
+      <span
+        className="absolute top-3 left-3 inline-block px-2.5 py-1 rounded-full bg-white text-[10px] font-extrabold uppercase tracking-widest shadow-sm"
+        style={{ color: labelColor }}
       >
-        <span aria-hidden className="absolute -top-4 left-6 w-16 h-16 rounded-full opacity-60 blur-xl pointer-events-none" style={{ backgroundColor: haloColor }} />
-        <span className="emoji-floats text-3xl relative z-10 drop-shadow">{emoji}</span>
-      </div>
-      <div className="px-3.5 pt-2 pb-3">
-        <p className="text-[10px] font-extrabold uppercase tracking-widest text-gray-600">{label}</p>
-        <p className="text-2xl font-black text-gray-900 tabular-nums mt-1">{value}</p>
-      </div>
-    </div>
-  )
-}
+        {label}
+      </span>
 
-// Shape 4 — White body with a diagonal-slice gradient hugging the
-// top-right corner, emoji nested inside the slice. Asymmetric so it
-// breaks the rhythm of the previous three tiles.
-function PaymentTileDiagonal({ emoji, gradient, haloColor, label, value }) {
-  return (
-    <div className={`${PAYMENT_TILE_BASE} bg-white`}>
-      {/* Diagonal slice via clip-path. Hugs the top-right corner so
-          the emoji sits inside the colored region. */}
-      <div
-        className="absolute top-0 right-0 w-32 h-24"
-        style={{
-          background: gradient,
-          clipPath: 'polygon(45% 0, 100% 0, 100% 100%, 0 100%)',
-        }}
-      >
-        <span aria-hidden className="absolute top-2 right-2 w-14 h-14 rounded-full opacity-50 blur-xl pointer-events-none" style={{ backgroundColor: haloColor }} />
-      </div>
-      <span aria-hidden className="emoji-floats absolute top-2 right-2 text-4xl select-none drop-shadow">{emoji}</span>
-      <div className="absolute bottom-3 left-3.5 right-10">
-        <p className="text-[10px] font-extrabold uppercase tracking-widest text-gray-600">{label}</p>
-        <p className="text-2xl font-black text-gray-900 tabular-nums mt-1">{value}</p>
-      </div>
+      <p className="absolute bottom-2.5 left-3.5 text-2xl font-black tabular-nums leading-none drop-shadow">
+        {value}
+      </p>
     </div>
   )
 }

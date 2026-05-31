@@ -114,29 +114,29 @@ export default function PreviewDashboardClient({ receipts, rewards, firstName })
         <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 hide-scrollbar">
           <PaymentTile
             emoji="🧾"
-            gradient="linear-gradient(135deg, #0ea5e9 0%, #2563eb 50%, #4f46e5 100%)"
-            haloColor="#7dd3fc"
+            haloColor="#bfdbfe"
+            accent="#1d4ed8"
             label="Transactions"
             value={receipts.length}
           />
           <PaymentTile
             emoji="💸"
-            gradient="linear-gradient(135deg, #f97316 0%, #ef4444 50%, #ec4899 100%)"
-            haloColor="#fdba74"
+            haloColor="#fecaca"
+            accent="#b91c1c"
             label="Total Spent"
             value={`$${totalSpend.toFixed(2)}`}
           />
           <PaymentTile
             emoji="📈"
-            gradient="linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)"
-            haloColor="#fde68a"
+            haloColor="#fef3c7"
+            accent="#92400e"
             label="Tax Paid"
             value={`$${totalTax.toFixed(2)}`}
           />
           <PaymentTile
             emoji="🏦"
-            gradient="linear-gradient(135deg, #f43f5e 0%, #be185d 50%, #9d174d 100%)"
-            haloColor="#fda4af"
+            haloColor="#fbcfe8"
+            accent="#9d174d"
             label="Bank Fees"
             value={`$${bankFees.toFixed(2)}`}
           />
@@ -272,21 +272,19 @@ function WorthItTile({ pending = 0 }) {
   )
 }
 
-function PaymentTile({ emoji, gradient, haloColor, label, value }) {
-  // Vibrant gradient body + big floating emoji. Mirrors the Fetch
-  // multi-color tile palette so the strip reads as a row of distinct
-  // categories instead of four-near-identical white cards.
+function PaymentTile({ emoji, haloColor, accent = '#1f2937', label, value }) {
+  // Same shape as the previous vibrant version (w-44, floating
+  // corner emoji + halo glow, big drop-shadowed label + value) —
+  // but the card body is white now, and the label + value take the
+  // per-tile accent color instead of pure white.
   return (
-    <div
-      className="snap-start shrink-0 w-44 relative overflow-hidden rounded-2xl border-2 border-white shadow-lg p-3.5 hover:shadow-xl hover:-translate-y-1 hover:rotate-[0.5deg] transition-all text-white"
-      style={{ background: gradient }}
-    >
+    <div className="snap-start shrink-0 w-44 relative overflow-hidden rounded-2xl bg-white border-2 border-white shadow-lg ring-1 ring-gray-200/60 p-3.5 hover:shadow-xl hover:-translate-y-1 hover:rotate-[0.5deg] transition-all">
       <span aria-hidden className="absolute -bottom-5 -right-3 select-none pointer-events-none">
-        <span className="emoji-floats text-6xl opacity-90">{emoji}</span>
+        <span className="emoji-floats text-6xl opacity-95">{emoji}</span>
       </span>
-      <span aria-hidden className="absolute -top-6 -left-6 w-20 h-20 rounded-full opacity-50 blur-2xl pointer-events-none" style={{ backgroundColor: haloColor }} />
-      <p className="text-[10px] font-extrabold uppercase tracking-widest text-white/90 drop-shadow relative">{label}</p>
-      <p className="text-2xl font-black tabular-nums mt-1 relative drop-shadow">{value}</p>
+      <span aria-hidden className="absolute -bottom-6 -right-6 w-24 h-24 rounded-full opacity-80 blur-2xl pointer-events-none" style={{ backgroundColor: haloColor }} />
+      <p className="text-[10px] font-extrabold uppercase tracking-widest relative" style={{ color: accent }}>{label}</p>
+      <p className="text-2xl font-black tabular-nums mt-1 relative" style={{ color: accent }}>{value}</p>
     </div>
   )
 }

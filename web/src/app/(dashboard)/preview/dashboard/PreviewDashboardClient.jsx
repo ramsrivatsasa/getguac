@@ -324,28 +324,35 @@ function CategoryWhiteCard({ label, emoji, accent }) {
   )
 }
 
-// Full-gradient tile with a WHITE PILL CHIP for the label.
-// White-pill on vibrant gradient is the splash of white the user
-// asked for; everything else (body color, emoji-corner placement,
-// halo glow) matches the reference screenshot.
+// White-bodied tile with colorful accents.
+//   - Background: SOLID WHITE (the whole card)
+//   - Label: small gradient PILL chip top-left (the only big block of
+//     gradient in the tile)
+//   - Emoji: floats on a soft round halo glow bottom-right
+//   - Value: large dark text on white, plenty of breathing room
+//
+// Keeps each tile color-coded by category without ever covering the
+// card body with the gradient.
 function PaymentTile({ emoji, gradient, haloColor, label, labelColor = '#1f2937', value }) {
   return (
-    <div
-      className="snap-start shrink-0 w-52 sm:w-56 h-28 relative overflow-hidden rounded-2xl border-2 border-white shadow-lg ring-1 ring-black/5 hover:shadow-xl hover:-translate-y-1 transition-all text-white"
-      style={{ background: gradient }}
-    >
-      <span aria-hidden className="absolute -bottom-8 -right-4 w-32 h-32 rounded-full opacity-50 blur-2xl pointer-events-none" style={{ backgroundColor: haloColor }} />
-      <span aria-hidden className="emoji-floats absolute -bottom-1 -right-1 text-6xl opacity-95 select-none">{emoji}</span>
+    <div className="snap-start shrink-0 w-52 sm:w-56 h-28 relative overflow-hidden rounded-2xl bg-white border-2 border-white shadow-lg ring-1 ring-gray-200/60 hover:shadow-xl hover:-translate-y-1 transition-all">
+      {/* Soft tinted halo behind the emoji — just enough color to
+          signal the category without coloring the whole card */}
+      <span aria-hidden className="absolute -bottom-6 -right-6 w-28 h-28 rounded-full opacity-70 blur-2xl pointer-events-none" style={{ backgroundColor: haloColor }} />
+      <span aria-hidden className="emoji-floats absolute -bottom-1 -right-1 text-6xl opacity-90 select-none">{emoji}</span>
 
-      {/* White pill chip — the splash of white inside the gradient */}
+      {/* Gradient pill chip for the label */}
       <span
-        className="absolute top-3 left-3 inline-block px-2.5 py-1 rounded-full bg-white text-[10px] font-extrabold uppercase tracking-widest shadow-sm"
-        style={{ color: labelColor }}
+        className="absolute top-3 left-3 inline-block px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest text-white shadow-sm"
+        style={{ background: gradient }}
       >
         {label}
       </span>
 
-      <p className="absolute bottom-2.5 left-3.5 text-2xl font-black tabular-nums leading-none drop-shadow">
+      <p
+        className="absolute bottom-2.5 left-3.5 text-2xl font-black tabular-nums leading-none"
+        style={{ color: labelColor }}
+      >
         {value}
       </p>
     </div>

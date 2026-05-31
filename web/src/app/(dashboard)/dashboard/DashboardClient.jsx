@@ -233,29 +233,49 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
       {/* Stat tiles — GuacScore leads, then GuacWizard right next
           to it (paired engagement scores), then GuacMoney, then
           financial tiles, then Smash days last per user request. */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
-        {/* GuacScore reads lifetime rated purchases, not just the
-            current period filter — otherwise a 3-month dashboard
-            window with no rated purchases inside it shows score=0
-            even when the user has rated items further back. The
-            big card on /guacanomics already uses a wider window;
-            this matches that behavior. */}
+      {/* Engagement strip — the four "how am I doing" tiles. GuacScore
+          uses lifetime rated purchases (not the period filter), so a
+          3-month window with no rated rows doesn't read score=0. */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         <GuacoScoreCard receipts={spendingReceipts} size="sm" />
         <GuacWizardTile />
         <GuacMoneyTile />
-        {[
-          { label: 'Transactions', value: filtered.length, icon: Receipt, color: 'bg-emerald-100 text-emerald-700' },
-          { label: 'Total Spent', value: `$${totalSpend.toFixed(2)}`, icon: DollarSign, color: 'bg-gradient-to-br from-rose-400 via-rose-600 to-rose-800 text-white shadow-sm', trend: trendBadge },
-          { label: 'Tax Paid', value: `$${totalTax.toFixed(2)}`, icon: TrendingUp, color: 'bg-amber-100 text-amber-700' },
-          { label: 'Bank Fees', value: `$${bankFees.toFixed(2)}`, icon: TrendingUp, color: bankFees > 0 ? 'bg-rose-100 text-rose-700' : 'bg-gray-100 text-gray-400' },
-          { label: 'Rewards', value: initialRewards.length, icon: Gift, color: 'bg-lime-100 text-lime-700' },
-        ].map(({ label, value, icon: Icon, color, trend }) => (
-          <div key={label} className="stat-card">
-            <div className={`p-2 rounded-lg ${color}`}><Icon size={16} /></div>
-            <div className="min-w-0">
-              <p className="text-[11px] text-gray-500 font-medium leading-tight">{label}</p>
-              <div className="flex items-baseline gap-1.5">
-                <p className="text-base font-bold text-gray-900">{value}</p>
+        <div className="stat-card">
+          <div className="p-2 rounded-lg bg-lime-100 text-lime-700"><Gift size={16} /></div>
+          <div className="min-w-0">
+            <p className="text-[11px] text-gray-500 font-medium leading-tight">Rewards</p>
+            <p className="text-base font-bold text-gray-900">{initialRewards.length}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Spending anomalies — sits below the score strip. Self-hides
+          when nothing is off; session-dismissable; collapsed-by-default. */}
+      <AnomaliesPanel receipts={spendingReceipts} />
+
+      {/* Payments Made — Transactions / Total Spent / Tax Paid /
+          Bank Fees. Horizontal scroll on every viewport (per user
+          request) so the strip stays one row regardless of screen
+          width. Snap-x keeps tiles aligned during swipe. */}
+      <section>
+        <div className="flex items-baseline justify-between mb-2">
+          <h2 className="text-base font-extrabold text-gray-900">Payments Made</h2>
+          <span className="text-xs text-gray-500">{rangeLabel}</span>
+        </div>
+        <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 payments-row">
+          {[
+            { label: 'Transactions', value: filtered.length, icon: Receipt, color: 'bg-emerald-100 text-emerald-700' },
+            { label: 'Total Spent', value: `$${totalSpend.toFixed(2)}`, icon: DollarSign, color: 'bg-gradient-to-br from-rose-400 via-rose-600 to-rose-800 text-white shadow-sm', trend: trendBadge },
+            { label: 'Tax Paid', value: `$${totalTax.toFixed(2)}`, icon: TrendingUp, color: 'bg-amber-100 text-amber-700' },
+            { label: 'Bank Fees', value: `$${bankFees.toFixed(2)}`, icon: TrendingUp, color: bankFees > 0 ? 'bg-rose-100 text-rose-700' : 'bg-gray-100 text-gray-400' },
+          ].map(({ label, value, icon: Icon, color, trend }) => (
+            <div key={label} className="snap-start shrink-0 w-44 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all p-3">
+              <div className={`w-10 h-10 rounded-xl ${color} flex items-center justify-center mb-2`}>
+                <Icon size={18} />
+              </div>
+              <p className="text-[11px] text-gray-500 font-semibold uppercase tracking-wide">{label}</p>
+              <div className="flex items-baseline gap-1.5 mt-0.5">
+                <p className="text-lg font-extrabold text-gray-900 tabular-nums">{value}</p>
                 {trend && trend.label !== '—' && (
                   <span
                     className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
@@ -270,15 +290,13 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
                 )}
               </div>
             </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Spending anomalies — moved here so it sits right below the
-          GuacScore strip (was above before, eating ~300px and
-          pushing the score row off-screen). Self-hides when nothing
-          is off; session-dismissable; collapsed-by-default. */}
-      <AnomaliesPanel receipts={spendingReceipts} />
+          ))}
+        </div>
+        <style jsx>{`
+          .payments-row::-webkit-scrollbar { display: none; }
+          .payments-row { -ms-overflow-style: none; scrollbar-width: none; }
+        `}</style>
+      </section>
 
       {/* Bank summary row — payments / interest / fees / purchases /
           refunds across all the user's bank statements. Mirrors the

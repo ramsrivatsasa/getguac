@@ -220,11 +220,6 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
           hides when nothing is urgent; session-dismissable. */}
       <UpcomingReturnsBanner />
 
-      {/* Spending anomalies — surfaces merchants/categories spiking
-          ≥2× their usual + any monthly recurring that stopped showing
-          up. Self-hides when nothing's off; session-dismissable. */}
-      <AnomaliesPanel receipts={spendingReceipts} />
-
       {/* Stats — GuacScore first, then Smash days, then the spend
           tiles. Total Spent gets an inline trend badge ("up 18% vs
           prior 3 windows") using the central spending-trends lib.
@@ -272,6 +267,12 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
           </div>
         ))}
       </div>
+
+      {/* Spending anomalies — moved here so it sits right below the
+          GuacScore strip (was above before, eating ~300px and
+          pushing the score row off-screen). Self-hides when nothing
+          is off; session-dismissable; collapsed-by-default. */}
+      <AnomaliesPanel receipts={spendingReceipts} />
 
       {/* Bank summary row — payments / interest / fees / purchases /
           refunds across all the user's bank statements. Mirrors the

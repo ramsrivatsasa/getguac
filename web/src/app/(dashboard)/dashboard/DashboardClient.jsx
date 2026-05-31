@@ -585,27 +585,17 @@ function GuacWizardTile() {
     const result = generateInsights({ statements, fees, transactions }, since)
     return computeWizardScore(result).score
   })()
-  // GuacWizard's tile palette is ALWAYS violet — bg, ring, chip,
-  // label, value, subtext all use shades of violet/purple. One
-  // visual identity per tile is the rule across the engagement
-  // strip (GuacScore amber · GuacWizard violet · GuacMoney emerald
-  // · Rewards rose). Score-band signal is conveyed by a small
-  // emoji badge next to the value (🟢/🟡/🔴) instead of recoloring
-  // the number itself, which kept the tile reading as
-  // multi-colored.
-  const tone = {
-    bg: 'from-violet-50 to-purple-100',
-    ring: 'ring-violet-200',
-    chip: 'from-violet-500 to-purple-600',
-    label: 'text-violet-700',
-    value: 'text-violet-900',
-    sub: 'text-violet-600',
-  }
-  const bandBadge =
-    score === undefined || score === null ? null :
-    score >= 65                           ? '🟢' :
-    score >= 35                           ? '🟡' :
-                                            '🔴'
+  // Score-band tone applied to the WHOLE tile (bg + ring + chip +
+  // every text color) — if green means "healthy", commit to it
+  // everywhere on the card, not just a tiny dot. While loading,
+  // use a neutral slate palette so we never flash through a wrong
+  // color before the real score lands.
+  const tone =
+    score === undefined ? { bg: 'from-slate-50 to-slate-100',     ring: 'ring-slate-200',   chip: 'from-slate-300 to-slate-400',     label: 'text-slate-600',   value: 'text-slate-700',   sub: 'text-slate-500' } :
+    score === null      ? { bg: 'from-violet-50 to-purple-100',   ring: 'ring-violet-200',  chip: 'from-violet-400 to-violet-600',   label: 'text-violet-700',  value: 'text-violet-900',  sub: 'text-violet-600' } :
+    score >= 65         ? { bg: 'from-emerald-50 to-lime-100',    ring: 'ring-emerald-200', chip: 'from-emerald-400 to-lime-600',    label: 'text-emerald-700', value: 'text-emerald-900', sub: 'text-emerald-700' } :
+    score >= 35         ? { bg: 'from-amber-50 to-orange-100',    ring: 'ring-amber-200',   chip: 'from-amber-400 to-orange-600',    label: 'text-amber-700',   value: 'text-amber-900',   sub: 'text-amber-700' } :
+                          { bg: 'from-rose-50 to-red-100',        ring: 'ring-rose-200',    chip: 'from-rose-400 to-red-600',        label: 'text-rose-700',    value: 'text-rose-900',    sub: 'text-rose-700' }
 
   return (
     <Link
@@ -630,11 +620,7 @@ function GuacWizardTile() {
           </>
         ) : score != null ? (
           <>
-            <p className={`text-xl font-black ${tone.value} tabular-nums leading-tight flex items-baseline gap-1`}>
-              <span>{score}</span>
-              <span className="text-[10px] font-bold opacity-60">/ 100</span>
-              {bandBadge && <span className="text-[10px]">{bandBadge}</span>}
-            </p>
+            <p className={`text-xl font-black ${tone.value} tabular-nums leading-tight`}>{score}<span className="text-xs font-bold opacity-60 ml-0.5">/ 100</span></p>
             <p className={`text-[10px] font-semibold mt-0.5 ${tone.sub}`}>health score</p>
           </>
         ) : (

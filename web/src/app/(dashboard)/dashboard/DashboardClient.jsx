@@ -22,6 +22,7 @@ import { periodToReceiptsChip, buildReceiptsUrl } from '../../../lib/receipts-de
 import { isPaymentReceipt } from '../../../lib/payment-rows'
 import PaymentTile, { PAYMENT_TILE_CONFIGS } from '../../../components/PaymentTile'
 import { computeDashboardAnalysis } from '../../../lib/analysisEngine'
+import { periodStartDate } from '../../../lib/timeframe'
 const PERIODS = ['daily', 'weekly', 'monthly', 'yearly']
 
 // Dropdown options for "how many <period>s back to include"
@@ -44,14 +45,19 @@ function periodStart(period, count) {
 }
 
 export default function DashboardClient({ initialReceipts, initialRewards, firstName, country }) {
-  const { spendingPeriod, setSpendingPeriod } = useStore()
+  // Time-frame state lives in the Zustand store with localStorage
+  // persistence so every page (GuacWizard, reports, …) sees the same
+  // window the dashboard is on. Changing it here updates the cached
+  // value; the next page navigation reads the updated value.
+  const { spendingPeriod, setSpendingPeriod, spendingPeriodCount, setSpendingPeriodCount } = useStore()
   const router = useRouter()
   const period = PERIODS.includes(spendingPeriod) ? spendingPeriod : 'monthly'
-  const [periodCount, setPeriodCount] = useState(() => DEFAULT_COUNT[period] || 1)
+  const periodCount = spendingPeriodCount || DEFAULT_COUNT[period] || 1
+  const setPeriodCount = setSpendingPeriodCount
 
   function selectPeriod(p) {
     setSpendingPeriod(p)
-    setPeriodCount(DEFAULT_COUNT[p] || 1)
+    setSpendingPeriodCount(DEFAULT_COUNT[p] || 1)
   }
 
   function filterByPeriod(receipts) {
@@ -534,6 +540,11 @@ function AllPaymentsScroll({ spendingReceipts, period, periodCount }) {
 // links to /guacwizard so the user can connect statements.
 function GuacWizardTile() {
   const sb = createSbClient()
+  // The wizard tile inherits the dashboard's active time-frame so the
+  // score it shows matches what /guacwizard renders for the same
+  // window. Previously this was hardcoded to 'ytd', which drifted
+  // from /guacwizard whenever the user changed the period there.
+  const { spendingPeriod, spendingPeriodCount } = useStore()
   const { data: statements = [] } = useQuery({
     queryKey: ['bank_statements'],
     queryFn: async () => { const { data } = await sb.from('bank_statements').select('*'); return data || [] },
@@ -552,7 +563,8 @@ function GuacWizardTile() {
   const score = (() => {
     const hasData = statements.length > 0 || fees.length > 0 || transactions.length > 0
     if (!hasData) return null
-    const result = generateInsights({ statements, fees, transactions }, 'ytd')
+    const since = periodStartDate(spendingPeriod, spendingPeriodCount)
+    const result = generateInsights({ statements, fees, transactions }, since)
     return computeWizardScore(result).score
   })()
   return (

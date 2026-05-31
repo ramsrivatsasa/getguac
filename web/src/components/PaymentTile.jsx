@@ -162,7 +162,7 @@ export default function PaymentTile({
   const t = TONE[tone] || TONE.sky
   const d = decor || {}
   return (
-    <div className="group snap-start shrink-0 w-40 relative overflow-hidden flex items-center gap-2.5 bg-white rounded-xl border border-gray-200 shadow-sm p-2.5 hover:shadow-md transition-all">
+    <div className="payment-tile-card snap-start shrink-0 w-40 relative overflow-hidden flex items-center gap-2.5 bg-white rounded-xl border border-gray-200 shadow-sm p-2.5 hover:shadow-md transition-all">
       <VectorPattern pattern={pattern} stroke={t.stroke} pos={d.patternPos} />
       <EmojiMark emoji="🥑" pos={d.avocadoPos} />
       <EmojiMark emoji={d.themeEmoji} pos={d.themePos} />

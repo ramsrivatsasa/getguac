@@ -17,7 +17,16 @@ export const PERIODS = [
   { key: 'all',   label: 'All time',    fn: () => null },
 ]
 
+// Accepts:
+//   - a string periodKey from PERIODS (mtd/30d/90d/ytd/12mo/all)
+//   - a Date instance (used as-is; callers compute custom windows
+//     via web/src/lib/timeframe.periodStartDate and pass the result
+//     here so the engine handles dashboard-driven time-frames
+//     without needing a matching string key)
+//   - null/undefined → falls back to the default (ytd)
 export function getPeriodStart(key) {
+  if (key instanceof Date) return key
+  if (key === null) return null
   return (PERIODS.find(p => p.key === key) || PERIODS[3]).fn()
 }
 
@@ -116,7 +125,12 @@ export function bankAccountTotals({ statements, fees, transactions }, periodKey 
 export function generateInsights({ statements = [], fees = [], transactions = [], receipts = [] }, periodKey = 'ytd') {
   const insights = []
   const since = getPeriodStart(periodKey)
-  const periodLabel = (PERIODS.find(p => p.key === periodKey) || PERIODS[3]).label
+  // When a Date is passed (custom window from the dashboard time-
+  // frame), build the label from the cutoff itself; otherwise look
+  // it up in the PERIODS table.
+  const periodLabel = periodKey instanceof Date
+    ? `since ${periodKey.toISOString().slice(0, 10)}`
+    : (PERIODS.find(p => p.key === periodKey) || PERIODS[3]).label
 
   const accounts = bankAccountTotals({ statements, fees, transactions }, periodKey)
 

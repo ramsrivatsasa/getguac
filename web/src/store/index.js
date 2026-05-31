@@ -9,6 +9,14 @@ const readBool = (key, fallback = false) => {
 const writeBool = (key, value) => {
   if (typeof window !== 'undefined') window.localStorage.setItem(key, value ? 'true' : 'false')
 }
+const readString = (key, fallback) => {
+  if (typeof window === 'undefined') return fallback
+  const v = window.localStorage.getItem(key)
+  return v ?? fallback
+}
+const writeString = (key, value) => {
+  if (typeof window !== 'undefined') window.localStorage.setItem(key, value)
+}
 
 export const useStore = create((set) => ({
   sidebarOpen: false,
@@ -19,9 +27,16 @@ export const useStore = create((set) => ({
   setSidebarCollapsed: (collapsed) => { writeBool('sidebarCollapsed', collapsed); set({ sidebarCollapsed: collapsed }) },
   toggleSidebar: () => set((s) => { const next = !s.sidebarCollapsed; writeBool('sidebarCollapsed', next); return { sidebarCollapsed: next } }),
 
-  // Dashboard time period tab
-  spendingPeriod: 'monthly',
-  setSpendingPeriod: (period) => set({ spendingPeriod: period }),
+  // App-wide time-frame. Set on the dashboard and inherited by
+  // every internal page that filters by date (GuacWizard, reports,
+  // etc.). Persisted to localStorage so a refresh or navigation
+  // keeps the same window. `spendingPeriod` is one of
+  // daily|weekly|monthly|yearly; `spendingPeriodCount` is the unit
+  // count (e.g. monthly + 3 = last 3 months).
+  spendingPeriod: readString('spendingPeriod', 'monthly'),
+  setSpendingPeriod: (period) => { writeString('spendingPeriod', period); set({ spendingPeriod: period }) },
+  spendingPeriodCount: parseInt(readString('spendingPeriodCount', '3'), 10) || 3,
+  setSpendingPeriodCount: (count) => { writeString('spendingPeriodCount', String(count)); set({ spendingPeriodCount: count }) },
 
   // Receipt upload modal
   receiptModalOpen: false,

@@ -1,11 +1,13 @@
 'use client'
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '../../../lib/supabase/client'
-import { generateInsights, PERIODS } from '../../../lib/financeInsights'
+import { generateInsights } from '../../../lib/financeInsights'
+import { periodStartDate, timeframeLabel } from '../../../lib/timeframe'
+import { useStore } from '../../../store'
 import GuacMascot from '../../../components/GuacMascot'
-import { TrendingUp, TrendingDown, AlertTriangle, Percent, CreditCard, Banknote, Sparkles } from 'lucide-react'
+import { TrendingUp, TrendingDown, AlertTriangle, Percent, CreditCard, Banknote, Sparkles, Clock } from 'lucide-react'
 const SEVERITY_STYLE = {
   good:    { card: 'bg-emerald-50 border-emerald-200', label: 'text-emerald-700' },
   neutral: { card: 'bg-gray-50 border-gray-200',       label: 'text-gray-700' },
@@ -64,15 +66,21 @@ function computeWizardScore({ summary, accounts }) {
 
 export default function GuacWizardPage() {
   const sb = createClient()
-  const [period, setPeriod] = useState('ytd')
+  // Time-frame is inherited from the dashboard's selector via the
+  // shared Zustand store (persisted to localStorage). To change it,
+  // the user goes back to /dashboard and updates the selector there
+  // — single source of truth across the app.
+  const { spendingPeriod, spendingPeriodCount } = useStore()
+  const since = periodStartDate(spendingPeriod, spendingPeriodCount)
+  const tfLabel = timeframeLabel(spendingPeriod, spendingPeriodCount)
 
   const { data: statements = [] }   = useQuery({ queryKey: ['bank_statements'],   queryFn: async () => { const { data } = await sb.from('bank_statements').select('*'); return data || [] }})
   const { data: fees = [] }         = useQuery({ queryKey: ['bank_fees'],         queryFn: async () => { const { data } = await sb.from('bank_fees').select('*'); return data || [] }})
   const { data: transactions = [] } = useQuery({ queryKey: ['bank_transactions'], queryFn: async () => { const { data } = await sb.from('bank_transactions').select('*'); return data || [] }})
 
   const result = useMemo(
-    () => generateInsights({ statements, fees, transactions }, period),
-    [statements, fees, transactions, period]
+    () => generateInsights({ statements, fees, transactions }, since),
+    [statements, fees, transactions, since]
   )
   const { insights, summary, accounts } = result
   const { score, reasons } = useMemo(() => computeWizardScore(result), [result])
@@ -101,19 +109,19 @@ export default function GuacWizardPage() {
             <div className="text-right">
               <p className="text-[10px] uppercase tracking-wider font-bold text-emerald-700">Wizard score</p>
               <p className="text-4xl font-black text-emerald-900 leading-none">{score}<span className="text-base font-bold opacity-60"> / 100</span></p>
-              <p className="text-[10px] text-emerald-800 mt-0.5">{summary.periodLabel}</p>
+              <p className="text-[10px] text-emerald-800 mt-0.5">{tfLabel}</p>
             </div>
           </div>
         </div>
 
-        {/* Period chips */}
-        <div className="mt-4 inline-flex bg-white/70 backdrop-blur rounded-xl p-1 gap-1 flex-wrap">
-          {PERIODS.map(p => (
-            <button key={p.key} onClick={() => setPeriod(p.key)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${period === p.key ? 'bg-emerald-600 text-white shadow' : 'text-emerald-800 hover:bg-emerald-100'}`}>
-              {p.label}
-            </button>
-          ))}
+        {/* Time-frame is owned by the dashboard. Show what's active
+            and link back so changes stay in one place. */}
+        <div className="mt-4">
+          <Link href="/dashboard" className="inline-flex items-center gap-2 bg-white/70 backdrop-blur rounded-full px-3 py-1.5 text-xs font-bold text-emerald-800 hover:bg-white transition-colors">
+            <Clock size={12} />
+            <span>{tfLabel}</span>
+            <span className="text-emerald-600">· change on dashboard →</span>
+          </Link>
         </div>
       </div>
 

@@ -1,112 +1,48 @@
 'use client'
-// Vibrant-gradient stat tile. Used by the dashboard's Payments Made
-// row (and the preview at /preview/dashboard). Same shape as the
-// reference screenshot:
-//   width  240px (w-60)
-//   height 176px (h-44)
-//   body   full-bleed multi-stop gradient
-//   label  text-sm extrabold uppercase, drop-shadowed white
-//   value  text-4xl black tabular-nums, drop-shadowed white
-//   emoji  text-7xl floating bottom-right
-//   halo   blurred color blob behind the emoji
-//   logo   optional avocado watermark, position + rotation per tile
+// Regular stat-card style — white background, pastel icon block,
+// gray label, dark value. Matches the dashboard's existing
+// stat-card pattern. Same component API as before so the existing
+// AllPaymentsScroll mount in DashboardClient keeps working — only
+// the visual style changed (no gradients, no halo, no watermark).
 
 import './emoji-floats.css'
 
-export default function PaymentTile({ emoji, gradient, haloColor, label, value, logoPos }) {
+// Pastel icon-block tones — used for the emoji chip on the left of
+// each tile. Each tone is bg-X-100 + text-X-700, matching the rest
+// of the dashboard's stat-card icon blocks.
+const TONE = {
+  sky:     'bg-sky-100 text-sky-700',
+  rose:    'bg-rose-100 text-rose-700',
+  amber:   'bg-amber-100 text-amber-700',
+  emerald: 'bg-emerald-100 text-emerald-700',
+  violet:  'bg-violet-100 text-violet-700',
+  orange:  'bg-orange-100 text-orange-700',
+  teal:    'bg-teal-100 text-teal-700',
+  pink:    'bg-pink-100 text-pink-700',
+}
+
+export default function PaymentTile({ emoji, tone, label, value }) {
   return (
-    <div
-      className="snap-start shrink-0 w-60 h-24 relative overflow-hidden rounded-2xl border-2 border-white shadow-lg p-4 hover:shadow-xl hover:-translate-y-1 hover:rotate-[0.5deg] transition-all text-white"
-      style={{ background: gradient }}
-    >
-      {/* Watermark logo — sits behind everything (z-0) at low opacity.
-          logoPos.{top|bottom|left|right|rotate|size} drives placement. */}
-      {logoPos && (
-        <span
-          aria-hidden
-          className="absolute select-none pointer-events-none leading-none"
-          style={{
-            top: logoPos.top,
-            right: logoPos.right,
-            bottom: logoPos.bottom,
-            left: logoPos.left,
-            transform: `rotate(${logoPos.rotate || '0deg'})`,
-            fontSize: logoPos.size || '100px',
-            opacity: 0.18,
-            filter: 'drop-shadow(0 0 6px rgba(255,255,255,0.3))',
-          }}
-        >
-          🥑
-        </span>
-      )}
-      <span aria-hidden className="absolute -bottom-4 -right-2 select-none pointer-events-none z-10">
-        <span className="emoji-floats text-7xl opacity-95">{emoji}</span>
-      </span>
-      <span aria-hidden className="absolute -top-6 -left-6 w-24 h-24 rounded-full opacity-50 blur-2xl pointer-events-none" style={{ backgroundColor: haloColor }} />
-      <p className="text-sm font-extrabold uppercase tracking-wider text-white drop-shadow relative z-10">{label}</p>
-      <p className="text-4xl font-black tabular-nums mt-1 relative drop-shadow leading-none z-10">{value}</p>
+    <div className="snap-start shrink-0 w-52 flex items-center gap-3 bg-white rounded-xl border border-gray-200 shadow-sm p-3 hover:shadow-md transition-all">
+      <div className={`shrink-0 w-11 h-11 rounded-lg flex items-center justify-center ${TONE[tone] || TONE.sky}`}>
+        <span className="text-2xl leading-none">{emoji}</span>
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider leading-tight">{label}</p>
+        <p className="text-base font-bold text-gray-900 tabular-nums mt-0.5 truncate">{value}</p>
+      </div>
     </div>
   )
 }
 
-// Standard 4-tile gradient + halo + logoPos config. Used by the
-// dashboard's Payments Made row and the preview page. Keep these in
-// sync so refining one updates both.
+// Same eight keys as before so AllPaymentsScroll keeps working.
 export const PAYMENT_TILE_CONFIGS = {
-  transactions: {
-    emoji: '🧾',
-    gradient: 'linear-gradient(135deg, #0ea5e9 0%, #2563eb 50%, #4f46e5 100%)',
-    haloColor: '#7dd3fc',
-    label: 'Transactions',
-    logoPos: { top: '-12px', left: '-10px', rotate: '-18deg', size: '110px' },
-  },
-  totalSpent: {
-    emoji: '💸',
-    gradient: 'linear-gradient(135deg, #f97316 0%, #ef4444 50%, #ec4899 100%)',
-    haloColor: '#fdba74',
-    label: 'Total Spent',
-    logoPos: { top: '40px', right: '-22px', rotate: '24deg', size: '100px' },
-  },
-  taxPaid: {
-    emoji: '📈',
-    gradient: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)',
-    haloColor: '#fde68a',
-    label: 'Tax Paid',
-    logoPos: { bottom: '-18px', left: '60px', rotate: '12deg', size: '120px' },
-  },
-  bankFees: {
-    emoji: '🏦',
-    gradient: 'linear-gradient(135deg, #f43f5e 0%, #be185d 50%, #9d174d 100%)',
-    haloColor: '#fda4af',
-    label: 'Bank Fees',
-    logoPos: { top: '-8px', right: '70px', rotate: '-32deg', size: '95px' },
-  },
-  purchases: {
-    emoji: '🛒',
-    gradient: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
-    haloColor: '#a7f3d0',
-    label: 'Purchases',
-    logoPos: { top: '-10px', right: '-10px', rotate: '20deg', size: '105px' },
-  },
-  payments: {
-    emoji: '💳',
-    gradient: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)',
-    haloColor: '#c4b5fd',
-    label: 'Payments',
-    logoPos: { bottom: '-10px', right: '20px', rotate: '-15deg', size: '110px' },
-  },
-  interestPaid: {
-    emoji: '📊',
-    gradient: 'linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)',
-    haloColor: '#fdba74',
-    label: 'Interest Paid',
-    logoPos: { top: '-12px', left: '50px', rotate: '8deg', size: '100px' },
-  },
-  feesPaid: {
-    emoji: '💰',
-    gradient: 'linear-gradient(135deg, #14b8a6 0%, #0d9488 50%, #0f766e 100%)',
-    haloColor: '#5eead4',
-    label: 'Fees Paid',
-    logoPos: { top: '40px', left: '-20px', rotate: '-22deg', size: '115px' },
-  },
+  transactions: { emoji: '🧾', tone: 'sky',     label: 'Transactions' },
+  totalSpent:   { emoji: '💸', tone: 'rose',    label: 'Total Spent' },
+  taxPaid:      { emoji: '📈', tone: 'amber',   label: 'Tax Paid' },
+  purchases:    { emoji: '🛒', tone: 'emerald', label: 'Purchases' },
+  payments:     { emoji: '💳', tone: 'violet',  label: 'Payments' },
+  interestPaid: { emoji: '📊', tone: 'orange',  label: 'Interest Paid' },
+  feesPaid:     { emoji: '💰', tone: 'teal',    label: 'Fees Paid' },
+  bankFees:     { emoji: '🏦', tone: 'pink',    label: 'Bank Fees' },
 }

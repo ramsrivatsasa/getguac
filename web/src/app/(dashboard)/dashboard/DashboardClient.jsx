@@ -430,8 +430,12 @@ function AllPaymentsScroll({ txCount, totalSpend, totalTax, bankFees }) {
     : { totalPayments: 0, totalInterest: 0, totalFees: 0, totalPurch: 0 }
   const money = (n) => `$${Number(n || 0).toFixed(2)}`
   return (
-    <div className="-mx-2 px-2 overflow-x-auto snap-x snap-mandatory scrollbar-thin">
-      <div className="flex gap-3 pb-1">
+    // overflow-x-auto + min-w-max forces the row to always be wider
+    // than its container so the scrollbar is always reachable, even
+    // on a wide monitor where 4-5 tiles would otherwise fit on one
+    // line without any scroll affordance.
+    <div className="relative -mx-2 px-2 overflow-x-auto pb-2">
+      <div className="flex gap-3 min-w-max">
         <PaymentTile {...PAYMENT_TILE_CONFIGS.transactions} value={txCount} />
         <PaymentTile {...PAYMENT_TILE_CONFIGS.totalSpent}   value={money(totalSpend)} />
         <PaymentTile {...PAYMENT_TILE_CONFIGS.taxPaid}      value={money(totalTax)} />

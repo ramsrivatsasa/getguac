@@ -131,14 +131,23 @@ export async function GET(request) {
 
         // UPSERT so a race with the auth trigger doesn't error. The
         // profiles primary key is the auth.users.id.
-        await adminSb.from('profiles').upsert({
+        //
+        // NOTE: profiles table does NOT have an avatar_url column today
+        // (no migration creates it). Surfacing the Google profile photo
+        // is a future enhancement that needs a schema migration first;
+        // for now we only persist what the table actually has.
+        const upsertPayload = {
           id: user.id,
           email_alias: username,
           first_name: existing?.first_name || first || meta.given_name || null,
           last_name: last || meta.family_name || null,
-          // Google profile photo — useful as the default avatar
-          avatar_url: meta.avatar_url || meta.picture || null,
-        }, { onConflict: 'id' })
+        }
+        const { error: upsertErr } = await adminSb
+          .from('profiles')
+          .upsert(upsertPayload, { onConflict: 'id' })
+        if (upsertErr) {
+          console.error('[auth/callback] profile upsert failed:', upsertErr)
+        }
 
         // Best-effort Migadu mailbox provisioning. Mirrors the path
         // the email-signup flow takes via /api/auth/finish-signup;

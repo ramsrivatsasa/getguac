@@ -433,8 +433,8 @@ function AllPaymentsScroll({ txCount, totalSpend, totalTax, bankFees }) {
       <div className="flex gap-3 pb-1">
         <PaymentTile {...PAYMENT_TILE_CONFIGS.transactions} value={txCount} />
         <PaymentTile {...PAYMENT_TILE_CONFIGS.totalSpent}   value={money(totalSpend)} />
-        <PaymentTile {...PAYMENT_TILE_CONFIGS.taxPaid}      value={money(totalTax)} />
         <PaymentTile {...PAYMENT_TILE_CONFIGS.purchases}    value={money(summary.totalPurch)} />
+        <PaymentTile {...PAYMENT_TILE_CONFIGS.taxPaid}      value={money(totalTax)} />
         <PaymentTile {...PAYMENT_TILE_CONFIGS.payments}     value={money(summary.totalPayments)} />
         <PaymentTile {...PAYMENT_TILE_CONFIGS.interestPaid} value={money(summary.totalInterest)} />
         <PaymentTile {...PAYMENT_TILE_CONFIGS.feesPaid}     value={money(summary.totalFees)} />

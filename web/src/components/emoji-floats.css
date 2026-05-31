@@ -1,5 +1,5 @@
-/* Shared emoji styling — used by ProductCard, QuestTile, CategoryTile,
-   ItemRowCard, DiscoverStrip, and the preview pages.
+/* Shared emoji styling — used by ProductCard, ItemRowCard, and any
+   other card primitive that floats an emoji on a pastel tile.
 
    Goal: make native emoji on pastel tiles feel like Fetch's 3D floating
    illustrations. Modern OS emoji (Apple Color, Noto Color, Segoe UI

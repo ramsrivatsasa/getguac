@@ -5,22 +5,23 @@ import { useRouter } from 'next/navigation'
 import { useStore } from '../../../store'
 import Link from 'next/link'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { Gift, ArrowRight, Sparkles, PiggyBank, Wand2 } from 'lucide-react'
+import { DollarSign, Receipt, Gift, TrendingUp, TrendingDown, ArrowRight, Sparkles, Flame, PiggyBank, Wand2, CreditCard, Percent, AlertTriangle } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import GuacoScoreCard from '../../../components/GuacoScoreCard'
 import UpcomingReturnsBanner from '../../../components/UpcomingReturnsBanner'
 import AnomaliesPanel from '../../../components/AnomaliesPanel'
 import { ActivityFeed } from '../../../components/ActivityFeed'
+import { computeSmashDays } from '../../../lib/smashDays'
 import { fetchTotal as fetchGuacMoneyTotal, formatGuacMoney } from '../../../lib/guacMoney'
 import { generateInsights } from '../../../lib/financeInsights'
 import { computeWizardScore } from '../../../lib/wizardScore'
 import { createClient as createSbClient } from '../../../lib/supabase/client'
 import { flagForCountry, countryName } from '../../../lib/countryFlag'
 import { subDays, subWeeks, subMonths, subYears } from 'date-fns'
-import { displayStoreName, storeGroupKey } from '../../../lib/store-name-normalize'
+import { normalizeStoreName, canonicalStoreName, displayStoreName, storeGroupKey } from '../../../lib/store-name-normalize'
 import { periodToReceiptsChip, buildReceiptsUrl } from '../../../lib/receipts-deeplink'
 import { isPaymentReceipt } from '../../../lib/payment-rows'
-import PaymentTile, { PAYMENT_TILE_CONFIGS } from '../../../components/PaymentTile'
+import { computeSpendingTrend, formatTrend } from '../../../lib/spending-trends'
 const PERIODS = ['daily', 'weekly', 'monthly', 'yearly']
 
 // Dropdown options for "how many <period>s back to include"
@@ -86,6 +87,14 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
     .filter(r => r.category === 'bank-fees')
     .reduce((s, r) => s + parseFloat(r.total_amount || 0), 0)
   const today = new Date().toISOString().split('T')[0]
+
+  // Period-over-period trend: total spend vs the avg of the prior 3
+  // windows of the same shape. Surfaces a small badge next to the
+  // Total Spent stat — "up 18% vs last 3M" style. Lives in the
+  // central spending-trends lib so future surfaces (weekly digest,
+  // category drill-down) share the math.
+  const trend = computeSpendingTrend(spendingReceipts, period, periodCount)
+  const trendBadge = formatTrend(trend.deltaPct)
 
   // True "Spending by Store" — sum every receipt's total per merchant, take
   // the top 8 spenders, sort descending. Previously this chart plotted the
@@ -224,7 +233,7 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
       {/* Stat tiles — GuacScore leads, then GuacWizard right next
           to it (paired engagement scores), then GuacMoney, then
           financial tiles, then Smash days last per user request. */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
         {/* GuacScore reads lifetime rated purchases, not just the
             current period filter — otherwise a 3-month dashboard
             window with no rated purchases inside it shows score=0
@@ -234,33 +243,49 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
         <GuacoScoreCard receipts={spendingReceipts} size="sm" />
         <GuacWizardTile />
         <GuacMoneyTile />
-        <div className="stat-card">
-          <div className="p-2 rounded-lg bg-lime-100 text-lime-700"><Gift size={16} /></div>
-          <div className="min-w-0">
-            <p className="text-[11px] text-gray-500 font-medium leading-tight">Rewards</p>
-            <p className="text-base font-bold text-gray-900">{initialRewards.length}</p>
+        {[
+          { label: 'Transactions', value: filtered.length, icon: Receipt, color: 'bg-emerald-100 text-emerald-700' },
+          { label: 'Total Spent', value: `$${totalSpend.toFixed(2)}`, icon: DollarSign, color: 'bg-gradient-to-br from-rose-400 via-rose-600 to-rose-800 text-white shadow-sm', trend: trendBadge },
+          { label: 'Tax Paid', value: `$${totalTax.toFixed(2)}`, icon: TrendingUp, color: 'bg-amber-100 text-amber-700' },
+          { label: 'Bank Fees', value: `$${bankFees.toFixed(2)}`, icon: TrendingUp, color: bankFees > 0 ? 'bg-rose-100 text-rose-700' : 'bg-gray-100 text-gray-400' },
+          { label: 'Rewards', value: initialRewards.length, icon: Gift, color: 'bg-lime-100 text-lime-700' },
+        ].map(({ label, value, icon: Icon, color, trend }) => (
+          <div key={label} className="stat-card">
+            <div className={`p-2 rounded-lg ${color}`}><Icon size={16} /></div>
+            <div className="min-w-0">
+              <p className="text-[11px] text-gray-500 font-medium leading-tight">{label}</p>
+              <div className="flex items-baseline gap-1.5">
+                <p className="text-base font-bold text-gray-900">{value}</p>
+                {trend && trend.label !== '—' && (
+                  <span
+                    className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                      trend.tone === 'up'   ? 'bg-rose-50 text-rose-700 border border-rose-100'
+                      : trend.tone === 'down' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                      : 'bg-gray-50 text-gray-500 border border-gray-200'
+                    }`}
+                    title={`vs avg of prior 3 ${UNIT_LABEL[period]} window${periodCount === 1 ? '' : 's'}`}
+                  >
+                    {trend.label}
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
+        ))}
       </div>
-
-      {/* Vibrant financial-tiles horizontal scroll — combines the
-          period-window receipt totals (transactions / total spent /
-          tax / bank fees) and the bank-statement totals (purchases /
-          payments / interest / fees) into one snap-scroll row. Same
-          PaymentTile primitive as /preview/dashboard so refining the
-          gradient palette in PAYMENT_TILE_CONFIGS updates both. */}
-      <AllPaymentsScroll
-        txCount={filtered.length}
-        totalSpend={totalSpend}
-        totalTax={totalTax}
-        bankFees={bankFees}
-      />
 
       {/* Spending anomalies — moved here so it sits right below the
           GuacScore strip (was above before, eating ~300px and
           pushing the score row off-screen). Self-hides when nothing
           is off; session-dismissable; collapsed-by-default. */}
       <AnomaliesPanel receipts={spendingReceipts} />
+
+      {/* Bank summary row — payments / interest / fees / purchases /
+          refunds across all the user's bank statements. Mirrors the
+          row on /guacwizard so the user sees the same five numbers
+          without leaving the dashboard. Self-hides when no bank
+          data exists yet. */}
+      <BankSummaryRow />
 
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Spending chart */}
@@ -400,13 +425,31 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
 // (guac_money_total) so we don't fetch every event row. Loading
 // state shows a subtle dash, empty state shows "$0" + a "start
 // saving" prompt.
-// Vibrant 8-tile horizontal scroll: 4 receipt-side totals + 4
-// bank-statement totals. Receipt-side numbers come in as props
-// from the dashboard period window; bank-side numbers are fetched
-// here via the same useQuery keys as BankTile so cache is shared.
-// Bank tiles silently render as $0 when no statements exist — the
-// row still shows transactions/spend/tax so it never disappears.
-function AllPaymentsScroll({ txCount, totalSpend, totalTax, bankFees }) {
+// Bank summary row — five tiles aggregated across all bank
+// statements: payments made, interest paid, fees paid, purchases,
+// refunds. Re-uses the same TanStack Query keys the GuacWizardTile
+// uses so we don't fire duplicate fetches; TanStack dedups by key.
+// Self-hides entirely when the user has no bank data yet.
+const TILE_TONE = {
+  sky:     { bg: 'bg-sky-50',     text: 'text-sky-800',     icon: 'text-sky-600',     border: 'border-sky-100' },
+  orange:  { bg: 'bg-orange-50',  text: 'text-orange-800',  icon: 'text-orange-600',  border: 'border-orange-200' },
+  amber:   { bg: 'bg-amber-50',   text: 'text-amber-800',   icon: 'text-amber-600',   border: 'border-amber-200' },
+  rose:    { bg: 'bg-rose-50',    text: 'text-rose-800',    icon: 'text-rose-600',    border: 'border-rose-100' },
+  emerald: { bg: 'bg-emerald-50', text: 'text-emerald-800', icon: 'text-emerald-600', border: 'border-emerald-100' },
+}
+function BankTile({ icon: Icon, tone, label, value }) {
+  const t = TILE_TONE[tone] || TILE_TONE.sky
+  return (
+    <div className={`stat-card border ${t.border} ${t.bg}`}>
+      <div className={`p-2 rounded-lg bg-white shadow-sm`}><Icon size={16} className={t.icon} /></div>
+      <div className="min-w-0">
+        <p className={`text-[10px] uppercase tracking-wider font-bold ${t.text} opacity-80`}>{label}</p>
+        <p className={`text-base font-bold ${t.text} tabular-nums`}>${Number(value || 0).toFixed(2)}</p>
+      </div>
+    </div>
+  )
+}
+function BankSummaryRow() {
   const sb = createSbClient()
   const { data: statements = [] } = useQuery({
     queryKey: ['bank_statements'],
@@ -423,23 +466,16 @@ function AllPaymentsScroll({ txCount, totalSpend, totalTax, bankFees }) {
     queryFn: async () => { const { data } = await sb.from('bank_transactions').select('*'); return data || [] },
     staleTime: 5 * 60_000,
   })
-  const hasBank = statements.length > 0 || fees.length > 0 || transactions.length > 0
-  const summary = hasBank
-    ? generateInsights({ statements, fees, transactions }, 'ytd').summary
-    : { totalPayments: 0, totalInterest: 0, totalFees: 0, totalPurch: 0 }
-  const money = (n) => `$${Number(n || 0).toFixed(2)}`
+  const hasData = statements.length > 0 || fees.length > 0 || transactions.length > 0
+  if (!hasData) return null
+  const { summary } = generateInsights({ statements, fees, transactions }, 'ytd')
   return (
-    <div className="-mx-2 px-2 overflow-x-auto snap-x snap-mandatory scrollbar-thin">
-      <div className="flex gap-3 pb-1">
-        <PaymentTile {...PAYMENT_TILE_CONFIGS.transactions} value={txCount} />
-        <PaymentTile {...PAYMENT_TILE_CONFIGS.totalSpent}   value={money(totalSpend)} />
-        <PaymentTile {...PAYMENT_TILE_CONFIGS.purchases}    value={money(summary.totalPurch)} />
-        <PaymentTile {...PAYMENT_TILE_CONFIGS.taxPaid}      value={money(totalTax)} />
-        <PaymentTile {...PAYMENT_TILE_CONFIGS.payments}     value={money(summary.totalPayments)} />
-        <PaymentTile {...PAYMENT_TILE_CONFIGS.interestPaid} value={money(summary.totalInterest)} />
-        <PaymentTile {...PAYMENT_TILE_CONFIGS.feesPaid}     value={money(summary.totalFees)} />
-        <PaymentTile {...PAYMENT_TILE_CONFIGS.bankFees}     value={money(bankFees)} />
-      </div>
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      <BankTile icon={CreditCard}     tone="sky"     label="Payments made" value={summary.totalPayments} />
+      <BankTile icon={Percent}        tone="orange"  label="Interest paid" value={summary.totalInterest} />
+      <BankTile icon={AlertTriangle}  tone="amber"   label="Fees paid"     value={summary.totalFees} />
+      <BankTile icon={TrendingUp}     tone="rose"    label="Purchases"     value={summary.totalPurch} />
+      <BankTile icon={TrendingDown}   tone="emerald" label="Refunds"       value={summary.totalRefunds} />
     </div>
   )
 }

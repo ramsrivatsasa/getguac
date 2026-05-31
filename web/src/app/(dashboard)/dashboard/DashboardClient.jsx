@@ -23,6 +23,7 @@ import { isPaymentReceipt } from '../../../lib/payment-rows'
 import PaymentTile, { PAYMENT_TILE_CONFIGS } from '../../../components/PaymentTile'
 import { computeDashboardAnalysis } from '../../../lib/analysisEngine'
 import { periodStartDate } from '../../../lib/timeframe'
+import { useBankData } from '../../../lib/useBankData'
 import TimeframePicker from '../../../components/TimeframePicker'
 const PERIODS = ['daily', 'weekly', 'monthly', 'yearly']
 
@@ -396,27 +397,17 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
 // Bank fees come from the shared `bank_fees` TanStack query; the
 // active time-frame comes from the store-driven (period, count).
 function GuacScoreTileWithBankBite({ receipts, period, periodCount }) {
-  const sb = createSbClient()
-  const { data: bankFees = [] } = useQuery({
-    queryKey: ['bank_fees'],
-    queryFn: async () => { const { data } = await sb.from('bank_fees').select('kind, amount, date'); return data || [] },
-    staleTime: 5 * 60_000,
-  })
-  const sinceStr = (() => {
-    const d = periodStartDate(period, periodCount)
-    return d.toISOString().slice(0, 10)
-  })()
-  const bankBite = (() => {
-    let interest = 0, fees = 0
-    for (const f of bankFees) {
-      const d = String(f.date || '')
-      if (d.length < 10 || d < sinceStr) continue
-      const v = Math.abs(Number(f.amount || 0))
-      if (f.kind === 'interest') interest += v
-      else if (f.kind === 'fee' || f.kind === 'penalty') fees += v
-    }
-    return { interest, fees, total: interest + fees }
-  })()
+  const { fees: bankFees } = useBankData()
+  const sinceStr = periodStartDate(period, periodCount).toISOString().slice(0, 10)
+  let interest = 0, fees = 0
+  for (const f of bankFees) {
+    const d = String(f.date || '')
+    if (d.length < 10 || d < sinceStr) continue
+    const v = Math.abs(Number(f.amount || 0))
+    if (f.kind === 'interest') interest += v
+    else if (f.kind === 'fee' || f.kind === 'penalty') fees += v
+  }
+  const bankBite = { interest, fees, total: interest + fees }
   return <GuacoScoreCard receipts={receipts} bankBite={bankBite} size="sm" />
 }
 
@@ -446,23 +437,8 @@ const METRIC_DIRECTIONS = {
 }
 
 function AllPaymentsScroll({ spendingReceipts, period, periodCount }) {
-  const sb = createSbClient()
   const scrollRef = useRef(null)
-  const { data: statements = [] } = useQuery({
-    queryKey: ['bank_statements'],
-    queryFn: async () => { const { data } = await sb.from('bank_statements').select('*'); return data || [] },
-    staleTime: 5 * 60_000,
-  })
-  const { data: fees = [] } = useQuery({
-    queryKey: ['bank_fees'],
-    queryFn: async () => { const { data } = await sb.from('bank_fees').select('*'); return data || [] },
-    staleTime: 5 * 60_000,
-  })
-  const { data: transactions = [] } = useQuery({
-    queryKey: ['bank_transactions'],
-    queryFn: async () => { const { data } = await sb.from('bank_transactions').select('*'); return data || [] },
-    staleTime: 5 * 60_000,
-  })
+  const { statements, fees, transactions } = useBankData()
 
   const analysis = computeDashboardAnalysis({
     receipts: spendingReceipts,
@@ -548,46 +524,17 @@ function AllPaymentsScroll({ spendingReceipts, period, periodCount }) {
 // RLS); when no bank data exists yet the tile shows "Set up →" and
 // links to /guacwizard so the user can connect statements.
 function GuacWizardTile() {
-  const sb = createSbClient()
-  // The wizard tile inherits the dashboard's active time-frame so the
-  // score it shows matches what /guacwizard renders for the same
-  // window. Previously this was hardcoded to 'ytd', which drifted
-  // from /guacwizard whenever the user changed the period there.
+  // Time-frame from the dashboard's selector + bank data both come
+  // from shared sources (`useStore` + `useBankData`) so this tile
+  // and /guacwizard score against identical inputs.
   const { spendingPeriod, spendingPeriodCount } = useStore()
-  // Match /guacwizard's ordered queries so the same rows arrive in
-  // the same order on both pages — fixes the dashboard-vs-page
-  // GuacWizard score mismatch where Supabase's non-deterministic
-  // order picked different "latest" statements for the APR check.
-  const { data: statements = [], isLoading: stmLoading } = useQuery({
-    queryKey: ['bank_statements'],
-    queryFn: async () => { const { data } = await sb.from('bank_statements').select('*').order('period_end', { ascending: false, nullsFirst: false }).order('id'); return data || [] },
-    staleTime: 5 * 60_000,
-  })
-  const { data: fees = [], isLoading: feeLoading } = useQuery({
-    queryKey: ['bank_fees'],
-    queryFn: async () => { const { data } = await sb.from('bank_fees').select('*').order('date', { ascending: false, nullsFirst: false }).order('id'); return data || [] },
-    staleTime: 5 * 60_000,
-  })
-  const { data: transactions = [], isLoading: txLoading } = useQuery({
-    queryKey: ['bank_transactions'],
-    queryFn: async () => { const { data } = await sb.from('bank_transactions').select('*').order('date', { ascending: false, nullsFirst: false }).order('id'); return data || [] },
-    staleTime: 5 * 60_000,
-  })
-  // `isLoading` is true on initial fetch only. While loading, treat
-  // the tile as "score pending" instead of "no statements" — that
-  // was the cause of the purple→green flash (empty arrays during
-  // the first render flagged hasData=false, score=null → violet
-  // tone, then the fetch resolved a second later and the tone
-  // flipped to emerald/amber). Now we hold the loading state until
-  // every bank query has resolved.
-  const isLoading = stmLoading || feeLoading || txLoading
+  const { statements, fees, transactions, isLoading } = useBankData()
   const score = (() => {
     if (isLoading) return undefined
     const hasData = statements.length > 0 || fees.length > 0 || transactions.length > 0
     if (!hasData) return null
     const since = periodStartDate(spendingPeriod, spendingPeriodCount)
-    const result = generateInsights({ statements, fees, transactions }, since)
-    return computeWizardScore(result).score
+    return computeWizardScore(generateInsights({ statements, fees, transactions }, since)).score
   })()
   // Score-band tone applied to the WHOLE tile (bg + ring + chip +
   // every text color) — if green means "healthy", commit to it

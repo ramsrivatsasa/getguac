@@ -1,10 +1,9 @@
 'use client'
 import { useMemo } from 'react'
 import Link from 'next/link'
-import { useQuery } from '@tanstack/react-query'
-import { createClient } from '../../../lib/supabase/client'
 import { generateInsights } from '../../../lib/financeInsights'
 import { computeWizardScore } from '../../../lib/wizardScore'
+import { useBankData } from '../../../lib/useBankData'
 import { periodStartDate, timeframeLabel } from '../../../lib/timeframe'
 import { useStore } from '../../../store'
 import GuacMascot from '../../../components/GuacMascot'
@@ -30,30 +29,22 @@ const MASCOT_BY_SCORE = (score) => {
 // dashboard tile and this page never drift. Don't redefine it here.
 
 export default function GuacWizardPage() {
-  const sb = createClient()
-  // Time-frame is inherited from the dashboard's selector via the
-  // shared Zustand store (persisted to localStorage). To change it,
-  // the user goes back to /dashboard and updates the selector there
-  // — single source of truth across the app.
+  // Time-frame inherited from the dashboard's selector via the
+  // shared Zustand store (persisted to localStorage). The dashboard
+  // is the single edit surface — this page reads the (period,
+  // count) tuple and displays the current label inline.
   const { spendingPeriod, spendingPeriodCount } = useStore()
   const since = periodStartDate(spendingPeriod, spendingPeriodCount)
   const tfLabel = timeframeLabel(spendingPeriod, spendingPeriodCount)
 
-  // Explicit `.order()` clauses make row order deterministic so
-  // bankAccountTotals' "latestApr" pick is identical between the
-  // dashboard tile and this page — without them, Supabase can
-  // return ties (statements with the same period_end) in different
-  // orders across fetches, producing slightly different scores
-  // (the 66 vs 61 discrepancy).
-  const { data: statements = [], isLoading: stmLoading }   = useQuery({ queryKey: ['bank_statements'],   queryFn: async () => { const { data } = await sb.from('bank_statements').select('*').order('period_end', { ascending: false, nullsFirst: false }).order('id'); return data || [] }, staleTime: 5 * 60_000})
-  const { data: fees = [], isLoading: feeLoading }         = useQuery({ queryKey: ['bank_fees'],         queryFn: async () => { const { data } = await sb.from('bank_fees').select('*').order('date', { ascending: false, nullsFirst: false }).order('id'); return data || [] }, staleTime: 5 * 60_000})
-  const { data: transactions = [], isLoading: txLoading }  = useQuery({ queryKey: ['bank_transactions'], queryFn: async () => { const { data } = await sb.from('bank_transactions').select('*').order('date', { ascending: false, nullsFirst: false }).order('id'); return data || [] }, staleTime: 5 * 60_000})
-  const isLoading = stmLoading || feeLoading || txLoading
+  // All bank queries (statements / fees / transactions) come through
+  // the shared useBankData hook so the dashboard tile and this page
+  // run identical math against identical row orderings.
+  const { statements, fees, transactions, isLoading } = useBankData()
 
-  // While the bank queries are in flight, skip generateInsights
-  // entirely so the score doesn't flash through the
-  // accounts.length===0 baseline (50). Display a "loading" placeholder
-  // until the data lands.
+  // While the bank queries are in flight, skip generateInsights —
+  // empty arrays would trip computeWizardScore's accounts.length=0
+  // baseline (50) and flash a wrong score before the real data lands.
   const result = useMemo(
     () => isLoading ? null : generateInsights({ statements, fees, transactions }, since),
     [statements, fees, transactions, since, isLoading]

@@ -585,18 +585,27 @@ function GuacWizardTile() {
     const result = generateInsights({ statements, fees, transactions }, since)
     return computeWizardScore(result).score
   })()
-  // Tone (pale background gradient + ring + chip gradient + text)
-  // tracks the score band. Loading state uses a neutral
-  // emerald-tinted palette so the tile doesn't flash through a
-  // wrong color (violet/rose/amber) before the bank query lands.
-  // `null` score = data fetched but no statements yet — violet
-  // baseline. `undefined` = still loading.
-  const tone =
-    score === undefined            ? { bg: 'from-emerald-50/40 to-lime-50/40', ring: 'ring-emerald-100',  chip: 'from-emerald-300 to-emerald-400', text: 'text-emerald-700', sub: 'text-emerald-600' } :
-    score === null                 ? { bg: 'from-violet-50 to-emerald-50',     ring: 'ring-violet-200',   chip: 'from-violet-400 to-violet-600',   text: 'text-violet-900',  sub: 'text-violet-700' } :
-    score >= 65                    ? { bg: 'from-emerald-50 to-lime-100',      ring: 'ring-emerald-200',  chip: 'from-emerald-400 to-lime-600',    text: 'text-emerald-900', sub: 'text-emerald-700' } :
-    score >= 35                    ? { bg: 'from-amber-50 to-orange-100',      ring: 'ring-amber-200',    chip: 'from-amber-300 to-orange-500',    text: 'text-orange-900',  sub: 'text-amber-700' } :
-                                     { bg: 'from-rose-50 to-red-100',          ring: 'ring-rose-200',     chip: 'from-rose-400 to-red-600',        text: 'text-rose-900',    sub: 'text-rose-700' }
+  // GuacWizard's tile palette is ALWAYS violet so it has its own
+  // visual identity in the 4-tile engagement strip (otherwise three
+  // of four tiles would be green). Score-band signal moves onto the
+  // score number text color (emerald/amber/rose) — the tile stays
+  // a stable violet, so loading→resolved no longer flashes through
+  // different color schemes.
+  const tone = {
+    bg: 'from-violet-50 to-purple-100',
+    ring: 'ring-violet-200',
+    chip: 'from-violet-500 to-purple-600',
+    label: 'text-violet-700',
+    sub: 'text-violet-600',
+  }
+  // Score-number color picks up the band so the user still gets the
+  // health-status signal at a glance.
+  const scoreText =
+    score === undefined ? 'text-violet-400' :
+    score === null      ? 'text-violet-400' :
+    score >= 65         ? 'text-emerald-700' :
+    score >= 35         ? 'text-amber-700' :
+                          'text-rose-700'
 
   return (
     <Link
@@ -613,15 +622,15 @@ function GuacWizardTile() {
         <Wand2 size={20} className="tile-chip-icon text-white" />
       </div>
       <div className="min-w-0 flex-1 relative z-10">
-        <p className={`text-[10px] uppercase tracking-wider font-bold ${tone.sub}`}>GuacWizard</p>
+        <p className={`text-[10px] uppercase tracking-wider font-bold ${tone.label}`}>GuacWizard</p>
         {score === undefined ? (
           <>
-            <p className={`text-xl font-black ${tone.text} tabular-nums leading-tight`}>—</p>
+            <p className={`text-xl font-black ${scoreText} tabular-nums leading-tight`}>—</p>
             <p className={`text-[10px] font-semibold mt-0.5 ${tone.sub}`}>loading…</p>
           </>
         ) : score != null ? (
           <>
-            <p className={`text-xl font-black ${tone.text} tabular-nums leading-tight`}>{score}<span className="text-xs font-bold opacity-60 ml-0.5">/ 100</span></p>
+            <p className={`text-xl font-black ${scoreText} tabular-nums leading-tight`}>{score}<span className="text-xs font-bold opacity-60 ml-0.5">/ 100</span></p>
             <p className={`text-[10px] font-semibold mt-0.5 ${tone.sub}`}>health score</p>
           </>
         ) : (
@@ -667,21 +676,25 @@ function GuacMoneyTile() {
 // tiles so the row reads as one design system.
 function RewardsTile({ count }) {
   const active = count > 0
+  // Rose/pink palette gives Rewards its own visual identity so the
+  // 4-tile engagement row doesn't read as three-quarters green.
+  // GuacScore (amber band) · GuacWizard (violet) · GuacMoney
+  // (emerald) · Rewards (rose) → four distinct color homes.
   return (
     <Link
       href="/rewards"
-      className={`payment-tile-card stat-card relative overflow-hidden bg-gradient-to-br ${active ? 'from-lime-50 to-emerald-100' : 'from-gray-50 to-gray-100/40'} ring-1 ${active ? 'ring-lime-300' : 'ring-gray-200'} hover:shadow-md transition-all`}
+      className={`payment-tile-card stat-card relative overflow-hidden bg-gradient-to-br ${active ? 'from-rose-50 to-pink-100' : 'from-gray-50 to-gray-100/40'} ring-1 ${active ? 'ring-rose-200' : 'ring-gray-200'} hover:shadow-md transition-all`}
       title="Rewards available"
     >
       <span aria-hidden className="tile-watermark-avocado absolute select-none pointer-events-none leading-none" style={{ bottom: '-4px', right: '4px', '--wm-rot': '-18deg', fontSize: '30px', opacity: 0.22 }}>🥑</span>
       <span aria-hidden className="tile-watermark-theme absolute select-none pointer-events-none leading-none" style={{ top: '2px', right: '6px', '--wm-rot': '12deg', fontSize: '20px', opacity: 0.28 }}>🎁</span>
-      <div className={`tile-chip-host shrink-0 w-11 h-11 rounded-xl flex items-center justify-center relative z-10 bg-gradient-to-br ${active ? 'from-lime-400 to-emerald-500' : 'from-gray-300 to-gray-400'} shadow-md text-white`}>
+      <div className={`tile-chip-host shrink-0 w-11 h-11 rounded-xl flex items-center justify-center relative z-10 bg-gradient-to-br ${active ? 'from-rose-400 to-pink-600' : 'from-gray-300 to-gray-400'} shadow-md text-white`}>
         <Gift size={20} className="tile-chip-icon text-white" />
       </div>
       <div className="min-w-0 flex-1 relative z-10">
-        <p className={`text-[10px] uppercase tracking-wider font-bold ${active ? 'text-lime-700' : 'text-gray-500'}`}>Rewards</p>
-        <p className={`text-xl font-black ${active ? 'text-lime-900' : 'text-gray-900'} tabular-nums leading-tight`}>{count}</p>
-        <p className={`text-[10px] font-semibold mt-0.5 ${active ? 'text-lime-700' : 'text-gray-500'}`}>
+        <p className={`text-[10px] uppercase tracking-wider font-bold ${active ? 'text-rose-700' : 'text-gray-500'}`}>Rewards</p>
+        <p className={`text-xl font-black ${active ? 'text-rose-900' : 'text-gray-900'} tabular-nums leading-tight`}>{count}</p>
+        <p className={`text-[10px] font-semibold mt-0.5 ${active ? 'text-rose-700' : 'text-gray-500'}`}>
           {active ? 'available' : 'none yet'}
         </p>
       </div>

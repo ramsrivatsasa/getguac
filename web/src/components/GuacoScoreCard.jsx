@@ -56,10 +56,13 @@ export default function GuacoScoreCard({ receipts = [], bankBite = null, size = 
           </div>
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] text-gray-500 font-medium leading-tight">GuacScore</p>
-          <p className={`text-sm font-bold ${tint.text} flex items-center gap-1 mt-0.5`}>
+          <p className={`text-[10px] uppercase tracking-wider font-bold ${tint.text}`}>GuacScore</p>
+          <p className={`text-base font-black ${tint.text} flex items-center gap-1 mt-0.5 truncate`}>
             <span>{displayGrade.emoji}</span>
             <span className="truncate">{displayGrade.label}</span>
+          </p>
+          <p className={`text-[10px] font-semibold mt-0.5 ${tint.text} opacity-70`}>
+            {isPreRating ? 'rate to start' : `${ratedCount} rated`}
           </p>
         </div>
       </div>

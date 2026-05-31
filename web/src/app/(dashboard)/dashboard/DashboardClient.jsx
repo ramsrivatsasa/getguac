@@ -554,22 +554,31 @@ function GuacWizardTile() {
   // window. Previously this was hardcoded to 'ytd', which drifted
   // from /guacwizard whenever the user changed the period there.
   const { spendingPeriod, spendingPeriodCount } = useStore()
-  const { data: statements = [] } = useQuery({
+  const { data: statements = [], isLoading: stmLoading } = useQuery({
     queryKey: ['bank_statements'],
     queryFn: async () => { const { data } = await sb.from('bank_statements').select('*'); return data || [] },
     staleTime: 5 * 60_000,
   })
-  const { data: fees = [] } = useQuery({
+  const { data: fees = [], isLoading: feeLoading } = useQuery({
     queryKey: ['bank_fees'],
     queryFn: async () => { const { data } = await sb.from('bank_fees').select('*'); return data || [] },
     staleTime: 5 * 60_000,
   })
-  const { data: transactions = [] } = useQuery({
+  const { data: transactions = [], isLoading: txLoading } = useQuery({
     queryKey: ['bank_transactions'],
     queryFn: async () => { const { data } = await sb.from('bank_transactions').select('*'); return data || [] },
     staleTime: 5 * 60_000,
   })
+  // `isLoading` is true on initial fetch only. While loading, treat
+  // the tile as "score pending" instead of "no statements" — that
+  // was the cause of the purple→green flash (empty arrays during
+  // the first render flagged hasData=false, score=null → violet
+  // tone, then the fetch resolved a second later and the tone
+  // flipped to emerald/amber). Now we hold the loading state until
+  // every bank query has resolved.
+  const isLoading = stmLoading || feeLoading || txLoading
   const score = (() => {
+    if (isLoading) return undefined
     const hasData = statements.length > 0 || fees.length > 0 || transactions.length > 0
     if (!hasData) return null
     const since = periodStartDate(spendingPeriod, spendingPeriodCount)
@@ -577,13 +586,17 @@ function GuacWizardTile() {
     return computeWizardScore(result).score
   })()
   // Tone (pale background gradient + ring + chip gradient + text)
-  // tracks the score band, matching the GuacScore tile's "color-coded
-  // by health" aesthetic. Violet baseline when no statements yet.
+  // tracks the score band. Loading state uses a neutral
+  // emerald-tinted palette so the tile doesn't flash through a
+  // wrong color (violet/rose/amber) before the bank query lands.
+  // `null` score = data fetched but no statements yet — violet
+  // baseline. `undefined` = still loading.
   const tone =
-    score == null                  ? { bg: 'from-violet-50 to-emerald-50',  ring: 'ring-violet-200',  chip: 'from-violet-400 to-violet-600',  text: 'text-violet-900', sub: 'text-violet-700' } :
-    score >= 65                    ? { bg: 'from-emerald-50 to-lime-100',   ring: 'ring-emerald-200', chip: 'from-emerald-400 to-lime-600',   text: 'text-emerald-900', sub: 'text-emerald-700' } :
-    score >= 35                    ? { bg: 'from-amber-50 to-orange-100',   ring: 'ring-amber-200',   chip: 'from-amber-300 to-orange-500',   text: 'text-orange-900', sub: 'text-amber-700' } :
-                                     { bg: 'from-rose-50 to-red-100',       ring: 'ring-rose-200',    chip: 'from-rose-400 to-red-600',       text: 'text-rose-900',   sub: 'text-rose-700' }
+    score === undefined            ? { bg: 'from-emerald-50/40 to-lime-50/40', ring: 'ring-emerald-100',  chip: 'from-emerald-300 to-emerald-400', text: 'text-emerald-700', sub: 'text-emerald-600' } :
+    score === null                 ? { bg: 'from-violet-50 to-emerald-50',     ring: 'ring-violet-200',   chip: 'from-violet-400 to-violet-600',   text: 'text-violet-900',  sub: 'text-violet-700' } :
+    score >= 65                    ? { bg: 'from-emerald-50 to-lime-100',      ring: 'ring-emerald-200',  chip: 'from-emerald-400 to-lime-600',    text: 'text-emerald-900', sub: 'text-emerald-700' } :
+    score >= 35                    ? { bg: 'from-amber-50 to-orange-100',      ring: 'ring-amber-200',    chip: 'from-amber-300 to-orange-500',    text: 'text-orange-900',  sub: 'text-amber-700' } :
+                                     { bg: 'from-rose-50 to-red-100',          ring: 'ring-rose-200',     chip: 'from-rose-400 to-red-600',        text: 'text-rose-900',    sub: 'text-rose-700' }
 
   return (
     <Link
@@ -601,7 +614,12 @@ function GuacWizardTile() {
       </div>
       <div className="min-w-0 flex-1 relative z-10">
         <p className={`text-[10px] uppercase tracking-wider font-bold ${tone.sub}`}>GuacWizard</p>
-        {score != null ? (
+        {score === undefined ? (
+          <>
+            <p className={`text-xl font-black ${tone.text} tabular-nums leading-tight`}>—</p>
+            <p className={`text-[10px] font-semibold mt-0.5 ${tone.sub}`}>loading…</p>
+          </>
+        ) : score != null ? (
           <>
             <p className={`text-xl font-black ${tone.text} tabular-nums leading-tight`}>{score}<span className="text-xs font-bold opacity-60 ml-0.5">/ 100</span></p>
             <p className={`text-[10px] font-semibold mt-0.5 ${tone.sub}`}>health score</p>

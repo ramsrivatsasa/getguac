@@ -105,6 +105,24 @@ export default function PreviewDashboardClient({ receipts, rewards, firstName })
         )}
       </section>
 
+      {/* White-card category tiles — title left, colored emoji right.
+          Horizontal scroll on mobile, wraps to grid on desktop. */}
+      <section>
+        <div className="flex items-baseline justify-between mb-2">
+          <h2 className="text-base font-extrabold text-gray-900">Shop by category</h2>
+          <Link href="/stash" className="text-xs font-bold text-emerald-700 hover:text-emerald-900">See all</Link>
+        </div>
+        <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 hide-scrollbar">
+          <CategoryWhiteCard label="Health & Wellness" emoji="💊" accent="#bae6fd" />
+          <CategoryWhiteCard label="Beverages"         emoji="🧃" accent="#fde68a" />
+          <CategoryWhiteCard label="Grocery"           emoji="🥦" accent="#bbf7d0" />
+          <CategoryWhiteCard label="Household"         emoji="🧴" accent="#ddd6fe" />
+          <CategoryWhiteCard label="Pet"               emoji="🐶" accent="#fbcfe8" />
+          <CategoryWhiteCard label="Restaurants"       emoji="🍴" accent="#fed7aa" />
+          <CategoryWhiteCard label="Alcohol"           emoji="🍷" accent="#fecaca" />
+        </div>
+      </section>
+
       {/* 4. Payments Made — horizontal scroll, lifetime numbers */}
       <section>
         <div className="flex items-baseline justify-between mb-2">
@@ -268,6 +286,32 @@ function WorthItTile({ pending = 0 }) {
           .worth-heartbeat { animation: none; }
         }
       `}</style>
+    </Link>
+  )
+}
+
+function CategoryWhiteCard({ label, emoji, accent }) {
+  // White-card variant — bold title on the left, floating emoji on
+  // a soft accent halo on the right. Same shape as Fetch's
+  // "Health & Wellness / Beverages / Grocery" trio: title isn't on
+  // a tinted background, only the emoji backdrop is colored, which
+  // keeps the row from getting visually loud.
+  return (
+    <Link
+      href="/stash"
+      className="snap-start shrink-0 group relative overflow-hidden flex items-center bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all w-56 sm:w-auto sm:flex-1 sm:min-w-[200px]"
+      style={{ minHeight: 76 }}
+    >
+      <div className="flex-1 min-w-0 px-4 py-3.5 relative z-10">
+        <p className="text-sm font-extrabold text-gray-900 leading-tight">{label}</p>
+      </div>
+      <div
+        className="relative shrink-0 w-24 h-full flex items-center justify-center"
+        style={{ background: `linear-gradient(135deg, ${accent} 0%, white 110%)` }}
+      >
+        <span aria-hidden className="absolute w-16 h-16 rounded-full opacity-60 blur-xl pointer-events-none" style={{ backgroundColor: accent }} />
+        <span className="emoji-floats text-4xl relative z-10">{emoji}</span>
+      </div>
     </Link>
   )
 }

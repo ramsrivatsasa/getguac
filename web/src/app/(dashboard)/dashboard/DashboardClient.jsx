@@ -225,13 +225,7 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
         <GuacScoreTileWithBankBite receipts={spendingReceipts} period={period} periodCount={periodCount} />
         <GuacWizardTile />
         <GuacMoneyTile />
-        <div className="stat-card">
-          <div className="p-2 rounded-lg bg-lime-100 text-lime-700"><Gift size={16} /></div>
-          <div className="min-w-0">
-            <p className="text-[11px] text-gray-500 font-medium leading-tight">Rewards</p>
-            <p className="text-base font-bold text-gray-900">{initialRewards.length}</p>
-          </div>
-        </div>
+        <RewardsTile count={initialRewards.length} />
       </div>
 
       {/* Spending anomalies sits ABOVE the financial-tile scroll so
@@ -582,23 +576,39 @@ function GuacWizardTile() {
     const result = generateInsights({ statements, fees, transactions }, since)
     return computeWizardScore(result).score
   })()
+  // Tone (pale background gradient + ring + chip gradient + text)
+  // tracks the score band, matching the GuacScore tile's "color-coded
+  // by health" aesthetic. Violet baseline when no statements yet.
+  const tone =
+    score == null                  ? { bg: 'from-violet-50 to-emerald-50',  ring: 'ring-violet-200',  chip: 'from-violet-400 to-violet-600',  text: 'text-violet-900', sub: 'text-violet-700' } :
+    score >= 65                    ? { bg: 'from-emerald-50 to-lime-100',   ring: 'ring-emerald-200', chip: 'from-emerald-400 to-lime-600',   text: 'text-emerald-900', sub: 'text-emerald-700' } :
+    score >= 35                    ? { bg: 'from-amber-50 to-orange-100',   ring: 'ring-amber-200',   chip: 'from-amber-300 to-orange-500',   text: 'text-orange-900', sub: 'text-amber-700' } :
+                                     { bg: 'from-rose-50 to-red-100',       ring: 'ring-rose-200',    chip: 'from-rose-400 to-red-600',       text: 'text-rose-900',   sub: 'text-rose-700' }
+
   return (
-    <Link href="/guacwizard" className="stat-card hover:bg-emerald-50/40 transition-colors" title="GuacWizard health score">
-      <div className={`p-2 rounded-lg ${score != null && score >= 65 ? 'bg-gradient-to-br from-emerald-400 to-lime-500 text-white shadow-sm' : score != null && score >= 35 ? 'bg-gradient-to-br from-amber-300 to-orange-500 text-white shadow-sm' : score != null ? 'bg-gradient-to-br from-rose-400 to-red-600 text-white shadow-sm' : 'bg-violet-100 text-violet-700'}`}>
-        <Wand2 size={16} />
+    <Link
+      href="/guacwizard"
+      className={`payment-tile-card stat-card relative overflow-hidden bg-gradient-to-br ${tone.bg} ring-1 ${tone.ring} hover:shadow-md transition-all`}
+      title="GuacWizard health score"
+    >
+      {/* 🥑 brand watermark + 🧙‍♂️ theme watermark — same proportions
+          as the PaymentTile row so the engagement strip and the
+          financial scroll feel like one design system. */}
+      <span aria-hidden className="absolute select-none pointer-events-none leading-none" style={{ top: '-4px', right: '6px', transform: 'rotate(-12deg)', fontSize: '30px', opacity: 0.22 }}>🥑</span>
+      <span aria-hidden className="absolute select-none pointer-events-none leading-none" style={{ bottom: '4px', right: '8px', transform: 'rotate(8deg)', fontSize: '18px', opacity: 0.26 }}>🧙‍♂️</span>
+      <div className={`shrink-0 w-11 h-11 rounded-xl flex items-center justify-center relative z-10 bg-gradient-to-br ${tone.chip} shadow-md`}>
+        <Wand2 size={20} className="tile-chip-icon text-white" />
       </div>
-      <div className="min-w-0">
-        <p className="text-[11px] text-gray-500 font-medium leading-tight">GuacWizard 🧙‍♂️</p>
-        <div className="flex items-baseline gap-1.5">
-          {score != null ? (
-            <>
-              <p className="text-base font-bold text-gray-900 tabular-nums">{score}</p>
-              <span className="text-[10px] text-gray-500">/ 100</span>
-            </>
-          ) : (
-            <p className="text-xs text-violet-700 font-bold">Set up →</p>
-          )}
-        </div>
+      <div className="min-w-0 flex-1 relative z-10">
+        <p className={`text-[10px] uppercase tracking-wider font-bold ${tone.sub}`}>GuacWizard</p>
+        {score != null ? (
+          <>
+            <p className={`text-xl font-black ${tone.text} tabular-nums leading-tight`}>{score}<span className="text-xs font-bold opacity-60 ml-0.5">/ 100</span></p>
+            <p className={`text-[10px] font-semibold mt-0.5 ${tone.sub}`}>health score</p>
+          </>
+        ) : (
+          <p className={`text-sm font-bold ${tone.sub} mt-0.5`}>Set up →</p>
+        )}
       </div>
     </Link>
   )
@@ -610,22 +620,53 @@ function GuacMoneyTile() {
     queryFn: fetchGuacMoneyTotal,
     staleTime: 60_000,
   })
+  // Emerald palette throughout — the brand colour. Active = strong
+  // gradient chip + filled bg; idle = same shape with paler tints so
+  // a fresh account still feels designed.
+  const active = total > 0
   return (
-    <div className="stat-card">
-      <div className={`p-2 rounded-lg ${total > 0 ? 'bg-gradient-to-br from-emerald-400 via-emerald-500 to-lime-600 text-white shadow-sm' : 'bg-emerald-50 text-emerald-700'}`}>
-        <PiggyBank size={16} />
+    <div className={`payment-tile-card stat-card relative overflow-hidden bg-gradient-to-br ${active ? 'from-emerald-50 to-lime-100' : 'from-emerald-50/60 to-lime-50/60'} ring-1 ring-emerald-200 hover:shadow-md transition-all`}>
+      <span aria-hidden className="absolute select-none pointer-events-none leading-none" style={{ top: '-4px', left: '52px', transform: 'rotate(16deg)', fontSize: '30px', opacity: 0.22 }}>🥑</span>
+      <span aria-hidden className="absolute select-none pointer-events-none leading-none" style={{ top: '2px', right: '6px', transform: 'rotate(-8deg)', fontSize: '20px', opacity: 0.28 }}>💰</span>
+      <div className={`shrink-0 w-11 h-11 rounded-xl flex items-center justify-center relative z-10 bg-gradient-to-br ${active ? 'from-emerald-400 via-emerald-500 to-lime-600' : 'from-emerald-200 to-lime-300'} shadow-md`}>
+        <PiggyBank size={20} className="tile-chip-icon text-white" />
       </div>
-      <div className="min-w-0">
-        <p className="text-[11px] text-gray-500 font-medium leading-tight">GuacMoney 🥑</p>
-        <div className="flex items-baseline gap-1.5">
-          <p className="text-base font-bold text-emerald-700 tabular-nums">
-            {isLoading ? '—' : formatGuacMoney(total)}
-          </p>
-          <span className="text-[10px] text-gray-500">
-            {total > 0 ? 'saved' : 'tap Cheapest'}
-          </span>
-        </div>
+      <div className="min-w-0 flex-1 relative z-10">
+        <p className="text-[10px] uppercase tracking-wider font-bold text-emerald-700">GuacMoney</p>
+        <p className="text-xl font-black text-emerald-900 tabular-nums leading-tight">
+          {isLoading ? '—' : formatGuacMoney(total)}
+        </p>
+        <p className="text-[10px] font-semibold mt-0.5 text-emerald-700">
+          {active ? 'saved' : 'tap Cheapest →'}
+        </p>
       </div>
     </div>
+  )
+}
+
+// Rewards tile — count of unredeemed rewards available, lime/emerald
+// palette to match the brand. Treated like the other engagement
+// tiles so the row reads as one design system.
+function RewardsTile({ count }) {
+  const active = count > 0
+  return (
+    <Link
+      href="/rewards"
+      className={`payment-tile-card stat-card relative overflow-hidden bg-gradient-to-br ${active ? 'from-lime-50 to-emerald-100' : 'from-gray-50 to-gray-100/40'} ring-1 ${active ? 'ring-lime-300' : 'ring-gray-200'} hover:shadow-md transition-all`}
+      title="Rewards available"
+    >
+      <span aria-hidden className="absolute select-none pointer-events-none leading-none" style={{ bottom: '-4px', right: '4px', transform: 'rotate(-18deg)', fontSize: '30px', opacity: 0.22 }}>🥑</span>
+      <span aria-hidden className="absolute select-none pointer-events-none leading-none" style={{ top: '2px', right: '6px', transform: 'rotate(12deg)', fontSize: '20px', opacity: 0.28 }}>🎁</span>
+      <div className={`shrink-0 w-11 h-11 rounded-xl flex items-center justify-center relative z-10 bg-gradient-to-br ${active ? 'from-lime-400 to-emerald-500' : 'from-gray-300 to-gray-400'} shadow-md`}>
+        <Gift size={20} className="tile-chip-icon text-white" />
+      </div>
+      <div className="min-w-0 flex-1 relative z-10">
+        <p className={`text-[10px] uppercase tracking-wider font-bold ${active ? 'text-lime-700' : 'text-gray-500'}`}>Rewards</p>
+        <p className={`text-xl font-black ${active ? 'text-lime-900' : 'text-gray-900'} tabular-nums leading-tight`}>{count}</p>
+        <p className={`text-[10px] font-semibold mt-0.5 ${active ? 'text-lime-700' : 'text-gray-500'}`}>
+          {active ? 'available' : 'none yet'}
+        </p>
+      </div>
+    </Link>
   )
 }

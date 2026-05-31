@@ -164,7 +164,7 @@ function ScoreTile({ score = 0, grade }) {
   const C = Math.PI * R
   const label = grade?.label || 'Fresh start'
   return (
-    <Link href="/guacanomics" className="group relative overflow-hidden bg-gradient-to-br from-lime-100 via-emerald-100 to-teal-100 rounded-2xl border-2 border-white p-4 hover:shadow-xl hover:-translate-y-1 hover:rotate-[0.5deg] transition-all flex flex-col shadow-lg ring-1 ring-emerald-200/50">
+    <Link href="/guacanomics" className="group relative overflow-hidden bg-gradient-to-br from-lime-100 via-emerald-100 to-teal-100 rounded-2xl border-2 border-white p-4 h-44 hover:shadow-xl hover:-translate-y-1 hover:rotate-[0.5deg] transition-all flex flex-col shadow-lg ring-1 ring-emerald-200/50">
       <span aria-hidden className="emoji-floats absolute -bottom-4 -right-3 text-6xl opacity-15 select-none">🥑</span>
       <span aria-hidden className="absolute -top-8 -left-8 w-24 h-24 rounded-full bg-emerald-300/30 blur-2xl pointer-events-none" />
       <div className="flex items-center justify-between mb-1 relative">
@@ -197,7 +197,7 @@ function ScoreTile({ score = 0, grade }) {
 
 function MoneyTile({ total = 0 }) {
   return (
-    <Link href="/receipts" className="group relative overflow-hidden rounded-2xl p-4 hover:shadow-xl hover:-translate-y-1 hover:-rotate-[0.5deg] transition-all border-2 border-white shadow-lg ring-1 ring-emerald-300/40"
+    <Link href="/receipts" className="group relative overflow-hidden rounded-2xl p-4 h-44 hover:shadow-xl hover:-translate-y-1 hover:-rotate-[0.5deg] transition-all border-2 border-white shadow-lg ring-1 ring-emerald-300/40"
       style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)' }}>
       <span aria-hidden className="emoji-floats absolute -bottom-4 -right-4 text-7xl opacity-30 select-none">🥑</span>
       <span aria-hidden className="absolute top-1 left-1 w-20 h-20 rounded-full bg-lime-300/30 blur-2xl pointer-events-none" />
@@ -217,7 +217,7 @@ function MoneyTile({ total = 0 }) {
 
 function WizardTile() {
   return (
-    <Link href="/guacwizard" className="group relative overflow-hidden rounded-2xl p-4 hover:shadow-xl hover:-translate-y-1 hover:rotate-[0.5deg] transition-all border-2 border-white shadow-lg ring-1 ring-violet-300/40"
+    <Link href="/guacwizard" className="group relative overflow-hidden rounded-2xl p-4 h-44 hover:shadow-xl hover:-translate-y-1 hover:rotate-[0.5deg] transition-all border-2 border-white shadow-lg ring-1 ring-violet-300/40"
       style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #a855f7 50%, #d946ef 100%)' }}>
       <span aria-hidden className="emoji-floats absolute -bottom-3 -right-3 text-7xl opacity-30 select-none">🔮</span>
       <span aria-hidden className="absolute top-2 left-2 w-20 h-20 rounded-full bg-fuchsia-300/40 blur-2xl pointer-events-none" />
@@ -246,7 +246,7 @@ function WizardTile() {
 
 function WorthItTile({ pending = 0 }) {
   return (
-    <Link href="/validate" className="group relative overflow-hidden rounded-2xl p-4 hover:shadow-xl hover:-translate-y-1 hover:-rotate-[0.5deg] transition-all border-2 border-white shadow-lg ring-1 ring-rose-300/40"
+    <Link href="/validate" className="group relative overflow-hidden rounded-2xl p-4 h-44 hover:shadow-xl hover:-translate-y-1 hover:-rotate-[0.5deg] transition-all border-2 border-white shadow-lg ring-1 ring-rose-300/40"
       style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #f97316 35%, #ef4444 70%, #ec4899 100%)' }}>
       <span aria-hidden className="emoji-floats absolute -bottom-4 -right-3 text-7xl opacity-30 select-none">💚</span>
       <span aria-hidden className="absolute top-2 left-2 w-20 h-20 rounded-full bg-yellow-200/40 blur-2xl pointer-events-none" />

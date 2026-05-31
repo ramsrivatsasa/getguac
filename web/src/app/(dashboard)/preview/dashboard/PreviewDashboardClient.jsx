@@ -279,10 +279,10 @@ function PaymentTile({ emoji, haloColor, accent = '#1f2937', label, value }) {
   // per-tile accent color instead of pure white.
   return (
     <div className="snap-start shrink-0 w-44 relative overflow-hidden rounded-2xl bg-white border-2 border-white shadow-lg ring-1 ring-gray-200/60 p-3.5 hover:shadow-xl hover:-translate-y-1 hover:rotate-[0.5deg] transition-all">
-      <span aria-hidden className="absolute -bottom-5 -right-3 select-none pointer-events-none">
+      <span aria-hidden className="absolute bottom-1 -right-2 select-none pointer-events-none">
         <span className="emoji-floats text-6xl opacity-95">{emoji}</span>
       </span>
-      <span aria-hidden className="absolute -bottom-6 -right-6 w-24 h-24 rounded-full opacity-80 blur-2xl pointer-events-none" style={{ backgroundColor: haloColor }} />
+      <span aria-hidden className="absolute -bottom-2 -right-4 w-24 h-24 rounded-full opacity-80 blur-2xl pointer-events-none" style={{ backgroundColor: haloColor }} />
       <p className="text-[10px] font-extrabold uppercase tracking-widest relative" style={{ color: accent }}>{label}</p>
       <p className="text-2xl font-black tabular-nums mt-1 relative" style={{ color: accent }}>{value}</p>
     </div>

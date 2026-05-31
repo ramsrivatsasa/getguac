@@ -585,27 +585,27 @@ function GuacWizardTile() {
     const result = generateInsights({ statements, fees, transactions }, since)
     return computeWizardScore(result).score
   })()
-  // GuacWizard's tile palette is ALWAYS violet so it has its own
-  // visual identity in the 4-tile engagement strip (otherwise three
-  // of four tiles would be green). Score-band signal moves onto the
-  // score number text color (emerald/amber/rose) — the tile stays
-  // a stable violet, so loading→resolved no longer flashes through
-  // different color schemes.
+  // GuacWizard's tile palette is ALWAYS violet — bg, ring, chip,
+  // label, value, subtext all use shades of violet/purple. One
+  // visual identity per tile is the rule across the engagement
+  // strip (GuacScore amber · GuacWizard violet · GuacMoney emerald
+  // · Rewards rose). Score-band signal is conveyed by a small
+  // emoji badge next to the value (🟢/🟡/🔴) instead of recoloring
+  // the number itself, which kept the tile reading as
+  // multi-colored.
   const tone = {
     bg: 'from-violet-50 to-purple-100',
     ring: 'ring-violet-200',
     chip: 'from-violet-500 to-purple-600',
     label: 'text-violet-700',
+    value: 'text-violet-900',
     sub: 'text-violet-600',
   }
-  // Score-number color picks up the band so the user still gets the
-  // health-status signal at a glance.
-  const scoreText =
-    score === undefined ? 'text-violet-400' :
-    score === null      ? 'text-violet-400' :
-    score >= 65         ? 'text-emerald-700' :
-    score >= 35         ? 'text-amber-700' :
-                          'text-rose-700'
+  const bandBadge =
+    score === undefined || score === null ? null :
+    score >= 65                           ? '🟢' :
+    score >= 35                           ? '🟡' :
+                                            '🔴'
 
   return (
     <Link
@@ -625,12 +625,16 @@ function GuacWizardTile() {
         <p className={`text-[10px] uppercase tracking-wider font-bold ${tone.label}`}>GuacWizard</p>
         {score === undefined ? (
           <>
-            <p className={`text-xl font-black ${scoreText} tabular-nums leading-tight`}>—</p>
+            <p className={`text-xl font-black ${tone.value} tabular-nums leading-tight`}>—</p>
             <p className={`text-[10px] font-semibold mt-0.5 ${tone.sub}`}>loading…</p>
           </>
         ) : score != null ? (
           <>
-            <p className={`text-xl font-black ${scoreText} tabular-nums leading-tight`}>{score}<span className="text-xs font-bold opacity-60 ml-0.5">/ 100</span></p>
+            <p className={`text-xl font-black ${tone.value} tabular-nums leading-tight flex items-baseline gap-1`}>
+              <span>{score}</span>
+              <span className="text-[10px] font-bold opacity-60">/ 100</span>
+              {bandBadge && <span className="text-[10px]">{bandBadge}</span>}
+            </p>
             <p className={`text-[10px] font-semibold mt-0.5 ${tone.sub}`}>health score</p>
           </>
         ) : (

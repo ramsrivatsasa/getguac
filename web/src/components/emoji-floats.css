@@ -38,3 +38,28 @@ a:hover .emoji-floats {
     transition: none;
   }
 }
+
+/* PaymentTile chip emoji — animates on parent-group hover. Spring
+   scale + counter-rotate so the chip "pops" when the cursor enters
+   the tile, then settles back smoothly when the cursor leaves. No
+   idle animation so the dashboard row reads as static at rest. */
+.tile-chip-icon {
+  display: inline-block;
+  line-height: 1;
+  transition: transform 280ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-origin: center;
+}
+.group:hover .tile-chip-icon {
+  animation: tile-chip-wiggle 720ms ease-out;
+}
+@keyframes tile-chip-wiggle {
+  0%   { transform: scale(1)    rotate(0deg); }
+  25%  { transform: scale(1.18) rotate(-12deg); }
+  50%  { transform: scale(1.12) rotate(10deg); }
+  75%  { transform: scale(1.15) rotate(-6deg); }
+  100% { transform: scale(1.08) rotate(0deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tile-chip-icon { transition: none; }
+  .group:hover .tile-chip-icon { animation: none; }
+}

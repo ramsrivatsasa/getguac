@@ -114,32 +114,32 @@ export default function PreviewDashboardClient({ receipts, rewards, firstName })
         <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 hide-scrollbar">
           <PaymentTile
             emoji="🧾"
-            gradient="linear-gradient(135deg, #38bdf8 0%, #3b82f6 50%, #6366f1 100%)"
-            haloColor="#7dd3fc"
+            gradient="linear-gradient(135deg, #7dd3fc 0%, #60a5fa 50%, #818cf8 100%)"
+            haloColor="#bae6fd"
             label="Transactions"
             value={receipts.length}
             logoPos={{ top: '-12px', left: '-10px', rotate: '-18deg', size: '110px' }}
           />
           <PaymentTile
             emoji="💸"
-            gradient="linear-gradient(135deg, #fb923c 0%, #f87171 50%, #f472b6 100%)"
-            haloColor="#fdba74"
+            gradient="linear-gradient(135deg, #fdba74 0%, #fca5a5 50%, #f9a8d4 100%)"
+            haloColor="#fed7aa"
             label="Total Spent"
             value={`$${totalSpend.toFixed(2)}`}
             logoPos={{ top: '40px', right: '-22px', rotate: '24deg', size: '100px' }}
           />
           <PaymentTile
             emoji="📈"
-            gradient="linear-gradient(135deg, #fcd34d 0%, #fbbf24 50%, #f59e0b 100%)"
-            haloColor="#fde68a"
+            gradient="linear-gradient(135deg, #fde68a 0%, #fcd34d 50%, #fbbf24 100%)"
+            haloColor="#fef3c7"
             label="Tax Paid"
             value={`$${totalTax.toFixed(2)}`}
             logoPos={{ bottom: '-18px', left: '60px', rotate: '12deg', size: '120px' }}
           />
           <PaymentTile
             emoji="🏦"
-            gradient="linear-gradient(135deg, #fb7185 0%, #ec4899 50%, #db2777 100%)"
-            haloColor="#fda4af"
+            gradient="linear-gradient(135deg, #fda4af 0%, #f9a8d4 50%, #f0abfc 100%)"
+            haloColor="#fecdd3"
             label="Bank Fees"
             value={`$${bankFees.toFixed(2)}`}
             logoPos={{ top: '-8px', right: '70px', rotate: '-32deg', size: '95px' }}

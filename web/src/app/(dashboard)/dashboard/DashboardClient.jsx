@@ -425,7 +425,7 @@ const TILE_TONE = {
 function BankTile({ icon: Icon, tone, label, value }) {
   const t = TILE_TONE[tone] || TILE_TONE.sky
   return (
-    <div className={`stat-card border ${t.border} ${t.bg}`}>
+    <div className={`snap-start shrink-0 w-48 stat-card border ${t.border} ${t.bg}`}>
       <div className={`p-2 rounded-lg bg-white shadow-sm`}><Icon size={16} className={t.icon} /></div>
       <div className="min-w-0">
         <p className={`text-[10px] uppercase tracking-wider font-bold ${t.text} opacity-80`}>{label}</p>
@@ -455,12 +455,16 @@ function BankSummaryRow() {
   if (!hasData) return null
   const { summary } = generateInsights({ statements, fees, transactions }, 'ytd')
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+    <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 bank-row">
       <BankTile icon={CreditCard}     tone="sky"     label="Payments made" value={summary.totalPayments} />
       <BankTile icon={Percent}        tone="orange"  label="Interest paid" value={summary.totalInterest} />
       <BankTile icon={AlertTriangle}  tone="amber"   label="Fees paid"     value={summary.totalFees} />
       <BankTile icon={TrendingUp}     tone="rose"    label="Purchases"     value={summary.totalPurch} />
       <BankTile icon={TrendingDown}   tone="emerald" label="Refunds"       value={summary.totalRefunds} />
+      <style jsx>{`
+        .bank-row::-webkit-scrollbar { display: none; }
+        .bank-row { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
     </div>
   )
 }

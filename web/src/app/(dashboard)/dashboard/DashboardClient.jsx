@@ -434,48 +434,6 @@ function BankTile({ icon: Icon, tone, label, value }) {
     </div>
   )
 }
-// Bank summary tile configs — same vibrant treatment as the
-// Spending Analysis PaymentTiles. Each gets its own emoji, gradient
-// palette, halo, and watermark logo position so the 5-tile row reads
-// as 5 distinct categories rather than a copy-paste strip.
-const BANK_TILE_CONFIGS = {
-  payments: {
-    emoji: '💳',
-    gradient: 'linear-gradient(135deg, #38bdf8 0%, #0284c7 50%, #0369a1 100%)',
-    haloColor: '#bae6fd',
-    label: 'Payments Made',
-    logoPos: { top: '-10px', left: '60px', rotate: '-22deg', size: '95px' },
-  },
-  interest: {
-    emoji: '💢',
-    gradient: 'linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)',
-    haloColor: '#fed7aa',
-    label: 'Interest Paid',
-    logoPos: { bottom: '-14px', right: '60px', rotate: '20deg', size: '105px' },
-  },
-  fees: {
-    emoji: '⚠️',
-    gradient: 'linear-gradient(135deg, #facc15 0%, #ca8a04 50%, #a16207 100%)',
-    haloColor: '#fef08a',
-    label: 'Fees Paid',
-    logoPos: { top: '-8px', right: '-12px', rotate: '14deg', size: '90px' },
-  },
-  purchases: {
-    emoji: '🛒',
-    gradient: 'linear-gradient(135deg, #f87171 0%, #dc2626 50%, #991b1b 100%)',
-    haloColor: '#fecaca',
-    label: 'Purchases',
-    logoPos: { top: '20px', left: '-14px', rotate: '-12deg', size: '110px' },
-  },
-  refunds: {
-    emoji: '↩️',
-    gradient: 'linear-gradient(135deg, #34d399 0%, #10b981 50%, #047857 100%)',
-    haloColor: '#a7f3d0',
-    label: 'Refunds',
-    logoPos: { bottom: '-12px', left: '40px', rotate: '28deg', size: '100px' },
-  },
-}
-
 function BankSummaryRow() {
   const sb = createSbClient()
   const { data: statements = [] } = useQuery({
@@ -496,25 +454,14 @@ function BankSummaryRow() {
   const hasData = statements.length > 0 || fees.length > 0 || transactions.length > 0
   if (!hasData) return null
   const { summary } = generateInsights({ statements, fees, transactions }, 'ytd')
-  const fmt = (v) => `$${Number(v || 0).toFixed(2)}`
   return (
-    <section>
-      <div className="flex items-baseline justify-between mb-2">
-        <h2 className="text-base font-extrabold text-gray-900">Bank Summary</h2>
-        <span className="text-xs text-gray-500">Year-to-date</span>
-      </div>
-      <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 bank-row">
-        <PaymentTile {...BANK_TILE_CONFIGS.payments}  value={fmt(summary.totalPayments)} />
-        <PaymentTile {...BANK_TILE_CONFIGS.interest}  value={fmt(summary.totalInterest)} />
-        <PaymentTile {...BANK_TILE_CONFIGS.fees}      value={fmt(summary.totalFees)} />
-        <PaymentTile {...BANK_TILE_CONFIGS.purchases} value={fmt(summary.totalPurch)} />
-        <PaymentTile {...BANK_TILE_CONFIGS.refunds}   value={fmt(summary.totalRefunds)} />
-      </div>
-      <style jsx>{`
-        .bank-row::-webkit-scrollbar { display: none; }
-        .bank-row { -ms-overflow-style: none; scrollbar-width: none; }
-      `}</style>
-    </section>
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      <BankTile icon={CreditCard}     tone="sky"     label="Payments made" value={summary.totalPayments} />
+      <BankTile icon={Percent}        tone="orange"  label="Interest paid" value={summary.totalInterest} />
+      <BankTile icon={AlertTriangle}  tone="amber"   label="Fees paid"     value={summary.totalFees} />
+      <BankTile icon={TrendingUp}     tone="rose"    label="Purchases"     value={summary.totalPurch} />
+      <BankTile icon={TrendingDown}   tone="emerald" label="Refunds"       value={summary.totalRefunds} />
+    </div>
   )
 }
 

@@ -55,10 +55,10 @@ export default function GuacoScoreCard({ receipts = [], bankBite = null, size = 
             <p className={`font-extrabold tabular-nums ${tint.text} text-sm`}>{displayScore}</p>
           </div>
         </div>
-        <div className="min-w-0">
-          <p className="text-xs text-gray-500 font-medium">GuacScore</p>
-          <p className={`text-xl font-bold ${tint.text} flex items-center gap-1`}>
-            <span className="text-base">{displayGrade.emoji}</span>
+        <div className="min-w-0 flex-1">
+          <p className="text-[11px] text-gray-500 font-medium leading-tight">GuacScore</p>
+          <p className={`text-sm font-bold ${tint.text} flex items-center gap-1 mt-0.5`}>
+            <span>{displayGrade.emoji}</span>
             <span className="truncate">{displayGrade.label}</span>
           </p>
         </div>

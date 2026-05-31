@@ -7,7 +7,8 @@ import { generateInsights } from '../../../lib/financeInsights'
 import { periodStartDate, timeframeLabel } from '../../../lib/timeframe'
 import { useStore } from '../../../store'
 import GuacMascot from '../../../components/GuacMascot'
-import { TrendingUp, TrendingDown, AlertTriangle, Percent, CreditCard, Banknote, Sparkles, Clock } from 'lucide-react'
+import TimeframePicker from '../../../components/TimeframePicker'
+import { TrendingUp, TrendingDown, AlertTriangle, Percent, CreditCard, Banknote, Sparkles } from 'lucide-react'
 const SEVERITY_STYLE = {
   good:    { card: 'bg-emerald-50 border-emerald-200', label: 'text-emerald-700' },
   neutral: { card: 'bg-gray-50 border-gray-200',       label: 'text-gray-700' },
@@ -114,14 +115,12 @@ export default function GuacWizardPage() {
           </div>
         </div>
 
-        {/* Time-frame is owned by the dashboard. Show what's active
-            and link back so changes stay in one place. */}
+        {/* Standard time-frame picker — shared with the dashboard
+            and every other internal page. Changes here sync to the
+            dashboard via the Zustand store (persisted to
+            localStorage). */}
         <div className="mt-4">
-          <Link href="/dashboard" className="inline-flex items-center gap-2 bg-white/70 backdrop-blur rounded-full px-3 py-1.5 text-xs font-bold text-emerald-800 hover:bg-white transition-colors">
-            <Clock size={12} />
-            <span>{tfLabel}</span>
-            <span className="text-emerald-600">· change on dashboard →</span>
-          </Link>
+          <TimeframePicker />
         </div>
       </div>
 

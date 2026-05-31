@@ -23,6 +23,7 @@ import { isPaymentReceipt } from '../../../lib/payment-rows'
 import PaymentTile, { PAYMENT_TILE_CONFIGS } from '../../../components/PaymentTile'
 import { computeDashboardAnalysis } from '../../../lib/analysisEngine'
 import { periodStartDate } from '../../../lib/timeframe'
+import TimeframePicker from '../../../components/TimeframePicker'
 const PERIODS = ['daily', 'weekly', 'monthly', 'yearly']
 
 // Dropdown options for "how many <period>s back to include"
@@ -186,32 +187,15 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
         </div>
       </div>
 
-      {/* Period selector */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="inline-flex bg-emerald-50 rounded-full p-1 gap-1 border border-emerald-100">
-          {PERIODS.map(p => (
-            <button key={p} onClick={() => selectPeriod(p)}
-              className={`px-4 py-1.5 rounded-full text-sm font-semibold capitalize transition-all ${
-                period === p ? 'bg-white text-emerald-900 shadow-sm ring-1 ring-emerald-200' : 'text-emerald-700/70 hover:text-emerald-900'
-              }`}>
-              {p}
-            </button>
-          ))}
-        </div>
-        <div className="inline-flex items-center gap-2 bg-white rounded-full pl-4 pr-2 py-1 border border-emerald-100 shadow-sm">
-          <span className="text-xs font-semibold text-gray-500">Last</span>
-          <select
-            value={periodCount}
-            onChange={e => setPeriodCount(parseInt(e.target.value, 10))}
-            className="bg-transparent text-sm font-bold text-emerald-800 focus:outline-none cursor-pointer font-sans">
-            {(COUNT_OPTIONS[period] || [1]).map(n => (
-              <option key={n} value={n}>{n}</option>
-            ))}
-          </select>
-          <span className="text-xs font-semibold text-gray-500">{UNIT_LABEL[period]}{periodCount === 1 ? '' : 's'}</span>
-        </div>
-        <span className="text-xs text-gray-400">{filtered.length} transaction{filtered.length === 1 ? '' : 's'} • {rangeLabel}</span>
-      </div>
+      {/* Standard time-frame picker — shared with /guacwizard and
+          every other internal page. */}
+      <TimeframePicker
+        trailing={
+          <span className="text-xs text-gray-400">
+            {filtered.length} transaction{filtered.length === 1 ? '' : 's'} • {rangeLabel}
+          </span>
+        }
+      />
 
       {/* Return-window banner — surfaces items expiring within 7
           days so the user can act before the window closes. Self-

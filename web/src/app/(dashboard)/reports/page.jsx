@@ -20,17 +20,18 @@ import { computeTaxSummary, buildTaxExportCsv } from '../../../lib/tax-summary'
 import { detectSubscriptions, summarizeSubscriptions } from '../../../lib/subscription-tracker'
 import { computeSpendingTrend, formatTrend } from '../../../lib/spending-trends'
 import { formatDateShort } from '../../../lib/dateFormat'
+import { periodStartIsoDate, timeframeLabel } from '../../../lib/timeframe'
+import { useStore } from '../../../store'
+import TimeframePicker from '../../../components/TimeframePicker'
 import { BarChart3, PieChart as PieIcon, Repeat, Award, Store as StoreIcon, X, Receipt as ReceiptIcon, Download, HeartHandshake, Briefcase, Percent, RotateCw, TrendingUp } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
 
-const PERIODS = [
-  { id: '1m',  label: '1 month',  days: 30  },
-  { id: '3m',  label: '3 months', days: 90  },
-  { id: '1y',  label: '1 year',   days: 365 },
-  { id: 'all', label: 'All time', days: null },
-]
-const DEFAULT_PERIOD = '1y'
+// Time-frame is owned by the dashboard via the Zustand store.
+// /reports reads `spendingPeriod` + `spendingPeriodCount` and
+// derives the `dateFrom` cutoff through the shared
+// `periodStartIsoDate` helper — same window the dashboard and
+// /guacwizard use.
 
 // Recharts donut colors — matches CATEGORIES palette as closely as Tailwind lets.
 const CATEGORY_COLORS = {
@@ -67,15 +68,13 @@ async function getReportsData({ dateFrom }) {
 }
 
 export default function ReportsPage() {
-  const [periodId, setPeriodId] = useState(DEFAULT_PERIOD)
   const [selectedCategory, setSelectedCategory] = useState(null)
-  const period = PERIODS.find(p => p.id === periodId) || PERIODS[0]
-  const dateFrom = period.days
-    ? new Date(Date.now() - period.days * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
-    : null
+  const { spendingPeriod, spendingPeriodCount } = useStore()
+  const dateFrom = periodStartIsoDate(spendingPeriod, spendingPeriodCount)
+  const periodLabel = timeframeLabel(spendingPeriod, spendingPeriodCount)
 
   const { data: receipts = [], isLoading } = useQuery({
-    queryKey: ['reports', periodId],
+    queryKey: ['reports', spendingPeriod, spendingPeriodCount],
     queryFn: () => getReportsData({ dateFrom }),
     staleTime: 60_000,
   })
@@ -208,21 +207,11 @@ export default function ReportsPage() {
           <div>
             <h1 className="page-title">Reports</h1>
             <p className="text-xs text-gray-500 mt-0.5">
-              <span className="font-semibold text-gray-700">${totalSpent.toFixed(2)}</span> across <span className="font-semibold text-gray-700">{totalReceipts}</span> receipt{totalReceipts === 1 ? '' : 's'} · {period.label}
+              <span className="font-semibold text-gray-700">${totalSpent.toFixed(2)}</span> across <span className="font-semibold text-gray-700">{totalReceipts}</span> receipt{totalReceipts === 1 ? '' : 's'} · {periodLabel}
             </p>
           </div>
         </div>
-        <div className="inline-flex bg-white rounded-full border border-gray-200 p-0.5 text-xs">
-          {PERIODS.map(p => (
-            <button
-              key={p.id}
-              onClick={() => setPeriodId(p.id)}
-              className={`px-3 py-1 rounded-full font-semibold transition-colors ${
-                periodId === p.id ? 'bg-emerald-100 text-emerald-900' : 'text-gray-500 hover:bg-gray-50'
-              }`}
-            >{p.label}</button>
-          ))}
-        </div>
+        <TimeframePicker compact />
       </div>
 
       {isLoading ? (

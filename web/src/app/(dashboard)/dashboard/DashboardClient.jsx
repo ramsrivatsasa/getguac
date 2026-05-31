@@ -11,7 +11,6 @@ import GuacoScoreCard from '../../../components/GuacoScoreCard'
 import UpcomingReturnsBanner from '../../../components/UpcomingReturnsBanner'
 import AnomaliesPanel from '../../../components/AnomaliesPanel'
 import { ActivityFeed } from '../../../components/ActivityFeed'
-import PaymentTile, { PAYMENT_TILE_CONFIGS } from '../../../components/PaymentTile'
 import { computeSmashDays } from '../../../lib/smashDays'
 import { fetchTotal as fetchGuacMoneyTotal, formatGuacMoney } from '../../../lib/guacMoney'
 import { generateInsights } from '../../../lib/financeInsights'
@@ -234,85 +233,52 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
       {/* Stat tiles — GuacScore leads, then GuacWizard right next
           to it (paired engagement scores), then GuacMoney, then
           financial tiles, then Smash days last per user request. */}
-      {/* Engagement strip — the four "how am I doing" tiles. GuacScore
-          uses lifetime rated purchases (not the period filter), so a
-          3-month window with no rated rows doesn't read score=0. */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
+        {/* GuacScore reads lifetime rated purchases, not just the
+            current period filter — otherwise a 3-month dashboard
+            window with no rated purchases inside it shows score=0
+            even when the user has rated items further back. The
+            big card on /guacanomics already uses a wider window;
+            this matches that behavior. */}
         <GuacoScoreCard receipts={spendingReceipts} size="sm" />
         <GuacWizardTile />
         <GuacMoneyTile />
-        <div className="stat-card">
-          <div className="p-2 rounded-lg bg-lime-100 text-lime-700"><Gift size={16} /></div>
-          <div className="min-w-0">
-            <p className="text-[11px] text-gray-500 font-medium leading-tight">Rewards</p>
-            <p className="text-base font-bold text-gray-900">{initialRewards.length}</p>
+        {[
+          { label: 'Transactions', value: filtered.length, icon: Receipt, color: 'bg-emerald-100 text-emerald-700' },
+          { label: 'Total Spent', value: `$${totalSpend.toFixed(2)}`, icon: DollarSign, color: 'bg-gradient-to-br from-rose-400 via-rose-600 to-rose-800 text-white shadow-sm', trend: trendBadge },
+          { label: 'Tax Paid', value: `$${totalTax.toFixed(2)}`, icon: TrendingUp, color: 'bg-amber-100 text-amber-700' },
+          { label: 'Bank Fees', value: `$${bankFees.toFixed(2)}`, icon: TrendingUp, color: bankFees > 0 ? 'bg-rose-100 text-rose-700' : 'bg-gray-100 text-gray-400' },
+          { label: 'Rewards', value: initialRewards.length, icon: Gift, color: 'bg-lime-100 text-lime-700' },
+        ].map(({ label, value, icon: Icon, color, trend }) => (
+          <div key={label} className="stat-card">
+            <div className={`p-2 rounded-lg ${color}`}><Icon size={16} /></div>
+            <div className="min-w-0">
+              <p className="text-[11px] text-gray-500 font-medium leading-tight">{label}</p>
+              <div className="flex items-baseline gap-1.5">
+                <p className="text-base font-bold text-gray-900">{value}</p>
+                {trend && trend.label !== '—' && (
+                  <span
+                    className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                      trend.tone === 'up'   ? 'bg-rose-50 text-rose-700 border border-rose-100'
+                      : trend.tone === 'down' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                      : 'bg-gray-50 text-gray-500 border border-gray-200'
+                    }`}
+                    title={`vs avg of prior 3 ${UNIT_LABEL[period]} window${periodCount === 1 ? '' : 's'}`}
+                  >
+                    {trend.label}
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
+        ))}
       </div>
 
-      {/* Spending anomalies — sits below the score strip. Self-hides
-          when nothing is off; session-dismissable; collapsed-by-default. */}
+      {/* Spending anomalies — moved here so it sits right below the
+          GuacScore strip (was above before, eating ~300px and
+          pushing the score row off-screen). Self-hides when nothing
+          is off; session-dismissable; collapsed-by-default. */}
       <AnomaliesPanel receipts={spendingReceipts} />
-
-      {/* Spending Analysis — one horizontal-scrolling row containing
-          the spending chart + all 4 Payment tiles. Per user request,
-          everything related to the current period's spending lives in
-          one strip the user can swipe through. */}
-      <section>
-        <div className="flex items-baseline justify-between mb-2">
-          <h2 className="text-base font-extrabold text-gray-900">Spending Analysis</h2>
-          <span className="text-xs text-gray-500">{rangeLabel}</span>
-        </div>
-        <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 payments-row">
-          {/* Spending-by-store mini chart as the first tile */}
-          <div className="snap-start shrink-0 w-80 h-24 relative overflow-hidden rounded-2xl border-2 border-white bg-white shadow-lg ring-1 ring-gray-200/60 hover:shadow-xl hover:-translate-y-1 transition-all p-2.5">
-            <div className="flex items-baseline justify-between mb-1 px-1">
-              <p className="text-[10px] font-extrabold uppercase tracking-widest text-gray-600">Spending by Store</p>
-              <span className="text-[9px] text-gray-400">Tap a bar</span>
-            </div>
-            {chartData.length === 0 ? (
-              <div className="h-14 flex items-center justify-center text-gray-400 text-[11px]">
-                No transactions yet
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height={64}>
-                <BarChart
-                  data={chartData}
-                  margin={{ top: 2, right: 4, left: -28, bottom: 0 }}
-                  barCategoryGap="20%"
-                  onClick={(state) => {
-                    const datum = state?.activePayload?.[0]?.payload
-                    if (datum?.fullName) {
-                      router.push(buildReceiptsUrl({
-                        store: datum.fullName,
-                        period: periodToReceiptsChip(period, periodCount),
-                      }))
-                    }
-                  }}
-                >
-                  <XAxis dataKey="name" tick={{ fontSize: 8, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                  <YAxis hide />
-                  <Tooltip
-                    cursor={{ fill: '#f8fafc' }}
-                    contentStyle={{ borderRadius: 8, border: '1px solid #d1fae5', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', fontSize: 11 }}
-                    formatter={v => [`$${v.toFixed(2)}`, 'Amount']}
-                    labelFormatter={(label, payload) => payload?.[0]?.payload?.fullName || label}
-                  />
-                  <Bar dataKey="amount" fill="#e11d48" radius={[6, 6, 0, 0]} maxBarSize={20} cursor="pointer" />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </div>
-          <PaymentTile {...PAYMENT_TILE_CONFIGS.transactions} value={filtered.length} />
-          <PaymentTile {...PAYMENT_TILE_CONFIGS.totalSpent}   value={`$${totalSpend.toFixed(2)}`} />
-          <PaymentTile {...PAYMENT_TILE_CONFIGS.taxPaid}      value={`$${totalTax.toFixed(2)}`} />
-          <PaymentTile {...PAYMENT_TILE_CONFIGS.bankFees}     value={`$${bankFees.toFixed(2)}`} />
-        </div>
-        <style jsx>{`
-          .payments-row::-webkit-scrollbar { display: none; }
-          .payments-row { -ms-overflow-style: none; scrollbar-width: none; }
-        `}</style>
-      </section>
 
       {/* Bank summary row — payments / interest / fees / purchases /
           refunds across all the user's bank statements. Mirrors the
@@ -321,11 +287,60 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
           data exists yet. */}
       <BankSummaryRow />
 
-      {/* Rewards expiring soon — chart moved into the Spending
-          Analysis horizontal-scroll row above, so this card no longer
-          needs the 3-col grid wrapper. */}
-      <div>
-        <div className="card lg:max-w-md">
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* Spending chart */}
+        <div className="card lg:col-span-2">
+          <h3 className="font-semibold text-gray-900 mb-1">Spending by Store</h3>
+          <p className="text-xs text-gray-500 mb-3">Tap a bar to see that store&apos;s receipts.</p>
+          {chartData.length === 0 ? (
+            <div className="h-48 flex items-center justify-center text-gray-400 text-sm">
+              No transactions for this period
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart
+                data={chartData}
+                margin={{ top: 12, right: 12, left: -12, bottom: 0 }}
+                barCategoryGap="25%"
+                // Recharts surfaces the clicked datum on chart-level onClick.
+                // Bar-level onClick fires twice on some versions; chart-level
+                // is the reliable path.
+                onClick={(state) => {
+                  const datum = state?.activePayload?.[0]?.payload
+                  if (datum?.fullName) {
+                    // Build the deep-link via the shared helper so the URL
+                    // shape + chip mapping live in one place (used by every
+                    // dashboard-to-receipts transfer, present and future).
+                    router.push(buildReceiptsUrl({
+                      store: datum.fullName,
+                      period: periodToReceiptsChip(period, periodCount),
+                    }))
+                  }
+                }}
+              >
+                <CartesianGrid strokeDasharray="2 4" stroke="#f1f5f9" vertical={false} />
+                <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                <Tooltip
+                  cursor={{ fill: '#f8fafc' }}
+                  contentStyle={{ borderRadius: 12, border: '1px solid #d1fae5', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', fontSize: 12 }}
+                  formatter={v => [`$${v.toFixed(2)}`, 'Amount']}
+                  labelFormatter={(label, payload) => payload?.[0]?.payload?.fullName || label}
+                />
+                <Bar
+                  dataKey="amount"
+                  fill="#e11d48"
+                  radius={[8, 8, 0, 0]}
+                  maxBarSize={56}
+                  cursor="pointer"
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+
+        {/* Rewards expiring soon */}
+        <div className="card">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-gray-900">Rewards</h3>
             <Link href="/rewards" title="View all rewards" aria-label="View all rewards"
@@ -425,7 +440,7 @@ const TILE_TONE = {
 function BankTile({ icon: Icon, tone, label, value }) {
   const t = TILE_TONE[tone] || TILE_TONE.sky
   return (
-    <div className={`snap-start shrink-0 w-48 stat-card border ${t.border} ${t.bg}`}>
+    <div className={`stat-card border ${t.border} ${t.bg}`}>
       <div className={`p-2 rounded-lg bg-white shadow-sm`}><Icon size={16} className={t.icon} /></div>
       <div className="min-w-0">
         <p className={`text-[10px] uppercase tracking-wider font-bold ${t.text} opacity-80`}>{label}</p>
@@ -455,16 +470,12 @@ function BankSummaryRow() {
   if (!hasData) return null
   const { summary } = generateInsights({ statements, fees, transactions }, 'ytd')
   return (
-    <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 bank-row">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
       <BankTile icon={CreditCard}     tone="sky"     label="Payments made" value={summary.totalPayments} />
       <BankTile icon={Percent}        tone="orange"  label="Interest paid" value={summary.totalInterest} />
       <BankTile icon={AlertTriangle}  tone="amber"   label="Fees paid"     value={summary.totalFees} />
       <BankTile icon={TrendingUp}     tone="rose"    label="Purchases"     value={summary.totalPurch} />
       <BankTile icon={TrendingDown}   tone="emerald" label="Refunds"       value={summary.totalRefunds} />
-      <style jsx>{`
-        .bank-row::-webkit-scrollbar { display: none; }
-        .bank-row { -ms-overflow-style: none; scrollbar-width: none; }
-      `}</style>
     </div>
   )
 }

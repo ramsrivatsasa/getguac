@@ -324,37 +324,31 @@ function CategoryWhiteCard({ label, emoji, accent }) {
   )
 }
 
-// White-bodied tile, no gradient pill. The label text itself takes
-// the accent color the pill used to be. Empty-state shows a
-// human-readable string instead of "$0.00" / "0".
+// Compact white tile. Height matches the emoji height so the row
+// stays tight. Label + value share the same font weight + size so
+// the two lines have a consistent typographic rhythm.
 function PaymentTile({ emoji, haloColor, label, accent = '#1f2937', value, emptyText, isEmpty = false }) {
   return (
-    <div className="snap-start shrink-0 w-52 sm:w-56 h-20 relative overflow-hidden rounded-2xl bg-white border-2 border-white shadow-lg ring-1 ring-gray-200/60 hover:shadow-xl hover:-translate-y-1 transition-all">
-      <span aria-hidden className="absolute -bottom-6 -right-6 w-24 h-24 rounded-full opacity-70 blur-2xl pointer-events-none" style={{ backgroundColor: haloColor }} />
-      <span aria-hidden className="emoji-floats absolute -bottom-1 -right-1 text-5xl opacity-90 select-none">{emoji}</span>
-
-      <p
-        className="absolute top-2.5 left-3.5 text-[10px] font-extrabold uppercase tracking-widest"
-        style={{ color: accent }}
-      >
-        {label}
-      </p>
-
-      {isEmpty ? (
+    <div
+      className="snap-start shrink-0 w-52 sm:w-56 relative overflow-hidden rounded-2xl bg-white border-2 border-white shadow-lg ring-1 ring-gray-200/60 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center"
+      style={{ height: 64 }}
+    >
+      <span aria-hidden className="absolute -right-4 -top-2 -bottom-2 w-20 rounded-full opacity-70 blur-xl pointer-events-none" style={{ backgroundColor: haloColor }} />
+      <span aria-hidden className="emoji-floats absolute right-2 top-1/2 -translate-y-1/2 text-4xl opacity-95 select-none leading-none">{emoji}</span>
+      <div className="pl-3.5 pr-14 min-w-0 w-full">
         <p
-          className="absolute bottom-2 left-3.5 right-14 text-sm font-bold italic leading-tight"
-          style={{ color: accent, opacity: 0.75 }}
-        >
-          {emptyText}
-        </p>
-      ) : (
-        <p
-          className="absolute bottom-2 left-3.5 text-xl font-black tabular-nums leading-none"
+          className="text-sm font-extrabold uppercase tracking-wider leading-tight"
           style={{ color: accent }}
         >
-          {value}
+          {label}
         </p>
-      )}
+        <p
+          className="text-sm font-extrabold tabular-nums leading-tight mt-0.5"
+          style={{ color: accent, opacity: isEmpty ? 0.7 : 1, fontStyle: isEmpty ? 'italic' : 'normal' }}
+        >
+          {isEmpty ? emptyText : value}
+        </p>
+      </div>
     </div>
   )
 }

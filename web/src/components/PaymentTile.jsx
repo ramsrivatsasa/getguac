@@ -49,20 +49,20 @@ function VectorPattern({ pattern, stroke, pos }) {
       top: pos.top, right: pos.right, bottom: pos.bottom, left: pos.left,
       transform: pos.rotate ? `rotate(${pos.rotate})` : undefined,
     },
-    className: 'absolute opacity-[0.12] pointer-events-none',
+    className: 'absolute opacity-[0.22] pointer-events-none',
   }
   switch (pattern) {
     case 'dots':
       return (
-        <svg {...common} width="42" height="42" viewBox="0 0 56 56" fill="currentColor">
+        <svg {...common} width="64" height="64" viewBox="0 0 56 56" fill="currentColor">
           {[...Array(16)].map((_, i) => (
-            <circle key={i} cx={(i % 4) * 14 + 6} cy={Math.floor(i / 4) * 14 + 6} r="2" />
+            <circle key={i} cx={(i % 4) * 14 + 6} cy={Math.floor(i / 4) * 14 + 6} r="2.4" />
           ))}
         </svg>
       )
     case 'wave':
       return (
-        <svg {...common} width="56" height="30" viewBox="0 0 72 40" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg {...common} width="80" height="44" viewBox="0 0 72 40" fill="none" stroke="currentColor" strokeWidth="2.4">
           <path d="M0 10 Q 9 2, 18 10 T 36 10 T 54 10 T 72 10" />
           <path d="M0 22 Q 9 14, 18 22 T 36 22 T 54 22 T 72 22" />
           <path d="M0 34 Q 9 26, 18 34 T 36 34 T 54 34 T 72 34" />
@@ -70,7 +70,7 @@ function VectorPattern({ pattern, stroke, pos }) {
       )
     case 'rings':
       return (
-        <svg {...common} width="48" height="48" viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg {...common} width="68" height="68" viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2.4">
           <circle cx="44" cy="44" r="7" />
           <circle cx="44" cy="44" r="16" />
           <circle cx="44" cy="44" r="25" />
@@ -78,7 +78,7 @@ function VectorPattern({ pattern, stroke, pos }) {
       )
     case 'stripes':
       return (
-        <svg {...common} width="48" height="48" viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg {...common} width="68" height="68" viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2.4">
           {[...Array(6)].map((_, i) => (
             <line key={i} x1={i * 12} y1="64" x2={64 + i * 12} y2="0" />
           ))}
@@ -86,13 +86,13 @@ function VectorPattern({ pattern, stroke, pos }) {
       )
     case 'blob':
       return (
-        <svg {...common} width="52" height="52" viewBox="0 0 80 80" fill="currentColor">
+        <svg {...common} width="76" height="76" viewBox="0 0 80 80" fill="currentColor">
           <path d="M62 14c12 8 16 26 8 38s-26 18-40 12S6 42 12 28 50 6 62 14z" />
         </svg>
       )
     case 'hex':
       return (
-        <svg {...common} width="48" height="42" viewBox="0 0 72 64" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg {...common} width="68" height="60" viewBox="0 0 72 64" fill="none" stroke="currentColor" strokeWidth="2.4">
           {[[10, 16], [34, 16], [58, 16], [22, 36], [46, 36], [10, 56], [34, 56], [58, 56]].map(([cx, cy], i) => {
             const r = 7
             const pts = [0, 1, 2, 3, 4, 5].map(k => {
@@ -105,7 +105,7 @@ function VectorPattern({ pattern, stroke, pos }) {
       )
     case 'plus':
       return (
-        <svg {...common} width="44" height="44" viewBox="0 0 60 60" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+        <svg {...common} width="64" height="64" viewBox="0 0 60 60" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round">
           {[[10, 10], [30, 10], [50, 10], [10, 30], [30, 30], [50, 30], [10, 50], [30, 50], [50, 50]].map(([cx, cy], i) => (
             <g key={i}>
               <line x1={cx - 3} y1={cy} x2={cx + 3} y2={cy} />
@@ -116,7 +116,7 @@ function VectorPattern({ pattern, stroke, pos }) {
       )
     case 'zigzag':
       return (
-        <svg {...common} width="56" height="34" viewBox="0 0 72 48" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round">
+        <svg {...common} width="80" height="48" viewBox="0 0 72 48" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" strokeLinecap="round">
           <polyline points="0,8 9,2 18,8 27,2 36,8 45,2 54,8 63,2 72,8" />
           <polyline points="0,24 9,18 18,24 27,18 36,24 45,18 54,24 63,18 72,24" />
           <polyline points="0,40 9,34 18,40 27,34 36,40 45,34 54,40 63,34 72,40" />
@@ -173,73 +173,73 @@ export const PAYMENT_TILE_CONFIGS = {
   transactions: {
     emoji: '🧾', tone: 'red', label: 'Transactions', pattern: 'dots',
     decor: {
-      patternPos:  { bottom: '-4px', right: '-4px' },
-      avocadoPos:  { top: '-2px', right: '4px', rotate: '-18deg', size: '22px', opacity: 0.12 },
+      patternPos:  { bottom: '-6px', right: '-6px' },
+      avocadoPos:  { top: '-4px', right: '4px', rotate: '-18deg', size: '32px', opacity: 0.22 },
       themeEmoji: '📝',
-      themePos:    { bottom: '4px', left: '62px', rotate: '8deg', size: '14px', opacity: 0.18 },
+      themePos:    { bottom: '4px', left: '60px', rotate: '8deg', size: '20px', opacity: 0.28 },
     },
   },
   totalSpent: {
     emoji: '💸', tone: 'orange', label: 'Total Spent', pattern: 'wave',
     decor: {
-      patternPos:  { bottom: '-4px', left: '-2px' },
-      avocadoPos:  { top: '-2px', left: '66px', rotate: '14deg', size: '20px', opacity: 0.12 },
+      patternPos:  { bottom: '-6px', left: '-4px' },
+      avocadoPos:  { top: '-4px', left: '64px', rotate: '14deg', size: '30px', opacity: 0.22 },
       themeEmoji: '💵',
-      themePos:    { top: '4px', right: '6px', rotate: '-10deg', size: '16px', opacity: 0.18 },
+      themePos:    { top: '2px', right: '4px', rotate: '-10deg', size: '22px', opacity: 0.28 },
     },
   },
   taxPaid: {
     emoji: '📈', tone: 'amber', label: 'Tax Paid', pattern: 'rings',
     decor: {
-      patternPos:  { top: '-2px', right: '-2px' },
-      avocadoPos:  { bottom: '-2px', left: '66px', rotate: '-12deg', size: '20px', opacity: 0.12 },
+      patternPos:  { top: '-4px', right: '-4px' },
+      avocadoPos:  { bottom: '-4px', left: '64px', rotate: '-12deg', size: '30px', opacity: 0.22 },
       themeEmoji: '🧮',
-      themePos:    { top: '4px', right: '8px', rotate: '6deg', size: '14px', opacity: 0.18 },
+      themePos:    { top: '2px', right: '6px', rotate: '6deg', size: '20px', opacity: 0.28 },
     },
   },
   purchases: {
     emoji: '🛒', tone: 'yellow', label: 'Purchases', pattern: 'stripes',
     decor: {
-      patternPos:  { bottom: '-2px', right: '-2px' },
-      avocadoPos:  { top: '-2px', left: '60px', rotate: '20deg', size: '22px', opacity: 0.12 },
+      patternPos:  { bottom: '-4px', right: '-4px' },
+      avocadoPos:  { top: '-4px', left: '58px', rotate: '20deg', size: '32px', opacity: 0.22 },
       themeEmoji: '🛍️',
-      themePos:    { top: '4px', right: '6px', rotate: '-8deg', size: '15px', opacity: 0.18 },
+      themePos:    { top: '2px', right: '4px', rotate: '-8deg', size: '20px', opacity: 0.28 },
     },
   },
   payments: {
     emoji: '💳', tone: 'lime', label: 'Payments', pattern: 'blob',
     decor: {
-      patternPos:  { top: '-4px', right: '-4px' },
-      avocadoPos:  { bottom: '-2px', right: '8px', rotate: '-15deg', size: '22px', opacity: 0.12 },
+      patternPos:  { top: '-6px', right: '-6px' },
+      avocadoPos:  { bottom: '-4px', right: '6px', rotate: '-15deg', size: '32px', opacity: 0.22 },
       themeEmoji: '💹',
-      themePos:    { top: '4px', left: '68px', rotate: '10deg', size: '14px', opacity: 0.18 },
+      themePos:    { top: '2px', left: '66px', rotate: '10deg', size: '20px', opacity: 0.28 },
     },
   },
   interestPaid: {
     emoji: '📊', tone: 'emerald', label: 'Interest Paid', pattern: 'hex',
     decor: {
-      patternPos:  { top: '-2px', left: '-2px' },
-      avocadoPos:  { bottom: '-2px', right: '4px', rotate: '18deg', size: '20px', opacity: 0.12 },
+      patternPos:  { top: '-4px', left: '-4px' },
+      avocadoPos:  { bottom: '-4px', right: '4px', rotate: '18deg', size: '30px', opacity: 0.22 },
       themeEmoji: '📉',
-      themePos:    { top: '4px', right: '6px', rotate: '4deg', size: '14px', opacity: 0.18 },
+      themePos:    { top: '2px', right: '4px', rotate: '4deg', size: '20px', opacity: 0.28 },
     },
   },
   feesPaid: {
     emoji: '💰', tone: 'teal', label: 'Fees Paid', pattern: 'plus',
     decor: {
-      patternPos:  { bottom: '-2px', right: '-2px' },
-      avocadoPos:  { top: '-2px', left: '62px', rotate: '-6deg', size: '22px', opacity: 0.12 },
+      patternPos:  { bottom: '-4px', right: '-4px' },
+      avocadoPos:  { top: '-4px', left: '60px', rotate: '-6deg', size: '32px', opacity: 0.22 },
       themeEmoji: '🪙',
-      themePos:    { top: '4px', right: '6px', rotate: '12deg', size: '15px', opacity: 0.18 },
+      themePos:    { top: '2px', right: '4px', rotate: '12deg', size: '20px', opacity: 0.28 },
     },
   },
   bankFees: {
     emoji: '🏦', tone: 'green', label: 'Bank Fees', pattern: 'zigzag',
     decor: {
-      patternPos:  { top: '-2px', right: '-2px' },
-      avocadoPos:  { bottom: '-2px', left: '68px', rotate: '-25deg', size: '22px', opacity: 0.12 },
+      patternPos:  { top: '-4px', right: '-4px' },
+      avocadoPos:  { bottom: '-4px', left: '66px', rotate: '-25deg', size: '32px', opacity: 0.22 },
       themeEmoji: '🏧',
-      themePos:    { bottom: '4px', right: '6px', rotate: '8deg', size: '15px', opacity: 0.18 },
+      themePos:    { bottom: '2px', right: '4px', rotate: '8deg', size: '20px', opacity: 0.28 },
     },
   },
 }

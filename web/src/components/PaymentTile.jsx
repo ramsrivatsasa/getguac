@@ -16,7 +16,7 @@ import './emoji-floats.css'
 export default function PaymentTile({ emoji, gradient, haloColor, label, value, logoPos }) {
   return (
     <div
-      className="snap-start shrink-0 w-60 h-28 relative overflow-hidden rounded-2xl border-2 border-white shadow-lg p-4 hover:shadow-xl hover:-translate-y-1 hover:rotate-[0.5deg] transition-all text-white"
+      className="snap-start shrink-0 w-60 h-24 relative overflow-hidden rounded-2xl border-2 border-white shadow-lg p-4 hover:shadow-xl hover:-translate-y-1 hover:rotate-[0.5deg] transition-all text-white"
       style={{ background: gradient }}
     >
       {/* Watermark logo — sits behind everything (z-0) at low opacity.

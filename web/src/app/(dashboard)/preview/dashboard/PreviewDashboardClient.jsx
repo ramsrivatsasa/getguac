@@ -112,10 +112,34 @@ export default function PreviewDashboardClient({ receipts, rewards, firstName })
           <span className="text-xs text-gray-500">Lifetime</span>
         </div>
         <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 hide-scrollbar">
-          <PaymentTile tint="#dcfce7" icon={Receipt}     iconColor="text-emerald-700"  label="Transactions" value={receipts.length} />
-          <PaymentTile tint="#fee2e2" icon={DollarSign}  iconColor="text-rose-700"     label="Total Spent"  value={`$${totalSpend.toFixed(2)}`} />
-          <PaymentTile tint="#fef3c7" icon={TrendingUp}  iconColor="text-amber-700"    label="Tax Paid"     value={`$${totalTax.toFixed(2)}`} />
-          <PaymentTile tint="#fce7f3" icon={TrendingUp}  iconColor="text-rose-700"     label="Bank Fees"    value={`$${bankFees.toFixed(2)}`} />
+          <PaymentTile
+            emoji="🧾"
+            gradient="linear-gradient(135deg, #0ea5e9 0%, #2563eb 50%, #4f46e5 100%)"
+            haloColor="#7dd3fc"
+            label="Transactions"
+            value={receipts.length}
+          />
+          <PaymentTile
+            emoji="💸"
+            gradient="linear-gradient(135deg, #f97316 0%, #ef4444 50%, #ec4899 100%)"
+            haloColor="#fdba74"
+            label="Total Spent"
+            value={`$${totalSpend.toFixed(2)}`}
+          />
+          <PaymentTile
+            emoji="📈"
+            gradient="linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)"
+            haloColor="#fde68a"
+            label="Tax Paid"
+            value={`$${totalTax.toFixed(2)}`}
+          />
+          <PaymentTile
+            emoji="🏦"
+            gradient="linear-gradient(135deg, #f43f5e 0%, #be185d 50%, #9d174d 100%)"
+            haloColor="#fda4af"
+            label="Bank Fees"
+            value={`$${bankFees.toFixed(2)}`}
+          />
         </div>
         <style jsx>{`
           .hide-scrollbar::-webkit-scrollbar { display: none; }
@@ -136,14 +160,16 @@ function ScoreTile({ score = 0, grade }) {
   const C = Math.PI * R
   const label = grade?.label || 'Fresh start'
   return (
-    <Link href="/guacanomics" className="group bg-white rounded-2xl border border-emerald-100 p-4 hover:shadow-md hover:-translate-y-0.5 transition-all flex flex-col">
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-700">GuacScore</span>
-        <ArrowRight size={14} className="text-emerald-300 group-hover:text-emerald-600 group-hover:translate-x-0.5 transition" />
+    <Link href="/guacanomics" className="group relative overflow-hidden bg-gradient-to-br from-lime-100 via-emerald-100 to-teal-100 rounded-2xl border-2 border-white p-4 hover:shadow-xl hover:-translate-y-1 hover:rotate-[0.5deg] transition-all flex flex-col shadow-lg ring-1 ring-emerald-200/50">
+      <span aria-hidden className="emoji-floats absolute -bottom-4 -right-3 text-6xl opacity-15 select-none">🥑</span>
+      <span aria-hidden className="absolute -top-8 -left-8 w-24 h-24 rounded-full bg-emerald-300/30 blur-2xl pointer-events-none" />
+      <div className="flex items-center justify-between mb-1 relative">
+        <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-800">GuacScore</span>
+        <ArrowRight size={14} className="text-emerald-600 group-hover:translate-x-0.5 transition" />
       </div>
       <div className="relative flex items-end justify-center flex-1">
         <svg width="120" height="68" viewBox="0 0 120 68" aria-hidden>
-          <path d={`M 8 60 A ${R} ${R} 0 0 1 112 60`} fill="none" stroke="#e5e7eb" strokeWidth="10" strokeLinecap="round" />
+          <path d={`M 8 60 A ${R} ${R} 0 0 1 112 60`} fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="10" strokeLinecap="round" />
           <path d={`M 8 60 A ${R} ${R} 0 0 1 112 60`}
             fill="none" stroke="url(#preview-score-gradient)" strokeWidth="10" strokeLinecap="round"
             strokeDasharray={C} strokeDashoffset={C * (1 - pct)}
@@ -157,8 +183,8 @@ function ScoreTile({ score = 0, grade }) {
           </defs>
         </svg>
         <div className="absolute bottom-0 text-center">
-          <p className="text-3xl font-black text-gray-900 tabular-nums leading-none">{Math.round(score)}</p>
-          <p className="text-[10px] font-semibold text-gray-500">{label}</p>
+          <p className="text-4xl font-black text-emerald-900 tabular-nums leading-none drop-shadow-sm">{Math.round(score)}</p>
+          <p className="text-[10px] font-extrabold text-emerald-800 uppercase tracking-wide mt-0.5">{label}</p>
         </div>
       </div>
     </Link>
@@ -167,58 +193,100 @@ function ScoreTile({ score = 0, grade }) {
 
 function MoneyTile({ total = 0 }) {
   return (
-    <Link href="/receipts" className="group relative overflow-hidden bg-gradient-to-br from-emerald-500 via-emerald-600 to-green-700 text-white rounded-2xl p-4 hover:shadow-lg hover:-translate-y-0.5 transition-all">
-      <span aria-hidden className="emoji-floats absolute -top-2 -right-2 text-5xl opacity-25 select-none">🥑</span>
+    <Link href="/receipts" className="group relative overflow-hidden rounded-2xl p-4 hover:shadow-xl hover:-translate-y-1 hover:-rotate-[0.5deg] transition-all border-2 border-white shadow-lg ring-1 ring-emerald-300/40"
+      style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)' }}>
+      <span aria-hidden className="emoji-floats absolute -bottom-4 -right-4 text-7xl opacity-30 select-none">🥑</span>
+      <span aria-hidden className="absolute top-1 left-1 w-20 h-20 rounded-full bg-lime-300/30 blur-2xl pointer-events-none" />
+      <span aria-hidden className="absolute -bottom-6 right-12 text-2xl opacity-50">✨</span>
+      <span aria-hidden className="absolute top-6 right-2 text-base opacity-50">✨</span>
       <div className="flex items-center justify-between mb-2 relative">
-        <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-50">GuacMoney</span>
-        <ArrowRight size={14} className="text-emerald-100 group-hover:translate-x-0.5 transition" />
+        <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-50 drop-shadow">GuacMoney</span>
+        <ArrowRight size={14} className="text-white group-hover:translate-x-0.5 transition" />
       </div>
-      <p className="text-3xl font-black tabular-nums leading-none relative">
+      <p className="text-4xl font-black tabular-nums leading-none relative text-white drop-shadow">
         ${Number(total || 0).toFixed(total >= 100 ? 0 : 2)}
       </p>
-      <p className="text-[11px] font-semibold text-emerald-50 mt-2 relative">Lifetime saved</p>
+      <p className="text-[11px] font-bold text-emerald-50 mt-2 relative uppercase tracking-wide">Lifetime saved 🌱</p>
     </Link>
   )
 }
 
 function WizardTile() {
   return (
-    <Link href="/guacwizard" className="group relative overflow-hidden bg-gradient-to-br from-violet-500 to-fuchsia-600 text-white rounded-2xl p-4 hover:shadow-lg hover:-translate-y-0.5 transition-all">
-      <span aria-hidden className="emoji-floats absolute -bottom-3 -right-3 text-5xl opacity-25 select-none">🔮</span>
+    <Link href="/guacwizard" className="group relative overflow-hidden rounded-2xl p-4 hover:shadow-xl hover:-translate-y-1 hover:rotate-[0.5deg] transition-all border-2 border-white shadow-lg ring-1 ring-violet-300/40"
+      style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #a855f7 50%, #d946ef 100%)' }}>
+      <span aria-hidden className="emoji-floats absolute -bottom-3 -right-3 text-7xl opacity-30 select-none">🔮</span>
+      <span aria-hidden className="absolute top-2 left-2 w-20 h-20 rounded-full bg-fuchsia-300/40 blur-2xl pointer-events-none" />
+      <span aria-hidden className="absolute top-8 right-3 text-lg opacity-70 wizard-twinkle">✨</span>
+      <span aria-hidden className="absolute bottom-4 left-3 text-sm opacity-50 wizard-twinkle-2">⭐</span>
       <div className="flex items-center justify-between mb-2 relative">
-        <span className="text-[10px] font-extrabold uppercase tracking-widest text-violet-50">GuacWizard</span>
-        <Sparkles size={14} className="text-violet-100" />
+        <span className="text-[10px] font-extrabold uppercase tracking-widest text-violet-50 drop-shadow">GuacWizard</span>
+        <Sparkles size={14} className="text-white wizard-twinkle" />
       </div>
-      <p className="text-base font-extrabold leading-tight relative">Daily insight</p>
-      <p className="text-[11px] text-violet-50 mt-1 relative">Tap to open the wizard</p>
+      <p className="text-lg font-black leading-tight relative text-white drop-shadow">Daily insight</p>
+      <p className="text-[11px] font-bold text-violet-50 mt-1 relative uppercase tracking-wide">Tap to peek 🪄</p>
+      <style jsx>{`
+        .wizard-twinkle   { animation: twinkle 2.6s ease-in-out infinite; }
+        .wizard-twinkle-2 { animation: twinkle 2.6s ease-in-out infinite 1.3s; }
+        @keyframes twinkle {
+          0%, 100% { transform: scale(1)   rotate(0);    opacity: 0.7; }
+          50%      { transform: scale(1.4) rotate(180deg); opacity: 1; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .wizard-twinkle, .wizard-twinkle-2 { animation: none; }
+        }
+      `}</style>
     </Link>
   )
 }
 
 function WorthItTile({ pending = 0 }) {
   return (
-    <Link href="/validate" className="group relative overflow-hidden bg-gradient-to-br from-amber-400 via-amber-500 to-rose-500 text-white rounded-2xl p-4 hover:shadow-lg hover:-translate-y-0.5 transition-all">
-      <span aria-hidden className="emoji-floats absolute -bottom-3 -right-3 text-5xl opacity-25 select-none">💚</span>
+    <Link href="/validate" className="group relative overflow-hidden rounded-2xl p-4 hover:shadow-xl hover:-translate-y-1 hover:-rotate-[0.5deg] transition-all border-2 border-white shadow-lg ring-1 ring-rose-300/40"
+      style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #f97316 35%, #ef4444 70%, #ec4899 100%)' }}>
+      <span aria-hidden className="emoji-floats absolute -bottom-4 -right-3 text-7xl opacity-30 select-none">💚</span>
+      <span aria-hidden className="absolute top-2 left-2 w-20 h-20 rounded-full bg-yellow-200/40 blur-2xl pointer-events-none" />
+      <span aria-hidden className="absolute top-7 right-3 text-base opacity-60">💕</span>
       <div className="flex items-center justify-between mb-2 relative">
-        <span className="text-[10px] font-extrabold uppercase tracking-widest text-amber-50">Worth It?</span>
-        <Heart size={14} className="text-amber-100" />
+        <span className="text-[10px] font-extrabold uppercase tracking-widest text-yellow-50 drop-shadow">Worth It?</span>
+        <Heart size={14} className="text-white fill-white worth-heartbeat" />
       </div>
-      <p className="text-3xl font-black tabular-nums leading-none relative">{pending}</p>
-      <p className="text-[11px] font-semibold text-amber-50 mt-2 relative">
-        {pending > 0 ? 'to rate' : 'caught up'}
+      <p className="text-4xl font-black tabular-nums leading-none relative text-white drop-shadow">{pending}</p>
+      <p className="text-[11px] font-bold text-yellow-50 mt-2 relative uppercase tracking-wide">
+        {pending > 0 ? 'to rate ❤️' : "you're caught up ✨"}
       </p>
+      <style jsx>{`
+        .worth-heartbeat { animation: worth-beat 1.4s ease-in-out infinite; transform-origin: center; }
+        @keyframes worth-beat {
+          0%, 100% { transform: scale(1); }
+          15%      { transform: scale(1.22); }
+          30%      { transform: scale(1); }
+          45%      { transform: scale(1.14); }
+          60%      { transform: scale(1); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .worth-heartbeat { animation: none; }
+        }
+      `}</style>
     </Link>
   )
 }
 
-function PaymentTile({ tint, icon: Icon, iconColor, label, value }) {
+function PaymentTile({ emoji, gradient, haloColor, label, value }) {
+  // Vibrant gradient body + big floating emoji. Mirrors the Fetch
+  // multi-color tile palette so the strip reads as a row of distinct
+  // categories instead of four-near-identical white cards.
   return (
-    <div className="snap-start shrink-0 w-44 bg-white rounded-2xl border border-gray-100 shadow-sm p-3 hover:shadow-md hover:-translate-y-0.5 transition-all">
-      <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-2" style={{ backgroundColor: tint }}>
-        <Icon size={18} className={iconColor} />
-      </div>
-      <p className="text-[11px] text-gray-500 font-semibold uppercase tracking-wide">{label}</p>
-      <p className="text-lg font-extrabold text-gray-900 tabular-nums mt-0.5">{value}</p>
+    <div
+      className="snap-start shrink-0 w-44 relative overflow-hidden rounded-2xl border-2 border-white shadow-lg p-3.5 hover:shadow-xl hover:-translate-y-1 hover:rotate-[0.5deg] transition-all text-white"
+      style={{ background: gradient }}
+    >
+      <span aria-hidden className="absolute -bottom-5 -right-3 select-none pointer-events-none">
+        <span className="emoji-floats text-6xl opacity-90">{emoji}</span>
+      </span>
+      <span aria-hidden className="absolute -top-6 -left-6 w-20 h-20 rounded-full opacity-50 blur-2xl pointer-events-none" style={{ backgroundColor: haloColor }} />
+      <p className="text-[10px] font-extrabold uppercase tracking-widest text-white/90 drop-shadow relative">{label}</p>
+      <p className="text-2xl font-black tabular-nums mt-1 relative drop-shadow">{value}</p>
     </div>
   )
 }

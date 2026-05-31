@@ -234,7 +234,13 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
           to it (paired engagement scores), then GuacMoney, then
           financial tiles, then Smash days last per user request. */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
-        <GuacoScoreCard receipts={filtered} size="sm" />
+        {/* GuacScore reads lifetime rated purchases, not just the
+            current period filter — otherwise a 3-month dashboard
+            window with no rated purchases inside it shows score=0
+            even when the user has rated items further back. The
+            big card on /guacanomics already uses a wider window;
+            this matches that behavior. */}
+        <GuacoScoreCard receipts={spendingReceipts} size="sm" />
         <GuacWizardTile />
         <GuacMoneyTile />
         {[

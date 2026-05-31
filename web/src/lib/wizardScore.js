@@ -9,7 +9,7 @@
 // aggregates bank_statements + bank_fees + bank_transactions into
 // summary + accounts shapes.
 
-export function computeWizardScore({ summary, accounts } = {}) {
+export function computeWizardScore({ summary, accounts = [] } = {}) {
   let score = 100
   const reasons = []
   if (!summary) return { score: null, reasons }
@@ -34,6 +34,22 @@ export function computeWizardScore({ summary, accounts } = {}) {
     const bonus = Math.min(10, Math.round(Math.abs(netDebtChange) / 100))
     score += bonus
     reasons.push({ label: `+${bonus}`, why: `Debt down $${Math.abs(netDebtChange).toFixed(2)}` })
+  }
+  // High-APR card penalty — 5 points per card whose latest statement
+  // shows an APR ≥ 25%. Captures the "you're carrying a balance on a
+  // predatory card" signal even when this window's interest happens
+  // to be small.
+  const highApr = accounts.filter(a => a.latestApr != null && Number(a.latestApr) >= 25).length
+  if (highApr > 0) {
+    score -= highApr * 5
+    reasons.push({ label: `-${highApr * 5}`, why: `${highApr} card(s) above 25% APR` })
+  }
+  // Cold-start baseline — if the user hasn't uploaded any statements
+  // yet, peg at 50 so the dashboard tile doesn't show a misleading
+  // 100/100 from "nothing bad found because there's nothing here".
+  if (accounts.length === 0) {
+    score = 50
+    reasons.push({ label: 'baseline', why: 'No statements uploaded yet' })
   }
 
   score = Math.max(0, Math.min(100, score))

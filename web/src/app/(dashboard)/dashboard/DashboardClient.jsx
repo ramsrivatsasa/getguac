@@ -468,7 +468,7 @@ function AllPaymentsScroll({ spendingReceipts, period, periodCount }) {
   const scrollBy = (dir) => {
     const el = scrollRef.current
     if (!el) return
-    el.scrollBy({ left: dir * 172 * 3, behavior: 'smooth' })
+    el.scrollBy({ left: dir * 236 * 2, behavior: 'smooth' })
   }
 
   return (

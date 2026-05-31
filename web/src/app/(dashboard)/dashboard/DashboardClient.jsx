@@ -254,14 +254,55 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
           when nothing is off; session-dismissable; collapsed-by-default. */}
       <AnomaliesPanel receipts={spendingReceipts} />
 
-      {/* Payments Made — vibrant gradient PaymentTile from the preview.
-          Same shape on every viewport, horizontal scroll on mobile. */}
+      {/* Spending Analysis — one horizontal-scrolling row containing
+          the spending chart + all 4 Payment tiles. Per user request,
+          everything related to the current period's spending lives in
+          one strip the user can swipe through. */}
       <section>
         <div className="flex items-baseline justify-between mb-2">
-          <h2 className="text-base font-extrabold text-gray-900">Payments Made</h2>
+          <h2 className="text-base font-extrabold text-gray-900">Spending Analysis</h2>
           <span className="text-xs text-gray-500">{rangeLabel}</span>
         </div>
         <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 payments-row">
+          {/* Spending-by-store mini chart as the first tile */}
+          <div className="snap-start shrink-0 w-80 h-24 relative overflow-hidden rounded-2xl border-2 border-white bg-white shadow-lg ring-1 ring-gray-200/60 hover:shadow-xl hover:-translate-y-1 transition-all p-2.5">
+            <div className="flex items-baseline justify-between mb-1 px-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-widest text-gray-600">Spending by Store</p>
+              <span className="text-[9px] text-gray-400">Tap a bar</span>
+            </div>
+            {chartData.length === 0 ? (
+              <div className="h-14 flex items-center justify-center text-gray-400 text-[11px]">
+                No transactions yet
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={64}>
+                <BarChart
+                  data={chartData}
+                  margin={{ top: 2, right: 4, left: -28, bottom: 0 }}
+                  barCategoryGap="20%"
+                  onClick={(state) => {
+                    const datum = state?.activePayload?.[0]?.payload
+                    if (datum?.fullName) {
+                      router.push(buildReceiptsUrl({
+                        store: datum.fullName,
+                        period: periodToReceiptsChip(period, periodCount),
+                      }))
+                    }
+                  }}
+                >
+                  <XAxis dataKey="name" tick={{ fontSize: 8, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                  <YAxis hide />
+                  <Tooltip
+                    cursor={{ fill: '#f8fafc' }}
+                    contentStyle={{ borderRadius: 8, border: '1px solid #d1fae5', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', fontSize: 11 }}
+                    formatter={v => [`$${v.toFixed(2)}`, 'Amount']}
+                    labelFormatter={(label, payload) => payload?.[0]?.payload?.fullName || label}
+                  />
+                  <Bar dataKey="amount" fill="#e11d48" radius={[6, 6, 0, 0]} maxBarSize={20} cursor="pointer" />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
           <PaymentTile {...PAYMENT_TILE_CONFIGS.transactions} value={filtered.length} />
           <PaymentTile {...PAYMENT_TILE_CONFIGS.totalSpent}   value={`$${totalSpend.toFixed(2)}`} />
           <PaymentTile {...PAYMENT_TILE_CONFIGS.taxPaid}      value={`$${totalTax.toFixed(2)}`} />
@@ -280,60 +321,11 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
           data exists yet. */}
       <BankSummaryRow />
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* Spending chart */}
-        <div className="card lg:col-span-2">
-          <h3 className="font-semibold text-gray-900 mb-1">Spending by Store</h3>
-          <p className="text-xs text-gray-500 mb-3">Tap a bar to see that store&apos;s receipts.</p>
-          {chartData.length === 0 ? (
-            <div className="h-48 flex items-center justify-center text-gray-400 text-sm">
-              No transactions for this period
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart
-                data={chartData}
-                margin={{ top: 12, right: 12, left: -12, bottom: 0 }}
-                barCategoryGap="25%"
-                // Recharts surfaces the clicked datum on chart-level onClick.
-                // Bar-level onClick fires twice on some versions; chart-level
-                // is the reliable path.
-                onClick={(state) => {
-                  const datum = state?.activePayload?.[0]?.payload
-                  if (datum?.fullName) {
-                    // Build the deep-link via the shared helper so the URL
-                    // shape + chip mapping live in one place (used by every
-                    // dashboard-to-receipts transfer, present and future).
-                    router.push(buildReceiptsUrl({
-                      store: datum.fullName,
-                      period: periodToReceiptsChip(period, periodCount),
-                    }))
-                  }
-                }}
-              >
-                <CartesianGrid strokeDasharray="2 4" stroke="#f1f5f9" vertical={false} />
-                <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                <Tooltip
-                  cursor={{ fill: '#f8fafc' }}
-                  contentStyle={{ borderRadius: 12, border: '1px solid #d1fae5', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', fontSize: 12 }}
-                  formatter={v => [`$${v.toFixed(2)}`, 'Amount']}
-                  labelFormatter={(label, payload) => payload?.[0]?.payload?.fullName || label}
-                />
-                <Bar
-                  dataKey="amount"
-                  fill="#e11d48"
-                  radius={[8, 8, 0, 0]}
-                  maxBarSize={56}
-                  cursor="pointer"
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-
-        {/* Rewards expiring soon */}
-        <div className="card">
+      {/* Rewards expiring soon — chart moved into the Spending
+          Analysis horizontal-scroll row above, so this card no longer
+          needs the 3-col grid wrapper. */}
+      <div>
+        <div className="card lg:max-w-md">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-gray-900">Rewards</h3>
             <Link href="/rewards" title="View all rewards" aria-label="View all rewards"

@@ -118,6 +118,7 @@ export default function PreviewDashboardClient({ receipts, rewards, firstName })
             haloColor="#7dd3fc"
             label="Transactions"
             value={receipts.length}
+            logoPos={{ top: '-12px', left: '-10px', rotate: '-18deg', size: '110px' }}
           />
           <PaymentTile
             emoji="💸"
@@ -125,6 +126,7 @@ export default function PreviewDashboardClient({ receipts, rewards, firstName })
             haloColor="#fdba74"
             label="Total Spent"
             value={`$${totalSpend.toFixed(2)}`}
+            logoPos={{ top: '40px', right: '-22px', rotate: '24deg', size: '100px' }}
           />
           <PaymentTile
             emoji="📈"
@@ -132,6 +134,7 @@ export default function PreviewDashboardClient({ receipts, rewards, firstName })
             haloColor="#fde68a"
             label="Tax Paid"
             value={`$${totalTax.toFixed(2)}`}
+            logoPos={{ bottom: '-18px', left: '60px', rotate: '12deg', size: '120px' }}
           />
           <PaymentTile
             emoji="🏦"
@@ -139,6 +142,7 @@ export default function PreviewDashboardClient({ receipts, rewards, firstName })
             haloColor="#fda4af"
             label="Bank Fees"
             value={`$${bankFees.toFixed(2)}`}
+            logoPos={{ top: '-8px', right: '70px', rotate: '-32deg', size: '95px' }}
           />
         </div>
         <style jsx>{`
@@ -272,24 +276,43 @@ function WorthItTile({ pending = 0 }) {
   )
 }
 
-function PaymentTile({ emoji, gradient, haloColor, label, value }) {
-  // Sized to match the user's reference screenshot exactly:
-  //   width  240px (w-60)
-  //   height 176px (h-44)
-  //   label  text-sm  (~14px) — uppercase extrabold tracking-wider
-  //   value  text-4xl (~36px) — black tabular-nums
-  //   emoji  text-7xl (~72px) — bottom-right corner
+function PaymentTile({ emoji, gradient, haloColor, label, value, logoPos }) {
+  // GetGuac avocado logo as a watermark behind everything. Each tile
+  // gets its own position + rotation (via logoPos prop) so the
+  // logos don't all sit in the same spot — adds organic variety
+  // without changing any other layout dimension.
   return (
     <div
       className="snap-start shrink-0 w-60 h-44 relative overflow-hidden rounded-2xl border-2 border-white shadow-lg p-4 hover:shadow-xl hover:-translate-y-1 hover:rotate-[0.5deg] transition-all text-white"
       style={{ background: gradient }}
     >
-      <span aria-hidden className="absolute -bottom-4 -right-2 select-none pointer-events-none">
+      {/* Logo watermark — sits behind everything (z-0) with low
+          opacity. Position/rotation per logoPos so each tile feels
+          unique. */}
+      {logoPos && (
+        <span
+          aria-hidden
+          className="absolute select-none pointer-events-none leading-none"
+          style={{
+            top: logoPos.top,
+            right: logoPos.right,
+            bottom: logoPos.bottom,
+            left: logoPos.left,
+            transform: `rotate(${logoPos.rotate || '0deg'})`,
+            fontSize: logoPos.size || '100px',
+            opacity: 0.18,
+            filter: 'drop-shadow(0 0 6px rgba(255,255,255,0.3))',
+          }}
+        >
+          🥑
+        </span>
+      )}
+      <span aria-hidden className="absolute -bottom-4 -right-2 select-none pointer-events-none z-10">
         <span className="emoji-floats text-7xl opacity-95">{emoji}</span>
       </span>
       <span aria-hidden className="absolute -top-6 -left-6 w-24 h-24 rounded-full opacity-50 blur-2xl pointer-events-none" style={{ backgroundColor: haloColor }} />
-      <p className="text-sm font-extrabold uppercase tracking-wider text-white drop-shadow relative">{label}</p>
-      <p className="text-4xl font-black tabular-nums mt-1 relative drop-shadow leading-none">{value}</p>
+      <p className="text-sm font-extrabold uppercase tracking-wider text-white drop-shadow relative z-10">{label}</p>
+      <p className="text-4xl font-black tabular-nums mt-1 relative drop-shadow leading-none z-10">{value}</p>
     </div>
   )
 }

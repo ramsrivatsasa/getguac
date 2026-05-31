@@ -105,24 +105,6 @@ export default function PreviewDashboardClient({ receipts, rewards, firstName })
         )}
       </section>
 
-      {/* White-card category tiles — title left, colored emoji right.
-          Horizontal scroll on mobile, wraps to grid on desktop. */}
-      <section>
-        <div className="flex items-baseline justify-between mb-2">
-          <h2 className="text-base font-extrabold text-gray-900">Shop by category</h2>
-          <Link href="/stash" className="text-xs font-bold text-emerald-700 hover:text-emerald-900">See all</Link>
-        </div>
-        <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 hide-scrollbar">
-          <CategoryWhiteCard label="Health & Wellness" emoji="💊" accent="#bae6fd" />
-          <CategoryWhiteCard label="Beverages"         emoji="🧃" accent="#fde68a" />
-          <CategoryWhiteCard label="Grocery"           emoji="🥦" accent="#bbf7d0" />
-          <CategoryWhiteCard label="Household"         emoji="🧴" accent="#ddd6fe" />
-          <CategoryWhiteCard label="Pet"               emoji="🐶" accent="#fbcfe8" />
-          <CategoryWhiteCard label="Restaurants"       emoji="🍴" accent="#fed7aa" />
-          <CategoryWhiteCard label="Alcohol"           emoji="🍷" accent="#fecaca" />
-        </div>
-      </section>
-
       {/* 4. Payments Made — horizontal scroll, lifetime numbers */}
       <section>
         <div className="flex items-baseline justify-between mb-2">
@@ -132,39 +114,31 @@ export default function PreviewDashboardClient({ receipts, rewards, firstName })
         <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 hide-scrollbar">
           <PaymentTile
             emoji="🧾"
-            haloColor="#bfdbfe"
+            gradient="linear-gradient(135deg, #0ea5e9 0%, #2563eb 50%, #4f46e5 100%)"
+            haloColor="#7dd3fc"
             label="Transactions"
-            accent="#1d4ed8"
             value={receipts.length}
-            emptyText="No receipts yet"
-            isEmpty={receipts.length === 0}
           />
           <PaymentTile
             emoji="💸"
-            haloColor="#fecaca"
+            gradient="linear-gradient(135deg, #f97316 0%, #ef4444 50%, #ec4899 100%)"
+            haloColor="#fdba74"
             label="Total Spent"
-            accent="#b91c1c"
             value={`$${totalSpend.toFixed(2)}`}
-            emptyText="Capture your first"
-            isEmpty={totalSpend === 0}
           />
           <PaymentTile
             emoji="📈"
-            haloColor="#fef3c7"
+            gradient="linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)"
+            haloColor="#fde68a"
             label="Tax Paid"
-            accent="#92400e"
             value={`$${totalTax.toFixed(2)}`}
-            emptyText="None tracked yet"
-            isEmpty={totalTax === 0}
           />
           <PaymentTile
             emoji="🏦"
-            haloColor="#fbcfe8"
+            gradient="linear-gradient(135deg, #f43f5e 0%, #be185d 50%, #9d174d 100%)"
+            haloColor="#fda4af"
             label="Bank Fees"
-            accent="#9d174d"
             value={`$${bankFees.toFixed(2)}`}
-            emptyText="All clear ✓"
-            isEmpty={bankFees === 0}
           />
         </div>
         <style jsx>{`
@@ -298,63 +272,21 @@ function WorthItTile({ pending = 0 }) {
   )
 }
 
-function CategoryWhiteCard({ label, emoji, accent }) {
-  // White-card variant — bold title on the left, floating emoji on
-  // a soft accent halo on the right. Same shape as Fetch's
-  // "Health & Wellness / Beverages / Grocery" trio: title isn't on
-  // a tinted background, only the emoji backdrop is colored, which
-  // keeps the row from getting visually loud.
+function PaymentTile({ emoji, gradient, haloColor, label, value }) {
+  // Vibrant gradient body + big floating emoji. Mirrors the Fetch
+  // multi-color tile palette so the strip reads as a row of distinct
+  // categories instead of four-near-identical white cards.
   return (
-    <Link
-      href="/stash"
-      className="snap-start shrink-0 group relative overflow-hidden flex items-center bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all w-56 sm:w-auto sm:flex-1 sm:min-w-[200px]"
-      style={{ minHeight: 76 }}
+    <div
+      className="snap-start shrink-0 w-44 relative overflow-hidden rounded-2xl border-2 border-white shadow-lg p-3.5 hover:shadow-xl hover:-translate-y-1 hover:rotate-[0.5deg] transition-all text-white"
+      style={{ background: gradient }}
     >
-      <div className="flex-1 min-w-0 px-4 py-3.5 relative z-10">
-        <p className="text-sm font-extrabold text-gray-900 leading-tight">{label}</p>
-      </div>
-      <div
-        className="relative shrink-0 w-24 h-full flex items-center justify-center"
-        style={{ background: `linear-gradient(135deg, ${accent} 0%, white 110%)` }}
-      >
-        <span aria-hidden className="absolute w-16 h-16 rounded-full opacity-60 blur-xl pointer-events-none" style={{ backgroundColor: accent }} />
-        <span className="emoji-floats text-4xl relative z-10">{emoji}</span>
-      </div>
-    </Link>
-  )
-}
-
-// White-bodied tile, no gradient pill. The label text itself takes
-// the accent color the pill used to be. Empty-state shows a
-// human-readable string instead of "$0.00" / "0".
-function PaymentTile({ emoji, haloColor, label, accent = '#1f2937', value, emptyText, isEmpty = false }) {
-  return (
-    <div className="snap-start shrink-0 w-52 sm:w-56 h-20 relative overflow-hidden rounded-2xl bg-white border-2 border-white shadow-lg ring-1 ring-gray-200/60 hover:shadow-xl hover:-translate-y-1 transition-all">
-      <span aria-hidden className="absolute -bottom-6 -right-6 w-24 h-24 rounded-full opacity-70 blur-2xl pointer-events-none" style={{ backgroundColor: haloColor }} />
-      <span aria-hidden className="emoji-floats absolute -bottom-1 -right-1 text-5xl opacity-90 select-none">{emoji}</span>
-
-      <p
-        className="absolute top-2.5 left-3.5 text-[10px] font-extrabold uppercase tracking-widest"
-        style={{ color: accent }}
-      >
-        {label}
-      </p>
-
-      {isEmpty ? (
-        <p
-          className="absolute bottom-2 left-3.5 right-14 text-sm font-bold italic leading-tight"
-          style={{ color: accent, opacity: 0.75 }}
-        >
-          {emptyText}
-        </p>
-      ) : (
-        <p
-          className="absolute bottom-2 left-3.5 text-xl font-black tabular-nums leading-none"
-          style={{ color: accent }}
-        >
-          {value}
-        </p>
-      )}
+      <span aria-hidden className="absolute -bottom-5 -right-3 select-none pointer-events-none">
+        <span className="emoji-floats text-6xl opacity-90">{emoji}</span>
+      </span>
+      <span aria-hidden className="absolute -top-6 -left-6 w-20 h-20 rounded-full opacity-50 blur-2xl pointer-events-none" style={{ backgroundColor: haloColor }} />
+      <p className="text-[10px] font-extrabold uppercase tracking-widest text-white/90 drop-shadow relative">{label}</p>
+      <p className="text-2xl font-black tabular-nums mt-1 relative drop-shadow">{value}</p>
     </div>
   )
 }

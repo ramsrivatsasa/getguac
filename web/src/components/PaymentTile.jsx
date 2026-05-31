@@ -81,4 +81,32 @@ export const PAYMENT_TILE_CONFIGS = {
     label: 'Bank Fees',
     logoPos: { top: '-8px', right: '70px', rotate: '-32deg', size: '95px' },
   },
+  purchases: {
+    emoji: '🛒',
+    gradient: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
+    haloColor: '#a7f3d0',
+    label: 'Purchases',
+    logoPos: { top: '-10px', right: '-10px', rotate: '20deg', size: '105px' },
+  },
+  payments: {
+    emoji: '💳',
+    gradient: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)',
+    haloColor: '#c4b5fd',
+    label: 'Payments',
+    logoPos: { bottom: '-10px', right: '20px', rotate: '-15deg', size: '110px' },
+  },
+  interestPaid: {
+    emoji: '📊',
+    gradient: 'linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)',
+    haloColor: '#fdba74',
+    label: 'Interest Paid',
+    logoPos: { top: '-12px', left: '50px', rotate: '8deg', size: '100px' },
+  },
+  feesPaid: {
+    emoji: '💰',
+    gradient: 'linear-gradient(135deg, #14b8a6 0%, #0d9488 50%, #0f766e 100%)',
+    haloColor: '#5eead4',
+    label: 'Fees Paid',
+    logoPos: { top: '40px', left: '-20px', rotate: '-22deg', size: '115px' },
+  },
 }

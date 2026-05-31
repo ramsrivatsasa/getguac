@@ -283,8 +283,8 @@ function PaymentTile({ emoji, haloColor, accent = '#1f2937', label, value }) {
         <span className="emoji-floats text-6xl opacity-95">{emoji}</span>
       </span>
       <span aria-hidden className="absolute -bottom-2 -right-4 w-24 h-24 rounded-full opacity-80 blur-2xl pointer-events-none" style={{ backgroundColor: haloColor }} />
-      <p className="text-[10px] font-extrabold uppercase tracking-widest relative" style={{ color: accent }}>{label}</p>
-      <p className="text-2xl font-black tabular-nums mt-1 relative" style={{ color: accent }}>{value}</p>
+      <p className="text-xs font-extrabold uppercase tracking-widest relative" style={{ color: accent }}>{label}</p>
+      <p className="text-3xl font-black tabular-nums mt-1 relative" style={{ color: accent }}>{value}</p>
     </div>
   )
 }

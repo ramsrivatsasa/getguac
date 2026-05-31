@@ -11,14 +11,25 @@ const UNIT_LABEL = { daily: 'day', weekly: 'week', monthly: 'month', yearly: 'ye
 // (period, count) → Date marking the start of the window. `count`
 // is the number of period units to look back; if missing falls back
 // to 1.
+//
+// The returned Date is SNAPPED TO MIDNIGHT LOCAL — same calendar
+// day across every render of the page, regardless of how many
+// seconds elapsed between calls. Without this snap, two renders
+// seconds apart compute `since` at different ms precisions and a
+// transaction dated exactly on the boundary day can flip in/out
+// of the window — which produced the dashboard-vs-/guacwizard
+// score mismatch (66 vs 61).
 export function periodStartDate(period, count = 1) {
   const now = new Date()
   const n = Math.max(1, Number(count) || 1)
-  if (period === 'daily')   return subDays(now,  n)
-  if (period === 'weekly')  return subWeeks(now, n)
-  if (period === 'monthly') return subMonths(now, n)
-  if (period === 'yearly')  return subYears(now, n)
-  return now
+  let d
+  if (period === 'daily')        d = subDays(now,  n)
+  else if (period === 'weekly')  d = subWeeks(now, n)
+  else if (period === 'monthly') d = subMonths(now, n)
+  else if (period === 'yearly')  d = subYears(now, n)
+  else                           d = now
+  d.setHours(0, 0, 0, 0)
+  return d
 }
 
 // Short label for read-only displays ("Last 3 months", "Last 7 days").

@@ -39,16 +39,30 @@ export default function GuacWizardPage() {
   const since = periodStartDate(spendingPeriod, spendingPeriodCount)
   const tfLabel = timeframeLabel(spendingPeriod, spendingPeriodCount)
 
-  const { data: statements = [] }   = useQuery({ queryKey: ['bank_statements'],   queryFn: async () => { const { data } = await sb.from('bank_statements').select('*'); return data || [] }})
-  const { data: fees = [] }         = useQuery({ queryKey: ['bank_fees'],         queryFn: async () => { const { data } = await sb.from('bank_fees').select('*'); return data || [] }})
-  const { data: transactions = [] } = useQuery({ queryKey: ['bank_transactions'], queryFn: async () => { const { data } = await sb.from('bank_transactions').select('*'); return data || [] }})
+  // Explicit `.order()` clauses make row order deterministic so
+  // bankAccountTotals' "latestApr" pick is identical between the
+  // dashboard tile and this page — without them, Supabase can
+  // return ties (statements with the same period_end) in different
+  // orders across fetches, producing slightly different scores
+  // (the 66 vs 61 discrepancy).
+  const { data: statements = [], isLoading: stmLoading }   = useQuery({ queryKey: ['bank_statements'],   queryFn: async () => { const { data } = await sb.from('bank_statements').select('*').order('period_end', { ascending: false, nullsFirst: false }).order('id'); return data || [] }, staleTime: 5 * 60_000})
+  const { data: fees = [], isLoading: feeLoading }         = useQuery({ queryKey: ['bank_fees'],         queryFn: async () => { const { data } = await sb.from('bank_fees').select('*').order('date', { ascending: false, nullsFirst: false }).order('id'); return data || [] }, staleTime: 5 * 60_000})
+  const { data: transactions = [], isLoading: txLoading }  = useQuery({ queryKey: ['bank_transactions'], queryFn: async () => { const { data } = await sb.from('bank_transactions').select('*').order('date', { ascending: false, nullsFirst: false }).order('id'); return data || [] }, staleTime: 5 * 60_000})
+  const isLoading = stmLoading || feeLoading || txLoading
 
+  // While the bank queries are in flight, skip generateInsights
+  // entirely so the score doesn't flash through the
+  // accounts.length===0 baseline (50). Display a "loading" placeholder
+  // until the data lands.
   const result = useMemo(
-    () => generateInsights({ statements, fees, transactions }, since),
-    [statements, fees, transactions, since]
+    () => isLoading ? null : generateInsights({ statements, fees, transactions }, since),
+    [statements, fees, transactions, since, isLoading]
   )
-  const { insights, summary, accounts } = result
-  const { score, reasons } = useMemo(() => computeWizardScore(result), [result])
+  const { insights = [], summary = { totalPayments: 0, totalInterest: 0, totalFees: 0, totalPurch: 0, totalRefunds: 0, netDebtChange: 0 }, accounts = [] } = result || {}
+  const { score, reasons } = useMemo(
+    () => result ? computeWizardScore(result) : { score: null, reasons: [] },
+    [result]
+  )
 
   return (
     <div className="space-y-6 max-w-7xl">

@@ -554,19 +554,23 @@ function GuacWizardTile() {
   // window. Previously this was hardcoded to 'ytd', which drifted
   // from /guacwizard whenever the user changed the period there.
   const { spendingPeriod, spendingPeriodCount } = useStore()
+  // Match /guacwizard's ordered queries so the same rows arrive in
+  // the same order on both pages — fixes the dashboard-vs-page
+  // GuacWizard score mismatch where Supabase's non-deterministic
+  // order picked different "latest" statements for the APR check.
   const { data: statements = [], isLoading: stmLoading } = useQuery({
     queryKey: ['bank_statements'],
-    queryFn: async () => { const { data } = await sb.from('bank_statements').select('*'); return data || [] },
+    queryFn: async () => { const { data } = await sb.from('bank_statements').select('*').order('period_end', { ascending: false, nullsFirst: false }).order('id'); return data || [] },
     staleTime: 5 * 60_000,
   })
   const { data: fees = [], isLoading: feeLoading } = useQuery({
     queryKey: ['bank_fees'],
-    queryFn: async () => { const { data } = await sb.from('bank_fees').select('*'); return data || [] },
+    queryFn: async () => { const { data } = await sb.from('bank_fees').select('*').order('date', { ascending: false, nullsFirst: false }).order('id'); return data || [] },
     staleTime: 5 * 60_000,
   })
   const { data: transactions = [], isLoading: txLoading } = useQuery({
     queryKey: ['bank_transactions'],
-    queryFn: async () => { const { data } = await sb.from('bank_transactions').select('*'); return data || [] },
+    queryFn: async () => { const { data } = await sb.from('bank_transactions').select('*').order('date', { ascending: false, nullsFirst: false }).order('id'); return data || [] },
     staleTime: 5 * 60_000,
   })
   // `isLoading` is true on initial fetch only. While loading, treat

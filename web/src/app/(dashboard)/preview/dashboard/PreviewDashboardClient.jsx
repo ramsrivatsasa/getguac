@@ -317,20 +317,25 @@ function CategoryWhiteCard({ label, emoji, accent }) {
 }
 
 function PaymentTile({ emoji, gradient, haloColor, label, value }) {
-  // Vibrant gradient body + big floating emoji. Mirrors the Fetch
-  // multi-color tile palette so the strip reads as a row of distinct
-  // categories instead of four-near-identical white cards.
+  // Split-tile: text on white panel (left, ~60%), vibrant gradient
+  // emoji-panel on the right (~40%). Keeps the multi-color punch
+  // visible per tile but the row reads as predominantly white so
+  // typography stays crisp and the page doesn't get visually loud.
   return (
-    <div
-      className="snap-start shrink-0 w-44 relative overflow-hidden rounded-2xl border-2 border-white shadow-lg p-3.5 hover:shadow-xl hover:-translate-y-1 hover:rotate-[0.5deg] transition-all text-white"
-      style={{ background: gradient }}
-    >
-      <span aria-hidden className="absolute -bottom-5 -right-3 select-none pointer-events-none">
-        <span className="emoji-floats text-6xl opacity-90">{emoji}</span>
-      </span>
-      <span aria-hidden className="absolute -top-6 -left-6 w-20 h-20 rounded-full opacity-50 blur-2xl pointer-events-none" style={{ backgroundColor: haloColor }} />
-      <p className="text-[10px] font-extrabold uppercase tracking-widest text-white/90 drop-shadow relative">{label}</p>
-      <p className="text-2xl font-black tabular-nums mt-1 relative drop-shadow">{value}</p>
+    <div className="snap-start shrink-0 w-52 sm:w-56 relative overflow-hidden rounded-2xl border-2 border-white shadow-lg ring-1 ring-gray-200/40 hover:shadow-xl hover:-translate-y-1 hover:rotate-[0.5deg] transition-all bg-white">
+      <div className="flex h-full">
+        <div className="flex-1 min-w-0 px-3.5 py-3 flex flex-col justify-center">
+          <p className="text-[10px] font-extrabold uppercase tracking-widest text-gray-600">{label}</p>
+          <p className="text-2xl font-black text-gray-900 tabular-nums mt-1">{value}</p>
+        </div>
+        <div
+          className="relative shrink-0 w-20 flex items-center justify-center"
+          style={{ background: gradient }}
+        >
+          <span aria-hidden className="absolute -top-3 -left-3 w-16 h-16 rounded-full opacity-70 blur-xl pointer-events-none" style={{ backgroundColor: haloColor }} />
+          <span className="emoji-floats text-5xl relative z-10">{emoji}</span>
+        </div>
+      </div>
     </div>
   )
 }

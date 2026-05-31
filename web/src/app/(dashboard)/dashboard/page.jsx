@@ -12,7 +12,11 @@ export default async function DashboardPage() {
   // not just the latest 50. 5000 covers any realistic household over a
   // decade; users beyond that scale need pagination, not a higher cap.
   const [{ data: receipts }, { data: rewards }, { data: profile }] = await Promise.all([
-    sb.from('receipts').select('id,store_name,date,total_amount,tax_paid,business_purchase,category,is_return').order('date', { ascending: false }).limit(5000),
+    // `rating` is required by the GuacScore tile — without it every
+    // receipt looks unrated and `calculateGuacoScore` returns null
+    // ("Fresh start" placeholder) even when the user has rated
+    // purchases that /guacanomics correctly scores.
+    sb.from('receipts').select('id,store_name,date,total_amount,tax_paid,business_purchase,category,is_return,rating').order('date', { ascending: false }).limit(5000),
     sb.from('rewards').select('*').order('expiry_date', { ascending: true }).limit(10),
     sb.from('profiles').select('first_name').eq('id', user?.id || '').single(),
   ])

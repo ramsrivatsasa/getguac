@@ -222,7 +222,7 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
             even when the user has rated items further back. The
             big card on /guacanomics already uses a wider window;
             this matches that behavior. */}
-        <GuacoScoreCard receipts={spendingReceipts} size="sm" />
+        <GuacScoreTileWithBankBite receipts={spendingReceipts} period={period} periodCount={periodCount} />
         <GuacWizardTile />
         <GuacMoneyTile />
         <div className="stat-card">
@@ -395,6 +395,37 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
 // here via the same useQuery keys as BankTile so cache is shared.
 // Bank tiles silently render as $0 when no statements exist — the
 // row still shows transactions/spend/tax so it never disappears.
+// Dashboard GuacScore tile — wraps GuacoScoreCard so it includes
+// the same bankBite penalty (-interest, -fees over the active
+// window) that /guacanomics applies. Without this the dashboard
+// tile shows a higher score than /guacanomics for the same user.
+// Bank fees come from the shared `bank_fees` TanStack query; the
+// active time-frame comes from the store-driven (period, count).
+function GuacScoreTileWithBankBite({ receipts, period, periodCount }) {
+  const sb = createSbClient()
+  const { data: bankFees = [] } = useQuery({
+    queryKey: ['bank_fees'],
+    queryFn: async () => { const { data } = await sb.from('bank_fees').select('kind, amount, date'); return data || [] },
+    staleTime: 5 * 60_000,
+  })
+  const sinceStr = (() => {
+    const d = periodStartDate(period, periodCount)
+    return d.toISOString().slice(0, 10)
+  })()
+  const bankBite = (() => {
+    let interest = 0, fees = 0
+    for (const f of bankFees) {
+      const d = String(f.date || '')
+      if (d.length < 10 || d < sinceStr) continue
+      const v = Math.abs(Number(f.amount || 0))
+      if (f.kind === 'interest') interest += v
+      else if (f.kind === 'fee' || f.kind === 'penalty') fees += v
+    }
+    return { interest, fees, total: interest + fees }
+  })()
+  return <GuacoScoreCard receipts={receipts} bankBite={bankBite} size="sm" />
+}
+
 // 8-tile financial scroll. Pulls bank data via the same useQuery
 // keys the rest of the dashboard uses (TanStack dedups by key, so
 // this doesn't fire duplicate fetches) and hands the raw rows + the

@@ -1,11 +1,11 @@
 'use client'
 import { formatDateShort } from '../../../lib/dateFormat'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useStore } from '../../../store'
 import Link from 'next/link'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { Gift, ArrowRight, Sparkles, PiggyBank, Wand2 } from 'lucide-react'
+import { Gift, ArrowRight, Sparkles, PiggyBank, Wand2, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import GuacoScoreCard from '../../../components/GuacoScoreCard'
 import UpcomingReturnsBanner from '../../../components/UpcomingReturnsBanner'
@@ -243,25 +243,23 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
         </div>
       </div>
 
-      {/* Vibrant financial-tiles horizontal scroll — combines the
-          period-window receipt totals (transactions / total spent /
-          tax / bank fees) and the bank-statement totals (purchases /
-          payments / interest / fees) into one snap-scroll row. The
-          GuacScore / Wizard / Money / Rewards engagement strip
-          above intentionally stays in the pale 4-up grid — vibrant
-          gradients are scoped to financial tiles only. */}
+      {/* Spending anomalies sits ABOVE the financial-tile scroll so
+          warning state is visible before the user scans the row of
+          numbers. Self-hides when nothing is off; session-
+          dismissable; collapsed-by-default. */}
+      <AnomaliesPanel receipts={spendingReceipts} />
+
+      {/* Financial-tile horizontal scroll — combines the period-
+          window receipt totals (transactions / total spent / tax /
+          bank fees) and the bank-statement totals (purchases /
+          payments / interest / fees) into one row with left/right
+          arrow controls and a hidden native scrollbar. */}
       <AllPaymentsScroll
         txCount={filtered.length}
         totalSpend={totalSpend}
         totalTax={totalTax}
         bankFees={bankFees}
       />
-
-      {/* Spending anomalies — moved here so it sits right below the
-          GuacScore strip (was above before, eating ~300px and
-          pushing the score row off-screen). Self-hides when nothing
-          is off; session-dismissable; collapsed-by-default. */}
-      <AnomaliesPanel receipts={spendingReceipts} />
 
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Spending chart */}
@@ -409,6 +407,7 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
 // row still shows transactions/spend/tax so it never disappears.
 function AllPaymentsScroll({ txCount, totalSpend, totalTax, bankFees }) {
   const sb = createSbClient()
+  const scrollRef = useRef(null)
   const { data: statements = [] } = useQuery({
     queryKey: ['bank_statements'],
     queryFn: async () => { const { data } = await sb.from('bank_statements').select('*'); return data || [] },
@@ -429,22 +428,61 @@ function AllPaymentsScroll({ txCount, totalSpend, totalTax, bankFees }) {
     ? generateInsights({ statements, fees, transactions }, 'ytd').summary
     : { totalPayments: 0, totalInterest: 0, totalFees: 0, totalPurch: 0 }
   const money = (n) => `$${Number(n || 0).toFixed(2)}`
+
+  // Smooth-scroll the row by roughly one tile (~220px = w-52 + gap).
+  // Multiplied by 3 so each click moves a meaningful chunk on wide
+  // screens. behavior:'smooth' = the "auto"-feeling slide the user
+  // asked for.
+  const scrollBy = (dir) => {
+    const el = scrollRef.current
+    if (!el) return
+    el.scrollBy({ left: dir * 220 * 3, behavior: 'smooth' })
+  }
+
   return (
-    // overflow-x-auto + min-w-max forces the row to always be wider
-    // than its container so the scrollbar is always reachable, even
-    // on a wide monitor where 4-5 tiles would otherwise fit on one
-    // line without any scroll affordance.
-    <div className="relative -mx-2 px-2 overflow-x-auto pb-2">
-      <div className="flex gap-3 min-w-max">
-        <PaymentTile {...PAYMENT_TILE_CONFIGS.transactions} value={txCount} />
-        <PaymentTile {...PAYMENT_TILE_CONFIGS.totalSpent}   value={money(totalSpend)} />
-        <PaymentTile {...PAYMENT_TILE_CONFIGS.taxPaid}      value={money(totalTax)} />
-        <PaymentTile {...PAYMENT_TILE_CONFIGS.purchases}    value={money(summary.totalPurch)} />
-        <PaymentTile {...PAYMENT_TILE_CONFIGS.payments}     value={money(summary.totalPayments)} />
-        <PaymentTile {...PAYMENT_TILE_CONFIGS.interestPaid} value={money(summary.totalInterest)} />
-        <PaymentTile {...PAYMENT_TILE_CONFIGS.feesPaid}     value={money(summary.totalFees)} />
-        <PaymentTile {...PAYMENT_TILE_CONFIGS.bankFees}     value={money(bankFees)} />
+    <div className="relative -mx-2 px-2 group">
+      {/* Hidden-scrollbar utility: hides the native bar on every
+          modern browser while keeping overflow scrollable, so the
+          arrows are the only scroll affordance the user sees. */}
+      <style jsx>{`
+        .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+      `}</style>
+      <div
+        ref={scrollRef}
+        className="no-scrollbar overflow-x-auto scroll-smooth pb-1"
+      >
+        <div className="flex gap-3 min-w-max">
+          <PaymentTile {...PAYMENT_TILE_CONFIGS.transactions} value={txCount} />
+          <PaymentTile {...PAYMENT_TILE_CONFIGS.totalSpent}   value={money(totalSpend)} />
+          <PaymentTile {...PAYMENT_TILE_CONFIGS.taxPaid}      value={money(totalTax)} />
+          <PaymentTile {...PAYMENT_TILE_CONFIGS.purchases}    value={money(summary.totalPurch)} />
+          <PaymentTile {...PAYMENT_TILE_CONFIGS.payments}     value={money(summary.totalPayments)} />
+          <PaymentTile {...PAYMENT_TILE_CONFIGS.interestPaid} value={money(summary.totalInterest)} />
+          <PaymentTile {...PAYMENT_TILE_CONFIGS.feesPaid}     value={money(summary.totalFees)} />
+          <PaymentTile {...PAYMENT_TILE_CONFIGS.bankFees}     value={money(bankFees)} />
+        </div>
       </div>
+      {/* Edge arrows — float over the row's left/right edges. Always
+          present, but soften the opacity when the mouse isn't over
+          the section so they don't dominate the chrome. The fade
+          mask underneath each one hints there's more off-screen. */}
+      <button
+        type="button"
+        aria-label="Scroll left"
+        onClick={() => scrollBy(-1)}
+        className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white shadow-md border border-gray-200 flex items-center justify-center text-gray-700 hover:bg-gray-50 hover:text-emerald-700 opacity-70 group-hover:opacity-100 transition-opacity"
+      >
+        <ChevronLeft size={18} />
+      </button>
+      <button
+        type="button"
+        aria-label="Scroll right"
+        onClick={() => scrollBy(1)}
+        className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white shadow-md border border-gray-200 flex items-center justify-center text-gray-700 hover:bg-gray-50 hover:text-emerald-700 opacity-70 group-hover:opacity-100 transition-opacity"
+      >
+        <ChevronRight size={18} />
+      </button>
     </div>
   )
 }

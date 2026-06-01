@@ -12,6 +12,7 @@ import 'services/app_lock_service.dart';
 import 'services/debug_log.dart';
 import 'services/update_service.dart';
 import 'services/receipt_outbox.dart';
+import 'services/push_notifications.dart';
 
 // Brand palette — matches the web app (emerald + lime).
 const kBrandPrimary    = Color(0xFF15803d); // emerald-700 — main brand
@@ -89,6 +90,13 @@ void main() async {
   // Set up share-intent listener AFTER router is constructed so we can
   // navigate to /car-miles on incoming shares.
   await ShareIntentService.init(appRouter);
+
+  // Push notifications — best-effort. Initializes Firebase, requests
+  // OS permission, captures the device's FCM token, and upserts it
+  // into `push_tokens` so the server dispatcher can target this
+  // device. No-ops cleanly if Firebase isn't configured for this
+  // build (no google-services.json / GoogleService-Info.plist).
+  unawaited(PushNotifications.instance.init());
 
   runApp(const GetGuacApp());
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/push_notifications.dart';
 
 class AppAuthProvider extends ChangeNotifier {
   final _sb = Supabase.instance.client;
@@ -78,6 +79,10 @@ class AppAuthProvider extends ChangeNotifier {
     // which meant every sign-out cost the user their saved unlock.
     // If a user really wants to clear biometric, Profile -> Diagnose
     // biometric -> "Clear stored credentials" wipes them explicitly.
+    // Drop the device's FCM token from `push_tokens` so the user
+    // stops receiving sends targeted at this signed-out session.
+    // Best-effort — never blocks the signOut path.
+    try { await PushNotifications.instance.clearToken(); } catch (_) {}
     await _sb.auth.signOut();
     userProfile = null;
     notifyListeners();

@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "132237765108",
+    "project_id": "getguac-43d47",
+    "storage_bucket": "getguac-43d47.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:132237765108:android:eca879293d4ec16fc9f1a1",
+        "android_client_info": {
+          "package_name": "app.getguac.getguac"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "132237765108-rphm0elngeajqb5kfap476umndt49u46.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCTMQAeLJZ6mmogYk6pvZZHkiy6waUApHg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "132237765108-rphm0elngeajqb5kfap476umndt49u46.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

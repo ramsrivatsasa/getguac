@@ -2,6 +2,9 @@ plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    // Google Services — processes app/google-services.json so the
+    // firebase_messaging runtime can find its project credentials.
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -11,6 +14,11 @@ android {
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
+        // Core library desugaring is required by
+        // flutter_local_notifications (it uses java.time APIs that
+        // need to be back-ported on older Android API levels).
+        // See https://developer.android.com/studio/write/java8-support.
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
@@ -43,4 +51,10 @@ kotlin {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Pairs with isCoreLibraryDesugaringEnabled above. Pinned to
+    // the minor version flutter_local_notifications 17.x expects.
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }

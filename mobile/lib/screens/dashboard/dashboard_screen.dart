@@ -20,7 +20,10 @@ import '../../widgets/top_app_bar_actions.dart';
 import '../../widgets/horizontal_section.dart';
 import '../../widgets/feature_card.dart';
 import '../../widgets/payment_tile.dart';
+import '../../widgets/engagement_tile.dart';
 import '../../services/analysis_engine.dart';
+import '../../services/wizard_score.dart';
+import '../../services/timeframe_store.dart';
 
 const _kEmerald700 = Color(0xFF15803d);
 const _kEmerald800 = Color(0xFF166534);
@@ -49,15 +52,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
   _Period _period = _Period.monthly;
   int _periodCount = 3;
   // Bank data (statements/fees/transactions) is loaded once per
-  // dashboard mount and shared with the 8-tile PaymentTile row.
-  // Future is kicked off in initState so the network round-trip
-  // overlaps with the rest of the page mount.
+  // dashboard mount and shared with the 8-tile PaymentTile row +
+  // the GuacWizard engagement tile + the GuacScore bank-bite
+  // penalty. Future is kicked off in initState so the network
+  // round-trip overlaps with the rest of the page mount.
   late Future<BankData> _bankDataFuture;
 
   @override
   void initState() {
     super.initState();
     _bankDataFuture = fetchBankData();
+    // Hydrate the persisted time-frame from SharedPreferences so the
+    // mobile dashboard remembers the user's last selection across
+    // app launches — same UX guarantee the web Zustand store gives
+    // via localStorage.
+    TimeframeStore.load().then((tf) {
+      if (!mounted) return;
+      setState(() {
+        _period = _periodFromKey(tf.period);
+        _periodCount = tf.count;
+      });
+    });
     // Dashboard needs FULL history for cross-period analytics (year-over-
     // year totals, month-by-month bars going back). The list-screen
     // default (1-month, 10-cap) is too narrow for this view — selecting
@@ -130,6 +145,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _period = p;
       _periodCount = _kDefaultCount[p]!;
     });
+    _persistTimeframe();
+  }
+
+  void _setPeriodCount(int n) {
+    setState(() => _periodCount = n);
+    _persistTimeframe();
+  }
+
+  void _persistTimeframe() {
+    TimeframeStore.save(Timeframe(_periodKey(), _periodCount));
+  }
+
+  String _periodKey() {
+    switch (_period) {
+      case _Period.daily:   return 'daily';
+      case _Period.weekly:  return 'weekly';
+      case _Period.monthly: return 'monthly';
+      case _Period.yearly:  return 'yearly';
+    }
+  }
+
+  static _Period _periodFromKey(String k) {
+    switch (k) {
+      case 'daily':   return _Period.daily;
+      case 'weekly':  return _Period.weekly;
+      case 'yearly':  return _Period.yearly;
+      default:        return _Period.monthly;
+    }
   }
 
   @override
@@ -161,18 +204,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return d.length >= 10 && d.compareTo(cutoffStr) >= 0;
     }).toList();
 
-    final totalSpend = filtered.fold<double>(0, (s, r) => s + r.totalAmount);
-    final totalTax   = filtered.fold<double>(0, (s, r) => s + r.taxPaid);
-
-    // Period-over-period trend chip for the Total Spent tile. Computed
-    // off `spendingReceipts` (payment-rows already excluded) so the
-    // delta matches what's totalled above.
-    final periodKey = _period == _Period.daily   ? 'daily'
-                    : _period == _Period.weekly  ? 'weekly'
-                    : _period == _Period.yearly  ? 'yearly'
-                    :                              'monthly';
-    final trend = computeSpendingTrend(spendingReceipts, periodKey, _periodCount);
-    final trendFmt = formatTrend(trend.deltaPct);
+    // totalSpend / totalTax / spending-trend chip used to feed the old
+    // _statGrid — replaced by the analysis-engine-driven
+    // _paymentTileScroll + _engagementStrip which compute their own
+    // totals + deltas, so the locals are gone.
     final rangeLabel = 'Last $_periodCount ${_kUnitLabel[_period]}${_periodCount == 1 ? '' : 's'}';
 
     return Scaffold(
@@ -228,8 +263,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _paymentTileScroll(spendingReceipts),
             const SizedBox(height: 14),
 
-            // Stat tiles (GuacScore, GuacMoney, plain stats)
-            _statGrid(filtered, totalSpend, totalTax, rewards.length, trendFmt),
+            // Engagement strip — GuacScore · GuacWizard · GuacMoney
+            // · Rewards. Same 4-tile shape the web dashboard renders;
+            // shares the FutureBuilder-backed BankData with the
+            // PaymentTile row above for a single bank-data fetch.
+            _engagementStrip(spendingReceipts, rewards.length),
             const SizedBox(height: 20),
 
             // Spending chart
@@ -422,7 +460,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             isDense: true,
             style: const TextStyle(fontSize: 13, color: _kEmerald800, fontWeight: FontWeight.w900),
             items: opts.map((n) => DropdownMenuItem(value: n, child: Text('$n'))).toList(),
-            onChanged: (n) { if (n != null) setState(() => _periodCount = n); },
+            onChanged: (n) { if (n != null) _setPeriodCount(n); },
           ),
           Text(' ${_kUnitLabel[_period]}${_periodCount == 1 ? '' : 's'}',
             style: const TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w700)),
@@ -433,6 +471,166 @@ class _DashboardScreenState extends State<DashboardScreen> {
         style: const TextStyle(fontSize: 11, color: Colors.black45),
         overflow: TextOverflow.ellipsis)),
     ]);
+  }
+
+  /// 2×2 engagement strip — GuacScore / GuacWizard / GuacMoney /
+  /// Rewards. Mirrors the web dashboard's 4-tile engagement row.
+  /// Shares the BankData FutureBuilder with `_paymentTileScroll`
+  /// so we fire a single network round-trip for both surfaces.
+  Widget _engagementStrip(List<Receipt> spendingReceipts, int rewardCount) {
+    return FutureBuilder<BankData>(
+      future: _bankDataFuture,
+      builder: (ctx, snap) {
+        final bank = snap.data ?? BankData.empty;
+        final isLoading = snap.connectionState == ConnectionState.waiting;
+        final since = periodStartIso(_periodKey(), _periodCount);
+        // GuacWizard score
+        WizardScoreResult wiz;
+        if (isLoading) {
+          wiz = const WizardScoreResult(score: null);
+        } else {
+          final agg = aggregateBankForWizard(bank: bank, startStr: since, endStr: null);
+          wiz = computeWizardScore(summary: agg.summary, accounts: agg.accounts);
+        }
+        // GuacScore — rated-purchase weighted average + bank-bite penalty
+        final guacScore = _computeGuacScore(spendingReceipts, bank, since);
+        return Column(children: [
+          Row(children: [
+            Expanded(child: _guacScoreTile(guacScore)),
+            const SizedBox(width: 10),
+            Expanded(child: _guacWizardTile(wiz, isLoading)),
+          ]),
+          const SizedBox(height: 10),
+          Row(children: [
+            Expanded(child: _guacMoneyTile()),
+            const SizedBox(width: 10),
+            Expanded(child: _rewardsTile(rewardCount)),
+          ]),
+        ]);
+      },
+    );
+  }
+
+  _GuacScoreResult _computeGuacScore(List<Receipt> spendingReceipts, BankData bank, String sinceIso) {
+    final rated = spendingReceipts.where((r) => r.rating != null && r.totalAmount > 0).toList();
+    if (rated.isEmpty) return const _GuacScoreResult(score: null, grade: 'fresh', ratedCount: 0);
+    double weightedSum = 0, weightTotal = 0;
+    for (final r in rated) {
+      final w = r.totalAmount.abs();
+      final v = (r.rating! - 3) * 25;
+      weightedSum += v * w;
+      weightTotal += w;
+    }
+    final raw = weightTotal == 0 ? 50.0 : (weightedSum / weightTotal) + 50;
+    // Bank-bite penalty over the active window (mirrors web).
+    double interest = 0, fees = 0;
+    for (final f in bank.fees) {
+      final d = (f['date'] ?? '').toString();
+      if (d.length < 10 || d.compareTo(sinceIso) < 0) continue;
+      final v = (double.tryParse((f['amount'] ?? '0').toString()) ?? 0).abs();
+      if (f['kind'] == 'interest') interest += v;
+      else if (f['kind'] == 'fee' || f['kind'] == 'penalty') fees += v;
+    }
+    int penalty = 0;
+    if ((interest + fees) > 0 && weightTotal > 0) {
+      final ratioHit = ((interest + fees) / weightTotal * 100).clamp(0.0, 25.0);
+      final dollarHit = (interest / 25) + (fees / 50);
+      penalty = (ratioHit + dollarHit).round().clamp(0, 25);
+    }
+    final score = (raw - penalty).clamp(0, 100).round();
+    final grade = score >= 80 ? 'rich' : score >= 65 ? 'celebrating' : score >= 50 ? 'thumbsup' : score >= 35 ? 'sleepy' : 'surprised';
+    return _GuacScoreResult(score: score, grade: grade, ratedCount: rated.length);
+  }
+
+  Widget _guacScoreTile(_GuacScoreResult r) {
+    // Tone tracks the score band (matches web GuacoScoreCard).
+    EngagementTone tone;
+    String subtext;
+    String value;
+    if (r.score == null) {
+      tone = kToneEmerald;
+      value = 'Fresh';
+      subtext = 'rate to start';
+    } else {
+      final s = r.score!;
+      tone = s >= 65 ? kToneEmerald : s >= 50 ? kToneEmerald : s >= 35 ? kToneAmber : kToneRose;
+      value = '$s';
+      subtext = '${r.ratedCount} rated';
+    }
+    return EngagementTile(
+      label: 'GUACSCORE', value: value, subtext: subtext,
+      bg: tone.bg, ringColor: tone.ring, chip: tone.chip,
+      labelColor: tone.label, valueColor: tone.value, subColor: tone.sub,
+      themeEmoji: '😋',
+      iconChild: Center(child: Text(r.score == null ? '🥑' : '😊', style: const TextStyle(fontSize: 20))),
+      onTap: () => context.go('/guacscore'),
+    );
+  }
+
+  Widget _guacWizardTile(WizardScoreResult r, bool loading) {
+    // Tone tracks the score band; loading uses neutral slate so the
+    // tile doesn't flash through the wrong color before bank data
+    // lands (same fix the web dashboard's GuacWizardTile has).
+    EngagementTone tone;
+    String value;
+    String? sub;
+    if (loading) {
+      tone = kToneSlate;
+      value = '—';
+      sub = 'loading…';
+    } else if (r.score == null) {
+      tone = kToneViolet;
+      value = 'Set up';
+      sub = 'connect bank →';
+    } else {
+      final s = r.score!;
+      tone = s >= 65 ? kToneEmerald : s >= 35 ? kToneAmber : kToneRose;
+      value = '$s/100';
+      sub = 'health score';
+    }
+    return EngagementTile(
+      label: 'GUACWIZARD', value: value, subtext: sub,
+      bg: tone.bg, ringColor: tone.ring, chip: tone.chip,
+      labelColor: tone.label, valueColor: tone.value, subColor: tone.sub,
+      icon: Icons.auto_fix_high,
+      themeEmoji: '🧙‍♂️',
+      onTap: () => context.go('/guacwizard'),
+    );
+  }
+
+  Widget _guacMoneyTile() {
+    return FutureBuilder<double>(
+      future: fetchGuacMoneyTotal(),
+      builder: (ctx, snap) {
+        final total = snap.data ?? 0;
+        final active = total > 0;
+        final loading = snap.connectionState == ConnectionState.waiting && !snap.hasData;
+        final tone = active ? kToneEmerald : kToneSlate;
+        return EngagementTile(
+          label: 'GUACMONEY',
+          value: loading ? '—' : formatGuacMoney(total),
+          subtext: active ? 'saved' : 'tap Cheapest →',
+          bg: tone.bg, ringColor: tone.ring, chip: tone.chip,
+          labelColor: tone.label, valueColor: tone.value, subColor: tone.sub,
+          icon: Icons.savings_outlined,
+          themeEmoji: '💰',
+        );
+      },
+    );
+  }
+
+  Widget _rewardsTile(int count) {
+    final active = count > 0;
+    final tone = active ? kToneRose : kToneSlate;
+    return EngagementTile(
+      label: 'REWARDS', value: '$count',
+      subtext: active ? 'available' : 'none yet',
+      bg: tone.bg, ringColor: tone.ring, chip: tone.chip,
+      labelColor: tone.label, valueColor: tone.value, subColor: tone.sub,
+      icon: Icons.card_giftcard_rounded,
+      themeEmoji: '🎁',
+      onTap: () => context.go('/rewards'),
+    );
   }
 
   /// 8-tile horizontal scroll row, mirroring the web dashboard's
@@ -508,6 +706,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  // Old 2×4 stat grid — superseded by _engagementStrip (4-up brand
+  // tiles) + _paymentTileScroll (8-tile analysis-engine row). Kept
+  // here only because Dart's tree-shaker doesn't elide unreferenced
+  // method bodies; replace with `// removed` once we're confident.
+  // ignore: unused_element
   Widget _statGrid(List<Receipt> filtered, double totalSpend, double totalTax, int rewardCount, TrendFormat? spendTrend) {
     return Column(children: [
       Row(children: [
@@ -866,6 +1069,18 @@ class _StatTile extends StatelessWidget {
 /// Per-store aggregation row for the dashboard's Spending-by-Store chart.
 /// Mirrors the web's chartData entries — keep them in sync if the web
 /// aggregation logic changes (lib/src/app/(dashboard)/dashboard/DashboardClient.jsx).
+/// Result of the GuacScore calc — same fields the web's
+/// calculateGuacoScore returns. Score is null when there are no
+/// rated purchases yet (pre-rating "fresh" state).
+class _GuacScoreResult {
+  final int? score;
+  final String grade;     // mascot expression name
+  final int ratedCount;
+  const _GuacScoreResult({
+    required this.score, required this.grade, required this.ratedCount,
+  });
+}
+
 class _StoreSpend {
   String name;
   double amount;

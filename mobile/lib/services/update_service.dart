@@ -1,12 +1,26 @@
 // In-app update check.
 //
-// Calls GitHub's public Releases API for ramsrivatsasa/getguac, compares the
-// latest tag with the bundled pubspec version, and returns the download URL
-// when a newer version is available.
+// Reads getguac.app/downloads/latest.json, compares the published
+// version against the bundled pubspec version, and returns the
+// download URL when a newer version is available. The JSON shape:
 //
-// Apple-style auto-install isn't possible for sideloaded Android apps without
-// Play Store integration. Instead, we open the APK URL in a browser — Android
-// downloads it, the user taps the download notification → installs.
+//   {
+//     "version":      "v0.3.5",
+//     "name":         "v0.3.5 — engagement strip horizontal scroll",
+//     "downloadUrl":  "https://getguac.app/downloads/v0.3.5/app-arm64-v8a-release.apk",
+//     "releaseNotes": "What's new in this build…"
+//   }
+//
+// Switched from GitHub Releases because we publish APKs to
+// /downloads/<version>/ on getguac.app directly — the manifest
+// approach decouples the in-app update prompt from creating a
+// GitHub release for every build.
+//
+// Apple-style auto-install isn't possible for sideloaded Android
+// apps without Play Store integration. Instead, we download the APK
+// into the app's cache and open it with the system package
+// installer (downloadAndInstall) — Android shows the install
+// confirmation, user taps Install, done.
 
 import 'dart:convert';
 import 'dart:io';
@@ -26,45 +40,39 @@ class AvailableUpdate {
 }
 
 class UpdateService {
-  static const _githubApi = 'https://api.github.com/repos/ramsrivatsasa/getguac/releases/latest';
-  static const _abiPreference = 'app-arm64-v8a-release.apk';
+  // Manifest published alongside each release at
+  // /downloads/latest.json. Reading from getguac.app means a fresh
+  // deploy = an instantly-detected update on every signed-in
+  // device, with zero GitHub coupling. `?t=…` cache-buster appended
+  // at request time so CDN/edge caches can't serve a stale
+  // manifest after a redeploy.
+  static const _manifestUrl = 'https://getguac.app/downloads/latest.json';
 
-  /// Fetches the latest GitHub release. Returns null if there's no newer
-  /// version than what's running, or if the check failed (offline, rate
-  /// limited, etc — never throws).
+  /// Fetches latest.json. Returns null if there's no newer version
+  /// than what's running, or if the check failed (offline, 404,
+  /// JSON parse error, etc — never throws).
   static Future<AvailableUpdate?> checkForUpdate() async {
     try {
       final info = await PackageInfo.fromPlatform();
-      final currentTag = 'v${info.version}';  // pubspec version is like "1.0.0+1" → "v1.0.0"
+      final currentTag = 'v${info.version}';  // pubspec is "0.3.5+97" → "v0.3.5+97"
 
-      final res = await http.get(Uri.parse(_githubApi)).timeout(const Duration(seconds: 6));
+      final res = await http
+          .get(Uri.parse('$_manifestUrl?t=${DateTime.now().millisecondsSinceEpoch}'))
+          .timeout(const Duration(seconds: 6));
       if (res.statusCode != 200) return null;
       final json = jsonDecode(res.body) as Map<String, dynamic>;
-      final latestTag = (json['tag_name'] ?? '').toString();
+      final latestTag = (json['version'] ?? '').toString();
       if (latestTag.isEmpty) return null;
       if (_compareVersions(latestTag, currentTag) <= 0) return null;
 
-      // Find the arm64 APK in the release assets
-      final assets = (json['assets'] as List?) ?? [];
-      String? downloadUrl;
-      for (final a in assets) {
-        if (a is Map && a['name'] == _abiPreference) {
-          downloadUrl = a['browser_download_url'] as String?;
-          break;
-        }
-      }
-      // Fall back to the first APK asset if arm64 isn't there
-      downloadUrl ??= assets
-          .whereType<Map>()
-          .map((a) => a['browser_download_url'] as String?)
-          .firstWhere((u) => u != null && u.endsWith('.apk'), orElse: () => null);
-      if (downloadUrl == null) return null;
+      final downloadUrl = (json['downloadUrl'] ?? '').toString();
+      if (downloadUrl.isEmpty) return null;
 
       return AvailableUpdate(
         tag: latestTag,
         name: (json['name'] ?? latestTag).toString(),
         downloadUrl: downloadUrl,
-        releaseNotes: (json['body'] ?? '').toString(),
+        releaseNotes: (json['releaseNotes'] ?? '').toString(),
       );
     } catch (_) {
       return null;

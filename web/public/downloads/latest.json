@@ -1,0 +1,7 @@
+{
+  "version": "v0.3.5",
+  "name": "v0.3.5 — engagement-strip horizontal scroll",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.5/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Engagement strip (GuacScore · GuacWizard · GuacMoney · Rewards) becomes one horizontal-scroll carousel matching the web dashboard.\n• Tap any tile → routes to its detail screen (GuacScore → /guacanomics, GuacWizard → /guacwizard, GuacMoney → /shopping, Rewards → /rewards).\n• In-app update detector switched from GitHub Releases to a manifest at getguac.app/downloads/latest.json so new builds are detected the moment they ship.\n• Push-notification scaffolding (Firebase Cloud Messaging) — token captured on sign-in; daily server-side dispatcher pending Vercel env-var setup.",
+  "publishedAt": "2026-06-01"
+}

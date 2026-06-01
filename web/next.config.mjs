@@ -40,6 +40,14 @@ const securityHeaders = [
 
 const nextConfig = {
   serverExternalPackages: ['tesseract.js', 'pdf-parse', 'imapflow', 'mailparser'],
+  // Build-time SHA baked into the client bundle. The UpdatePrompt
+  // component compares this to the SHA returned by /api/build-info
+  // and shows a "reload to update" banner when they diverge — so
+  // users open the app and get nudged the moment a new Vercel
+  // deploy lands. Falls back to 'dev' for local runs.
+  env: {
+    NEXT_PUBLIC_BUILD_SHA: process.env.VERCEL_GIT_COMMIT_SHA || 'dev',
+  },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: '*.supabase.co' },

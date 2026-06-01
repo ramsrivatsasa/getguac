@@ -14,7 +14,21 @@ export function computeWizardScore({ summary, accounts = [] } = {}) {
   const reasons = []
   if (!summary) return { score: null, reasons }
 
-  const { totalInterest = 0, totalFees = 0, netDebtChange = 0, totalPurch = 0 } = summary
+  const { totalInterest = 0, totalFees = 0,
+          totalPayments = 0, totalRefunds = 0 } = summary
+  // Accept both `totalPurch` (the field name web's generateInsights
+  // emits) and `totalPurchases` (the field name the Dart engine
+  // uses). Same value, different historical naming — both engines
+  // now produce the same answer for the same data.
+  const totalPurch = summary.totalPurch != null
+    ? summary.totalPurch
+    : (summary.totalPurchases ?? 0)
+  // netDebtChange may be pre-computed by web's upstream pipeline,
+  // or derived from raw fields (mobile passes the raw shape).
+  // Falling back to the formula keeps both paths consistent.
+  const netDebtChange = summary.netDebtChange != null
+    ? summary.netDebtChange
+    : (totalPurch - totalRefunds - totalPayments)
 
   if (totalInterest > 0) {
     const penalty = Math.min(35, Math.round(totalInterest / 10))

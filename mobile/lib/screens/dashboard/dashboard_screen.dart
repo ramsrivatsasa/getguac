@@ -19,6 +19,7 @@ import '../../widgets/subscriptions_card.dart';
 import '../../widgets/top_app_bar_actions.dart';
 import '../../widgets/horizontal_section.dart';
 import '../../widgets/feature_card.dart';
+import '../../widgets/feature_pill.dart';
 import '../../widgets/payment_tile.dart';
 import '../../widgets/engagement_tile.dart';
 import '../../services/analysis_engine.dart';
@@ -235,6 +236,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   style: TextStyle(fontSize: 13, color: Colors.black54)),
               ])),
             ]),
+            const SizedBox(height: 14),
+            // Feature pills — same horizontal-scroll shape the
+            // Profile screen uses. Replaces the older 'Smart
+            // shopping' + 'Quick actions' rectangular-card rows
+            // that lived further down the dashboard. Sits right
+            // under the greeting so the nine destinations are the
+            // first interactive thing the user sees.
+            _featurePillScroll(),
+            const SizedBox(height: 14),
             // Spending alerts (auto-hides when none). Reads receipts already
             // loaded by ReceiptProvider — no extra fetch.
             AnomaliesCard(receipts: receipts),
@@ -260,12 +270,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _paymentTileScroll(spendingReceipts),
             const SizedBox(height: 18),
 
-            // Remaining feature sections — Smart shopping + Quick
-            // actions. "Your score & insights" static-card row is
-            // gone; the engagement strip in Spending analysis above
-            // covers those destinations with live values.
-            _featureSections(),
-            const SizedBox(height: 20),
+            // _featureSections() (Smart shopping + Quick actions
+            // rectangular-card rows) removed — replaced by the
+            // FeaturePill horizontal scroll directly under the
+            // greeting at the top of this build method.
 
             // Spending chart
             _spendingChart(filtered),
@@ -329,6 +337,70 @@ class _DashboardScreenState extends State<DashboardScreen> {
   /// Fetch-style. Three sections group the 8 main features by
   /// purpose so the eye can sweep through related actions instead
   /// of decoding a dense 4×2 grid.
+  /// Horizontal-scroll row of Guac-AI pills — same widget the
+  /// Profile screen uses. Sits directly under the dashboard
+  /// greeting now. Each pill drills into its detail surface via
+  /// context.push() so the back-stack builds (edge-swipe + ←
+  /// AppBar both work).
+  Widget _featurePillScroll() {
+    return SizedBox(
+      height: 64,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: EdgeInsets.zero,
+        children: [
+          SizedBox(width: 180, child: FeaturePill(
+            gradient: const [Color(0xFFfbbf24), Color(0xFFf59e0b), Color(0xFFe11d48)],
+            emoji: '🥑', title: 'Worth It?', subtitle: 'Rate every purchase',
+            onTap: () => context.push(_receiptsDeepLink()),
+          )),
+          const SizedBox(width: 10),
+          SizedBox(width: 180, child: FeaturePill(
+            gradient: const [Color(0xFF22c55e), Color(0xFF15803d)],
+            icon: Icons.auto_awesome, title: 'Guacanomics', subtitle: 'GuacScore + insights',
+            onTap: () => context.push('/guacanomics'),
+          )),
+          const SizedBox(width: 10),
+          SizedBox(width: 180, child: FeaturePill(
+            gradient: const [Color(0xFFa78bfa), Color(0xFF7c3aed)],
+            icon: Icons.auto_fix_high, title: 'GuacWizard', subtitle: 'Bank Bite + leaks',
+            onTap: () => context.push('/guacwizard'),
+          )),
+          const SizedBox(width: 10),
+          SizedBox(width: 180, child: FeaturePill(
+            gradient: const [Color(0xFFf9a8d4), Color(0xFFdb2777)],
+            icon: Icons.local_offer, title: 'Steals', subtitle: 'AI price hunt',
+            onTap: () => context.push('/steals'),
+          )),
+          const SizedBox(width: 10),
+          SizedBox(width: 180, child: FeaturePill(
+            gradient: const [Color(0xFFf472b6), Color(0xFFdb2777)],
+            icon: Icons.card_giftcard_rounded, title: 'Rewards', subtitle: 'Loyalty + expiring',
+            onTap: () => context.push('/rewards'),
+          )),
+          const SizedBox(width: 10),
+          SizedBox(width: 180, child: FeaturePill(
+            gradient: const [Color(0xFFfde047), Color(0xFFca8a04)],
+            icon: Icons.inventory_2, title: 'Stash', subtitle: 'Everything you own',
+            onTap: () => context.push('/stash'),
+          )),
+          const SizedBox(width: 10),
+          SizedBox(width: 180, child: FeaturePill(
+            gradient: const [Color(0xFFfcd34d), Color(0xFFca8a04)],
+            icon: Icons.mark_email_unread_rounded, title: 'Inbox', subtitle: 'Mail + auto-receipts',
+            onTap: () => context.push('/inbox'),
+          )),
+          const SizedBox(width: 10),
+          SizedBox(width: 180, child: FeaturePill(
+            gradient: const [Color(0xFF67e8f9), Color(0xFF0891b2)],
+            icon: Icons.directions_car_filled_rounded, title: 'Car Miles', subtitle: 'Trip log',
+            onTap: () => context.push('/car-miles'),
+          )),
+        ],
+      ),
+    );
+  }
+
   Widget _featureSections() {
     // listPadding/headerPadding zero here because the outer ListView
     // already supplies 16px horizontal padding; doubling it pushes

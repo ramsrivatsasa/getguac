@@ -1,0 +1,77 @@
+{
+  "$comment": "Cross-platform test fixtures. Both web (JS) and mobile (Dart) test suites load this JSON and assert identical engine output for the same input. If you change a fixture, run both `web/npm test` AND `mobile/flutter test` — if they diverge, the engines drift.",
+  "wizardScore": [
+    {
+      "name": "no_data_baseline",
+      "input": {
+        "summary": { "totalInterest": 0, "totalFees": 0, "totalPayments": 0, "totalPurchases": 0, "totalRefunds": 0 },
+        "accounts": []
+      },
+      "expected": { "score": 50 }
+    },
+    {
+      "name": "clean_user_no_costs",
+      "input": {
+        "summary": { "totalInterest": 0, "totalFees": 0, "totalPayments": 500, "totalPurchases": 500, "totalRefunds": 0 },
+        "accounts": [{ "latestApr": 18.99 }]
+      },
+      "expected": { "score": 100 }
+    },
+    {
+      "name": "interest_50_dollars",
+      "input": {
+        "summary": { "totalInterest": 50, "totalFees": 0, "totalPayments": 200, "totalPurchases": 200, "totalRefunds": 0 },
+        "accounts": [{ "latestApr": 18.99 }]
+      },
+      "expected": { "score": 95 }
+    },
+    {
+      "name": "high_apr_card_penalty",
+      "input": {
+        "summary": { "totalInterest": 0, "totalFees": 0, "totalPayments": 0, "totalPurchases": 0, "totalRefunds": 0 },
+        "accounts": [{ "latestApr": 26.99 }]
+      },
+      "expected": { "score": 95 }
+    },
+    {
+      "name": "interest_350_capped_at_35",
+      "input": {
+        "summary": { "totalInterest": 500, "totalFees": 0, "totalPayments": 100, "totalPurchases": 100, "totalRefunds": 0 },
+        "accounts": [{ "latestApr": 18.99 }]
+      },
+      "expected": { "score": 65 }
+    },
+    {
+      "name": "debt_growing",
+      "input": {
+        "summary": { "totalInterest": 0, "totalFees": 0, "totalPayments": 100, "totalPurchases": 500, "totalRefunds": 0 },
+        "accounts": [{ "latestApr": 18.99 }]
+      },
+      "expected": { "score": 92 }
+    },
+    {
+      "name": "debt_shrinking_bonus",
+      "input": {
+        "summary": { "totalInterest": 0, "totalFees": 0, "totalPayments": 600, "totalPurchases": 100, "totalRefunds": 0 },
+        "accounts": [{ "latestApr": 18.99 }]
+      },
+      "expected": { "score": 100 }
+    },
+    {
+      "name": "fees_paid_25_dollars",
+      "input": {
+        "summary": { "totalInterest": 0, "totalFees": 25, "totalPayments": 200, "totalPurchases": 200, "totalRefunds": 0 },
+        "accounts": [{ "latestApr": 18.99 }]
+      },
+      "expected": { "score": 95 }
+    },
+    {
+      "name": "two_high_apr_cards",
+      "input": {
+        "summary": { "totalInterest": 0, "totalFees": 0, "totalPayments": 0, "totalPurchases": 0, "totalRefunds": 0 },
+        "accounts": [{ "latestApr": 27 }, { "latestApr": 29.99 }]
+      },
+      "expected": { "score": 90 }
+    }
+  ]
+}

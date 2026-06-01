@@ -1,7 +1,7 @@
 {
-  "version": "v0.3.8",
-  "name": "v0.3.8 — Profile Guac-AI tiles → horizontal scroll",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.8/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Profile screen 'Your Guac-AI' 5×2 pill grid is now one horizontal-scroll row (Worth It? · GuacScore · Inbox · GuacWizard · Rewards · Stash · Steals · Car Miles · How It Works). Drops half the vertical scroll on Profile.\n• Drill-in taps from Profile use context.push() so swipe-back works.\n• Dashboard's 'Spending analysis' section consolidation + working back navigation from v0.3.7 carried forward.",
+  "version": "v0.3.9",
+  "name": "v0.3.9 — Dashboard Guac-AI pill scroll + WizardScore drift fix + cross-platform parity tests",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.9/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Dashboard greeting now sits right above one horizontal-scroll row of nine Guac-AI pills (Worth It? · Guacanomics · GuacWizard · Steals · Rewards · Stash · Inbox · Car Miles · How It Works) — same widget the Profile screen uses, no more rectangular feature-card rows further down the page.\n• Profile screen 5×2 Guac-AI grid also collapsed to one horizontal scroll.\n• WizardScore engine — synthetic-account fallback when user has bank_fees but no bank_statements (was triggering the 50/100 baseline path). Plus accept either totalPurch/totalPurchases field naming to match the Dart engine.\n• Cross-platform parity tests landed — fixture file at test-fixtures/score-engines.json, runs through BOTH Dart (mobile/test/services/wizard_score_test.dart) AND JS (web/scripts/test-score-engines.mjs). 9/9 cases produce identical scores on both sides. `npm run test:parity` runs both suites.",
   "publishedAt": "2026-06-01"
 }

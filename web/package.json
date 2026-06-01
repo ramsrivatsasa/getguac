@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:score-engines": "node scripts/test-score-engines.mjs",
+    "test:parity": "echo 'Web side:' && node scripts/test-score-engines.mjs && echo 'Mobile side:' && cd ../mobile && flutter test test/services/wizard_score_test.dart"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.98.0",

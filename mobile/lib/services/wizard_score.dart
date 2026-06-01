@@ -173,6 +173,43 @@ WizardSummaryAndAccounts aggregateBankForWizard({
     accounts.add(WizardAccount(latestApr: b.latestApr));
   }
 
+  // Fallback for users who have bank_fees / bank_transactions but
+  // no bank_statements yet (e.g. fees imported directly without an
+  // attached statement). Without this, accounts stays empty and
+  // computeWizardScore falls into the "no statements uploaded yet"
+  // baseline (50) — making the dashboard tile show 50 even when
+  // the detail screen clearly shows fee data.
+  //
+  // Scan fees + transactions in the active window, sum them as a
+  // synthetic single account so the score is computed from the
+  // data the user actually has.
+  if (accounts.isEmpty) {
+    final feeRows = bank.fees.where((f) => _inRange((f['date'] ?? '').toString(), startStr, endStr)).toList();
+    final txnRows = bank.transactions.where((t) => _inRange((t['date'] ?? '').toString(), startStr, endStr)).toList();
+    if (feeRows.isNotEmpty || txnRows.isNotEmpty) {
+      sumInterest = _sumAbsWhere(feeRows, (f) => f['kind'] == 'interest')
+                  + _sumAbsWhere(txnRows, (t) => t['is_interest'] == true);
+      sumFees     = _sumAbsWhere(feeRows, (f) => f['kind'] == 'fee' || f['kind'] == 'penalty')
+                  + _sumAbsWhere(txnRows, (t) => t['is_fee'] == true);
+      sumPayments = _sumAbsWhere(txnRows, (t) => t['is_payment'] == true);
+      sumPurch    = _sumPosWhere(txnRows, (t) {
+        final amt = _num(t['amount']);
+        return t['is_payment'] != true && t['is_fee'] != true
+            && t['is_interest'] != true && t['is_refund'] != true
+            && amt > 0;
+      });
+      sumRefunds  = _sumAbsWhere(txnRows, (t) {
+        final amt = _num(t['amount']);
+        return t['is_refund'] == true
+            || (amt < 0 && t['is_payment'] != true && t['is_fee'] != true && t['is_interest'] != true);
+      });
+      // Synthetic account — no APR known, so high-APR penalty
+      // can't fire. Just lets accounts.length > 0 so the baseline
+      // path doesn't trip.
+      accounts.add(const WizardAccount());
+    }
+  }
+
   return WizardSummaryAndAccounts(
     summary: WizardSummary(
       totalInterest: sumInterest,

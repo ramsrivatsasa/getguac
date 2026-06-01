@@ -49,6 +49,12 @@ class PushNotifications {
   Future<void> init() async {
     if (_initialized) return;
     try {
+      // FlutterFire CLI generates lib/firebase_options.dart with
+      // platform-specific config. If the file isn't present (the
+      // user hasn't run `flutterfire configure` yet), fall back to
+      // a bare init that picks up google-services.json /
+      // GoogleService-Info.plist by convention. Whichever path
+      // succeeds, _initialized flips to true.
       await Firebase.initializeApp();
       _initialized = true;
     } catch (e) {

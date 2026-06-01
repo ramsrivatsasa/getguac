@@ -515,9 +515,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ]),
 
           const SizedBox(height: 20),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: OutlinedButton.icon(
+          // Sign-out + Check-for-update share a pill row so both
+          // operations sit at the same visual altitude. Update is
+          // first since it's the more common action; sign-out
+          // keeps the danger-red treatment.
+          Row(children: [
+            OutlinedButton.icon(
+              onPressed: () => _checkForUpdate(context),
+              icon: const Icon(Icons.system_update_alt, size: 12),
+              label: const Text('Check for update',
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 11)),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF15803d),
+                side: const BorderSide(color: Color(0xFFA7F3D0), width: 1),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                minimumSize: const Size(0, 26),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: VisualDensity.compact,
+              ),
+            ),
+            const SizedBox(width: 8),
+            OutlinedButton.icon(
               onPressed: () => _signOut(context),
               icon: const Icon(Icons.logout, size: 12),
               label: const Text('Sign out',
@@ -532,10 +551,52 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 visualDensity: VisualDensity.compact,
               ),
             ),
-          ),
+          ]),
         ],
       ),
     );
+  }
+
+  Future<void> _checkForUpdate(BuildContext context) async {
+    // Show a quick "Checking…" snackbar so the tap doesn't feel
+    // dead while the manifest fetch is in flight.
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.showSnackBar(const SnackBar(
+      duration: Duration(milliseconds: 1500),
+      content: Text('Checking for update…'),
+    ));
+    final upd = await UpdateService.checkForUpdate();
+    if (!context.mounted) return;
+    if (upd == null) {
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(const SnackBar(
+        backgroundColor: Color(0xFF065f46),
+        content: Text("You're on the latest version 🥑"),
+      ));
+      return;
+    }
+    // Match the auto-prompt dialog from main_scaffold so the user
+    // gets the same experience whether the check fires
+    // automatically or via this button.
+    final installNow = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('${upd.tag} available'),
+        content: Text(upd.releaseNotes?.isNotEmpty == true
+          ? upd.releaseNotes!
+          : 'A newer version of GetGuac is ready to install.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Later')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Install now')),
+        ],
+      ),
+    );
+    if (installNow != true || !context.mounted) return;
+    final ok = await UpdateService.downloadAndInstall(upd.downloadUrl);
+    if (!ok && context.mounted) {
+      // Fall back to browser download if the in-app install fails.
+      await UpdateService.openDownload(upd.downloadUrl);
+    }
   }
 
   Future<void> _signOut(BuildContext context) async {

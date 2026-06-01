@@ -242,9 +242,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
             SubscriptionsCard(receipts: spendingReceipts),
             const SizedBox(height: 18),
 
-            // Feature sections — horizontal-scrolling cards grouped by
-            // purpose, replacing the previous 4×2 dense pill grid.
-            // Each section is a Fetch-style swipeable row.
+            // Engagement strip — GuacScore · GuacWizard · GuacMoney
+            // · Rewards with REAL values. Promoted to the top
+            // position (where the static "Your score & insights"
+            // feature-card row used to live) since these tiles
+            // already navigate to the same destinations AND display
+            // actual numbers. No reason to render both. Each tile
+            // tap routes to its detail screen (see _engagementStrip).
+            const _SectionHeader(title: 'Your score & insights', subtitle: 'Live numbers · tap to drill in'),
+            _engagementStrip(spendingReceipts, rewards.length),
+            const SizedBox(height: 18),
+
+            // Remaining feature sections — Smart shopping + Quick
+            // actions. "Your score & insights" group dropped from
+            // here; the engagement strip above covers it.
             _featureSections(),
             const SizedBox(height: 18),
 
@@ -261,13 +272,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             // analysisEngine the web uses) so the numbers match
             // across platforms.
             _paymentTileScroll(spendingReceipts),
-            const SizedBox(height: 14),
-
-            // Engagement strip — GuacScore · GuacWizard · GuacMoney
-            // · Rewards. Same 4-tile shape the web dashboard renders;
-            // shares the FutureBuilder-backed BankData with the
-            // PaymentTile row above for a single bank-data fetch.
-            _engagementStrip(spendingReceipts, rewards.length),
             const SizedBox(height: 20),
 
             // Spending chart
@@ -337,39 +341,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     // already supplies 16px horizontal padding; doubling it pushes
     // the headings inward by 32px and squeezes the cards.
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      HorizontalSection(
-        title: 'Your score & insights',
-        subtitle: 'Health checks and ratings',
-        headerPadding: EdgeInsets.zero,
-        listPadding: EdgeInsets.zero,
-        height: 130,
-        children: [
-          // Dashboard — first card so it's the quickest target when
-          // the user lands on /guacscore or /guacwizard and wants a
-          // one-tap path back to the financial overview.
-          FeatureCard(
-            title: 'Dashboard', subtitle: 'Financial snapshot',
-            gradient: kFeatureGradients['lime']!, icon: Icons.dashboard_rounded,
-            onTap: () => context.go('/dashboard'),
-          ),
-          FeatureCard(
-            title: 'Worth It?', subtitle: 'Rate every purchase',
-            gradient: kFeatureGradients['orange']!, emoji: '🥑',
-            onTap: () => context.go(_receiptsDeepLink()),
-          ),
-          FeatureCard(
-            title: 'Guacanomics', subtitle: 'GuacScore + insights',
-            gradient: kFeatureGradients['emerald']!, icon: Icons.auto_awesome,
-            onTap: () => context.go('/guacanomics'),
-          ),
-          FeatureCard(
-            title: 'GuacWizard', subtitle: 'Bank Bite + leaks',
-            gradient: kFeatureGradients['violet']!, icon: Icons.auto_fix_high,
-            onTap: () => context.go('/guacwizard'),
-          ),
-        ],
-      ),
-      const SizedBox(height: 14),
       HorizontalSection(
         title: 'Smart shopping',
         subtitle: 'Save more, find more',
@@ -1104,6 +1075,38 @@ class _GuacScoreResult {
   const _GuacScoreResult({
     required this.score, required this.grade, required this.ratedCount,
   });
+}
+
+/// Same heading layout that HorizontalSection renders, extracted so
+/// callers can pair the heading with custom-bodied rows (the
+/// engagement strip uses its own ListView, so we can't pass it as
+/// `children` to HorizontalSection).
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  final String? subtitle;
+  const _SectionHeader({required this.title, this.subtitle});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 6, 0, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(title,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF111827)),
+          ),
+          if (subtitle != null) ...[
+            const SizedBox(height: 2),
+            Text(subtitle!,
+              style: const TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w500),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 }
 
 class _StoreSpend {

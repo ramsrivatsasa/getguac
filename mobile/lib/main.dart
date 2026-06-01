@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
@@ -126,6 +127,22 @@ class GetGuacApp extends StatelessWidget {
             surface: Colors.white,
           ),
           scaffoldBackgroundColor: const Color(0xFFf8fafc),
+          // Edge-swipe-to-go-back on EVERY platform. Cupertino's
+          // page-transition builder ships the iOS-style drag-from-
+          // left-edge gesture (drag right, screen behind slides
+          // back into view) — on stock Android Material that
+          // gesture isn't wired by default. Applying it to all
+          // TargetPlatform entries gives the same UX everywhere
+          // without rewriting individual routes.
+          pageTransitionsTheme: const PageTransitionsTheme(
+            builders: {
+              TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+              TargetPlatform.iOS:     CupertinoPageTransitionsBuilder(),
+              TargetPlatform.linux:   CupertinoPageTransitionsBuilder(),
+              TargetPlatform.macOS:   CupertinoPageTransitionsBuilder(),
+              TargetPlatform.windows: CupertinoPageTransitionsBuilder(),
+            },
+          ),
           appBarTheme: const AppBarTheme(
             backgroundColor: Colors.white,
             foregroundColor: kBrandPrimaryDk,

@@ -266,29 +266,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
             // first interactive thing the user sees.
             _featurePillScroll(),
             const SizedBox(height: 14),
-            // Spending alerts (auto-hides when none). Reads receipts already
-            // loaded by ReceiptProvider — no extra fetch.
-            AnomaliesCard(receipts: receipts),
-            // Recurring-charge summary. Same auto-hide behaviour.
-            SubscriptionsCard(receipts: spendingReceipts),
-            const SizedBox(height: 18),
 
-            // Spending analysis — one combined section with the
-            // four engagement tiles (GuacScore · GuacWizard ·
-            // GuacMoney · Rewards) followed by the eight financial
-            // PaymentTiles (Transactions / Total Spent / Tax Paid /
-            // Purchases / Payments / Interest Paid / Fees Paid /
-            // Bank Fees). Period selector lives at the top of this
-            // block so the user understands which window the
-            // deltas compare against.
-            const _SectionHeader(title: 'Spending analysis', subtitle: 'Live numbers · tap to drill in'),
+            // Layout mirrors the web /dashboard top section: no
+            // custom headers, the engagement strip + anomaly
+            // banner + PaymentTile scroll just flow in order. The
+            // period picker sits ABOVE the engagement strip so the
+            // window the numbers reference is obvious; the
+            // AnomaliesCard slots between engagement and PaymentTile
+            // rows (matching web's compact pink banner).
             _periodSelector(),
             const SizedBox(height: 8),
             _periodCountRow(filtered.length, rangeLabel),
             const SizedBox(height: 12),
             _engagementStrip(spendingReceipts, rewards.length),
             const SizedBox(height: 10),
+            AnomaliesCard(receipts: receipts),
             _paymentTileScroll(spendingReceipts),
+            const SizedBox(height: 12),
+            // Subscription drift surfaces below the PaymentTile row —
+            // same auto-hide behaviour as the anomalies banner so
+            // it disappears on a clean month.
+            SubscriptionsCard(receipts: spendingReceipts),
             const SizedBox(height: 18),
 
             // _featureSections() (Smart shopping + Quick actions

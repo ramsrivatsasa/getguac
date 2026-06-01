@@ -1,7 +1,7 @@
 {
-  "version": "v0.3.10",
-  "name": "v0.3.10 — Detail screens preserve dashboard data scope + navigation audit tests",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.10/app-arm64-v8a-release.apk",
-  "releaseNotes": "• GuacScore + GuacWizard + Receipt-detail screens now call loadReceipts(period: ReceiptPeriod.all) instead of the default 1-month — visiting them no longer shrinks the dashboard's full-history cache, so the dashboard's tile values don't drift after going back.\n• New automated tests (mobile/test/navigation_back_button_audit_test.dart) — verifies every screen has Scaffold+AppBar (so ← back arrow renders), main.dart wires CupertinoPageTransitionsBuilder for every platform (so left-edge swipe-back works everywhere), and the dashboard never falls back to context.go() (which would break the back stack).\n• Full Dart test suite (13 tests including the 9 cross-platform score fixtures) green.",
+  "version": "v0.3.11",
+  "name": "v0.3.11 — Mobile dashboard layout matches web",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.11/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Mobile dashboard layout now mirrors web exactly: feature pills → engagement strip → compact anomalies banner → 8-tile PaymentTile row → subscriptions card.\n• AnomaliesCard redesigned to the same compact pink/amber single-line banner the web uses — '⚠ 3 spending anomalies · HOUSEHOLD · target · hulu' with chevron-expand + dismiss eye icon. Collapsed by default.\n• TimeframeStore is now reactive — changing the time-frame on /guacwizard or any other screen propagates back to the dashboard live (ValueNotifier singleton).\n• GuacWizard screen uses the shared TimeframePicker widget (Daily/Weekly/Monthly/Yearly + count dropdown) instead of its own Month/YTD/All chips.",
   "publishedAt": "2026-06-01"
 }

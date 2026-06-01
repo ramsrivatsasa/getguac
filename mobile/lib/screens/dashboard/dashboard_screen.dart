@@ -267,26 +267,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _featurePillScroll(),
             const SizedBox(height: 14),
 
-            // Layout mirrors the web /dashboard top section: no
-            // custom headers, the engagement strip + anomaly
-            // banner + PaymentTile scroll just flow in order. The
-            // period picker sits ABOVE the engagement strip so the
-            // window the numbers reference is obvious; the
-            // AnomaliesCard slots between engagement and PaymentTile
-            // rows (matching web's compact pink banner).
+            // Heads-up alerts right after the feature pills — both
+            // auto-hide when nothing's worth flagging, so the
+            // dashboard stays clean on a calm month. Pink anomaly
+            // banner sits first (matches web style), purple
+            // subscription card directly below.
+            AnomaliesCard(receipts: receipts),
+            SubscriptionsCard(receipts: spendingReceipts),
+            const SizedBox(height: 8),
+
+            // Period picker controls the window for all the numbers
+            // below it (engagement strip + PaymentTile deltas).
             _periodSelector(),
             const SizedBox(height: 8),
             _periodCountRow(filtered.length, rangeLabel),
             const SizedBox(height: 12),
             _engagementStrip(spendingReceipts, rewards.length),
             const SizedBox(height: 10),
-            AnomaliesCard(receipts: receipts),
             _paymentTileScroll(spendingReceipts),
-            const SizedBox(height: 12),
-            // Subscription drift surfaces below the PaymentTile row —
-            // same auto-hide behaviour as the anomalies banner so
-            // it disappears on a clean month.
-            SubscriptionsCard(receipts: spendingReceipts),
             const SizedBox(height: 18),
 
             // _featureSections() (Smart shopping + Quick actions

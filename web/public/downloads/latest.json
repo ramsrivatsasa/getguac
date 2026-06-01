@@ -1,7 +1,7 @@
 {
-  "version": "v0.3.11",
-  "name": "v0.3.11 — Mobile dashboard layout matches web",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.11/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Mobile dashboard layout now mirrors web exactly: feature pills → engagement strip → compact anomalies banner → 8-tile PaymentTile row → subscriptions card.\n• AnomaliesCard redesigned to the same compact pink/amber single-line banner the web uses — '⚠ 3 spending anomalies · HOUSEHOLD · target · hulu' with chevron-expand + dismiss eye icon. Collapsed by default.\n• TimeframeStore is now reactive — changing the time-frame on /guacwizard or any other screen propagates back to the dashboard live (ValueNotifier singleton).\n• GuacWizard screen uses the shared TimeframePicker widget (Daily/Weekly/Monthly/Yearly + count dropdown) instead of its own Month/YTD/All chips.",
+  "version": "v0.3.12",
+  "name": "v0.3.12 — Aggregator parity fix + GuacWizard hero card + 31-case test suite",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.12/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Web bankAccountTotals: synthetic-account fallback when user has bank_fees but no bank_statements. Closes the gap where web showed GuacWizard=50 (baseline) while mobile showed 88 (real data). Both engines now produce identical numbers.\n• /guacwizard hero card on mobile — matches the web's emerald-tinted card with avocado mascot + GuacWizard title + score X/100. Score computed from the same Dart engine the dashboard tile uses.\n• Test infrastructure: 31 cross-platform fixture cases (23 score-formula + 8 aggregation-pipeline). Web JS + Mobile Dart both pass all 31. Test report at test-fixtures/TEST_REPORT.html (open in browser → Ctrl+P → Save as PDF).\n• AnomaliesCard + SubscriptionsCard moved to right under the feature-pill row (matches user-requested layout).",
   "publishedAt": "2026-06-01"
 }

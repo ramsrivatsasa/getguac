@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>GetGuac — Cross-Platform Test Report</title>
+<style>
+  @page { size: A4; margin: 18mm; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 760px; margin: 24px auto; color: #1f2937; padding: 0 16px; line-height: 1.45; }
+  h1 { color: #065f46; font-size: 28px; border-bottom: 3px solid #10b981; padding-bottom: 8px; }
+  h2 { color: #047857; margin-top: 28px; font-size: 18px; border-left: 4px solid #34d399; padding-left: 10px; }
+  h3 { color: #065f46; margin-top: 18px; font-size: 14px; }
+  .summary { background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 14px 18px; margin: 18px 0; }
+  .summary .stat { display: inline-block; margin-right: 24px; }
+  .summary .num { font-size: 26px; font-weight: 900; color: #065f46; }
+  .summary .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #047857; }
+  table { border-collapse: collapse; width: 100%; font-size: 12px; margin: 8px 0; }
+  th, td { border: 1px solid #e5e7eb; padding: 6px 8px; text-align: left; vertical-align: top; }
+  th { background: #f0fdf4; color: #065f46; font-weight: 700; font-size: 11px; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .pass { color: #15803d; font-weight: 700; }
+  .fail { color: #b91c1c; font-weight: 700; }
+  code { background: #f3f4f6; padding: 1px 5px; border-radius: 3px; font-size: 11.5px; }
+  pre { background: #1f2937; color: #d1fae5; padding: 12px; border-radius: 6px; font-size: 11px; overflow-x: auto; line-height: 1.4; }
+  .note { background: #fffbeb; border-left: 4px solid #f59e0b; padding: 8px 12px; margin: 10px 0; font-size: 12.5px; }
+  .meta { color: #6b7280; font-size: 12px; margin-top: -8px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media print { h2 { page-break-before: avoid; } }
+</style>
+</head>
+<body>
+
+<h1>🥑 GetGuac — Cross-Platform Test Report</h1>
+<p class="meta">Generated 2026-06-01 · 31 fixture cases × 2 engines (Web JS + Mobile Dart)</p>
+
+<div class="summary">
+  <div class="stat">
+    <div class="num">62 / 62</div>
+    <div class="label">total assertions passing</div>
+  </div>
+  <div class="stat">
+    <div class="num">31</div>
+    <div class="label">fixture cases</div>
+  </div>
+  <div class="stat">
+    <div class="num">2</div>
+    <div class="label">engines (JS + Dart)</div>
+  </div>
+  <div class="stat">
+    <div class="num">3</div>
+    <div class="label">bugs caught + fixed</div>
+  </div>
+</div>
+
+<h2>What this report verifies</h2>
+<p>
+  Both engines — <code>web/src/lib/wizardScore.js</code> +
+  <code>web/src/lib/financeInsights.js</code> on the JS side, and
+  <code>mobile/lib/services/wizard_score.dart</code> on the Dart side —
+  run the SAME input fixture and produce identical output. If they
+  drift, the dashboard tile and the /guacanomics / /guacwizard pages
+  would disagree for the same user. The fixture file at
+  <code>test-fixtures/score-engines.json</code> is the contract.
+</p>
+
+<h2>How to re-run</h2>
+<pre>cd web    &amp;&amp; node scripts/test-score-engines.mjs       (JS engine)
+cd mobile &amp;&amp; flutter test test/services/wizard_score_test.dart  (Dart engine)
+cd web    &amp;&amp; npm run test:parity                       (both)</pre>
+
+<h2>1. computeWizardScore — score-formula tests (23 cases)</h2>
+<p>Pure function: <code>summary</code> + <code>accounts</code> → score 0-100.</p>
+
+<table>
+<tr><th>#</th><th>Case</th><th>Inputs</th><th>Expected</th><th>Web</th><th>Mobile</th><th>Status</th></tr>
+<tr><td>1</td><td>no_data_baseline</td><td>no accounts, no totals</td><td class="num">50</td><td class="num">50</td><td class="num">50</td><td class="pass">✓ pass</td></tr>
+<tr><td>2</td><td>clean_user_no_costs</td><td>0 fees, payments=purchases</td><td class="num">100</td><td class="num">100</td><td class="num">100</td><td class="pass">✓ pass</td></tr>
+<tr><td>3</td><td>interest_50_dollars</td><td>$50 interest</td><td class="num">95</td><td class="num">95</td><td class="num">95</td><td class="pass">✓ pass</td></tr>
+<tr><td>4</td><td>high_apr_card_penalty</td><td>APR 26.99%</td><td class="num">95</td><td class="num">95</td><td class="num">95</td><td class="pass">✓ pass</td></tr>
+<tr><td>5</td><td>interest_350_capped</td><td>$500 interest → cap -35</td><td class="num">65</td><td class="num">65</td><td class="num">65</td><td class="pass">✓ pass</td></tr>
+<tr><td>6</td><td>debt_growing</td><td>netDebtChange=+$400</td><td class="num">92</td><td class="num">92</td><td class="num">92</td><td class="pass">✓ pass</td></tr>
+<tr><td>7</td><td>debt_shrinking_bonus</td><td>netDebtChange=-$500</td><td class="num">100</td><td class="num">100</td><td class="num">100</td><td class="pass">✓ pass</td></tr>
+<tr><td>8</td><td>fees_paid_25_dollars</td><td>$25 fees</td><td class="num">95</td><td class="num">95</td><td class="num">95</td><td class="pass">✓ pass</td></tr>
+<tr><td>9</td><td>two_high_apr_cards</td><td>2 cards ≥ 25% APR</td><td class="num">90</td><td class="num">90</td><td class="num">90</td><td class="pass">✓ pass</td></tr>
+<tr><td>10</td><td>extreme_high_interest_capped</td><td>$10000 interest</td><td class="num">65</td><td class="num">65</td><td class="num">65</td><td class="pass">✓ pass</td></tr>
+<tr><td>11</td><td>extreme_fees_capped_at_20</td><td>$1000 fees</td><td class="num">80</td><td class="num">80</td><td class="num">80</td><td class="pass">✓ pass</td></tr>
+<tr><td>12</td><td>high_apr_AND_high_interest</td><td>stacking</td><td class="num">75</td><td class="num">75</td><td class="num">75</td><td class="pass">✓ pass</td></tr>
+<tr><td>13</td><td>all_metrics_in_play</td><td>4 penalties stacking</td><td class="num">66</td><td class="num">66</td><td class="num">66</td><td class="pass">✓ pass</td></tr>
+<tr><td>14</td><td>apr_just_below_threshold</td><td>24.99%</td><td class="num">100</td><td class="num">100</td><td class="num">100</td><td class="pass">✓ pass</td></tr>
+<tr><td>15</td><td>apr_exactly_at_threshold_25</td><td>25%</td><td class="num">95</td><td class="num">95</td><td class="num">95</td><td class="pass">✓ pass</td></tr>
+<tr><td>16</td><td>tiny_interest_rounds_zero</td><td>$0.01 interest</td><td class="num">100</td><td class="num">100</td><td class="num">100</td><td class="pass">✓ pass</td></tr>
+<tr><td>17</td><td>five_high_apr_cards_stacks</td><td>5 × -5</td><td class="num">75</td><td class="num">75</td><td class="num">75</td><td class="pass">✓ pass</td></tr>
+<tr><td>18</td><td>null_apr_accounts</td><td>2 accounts, null APR</td><td class="num">100</td><td class="num">100</td><td class="num">100</td><td class="pass">✓ pass</td></tr>
+<tr><td>19</td><td>fractional_fees</td><td>$27.50 fees</td><td class="num">94</td><td class="num">94</td><td class="num">94</td><td class="pass">✓ pass</td></tr>
+<tr><td>20</td><td>debt_growing_capped_at_20</td><td>$10K purchases</td><td class="num">80</td><td class="num">80</td><td class="num">80</td><td class="pass">✓ pass</td></tr>
+<tr><td>21</td><td>huge_debt_shrink_capped_at_10</td><td>bonus +10 max</td><td class="num">100</td><td class="num">100</td><td class="num">100</td><td class="pass">✓ pass</td></tr>
+<tr><td>22</td><td>refunds_pull_debt_negative</td><td>refunds &gt; payments</td><td class="num">100</td><td class="num">100</td><td class="num">100</td><td class="pass">✓ pass</td></tr>
+<tr><td>23</td><td>totalPurch_legacy_field</td><td>old field name accepted</td><td class="num">92</td><td class="num">92</td><td class="num">92</td><td class="pass">✓ pass</td></tr>
+</table>
+
+<h2>2. aggregateBankForWizard — pipeline tests (8 cases)</h2>
+<p>Raw bank rows → summary + accounts. This layer was historically the source of most cross-platform drift.</p>
+
+<table>
+<tr><th>#</th><th>Case</th><th>Setup</th><th>Expected interest / fees / accts</th><th>Web</th><th>Mobile</th><th>Status</th></tr>
+<tr><td>24</td><td>fees_only_no_statements</td><td>Fees but no statements</td><td class="num">60 / 30 / 1</td><td class="num">60 / 30 / 1</td><td class="num">60 / 30 / 1</td><td class="pass">✓ pass</td></tr>
+<tr><td>25</td><td>everything_empty</td><td>All arrays empty</td><td class="num">0 / 0 / 0</td><td class="num">0 / 0 / 0</td><td class="num">0 / 0 / 0</td><td class="pass">✓ pass</td></tr>
+<tr><td>26</td><td>fees_outside_window</td><td>Date before startStr</td><td class="num">0 / 0 / 0</td><td class="num">0 / 0 / 0</td><td class="num">0 / 0 / 0</td><td class="pass">✓ pass</td></tr>
+<tr><td>27</td><td>penalty_classified_as_fee</td><td>kind=penalty</td><td class="num">0 / 35 / 1</td><td class="num">0 / 35 / 1</td><td class="num">0 / 35 / 1</td><td class="pass">✓ pass</td></tr>
+<tr><td>28</td><td>transactions_with_flags</td><td>is_interest, is_fee, is_payment</td><td class="num">25 / 15 / 1</td><td class="num">25 / 15 / 1</td><td class="num">25 / 15 / 1</td><td class="pass">✓ pass</td></tr>
+<tr><td>29</td><td>boundary_date_at_start_included</td><td>Date == startStr</td><td class="num">50 / 0 / 1</td><td class="num">50 / 0 / 1</td><td class="num">50 / 0 / 1</td><td class="pass">✓ pass</td></tr>
+<tr><td>30</td><td>boundary_date_at_end_excluded</td><td>Date == endStr (exclusive)</td><td class="num">0 / 0 / 0</td><td class="num">0 / 0 / 0</td><td class="num">0 / 0 / 0</td><td class="pass">✓ pass</td></tr>
+<tr><td>31</td><td>mixed_fees_and_txns_no_dedup</td><td>Same incident in both tables</td><td class="num">120 / 0 / 1</td><td class="num">120 / 0 / 1</td><td class="num">120 / 0 / 1</td><td class="pass">✓ pass</td></tr>
+</table>
+
+<h2>3. Bugs caught + fixed during this test run</h2>
+
+<div class="note">
+  <strong>The whole reason for fixture testing.</strong> Each of these would have caused real user-facing drift between web and mobile.
+</div>
+
+<h3>Bug 1 — Web's <code>bankAccountTotals</code> ignored end-date bound</h3>
+<table>
+<tr><th>Layer</th><th>Symptom</th><th>Root cause</th><th>Fix</th></tr>
+<tr>
+  <td>JS <code>financeInsights.inRange()</code></td>
+  <td>Row dated == endStr was INCLUDED on web but EXCLUDED on Dart</td>
+  <td>JS only checked <code>since</code> (single Date). No upper-bound support.</td>
+  <td>Extended inRange to accept <code>{ start, end }</code> object with exclusive upper bound. getPeriodStart passes through the new shape.</td>
+</tr>
+</table>
+
+<h3>Bug 2 — Wrong expected values in fixtures (writer error)</h3>
+<table>
+<tr><th>Fixture</th><th>Was</th><th>Should be</th><th>Math</th></tr>
+<tr>
+  <td><code>all_metrics_in_play</code></td>
+  <td>56</td>
+  <td>66</td>
+  <td>100 - 8 (interest) - 8 (fees) - 13 (debt) - 5 (APR) = 66</td>
+</tr>
+<tr>
+  <td><code>refunds_pull_debt_negative</code></td>
+  <td>105</td>
+  <td>100</td>
+  <td>Bonus +5 clamps at final <code>min(100, …)</code></td>
+</tr>
+</table>
+
+<h2>4. Cross-platform drift bugs caught in earlier sessions</h2>
+
+<table>
+<tr><th>#</th><th>Bug</th><th>Status</th></tr>
+<tr><td>1</td><td>JS used <code>totalPurch</code>, Dart used <code>totalPurchases</code> — same value, different name</td><td class="pass">Fixed; engine accepts both</td></tr>
+<tr><td>2</td><td>JS expected <code>summary.netDebtChange</code> pre-computed, Dart derived it</td><td class="pass">Fixed; engine falls back to computing from raw fields</td></tr>
+<tr><td>3</td><td>Both engines tripped baseline-50 when fees existed but statements were empty</td><td class="pass">Fixed; both engines now synthesize a placeholder account</td></tr>
+<tr><td>4</td><td>Supabase queries non-deterministic order → web vs mobile picked different "latest" statement</td><td class="pass">Fixed; explicit <code>.order('period_end', desc).order('id')</code> everywhere</td></tr>
+<tr><td>5</td><td><code>periodStartDate</code> returned ms-precision Date → boundary day flipped in/out across renders</td><td class="pass">Fixed; snap to midnight local</td></tr>
+<tr><td>6</td><td>Detail screens called <code>loadReceipts()</code> with default month period → shrinking the dashboard's all-history cache</td><td class="pass">Fixed; <code>ReceiptPeriod.all</code> on every detail screen</td></tr>
+</table>
+
+<h2>5. Test infrastructure summary</h2>
+<table>
+<tr><th>File</th><th>Purpose</th></tr>
+<tr><td><code>test-fixtures/score-engines.json</code></td><td>31 input/output pairs, language-neutral JSON</td></tr>
+<tr><td><code>web/scripts/test-score-engines.mjs</code></td><td>JS runner — Node, no test framework, plain assertions</td></tr>
+<tr><td><code>mobile/test/services/wizard_score_test.dart</code></td><td>Dart runner — flutter_test, reads same JSON</td></tr>
+<tr><td><code>mobile/test/navigation_back_button_audit_test.dart</code></td><td>Static-source audit: every Scaffold has AppBar; main.dart wires Cupertino transitions; dashboard uses context.push()</td></tr>
+<tr><td><code>npm run test:parity</code></td><td>Runs both sides end-to-end</td></tr>
+</table>
+
+<h2>6. What's NOT covered yet (honesty section)</h2>
+<ul>
+  <li><strong>Widget rendering / layout</strong> — automated visual diffs would need golden-file tests. Manual eyeball + screenshots cover this today.</li>
+  <li><strong>Real-data scenarios</strong> — fixtures are synthetic. Your actual receipts/bank rows exercise paths fixtures don't.</li>
+  <li><strong>End-to-end integration</strong> — no test pumps the dashboard, simulates a tap, asserts the destination screen rendered. Possible to add but each test takes 10-30s to run.</li>
+  <li><strong>analysisEngine.computeDashboardAnalysis</strong> — has its own 8-metric output but no parity fixtures yet. (Each tile's value/delta is computed by it.)</li>
+  <li><strong>GuacScore engine (<code>calculateGuacoScore</code>)</strong> — uses a different formula than WizardScore; fixtures not yet written.</li>
+</ul>
+
+<h2>7. To convert this report to PDF</h2>
+<p>
+  Open this file in any browser (double-click <code>test-fixtures/TEST_REPORT.html</code>) →
+  <strong>Ctrl+P</strong> → Destination: <strong>Save as PDF</strong> → Save. Layout is print-styled (A4, narrow margins).
+</p>
+
+<hr style="margin-top: 40px; border: none; border-top: 1px solid #e5e7eb;">
+<p class="meta">
+  GetGuac · Cross-platform parity test report · 2026-06-01<br>
+  Source of truth: <code>test-fixtures/score-engines.json</code>
+</p>
+
+</body>
+</html>

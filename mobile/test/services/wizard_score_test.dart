@@ -11,25 +11,30 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:getguac/services/wizard_score.dart';
+import 'package:getguac/services/analysis_engine.dart';
 
 void main() {
   final fixturesPath = '${Directory.current.path}/../test-fixtures/score-engines.json';
   final raw = File(fixturesPath).readAsStringSync();
   final fixtures = jsonDecode(raw) as Map<String, dynamic>;
   final wizardCases = (fixtures['wizardScore'] as List).cast<Map<String, dynamic>>();
+  final aggCases = (fixtures['aggregateBankForWizard'] as List? ?? []).cast<Map<String, dynamic>>();
 
   group('computeWizardScore — cross-platform fixtures', () {
     for (final c in wizardCases) {
       test(c['name'] as String, () {
         final input = c['input'] as Map<String, dynamic>;
         final expected = c['expected'] as Map<String, dynamic>;
-
+        // Field name can be totalPurch OR totalPurchases (web/Dart drift).
+        // Accept either so the same fixture works on both engines.
+        final s = input['summary'] as Map<String, dynamic>;
+        final purchasesField = s['totalPurchases'] ?? s['totalPurch'] ?? 0;
         final summary = WizardSummary(
-          totalInterest:  _n(input['summary']['totalInterest']),
-          totalFees:      _n(input['summary']['totalFees']),
-          totalPayments:  _n(input['summary']['totalPayments']),
-          totalPurchases: _n(input['summary']['totalPurchases']),
-          totalRefunds:   _n(input['summary']['totalRefunds']),
+          totalInterest:  _n(s['totalInterest']),
+          totalFees:      _n(s['totalFees']),
+          totalPayments:  _n(s['totalPayments']),
+          totalPurchases: _n(purchasesField),
+          totalRefunds:   _n(s['totalRefunds']),
         );
         final accounts = (input['accounts'] as List).map((a) {
           final apr = (a as Map<String, dynamic>)['latestApr'];
@@ -42,6 +47,36 @@ void main() {
       });
     }
   });
+
+  group('aggregateBankForWizard — pipeline fixtures', () {
+    for (final c in aggCases) {
+      test(c['name'] as String, () {
+        final input = c['input'] as Map<String, dynamic>;
+        final expected = c['expected'] as Map<String, dynamic>;
+        final bank = BankData(
+          statements:   List<Map<String, dynamic>>.from(input['statements'] as List),
+          fees:         List<Map<String, dynamic>>.from(input['fees'] as List),
+          transactions: List<Map<String, dynamic>>.from(input['transactions'] as List),
+        );
+        final agg = aggregateBankForWizard(
+          bank: bank,
+          startStr: input['startStr'] as String?,
+          endStr:   input['endStr']   as String?,
+        );
+        final want = expected['summaryTotals'] as Map<String, dynamic>;
+        expect(agg.summary.totalInterest,  equals(_n(want['interest'])),
+          reason: '${c['name']}: interest');
+        expect(agg.summary.totalFees,      equals(_n(want['fees'])),
+          reason: '${c['name']}: fees');
+        expect(agg.summary.totalPayments,  equals(_n(want['payments'])),
+          reason: '${c['name']}: payments');
+        expect(agg.summary.totalPurchases, equals(_n(want['purchases'])),
+          reason: '${c['name']}: purchases');
+        expect(agg.accounts.length, equals(expected['accountsLength']),
+          reason: '${c['name']}: accounts.length');
+      });
+    }
+  });
 }
 
-double _n(dynamic v) => (v as num).toDouble();
+double _n(dynamic v) => v == null ? 0 : (v as num).toDouble();

@@ -8,6 +8,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../providers/receipt_provider.dart';
 import '../../utils/date_format.dart';
 import '../../services/timeframe_store.dart';
+import '../../services/wizard_score.dart';
+import '../../services/analysis_engine.dart';
 import '../../widgets/timeframe_picker.dart';
 
 const _kBrand = Color(0xFF7c3aed);
@@ -85,6 +87,88 @@ class _GuacWizardScreenState extends State<GuacWizardScreen> {
     }
   }
 
+  /// GuacWizard score for the active period — mirrors the web hero
+  /// card's "WIZARD SCORE N / 100". Pipes through the same Dart
+  /// engine the dashboard tile uses (computeWizardScore +
+  /// aggregateBankForWizard) so the two screens never disagree.
+  int? _computeScore() {
+    final cutoffIso = _periodCutoff().toIso8601String().substring(0, 10);
+    final filteredFees = _fees.where((f) => _inPeriod(f['date']?.toString())).toList();
+    if (filteredFees.isEmpty && _fees.isEmpty) {
+      // Nothing fetched yet (still loading) → null so the hero
+      // renders a "—" placeholder, no premature score.
+      return _loading ? null : 100;
+    }
+    final agg = aggregateBankForWizard(
+      bank: BankData(statements: const [], fees: filteredFees, transactions: const []),
+      startStr: cutoffIso,
+      endStr: null,
+    );
+    return computeWizardScore(summary: agg.summary, accounts: agg.accounts).score;
+  }
+
+  /// Tone the hero card by score band — emerald (healthy) / amber
+  /// (watch) / rose (urgent) — same band logic the engagement tile
+  /// uses on the dashboard.
+  ({Color bg, Color text, Color sub}) _heroTone(int? score) {
+    if (score == null) {
+      return (bg: const Color(0xFFf1f5f9), text: const Color(0xFF334155), sub: const Color(0xFF64748b));
+    }
+    if (score >= 65) return (bg: const Color(0xFFecfdf5), text: const Color(0xFF064e3b), sub: const Color(0xFF047857));
+    if (score >= 35) return (bg: const Color(0xFFfffbeb), text: const Color(0xFF78350f), sub: const Color(0xFFb45309));
+    return (bg: const Color(0xFFfff1f2), text: const Color(0xFF881337), sub: const Color(0xFFbe123c));
+  }
+
+  Widget _wizardHero() {
+    final score = _computeScore();
+    final tone = _heroTone(score);
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: tone.bg,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+        Container(
+          width: 64, height: 64,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 6)],
+          ),
+          alignment: Alignment.center,
+          child: const Text('🥑', style: TextStyle(fontSize: 36)),
+        ),
+        const SizedBox(width: 14),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+          Row(children: [
+            Text('GuacWizard', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: tone.text, height: 1.05)),
+            const SizedBox(width: 6),
+            const Text('✨', style: TextStyle(fontSize: 16)),
+          ]),
+          const SizedBox(height: 4),
+          Text('Your money sage. Reads every statement, calls out every leak.',
+            style: TextStyle(fontSize: 12, color: tone.sub, height: 1.3)),
+        ])),
+        Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+          Text('WIZARD SCORE', style: TextStyle(fontSize: 9, letterSpacing: 0.5, fontWeight: FontWeight.w800, color: tone.sub)),
+          const SizedBox(height: 4),
+          RichText(
+            text: TextSpan(children: [
+              TextSpan(text: score == null ? '—' : '$score',
+                style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: tone.text, height: 1)),
+              TextSpan(text: ' / 100',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: tone.sub)),
+            ]),
+          ),
+          const SizedBox(height: 2),
+          Text(_periodLabel(),
+            style: TextStyle(fontSize: 9, color: tone.sub, fontWeight: FontWeight.w600)),
+        ]),
+      ]),
+    );
+  }
+
   String _periodLabel() {
     final unit = _period == TimeframePeriod.daily ? 'day'
                : _period == TimeframePeriod.weekly ? 'week'
@@ -152,7 +236,15 @@ class _GuacWizardScreenState extends State<GuacWizardScreen> {
                 _periodCount = c;
               }),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 18),
+            // GuacWizard hero card — matches web's emerald-tinted
+            // hero with the avocado mascot on the left, title +
+            // tagline in the middle, and X/100 score on the right.
+            // Score is computed via the shared computeWizardScore +
+            // aggregateBankForWizard pipeline so the dashboard tile
+            // and this screen always agree.
+            _wizardHero(),
+            const SizedBox(height: 14),
             // Bank Bite headline
             Container(
               padding: const EdgeInsets.all(20),

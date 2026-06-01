@@ -1,5 +1,5 @@
 {
-  "$comment": "Cross-platform test fixtures. Both web (JS) and mobile (Dart) test suites load this JSON and assert identical engine output for the same input. If you change a fixture, run both `web/npm test` AND `mobile/flutter test` — if they diverge, the engines drift.",
+  "$comment": "Cross-platform test fixtures. Both web (JS) and mobile (Dart) test suites load this JSON and assert identical engine output for the same input. If you change a fixture, run both `web/npm run test:score-engines` AND `mobile/flutter test` — if they diverge, the engines drift.",
   "wizardScore": [
     {
       "name": "no_data_baseline",
@@ -72,6 +72,256 @@
         "accounts": [{ "latestApr": 27 }, { "latestApr": 29.99 }]
       },
       "expected": { "score": 90 }
+    },
+    {
+      "name": "extreme_high_interest_capped",
+      "input": {
+        "summary": { "totalInterest": 10000, "totalFees": 0, "totalPayments": 100, "totalPurchases": 100, "totalRefunds": 0 },
+        "accounts": [{ "latestApr": 18.99 }]
+      },
+      "expected": { "score": 65 }
+    },
+    {
+      "name": "extreme_fees_capped_at_20",
+      "input": {
+        "summary": { "totalInterest": 0, "totalFees": 1000, "totalPayments": 100, "totalPurchases": 100, "totalRefunds": 0 },
+        "accounts": [{ "latestApr": 18.99 }]
+      },
+      "expected": { "score": 80 }
+    },
+    {
+      "name": "high_apr_AND_high_interest",
+      "input": {
+        "summary": { "totalInterest": 100, "totalFees": 50, "totalPayments": 100, "totalPurchases": 200, "totalRefunds": 0 },
+        "accounts": [{ "latestApr": 28.99 }]
+      },
+      "expected": { "score": 75 }
+    },
+    {
+      "name": "all_metrics_in_play",
+      "$comment": "interest 80 → -8, fees 40 → -8, netDebt 650 → -13, high APR → -5, total 100-34=66",
+      "input": {
+        "summary": { "totalInterest": 80, "totalFees": 40, "totalPayments": 100, "totalPurchases": 800, "totalRefunds": 50 },
+        "accounts": [{ "latestApr": 27 }]
+      },
+      "expected": { "score": 66 }
+    },
+    {
+      "name": "apr_just_below_threshold",
+      "input": {
+        "summary": { "totalInterest": 0, "totalFees": 0, "totalPayments": 0, "totalPurchases": 0, "totalRefunds": 0 },
+        "accounts": [{ "latestApr": 24.99 }]
+      },
+      "expected": { "score": 100 }
+    },
+    {
+      "name": "apr_exactly_at_threshold_25",
+      "input": {
+        "summary": { "totalInterest": 0, "totalFees": 0, "totalPayments": 0, "totalPurchases": 0, "totalRefunds": 0 },
+        "accounts": [{ "latestApr": 25 }]
+      },
+      "expected": { "score": 95 }
+    },
+    {
+      "name": "tiny_interest_rounds_to_zero_penalty",
+      "input": {
+        "summary": { "totalInterest": 0.01, "totalFees": 0, "totalPayments": 100, "totalPurchases": 100, "totalRefunds": 0 },
+        "accounts": [{ "latestApr": 18.99 }]
+      },
+      "expected": { "score": 100 }
+    },
+    {
+      "name": "five_high_apr_cards_stacks",
+      "input": {
+        "summary": { "totalInterest": 0, "totalFees": 0, "totalPayments": 0, "totalPurchases": 0, "totalRefunds": 0 },
+        "accounts": [
+          { "latestApr": 27 }, { "latestApr": 28 }, { "latestApr": 29 },
+          { "latestApr": 30 }, { "latestApr": 31 }
+        ]
+      },
+      "expected": { "score": 75 }
+    },
+    {
+      "name": "null_apr_accounts",
+      "input": {
+        "summary": { "totalInterest": 0, "totalFees": 0, "totalPayments": 0, "totalPurchases": 0, "totalRefunds": 0 },
+        "accounts": [{ "latestApr": null }, { "latestApr": null }]
+      },
+      "expected": { "score": 100 }
+    },
+    {
+      "name": "fractional_fees",
+      "input": {
+        "summary": { "totalInterest": 0, "totalFees": 27.50, "totalPayments": 100, "totalPurchases": 100, "totalRefunds": 0 },
+        "accounts": [{ "latestApr": 18.99 }]
+      },
+      "expected": { "score": 94 }
+    },
+    {
+      "name": "debt_growing_capped_at_20",
+      "input": {
+        "summary": { "totalInterest": 0, "totalFees": 0, "totalPayments": 0, "totalPurchases": 10000, "totalRefunds": 0 },
+        "accounts": [{ "latestApr": 18.99 }]
+      },
+      "expected": { "score": 80 }
+    },
+    {
+      "name": "huge_debt_shrink_capped_at_10",
+      "input": {
+        "summary": { "totalInterest": 0, "totalFees": 0, "totalPayments": 10000, "totalPurchases": 100, "totalRefunds": 0 },
+        "accounts": [{ "latestApr": 18.99 }]
+      },
+      "expected": { "score": 100 }
+    },
+    {
+      "name": "refunds_pull_debt_negative",
+      "$comment": "Bonus +5 caps the score at 100 (final clamp)",
+      "input": {
+        "summary": { "totalInterest": 0, "totalFees": 0, "totalPayments": 100, "totalPurchases": 100, "totalRefunds": 500 },
+        "accounts": [{ "latestApr": 18.99 }]
+      },
+      "expected": { "score": 100 }
+    },
+    {
+      "name": "totalPurch_legacy_field_name",
+      "$comment": "Web's generateInsights emits totalPurch (not totalPurchases). The engine must accept either.",
+      "input": {
+        "summary": { "totalInterest": 0, "totalFees": 0, "totalPayments": 100, "totalPurch": 500, "totalRefunds": 0 },
+        "accounts": [{ "latestApr": 18.99 }]
+      },
+      "expected": { "score": 92 }
+    }
+  ],
+  "aggregateBankForWizard": [
+    {
+      "name": "fees_only_no_statements",
+      "input": {
+        "statements": [],
+        "fees": [
+          { "kind": "interest", "amount": 60, "date": "2026-04-15", "statement_id": null },
+          { "kind": "fee",      "amount": 30, "date": "2026-04-10", "statement_id": null }
+        ],
+        "transactions": [],
+        "startStr": "2026-01-01",
+        "endStr": null
+      },
+      "expected": {
+        "summaryTotals": { "interest": 60, "fees": 30, "payments": 0, "purchases": 0 },
+        "accountsLength": 1
+      }
+    },
+    {
+      "name": "everything_empty",
+      "input": { "statements": [], "fees": [], "transactions": [], "startStr": "2026-01-01", "endStr": null },
+      "expected": {
+        "summaryTotals": { "interest": 0, "fees": 0, "payments": 0, "purchases": 0 },
+        "accountsLength": 0
+      }
+    },
+    {
+      "name": "fees_outside_window",
+      "input": {
+        "statements": [],
+        "fees": [
+          { "kind": "interest", "amount": 60, "date": "2025-01-15", "statement_id": null }
+        ],
+        "transactions": [],
+        "startStr": "2026-01-01",
+        "endStr": null
+      },
+      "expected": {
+        "summaryTotals": { "interest": 0, "fees": 0, "payments": 0, "purchases": 0 },
+        "accountsLength": 0
+      }
+    },
+    {
+      "name": "penalty_classified_as_fee",
+      "$comment": "kind='penalty' should roll into the fees bucket, not interest",
+      "input": {
+        "statements": [],
+        "fees": [
+          { "kind": "penalty",  "amount": 35, "date": "2026-04-15", "statement_id": null }
+        ],
+        "transactions": [],
+        "startStr": "2026-01-01",
+        "endStr": null
+      },
+      "expected": {
+        "summaryTotals": { "interest": 0, "fees": 35, "payments": 0, "purchases": 0 },
+        "accountsLength": 1
+      }
+    },
+    {
+      "name": "transactions_with_flags",
+      "input": {
+        "statements": [],
+        "fees": [],
+        "transactions": [
+          { "is_interest": true, "amount": 25, "date": "2026-04-10" },
+          { "is_fee": true,      "amount": 15, "date": "2026-04-11" },
+          { "is_payment": true,  "amount": 500, "date": "2026-04-12" },
+          { "amount": 75, "date": "2026-04-13" }
+        ],
+        "startStr": "2026-01-01",
+        "endStr": null
+      },
+      "expected": {
+        "summaryTotals": { "interest": 25, "fees": 15, "payments": 500, "purchases": 75 },
+        "accountsLength": 1
+      }
+    },
+    {
+      "name": "boundary_date_at_start_included",
+      "$comment": "Row dated EXACTLY on startStr must count IN the window",
+      "input": {
+        "statements": [],
+        "fees": [
+          { "kind": "interest", "amount": 50, "date": "2026-01-01", "statement_id": null }
+        ],
+        "transactions": [],
+        "startStr": "2026-01-01",
+        "endStr": null
+      },
+      "expected": {
+        "summaryTotals": { "interest": 50, "fees": 0, "payments": 0, "purchases": 0 },
+        "accountsLength": 1
+      }
+    },
+    {
+      "name": "boundary_date_at_end_excluded",
+      "$comment": "Row dated EXACTLY on endStr is the start of the NEXT window, not this one",
+      "input": {
+        "statements": [],
+        "fees": [
+          { "kind": "interest", "amount": 50, "date": "2026-03-01", "statement_id": null }
+        ],
+        "transactions": [],
+        "startStr": "2026-01-01",
+        "endStr": "2026-03-01"
+      },
+      "expected": {
+        "summaryTotals": { "interest": 0, "fees": 0, "payments": 0, "purchases": 0 },
+        "accountsLength": 0
+      }
+    },
+    {
+      "name": "mixed_fees_and_transactions_no_double_count",
+      "input": {
+        "statements": [],
+        "fees": [
+          { "kind": "interest", "amount": 60, "date": "2026-04-15", "statement_id": null }
+        ],
+        "transactions": [
+          { "is_interest": true, "amount": 60, "date": "2026-04-15" }
+        ],
+        "startStr": "2026-01-01",
+        "endStr": null
+      },
+      "expected": {
+        "summaryTotals": { "interest": 120, "fees": 0, "payments": 0, "purchases": 0 },
+        "$note": "Both rows sum (we don't dedup — same incident appearing in both tables is rare and the user's data shape dictates the answer)",
+        "accountsLength": 1
+      }
     }
   ]
 }

@@ -11,6 +11,7 @@
 // Run:  cd web && node scripts/test-score-engines.mjs
 
 import { computeWizardScore } from '../src/lib/wizardScore.js'
+import { bankAccountTotals } from '../src/lib/financeInsights.js'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
@@ -19,12 +20,12 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const fixturesPath = join(__dirname, '..', '..', 'test-fixtures', 'score-engines.json')
 
 const fixtures = JSON.parse(readFileSync(fixturesPath, 'utf-8'))
-const cases = fixtures.wizardScore
 
 let pass = 0, fail = 0
 const failures = []
 
-for (const c of cases) {
+console.log('--- computeWizardScore ---')
+for (const c of fixtures.wizardScore) {
   const result = computeWizardScore({
     summary: c.input.summary,
     accounts: c.input.accounts,
@@ -36,6 +37,45 @@ for (const c of cases) {
     fail++
     failures.push(`${c.name}: expected ${c.expected.score}, got ${result.score}`)
     console.log(`  ✗ ${c.name} — expected ${c.expected.score}, got ${result.score}`)
+  }
+}
+
+console.log('\n--- aggregateBankForWizard (pipeline layer) ---')
+for (const c of fixtures.aggregateBankForWizard || []) {
+  // Fixtures pass startStr (always) and endStr (optional). When
+  // endStr is set we want EXCLUSIVE upper-bound semantics so a row
+  // dated == endStr belongs to the NEXT window. Use the new
+  // {start, end} shape that financeInsights.inRange supports.
+  const bound = c.input.endStr
+    ? { start: new Date(c.input.startStr), end: new Date(c.input.endStr) }
+    : new Date(c.input.startStr)
+  const accounts = bankAccountTotals(
+    { statements: c.input.statements, fees: c.input.fees, transactions: c.input.transactions },
+    bound,
+  )
+  const totals = accounts.reduce((t, a) => ({
+    interest:  t.interest  + a.totalInterest,
+    fees:      t.fees      + a.totalFees,
+    payments:  t.payments  + a.totalPayments,
+    purchases: t.purchases + a.totalPurchases,
+  }), { interest: 0, fees: 0, payments: 0, purchases: 0 })
+  const want = c.expected.summaryTotals
+  const wantLen = c.expected.accountsLength
+  const ok =
+       totals.interest  === want.interest
+    && totals.fees      === want.fees
+    && totals.payments  === want.payments
+    && totals.purchases === want.purchases
+    && accounts.length  === wantLen
+  if (ok) {
+    pass++
+    console.log(`  ✓ ${c.name} → interest=${totals.interest}, fees=${totals.fees}, accounts=${accounts.length}`)
+  } else {
+    fail++
+    const detail = `expected interest=${want.interest} fees=${want.fees} accounts=${wantLen}, ` +
+                   `got interest=${totals.interest} fees=${totals.fees} accounts=${accounts.length}`
+    failures.push(`${c.name}: ${detail}`)
+    console.log(`  ✗ ${c.name} — ${detail}`)
   }
 }
 

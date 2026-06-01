@@ -27,10 +27,28 @@ export const PERIODS = [
 export function getPeriodStart(key) {
   if (key instanceof Date) return key
   if (key === null) return null
+  // Bound object (`{ start, end }`) — pass through so inRange can
+  // honour the exclusive upper bound. Cross-platform fixture tests
+  // use this shape.
+  if (key && typeof key === 'object' && ('start' in key || 'end' in key)) return key
   return (PERIODS.find(p => p.key === key) || PERIODS[3]).fn()
 }
 
-const inRange = (dateStr, since) => !since || new Date(dateStr) >= since
+// Accepts either:
+//   - `since` as a Date (the existing single-cutoff use case used
+//     by every web caller today), OR
+//   - a `{ start, end }` object with optional bounds. End is
+//     EXCLUSIVE (row dated == end belongs to the NEXT window). This
+//     matches the Dart aggregator's _inRange so cross-platform
+//     fixtures behave identically.
+const inRange = (dateStr, since) => {
+  if (!since) return true
+  if (since instanceof Date) return new Date(dateStr) >= since
+  // Bound object
+  if (since.start && new Date(dateStr) < since.start) return false
+  if (since.end   && new Date(dateStr) >= since.end)  return false
+  return true
+}
 
 // ─────────────────────────────────────────────────────────────────────────
 // Per-bank-account roll-up over a period
@@ -112,6 +130,45 @@ export function bankAccountTotals({ statements, fees, transactions }, periodKey 
     b.paymentCount   = Math.max(b.paymentCount,   cPaymentCount)
     b.totalPurchases = Math.max(b.totalPurchases, cPurchases)
     b.totalRefunds   = Math.max(b.totalRefunds,   cRefunds)
+  }
+
+  // Fallback for users who have bank_fees / bank_transactions but no
+  // bank_statements yet (e.g. fees imported directly without an
+  // attached statement, or pre-statement-OCR rows). Without this,
+  // generateInsights returns zero-everything → computeWizardScore
+  // trips the "no bank data" baseline path → dashboard shows 50/100
+  // while the user clearly has $60 of interest accumulating.
+  // Matches the mobile aggregator's synthetic-account fallback.
+  if (m.size === 0) {
+    const txnRowsAll = transactions.filter(t => inRange(t.date, since))
+    const feeRowsAll = fees.filter(f => inRange(f.date, since))
+    if (txnRowsAll.length + feeRowsAll.length > 0) {
+      const sumAbs = (a) => a.reduce((n, x) => n + Math.abs(Number(x.amount || 0)), 0)
+      const sumPos = (a) => a.reduce((n, x) => n + Number(x.amount || 0), 0)
+      const paymentRows = txnRowsAll.filter(t => t.is_payment)
+      m.set('synthetic', {
+        key: 'synthetic',
+        issuer: 'Bank',
+        account_last4: null,
+        statementIds: new Set(),
+        statementCount: 0,
+        totalInterest: sumAbs(feeRowsAll.filter(f => f.kind === 'interest'))
+                     + sumAbs(txnRowsAll.filter(t => t.is_interest)),
+        totalFees:     sumAbs(feeRowsAll.filter(f => f.kind === 'fee' || f.kind === 'penalty'))
+                     + sumAbs(txnRowsAll.filter(t => t.is_fee)),
+        totalPayments: sumAbs(paymentRows),
+        paymentCount:  paymentRows.length,
+        totalPurchases: sumPos(txnRowsAll.filter(t =>
+          !t.is_payment && !t.is_fee && !t.is_interest && !t.is_refund && t.amount > 0)),
+        totalRefunds:  sumAbs(txnRowsAll.filter(t =>
+          t.is_refund || (t.amount < 0 && !t.is_payment && !t.is_fee && !t.is_interest))),
+        latestApr: null,
+        latestDueDate: null,
+        latestBalance: null,
+        latestPayoffMonths: null,
+        latestPeriodEnd: null,
+      })
+    }
   }
 
   return [...m.values()]

@@ -58,12 +58,19 @@ export function computeWizardScore({ summary, accounts = [] } = {}) {
     score -= highApr * 5
     reasons.push({ label: `-${highApr * 5}`, why: `${highApr} card(s) above 25% APR` })
   }
-  // Cold-start baseline — if the user hasn't uploaded any statements
-  // yet, peg at 50 so the dashboard tile doesn't show a misleading
-  // 100/100 from "nothing bad found because there's nothing here".
-  if (accounts.length === 0) {
+  // Cold-start baseline — only fires when there's literally NO bank
+  // data at all (no accounts AND no fees/payments/purchases). If the
+  // user has fees but no statements (common when bank rows come in
+  // via direct import rather than statement OCR), the score is
+  // computed from those raw totals instead of falling back to 50.
+  // Matches the mobile aggregator's synthetic-account fallback.
+  const hasAnyData =
+       totalInterest > 0 || totalFees > 0
+    || totalPayments > 0 || totalPurch    > 0
+    || totalRefunds  > 0
+  if (accounts.length === 0 && !hasAnyData) {
     score = 50
-    reasons.push({ label: 'baseline', why: 'No statements uploaded yet' })
+    reasons.push({ label: 'baseline', why: 'No bank data uploaded yet' })
   }
 
   score = Math.max(0, Math.min(100, score))

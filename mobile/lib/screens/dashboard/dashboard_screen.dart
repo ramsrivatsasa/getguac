@@ -19,6 +19,8 @@ import '../../widgets/subscriptions_card.dart';
 import '../../widgets/top_app_bar_actions.dart';
 import '../../widgets/horizontal_section.dart';
 import '../../widgets/feature_card.dart';
+import '../../widgets/payment_tile.dart';
+import '../../services/analysis_engine.dart';
 
 const _kEmerald700 = Color(0xFF15803d);
 const _kEmerald800 = Color(0xFF166534);
@@ -46,10 +48,16 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   _Period _period = _Period.monthly;
   int _periodCount = 3;
+  // Bank data (statements/fees/transactions) is loaded once per
+  // dashboard mount and shared with the 8-tile PaymentTile row.
+  // Future is kicked off in initState so the network round-trip
+  // overlaps with the rest of the page mount.
+  late Future<BankData> _bankDataFuture;
 
   @override
   void initState() {
     super.initState();
+    _bankDataFuture = fetchBankData();
     // Dashboard needs FULL history for cross-period analytics (year-over-
     // year totals, month-by-month bars going back). The list-screen
     // default (1-month, 10-cap) is too narrow for this view — selecting
@@ -211,7 +219,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _periodCountRow(filtered.length, rangeLabel),
             const SizedBox(height: 16),
 
-            // Stat tiles
+            // Financial-tile horizontal scroll — same shape + colors
+            // + delta-vs-prior-period as the web dashboard. Powered
+            // by the shared analysis engine (mobile/lib/services/
+            // analysis_engine.dart, which mirrors the JS
+            // analysisEngine the web uses) so the numbers match
+            // across platforms.
+            _paymentTileScroll(spendingReceipts),
+            const SizedBox(height: 14),
+
+            // Stat tiles (GuacScore, GuacMoney, plain stats)
             _statGrid(filtered, totalSpend, totalTax, rewards.length, trendFmt),
             const SizedBox(height: 20),
 
@@ -416,6 +433,79 @@ class _DashboardScreenState extends State<DashboardScreen> {
         style: const TextStyle(fontSize: 11, color: Colors.black45),
         overflow: TextOverflow.ellipsis)),
     ]);
+  }
+
+  /// 8-tile horizontal scroll row, mirroring the web dashboard's
+  /// `AllPaymentsScroll`. Receipt-side metrics (transactions /
+  /// totalSpent / taxPaid / bankFees) come from the in-memory
+  /// receipts list; bank-side metrics (purchases / payments /
+  /// interestPaid / feesPaid) come from a single bank-data fetch
+  /// kicked off in initState. The shared analysis engine computes
+  /// the current value AND the period-over-period delta for each
+  /// tile so the user gets the same "↑ 12% vs prior" signal here
+  /// as on the web.
+  Widget _paymentTileScroll(List<Receipt> spendingReceipts) {
+    final periodKey = _period == _Period.daily   ? 'daily'
+                    : _period == _Period.weekly  ? 'weekly'
+                    : _period == _Period.yearly  ? 'yearly'
+                    :                              'monthly';
+    return FutureBuilder<BankData>(
+      future: _bankDataFuture,
+      builder: (ctx, snap) {
+        // While loading, render the row with bank tiles at $0 so the
+        // page doesn't pop in late. Receipt-side tiles work from
+        // already-loaded data and show their real value immediately.
+        final bank = snap.data ?? BankData.empty;
+        final a = computeDashboardAnalysis(
+          receipts: spendingReceipts,
+          bank: bank,
+          period: periodKey,
+          periodCount: _periodCount,
+        );
+        String money(double n) => '\$${n.toStringAsFixed(2)}';
+        // (metric-key, formatter, good-direction). good-direction
+        // tints the delta subtext: green when a cost goes DOWN, green
+        // when payments go UP, neutral gray otherwise.
+        final tiles = <List<dynamic>>[
+          ['transactions', (double v) => v.round().toString(), DeltaGoodWhen.neutral],
+          ['totalSpent',   money, DeltaGoodWhen.down],
+          ['taxPaid',      money, DeltaGoodWhen.down],
+          ['purchases',    money, DeltaGoodWhen.neutral],
+          ['payments',     money, DeltaGoodWhen.up],
+          ['interestPaid', money, DeltaGoodWhen.down],
+          ['feesPaid',     money, DeltaGoodWhen.down],
+          ['bankFees',     money, DeltaGoodWhen.down],
+        ];
+        return SizedBox(
+          height: 96,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: EdgeInsets.zero,
+            itemCount: tiles.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 10),
+            itemBuilder: (_, i) {
+              final key = tiles[i][0] as String;
+              final fmt = tiles[i][1] as String Function(double);
+              final dir = tiles[i][2] as DeltaGoodWhen;
+              final preset = kPaymentTilePresets[key]!;
+              final m = a.metrics[key]!;
+              return PaymentTile(
+                emoji: preset.emoji,
+                chipGradient: kPaymentTileGradients[preset.tone]!,
+                label: preset.label,
+                value: fmt(m.current),
+                themeEmoji: preset.themeEmoji,
+                deltaLabel: m.deltaLabel,
+                deltaArrow: m.deltaArrow,
+                deltaGoodWhen: dir,
+                avocadoPos: preset.avocadoPos,
+                themePos: preset.themePos,
+              );
+            },
+          ),
+        );
+      },
+    );
   }
 
   Widget _statGrid(List<Receipt> filtered, double totalSpend, double totalTax, int rewardCount, TrendFormat? spendTrend) {

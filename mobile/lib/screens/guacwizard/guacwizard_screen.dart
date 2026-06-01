@@ -27,7 +27,9 @@ class _GuacWizardScreenState extends State<GuacWizardScreen> {
   void initState() {
     super.initState();
     _loadFees();
-    context.read<ReceiptProvider>().loadReceipts();
+    // ReceiptPeriod.all preserves the dashboard's full-history
+    // cache scope — see the same fix in guacscore_screen.dart.
+    context.read<ReceiptProvider>().loadReceipts(period: ReceiptPeriod.all);
   }
 
   Future<void> _loadFees() async {

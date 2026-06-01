@@ -124,7 +124,10 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
     if (result.ok) {
       // Refresh provider data so the new fields land in the list AND on
       // this detail screen.
-      await context.read<ReceiptProvider>().loadReceipts(force: true);
+      // Force a refetch with `all` so the cache stays at dashboard
+      // scope; default (month) would shrink the cached set and
+      // make the dashboard's tile values drift.
+      await context.read<ReceiptProvider>().loadReceipts(period: ReceiptPeriod.all, force: true);
       await _load();
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Re-parsed. ${result.itemsParsed} item${result.itemsParsed == 1 ? "" : "s"} found.')),

@@ -31,7 +31,11 @@ class _GuacScoreScreenState extends State<GuacScoreScreen> {
   void initState() {
     super.initState();
     _loadBankBite();
-    context.read<ReceiptProvider>().loadReceipts();
+    // ReceiptPeriod.all so navigating to this screen doesn't shrink
+    // the dashboard's full-history cache. Default loadReceipts() is
+    // 1-month — visiting this screen and going back used to leave
+    // the dashboard with only 30 days of data → GuacScore divergence.
+    context.read<ReceiptProvider>().loadReceipts(period: ReceiptPeriod.all);
   }
 
   Future<void> _loadBankBite() async {

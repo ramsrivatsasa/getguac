@@ -1,7 +1,7 @@
 {
-  "version": "v0.3.9",
-  "name": "v0.3.9 — Dashboard Guac-AI pill scroll + WizardScore drift fix + cross-platform parity tests",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.9/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Dashboard greeting now sits right above one horizontal-scroll row of nine Guac-AI pills (Worth It? · Guacanomics · GuacWizard · Steals · Rewards · Stash · Inbox · Car Miles · How It Works) — same widget the Profile screen uses, no more rectangular feature-card rows further down the page.\n• Profile screen 5×2 Guac-AI grid also collapsed to one horizontal scroll.\n• WizardScore engine — synthetic-account fallback when user has bank_fees but no bank_statements (was triggering the 50/100 baseline path). Plus accept either totalPurch/totalPurchases field naming to match the Dart engine.\n• Cross-platform parity tests landed — fixture file at test-fixtures/score-engines.json, runs through BOTH Dart (mobile/test/services/wizard_score_test.dart) AND JS (web/scripts/test-score-engines.mjs). 9/9 cases produce identical scores on both sides. `npm run test:parity` runs both suites.",
+  "version": "v0.3.10",
+  "name": "v0.3.10 — Detail screens preserve dashboard data scope + navigation audit tests",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.10/app-arm64-v8a-release.apk",
+  "releaseNotes": "• GuacScore + GuacWizard + Receipt-detail screens now call loadReceipts(period: ReceiptPeriod.all) instead of the default 1-month — visiting them no longer shrinks the dashboard's full-history cache, so the dashboard's tile values don't drift after going back.\n• New automated tests (mobile/test/navigation_back_button_audit_test.dart) — verifies every screen has Scaffold+AppBar (so ← back arrow renders), main.dart wires CupertinoPageTransitionsBuilder for every platform (so left-edge swipe-back works everywhere), and the dashboard never falls back to context.go() (which would break the back stack).\n• Full Dart test suite (13 tests including the 9 cross-platform score fixtures) green.",
   "publishedAt": "2026-06-01"
 }

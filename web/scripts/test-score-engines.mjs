@@ -12,14 +12,16 @@
 
 import { computeWizardScore } from '../src/lib/wizardScore.js'
 import { bankAccountTotals } from '../src/lib/financeInsights.js'
+import { calculateGuacoScore } from '../src/lib/guacoscore.js'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const fixturesPath = join(__dirname, '..', '..', 'test-fixtures', 'score-engines.json')
+const baseDir = join(__dirname, '..', '..', 'test-fixtures')
 
-const fixtures = JSON.parse(readFileSync(fixturesPath, 'utf-8'))
+const fixtures = JSON.parse(readFileSync(join(baseDir, 'score-engines.json'), 'utf-8'))
+const guacoFixtures = JSON.parse(readFileSync(join(baseDir, 'guacoscore.json'), 'utf-8'))
 
 let pass = 0, fail = 0
 const failures = []
@@ -74,6 +76,29 @@ for (const c of fixtures.aggregateBankForWizard || []) {
     fail++
     const detail = `expected interest=${want.interest} fees=${want.fees} accounts=${wantLen}, ` +
                    `got interest=${totals.interest} fees=${totals.fees} accounts=${accounts.length}`
+    failures.push(`${c.name}: ${detail}`)
+    console.log(`  ✗ ${c.name} — ${detail}`)
+  }
+}
+
+console.log('\n--- calculateGuacoScore ---')
+for (const c of guacoFixtures.cases) {
+  // Convert fixture's camelCase to the snake_case the engine expects
+  const receipts = c.input.receipts.map(r => ({
+    rating: r.rating,
+    total_amount: r.totalAmount,
+  }))
+  const result = calculateGuacoScore(receipts, { bankBite: c.input.bankBite })
+  const okScore = result.score === c.expected.score
+  const okCount = result.ratedCount === c.expected.ratedCount
+  const okPenalty = result.bankPenalty === c.expected.bankPenalty
+  if (okScore && okCount && okPenalty) {
+    pass++
+    console.log(`  ✓ ${c.name} → score=${result.score} rated=${result.ratedCount} penalty=${result.bankPenalty}`)
+  } else {
+    fail++
+    const detail = `expected score=${c.expected.score} rated=${c.expected.ratedCount} penalty=${c.expected.bankPenalty}, ` +
+                   `got score=${result.score} rated=${result.ratedCount} penalty=${result.bankPenalty}`
     failures.push(`${c.name}: ${detail}`)
     console.log(`  ✗ ${c.name} — ${detail}`)
   }

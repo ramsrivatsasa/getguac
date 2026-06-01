@@ -30,25 +30,35 @@
 <body>
 
 <h1>🥑 GetGuac — Cross-Platform Test Report</h1>
-<p class="meta">Generated 2026-06-01 · 31 fixture cases × 2 engines (Web JS + Mobile Dart)</p>
+<p class="meta">Generated 2026-06-01 · 51 fixture cases × 2 engines (Web JS + Mobile Dart) · GuacScore + WizardScore + Aggregator pipeline</p>
 
 <div class="summary">
   <div class="stat">
-    <div class="num">62 / 62</div>
+    <div class="num">106 / 106</div>
     <div class="label">total assertions passing</div>
   </div>
   <div class="stat">
-    <div class="num">31</div>
+    <div class="num">51</div>
     <div class="label">fixture cases</div>
   </div>
   <div class="stat">
-    <div class="num">2</div>
-    <div class="label">engines (JS + Dart)</div>
+    <div class="num">3</div>
+    <div class="label">engines tested</div>
   </div>
   <div class="stat">
     <div class="num">3</div>
-    <div class="label">bugs caught + fixed</div>
+    <div class="label">bugs caught + fixed this run</div>
   </div>
+</div>
+
+<div class="note">
+  <strong>What's covered:</strong>
+  <ul style="margin: 6px 0;">
+    <li><code>computeWizardScore</code> — 23 cases (score-formula edge cases)</li>
+    <li><code>bankAccountTotals</code> aka <code>aggregateBankForWizard</code> — 11 cases (pipeline layer)</li>
+    <li><code>calculateGuacoScore</code> — 17 cases (the other score engine)</li>
+    <li>Mobile-only: 3 navigation/back-button audit tests + 1 widget smoke</li>
+  </ul>
 </div>
 
 <h2>What this report verifies</h2>
@@ -112,7 +122,31 @@ cd web    &amp;&amp; npm run test:parity                       (both)</pre>
 <tr><td>31</td><td>mixed_fees_and_txns_no_dedup</td><td>Same incident in both tables</td><td class="num">120 / 0 / 1</td><td class="num">120 / 0 / 1</td><td class="num">120 / 0 / 1</td><td class="pass">✓ pass</td></tr>
 </table>
 
-<h2>3. Bugs caught + fixed during this test run</h2>
+<h2>3. calculateGuacoScore — GuacScore engine tests (17 cases)</h2>
+<p>Different formula from WizardScore: weighted rating average + bank-bite penalty (interest stings harder per-dollar than fees).</p>
+
+<table>
+<tr><th>#</th><th>Case</th><th>Setup</th><th>Expected score</th><th>Status</th></tr>
+<tr><td>1</td><td>no_rated_purchases_null</td><td>empty receipts</td><td class="num">null</td><td class="pass">✓ pass</td></tr>
+<tr><td>2</td><td>single_five_star_low_value</td><td>1 receipt 5★ $10</td><td class="num">100</td><td class="pass">✓ pass</td></tr>
+<tr><td>3</td><td>single_one_star_low_value</td><td>1 receipt 1★ $10</td><td class="num">0</td><td class="pass">✓ pass</td></tr>
+<tr><td>4</td><td>single_three_star_neutral</td><td>1 receipt 3★ $100</td><td class="num">50</td><td class="pass">✓ pass</td></tr>
+<tr><td>5</td><td>mixed_ratings_weighted_average</td><td>5★ + 1★ equal weight</td><td class="num">50</td><td class="pass">✓ pass</td></tr>
+<tr><td>6</td><td>high_value_5star_outweighs_low_1star</td><td>$1000 5★ vs $10 1★</td><td class="num">99</td><td class="pass">✓ pass</td></tr>
+<tr><td>7</td><td>unrated_receipts_ignored</td><td>rating null skipped</td><td class="num">100</td><td class="pass">✓ pass</td></tr>
+<tr><td>8</td><td>zero_amount_skipped</td><td>amount 0 not counted</td><td class="num">50</td><td class="pass">✓ pass</td></tr>
+<tr><td>9</td><td>bank_bite_no_spending</td><td>bite but no rated</td><td class="num">null</td><td class="pass">✓ pass</td></tr>
+<tr><td>10</td><td>bank_bite_small_relative</td><td>$10 int / $1000 spend</td><td class="num">99</td><td class="pass">✓ pass</td></tr>
+<tr><td>11</td><td>bank_bite_huge_capped</td><td>$500 bite, -25 cap fires</td><td class="num">75</td><td class="pass">✓ pass</td></tr>
+<tr><td>12</td><td>interest_hurts_more_than_fees</td><td>$100 interest only</td><td class="num">86</td><td class="pass">✓ pass</td></tr>
+<tr><td>13</td><td>fees_only_lighter_penalty</td><td>$100 fees only</td><td class="num">88</td><td class="pass">✓ pass</td></tr>
+<tr><td>14</td><td>negative_amount_skipped</td><td>refund row with rating</td><td class="num">null</td><td class="pass">✓ pass</td></tr>
+<tr><td>15</td><td>many_neutral_ratings</td><td>5 × 3★ → exactly 50</td><td class="num">50</td><td class="pass">✓ pass</td></tr>
+<tr><td>16</td><td>all_five_stars</td><td>3 × 5★</td><td class="num">100</td><td class="pass">✓ pass</td></tr>
+<tr><td>17</td><td>all_one_stars_huge_regret</td><td>2 × 1★</td><td class="num">0</td><td class="pass">✓ pass</td></tr>
+</table>
+
+<h2>4. Bugs caught + fixed during this test run</h2>
 
 <div class="note">
   <strong>The whole reason for fixture testing.</strong> Each of these would have caused real user-facing drift between web and mobile.

@@ -305,6 +305,52 @@
       }
     },
     {
+      "name": "many_fees_one_huge",
+      "$comment": "Confirms summation, not picking max",
+      "input": {
+        "statements": [], "transactions": [],
+        "fees": [
+          { "kind": "interest", "amount": 5,    "date": "2026-04-01", "statement_id": null },
+          { "kind": "interest", "amount": 7,    "date": "2026-04-02", "statement_id": null },
+          { "kind": "interest", "amount": 1000, "date": "2026-04-03", "statement_id": null }
+        ],
+        "startStr": "2026-01-01", "endStr": null
+      },
+      "expected": {
+        "summaryTotals": { "interest": 1012, "fees": 0, "payments": 0, "purchases": 0 },
+        "accountsLength": 1
+      }
+    },
+    {
+      "name": "negative_amount_treated_as_abs",
+      "input": {
+        "statements": [], "transactions": [],
+        "fees": [
+          { "kind": "fee", "amount": -25, "date": "2026-04-15", "statement_id": null }
+        ],
+        "startStr": "2026-01-01", "endStr": null
+      },
+      "expected": {
+        "summaryTotals": { "interest": 0, "fees": 25, "payments": 0, "purchases": 0 },
+        "accountsLength": 1
+      }
+    },
+    {
+      "name": "transactions_refund_excluded_from_purchases",
+      "input": {
+        "statements": [], "fees": [],
+        "transactions": [
+          { "amount": 100, "date": "2026-04-15" },
+          { "is_refund": true, "amount": -50, "date": "2026-04-16" }
+        ],
+        "startStr": "2026-01-01", "endStr": null
+      },
+      "expected": {
+        "summaryTotals": { "interest": 0, "fees": 0, "payments": 0, "purchases": 100 },
+        "accountsLength": 1
+      }
+    },
+    {
       "name": "mixed_fees_and_transactions_no_double_count",
       "input": {
         "statements": [],

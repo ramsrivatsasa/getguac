@@ -251,72 +251,73 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _SectionHeader(label: 'Your Guac-AI'),
           const SizedBox(height: 6),
 
-          // Colorful pill grid — matches the dashboard
-          Row(children: [
-            Expanded(child: _Pill(
-              gradient: const [Color(0xFFfbbf24), Color(0xFFf59e0b), Color(0xFFe11d48)],
-              emoji: '🥑', title: 'Worth It?', subtitle: 'Rate every purchase',
-              onTap: () => context.go('/receipts'),
-            )),
-            const SizedBox(width: 10),
-            Expanded(child: _Pill(
-              gradient: const [Color(0xFF22c55e), Color(0xFF15803d)],
-              icon: Icons.auto_awesome, title: 'GuacScore', subtitle: 'Spending grade',
-              onTap: () => context.go('/guacscore'),
-            )),
-          ]),
-          const SizedBox(height: 10),
-          Row(children: [
-            Expanded(child: _Pill(
-              gradient: const [Color(0xFFfcd34d), Color(0xFFca8a04)],
-              icon: Icons.mark_email_unread_rounded, title: 'Inbox', subtitle: 'Mail + auto-receipts',
-              onTap: () => context.go('/inbox'),
-            )),
-            const SizedBox(width: 10),
-            Expanded(child: _Pill(
-              gradient: const [Color(0xFFa78bfa), Color(0xFF7c3aed)],
-              icon: Icons.auto_fix_high, title: 'GuacWizard', subtitle: 'Bank Bite + insights',
-              onTap: () => context.go('/guacwizard'),
-            )),
-          ]),
-          const SizedBox(height: 10),
-          Row(children: [
-            Expanded(child: _Pill(
-              gradient: const [Color(0xFFf472b6), Color(0xFFdb2777)],
-              icon: Icons.card_giftcard_rounded, title: 'Rewards', subtitle: 'Loyalty + expiring',
-              onTap: () => context.go('/rewards'),
-            )),
-            const SizedBox(width: 10),
-            Expanded(child: _Pill(
-              gradient: const [Color(0xFFfde047), Color(0xFFca8a04)],
-              icon: Icons.inventory_2, title: 'Stash', subtitle: 'Everything you own',
-              onTap: () => context.go('/stash'),
-            )),
-          ]),
-          const SizedBox(height: 10),
-          Row(children: [
-            Expanded(child: _Pill(
-              gradient: const [Color(0xFFf9a8d4), Color(0xFFdb2777)],
-              icon: Icons.local_offer, title: 'Steals', subtitle: 'AI price hunt',
-              onTap: () => context.go('/steals'),
-            )),
-            const SizedBox(width: 10),
-            Expanded(child: _Pill(
-              gradient: const [Color(0xFF67e8f9), Color(0xFF0891b2)],
-              icon: Icons.directions_car_filled_rounded, title: 'Car Miles', subtitle: 'Trip log',
-              onTap: () => context.go('/car-miles'),
-            )),
-          ]),
-          const SizedBox(height: 10),
-          Row(children: [
-            Expanded(child: _Pill(
-              gradient: const [Color(0xFF84cc16), Color(0xFF15803d), Color(0xFF064e3b)],
-              emoji: '🥑', title: 'How It Works', subtitle: "Meet Guac-AI in 7 cards",
-              onTap: () => context.go('/how-it-works'),
-            )),
-            const SizedBox(width: 10),
-            const Expanded(child: SizedBox.shrink()),
-          ]),
+          // Single horizontal-scroll row — same pattern the
+          // dashboard uses now. All 9 Guac-AI pills slide instead
+          // of stacking into a 5×2 grid that ate half the screen.
+          // Each pill is fixed-width (180px) so the row reads as
+          // a swipeable carousel.
+          SizedBox(
+            height: 64,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: EdgeInsets.zero,
+              children: [
+                SizedBox(width: 180, child: _Pill(
+                  gradient: const [Color(0xFFfbbf24), Color(0xFFf59e0b), Color(0xFFe11d48)],
+                  emoji: '🥑', title: 'Worth It?', subtitle: 'Rate every purchase',
+                  onTap: () => context.push('/receipts'),
+                )),
+                const SizedBox(width: 10),
+                SizedBox(width: 180, child: _Pill(
+                  gradient: const [Color(0xFF22c55e), Color(0xFF15803d)],
+                  icon: Icons.auto_awesome, title: 'GuacScore', subtitle: 'Spending grade',
+                  onTap: () => context.push('/guacscore'),
+                )),
+                const SizedBox(width: 10),
+                SizedBox(width: 180, child: _Pill(
+                  gradient: const [Color(0xFFfcd34d), Color(0xFFca8a04)],
+                  icon: Icons.mark_email_unread_rounded, title: 'Inbox', subtitle: 'Mail + auto-receipts',
+                  onTap: () => context.push('/inbox'),
+                )),
+                const SizedBox(width: 10),
+                SizedBox(width: 180, child: _Pill(
+                  gradient: const [Color(0xFFa78bfa), Color(0xFF7c3aed)],
+                  icon: Icons.auto_fix_high, title: 'GuacWizard', subtitle: 'Bank Bite + insights',
+                  onTap: () => context.push('/guacwizard'),
+                )),
+                const SizedBox(width: 10),
+                SizedBox(width: 180, child: _Pill(
+                  gradient: const [Color(0xFFf472b6), Color(0xFFdb2777)],
+                  icon: Icons.card_giftcard_rounded, title: 'Rewards', subtitle: 'Loyalty + expiring',
+                  onTap: () => context.push('/rewards'),
+                )),
+                const SizedBox(width: 10),
+                SizedBox(width: 180, child: _Pill(
+                  gradient: const [Color(0xFFfde047), Color(0xFFca8a04)],
+                  icon: Icons.inventory_2, title: 'Stash', subtitle: 'Everything you own',
+                  onTap: () => context.push('/stash'),
+                )),
+                const SizedBox(width: 10),
+                SizedBox(width: 180, child: _Pill(
+                  gradient: const [Color(0xFFf9a8d4), Color(0xFFdb2777)],
+                  icon: Icons.local_offer, title: 'Steals', subtitle: 'AI price hunt',
+                  onTap: () => context.push('/steals'),
+                )),
+                const SizedBox(width: 10),
+                SizedBox(width: 180, child: _Pill(
+                  gradient: const [Color(0xFF67e8f9), Color(0xFF0891b2)],
+                  icon: Icons.directions_car_filled_rounded, title: 'Car Miles', subtitle: 'Trip log',
+                  onTap: () => context.push('/car-miles'),
+                )),
+                const SizedBox(width: 10),
+                SizedBox(width: 180, child: _Pill(
+                  gradient: const [Color(0xFF84cc16), Color(0xFF15803d), Color(0xFF064e3b)],
+                  emoji: '🥑', title: 'How It Works', subtitle: 'Meet Guac-AI in 7 cards',
+                  onTap: () => context.push('/how-it-works'),
+                )),
+              ],
+            ),
+          ),
 
           const SizedBox(height: 18),
           _SectionHeader(label: 'More'),

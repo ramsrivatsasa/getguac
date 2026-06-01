@@ -344,6 +344,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
         listPadding: EdgeInsets.zero,
         height: 130,
         children: [
+          // Dashboard — first card so it's the quickest target when
+          // the user lands on /guacscore or /guacwizard and wants a
+          // one-tap path back to the financial overview.
+          FeatureCard(
+            title: 'Dashboard', subtitle: 'Financial snapshot',
+            gradient: kFeatureGradients['lime']!, icon: Icons.dashboard_rounded,
+            onTap: () => context.go('/dashboard'),
+          ),
           FeatureCard(
             title: 'Worth It?', subtitle: 'Rate every purchase',
             gradient: kFeatureGradients['orange']!, emoji: '🥑',
@@ -352,7 +360,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           FeatureCard(
             title: 'Guacanomics', subtitle: 'GuacScore + insights',
             gradient: kFeatureGradients['emerald']!, icon: Icons.auto_awesome,
-            onTap: () => context.go('/guacscore'),
+            onTap: () => context.go('/guacanomics'),
           ),
           FeatureCard(
             title: 'GuacWizard', subtitle: 'Bank Bite + leaks',
@@ -494,19 +502,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
         }
         // GuacScore — rated-purchase weighted average + bank-bite penalty
         final guacScore = _computeGuacScore(spendingReceipts, bank, since);
-        return Column(children: [
-          Row(children: [
-            Expanded(child: _guacScoreTile(guacScore)),
-            const SizedBox(width: 10),
-            Expanded(child: _guacWizardTile(wiz, isLoading)),
-          ]),
-          const SizedBox(height: 10),
-          Row(children: [
-            Expanded(child: _guacMoneyTile()),
-            const SizedBox(width: 10),
-            Expanded(child: _rewardsTile(rewardCount)),
-          ]),
-        ]);
+        // Horizontal-scroll row so all four engagement tiles read
+        // as a single swipeable strip rather than a dense 2×2
+        // grid. Each card has an onTap that routes to its detail
+        // screen (GuacScore → /guacanomics, GuacWizard →
+        // /guacwizard, GuacMoney → /shopping for the Cheapest
+        // flow, Rewards → /rewards).
+        return SizedBox(
+          height: 92,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            padding: EdgeInsets.zero,
+            children: [
+              SizedBox(width: 180, child: _guacScoreTile(guacScore)),
+              const SizedBox(width: 10),
+              SizedBox(width: 180, child: _guacWizardTile(wiz, isLoading)),
+              const SizedBox(width: 10),
+              SizedBox(width: 180, child: _guacMoneyTile()),
+              const SizedBox(width: 10),
+              SizedBox(width: 180, child: _rewardsTile(rewardCount)),
+            ],
+          ),
+        );
       },
     );
   }
@@ -563,7 +580,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       labelColor: tone.label, valueColor: tone.value, subColor: tone.sub,
       themeEmoji: '😋',
       iconChild: Center(child: Text(r.score == null ? '🥑' : '😊', style: const TextStyle(fontSize: 20))),
-      onTap: () => context.go('/guacscore'),
+      // Both surfaces route to /guacanomics — the page that
+      // displays the GuacScore + the supporting analytics
+      // (mirrors how the web works: GuacScore lives inside
+      // /guacanomics, not its own dedicated route).
+      onTap: () => context.go('/guacanomics'),
     );
   }
 
@@ -614,6 +635,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           labelColor: tone.label, valueColor: tone.value, subColor: tone.sub,
           icon: Icons.savings_outlined,
           themeEmoji: '💰',
+          // Cheapest-routing lives on /shopping (Smashlist) — that
+          // page is where saves get logged into GuacMoney, so it's
+          // the right destination for users who tap the tile.
+          onTap: () => context.go('/shopping'),
         );
       },
     );

@@ -216,17 +216,28 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
       {/* Stat tiles — GuacScore leads, then GuacWizard right next
           to it (paired engagement scores), then GuacMoney, then
           financial tiles, then Smash days last per user request. */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        {/* GuacScore reads lifetime rated purchases, not just the
-            current period filter — otherwise a 3-month dashboard
-            window with no rated purchases inside it shows score=0
-            even when the user has rated items further back. The
-            big card on /guacanomics already uses a wider window;
-            this matches that behavior. */}
-        <GuacScoreTileWithBankBite receipts={spendingReceipts} period={period} periodCount={periodCount} />
-        <GuacWizardTile />
-        <GuacMoneyTile />
-        <RewardsTile count={initialRewards.length} />
+      {/* Engagement strip — single horizontal scroll so the row
+          reads as a swipeable carousel (matching the mobile
+          dashboard's behaviour). Each tile is the same fixed
+          width so the layout doesn't reflow as data lands; each
+          carries an onTap routed to its detail surface
+          (GuacScore → /guacanomics, GuacWizard → /guacwizard,
+          GuacMoney → /shopping, Rewards → /rewards). */}
+      <div className="-mx-2 px-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex gap-3 min-w-max">
+          {/* GuacScore reads lifetime rated purchases, not just the
+              current period filter — otherwise a 3-month dashboard
+              window with no rated purchases inside it shows score=0
+              even when the user has rated items further back. The
+              big card on /guacanomics already uses a wider window;
+              this matches that behavior. */}
+          <Link href="/guacanomics" className="w-64 shrink-0 block">
+            <GuacScoreTileWithBankBite receipts={spendingReceipts} period={period} periodCount={periodCount} />
+          </Link>
+          <div className="w-64 shrink-0"><GuacWizardTile /></div>
+          <Link href="/shopping" className="w-64 shrink-0 block"><GuacMoneyTile /></Link>
+          <div className="w-64 shrink-0"><RewardsTile count={initialRewards.length} /></div>
+        </div>
       </div>
 
       {/* Spending anomalies sits ABOVE the financial-tile scroll so

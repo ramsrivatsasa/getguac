@@ -81,6 +81,11 @@ final appRouter = GoRouter(
           );
         }),
         GoRoute(path: '/guacscore', builder: (_, __) => const GuacScoreScreen()),
+        // /guacanomics — alias for /guacscore so the mobile route
+        // name matches the web's /guacanomics page (where the
+        // GuacScore is the headline content). Both render the same
+        // screen.
+        GoRoute(path: '/guacanomics', builder: (_, __) => const GuacScoreScreen()),
         GoRoute(path: '/guacwizard', builder: (_, __) => const GuacWizardScreen()),
         GoRoute(path: '/stash', builder: (_, __) => const StashScreen()),
         GoRoute(path: '/steals', builder: (_, __) => const StealsScreen()),

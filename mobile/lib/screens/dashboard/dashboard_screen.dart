@@ -74,14 +74,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _periodCount = tf.count;
       });
     });
-    // Dashboard needs FULL history for cross-period analytics (year-over-
-    // year totals, month-by-month bars going back). The list-screen
-    // default (1-month, 10-cap) is too narrow for this view — selecting
-    // Monthly·36 should chart 36 months of bars, not the same 10 rows.
-    // Provider caches by period, so other screens that explicitly call
-    // with `month` will still get the lighter payload.
+    // Listen for changes from OTHER screens. If the user opens
+    // /guacscore or /guacwizard and flips the time-frame there,
+    // popping back to the dashboard must show the new selection +
+    // recomputed numbers. The store's ValueNotifier fires every
+    // save() across the app — we just push the new value into our
+    // local state so the build picks it up.
+    TimeframeStore.notifier.addListener(_onTimeframeChanged);
+    // Dashboard needs FULL history for cross-period analytics
+    // (year-over-year totals, month-by-month bars). The list-screen
+    // default (1-month, 10-cap) is too narrow.
     context.read<ReceiptProvider>().loadReceipts(period: ReceiptPeriod.all);
     context.read<RewardProvider>().loadRewards();
+  }
+
+  void _onTimeframeChanged() {
+    if (!mounted) return;
+    final tf = TimeframeStore.notifier.value;
+    final p = _periodFromKey(tf.period);
+    if (p == _period && tf.count == _periodCount) return;
+    setState(() {
+      _period = p;
+      _periodCount = tf.count;
+    });
+  }
+
+  @override
+  void dispose() {
+    TimeframeStore.notifier.removeListener(_onTimeframeChanged);
+    super.dispose();
   }
 
   /// Cutoff as a YYYY-MM-DD string. Mirrors the web filter so receipt

@@ -7,6 +7,8 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../providers/receipt_provider.dart';
 import '../../utils/date_format.dart';
+import '../../services/timeframe_store.dart';
+import '../../widgets/timeframe_picker.dart';
 
 const _kBrand = Color(0xFF7c3aed);
 
@@ -16,10 +18,14 @@ class GuacWizardScreen extends StatefulWidget {
   State<GuacWizardScreen> createState() => _GuacWizardScreenState();
 }
 
-enum _Period { thisMonth, ytd, all }
-
 class _GuacWizardScreenState extends State<GuacWizardScreen> {
-  _Period _period = _Period.thisMonth;
+  // Time-frame is hydrated from the shared TimeframeStore so this
+  // screen agrees with the dashboard the moment the user lands on
+  // it. Changing the picker here writes back to the store —
+  // popping back to the dashboard, the dashboard's listener
+  // updates instantly.
+  TimeframePeriod _period = TimeframePeriod.monthly;
+  int _periodCount = 3;
   bool _loading = true;
   List<Map<String, dynamic>> _fees = [];
 
@@ -27,6 +33,16 @@ class _GuacWizardScreenState extends State<GuacWizardScreen> {
   void initState() {
     super.initState();
     _loadFees();
+    // Hydrate time-frame from the shared store + listen for changes
+    // made on other screens (or popped back from this one).
+    TimeframeStore.load().then((tf) {
+      if (!mounted) return;
+      setState(() {
+        _period = timeframePeriodFromString(tf.period);
+        _periodCount = tf.count;
+      });
+    });
+    TimeframeStore.notifier.addListener(_onTimeframeChanged);
     // ReceiptPeriod.all preserves the dashboard's full-history
     // cache scope — see the same fix in guacscore_screen.dart.
     context.read<ReceiptProvider>().loadReceipts(period: ReceiptPeriod.all);
@@ -51,13 +67,47 @@ class _GuacWizardScreenState extends State<GuacWizardScreen> {
   }
 
   bool _inPeriod(String? dateStr) {
-    if (_period == _Period.all) return true;
     if (dateStr == null) return false;
     final d = DateTime.tryParse(dateStr);
     if (d == null) return false;
+    final since = _periodCutoff();
+    return !d.isBefore(since);
+  }
+
+  DateTime _periodCutoff() {
     final now = DateTime.now();
-    if (_period == _Period.thisMonth) return d.year == now.year && d.month == now.month;
-    return d.year == now.year;
+    final n = _periodCount < 1 ? 1 : _periodCount;
+    switch (_period) {
+      case TimeframePeriod.daily:   return DateTime(now.year, now.month, now.day - n);
+      case TimeframePeriod.weekly:  return DateTime(now.year, now.month, now.day - n * 7);
+      case TimeframePeriod.monthly: return DateTime(now.year, now.month - n, now.day);
+      case TimeframePeriod.yearly:  return DateTime(now.year - n, now.month, now.day);
+    }
+  }
+
+  String _periodLabel() {
+    final unit = _period == TimeframePeriod.daily ? 'day'
+               : _period == TimeframePeriod.weekly ? 'week'
+               : _period == TimeframePeriod.monthly ? 'month'
+               : 'year';
+    return 'Last $_periodCount $unit${_periodCount == 1 ? '' : 's'}';
+  }
+
+  void _onTimeframeChanged() {
+    if (!mounted) return;
+    final tf = TimeframeStore.notifier.value;
+    final p = timeframePeriodFromString(tf.period);
+    if (p == _period && tf.count == _periodCount) return;
+    setState(() {
+      _period = p;
+      _periodCount = tf.count;
+    });
+  }
+
+  @override
+  void dispose() {
+    TimeframeStore.notifier.removeListener(_onTimeframeChanged);
+    super.dispose();
   }
 
   @override
@@ -90,15 +140,17 @@ class _GuacWizardScreenState extends State<GuacWizardScreen> {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            // Period picker
-            SegmentedButton<_Period>(
-              segments: const [
-                ButtonSegment(value: _Period.thisMonth, label: Text('Month')),
-                ButtonSegment(value: _Period.ytd, label: Text('YTD')),
-                ButtonSegment(value: _Period.all, label: Text('All')),
-              ],
-              selected: {_period},
-              onSelectionChanged: (s) => setState(() => _period = s.first),
+            // Shared time-frame picker — same widget the dashboard
+            // uses. Reads/writes TimeframeStore so changes here
+            // propagate back to the dashboard via the store's
+            // ValueNotifier.
+            TimeframePicker(
+              period: _period,
+              count: _periodCount,
+              onChange: (p, c) => setState(() {
+                _period = p;
+                _periodCount = c;
+              }),
             ),
             const SizedBox(height: 20),
             // Bank Bite headline
@@ -126,7 +178,7 @@ class _GuacWizardScreenState extends State<GuacWizardScreen> {
                   const Text('Bank Bite', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.black54)),
                   Text('\$${bite.toStringAsFixed(2)}',
                     style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w900, color: _kBrand)),
-                  Text(_period == _Period.thisMonth ? 'this month' : _period == _Period.ytd ? 'year to date' : 'all time',
+                  Text(_periodLabel(),
                     style: const TextStyle(fontSize: 11, color: Colors.black54)),
                 ])),
               ]),

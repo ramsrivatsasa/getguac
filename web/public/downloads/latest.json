@@ -1,7 +1,7 @@
 {
-  "version": "v0.3.6",
-  "name": "v0.3.6 — engagement strip up top + swipe-back",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.6/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Engagement strip (GuacScore · GuacWizard · GuacMoney · Rewards with live values) promoted to the top of the dashboard, replacing the redundant 'Your score & insights' static cards.\n• Swipe-from-left-edge anywhere now goes back to the previous screen (Cupertino-style page transitions enabled on every platform).\n• New 'Check for update' pill on the Profile screen — manually triggers the same flow the auto-check fires, so you can pull updates on demand.\n• In-app update detector reads getguac.app/downloads/latest.json so each new build prompts within seconds of opening the app.",
+  "version": "v0.3.7",
+  "name": "v0.3.7 — Spending analysis combined section + working back nav",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.7/app-arm64-v8a-release.apk",
+  "releaseNotes": "• 'Spending analysis' — engagement strip (GuacScore · GuacWizard · GuacMoney · Rewards) + 8-tile PaymentTile row consolidated under a single section with the period selector right above them, so it's clear what window the deltas are comparing.\n• Back navigation actually works now — left-edge swipe pops the current screen, every AppBar shows the ← arrow, and drill-in taps build a real back stack (engagement tiles + feature cards switched from go() to push()).\n• Smaller feature cards in the Smart shopping + Quick actions rows so the row feels lighter.\n• Check for update pill on the Profile screen (manual trigger of the same flow the auto-check uses).",
   "publishedAt": "2026-06-01"
 }

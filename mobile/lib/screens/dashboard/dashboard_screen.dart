@@ -242,36 +242,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
             SubscriptionsCard(receipts: spendingReceipts),
             const SizedBox(height: 18),
 
-            // Engagement strip — GuacScore · GuacWizard · GuacMoney
-            // · Rewards with REAL values. Promoted to the top
-            // position (where the static "Your score & insights"
-            // feature-card row used to live) since these tiles
-            // already navigate to the same destinations AND display
-            // actual numbers. No reason to render both. Each tile
-            // tap routes to its detail screen (see _engagementStrip).
-            const _SectionHeader(title: 'Your score & insights', subtitle: 'Live numbers · tap to drill in'),
-            _engagementStrip(spendingReceipts, rewards.length),
-            const SizedBox(height: 18),
-
-            // Remaining feature sections — Smart shopping + Quick
-            // actions. "Your score & insights" group dropped from
-            // here; the engagement strip above covers it.
-            _featureSections(),
-            const SizedBox(height: 18),
-
-            // Period selector pill
+            // Spending analysis — one combined section with the
+            // four engagement tiles (GuacScore · GuacWizard ·
+            // GuacMoney · Rewards) followed by the eight financial
+            // PaymentTiles (Transactions / Total Spent / Tax Paid /
+            // Purchases / Payments / Interest Paid / Fees Paid /
+            // Bank Fees). Period selector lives at the top of this
+            // block so the user understands which window the
+            // deltas compare against.
+            const _SectionHeader(title: 'Spending analysis', subtitle: 'Live numbers · tap to drill in'),
             _periodSelector(),
             const SizedBox(height: 8),
             _periodCountRow(filtered.length, rangeLabel),
-            const SizedBox(height: 16),
-
-            // Financial-tile horizontal scroll — same shape + colors
-            // + delta-vs-prior-period as the web dashboard. Powered
-            // by the shared analysis engine (mobile/lib/services/
-            // analysis_engine.dart, which mirrors the JS
-            // analysisEngine the web uses) so the numbers match
-            // across platforms.
+            const SizedBox(height: 12),
+            _engagementStrip(spendingReceipts, rewards.length),
+            const SizedBox(height: 10),
             _paymentTileScroll(spendingReceipts),
+            const SizedBox(height: 18),
+
+            // Remaining feature sections — Smart shopping + Quick
+            // actions. "Your score & insights" static-card row is
+            // gone; the engagement strip in Spending analysis above
+            // covers those destinations with live values.
+            _featureSections(),
             const SizedBox(height: 20),
 
             // Spending chart
@@ -351,17 +344,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
           FeatureCard(
             title: 'Steals', subtitle: 'AI price hunt',
             gradient: kFeatureGradients['pink']!, icon: Icons.local_offer,
-            onTap: () => context.go('/steals'),
+            onTap: () => context.push('/steals'),
           ),
           FeatureCard(
             title: 'Rewards', subtitle: 'Loyalty + expiring',
             gradient: kFeatureGradients['rose']!, icon: Icons.card_giftcard_rounded,
-            onTap: () => context.go('/rewards'),
+            onTap: () => context.push('/rewards'),
           ),
           FeatureCard(
             title: 'Stash', subtitle: 'Everything you own',
             gradient: kFeatureGradients['yellow']!, icon: Icons.inventory_2,
-            onTap: () => context.go('/stash'),
+            onTap: () => context.push('/stash'),
           ),
         ],
       ),
@@ -376,12 +369,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
           FeatureCard(
             title: 'Inbox', subtitle: 'Mail + auto-receipts',
             gradient: kFeatureGradients['amber']!, icon: Icons.mark_email_unread_rounded,
-            onTap: () => context.go('/inbox'),
+            onTap: () => context.push('/inbox'),
           ),
           FeatureCard(
             title: 'Car Miles', subtitle: 'Trip log',
             gradient: kFeatureGradients['teal']!, icon: Icons.directions_car_filled_rounded,
-            onTap: () => context.go('/car-miles'),
+            onTap: () => context.push('/car-miles'),
           ),
         ],
       ),
@@ -555,7 +548,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       // displays the GuacScore + the supporting analytics
       // (mirrors how the web works: GuacScore lives inside
       // /guacanomics, not its own dedicated route).
-      onTap: () => context.go('/guacanomics'),
+      onTap: () => context.push('/guacanomics'),
     );
   }
 
@@ -586,7 +579,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       labelColor: tone.label, valueColor: tone.value, subColor: tone.sub,
       icon: Icons.auto_fix_high,
       themeEmoji: '🧙‍♂️',
-      onTap: () => context.go('/guacwizard'),
+      onTap: () => context.push('/guacwizard'),
     );
   }
 
@@ -609,7 +602,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           // Cheapest-routing lives on /shopping (Smashlist) — that
           // page is where saves get logged into GuacMoney, so it's
           // the right destination for users who tap the tile.
-          onTap: () => context.go('/shopping'),
+          onTap: () => context.push('/shopping'),
         );
       },
     );
@@ -625,7 +618,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       labelColor: tone.label, valueColor: tone.value, subColor: tone.sub,
       icon: Icons.card_giftcard_rounded,
       themeEmoji: '🎁',
-      onTap: () => context.go('/rewards'),
+      onTap: () => context.push('/rewards'),
     );
   }
 
@@ -718,7 +711,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           iconBg: _kEmerald100,
           iconChild: const GuacMascot(size: 38),
           valueColor: _kEmerald800,
-          onTap: () => context.go('/guacscore'),
+          onTap: () => context.push('/guacscore'),
         )),
         const SizedBox(width: 10),
         // GuacMoney tile — pulls the user's lifetime accumulated saved
@@ -774,7 +767,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           icon: Icons.receipt_long,
           iconBg: const Color(0xFFd1fae5),
           iconColor: _kEmerald700,
-          onTap: () => context.go(_receiptsDeepLink()),
+          onTap: () => context.push(_receiptsDeepLink()),
         )),
         const SizedBox(width: 10),
         Expanded(child: _StatTile(
@@ -783,7 +776,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           icon: Icons.card_giftcard,
           iconBg: const Color(0xFFecfccb),
           iconColor: const Color(0xFF65a30d),
-          onTap: () => context.go('/rewards'),
+          onTap: () => context.push('/rewards'),
         )),
       ]),
       const SizedBox(height: 10),
@@ -878,7 +871,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   // filtered receipts list can't disagree on which rows
                   // fall inside "Last N months" — the chip-bucket
                   // (1M/3M/6M/1Y) is too coarse for calendar-month math.
-                  context.go(_receiptsDeepLink(store: store));
+                  context.push(_receiptsDeepLink(store: store));
                 },
               ),
               barGroups: topData.asMap().entries.map((e) => BarChartGroupData(
@@ -927,7 +920,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         Row(children: [
           const Expanded(child: Text('Recent Transactions', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14))),
           InkWell(
-            onTap: () => context.go(_receiptsDeepLink()),
+            onTap: () => context.push(_receiptsDeepLink()),
             child: const Padding(padding: EdgeInsets.all(4), child: Icon(Icons.arrow_forward, size: 16, color: _kEmerald700)),
           ),
         ]),
@@ -939,7 +932,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           subtitle: Text(formatDateShort(r.date), style: const TextStyle(fontSize: 11, color: Colors.black45)),
           trailing: Text('\$${r.totalAmount.toStringAsFixed(2)}',
             style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
-          onTap: () => context.go('/receipts/${r.id}'),
+          onTap: () => context.push('/receipts/${r.id}'),
         )),
       ]),
     );
@@ -957,7 +950,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         Row(children: [
           const Expanded(child: Text('Rewards', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14))),
           InkWell(
-            onTap: () => context.go('/rewards'),
+            onTap: () => context.push('/rewards'),
             child: const Padding(padding: EdgeInsets.all(4), child: Icon(Icons.arrow_forward, size: 16, color: _kEmerald700)),
           ),
         ]),
@@ -977,7 +970,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800,
                 color: r.isExpired ? const Color(0xFF991b1b) : _kEmerald800)),
           ),
-          onTap: () => context.go('/rewards/${r.id}'),
+          onTap: () => context.push('/rewards/${r.id}'),
         )),
       ]),
     );

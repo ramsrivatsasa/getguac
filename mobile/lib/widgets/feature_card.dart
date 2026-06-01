@@ -23,7 +23,7 @@ class FeatureCard extends StatelessWidget {
     this.emoji,
     this.icon,
     this.onTap,
-    this.width = 150,
+    this.width = 118,
   });
 
   @override

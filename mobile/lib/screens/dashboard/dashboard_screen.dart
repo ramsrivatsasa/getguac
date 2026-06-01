@@ -17,6 +17,8 @@ import '../../services/smash_days_service.dart';
 import '../../services/guac_money_service.dart';
 import '../../widgets/subscriptions_card.dart';
 import '../../widgets/top_app_bar_actions.dart';
+import '../../widgets/horizontal_section.dart';
+import '../../widgets/feature_card.dart';
 
 const _kEmerald700 = Color(0xFF15803d);
 const _kEmerald800 = Color(0xFF166534);
@@ -197,91 +199,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             SubscriptionsCard(receipts: spendingReceipts),
             const SizedBox(height: 18),
 
-            // CTA pills — primary actions
-            Row(children: [
-              Expanded(child: _ctaPill(
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft, end: Alignment.bottomRight,
-                  colors: [Color(0xFFfbbf24), Color(0xFFf59e0b), Color(0xFFe11d48)],
-                ),
-                emoji: '🥑',
-                title: 'Worth It?',
-                subtitle: 'Rate every purchase',
-                onTap: () => context.go(_receiptsDeepLink()),
-              )),
-              const SizedBox(width: 10),
-              Expanded(child: _ctaPill(
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft, end: Alignment.bottomRight,
-                  colors: [Color(0xFF22c55e), _kEmerald700],
-                ),
-                icon: Icons.auto_awesome,
-                title: 'Guacanomics',
-                subtitle: 'GuacScore + insights',
-                onTap: () => context.go('/guacscore'),
-              )),
-            ]),
-            const SizedBox(height: 10),
-            // Feature pills — the rest of the menu surfaced directly on the dashboard
-            Row(children: [
-              Expanded(child: _ctaPill(
-                gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight,
-                  colors: [Color(0xFFfcd34d), Color(0xFFca8a04)]),
-                icon: Icons.mark_email_unread_rounded,
-                title: 'Inbox',
-                subtitle: 'Mail + auto-receipts',
-                onTap: () => context.go('/inbox'),
-              )),
-              const SizedBox(width: 10),
-              Expanded(child: _ctaPill(
-                gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight,
-                  colors: [Color(0xFFa78bfa), Color(0xFF7c3aed)]),
-                icon: Icons.auto_fix_high,
-                title: 'GuacWizard',
-                subtitle: 'Bank Bite + insights',
-                onTap: () => context.go('/guacwizard'),
-              )),
-            ]),
-            const SizedBox(height: 10),
-            Row(children: [
-              Expanded(child: _ctaPill(
-                gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight,
-                  colors: [Color(0xFFf472b6), Color(0xFFdb2777)]),
-                icon: Icons.card_giftcard_rounded,
-                title: 'Rewards',
-                subtitle: 'Loyalty + expiring',
-                onTap: () => context.go('/rewards'),
-              )),
-              const SizedBox(width: 10),
-              Expanded(child: _ctaPill(
-                gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight,
-                  colors: [Color(0xFFfde047), Color(0xFFca8a04)]),
-                icon: Icons.inventory_2,
-                title: 'Stash',
-                subtitle: 'Everything you own',
-                onTap: () => context.go('/stash'),
-              )),
-            ]),
-            const SizedBox(height: 10),
-            Row(children: [
-              Expanded(child: _ctaPill(
-                gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight,
-                  colors: [Color(0xFFf9a8d4), Color(0xFFdb2777)]),
-                icon: Icons.local_offer,
-                title: 'Steals',
-                subtitle: 'AI price hunt',
-                onTap: () => context.go('/steals'),
-              )),
-              const SizedBox(width: 10),
-              Expanded(child: _ctaPill(
-                gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight,
-                  colors: [Color(0xFF67e8f9), Color(0xFF0891b2)]),
-                icon: Icons.directions_car_filled_rounded,
-                title: 'Car Miles',
-                subtitle: 'Trip log',
-                onTap: () => context.go('/car-miles'),
-              )),
-            ]),
+            // Feature sections — horizontal-scrolling cards grouped by
+            // purpose, replacing the previous 4×2 dense pill grid.
+            // Each section is a Fetch-style swipeable row.
+            _featureSections(),
             const SizedBox(height: 18),
 
             // Period selector pill
@@ -352,30 +273,85 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ],
     );
   }
-  Widget _ctaPill({LinearGradient? gradient, IconData? icon, String? emoji, required String title, required String subtitle, required VoidCallback onTap}) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(40),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          gradient: gradient,
-          borderRadius: BorderRadius.circular(40),
-          boxShadow: [BoxShadow(color: (gradient?.colors.last ?? _kEmerald700).withValues(alpha: 0.35), blurRadius: 8, offset: const Offset(0, 3))],
-        ),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          if (emoji != null) Text(emoji, style: const TextStyle(fontSize: 22)),
-          if (icon != null) Icon(icon, size: 22, color: Colors.white),
-          const SizedBox(width: 8),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-            Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 14, height: 1.0)),
-            const SizedBox(height: 2),
-            Text(subtitle, style: TextStyle(color: Colors.white.withValues(alpha: 0.92), fontSize: 10, height: 1.0)),
-          ])),
-          const Icon(Icons.arrow_forward, size: 16, color: Colors.white),
-        ]),
+  /// Vertical stack of horizontally-scrolling card carousels —
+  /// Fetch-style. Three sections group the 8 main features by
+  /// purpose so the eye can sweep through related actions instead
+  /// of decoding a dense 4×2 grid.
+  Widget _featureSections() {
+    // listPadding/headerPadding zero here because the outer ListView
+    // already supplies 16px horizontal padding; doubling it pushes
+    // the headings inward by 32px and squeezes the cards.
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      HorizontalSection(
+        title: 'Your score & insights',
+        subtitle: 'Health checks and ratings',
+        headerPadding: EdgeInsets.zero,
+        listPadding: EdgeInsets.zero,
+        height: 130,
+        children: [
+          FeatureCard(
+            title: 'Worth It?', subtitle: 'Rate every purchase',
+            gradient: kFeatureGradients['orange']!, emoji: '🥑',
+            onTap: () => context.go(_receiptsDeepLink()),
+          ),
+          FeatureCard(
+            title: 'Guacanomics', subtitle: 'GuacScore + insights',
+            gradient: kFeatureGradients['emerald']!, icon: Icons.auto_awesome,
+            onTap: () => context.go('/guacscore'),
+          ),
+          FeatureCard(
+            title: 'GuacWizard', subtitle: 'Bank Bite + leaks',
+            gradient: kFeatureGradients['violet']!, icon: Icons.auto_fix_high,
+            onTap: () => context.go('/guacwizard'),
+          ),
+        ],
       ),
-    );
+      const SizedBox(height: 14),
+      HorizontalSection(
+        title: 'Smart shopping',
+        subtitle: 'Save more, find more',
+        headerPadding: EdgeInsets.zero,
+        listPadding: EdgeInsets.zero,
+        height: 130,
+        children: [
+          FeatureCard(
+            title: 'Steals', subtitle: 'AI price hunt',
+            gradient: kFeatureGradients['pink']!, icon: Icons.local_offer,
+            onTap: () => context.go('/steals'),
+          ),
+          FeatureCard(
+            title: 'Rewards', subtitle: 'Loyalty + expiring',
+            gradient: kFeatureGradients['rose']!, icon: Icons.card_giftcard_rounded,
+            onTap: () => context.go('/rewards'),
+          ),
+          FeatureCard(
+            title: 'Stash', subtitle: 'Everything you own',
+            gradient: kFeatureGradients['yellow']!, icon: Icons.inventory_2,
+            onTap: () => context.go('/stash'),
+          ),
+        ],
+      ),
+      const SizedBox(height: 14),
+      HorizontalSection(
+        title: 'Quick actions',
+        subtitle: 'Inbox · trips · more',
+        headerPadding: EdgeInsets.zero,
+        listPadding: EdgeInsets.zero,
+        height: 130,
+        children: [
+          FeatureCard(
+            title: 'Inbox', subtitle: 'Mail + auto-receipts',
+            gradient: kFeatureGradients['amber']!, icon: Icons.mark_email_unread_rounded,
+            onTap: () => context.go('/inbox'),
+          ),
+          FeatureCard(
+            title: 'Car Miles', subtitle: 'Trip log',
+            gradient: kFeatureGradients['teal']!, icon: Icons.directions_car_filled_rounded,
+            onTap: () => context.go('/car-miles'),
+          ),
+        ],
+      ),
+    ]);
   }
 
   Widget _periodSelector() {

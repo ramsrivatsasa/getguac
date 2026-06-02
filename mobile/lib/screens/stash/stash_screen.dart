@@ -35,7 +35,14 @@ class _StashItem {
   String lastDate;
   String lastReceiptId;
   String? category;
-  int? rating;            // 1-5, null if unrated. Mirrors web's per-item rating.
+  int? rating;            // user's PERSONAL rating (max seen across rows).
+  // Aggregate across the user's own multiple buys of this item — the
+  // closest thing to a "community rating" until cross-user data lands.
+  // Set when ratingCount >= 2 so the second chip only appears when
+  // it adds signal.
+  int ratingCount = 0;
+  int ratingSum = 0;
+  double? get ratingAvg => ratingCount > 0 ? ratingSum / ratingCount : null;
   _StashItem(this.name, this.qty, this.totalSpent, this.lastDate, this.lastReceiptId, this.category, [this.rating]);
 }
 
@@ -89,7 +96,9 @@ class _StashScreenState extends State<StashScreen> {
 
         final existing = byName[name.toLowerCase()];
         if (existing == null) {
-          byName[name.toLowerCase()] = _StashItem(name, qty, price * qty, date, rid, cat, rating);
+          final item = _StashItem(name, qty, price * qty, date, rid, cat, rating);
+          if (rating != null) { item.ratingCount = 1; item.ratingSum = rating; }
+          byName[name.toLowerCase()] = item;
         } else {
           existing.qty += qty;
           existing.totalSpent += price * qty;
@@ -98,11 +107,14 @@ class _StashScreenState extends State<StashScreen> {
             existing.lastReceiptId = rid;
           }
           existing.category ??= cat;
-          // Keep the highest rating we've seen (mirrors "most recent
-          // rate stamps the product" — the upsert direction).
+          // Keep the highest rating we've seen for the "personal"
+          // single-value display (matches setProductRating's upsert).
           if (rating != null && (existing.rating == null || rating > existing.rating!)) {
             existing.rating = rating;
           }
+          // Track sum/count separately so the aggregate chip can
+          // surface an avg distinct from the latest.
+          if (rating != null) { existing.ratingCount += 1; existing.ratingSum += rating; }
         }
       }
 
@@ -323,6 +335,13 @@ class _StashScreenState extends State<StashScreen> {
                             storeEmoji: '📦',
                             rating: i.rating ?? 0,
                             onRate: (n) => _rateItem(i, n),
+                            // Show the avg-across-buys chip only when
+                            // there's more than one rated buy — a
+                            // single rating == personal == avg, no
+                            // need to repeat it. When real community
+                            // data lands, swap this source.
+                            communityRating: i.ratingCount >= 2 ? i.ratingAvg : null,
+                            communityRatingCount: i.ratingCount >= 2 ? i.ratingCount : null,
                             onTap: i.lastReceiptId.isEmpty
                               ? () => _openActions(i)
                               : () => context.push('/receipts/${i.lastReceiptId}'),

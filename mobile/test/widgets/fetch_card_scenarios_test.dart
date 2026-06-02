@@ -66,6 +66,8 @@ FetchCard _buildCardFromProps(Map<String, dynamic> p) {
     valueLabel: (p['valueLabel'] as String?) ?? '',
     valueIsPrefix: (p['valueIsPrefix'] as bool?) ?? false,
     rating: (p['rating'] as num?)?.toInt() ?? 0,
+    communityRating: (p['communityRating'] as num?)?.toDouble(),
+    communityRatingCount: p['communityRatingCount'] as num?,
     saved: (p['saved'] as bool?) ?? false,
     onRate: p['onRate'] != null ? (_) {} : null,
     onToggleSave: p['onToggleSave'] != null ? () {} : null,

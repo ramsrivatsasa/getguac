@@ -26,20 +26,27 @@
   .content { flex: 1; min-width: 0; padding-top: 2px; }
   .urgency { display: inline-flex; align-items: center; gap: 2px; padding: 2px 7px; border-radius: 7px; font-size: 10px; font-weight: 900; margin-bottom: 4px; }
   .urgency .bolt { font-size: 9px; }
-  .title { font-size: 14px; font-weight: 800; color: #0f172a; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .title-row { display: flex; gap: 8px; align-items: flex-start; }
+  .title { flex: 1; font-size: 14px; font-weight: 800; color: #0f172a; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .subtitle { font-size: 11.5px; color: #64748b; font-weight: 500; line-height: 1.3; margin-top: 2px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .utility { display: flex; align-items: center; gap: 4px; margin-top: 6px; flex-wrap: nowrap; }
   .store-pill { display: inline-flex; align-items: center; gap: 5px; background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 3px 8px 3px 3px; max-width: 60%; }
   .store-emoji { width: 16px; height: 16px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: white; font-size: 9px; font-weight: 900; }
   .store-name { font-size: 10.5px; font-weight: 800; color: #334155; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .spacer { flex: 1; }
-  .stars { display: inline-flex; gap: 0; }
-  .star { font-size: 14px; line-height: 1; }
-  .star.on  { color: #f59e0b; }
-  .star.off { color: #cbd5e1; }
-  .value { display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; }
-  .value .coin { width: 18px; height: 18px; border-radius: 50%; background: linear-gradient(135deg, #fbbf24, #f59e0b); color: white; font-size: 11px; display: inline-flex; align-items: center; justify-content: center; }
-  .value-text { font-size: 13px; font-weight: 900; color: #0f172a; }
+  /* Compact rating chips — single star + number. Personal=gold (tappable);
+     community=indigo (read-only). Both same physical size to align cleanly. */
+  .rchip { display: inline-flex; align-items: center; gap: 3px; padding: 3px 7px; border-radius: 14px; font-size: 11px; font-weight: 900; margin-left: 4px; }
+  .rchip .rstar { font-size: 12px; line-height: 1; }
+  .rchip .rnum  { line-height: 1; }
+  .rate-empty { background: white; border: 1px solid #e2e8f0; color: #64748b; }
+  .rate-empty .rstar { color: #94a3b8; }
+  .rate-gold  { background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.35); color: #f59e0b; }
+  .rate-community { background: rgba(99,102,241,0.10); border: 1px solid rgba(99,102,241,0.30); color: #6366f1; }
+  .rate-community .rnum { font-weight: 800; }
+  .value { display: inline-flex; align-items: center; gap: 4px; }
+  .value .coin { width: 20px; height: 20px; border-radius: 50%; background: linear-gradient(135deg, #fbbf24, #f59e0b); color: white; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; }
+  .value-text { font-size: 14px; font-weight: 900; color: #0f172a; }
   .heart, .icon { color: #94a3b8; font-size: 16px; margin-left: 4px; }
   .heart.saved { color: #ec4899; }
 
@@ -61,10 +68,10 @@
   <h2>Prop contract</h2>
   <table class="contract">
     <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
-    <tbody><tr><td><code>title</code></td><td>string</td><td>—</td><td>Item name. Truncates to 2 lines.</td></tr><tr><td><code>subtitle</code></td><td>string?</td><td>—</td><td>One-sentence metadata line (≤ 2 lines).</td></tr><tr><td><code>imageEmoji</code></td><td>string?</td><td>—</td><td>Emoji rendered in the tinted image tile when no URL.</td></tr><tr><td><code>imageUrl</code></td><td>string?</td><td>—</td><td>Product image URL. Falls back to imageEmoji on error.</td></tr><tr><td><code>tint</code></td><td>color hex</td><td>—</td><td>Tile-bg color. Card body is always white.</td></tr><tr><td><code>urgency</code></td><td>string?</td><td>—</td><td>Top-of-content pill. Lightning bolt added when text contains &#39;left&#39;.</td></tr><tr><td><code>urgencyBg</code></td><td>color hex?</td><td>—</td><td>Urgency pill background. Defaults to rose-200.</td></tr><tr><td><code>urgencyFg</code></td><td>color hex?</td><td>—</td><td>Urgency pill text/icon. Defaults to rose-900.</td></tr><tr><td><code>storeName</code></td><td>string?</td><td>—</td><td>Pill in the utility row — store name, on-hand, etc.</td></tr><tr><td><code>storeColor</code></td><td>color hex?</td><td>—</td><td>Color for the store-emoji circle in the pill.</td></tr><tr><td><code>storeEmoji</code></td><td>string?</td><td>—</td><td>Emoji or letter inside the store-pill circle.</td></tr><tr><td><code>value</code></td><td>number?</td><td>—</td><td>Right-aligned coin chip value. Formats &gt;=1000 as &#39;k&#39;.</td></tr><tr><td><code>valueLabel</code></td><td>string</td><td></td><td>Optional currency/units string (&#39;$&#39;, &#39;pts&#39;).</td></tr><tr><td><code>valueIsPrefix</code></td><td>boolean</td><td>false</td><td>When true, label goes BEFORE the number (&#39;$ 42&#39;).</td></tr><tr><td><code>rating</code></td><td>int 0..5</td><td>0</td><td>Star count to display in the utility row.</td></tr><tr><td><code>saved</code></td><td>boolean</td><td>false</td><td>Heart filled (pink) when true.</td></tr><tr><td><code>onTap</code></td><td>callback?</td><td>—</td><td>Tap-the-card target.</td></tr><tr><td><code>onRate</code></td><td>callback?</td><td>—</td><td>Per-star tap. When null, the star row is hidden.</td></tr><tr><td><code>onToggleSave</code></td><td>callback?</td><td>—</td><td>Heart-icon tap. When null, no heart shown.</td></tr><tr><td><code>onShare</code></td><td>callback?</td><td>—</td><td>Share-icon tap. When null, hidden.</td></tr><tr><td><code>onMenu</code></td><td>callback?</td><td>—</td><td>⋮-icon tap. When null, hidden.</td></tr></tbody>
+    <tbody><tr><td><code>title</code></td><td>string</td><td>—</td><td>Item name. Truncates to 2 lines.</td></tr><tr><td><code>subtitle</code></td><td>string?</td><td>—</td><td>One-sentence metadata line (≤ 2 lines).</td></tr><tr><td><code>imageEmoji</code></td><td>string?</td><td>—</td><td>Emoji rendered in the tinted image tile when no URL.</td></tr><tr><td><code>imageUrl</code></td><td>string?</td><td>—</td><td>Product image URL. Falls back to imageEmoji on error.</td></tr><tr><td><code>tint</code></td><td>color hex</td><td>—</td><td>Tile-bg color. Card body is always white.</td></tr><tr><td><code>urgency</code></td><td>string?</td><td>—</td><td>Top-of-content pill. Lightning bolt added when text contains &#39;left&#39;.</td></tr><tr><td><code>urgencyBg</code></td><td>color hex?</td><td>—</td><td>Urgency pill background. Defaults to rose-200.</td></tr><tr><td><code>urgencyFg</code></td><td>color hex?</td><td>—</td><td>Urgency pill text/icon. Defaults to rose-900.</td></tr><tr><td><code>storeName</code></td><td>string?</td><td>—</td><td>Pill in the utility row — store name, on-hand, etc.</td></tr><tr><td><code>storeColor</code></td><td>color hex?</td><td>—</td><td>Color for the store-emoji circle in the pill.</td></tr><tr><td><code>storeEmoji</code></td><td>string?</td><td>—</td><td>Emoji or letter inside the store-pill circle.</td></tr><tr><td><code>value</code></td><td>number?</td><td>—</td><td>Right-aligned coin chip value. Formats &gt;=1000 as &#39;k&#39;.</td></tr><tr><td><code>valueLabel</code></td><td>string</td><td></td><td>Optional currency/units string (&#39;$&#39;, &#39;pts&#39;).</td></tr><tr><td><code>valueIsPrefix</code></td><td>boolean</td><td>false</td><td>When true, label goes BEFORE the number (&#39;$ 42&#39;).</td></tr><tr><td><code>rating</code></td><td>int 0..5</td><td>0</td><td>User&#39;s PERSONAL rating, shown as a compact ★N chip. Tap or long-press opens the 5-star picker; the engine calls onRate(n). When 0 (unrated), the chip reads &#39;Rate&#39;.</td></tr><tr><td><code>communityRating</code></td><td>number?</td><td>—</td><td>Aggregate / community rating, shown as a second ★X.X chip in a different tone. Read-only. Hidden when null.</td></tr><tr><td><code>communityRatingCount</code></td><td>number?</td><td>—</td><td>Social count appended to the community chip (e.g. 22000 → &#39;22k&#39;). Hidden when null.</td></tr><tr><td><code>saved</code></td><td>boolean</td><td>false</td><td>Heart filled (pink) when true.</td></tr><tr><td><code>onTap</code></td><td>callback?</td><td>—</td><td>Tap-the-card target.</td></tr><tr><td><code>onRate</code></td><td>callback?</td><td>—</td><td>Per-star tap. When null, the star row is hidden.</td></tr><tr><td><code>onToggleSave</code></td><td>callback?</td><td>—</td><td>Heart-icon tap. When null, no heart shown.</td></tr><tr><td><code>onShare</code></td><td>callback?</td><td>—</td><td>Share-icon tap. When null, hidden.</td></tr><tr><td><code>onMenu</code></td><td>callback?</td><td>—</td><td>⋮-icon tap. When null, hidden.</td></tr></tbody>
   </table>
 
-  <h2>20 scenarios</h2>
+  <h2>21 scenarios</h2>
   <div class="scenarios">
     <section class="scenario">
       <div class="meta">
@@ -77,7 +84,10 @@
       <div class="image-tile" style="background:#fef9c3">🍌</div>
       <div class="content">
         
-        <div class="title">Bananas</div>
+        <div class="title-row">
+          <div class="title">Bananas</div>
+          
+        </div>
         
         <div class="utility">
           
@@ -104,7 +114,10 @@
       <div class="image-tile" style="background:#fef9c3">🥛</div>
       <div class="content">
         
-        <div class="title">Milk Gallon</div>
+        <div class="title-row">
+          <div class="title">Milk Gallon</div>
+          
+        </div>
         <div class="subtitle">Bought ×3 · last May 30 · $14.97 total</div>
         <div class="utility">
           
@@ -131,17 +144,20 @@
       <div class="image-tile" style="background:#fef9c3">🫒</div>
       <div class="content">
         
-        <div class="title">Olive Oil</div>
+        <div class="title-row">
+          <div class="title">Olive Oil</div>
+          
+    <span class="value">
+      <span class="coin">★</span>
+      <span class="value-text">$42.50</span>
+    </span>
+        </div>
         <div class="subtitle">Bought ×4 · $42.50 total</div>
         <div class="utility">
           
           <span class="spacer"></span>
           
           
-    <span class="value">
-      <span class="coin">★</span>
-      <span class="value-text">$42.50</span>
-    </span>
           
           
           
@@ -162,17 +178,20 @@
       <div class="image-tile" style="background:#fef9c3">🍿</div>
       <div class="content">
         
-        <div class="title">Smartfood Popcorn</div>
+        <div class="title-row">
+          <div class="title">Smartfood Popcorn</div>
+          
+    <span class="value">
+      <span class="coin">★</span>
+      <span class="value-text">1.5k pts</span>
+    </span>
+        </div>
         <div class="subtitle">Select varieties</div>
         <div class="utility">
           
           <span class="spacer"></span>
           
           
-    <span class="value">
-      <span class="coin">★</span>
-      <span class="value-text">1.5k pts</span>
-    </span>
           
           
           
@@ -193,12 +212,15 @@
       <div class="image-tile" style="background:#fef9c3">🥛</div>
       <div class="content">
         
-        <div class="title">Greek Yogurt</div>
+        <div class="title-row">
+          <div class="title">Greek Yogurt</div>
+          
+        </div>
         <div class="subtitle">Bought ×5 · $24.00 total</div>
         <div class="utility">
           
           <span class="spacer"></span>
-          <span class="stars"><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star off">★</span><span class="star off">★</span></span>
+          <span class="rchip rate-gold"><span class="rstar">★</span> <span class="rnum">3</span></span>
           
           
           
@@ -220,17 +242,20 @@
       <div class="image-tile" style="background:#fef9c3">☕</div>
       <div class="content">
         
-        <div class="title">Coffee Beans</div>
-        <div class="subtitle">Bought ×8 · $96 total</div>
-        <div class="utility">
-          
-          <span class="spacer"></span>
-          <span class="stars"><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span></span>
+        <div class="title-row">
+          <div class="title">Coffee Beans</div>
           
     <span class="value">
       <span class="coin">★</span>
       <span class="value-text">$96</span>
     </span>
+        </div>
+        <div class="subtitle">Bought ×8 · $96 total</div>
+        <div class="utility">
+          
+          <span class="spacer"></span>
+          <span class="rchip rate-gold"><span class="rstar">★</span> <span class="rnum">5</span></span>
+          
           
           
           
@@ -255,7 +280,10 @@
       
       Buy 2
     </div>
-        <div class="title">Bactine First Aid</div>
+        <div class="title-row">
+          <div class="title">Bactine First Aid</div>
+          
+        </div>
         <div class="subtitle">Select varieties</div>
         <div class="utility">
           
@@ -286,7 +314,10 @@
       <span class="bolt">⚡</span>
       533 left
     </div>
-        <div class="title">Bic Soleil 3 Razors at Walmart</div>
+        <div class="title-row">
+          <div class="title">Bic Soleil 3 Razors at Walmart</div>
+          
+        </div>
         <div class="subtitle">4 count</div>
         <div class="utility">
           
@@ -313,7 +344,10 @@
       <div class="image-tile" style="background:#fef9c3">🥚</div>
       <div class="content">
         
-        <div class="title">Eggland&#39;s Best Eggs</div>
+        <div class="title-row">
+          <div class="title">Eggland&#39;s Best Eggs</div>
+          
+        </div>
         <div class="subtitle">Dozen</div>
         <div class="utility">
           
@@ -344,7 +378,10 @@
       <div class="image-tile" style="background:#e0e7ff">🫒</div>
       <div class="content">
         
-        <div class="title">Kirkland Olive Oil</div>
+        <div class="title-row">
+          <div class="title">Kirkland Olive Oil</div>
+          
+        </div>
         <div class="subtitle">2L bottle</div>
         <div class="utility">
           
@@ -375,7 +412,10 @@
       <div class="image-tile" style="background:#fef9c3">📦</div>
       <div class="content">
         
-        <div class="title">Unknown Item</div>
+        <div class="title-row">
+          <div class="title">Unknown Item</div>
+          
+        </div>
         <div class="subtitle">Generic placeholder</div>
         <div class="utility">
           
@@ -402,17 +442,20 @@
       <div class="image-tile" style="background:#dcfce7">🥑</div>
       <div class="content">
         
-        <div class="title">Avocados</div>
+        <div class="title-row">
+          <div class="title">Avocados</div>
+          
+    <span class="value">
+      <span class="coin">★</span>
+      <span class="value-text">$30</span>
+    </span>
+        </div>
         <div class="subtitle">Bought ×12 · $30 total</div>
         <div class="utility">
           
           <span class="spacer"></span>
           
           
-    <span class="value">
-      <span class="coin">★</span>
-      <span class="value-text">$30</span>
-    </span>
           
           
           
@@ -433,7 +476,10 @@
       <div class="image-tile" style="background:#e0f2fe">💧</div>
       <div class="content">
         
-        <div class="title">Bottled Water</div>
+        <div class="title-row">
+          <div class="title">Bottled Water</div>
+          
+        </div>
         <div class="subtitle">Case of 24</div>
         <div class="utility">
           
@@ -460,7 +506,10 @@
       <div class="image-tile" style="background:#d1fae5">🦷</div>
       <div class="content">
         
-        <div class="title">Toothpaste</div>
+        <div class="title-row">
+          <div class="title">Toothpaste</div>
+          
+        </div>
         <div class="subtitle">Personal care</div>
         <div class="utility">
           
@@ -487,7 +536,10 @@
       <div class="image-tile" style="background:#fce7f3">🧺</div>
       <div class="content">
         
-        <div class="title">Pink Detergent</div>
+        <div class="title-row">
+          <div class="title">Pink Detergent</div>
+          
+        </div>
         <div class="subtitle">Household</div>
         <div class="utility">
           
@@ -514,7 +566,10 @@
       <div class="image-tile" style="background:#fef9c3">❤️</div>
       <div class="content">
         
-        <div class="title">Favorite Item</div>
+        <div class="title-row">
+          <div class="title">Favorite Item</div>
+          
+        </div>
         <div class="subtitle">User saved this</div>
         <div class="utility">
           
@@ -541,7 +596,10 @@
       <div class="image-tile" style="background:#fef9c3">🍞</div>
       <div class="content">
         
-        <div class="title">Regular Item</div>
+        <div class="title-row">
+          <div class="title">Regular Item</div>
+          
+        </div>
         <div class="subtitle">Not saved</div>
         <div class="utility">
           
@@ -568,7 +626,10 @@
       <div class="image-tile" style="background:#fef9c3">📦</div>
       <div class="content">
         
-        <div class="title">Super Premium Extra Long Product Name That Definitely Wraps to Multiple Lines and Then Some</div>
+        <div class="title-row">
+          <div class="title">Super Premium Extra Long Product Name That Definitely Wraps to Multiple Lines and Then Some</div>
+          
+        </div>
         <div class="subtitle">Bought ×1</div>
         <div class="utility">
           
@@ -595,7 +656,10 @@
       <div class="image-tile" style="background:#fef9c3">📝</div>
       <div class="content">
         
-        <div class="title">Notes Item</div>
+        <div class="title-row">
+          <div class="title">Notes Item</div>
+          
+        </div>
         <div class="subtitle">Bought ×2 · last May 28 · $99.99 total · originally on sale at Costco · also seen at Trader Joes for $98 · etc etc etc</div>
         <div class="utility">
           
@@ -613,9 +677,39 @@
   
     <section class="scenario">
       <div class="meta">
+        <div class="meta-title">Both rating chips — personal (gold) + community (indigo)</div>
+        <div class="meta-id">personal_and_community_ratings</div>
+        <div class="meta-desc">User&#39;s personal rating shown left in gold; community avg shown right in indigo with a social count. Demonstrates the dual-chip pattern.</div>
+      </div>
+      <div class="render">
+    <div class="card">
+      <div class="image-tile" style="background:#fef9c3">🪒</div>
+      <div class="content">
+        
+        <div class="title-row">
+          <div class="title">Bic Soleil 3 Razors</div>
+          
+        </div>
+        <div class="subtitle">Bought ×3 · last May 30</div>
+        <div class="utility">
+          
+          <span class="spacer"></span>
+          <span class="rchip rate-gold"><span class="rstar">★</span> <span class="rnum">4</span></span>
+          <span class="rchip rate-community"><span class="rstar">★</span> <span class="rnum">4.2 · 22k</span></span>
+          
+          
+          
+        </div>
+      </div>
+    </div>
+  </div>
+    </section>
+  
+    <section class="scenario">
+      <div class="meta">
         <div class="meta-title">Everything on — full Stash card</div>
         <div class="meta-id">all_features_full_stash_card</div>
-        <div class="meta-desc">Title + sentence subtitle + on-hand pill + stars + value coin + menu. Exercises every prop.</div>
+        <div class="meta-desc">Title + value chip top-right + sentence subtitle + on-hand pill + dual rating chips + menu. Exercises every prop.</div>
       </div>
       <div class="render">
     <div class="card">
@@ -626,7 +720,14 @@
       <span class="bolt">⚡</span>
       533 left
     </div>
-        <div class="title">Bic Soleil 3 Razors at Walmart</div>
+        <div class="title-row">
+          <div class="title">Bic Soleil 3 Razors at Walmart</div>
+          
+    <span class="value">
+      <span class="coin">★</span>
+      <span class="value-text">$42.50</span>
+    </span>
+        </div>
         <div class="subtitle">Bought ×3 · last May 30 · $42.50 total</div>
         <div class="utility">
           
@@ -635,12 +736,8 @@
       <span class="store-name">On hand: 2</span>
     </div>
           <span class="spacer"></span>
-          <span class="stars"><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star off">★</span></span>
-          
-    <span class="value">
-      <span class="coin">★</span>
-      <span class="value-text">$42.50</span>
-    </span>
+          <span class="rchip rate-gold"><span class="rstar">★</span> <span class="rnum">4</span></span>
+          <span class="rchip rate-community"><span class="rstar">★</span> <span class="rnum">4.2 · 22k</span></span>
           
           
           <span class="icon">⋯</span>

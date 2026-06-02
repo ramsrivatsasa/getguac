@@ -32,15 +32,23 @@ class FetchCard extends StatelessWidget {
   final Color? storeColor;
   final String? storeEmoji;
 
-  // Bottom-right value chip — coin + amount.
+  // Top-right value chip — coin + amount. Lives at the top of the
+  // card so it's the first thing the eye lands on, paired with the
+  // title rather than buried in the utility row.
   final num? value;
   final String valueLabel;   // '', 'pts', '$', etc. (prefix or suffix)
   final bool valueIsPrefix;  // true → "$ 42", false → "42 $"
 
-  // Inline 5-star rating, rendered in the bottom row when onRate is set.
-  // `rating` is the current value (0–5; 0 = unrated).
+  // Compact rating chips — tap to set, long-press for the picker.
+  // `rating` is the user's PERSONAL rating (0–5; 0 = unrated). Render
+  // as a single ★N pill; long-press opens a 5-star bottom sheet for
+  // adjustment. `communityRating` is the AGGREGATE (e.g. avg across
+  // all the user's buys of this item or — eventually — across other
+  // users); rendered as a second pill with optional social count.
   final int rating;
   final void Function(int)? onRate;
+  final double? communityRating;
+  final num? communityRatingCount;
 
   // Bottom-left engagement — heart toggle (saved/unsaved).
   final bool saved;
@@ -69,6 +77,8 @@ class FetchCard extends StatelessWidget {
     this.valueIsPrefix = false,
     this.rating = 0,
     this.onRate,
+    this.communityRating,
+    this.communityRatingCount,
     this.saved = false,
     this.onToggleSave,
     this.onTap,
@@ -115,10 +125,8 @@ class FetchCard extends StatelessWidget {
                 : Text(imageEmoji ?? '📦', style: const TextStyle(fontSize: 36)),
             ),
             const SizedBox(width: 12),
-            // Right column: badge → title → subtitle → utility row
-            // (rating + value + menu). One column avoids the dead
-            // space the old vertical separator created when items
-            // had no store/category pill to fill the gap.
+            // Right column: title-row (title + amount chip) → subtitle →
+            // utility row (on-hand pill + rating chips + menu).
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
               if (urgency != null) Padding(
                 padding: const EdgeInsets.only(bottom: 4),
@@ -138,10 +146,35 @@ class FetchCard extends StatelessWidget {
                   ]),
                 ),
               ),
-              Text(title,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF0f172a), height: 1.2),
-                maxLines: 2, overflow: TextOverflow.ellipsis,
-              ),
+              // Title row: title left-flex, amount chip top-right
+              Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Expanded(child: Text(title,
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF0f172a), height: 1.2),
+                  maxLines: 2, overflow: TextOverflow.ellipsis,
+                )),
+                if (value != null) ...[
+                  const SizedBox(width: 8),
+                  Row(mainAxisSize: MainAxisSize.min, children: [
+                    Container(
+                      width: 20, height: 20,
+                      alignment: Alignment.center,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          colors: [Color(0xFFfbbf24), Color(0xFFf59e0b)],
+                          begin: Alignment.topLeft, end: Alignment.bottomRight,
+                        ),
+                      ),
+                      child: const Icon(Icons.star, size: 12, color: Colors.white),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      valueIsPrefix ? '$valueLabel${_fmt(value!)}' : '${_fmt(value!)}$valueLabel',
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: Color(0xFF0f172a)),
+                    ),
+                  ]),
+                ],
+              ]),
               if (subtitle != null) ...[
                 const SizedBox(height: 2),
                 Text(subtitle!,
@@ -149,9 +182,7 @@ class FetchCard extends StatelessWidget {
                   maxLines: 2, overflow: TextOverflow.ellipsis,
                 ),
               ],
-              // Utility row tucked right under the subtitle — the
-              // store/on-hand pill on the left, rating + value + menu
-              // on the right. Single row keeps the card compact.
+              // Utility row: on-hand pill (left) + rating chips + menu
               const SizedBox(height: 6),
               Row(children: [
                 if (storeName != null) Flexible(child: Container(
@@ -180,36 +211,24 @@ class FetchCard extends StatelessWidget {
                   ]),
                 )),
                 const Spacer(),
-                if (onRate != null) ...[
-                  for (var n = 1; n <= 5; n++)
-                    InkResponse(
-                      onTap: () => onRate!(n),
-                      radius: 12,
-                      child: Icon(
-                        n <= rating ? Icons.star : Icons.star_outline,
-                        size: 14,
-                        color: n <= rating ? const Color(0xFFf59e0b) : const Color(0xFFcbd5e1),
-                      ),
-                    ),
-                ],
-                if (value != null) ...[
-                  const SizedBox(width: 8),
-                  Container(
-                    width: 18, height: 18,
-                    alignment: Alignment.center,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: [Color(0xFFfbbf24), Color(0xFFf59e0b)],
-                        begin: Alignment.topLeft, end: Alignment.bottomRight,
-                      ),
-                    ),
-                    child: const Icon(Icons.star, size: 11, color: Colors.white),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    valueIsPrefix ? '$valueLabel${_fmt(value!)}' : '${_fmt(value!)}$valueLabel',
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: Color(0xFF0f172a)),
+                // Personal rating chip — single star + number. Tap or
+                // long-press opens a 5-star bottom-sheet picker.
+                if (onRate != null) _RatingChip(
+                  value: rating > 0 ? rating.toDouble() : null,
+                  tone: const Color(0xFFf59e0b),
+                  emptyLabel: 'Rate',
+                  onTap: () => _openRatingPicker(context, current: rating),
+                  isPersonal: true,
+                ),
+                // Community / aggregate rating chip — non-tappable.
+                // Only renders when communityRating is set.
+                if (communityRating != null) ...[
+                  const SizedBox(width: 6),
+                  _RatingChip(
+                    value: communityRating,
+                    tone: const Color(0xFF6366f1),
+                    countSuffix: communityRatingCount,
+                    isPersonal: false,
                   ),
                 ],
                 if (onToggleSave != null) ...[
@@ -256,5 +275,173 @@ class FetchCard extends StatelessWidget {
     }
     if (v == v.roundToDouble()) return v.toInt().toString();
     return v.toStringAsFixed(2);
+  }
+
+  /// Modal 5-star picker — opens from the personal-rating chip. The
+  /// user taps the star they want and the sheet closes. The selected
+  /// rating is dispatched via `onRate`. Long-press on the chip is
+  /// wired to this same picker so users discover it either way.
+  void _openRatingPicker(BuildContext context, {required int current}) {
+    if (onRate == null) return;
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => _RatingPickerSheet(
+        title: title,
+        current: current,
+        onPick: (n) {
+          Navigator.of(ctx).pop();
+          onRate!(n);
+        },
+      ),
+    );
+  }
+}
+
+/// Compact star+number rating chip. Used twice on each card —
+/// once for the user's personal rating (tap to set, long-press to
+/// open the picker), once for the community/aggregate rating (read-
+/// only, with optional social count).
+class _RatingChip extends StatelessWidget {
+  final double? value;       // 0..5, null = unrated
+  final Color tone;
+  final num? countSuffix;    // optional social count, e.g. 22k
+  final String? emptyLabel;  // shown when value is null (e.g. "Rate")
+  final VoidCallback? onTap;
+  final bool isPersonal;     // tighter rounded outline when tappable
+  const _RatingChip({
+    required this.value,
+    required this.tone,
+    this.countSuffix,
+    this.emptyLabel,
+    this.onTap,
+    this.isPersonal = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final unrated = value == null;
+    final display = unrated
+      ? (emptyLabel ?? '—')
+      : (value! == value!.roundToDouble() ? value!.toInt().toString() : value!.toStringAsFixed(1));
+    Widget chip = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: unrated ? Colors.white : tone.withValues(alpha: 0.12),
+        border: Border.all(
+          color: unrated ? const Color(0xFFe2e8f0) : tone.withValues(alpha: 0.35),
+        ),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Icon(
+          unrated ? Icons.star_outline : Icons.star,
+          size: 12,
+          color: unrated ? const Color(0xFF94a3b8) : tone,
+        ),
+        const SizedBox(width: 3),
+        Text(display,
+          style: TextStyle(
+            fontSize: 11, fontWeight: FontWeight.w900,
+            color: unrated ? const Color(0xFF64748b) : tone,
+          ),
+        ),
+        if (countSuffix != null && !unrated) ...[
+          const SizedBox(width: 4),
+          Text('· ${_fmtCount(countSuffix!)}',
+            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: tone.withValues(alpha: 0.7)),
+          ),
+        ],
+      ]),
+    );
+    if (onTap != null) {
+      chip = InkWell(
+        onTap: onTap,
+        onLongPress: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: chip,
+      );
+    }
+    return chip;
+  }
+
+  static String _fmtCount(num n) {
+    final v = n.abs();
+    if (v >= 1000) {
+      final k = v / 1000;
+      return '${k.toStringAsFixed(k == k.roundToDouble() ? 0 : 1)}k';
+    }
+    return v == v.roundToDouble() ? v.toInt().toString() : v.toStringAsFixed(1);
+  }
+}
+
+class _RatingPickerSheet extends StatefulWidget {
+  final String title;
+  final int current;
+  final void Function(int) onPick;
+  const _RatingPickerSheet({required this.title, required this.current, required this.onPick});
+
+  @override
+  State<_RatingPickerSheet> createState() => _RatingPickerSheetState();
+}
+
+class _RatingPickerSheetState extends State<_RatingPickerSheet> {
+  late int _hover = widget.current;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(child: Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Center(child: Container(
+          width: 40, height: 4,
+          decoration: BoxDecoration(color: Colors.black26, borderRadius: BorderRadius.circular(2)),
+        )),
+        const SizedBox(height: 16),
+        const Text('How worth it?',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+        ),
+        const SizedBox(height: 4),
+        Text(widget.title,
+          style: const TextStyle(fontSize: 13, color: Color(0xFF64748b)),
+          maxLines: 2, overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: 20),
+        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          for (var n = 1; n <= 5; n++) InkWell(
+            onTap: () => widget.onPick(n),
+            onHover: (h) { if (h) setState(() => _hover = n); },
+            borderRadius: BorderRadius.circular(24),
+            child: Padding(
+              padding: const EdgeInsets.all(6),
+              child: Icon(
+                n <= _hover ? Icons.star : Icons.star_outline,
+                size: 44,
+                color: n <= _hover ? const Color(0xFFf59e0b) : const Color(0xFFcbd5e1),
+              ),
+            ),
+          ),
+        ]),
+        const SizedBox(height: 12),
+        Text(_label(_hover),
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 12, color: Color(0xFF64748b), fontStyle: FontStyle.italic),
+        ),
+      ]),
+    ));
+  }
+
+  static String _label(int n) {
+    switch (n) {
+      case 5: return '⭐ Essential — worth every penny';
+      case 4: return '✅ Important — would buy again';
+      case 3: return '🙂 OK — nothing special';
+      case 2: return '🍿 Splurge — could have skipped';
+      case 1: return '🙈 Regret — pure waste';
+      default: return 'Tap a star to rate this item';
+    }
   }
 }

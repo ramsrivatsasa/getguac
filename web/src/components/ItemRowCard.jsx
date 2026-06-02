@@ -1,134 +1,259 @@
 'use client'
-// Horizontal row-style item card. Left thumbnail tile + right content
-// block with title / subtitle / heart / social-proof / progress / GuacMoney.
+// Centralized item card — React implementation of the cross-platform
+// contract documented at `test-fixtures/item-card-scenarios.json`.
+// Visually equivalent to mobile `FetchCard` (Flutter) — same prop
+// names, same defaults, same compact layout. Both implementations
+// must produce identical output for the same props.
 //
-// Visual lifted from the /preview/discover "Popular at Costco" rows —
-// promoted to a real component so production surfaces (Stash, Steals,
-// Smashlist Buy Again, Receipt detail, Activity feed) can all share
-// the same shape.
-//
-// Required props are loose so the same component renders well in every
-// context — pass only what the surface knows. Example:
-//
-//   <ItemRowCard
-//     tint="#fef3c7"
-//     emoji="🪒"
-//     title="Bic Soleil 3 Razors"
-//     subtitle="4 count"
-//     urgency="533 left"
-//     urgencyTone="rose"
-//     social="22k"
-//     guacMoney={10}
-//     brandBadge="🏪"
-//     saved={false}
-//     onToggleSave={...}
-//     onClick={() => router.push('/items/abc')}
-//   />
+// Used by Stash (production), Steals, Buy Again, etc. The Node
+// renderer at `web/scripts/render-item-card-scenarios.mjs` produces
+// a contract PDF that's the visual reference for both implementations.
 
-import { Heart } from 'lucide-react'
-import './emoji-floats.css'
+import { useState, useCallback } from 'react'
+import { Star, Heart, Share2, MoreHorizontal, Bolt } from 'lucide-react'
 
-const URGENCY_TONES = {
-  violet: 'bg-violet-100 text-violet-700 border-violet-200',
-  rose:   'bg-rose-100 text-rose-700 border-rose-200',
-  amber:  'bg-amber-100 text-amber-800 border-amber-200',
-  emerald:'bg-emerald-100 text-emerald-700 border-emerald-200',
+function fmt(n) {
+  const v = Math.abs(Number(n))
+  if (v >= 1000) {
+    const k = v / 1000
+    return k % 1 === 0 ? `${k}k` : `${k.toFixed(1)}k`
+  }
+  return v === Math.round(v) ? `${Math.round(v)}` : v.toFixed(2)
 }
 
-function formatCount(n) {
-  if (n == null) return ''
-  const num = Number(n)
-  if (!num || num < 1000) return String(num || 0)
-  if (num < 10_000) return `${(num / 1000).toFixed(1)}k`
-  if (num < 1_000_000) return `${Math.round(num / 1000)}k`
-  return `${(num / 1_000_000).toFixed(1)}M`
-}
-
+/**
+ * Centralized item card. All props are optional except `title`.
+ * See test-fixtures/item-card-scenarios.json for the prop contract.
+ */
 export default function ItemRowCard({
-  thumb,
-  tint = '#f3f4f6',
-  emoji,
-  urgency,
-  urgencyTone = 'violet',
   title,
   subtitle,
-  social,
-  progress,
-  guacMoney,
-  brandBadge,
+  imageEmoji,
+  imageUrl,
+  tint = '#fef9c3',
+  urgency,
+  urgencyBg = '#fecdd3',
+  urgencyFg = '#9f1239',
+  storeName,
+  storeColor = '#6b7280',
+  storeEmoji,
+  value,
+  valueLabel = '',
+  valueIsPrefix = false,
+  rating = 0,
+  onRate,
+  communityRating,
+  communityRatingCount,
   saved = false,
   onToggleSave,
-  onClick,
+  onTap,
+  onShare,
+  onMenu,
 }) {
-  const urgencyClass = URGENCY_TONES[urgencyTone] || URGENCY_TONES.violet
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const valueText = value != null
+    ? (valueIsPrefix ? `${valueLabel}${fmt(value)}` : `${fmt(value)}${valueLabel}`)
+    : ''
+  const isUrgencyBolt = urgency && urgency.toLowerCase().includes('left')
+
+  const openPicker = useCallback(() => { if (onRate) setPickerOpen(true) }, [onRate])
+  const pickRating = useCallback((n) => {
+    setPickerOpen(false)
+    onRate?.(n)
+  }, [onRate])
+
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="w-full text-left flex bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all overflow-hidden"
+    <div
+      onClick={onTap}
+      className={`relative flex gap-3 bg-white rounded-2xl p-2.5 pr-3 border border-gray-100 shadow-sm hover:shadow-md transition-shadow ${onTap ? 'cursor-pointer' : ''}`}
     >
-      {/* Left thumbnail tile */}
+      {/* Tinted image tile — visual anchor */}
       <div
-        className="relative shrink-0 flex items-center justify-center"
-        style={{ backgroundColor: tint, width: 120, height: 120 }}
+        className="w-[72px] h-[72px] rounded-xl flex items-center justify-center text-[36px] shrink-0"
+        style={{ background: tint }}
       >
-        {thumb ? (
+        {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={thumb} alt={title} className="max-h-24 max-w-[80%] object-contain" onError={(e) => { e.currentTarget.style.display = 'none' }} />
+          <img src={imageUrl} alt="" width={68} height={68}
+            className="w-[68px] h-[68px] rounded-[10px] object-cover"
+            onError={(e) => { e.currentTarget.style.display = 'none' }} />
         ) : (
-          <span className="emoji-floats text-6xl">{emoji || '🛒'}</span>
-        )}
-        {brandBadge && (
-          <span className="absolute -bottom-2 -right-2 w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center text-base border-2 border-white shadow">
-            {brandBadge}
-          </span>
+          <span>{imageEmoji || '📦'}</span>
         )}
       </div>
 
-      {/* Right content */}
-      <div className="flex-1 min-w-0 p-3 flex flex-col justify-between">
-        <div>
-          {urgency && (
-            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider border ${urgencyClass} mb-1`}>
-              {urgencyTone === 'rose' && <span>⚡</span>}
-              {urgency}
+      {/* Right column: title-row, subtitle, utility row */}
+      <div className="flex-1 min-w-0 pt-0.5">
+        {urgency && (
+          <div
+            className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-black mb-1"
+            style={{ background: urgencyBg, color: urgencyFg }}
+          >
+            {isUrgencyBolt && <Bolt size={10} style={{ marginRight: 1 }} />}
+            {urgency}
+          </div>
+        )}
+
+        {/* Title row — title left-flex, value chip top-right */}
+        <div className="flex items-start gap-2">
+          <h3 className="flex-1 min-w-0 text-[14px] font-extrabold text-gray-900 leading-tight line-clamp-2">
+            {title}
+          </h3>
+          {value != null && (
+            <span className="flex items-center gap-1 shrink-0">
+              <span className="w-5 h-5 rounded-full bg-gradient-to-br from-amber-300 to-amber-500 text-white flex items-center justify-center">
+                <Star size={11} fill="currentColor" />
+              </span>
+              <span className="text-[14px] font-black text-gray-900">{valueText}</span>
             </span>
           )}
-          <p className="text-base font-extrabold text-gray-900 leading-tight line-clamp-2">{title}</p>
-          {subtitle && <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>}
         </div>
-        <div className="flex items-center justify-between mt-2 gap-2">
-          <div className="flex items-center gap-2 min-w-0">
+
+        {subtitle && (
+          <p className="text-[11.5px] text-gray-500 font-medium leading-snug mt-0.5 line-clamp-2">
+            {subtitle}
+          </p>
+        )}
+
+        {/* Utility row — on-hand pill (left), rating chips, save/share/menu (right) */}
+        <div className="flex items-center gap-1 mt-1.5">
+          {storeName && (
+            <div className="inline-flex items-center gap-1 bg-white border border-gray-200 rounded-2xl pl-0.5 pr-2 py-0.5 max-w-[60%] min-w-0">
+              <span
+                className="w-4 h-4 rounded-full flex items-center justify-center text-white text-[9px] font-black shrink-0"
+                style={{ background: storeColor }}
+              >
+                {storeEmoji || '·'}
+              </span>
+              <span className="text-[10.5px] font-extrabold text-gray-700 truncate">{storeName}</span>
+            </div>
+          )}
+          <span className="flex-1" />
+
+          {/* Personal rating chip — tap or long-press opens the picker */}
+          {onRate && (
             <button
               type="button"
-              onClick={(e) => { e.stopPropagation(); onToggleSave?.() }}
-              className={`w-7 h-7 shrink-0 flex items-center justify-center rounded-full border transition ${
-                saved
-                  ? 'border-rose-300 bg-rose-50 text-rose-500'
-                  : 'border-gray-200 bg-white text-gray-400 hover:text-rose-500 hover:border-rose-200'
+              onClick={(e) => { e.stopPropagation(); openPicker() }}
+              className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-2xl text-[11px] font-black border ${
+                rating > 0
+                  ? 'bg-amber-100/60 border-amber-300 text-amber-700'
+                  : 'bg-white border-gray-200 text-gray-500'
               }`}
+              title={rating > 0 ? 'Tap to change rating' : 'Tap to rate'}
+            >
+              <Star size={12} fill={rating > 0 ? 'currentColor' : 'none'} />
+              <span>{rating > 0 ? rating : 'Rate'}</span>
+            </button>
+          )}
+
+          {/* Community / aggregate rating chip — read-only */}
+          {communityRating != null && (
+            <span
+              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-2xl text-[11px] font-black border bg-indigo-50 border-indigo-200 text-indigo-600 ml-1"
+              title="Aggregate rating across your buys (will read across users when data lands)"
+            >
+              <Star size={12} fill="currentColor" />
+              <span>
+                {communityRating === Math.round(communityRating)
+                  ? communityRating
+                  : communityRating.toFixed(1)}
+                {communityRatingCount != null && ` · ${fmt(communityRatingCount)}`}
+              </span>
+            </span>
+          )}
+
+          {onToggleSave && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onToggleSave() }}
+              className="ml-1 text-gray-400 hover:text-pink-500 transition-colors"
               aria-label={saved ? 'Unsave' : 'Save'}
             >
-              <Heart size={13} fill={saved ? 'currentColor' : 'none'} />
+              <Heart size={16} fill={saved ? '#ec4899' : 'none'} color={saved ? '#ec4899' : 'currentColor'} />
             </button>
-            {social != null && (
-              <span className="text-[11px] font-semibold text-gray-500 tabular-nums shrink-0">{formatCount(social)}</span>
-            )}
-            {typeof progress === 'number' && (
-              <div className="flex-1 min-w-[40px] max-w-[100px] h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-emerald-400 to-lime-500" style={{ width: `${Math.round(progress * 100)}%` }} />
-              </div>
-            )}
-          </div>
-          {guacMoney != null && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-sm font-extrabold tabular-nums shrink-0">
-              🥑 {typeof guacMoney === 'number'
-                ? (guacMoney < 1 ? `$${guacMoney.toFixed(2)}` : `$${guacMoney.toFixed(0)}`)
-                : guacMoney}
-            </span>
+          )}
+          {onShare && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onShare() }}
+              className="ml-1 text-gray-400 hover:text-gray-600 transition-colors"
+              aria-label="Share"
+            >
+              <Share2 size={15} />
+            </button>
+          )}
+          {onMenu && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onMenu() }}
+              className="ml-0.5 text-gray-400 hover:text-gray-600 transition-colors"
+              aria-label="More"
+            >
+              <MoreHorizontal size={18} />
+            </button>
           )}
         </div>
       </div>
-    </button>
+
+      {/* Rating picker modal — opens on Rate-chip click. Same UX as
+          the mobile bottom sheet but a centered dialog on web. */}
+      {pickerOpen && (
+        <RatingPickerDialog
+          itemTitle={title}
+          current={rating}
+          onPick={pickRating}
+          onClose={() => setPickerOpen(false)}
+        />
+      )}
+    </div>
+  )
+}
+
+const PICKER_LABELS = {
+  5: '⭐ Essential — worth every penny',
+  4: '✅ Important — would buy again',
+  3: '🙂 OK — nothing special',
+  2: '🍿 Splurge — could have skipped',
+  1: '🙈 Regret — pure waste',
+}
+
+function RatingPickerDialog({ itemTitle, current, onPick, onClose }) {
+  const [hover, setHover] = useState(current || 0)
+  const shown = hover
+  return (
+    <div
+      className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
+      onClick={(e) => { e.stopPropagation(); onClose() }}
+    >
+      <div
+        className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h3 className="text-base font-black">How worth it?</h3>
+        <p className="text-sm text-gray-500 mt-0.5 line-clamp-2">{itemTitle}</p>
+        <div className="flex items-center justify-between mt-5 mb-3">
+          {[1, 2, 3, 4, 5].map((n) => (
+            <button
+              key={n}
+              onClick={() => onPick(n)}
+              onMouseEnter={() => setHover(n)}
+              onMouseLeave={() => setHover(current || 0)}
+              className="p-1.5 transition-transform hover:scale-110"
+            >
+              <Star
+                size={44}
+                fill={n <= shown ? '#f59e0b' : 'none'}
+                color={n <= shown ? '#f59e0b' : '#cbd5e1'}
+                strokeWidth={1.5}
+              />
+            </button>
+          ))}
+        </div>
+        <p className="text-xs italic text-gray-500 text-center min-h-[18px]">
+          {PICKER_LABELS[shown] || 'Hover or tap a star to rate this item'}
+        </p>
+      </div>
+    </div>
   )
 }

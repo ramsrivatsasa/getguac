@@ -15,7 +15,9 @@
     "value":         { "type": "number?",            "desc": "Right-aligned coin chip value. Formats >=1000 as 'k'." },
     "valueLabel":    { "type": "string",  "default": "", "desc": "Optional currency/units string ('$', 'pts')." },
     "valueIsPrefix": { "type": "boolean", "default": false, "desc": "When true, label goes BEFORE the number ('$ 42')." },
-    "rating":        { "type": "int 0..5", "default": 0,    "desc": "Star count to display in the utility row." },
+    "rating":        { "type": "int 0..5", "default": 0,    "desc": "User's PERSONAL rating, shown as a compact ★N chip. Tap or long-press opens the 5-star picker; the engine calls onRate(n). When 0 (unrated), the chip reads 'Rate'." },
+    "communityRating":      { "type": "number?",            "desc": "Aggregate / community rating, shown as a second ★X.X chip in a different tone. Read-only. Hidden when null." },
+    "communityRatingCount": { "type": "number?",            "desc": "Social count appended to the community chip (e.g. 22000 → '22k'). Hidden when null." },
     "saved":         { "type": "boolean", "default": false, "desc": "Heart filled (pink) when true." },
     "onTap":         { "type": "callback?",          "desc": "Tap-the-card target." },
     "onRate":        { "type": "callback?",          "desc": "Per-star tap. When null, the star row is hidden." },
@@ -139,9 +141,24 @@
       "props": { "title": "Notes Item", "subtitle": "Bought ×2 · last May 28 · $99.99 total · originally on sale at Costco · also seen at Trader Joes for $98 · etc etc etc", "imageEmoji": "📝" }
     },
     {
+      "id": "personal_and_community_ratings",
+      "title": "Both rating chips — personal (gold) + community (indigo)",
+      "description": "User's personal rating shown left in gold; community avg shown right in indigo with a social count. Demonstrates the dual-chip pattern.",
+      "props": {
+        "title": "Bic Soleil 3 Razors",
+        "subtitle": "Bought ×3 · last May 30",
+        "imageEmoji": "🪒",
+        "tint": "#fef9c3",
+        "rating": 4,
+        "onRate": "noop",
+        "communityRating": 4.2,
+        "communityRatingCount": 22000
+      }
+    },
+    {
       "id": "all_features_full_stash_card",
       "title": "Everything on — full Stash card",
-      "description": "Title + sentence subtitle + on-hand pill + stars + value coin + menu. Exercises every prop.",
+      "description": "Title + value chip top-right + sentence subtitle + on-hand pill + dual rating chips + menu. Exercises every prop.",
       "props": {
         "title": "Bic Soleil 3 Razors at Walmart",
         "subtitle": "Bought ×3 · last May 30 · $42.50 total",
@@ -153,6 +170,8 @@
         "storeEmoji": "📦",
         "rating": 4,
         "onRate": "noop",
+        "communityRating": 4.2,
+        "communityRatingCount": 22000,
         "value": 42.50,
         "valueLabel": "$",
         "valueIsPrefix": true,

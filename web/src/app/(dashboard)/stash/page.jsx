@@ -17,6 +17,7 @@ import { StoreList } from '../../../components/StoreList'
 import BestPricesModal from '../../../components/BestPricesModal'
 import { StoreLogo } from '../../../components/StoreLogo'
 import { ShareItemButton } from '../../../components/ShareItemButton'
+import ItemRowCard from '../../../components/ItemRowCard'
 
 const SORTS = [
   { key: 'recent',     label: 'Most recent' },
@@ -348,7 +349,7 @@ export default function StashPage() {
       ) : view === 'grid' ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {filtered.map(it => (
-            <ProductCard
+            <StashCard
               key={it.key}
               item={it}
               expanded={expanded === it.key}
@@ -422,6 +423,143 @@ export default function StashPage() {
       <BestPricesModal open={!!stealsItem} onClose={() => setStealsItem(null)} item={stealsItem} />
     </div>
   )
+}
+
+/**
+ * StashCard — production wrapper around the centralized ItemRowCard.
+ * Maps a Stash `item` (from the aggregator) onto the card's prop
+ * contract and surfaces the rich expand panel (multi-store list,
+ * deal hunt, smashlist add) under a ⋮-toggleable region.
+ *
+ * Visual parity with mobile FetchCard: tinted tile + sentence
+ * subtitle + value top-right + dual rating chips + on-hand pill.
+ */
+const StashCard = memo(function StashCard({ item, expanded, onToggle, onAddToSmashlist, onFindDeals }) {
+  const qc = useQueryClient()
+  const cat = CATEGORY_BY_SLUG[item.category] || CATEGORY_BY_SLUG['misc']
+  const tone = TONE_TINT[cat.color] || TONE_TINT.gray
+
+  // Bulk-rate mutation — same as the old ProductCard. Cascades the
+  // rating across every receipt_item of this product at this store.
+  const rerate = useMutation({
+    mutationFn: async (rating) => {
+      const calls = [...item.stores.values()].map(s =>
+        s.id ? setStashProductRating({ storeId: s.id, sku: item.sku, item_name: item.item_name, rating }) : null
+      ).filter(Boolean)
+      return Promise.allSettled(calls)
+    },
+    onSuccess: (_data, rating) => {
+      const chip = guacImpactChip(rating)
+      toast.success(chip?.delta > 0
+        ? `Worth it ⭐ — ${chip.label}`
+        : chip?.delta < 0 ? `Noted — ${chip.label}` : 'Rating saved')
+      qc.invalidateQueries({ queryKey: ['stash'] })
+      qc.invalidateQueries({ queryKey: ['receipts'] })
+    },
+    onError: err => toast.error(err.message),
+  })
+
+  // Subtitle reads like a sentence — mirrors the mobile FetchCard's
+  // single-line metadata format. "Bought ×N · last DATE · $X total".
+  const lastDate = item.last_date ? friendlyDate(item.last_date) : ''
+  const subtitle = `Bought ×${item.times} · last ${lastDate} · $${item.total_spend.toFixed(2)} total`
+
+  // On-hand pill replaces the old category pill in the card body.
+  // "On hand: N" when set, "Tap to count" placeholder otherwise.
+  const onHand = item.on_hand_qty
+  const stockLabel = onHand > 0 ? `On hand: ${onHand}` : 'Tap to count'
+
+  // Personal rating = rounded average across rated rows (matches the
+  // old avg_rating semantic). Community rating fires only when there
+  // are 2+ rated rows so it adds signal beyond personal.
+  const personalRating = item.rating_count > 0 ? Math.round(item.avg_rating) : 0
+  const showCommunity = item.rating_count >= 2
+
+  return (
+    <div className="flex flex-col gap-2">
+      <ItemRowCard
+        title={item.item_name}
+        subtitle={subtitle}
+        imageEmoji={cat.emoji}
+        tint={tone.tintHex || '#fef9c3'}
+        urgency={item.low_stock?.state === 'urgent' ? item.low_stock.label
+              : item.low_stock?.state === 'out'    ? '🛑 Out'
+              : null}
+        storeName={stockLabel}
+        storeColor={onHand > 0 ? '#15803d' : '#94a3b8'}
+        storeEmoji="📦"
+        value={item.total_spend}
+        valueLabel="$"
+        valueIsPrefix={true}
+        rating={personalRating}
+        onRate={(n) => rerate.mutate(n)}
+        communityRating={showCommunity ? item.avg_rating : undefined}
+        communityRatingCount={showCommunity ? item.rating_count : undefined}
+        onMenu={onToggle}
+        onShare={() => onFindDeals?.()}
+        onTap={item.last_receipt_id ? () => { window.location.href = `/receipts/${item.last_receipt_id}` } : undefined}
+      />
+      {expanded && (
+        <div className="bg-white rounded-2xl p-3 ring-1 ring-gray-100 shadow-sm">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <p className="text-[10px] uppercase tracking-wider font-bold text-gray-500">
+              {item.store_count > 1 ? `📦 ${item.store_count} stores` : '📦 Your store'}
+            </p>
+            <div className="flex items-center gap-1.5">
+              <ShareItemButton
+                item={item}
+                buildPayload={() => ({
+                  kind: 'item',
+                  item_title: item.item_name,
+                  category_emoji: cat.emoji,
+                  rating: personalRating > 0 ? personalRating : null,
+                  best_price_callout: item.store_count > 1 && item.best
+                    ? `Cheapest at ${item.best.name} — $${Number(item.best.min_price).toFixed(2)}`
+                    : null,
+                  tiles: (item.stores_list || []).map(s => ({
+                    store: s.name || 'Store',
+                    location: '',
+                    title: item.item_name,
+                    price: s.min_price || s.last_price || 0,
+                    rating: null,
+                    review_count: null,
+                    sale: false,
+                  })),
+                })}
+                triggerClassName="text-xs font-bold text-emerald-700 hover:text-emerald-900"
+              />
+              <button onClick={() => onFindDeals?.()}
+                className="text-xs font-bold text-amber-700 hover:text-amber-900">
+                💎 Find deals
+              </button>
+              <button onClick={() => onAddToSmashlist?.()}
+                className="text-xs font-bold text-rose-700 hover:text-rose-900">
+                🛒 Smashlist
+              </button>
+            </div>
+          </div>
+          <StoreList
+            stores={item.stores_list}
+            best={item.best}
+            onAddToSmashlist={onAddToSmashlist}
+          />
+        </div>
+      )}
+    </div>
+  )
+})
+
+/** Lightweight friendly-date formatter for the sentence subtitle. */
+function friendlyDate(iso) {
+  if (!iso) return '—'
+  const parts = String(iso).split('-')
+  if (parts.length < 3) return iso
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+  const m = parseInt(parts[1], 10) || 1
+  const d = parseInt(parts[2], 10) || 1
+  const thisYear = new Date().getFullYear().toString()
+  const label = `${months[(m - 1) % 12]} ${d}`
+  return parts[0] === thisYear ? label : `${label}, ${parts[0]}`
 }
 
 const ProductCard = memo(function ProductCard({ item, expanded, onToggle, onAddToSmashlist, onFindDeals }) {

@@ -33,6 +33,17 @@ const publicHtml = join(REPO_ROOT, 'web', 'public', 'item-card-contract.html')
 writeFileSync(publicHtml, html, 'utf8')
 console.log(`Public (HTML)   → ${publicHtml}`)
 
+// Also publish the JSON spec itself so the React dev showcase
+// (/_dev/item-card) can fetch it at runtime — single source of truth
+// across the HTML preview, the PDF, the mobile widget test, and the
+// React showcase page. Any change to the spec automatically reflows
+// every consumer.
+const publicJson = join(REPO_ROOT, 'web', 'public', 'item-card-scenarios.json')
+writeFileSync(publicJson, readFileSync(
+  join(REPO_ROOT, 'test-fixtures', 'item-card-scenarios.json'), 'utf8'
+), 'utf8')
+console.log(`Public (JSON)   → ${publicJson}`)
+
 const outPdf = join(REPO_ROOT, 'test-fixtures', 'Item-Card-Contract.pdf')
 const publicPdf = join(REPO_ROOT, 'web', 'public', 'item-card-contract.pdf')
 if (renderPdf(outHtml, outPdf)) {
@@ -73,23 +84,9 @@ function escape(s) {
 function renderCard(props) {
   const tint = props.tint || '#fef9c3'
   const emoji = props.imageEmoji || '📦'
-  const showRate = props.onRate || props.rating != null
-  const showSave = props.onToggleSave != null
-  const showMenu = props.onMenu != null
-  const showShare = props.onShare != null
   const showStore = !!props.storeName
   const showValue = props.value != null
   const showUrg = !!props.urgency
-
-  const ratingHtml = (() => {
-    if (!showRate) return ''
-    const r = props.rating || 0
-    let s = ''
-    for (let n = 1; n <= 5; n++) {
-      s += `<span class="star ${n <= r ? 'on' : 'off'}">★</span>`
-    }
-    return `<span class="stars">${s}</span>`
-  })()
   const fmt = n => {
     const v = Math.abs(n)
     if (v >= 1000) {
@@ -101,6 +98,30 @@ function renderCard(props) {
   const valueText = showValue
     ? (props.valueIsPrefix ? `${props.valueLabel || ''}${fmt(props.value)}` : `${fmt(props.value)}${props.valueLabel || ''}`)
     : ''
+  const valueChip = showValue ? `
+    <span class="value">
+      <span class="coin">★</span>
+      <span class="value-text">${escape(valueText)}</span>
+    </span>` : ''
+
+  // Personal rating chip — single star + number, or "Rate" when unrated.
+  let personalChip = ''
+  if (props.onRate || props.rating != null) {
+    const r = props.rating || 0
+    if (r === 0) {
+      personalChip = `<span class="rchip rate-empty"><span class="rstar">☆</span> <span class="rnum">Rate</span></span>`
+    } else {
+      personalChip = `<span class="rchip rate-gold"><span class="rstar">★</span> <span class="rnum">${r}</span></span>`
+    }
+  }
+  // Community rating chip — read-only, indigo tone, optional social count.
+  let communityChip = ''
+  if (props.communityRating != null) {
+    const r = props.communityRating
+    const rDisplay = r === Math.round(r) ? `${r}` : r.toFixed(1)
+    const countText = props.communityRatingCount != null ? ` · ${fmt(props.communityRatingCount)}` : ''
+    communityChip = `<span class="rchip rate-community"><span class="rstar">★</span> <span class="rnum">${rDisplay}${countText}</span></span>`
+  }
 
   const urgencyHtml = showUrg ? `
     <div class="urgency" style="background:${props.urgencyBg || '#fecdd3'};color:${props.urgencyFg || '#9f1239'}">
@@ -114,27 +135,24 @@ function renderCard(props) {
       <span class="store-name">${escape(props.storeName)}</span>
     </div>` : ''
 
-  const valueHtml = showValue ? `
-    <span class="value">
-      <span class="coin">★</span>
-      <span class="value-text">${escape(valueText)}</span>
-    </span>` : ''
-
   return `
     <div class="card">
       <div class="image-tile" style="background:${tint}">${emoji}</div>
       <div class="content">
         ${urgencyHtml}
-        <div class="title">${escape(props.title || '')}</div>
+        <div class="title-row">
+          <div class="title">${escape(props.title || '')}</div>
+          ${valueChip}
+        </div>
         ${props.subtitle ? `<div class="subtitle">${escape(props.subtitle)}</div>` : ''}
         <div class="utility">
           ${storeHtml}
           <span class="spacer"></span>
-          ${ratingHtml}
-          ${valueHtml}
-          ${showSave ? `<span class="heart ${props.saved ? 'saved' : ''}">${props.saved ? '♥' : '♡'}</span>` : ''}
-          ${showShare ? `<span class="icon">⤴</span>` : ''}
-          ${showMenu ? `<span class="icon">⋯</span>` : ''}
+          ${personalChip}
+          ${communityChip}
+          ${props.onToggleSave != null ? `<span class="heart ${props.saved ? 'saved' : ''}">${props.saved ? '♥' : '♡'}</span>` : ''}
+          ${props.onShare != null ? `<span class="icon">⤴</span>` : ''}
+          ${props.onMenu != null ? `<span class="icon">⋯</span>` : ''}
         </div>
       </div>
     </div>
@@ -185,20 +203,27 @@ function renderHtml(data) {
   .content { flex: 1; min-width: 0; padding-top: 2px; }
   .urgency { display: inline-flex; align-items: center; gap: 2px; padding: 2px 7px; border-radius: 7px; font-size: 10px; font-weight: 900; margin-bottom: 4px; }
   .urgency .bolt { font-size: 9px; }
-  .title { font-size: 14px; font-weight: 800; color: #0f172a; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .title-row { display: flex; gap: 8px; align-items: flex-start; }
+  .title { flex: 1; font-size: 14px; font-weight: 800; color: #0f172a; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .subtitle { font-size: 11.5px; color: #64748b; font-weight: 500; line-height: 1.3; margin-top: 2px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .utility { display: flex; align-items: center; gap: 4px; margin-top: 6px; flex-wrap: nowrap; }
   .store-pill { display: inline-flex; align-items: center; gap: 5px; background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 3px 8px 3px 3px; max-width: 60%; }
   .store-emoji { width: 16px; height: 16px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: white; font-size: 9px; font-weight: 900; }
   .store-name { font-size: 10.5px; font-weight: 800; color: #334155; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .spacer { flex: 1; }
-  .stars { display: inline-flex; gap: 0; }
-  .star { font-size: 14px; line-height: 1; }
-  .star.on  { color: #f59e0b; }
-  .star.off { color: #cbd5e1; }
-  .value { display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; }
-  .value .coin { width: 18px; height: 18px; border-radius: 50%; background: linear-gradient(135deg, #fbbf24, #f59e0b); color: white; font-size: 11px; display: inline-flex; align-items: center; justify-content: center; }
-  .value-text { font-size: 13px; font-weight: 900; color: #0f172a; }
+  /* Compact rating chips — single star + number. Personal=gold (tappable);
+     community=indigo (read-only). Both same physical size to align cleanly. */
+  .rchip { display: inline-flex; align-items: center; gap: 3px; padding: 3px 7px; border-radius: 14px; font-size: 11px; font-weight: 900; margin-left: 4px; }
+  .rchip .rstar { font-size: 12px; line-height: 1; }
+  .rchip .rnum  { line-height: 1; }
+  .rate-empty { background: white; border: 1px solid #e2e8f0; color: #64748b; }
+  .rate-empty .rstar { color: #94a3b8; }
+  .rate-gold  { background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.35); color: #f59e0b; }
+  .rate-community { background: rgba(99,102,241,0.10); border: 1px solid rgba(99,102,241,0.30); color: #6366f1; }
+  .rate-community .rnum { font-weight: 800; }
+  .value { display: inline-flex; align-items: center; gap: 4px; }
+  .value .coin { width: 20px; height: 20px; border-radius: 50%; background: linear-gradient(135deg, #fbbf24, #f59e0b); color: white; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; }
+  .value-text { font-size: 14px; font-weight: 900; color: #0f172a; }
   .heart, .icon { color: #94a3b8; font-size: 16px; margin-left: 4px; }
   .heart.saved { color: #ec4899; }
 

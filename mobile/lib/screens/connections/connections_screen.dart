@@ -222,7 +222,7 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
                 Container(
                   width: 32, height: 32,
                   decoration: const BoxDecoration(
-                    color: Color(0xFF7c3aed), shape: BoxShape.circle,
+                    color: Color(0xFF15803d), shape: BoxShape.circle,
                   ),
                   alignment: Alignment.center,
                   child: const Icon(Icons.add, color: Colors.white, size: 18),

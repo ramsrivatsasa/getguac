@@ -92,7 +92,9 @@ export default function ConnectionsPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto pb-20">
+    // Left-aligned hug to the sidebar — was mx-auto centered which
+    // left a big dead zone on wide screens.
+    <div className="max-w-3xl pb-20">
       <header className="flex items-start gap-4 mb-6">
         <GuacMascot expression="sitting" size={70} />
         <div className="flex-1 min-w-0">
@@ -225,7 +227,7 @@ function RetailerRow({ retailer, conn, onClick, onDismiss }) {
           <X size={16} />
         </button>
       ) : (
-        <div className="w-8 h-8 rounded-full bg-violet-600 text-white flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center">
           <Plus size={16} />
         </div>
       )}

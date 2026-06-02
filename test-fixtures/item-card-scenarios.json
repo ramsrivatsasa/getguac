@@ -1,0 +1,163 @@
+{
+  "_doc": "Item-card contract — single canonical spec used by both platforms. The shape below is the prop set FetchCard (mobile, Flutter) and ItemRowCard (web, React) MUST implement. Each scenario describes a card configuration; the Node runner renders an HTML preview of each, the Dart test pumps each through FetchCard and asserts it builds. If both runners pass, the two implementations agree on the contract.",
+  "_contract": {
+    "title":         { "type": "string",  "required": true,  "desc": "Item name. Truncates to 2 lines." },
+    "subtitle":      { "type": "string?",            "desc": "One-sentence metadata line (≤ 2 lines)." },
+    "imageEmoji":    { "type": "string?",            "desc": "Emoji rendered in the tinted image tile when no URL." },
+    "imageUrl":      { "type": "string?",            "desc": "Product image URL. Falls back to imageEmoji on error." },
+    "tint":          { "type": "color hex",          "desc": "Tile-bg color. Card body is always white." },
+    "urgency":       { "type": "string?",            "desc": "Top-of-content pill. Lightning bolt added when text contains 'left'." },
+    "urgencyBg":     { "type": "color hex?",         "desc": "Urgency pill background. Defaults to rose-200." },
+    "urgencyFg":     { "type": "color hex?",         "desc": "Urgency pill text/icon. Defaults to rose-900." },
+    "storeName":     { "type": "string?",            "desc": "Pill in the utility row — store name, on-hand, etc." },
+    "storeColor":    { "type": "color hex?",         "desc": "Color for the store-emoji circle in the pill." },
+    "storeEmoji":    { "type": "string?",            "desc": "Emoji or letter inside the store-pill circle." },
+    "value":         { "type": "number?",            "desc": "Right-aligned coin chip value. Formats >=1000 as 'k'." },
+    "valueLabel":    { "type": "string",  "default": "", "desc": "Optional currency/units string ('$', 'pts')." },
+    "valueIsPrefix": { "type": "boolean", "default": false, "desc": "When true, label goes BEFORE the number ('$ 42')." },
+    "rating":        { "type": "int 0..5", "default": 0,    "desc": "Star count to display in the utility row." },
+    "saved":         { "type": "boolean", "default": false, "desc": "Heart filled (pink) when true." },
+    "onTap":         { "type": "callback?",          "desc": "Tap-the-card target." },
+    "onRate":        { "type": "callback?",          "desc": "Per-star tap. When null, the star row is hidden." },
+    "onToggleSave":  { "type": "callback?",          "desc": "Heart-icon tap. When null, no heart shown." },
+    "onShare":       { "type": "callback?",          "desc": "Share-icon tap. When null, hidden." },
+    "onMenu":        { "type": "callback?",          "desc": "⋮-icon tap. When null, hidden." }
+  },
+  "scenarios": [
+    {
+      "id": "minimal_title_only",
+      "title": "Bare minimum — title + image",
+      "description": "Smallest valid card. Image tile + title only.",
+      "props": { "title": "Bananas", "imageEmoji": "🍌" }
+    },
+    {
+      "id": "title_with_subtitle",
+      "title": "Title + one-line subtitle",
+      "description": "Subtitle reads like a sentence summary.",
+      "props": { "title": "Milk Gallon", "subtitle": "Bought ×3 · last May 30 · $14.97 total", "imageEmoji": "🥛" }
+    },
+    {
+      "id": "value_coin_dollar_prefix",
+      "title": "Value chip — dollar prefix ($42.50)",
+      "description": "Currency before the number; coin chip on the right.",
+      "props": { "title": "Olive Oil", "subtitle": "Bought ×4 · $42.50 total", "imageEmoji": "🫒", "value": 42.50, "valueLabel": "$", "valueIsPrefix": true }
+    },
+    {
+      "id": "value_coin_points_suffix",
+      "title": "Value chip — points suffix (1.5k pts)",
+      "description": "Points appended; thousands abbreviated.",
+      "props": { "title": "Smartfood Popcorn", "subtitle": "Select varieties", "imageEmoji": "🍿", "value": 1500, "valueLabel": " pts", "valueIsPrefix": false }
+    },
+    {
+      "id": "rating_three_stars",
+      "title": "Mid rating — 3 stars",
+      "description": "Stars in the utility row, ★★★☆☆.",
+      "props": { "title": "Greek Yogurt", "subtitle": "Bought ×5 · $24.00 total", "imageEmoji": "🥛", "rating": 3, "onRate": "noop" }
+    },
+    {
+      "id": "rating_five_stars",
+      "title": "Top rating — 5 stars",
+      "description": "All five filled gold.",
+      "props": { "title": "Coffee Beans", "subtitle": "Bought ×8 · $96 total", "imageEmoji": "☕", "rating": 5, "onRate": "noop", "value": 96, "valueLabel": "$", "valueIsPrefix": true }
+    },
+    {
+      "id": "urgency_buy_two_badge",
+      "title": "Urgency badge — \"Buy 2\"",
+      "description": "Purple-ish pill, NO lightning bolt (the trigger is the word 'left').",
+      "props": { "title": "Bactine First Aid", "subtitle": "Select varieties", "imageEmoji": "🩹", "tint": "#d1fae5", "urgency": "Buy 2", "urgencyBg": "#ede9fe", "urgencyFg": "#5b21b6" }
+    },
+    {
+      "id": "urgency_left_lightning",
+      "title": "Urgency badge — \"533 left\" with lightning bolt",
+      "description": "Rose pill with a lightning prefix automatically because text contains 'left'.",
+      "props": { "title": "Bic Soleil 3 Razors at Walmart", "subtitle": "4 count", "imageEmoji": "🪒", "tint": "#fef9c3", "urgency": "533 left" }
+    },
+    {
+      "id": "store_walmart_blue",
+      "title": "Store pill — Walmart blue",
+      "description": "Bottom-row pill with a circular emoji badge in the store's brand color.",
+      "props": { "title": "Eggland's Best Eggs", "subtitle": "Dozen", "imageEmoji": "🥚", "tint": "#fef9c3", "storeName": "Walmart", "storeColor": "#0071ce", "storeEmoji": "W" }
+    },
+    {
+      "id": "store_costco_red",
+      "title": "Store pill — Costco red",
+      "description": "Same pill shape with a different brand color.",
+      "props": { "title": "Kirkland Olive Oil", "subtitle": "2L bottle", "imageEmoji": "🫒", "tint": "#e0e7ff", "storeName": "Costco", "storeColor": "#e23744", "storeEmoji": "K" }
+    },
+    {
+      "id": "image_emoji_box_default",
+      "title": "Default emoji (📦) when no field provided",
+      "description": "Item with no image hint falls back to the generic box.",
+      "props": { "title": "Unknown Item", "subtitle": "Generic placeholder" }
+    },
+    {
+      "id": "image_emoji_food",
+      "title": "Food emoji example (🥑)",
+      "description": "Brand emoji renders large in the tinted tile.",
+      "props": { "title": "Avocados", "subtitle": "Bought ×12 · $30 total", "imageEmoji": "🥑", "tint": "#dcfce7", "value": 30, "valueLabel": "$", "valueIsPrefix": true }
+    },
+    {
+      "id": "custom_tint_sky",
+      "title": "Custom tint — sky blue",
+      "description": "Image tile in pale sky color.",
+      "props": { "title": "Bottled Water", "subtitle": "Case of 24", "imageEmoji": "💧", "tint": "#e0f2fe" }
+    },
+    {
+      "id": "custom_tint_mint",
+      "title": "Custom tint — mint green",
+      "description": "Image tile in soft mint.",
+      "props": { "title": "Toothpaste", "subtitle": "Personal care", "imageEmoji": "🦷", "tint": "#d1fae5" }
+    },
+    {
+      "id": "custom_tint_rose",
+      "title": "Custom tint — rose pink",
+      "description": "Image tile in pale rose.",
+      "props": { "title": "Pink Detergent", "subtitle": "Household", "imageEmoji": "🧺", "tint": "#fce7f3" }
+    },
+    {
+      "id": "heart_saved",
+      "title": "Heart icon — saved state filled",
+      "description": "Filled pink heart when saved=true.",
+      "props": { "title": "Favorite Item", "subtitle": "User saved this", "imageEmoji": "❤️", "saved": true, "onToggleSave": "noop" }
+    },
+    {
+      "id": "heart_unsaved",
+      "title": "Heart icon — unsaved (outline)",
+      "description": "Outlined gray heart when saved=false.",
+      "props": { "title": "Regular Item", "subtitle": "Not saved", "imageEmoji": "🍞", "saved": false, "onToggleSave": "noop" }
+    },
+    {
+      "id": "long_title_two_lines",
+      "title": "Long title — clamps to 2 lines",
+      "description": "Title overflow truncates with ellipsis at line 3.",
+      "props": { "title": "Super Premium Extra Long Product Name That Definitely Wraps to Multiple Lines and Then Some", "subtitle": "Bought ×1", "imageEmoji": "📦" }
+    },
+    {
+      "id": "long_subtitle_truncates",
+      "title": "Long subtitle — clamps to 2 lines",
+      "description": "Multi-sentence subtitle compresses; rest is `...`.",
+      "props": { "title": "Notes Item", "subtitle": "Bought ×2 · last May 28 · $99.99 total · originally on sale at Costco · also seen at Trader Joes for $98 · etc etc etc", "imageEmoji": "📝" }
+    },
+    {
+      "id": "all_features_full_stash_card",
+      "title": "Everything on — full Stash card",
+      "description": "Title + sentence subtitle + on-hand pill + stars + value coin + menu. Exercises every prop.",
+      "props": {
+        "title": "Bic Soleil 3 Razors at Walmart",
+        "subtitle": "Bought ×3 · last May 30 · $42.50 total",
+        "imageEmoji": "🪒",
+        "tint": "#fef9c3",
+        "urgency": "533 left",
+        "storeName": "On hand: 2",
+        "storeColor": "#15803d",
+        "storeEmoji": "📦",
+        "rating": 4,
+        "onRate": "noop",
+        "value": 42.50,
+        "valueLabel": "$",
+        "valueIsPrefix": true,
+        "onMenu": "noop"
+      }
+    }
+  ]
+}

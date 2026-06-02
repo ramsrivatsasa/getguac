@@ -14,6 +14,10 @@ class StashActionsSheet extends StatefulWidget {
   final int currentOnHand;
   final VoidCallback onShare;
   final VoidCallback? onAddToSmashlist;
+  // Opens the category-picker bottom sheet. Surfaced here because the
+  // inline category pill was removed from the card; users still need
+  // a path to recategorize.
+  final VoidCallback? onChangeCategory;
 
   const StashActionsSheet({
     super.key,
@@ -23,6 +27,7 @@ class StashActionsSheet extends StatefulWidget {
     this.currentOnHand = 0,
     required this.onShare,
     this.onAddToSmashlist,
+    this.onChangeCategory,
   });
 
   @override
@@ -150,6 +155,18 @@ class _StashActionsSheetState extends State<StashActionsSheet> {
           ],
           const SizedBox(height: 14),
 
+          if (widget.onChangeCategory != null) ...[
+            OutlinedButton.icon(
+              onPressed: widget.onChangeCategory,
+              icon: const Icon(Icons.category_outlined, size: 16),
+              label: const Text('Change category'),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(40),
+                alignment: Alignment.centerLeft,
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
           Row(children: [
             Expanded(child: OutlinedButton.icon(
               onPressed: () { Navigator.of(context).pop(); widget.onShare(); },

@@ -1,0 +1,657 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Item Card — Contract</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; margin: 0; background: #f8fafc; color: #0f172a; }
+  header { background: linear-gradient(135deg, #f59e0b, #ef4444); color: white; padding: 22px 32px; }
+  header h1 { margin: 0; font-size: 22px; }
+  header p { margin: 4px 0 0; opacity: 0.95; font-size: 12px; }
+  main { padding: 24px 32px 32px; }
+  h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.04em; color: #475569; margin: 20px 0 10px; }
+  .contract { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+  .contract th, .contract td { padding: 8px 12px; border-bottom: 1px solid #e2e8f0; text-align: left; font-size: 11.5px; vertical-align: top; }
+  .contract th { background: #f1f5f9; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: #475569; }
+  .contract code { background: #fef3c7; padding: 1px 5px; border-radius: 4px; font-family: ui-monospace, Menlo, monospace; }
+  .scenarios { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 14px; }
+  .scenario { background: white; border-radius: 12px; padding: 12px 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); border: 1px solid #f1f5f9; }
+  .meta-title { font-weight: 800; color: #0f172a; }
+  .meta-id { font-family: ui-monospace, Menlo, monospace; font-size: 10px; color: #94a3b8; margin-top: 1px; }
+  .meta-desc { color: #475569; font-size: 11.5px; margin-top: 4px; line-height: 1.4; }
+  .render { margin-top: 10px; }
+
+  /* === Card rendering matches mobile FetchCard layout === */
+  .card { display: flex; gap: 12px; background: white; border-radius: 18px; padding: 10px 12px 8px 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid #f1f5f9; align-items: flex-start; }
+  .image-tile { width: 72px; height: 72px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 36px; flex-shrink: 0; }
+  .content { flex: 1; min-width: 0; padding-top: 2px; }
+  .urgency { display: inline-flex; align-items: center; gap: 2px; padding: 2px 7px; border-radius: 7px; font-size: 10px; font-weight: 900; margin-bottom: 4px; }
+  .urgency .bolt { font-size: 9px; }
+  .title { font-size: 14px; font-weight: 800; color: #0f172a; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .subtitle { font-size: 11.5px; color: #64748b; font-weight: 500; line-height: 1.3; margin-top: 2px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .utility { display: flex; align-items: center; gap: 4px; margin-top: 6px; flex-wrap: nowrap; }
+  .store-pill { display: inline-flex; align-items: center; gap: 5px; background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 3px 8px 3px 3px; max-width: 60%; }
+  .store-emoji { width: 16px; height: 16px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: white; font-size: 9px; font-weight: 900; }
+  .store-name { font-size: 10.5px; font-weight: 800; color: #334155; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .spacer { flex: 1; }
+  .stars { display: inline-flex; gap: 0; }
+  .star { font-size: 14px; line-height: 1; }
+  .star.on  { color: #f59e0b; }
+  .star.off { color: #cbd5e1; }
+  .value { display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; }
+  .value .coin { width: 18px; height: 18px; border-radius: 50%; background: linear-gradient(135deg, #fbbf24, #f59e0b); color: white; font-size: 11px; display: inline-flex; align-items: center; justify-content: center; }
+  .value-text { font-size: 13px; font-weight: 900; color: #0f172a; }
+  .heart, .icon { color: #94a3b8; font-size: 16px; margin-left: 4px; }
+  .heart.saved { color: #ec4899; }
+
+  footer { padding: 16px 32px; color: #64748b; font-size: 11px; }
+  @page { size: A4 portrait; margin: 12mm; }
+  @media print {
+    body { background: white; }
+    header { background: #f59e0b; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .scenarios { grid-template-columns: repeat(2, 1fr); }
+    .scenario, .card { break-inside: avoid; page-break-inside: avoid; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style></head>
+<body>
+<header>
+  <h1>Item Card — Cross-Platform Contract</h1>
+  <p>Single canonical spec at <code>test-fixtures/item-card-scenarios.json</code>. Mobile renders via <code>FetchCard</code> (Flutter). Web renders via <code>ItemRowCard</code> (React). Both must produce visually-equivalent output for the same props.</p>
+</header>
+<main>
+  <h2>Prop contract</h2>
+  <table class="contract">
+    <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+    <tbody><tr><td><code>title</code></td><td>string</td><td>—</td><td>Item name. Truncates to 2 lines.</td></tr><tr><td><code>subtitle</code></td><td>string?</td><td>—</td><td>One-sentence metadata line (≤ 2 lines).</td></tr><tr><td><code>imageEmoji</code></td><td>string?</td><td>—</td><td>Emoji rendered in the tinted image tile when no URL.</td></tr><tr><td><code>imageUrl</code></td><td>string?</td><td>—</td><td>Product image URL. Falls back to imageEmoji on error.</td></tr><tr><td><code>tint</code></td><td>color hex</td><td>—</td><td>Tile-bg color. Card body is always white.</td></tr><tr><td><code>urgency</code></td><td>string?</td><td>—</td><td>Top-of-content pill. Lightning bolt added when text contains &#39;left&#39;.</td></tr><tr><td><code>urgencyBg</code></td><td>color hex?</td><td>—</td><td>Urgency pill background. Defaults to rose-200.</td></tr><tr><td><code>urgencyFg</code></td><td>color hex?</td><td>—</td><td>Urgency pill text/icon. Defaults to rose-900.</td></tr><tr><td><code>storeName</code></td><td>string?</td><td>—</td><td>Pill in the utility row — store name, on-hand, etc.</td></tr><tr><td><code>storeColor</code></td><td>color hex?</td><td>—</td><td>Color for the store-emoji circle in the pill.</td></tr><tr><td><code>storeEmoji</code></td><td>string?</td><td>—</td><td>Emoji or letter inside the store-pill circle.</td></tr><tr><td><code>value</code></td><td>number?</td><td>—</td><td>Right-aligned coin chip value. Formats &gt;=1000 as &#39;k&#39;.</td></tr><tr><td><code>valueLabel</code></td><td>string</td><td></td><td>Optional currency/units string (&#39;$&#39;, &#39;pts&#39;).</td></tr><tr><td><code>valueIsPrefix</code></td><td>boolean</td><td>false</td><td>When true, label goes BEFORE the number (&#39;$ 42&#39;).</td></tr><tr><td><code>rating</code></td><td>int 0..5</td><td>0</td><td>Star count to display in the utility row.</td></tr><tr><td><code>saved</code></td><td>boolean</td><td>false</td><td>Heart filled (pink) when true.</td></tr><tr><td><code>onTap</code></td><td>callback?</td><td>—</td><td>Tap-the-card target.</td></tr><tr><td><code>onRate</code></td><td>callback?</td><td>—</td><td>Per-star tap. When null, the star row is hidden.</td></tr><tr><td><code>onToggleSave</code></td><td>callback?</td><td>—</td><td>Heart-icon tap. When null, no heart shown.</td></tr><tr><td><code>onShare</code></td><td>callback?</td><td>—</td><td>Share-icon tap. When null, hidden.</td></tr><tr><td><code>onMenu</code></td><td>callback?</td><td>—</td><td>⋮-icon tap. When null, hidden.</td></tr></tbody>
+  </table>
+
+  <h2>20 scenarios</h2>
+  <div class="scenarios">
+    <section class="scenario">
+      <div class="meta">
+        <div class="meta-title">Bare minimum — title + image</div>
+        <div class="meta-id">minimal_title_only</div>
+        <div class="meta-desc">Smallest valid card. Image tile + title only.</div>
+      </div>
+      <div class="render">
+    <div class="card">
+      <div class="image-tile" style="background:#fef9c3">🍌</div>
+      <div class="content">
+        
+        <div class="title">Bananas</div>
+        
+        <div class="utility">
+          
+          <span class="spacer"></span>
+          
+          
+          
+          
+          
+        </div>
+      </div>
+    </div>
+  </div>
+    </section>
+  
+    <section class="scenario">
+      <div class="meta">
+        <div class="meta-title">Title + one-line subtitle</div>
+        <div class="meta-id">title_with_subtitle</div>
+        <div class="meta-desc">Subtitle reads like a sentence summary.</div>
+      </div>
+      <div class="render">
+    <div class="card">
+      <div class="image-tile" style="background:#fef9c3">🥛</div>
+      <div class="content">
+        
+        <div class="title">Milk Gallon</div>
+        <div class="subtitle">Bought ×3 · last May 30 · $14.97 total</div>
+        <div class="utility">
+          
+          <span class="spacer"></span>
+          
+          
+          
+          
+          
+        </div>
+      </div>
+    </div>
+  </div>
+    </section>
+  
+    <section class="scenario">
+      <div class="meta">
+        <div class="meta-title">Value chip — dollar prefix ($42.50)</div>
+        <div class="meta-id">value_coin_dollar_prefix</div>
+        <div class="meta-desc">Currency before the number; coin chip on the right.</div>
+      </div>
+      <div class="render">
+    <div class="card">
+      <div class="image-tile" style="background:#fef9c3">🫒</div>
+      <div class="content">
+        
+        <div class="title">Olive Oil</div>
+        <div class="subtitle">Bought ×4 · $42.50 total</div>
+        <div class="utility">
+          
+          <span class="spacer"></span>
+          
+          
+    <span class="value">
+      <span class="coin">★</span>
+      <span class="value-text">$42.50</span>
+    </span>
+          
+          
+          
+        </div>
+      </div>
+    </div>
+  </div>
+    </section>
+  
+    <section class="scenario">
+      <div class="meta">
+        <div class="meta-title">Value chip — points suffix (1.5k pts)</div>
+        <div class="meta-id">value_coin_points_suffix</div>
+        <div class="meta-desc">Points appended; thousands abbreviated.</div>
+      </div>
+      <div class="render">
+    <div class="card">
+      <div class="image-tile" style="background:#fef9c3">🍿</div>
+      <div class="content">
+        
+        <div class="title">Smartfood Popcorn</div>
+        <div class="subtitle">Select varieties</div>
+        <div class="utility">
+          
+          <span class="spacer"></span>
+          
+          
+    <span class="value">
+      <span class="coin">★</span>
+      <span class="value-text">1.5k pts</span>
+    </span>
+          
+          
+          
+        </div>
+      </div>
+    </div>
+  </div>
+    </section>
+  
+    <section class="scenario">
+      <div class="meta">
+        <div class="meta-title">Mid rating — 3 stars</div>
+        <div class="meta-id">rating_three_stars</div>
+        <div class="meta-desc">Stars in the utility row, ★★★☆☆.</div>
+      </div>
+      <div class="render">
+    <div class="card">
+      <div class="image-tile" style="background:#fef9c3">🥛</div>
+      <div class="content">
+        
+        <div class="title">Greek Yogurt</div>
+        <div class="subtitle">Bought ×5 · $24.00 total</div>
+        <div class="utility">
+          
+          <span class="spacer"></span>
+          <span class="stars"><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star off">★</span><span class="star off">★</span></span>
+          
+          
+          
+          
+        </div>
+      </div>
+    </div>
+  </div>
+    </section>
+  
+    <section class="scenario">
+      <div class="meta">
+        <div class="meta-title">Top rating — 5 stars</div>
+        <div class="meta-id">rating_five_stars</div>
+        <div class="meta-desc">All five filled gold.</div>
+      </div>
+      <div class="render">
+    <div class="card">
+      <div class="image-tile" style="background:#fef9c3">☕</div>
+      <div class="content">
+        
+        <div class="title">Coffee Beans</div>
+        <div class="subtitle">Bought ×8 · $96 total</div>
+        <div class="utility">
+          
+          <span class="spacer"></span>
+          <span class="stars"><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span></span>
+          
+    <span class="value">
+      <span class="coin">★</span>
+      <span class="value-text">$96</span>
+    </span>
+          
+          
+          
+        </div>
+      </div>
+    </div>
+  </div>
+    </section>
+  
+    <section class="scenario">
+      <div class="meta">
+        <div class="meta-title">Urgency badge — &quot;Buy 2&quot;</div>
+        <div class="meta-id">urgency_buy_two_badge</div>
+        <div class="meta-desc">Purple-ish pill, NO lightning bolt (the trigger is the word &#39;left&#39;).</div>
+      </div>
+      <div class="render">
+    <div class="card">
+      <div class="image-tile" style="background:#d1fae5">🩹</div>
+      <div class="content">
+        
+    <div class="urgency" style="background:#ede9fe;color:#5b21b6">
+      
+      Buy 2
+    </div>
+        <div class="title">Bactine First Aid</div>
+        <div class="subtitle">Select varieties</div>
+        <div class="utility">
+          
+          <span class="spacer"></span>
+          
+          
+          
+          
+          
+        </div>
+      </div>
+    </div>
+  </div>
+    </section>
+  
+    <section class="scenario">
+      <div class="meta">
+        <div class="meta-title">Urgency badge — &quot;533 left&quot; with lightning bolt</div>
+        <div class="meta-id">urgency_left_lightning</div>
+        <div class="meta-desc">Rose pill with a lightning prefix automatically because text contains &#39;left&#39;.</div>
+      </div>
+      <div class="render">
+    <div class="card">
+      <div class="image-tile" style="background:#fef9c3">🪒</div>
+      <div class="content">
+        
+    <div class="urgency" style="background:#fecdd3;color:#9f1239">
+      <span class="bolt">⚡</span>
+      533 left
+    </div>
+        <div class="title">Bic Soleil 3 Razors at Walmart</div>
+        <div class="subtitle">4 count</div>
+        <div class="utility">
+          
+          <span class="spacer"></span>
+          
+          
+          
+          
+          
+        </div>
+      </div>
+    </div>
+  </div>
+    </section>
+  
+    <section class="scenario">
+      <div class="meta">
+        <div class="meta-title">Store pill — Walmart blue</div>
+        <div class="meta-id">store_walmart_blue</div>
+        <div class="meta-desc">Bottom-row pill with a circular emoji badge in the store&#39;s brand color.</div>
+      </div>
+      <div class="render">
+    <div class="card">
+      <div class="image-tile" style="background:#fef9c3">🥚</div>
+      <div class="content">
+        
+        <div class="title">Eggland&#39;s Best Eggs</div>
+        <div class="subtitle">Dozen</div>
+        <div class="utility">
+          
+    <div class="store-pill">
+      <span class="store-emoji" style="background:#0071ce">W</span>
+      <span class="store-name">Walmart</span>
+    </div>
+          <span class="spacer"></span>
+          
+          
+          
+          
+          
+        </div>
+      </div>
+    </div>
+  </div>
+    </section>
+  
+    <section class="scenario">
+      <div class="meta">
+        <div class="meta-title">Store pill — Costco red</div>
+        <div class="meta-id">store_costco_red</div>
+        <div class="meta-desc">Same pill shape with a different brand color.</div>
+      </div>
+      <div class="render">
+    <div class="card">
+      <div class="image-tile" style="background:#e0e7ff">🫒</div>
+      <div class="content">
+        
+        <div class="title">Kirkland Olive Oil</div>
+        <div class="subtitle">2L bottle</div>
+        <div class="utility">
+          
+    <div class="store-pill">
+      <span class="store-emoji" style="background:#e23744">K</span>
+      <span class="store-name">Costco</span>
+    </div>
+          <span class="spacer"></span>
+          
+          
+          
+          
+          
+        </div>
+      </div>
+    </div>
+  </div>
+    </section>
+  
+    <section class="scenario">
+      <div class="meta">
+        <div class="meta-title">Default emoji (📦) when no field provided</div>
+        <div class="meta-id">image_emoji_box_default</div>
+        <div class="meta-desc">Item with no image hint falls back to the generic box.</div>
+      </div>
+      <div class="render">
+    <div class="card">
+      <div class="image-tile" style="background:#fef9c3">📦</div>
+      <div class="content">
+        
+        <div class="title">Unknown Item</div>
+        <div class="subtitle">Generic placeholder</div>
+        <div class="utility">
+          
+          <span class="spacer"></span>
+          
+          
+          
+          
+          
+        </div>
+      </div>
+    </div>
+  </div>
+    </section>
+  
+    <section class="scenario">
+      <div class="meta">
+        <div class="meta-title">Food emoji example (🥑)</div>
+        <div class="meta-id">image_emoji_food</div>
+        <div class="meta-desc">Brand emoji renders large in the tinted tile.</div>
+      </div>
+      <div class="render">
+    <div class="card">
+      <div class="image-tile" style="background:#dcfce7">🥑</div>
+      <div class="content">
+        
+        <div class="title">Avocados</div>
+        <div class="subtitle">Bought ×12 · $30 total</div>
+        <div class="utility">
+          
+          <span class="spacer"></span>
+          
+          
+    <span class="value">
+      <span class="coin">★</span>
+      <span class="value-text">$30</span>
+    </span>
+          
+          
+          
+        </div>
+      </div>
+    </div>
+  </div>
+    </section>
+  
+    <section class="scenario">
+      <div class="meta">
+        <div class="meta-title">Custom tint — sky blue</div>
+        <div class="meta-id">custom_tint_sky</div>
+        <div class="meta-desc">Image tile in pale sky color.</div>
+      </div>
+      <div class="render">
+    <div class="card">
+      <div class="image-tile" style="background:#e0f2fe">💧</div>
+      <div class="content">
+        
+        <div class="title">Bottled Water</div>
+        <div class="subtitle">Case of 24</div>
+        <div class="utility">
+          
+          <span class="spacer"></span>
+          
+          
+          
+          
+          
+        </div>
+      </div>
+    </div>
+  </div>
+    </section>
+  
+    <section class="scenario">
+      <div class="meta">
+        <div class="meta-title">Custom tint — mint green</div>
+        <div class="meta-id">custom_tint_mint</div>
+        <div class="meta-desc">Image tile in soft mint.</div>
+      </div>
+      <div class="render">
+    <div class="card">
+      <div class="image-tile" style="background:#d1fae5">🦷</div>
+      <div class="content">
+        
+        <div class="title">Toothpaste</div>
+        <div class="subtitle">Personal care</div>
+        <div class="utility">
+          
+          <span class="spacer"></span>
+          
+          
+          
+          
+          
+        </div>
+      </div>
+    </div>
+  </div>
+    </section>
+  
+    <section class="scenario">
+      <div class="meta">
+        <div class="meta-title">Custom tint — rose pink</div>
+        <div class="meta-id">custom_tint_rose</div>
+        <div class="meta-desc">Image tile in pale rose.</div>
+      </div>
+      <div class="render">
+    <div class="card">
+      <div class="image-tile" style="background:#fce7f3">🧺</div>
+      <div class="content">
+        
+        <div class="title">Pink Detergent</div>
+        <div class="subtitle">Household</div>
+        <div class="utility">
+          
+          <span class="spacer"></span>
+          
+          
+          
+          
+          
+        </div>
+      </div>
+    </div>
+  </div>
+    </section>
+  
+    <section class="scenario">
+      <div class="meta">
+        <div class="meta-title">Heart icon — saved state filled</div>
+        <div class="meta-id">heart_saved</div>
+        <div class="meta-desc">Filled pink heart when saved=true.</div>
+      </div>
+      <div class="render">
+    <div class="card">
+      <div class="image-tile" style="background:#fef9c3">❤️</div>
+      <div class="content">
+        
+        <div class="title">Favorite Item</div>
+        <div class="subtitle">User saved this</div>
+        <div class="utility">
+          
+          <span class="spacer"></span>
+          
+          
+          <span class="heart saved">♥</span>
+          
+          
+        </div>
+      </div>
+    </div>
+  </div>
+    </section>
+  
+    <section class="scenario">
+      <div class="meta">
+        <div class="meta-title">Heart icon — unsaved (outline)</div>
+        <div class="meta-id">heart_unsaved</div>
+        <div class="meta-desc">Outlined gray heart when saved=false.</div>
+      </div>
+      <div class="render">
+    <div class="card">
+      <div class="image-tile" style="background:#fef9c3">🍞</div>
+      <div class="content">
+        
+        <div class="title">Regular Item</div>
+        <div class="subtitle">Not saved</div>
+        <div class="utility">
+          
+          <span class="spacer"></span>
+          
+          
+          <span class="heart ">♡</span>
+          
+          
+        </div>
+      </div>
+    </div>
+  </div>
+    </section>
+  
+    <section class="scenario">
+      <div class="meta">
+        <div class="meta-title">Long title — clamps to 2 lines</div>
+        <div class="meta-id">long_title_two_lines</div>
+        <div class="meta-desc">Title overflow truncates with ellipsis at line 3.</div>
+      </div>
+      <div class="render">
+    <div class="card">
+      <div class="image-tile" style="background:#fef9c3">📦</div>
+      <div class="content">
+        
+        <div class="title">Super Premium Extra Long Product Name That Definitely Wraps to Multiple Lines and Then Some</div>
+        <div class="subtitle">Bought ×1</div>
+        <div class="utility">
+          
+          <span class="spacer"></span>
+          
+          
+          
+          
+          
+        </div>
+      </div>
+    </div>
+  </div>
+    </section>
+  
+    <section class="scenario">
+      <div class="meta">
+        <div class="meta-title">Long subtitle — clamps to 2 lines</div>
+        <div class="meta-id">long_subtitle_truncates</div>
+        <div class="meta-desc">Multi-sentence subtitle compresses; rest is `...`.</div>
+      </div>
+      <div class="render">
+    <div class="card">
+      <div class="image-tile" style="background:#fef9c3">📝</div>
+      <div class="content">
+        
+        <div class="title">Notes Item</div>
+        <div class="subtitle">Bought ×2 · last May 28 · $99.99 total · originally on sale at Costco · also seen at Trader Joes for $98 · etc etc etc</div>
+        <div class="utility">
+          
+          <span class="spacer"></span>
+          
+          
+          
+          
+          
+        </div>
+      </div>
+    </div>
+  </div>
+    </section>
+  
+    <section class="scenario">
+      <div class="meta">
+        <div class="meta-title">Everything on — full Stash card</div>
+        <div class="meta-id">all_features_full_stash_card</div>
+        <div class="meta-desc">Title + sentence subtitle + on-hand pill + stars + value coin + menu. Exercises every prop.</div>
+      </div>
+      <div class="render">
+    <div class="card">
+      <div class="image-tile" style="background:#fef9c3">🪒</div>
+      <div class="content">
+        
+    <div class="urgency" style="background:#fecdd3;color:#9f1239">
+      <span class="bolt">⚡</span>
+      533 left
+    </div>
+        <div class="title">Bic Soleil 3 Razors at Walmart</div>
+        <div class="subtitle">Bought ×3 · last May 30 · $42.50 total</div>
+        <div class="utility">
+          
+    <div class="store-pill">
+      <span class="store-emoji" style="background:#15803d">📦</span>
+      <span class="store-name">On hand: 2</span>
+    </div>
+          <span class="spacer"></span>
+          <span class="stars"><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star off">★</span></span>
+          
+    <span class="value">
+      <span class="coin">★</span>
+      <span class="value-text">$42.50</span>
+    </span>
+          
+          
+          <span class="icon">⋯</span>
+        </div>
+      </div>
+    </div>
+  </div>
+    </section>
+  </div>
+</main>
+<footer>
+  Mobile parity asserted by <code>mobile/test/widgets/fetch_card_scenarios_test.dart</code> — pumps each scenario through FetchCard and verifies the build succeeds (no exception). The HTML preview above is the visual reference.
+</footer>
+</body></html>

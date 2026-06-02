@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.16",
-  "name": "v0.3.16 — Stash horizontal-scroll category strip · Stash aggregator central engine",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.16/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Stash category-filter strip is now a single horizontal-scroll row on both web and mobile. Web was wrapping across 3 lines on wide screens; mobile pills now carry their category's brand color in the active state with a bigger emoji bubble (matches web visual richness).\n• Stash aggregation engine centralized — one source of truth at web/src/lib/stashEngine.js, mirrored in mobile/lib/services/stash_engine.dart. Same grouping rules everywhere: SKU-or-name key, case-insensitive, returned + statement-import rows filtered, multi-store merge, ratings tracked as max + avg.\n• 20-scenario Stash aggregator test report: 74/74 web + 20/20 mobile assertions green. PDF at /stash-scenario-report.pdf.\n• v0.3.15 (Stash pill polish) bundled here since it was on-device only — first time it ships to other users via auto-update."
+  "version": "v0.3.17",
+  "name": "v0.3.17 — Compact Stash cards · centralized item-card contract · sentence subtitle + on-hand pill",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.17/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Stash cards now read as a single dense row instead of a stack — title, sentence subtitle (Bought ×N · last date · $total), and a utility row with on-hand pill + rating + value coin + menu. No more empty space.\n• Category pill removed from the card; on-hand stock shown there instead (tap → bottom sheet stepper). Re-categorize still available via the actions sheet's new \"Change category\" button.\n• Centralized item-card contract: a JSON spec at test-fixtures/item-card-scenarios.json defines every prop the card accepts plus 20 example scenarios (urgency badges, store pills, ratings, tints, long-text truncation). Mobile FetchCard pumps every scenario in a widget test; web ItemRowCard renders the same spec as an HTML/PDF reference at /item-card-contract.pdf.\n• 20-scenario × 2-platform test report (mobile 20/20 pass) — see /item-card-contract.pdf."
 }

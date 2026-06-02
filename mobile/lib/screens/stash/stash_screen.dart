@@ -294,20 +294,22 @@ class _StashScreenState extends State<StashScreen> {
                         itemBuilder: (ctx, idx) {
                           final i = filtered[idx];
                           final preset = i.category == null ? null : presetBySlug(i.category!);
-                          // Tile tint follows the category's brand
-                          // color (or pale yellow fallback). Subtle —
-                          // gives a glance-able category cue without
-                          // dominating the card.
+                          // Image-tile tint follows the category's
+                          // brand color (or pale yellow fallback).
                           final tint = preset == null
                             ? const Color(0xFFfef9c3)
-                            : tintFor(preset.color).withValues(alpha: 0.18);
-                          // Decorate the subtitle with on-hand info when
-                          // we have it — "×3 · last May 30 · 2 on hand".
+                            : tintFor(preset.color).withValues(alpha: 0.22);
                           final invKey = StashService.inventoryKey(i.name);
                           final onHand = _onHand[invKey] ?? 0;
-                          final subtitle = onHand > 0
-                            ? '×${i.qty} · last ${_friendlyDate(i.lastDate)} · $onHand on hand'
-                            : '×${i.qty} · last ${_friendlyDate(i.lastDate)}';
+                          // Subtitle is one sentence — bought count +
+                          // last bought + lifetime total — reads like
+                          // a description rather than a metadata row.
+                          final subtitle = 'Bought ×${i.qty} · last ${_friendlyDate(i.lastDate)} · \$${i.totalSpent.toStringAsFixed(2)} total';
+                          // Where the category pill used to live we
+                          // now surface on-hand. Tap routes to the
+                          // actions sheet's stepper. Empty-state nudge
+                          // when the user hasn't counted yet.
+                          final stockLabel = onHand > 0 ? 'On hand: $onHand' : 'Tap to count';
                           return FetchCard(
                             title: i.name,
                             subtitle: subtitle,
@@ -315,15 +317,15 @@ class _StashScreenState extends State<StashScreen> {
                             tint: tint,
                             value: i.totalSpent,
                             valueLabel: '\$',
-                            storeName: preset != null ? preset.label : 'Tap to categorize',
-                            storeColor: preset != null ? tintFor(preset.color) : const Color(0xFF6b7280),
-                            storeEmoji: preset?.emoji,
+                            valueIsPrefix: true,
+                            storeName: stockLabel,
+                            storeColor: onHand > 0 ? const Color(0xFF15803d) : const Color(0xFF94a3b8),
+                            storeEmoji: '📦',
                             rating: i.rating ?? 0,
                             onRate: (n) => _rateItem(i, n),
                             onTap: i.lastReceiptId.isEmpty
-                              ? () => _openPicker(i)
+                              ? () => _openActions(i)
                               : () => context.push('/receipts/${i.lastReceiptId}'),
-                            onShare: () => _shareItem(i),
                             onMenu: () => _openActions(i),
                           );
                         },
@@ -386,6 +388,9 @@ class _StashScreenState extends State<StashScreen> {
         category: item.category,
         currentOnHand: _onHand[invKey] ?? 0,
         onShare: () => _shareItem(item),
+        // Surface the category picker inside the actions sheet now
+        // that we removed the inline category pill from the card.
+        onChangeCategory: () { Navigator.of(context).pop(); _openPicker(item); },
         onAddToSmashlist: null,  // TODO: wire mobile add-to-smashlist
       ),
     );

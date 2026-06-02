@@ -563,19 +563,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
         // screen (GuacScore → /guacanomics, GuacWizard →
         // /guacwizard, GuacMoney → /shopping for the Cheapest
         // flow, Rewards → /rewards).
+        // Engagement-tile widths bumped 180 → 220 so they match the
+        // PaymentTile row below them. Earlier the visual hierarchy
+        // was off — the engagement (top) tiles read as smaller than
+        // the metric (bottom) tiles when they should be the headline.
         return SizedBox(
           height: 92,
           child: ListView(
             scrollDirection: Axis.horizontal,
             padding: EdgeInsets.zero,
             children: [
-              SizedBox(width: 180, child: _guacScoreTile(guacScore)),
+              SizedBox(width: 220, child: _guacScoreTile(guacScore)),
               const SizedBox(width: 10),
-              SizedBox(width: 180, child: _guacWizardTile(wiz, isLoading)),
+              SizedBox(width: 220, child: _guacWizardTile(wiz, isLoading)),
               const SizedBox(width: 10),
-              SizedBox(width: 180, child: _guacMoneyTile()),
+              SizedBox(width: 220, child: _guacMoneyTile()),
               const SizedBox(width: 10),
-              SizedBox(width: 180, child: _rewardsTile(rewardCount)),
+              SizedBox(width: 220, child: _rewardsTile(rewardCount)),
             ],
           ),
         );

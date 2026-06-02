@@ -46,7 +46,10 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
       }
       if (mounted) setState(() {
         _statusById = map;
-        _aliasEmail = alias == null ? null : '$alias@getguac.app';
+        // Receipts auto-parse only on the `+g` subaddress — give
+        // retailers that variant. The bare `you@getguac.app` keeps
+        // signup mail / personal mail separate. See /how-email-works.
+        _aliasEmail = alias == null ? null : '$alias+g@getguac.app';
         _loading = false;
       });
     } catch (_) {

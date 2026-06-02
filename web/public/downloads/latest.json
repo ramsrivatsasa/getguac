@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.26",
-  "name": "v0.3.26 — store logo fills the circle · receipt hero cleaned up",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.26/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Store logos now fill their circle edge-to-edge (BoxFit.cover + no inner padding). Office Depot, Costco, etc. no longer show a tiny mark inside a big white ring.\n• Receipt detail hero stripped of decorative avocado/flower emojis — they read as misaligned 'stars' floating around the logo. The centered store logo + gradient is the focal hierarchy now."
+  "version": "v0.3.27",
+  "name": "v0.3.27 — engagement-tile widths align with PaymentTile row + +g alias on Connections",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.27/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Dashboard engagement tiles (GuacScore · GuacWizard · GuacMoney · Rewards) bumped 180px → 220px so they match the PaymentTile row below them. Top row no longer looks narrower than the bottom.\n• Connections page now shows the correct `+g` subaddress (rdasaradi+g@getguac.app) — that's the auto-parsing endpoint per /how-email-works. The bare @getguac.app address is for personal mail and stays untouched. Retailers go to +g."
 }

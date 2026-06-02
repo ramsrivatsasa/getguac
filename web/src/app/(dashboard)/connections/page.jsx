@@ -36,7 +36,11 @@ export default function ConnectionsPage() {
       const { data: prof } = await sb.from('profiles')
         .select('email_alias').eq('id', user.id).maybeSingle()
       if (prof?.email_alias) {
-        setAliasEmail(`${prof.email_alias}@getguac.app`)
+        // The `+g` subaddress is the auto-receipt-parsing endpoint
+        // (see /how-email-works). The bare `you@getguac.app` is for
+        // regular mail that stays in the inbox untouched. Retailers
+        // ALWAYS get the +g variant so Guac-AI runs on every receipt.
+        setAliasEmail(`${prof.email_alias}+g@getguac.app`)
       }
     })()
   }, [sb])
@@ -121,8 +125,10 @@ export default function ConnectionsPage() {
           )}
         </div>
         <p className="text-xs text-emerald-800/80 mt-3 leading-relaxed">
-          Forward any retailer&apos;s receipt email here and Guac-AI parses it into a receipt. Each retailer
-          below has step-by-step instructions to wire that forwarding directly from your account settings.
+          The <span className="font-mono font-bold">+g</span> subaddress auto-parses every receipt that lands
+          here. Your regular <span className="font-mono">@getguac.app</span> address (without the +g) is for
+          signups + personal mail and stays untouched. Each retailer below has step-by-step instructions
+          to wire forwarding to this address from your account settings.
         </p>
       </section>
 

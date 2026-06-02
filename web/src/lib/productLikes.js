@@ -17,7 +17,14 @@
 // without a Supabase connection. The fetch + toggle helpers wrap
 // Supabase calls and return values the UI can render directly.
 
-import { createClient } from './supabase/client'
+// Supabase client lazy-loaded inside the network functions so this
+// module can also be imported from a pure-Node test runner (which
+// doesn't have the @supabase/auth-helpers React bindings available).
+// formatLikeCount stays pure + standalone.
+async function _sb() {
+  const { createClient } = await import('./supabase/client.js')
+  return createClient()
+}
 
 /**
  * Aggregate like stats for a batch of item keys. Returns a Map so
@@ -30,7 +37,7 @@ import { createClient } from './supabase/client'
  */
 export async function fetchLikeStats(itemKeys) {
   if (!Array.isArray(itemKeys) || itemKeys.length === 0) return new Map()
-  const sb = createClient()
+  const sb = await _sb()
   const { data, error } = await sb.rpc('product_like_counts', { item_keys: itemKeys })
   if (error) {
     if (typeof console !== 'undefined') console.warn('[likes] fetchLikeStats failed:', error.message)
@@ -54,7 +61,7 @@ export async function fetchLikeStats(itemKeys) {
  */
 export async function toggleLike(itemKey) {
   if (!itemKey) throw new Error('itemKey required')
-  const sb = createClient()
+  const sb = await _sb()
   const { data: { user } } = await sb.auth.getUser()
   if (!user) throw new Error('sign in to like products')
   // Check if the user already liked this product.

@@ -1,0 +1,25 @@
+{
+  "_doc": "20 scenarios for the love-count engine. Two pieces under test: (1) formatLikeCount — pure formatting, must match byte-for-byte between web/src/lib/productLikes.js and mobile/lib/services/product_likes_service.dart#formatLikeCount; (2) toggle math invariants — the optimistic UI in the Stash screens depends on these holding. The toggle math is described in the scenario but not executed (needs a live Supabase) — the format scenarios are run end-to-end by both engines.",
+  "scenarios": [
+    { "id": "zero",                "value": 0,         "expectFormat": "0",      "note": "No likes yet — render '0' (and the chip auto-hides on cards)." },
+    { "id": "one",                 "value": 1,         "expectFormat": "1",      "note": "Single user liked — exact integer." },
+    { "id": "small_double_digit",  "value": 42,        "expectFormat": "42",     "note": "Under 100 — no k-suffix." },
+    { "id": "small_triple_digit",  "value": 999,       "expectFormat": "999",    "note": "Just below the k-suffix threshold." },
+    { "id": "boundary_one_k",      "value": 1000,      "expectFormat": "1k",     "note": "Exactly 1000 → '1k' (no decimal because round)." },
+    { "id": "one_point_five_k",    "value": 1500,      "expectFormat": "1.5k",   "note": "1500 → '1.5k' (one decimal place under 10k)." },
+    { "id": "two_point_three_k",   "value": 2300,      "expectFormat": "2.3k",   "note": "Sub-10k stays at 1-decimal precision." },
+    { "id": "almost_ten_k",        "value": 9499,      "expectFormat": "9.5k",   "note": "Rounds to nearest 0.1k under 10k boundary." },
+    { "id": "boundary_ten_k",      "value": 10000,     "expectFormat": "10k",    "note": "At/above 10k → integer-k (drops decimal). 22-rule." },
+    { "id": "twenty_two_k",        "value": 22000,     "expectFormat": "22k",    "note": "Fetch-style social count — '22k' is the canonical example." },
+    { "id": "twenty_two_point_five_k", "value": 22500, "expectFormat": "23k",    "note": "Rounds — above 10k we use whole-k." },
+    { "id": "ninety_nine_k",       "value": 99999,     "expectFormat": "100k",   "note": "Edge of the k-range — rounds up to 100k." },
+    { "id": "boundary_one_hundred_k", "value": 100000, "expectFormat": "100k",   "note": "Six-figure community love." },
+    { "id": "five_hundred_k",      "value": 500000,    "expectFormat": "500k",   "note": "Half-million → '500k'." },
+    { "id": "almost_one_m",        "value": 999999,    "expectFormat": "1000k",  "note": "Still 'k' because <1M boundary (we round 999999/1000 → 1000)." },
+    { "id": "boundary_one_m",      "value": 1000000,   "expectFormat": "1M",     "note": "1M threshold → 'M' suffix kicks in." },
+    { "id": "one_point_two_m",     "value": 1200000,   "expectFormat": "1.2M",   "note": "Above 1M → 1-decimal precision." },
+    { "id": "two_point_five_m",    "value": 2500000,   "expectFormat": "2.5M",   "note": "Big numbers stay readable with one decimal." },
+    { "id": "negative_input",      "value": -50,       "expectFormat": "50",     "note": "Abs-value: negatives normalize. Defensive against bad data." },
+    { "id": "fractional_truncates", "value": 12.7,     "expectFormat": "13",     "note": "Sub-1000 with a fractional input rounds to nearest integer." }
+  ]
+}

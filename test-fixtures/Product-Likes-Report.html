@@ -1,0 +1,271 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Product Likes — Scenario Report</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font: 13px/1.45 -apple-system, system-ui, sans-serif; margin: 0; background: #f8fafc; color: #0f172a; }
+  header { background: linear-gradient(135deg, #ec4899, #f59e0b); color: white; padding: 22px 32px; }
+  header h1 { margin: 0; font-size: 22px; }
+  header p { margin: 4px 0 0; opacity: 0.92; font-size: 12px; }
+  .banner { padding: 12px 32px; font-weight: 700; }
+  .banner.ok { background: #dcfce7; color: #166534; border-left: 4px solid #15803d; }
+  .banner.err { background: #fee2e2; color: #991b1b; border-left: 4px solid #dc2626; }
+  main { padding: 24px 32px; }
+  table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-radius: 10px; overflow: hidden; }
+  thead { background: #f1f5f9; }
+  th, td { border-bottom: 1px solid #e2e8f0; padding: 10px 14px; vertical-align: top; text-align: left; }
+  th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: #475569; }
+  .scenario .id { font-family: ui-monospace, Menlo, monospace; font-size: 11px; font-weight: 700; color: #0f172a; }
+  .scenario .note { font-size: 11px; color: #475569; margin-top: 2px; line-height: 1.4; }
+  .value, .expect { font-family: ui-monospace, Menlo, monospace; font-size: 12px; }
+  .result .chip { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 12px; background: rgba(236,72,153,0.10); border: 1px solid rgba(236,72,153,0.35); color: #ec4899; font-weight: 800; font-size: 12px; }
+  .ok { text-align: center; font-size: 16px; font-weight: 900; }
+  .ok.pass { color: #15803d; }
+  .ok.fail { color: #dc2626; }
+  tr.has-failure td.scenario { background: #fef2f2; }
+  footer { padding: 16px 32px; font-size: 11px; color: #64748b; }
+  @page { size: A4 portrait; margin: 14mm; }
+  @media print {
+    body { background: white; }
+    header { background: #ec4899; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    tr { break-inside: avoid; page-break-inside: avoid; }
+    thead { display: table-header-group; }
+  }
+</style></head>
+<body>
+<header>
+  <h1>Product Likes — 20-Scenario Formatter Report</h1>
+  <p>Cross-platform parity for <code>formatLikeCount</code>. Web (<code>web/src/lib/productLikes.js</code>) and mobile (<code>mobile/lib/services/product_likes_service.dart</code>) must produce identical output for every value below.</p>
+</header>
+<div class="banner ok">All 20 assertions passed — web + mobile formatters agree.</div>
+<main>
+  <table>
+    <thead>
+      <tr><th>Scenario</th><th>Input</th><th>Rendered chip</th><th>Expected</th><th></th></tr>
+    </thead>
+    <tbody>
+    <tr class="">
+      <td class="scenario">
+        <div class="id">zero</div>
+        <div class="note">No likes yet — render &#39;0&#39; (and the chip auto-hides on cards).</div>
+      </td>
+      <td class="value">0</td>
+      <td class="result"><span class="chip">♥ 0</span></td>
+      <td class="expect">0</td>
+      <td class="ok pass">✓</td>
+    </tr>
+  
+    <tr class="">
+      <td class="scenario">
+        <div class="id">one</div>
+        <div class="note">Single user liked — exact integer.</div>
+      </td>
+      <td class="value">1</td>
+      <td class="result"><span class="chip">♥ 1</span></td>
+      <td class="expect">1</td>
+      <td class="ok pass">✓</td>
+    </tr>
+  
+    <tr class="">
+      <td class="scenario">
+        <div class="id">small_double_digit</div>
+        <div class="note">Under 100 — no k-suffix.</div>
+      </td>
+      <td class="value">42</td>
+      <td class="result"><span class="chip">♥ 42</span></td>
+      <td class="expect">42</td>
+      <td class="ok pass">✓</td>
+    </tr>
+  
+    <tr class="">
+      <td class="scenario">
+        <div class="id">small_triple_digit</div>
+        <div class="note">Just below the k-suffix threshold.</div>
+      </td>
+      <td class="value">999</td>
+      <td class="result"><span class="chip">♥ 999</span></td>
+      <td class="expect">999</td>
+      <td class="ok pass">✓</td>
+    </tr>
+  
+    <tr class="">
+      <td class="scenario">
+        <div class="id">boundary_one_k</div>
+        <div class="note">Exactly 1000 → &#39;1k&#39; (no decimal because round).</div>
+      </td>
+      <td class="value">1000</td>
+      <td class="result"><span class="chip">♥ 1k</span></td>
+      <td class="expect">1k</td>
+      <td class="ok pass">✓</td>
+    </tr>
+  
+    <tr class="">
+      <td class="scenario">
+        <div class="id">one_point_five_k</div>
+        <div class="note">1500 → &#39;1.5k&#39; (one decimal place under 10k).</div>
+      </td>
+      <td class="value">1500</td>
+      <td class="result"><span class="chip">♥ 1.5k</span></td>
+      <td class="expect">1.5k</td>
+      <td class="ok pass">✓</td>
+    </tr>
+  
+    <tr class="">
+      <td class="scenario">
+        <div class="id">two_point_three_k</div>
+        <div class="note">Sub-10k stays at 1-decimal precision.</div>
+      </td>
+      <td class="value">2300</td>
+      <td class="result"><span class="chip">♥ 2.3k</span></td>
+      <td class="expect">2.3k</td>
+      <td class="ok pass">✓</td>
+    </tr>
+  
+    <tr class="">
+      <td class="scenario">
+        <div class="id">almost_ten_k</div>
+        <div class="note">Rounds to nearest 0.1k under 10k boundary.</div>
+      </td>
+      <td class="value">9499</td>
+      <td class="result"><span class="chip">♥ 9.5k</span></td>
+      <td class="expect">9.5k</td>
+      <td class="ok pass">✓</td>
+    </tr>
+  
+    <tr class="">
+      <td class="scenario">
+        <div class="id">boundary_ten_k</div>
+        <div class="note">At/above 10k → integer-k (drops decimal). 22-rule.</div>
+      </td>
+      <td class="value">10000</td>
+      <td class="result"><span class="chip">♥ 10k</span></td>
+      <td class="expect">10k</td>
+      <td class="ok pass">✓</td>
+    </tr>
+  
+    <tr class="">
+      <td class="scenario">
+        <div class="id">twenty_two_k</div>
+        <div class="note">Fetch-style social count — &#39;22k&#39; is the canonical example.</div>
+      </td>
+      <td class="value">22000</td>
+      <td class="result"><span class="chip">♥ 22k</span></td>
+      <td class="expect">22k</td>
+      <td class="ok pass">✓</td>
+    </tr>
+  
+    <tr class="">
+      <td class="scenario">
+        <div class="id">twenty_two_point_five_k</div>
+        <div class="note">Rounds — above 10k we use whole-k.</div>
+      </td>
+      <td class="value">22500</td>
+      <td class="result"><span class="chip">♥ 23k</span></td>
+      <td class="expect">23k</td>
+      <td class="ok pass">✓</td>
+    </tr>
+  
+    <tr class="">
+      <td class="scenario">
+        <div class="id">ninety_nine_k</div>
+        <div class="note">Edge of the k-range — rounds up to 100k.</div>
+      </td>
+      <td class="value">99999</td>
+      <td class="result"><span class="chip">♥ 100k</span></td>
+      <td class="expect">100k</td>
+      <td class="ok pass">✓</td>
+    </tr>
+  
+    <tr class="">
+      <td class="scenario">
+        <div class="id">boundary_one_hundred_k</div>
+        <div class="note">Six-figure community love.</div>
+      </td>
+      <td class="value">100000</td>
+      <td class="result"><span class="chip">♥ 100k</span></td>
+      <td class="expect">100k</td>
+      <td class="ok pass">✓</td>
+    </tr>
+  
+    <tr class="">
+      <td class="scenario">
+        <div class="id">five_hundred_k</div>
+        <div class="note">Half-million → &#39;500k&#39;.</div>
+      </td>
+      <td class="value">500000</td>
+      <td class="result"><span class="chip">♥ 500k</span></td>
+      <td class="expect">500k</td>
+      <td class="ok pass">✓</td>
+    </tr>
+  
+    <tr class="">
+      <td class="scenario">
+        <div class="id">almost_one_m</div>
+        <div class="note">Still &#39;k&#39; because &lt;1M boundary (we round 999999/1000 → 1000).</div>
+      </td>
+      <td class="value">999999</td>
+      <td class="result"><span class="chip">♥ 1000k</span></td>
+      <td class="expect">1000k</td>
+      <td class="ok pass">✓</td>
+    </tr>
+  
+    <tr class="">
+      <td class="scenario">
+        <div class="id">boundary_one_m</div>
+        <div class="note">1M threshold → &#39;M&#39; suffix kicks in.</div>
+      </td>
+      <td class="value">1000000</td>
+      <td class="result"><span class="chip">♥ 1M</span></td>
+      <td class="expect">1M</td>
+      <td class="ok pass">✓</td>
+    </tr>
+  
+    <tr class="">
+      <td class="scenario">
+        <div class="id">one_point_two_m</div>
+        <div class="note">Above 1M → 1-decimal precision.</div>
+      </td>
+      <td class="value">1200000</td>
+      <td class="result"><span class="chip">♥ 1.2M</span></td>
+      <td class="expect">1.2M</td>
+      <td class="ok pass">✓</td>
+    </tr>
+  
+    <tr class="">
+      <td class="scenario">
+        <div class="id">two_point_five_m</div>
+        <div class="note">Big numbers stay readable with one decimal.</div>
+      </td>
+      <td class="value">2500000</td>
+      <td class="result"><span class="chip">♥ 2.5M</span></td>
+      <td class="expect">2.5M</td>
+      <td class="ok pass">✓</td>
+    </tr>
+  
+    <tr class="">
+      <td class="scenario">
+        <div class="id">negative_input</div>
+        <div class="note">Abs-value: negatives normalize. Defensive against bad data.</div>
+      </td>
+      <td class="value">-50</td>
+      <td class="result"><span class="chip">♥ 50</span></td>
+      <td class="expect">50</td>
+      <td class="ok pass">✓</td>
+    </tr>
+  
+    <tr class="">
+      <td class="scenario">
+        <div class="id">fractional_truncates</div>
+        <div class="note">Sub-1000 with a fractional input rounds to nearest integer.</div>
+      </td>
+      <td class="value">12.7</td>
+      <td class="result"><span class="chip">♥ 13</span></td>
+      <td class="expect">13</td>
+      <td class="ok pass">✓</td>
+    </tr>
+  </tbody>
+  </table>
+</main>
+<footer>
+  Toggle behavior + RPC are integration concerns and live behind a Supabase session — covered by manual smoke tests in the mobile app (tap a heart, refresh, count persists) rather than the harness.
+</footer>
+</body></html>

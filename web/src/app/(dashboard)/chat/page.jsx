@@ -48,6 +48,10 @@ export default function ChatPage() {
     queryFn: () => getDisplayNames(peerIds),
     staleTime: 5 * 60_000,
     enabled: peerIds.length > 0,
+    // Defensive select — see commit fe2db61. If anyone ever
+    // subscribes to this queryKey with a non-Map shape, we don't
+    // crash on `names.get(id)` downstream.
+    select: (raw) => raw instanceof Map ? raw : new Map(),
   })
 
   // Realtime: when any new dm_message lands in a thread I'm in, invalidate
@@ -215,6 +219,8 @@ function Thread({ threadId, peerName, onBack }) {
     queryFn: () => getDisplayNames(authorIds),
     staleTime: 5 * 60_000,
     enabled: authorIds.length > 0,
+    // Defensive select — see commit fe2db61.
+    select: (raw) => raw instanceof Map ? raw : new Map(),
   })
 
   // My own user-id so we can right-align my bubbles.

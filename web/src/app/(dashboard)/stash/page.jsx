@@ -82,10 +82,17 @@ export default function StashPage() {
   // Per-user inventory (on-hand counts). Decorated onto each Stash
   // item below so the card knows how many to render in the stepper +
   // whether to fire the "running low" badge.
+  // Same shape-collision defense as useBankStatementMap (see commit
+  // fe2db61): if a future hook ever subscribes to ['stash-inventory']
+  // returning something other than a Map, the select fallback here
+  // prevents the `.get()`-on-non-Map crash that took down /receipts.
   const { data: inventoryMap = new Map() } = useQuery({
     queryKey: ['stash-inventory'],
     queryFn: fetchInventoryMap,
     staleTime: 1000 * 60,
+    select: (raw) => raw instanceof Map ? raw
+      : Array.isArray(raw) ? new Map(raw.map(r => [r.item_key, r]))
+      : new Map(),
   })
 
   // Aggregate by product (sku-or-name, case-insensitive) across ALL stores.

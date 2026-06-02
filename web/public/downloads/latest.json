@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.32",
-  "name": "v0.3.32 — Reports / Returns / Stores on mobile · CSE rate limit · Connections links everywhere",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.32/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Three new screens on mobile that previously only existed on web:\n  → Reports — monthly spending totals, sorted newest-first, with lifetime total card on top\n  → Returns — receipts with open refund windows, sorted by days-left ascending (urgent first)\n  → Stores — distinct stores with receipt count + lifetime spend, searchable\n• Reachable from the Menu long-press popover (Profile tab).\n• Web /api/product-image-batch now per-user rate-limited (6 req/min) + batch cap reduced 80 → 20 names. Protects the Google CSE 100/day free tier from runaway loads.\n• Connections link added to web Inbox + Profile headers (was already on Rewards / Stores)."
+  "version": "v0.3.33",
+  "name": "v0.3.33 — Profile redesigned as vertical-scroll card list",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.33/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Profile screen redesigned to match the simple vertical-scroll pattern. Horizontal-scroll Guac-AI strip + 2-column pill grid replaced with single-column card rows grouped into clear sections:\n  → My Activity (Worth It · GuacScore · GuacWizard)\n  → Money (Reports · Returns · Rewards)\n  → Shop (Stores · Stash · Steals)\n  → Mail & retailers (Connections · Inbox)\n  → Settings (biometric · mailbox · Security · Privacy)\n• Stores added to Profile (was previously only in the Menu long-press popover).\n• Debug log + Report a problem pills removed from everyday Profile chrome (still reachable via app-lock screen + crash flows).\n• Duplicate Inbox pill removed."
 }

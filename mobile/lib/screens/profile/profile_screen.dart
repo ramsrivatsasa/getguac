@@ -248,80 +248,100 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
 
           const SizedBox(height: 20),
-          _SectionHeader(label: 'Your Guac-AI'),
-          const SizedBox(height: 6),
-
-          // Single horizontal-scroll row — same pattern the
-          // dashboard uses now. All 9 Guac-AI pills slide instead
-          // of stacking into a 5×2 grid that ate half the screen.
-          // Each pill is fixed-width (180px) so the row reads as
-          // a swipeable carousel.
-          SizedBox(
-            height: 64,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: EdgeInsets.zero,
-              children: [
-                SizedBox(width: 180, child: _Pill(
-                  gradient: const [Color(0xFFfbbf24), Color(0xFFf59e0b), Color(0xFFe11d48)],
-                  emoji: '🥑', title: 'Worth It?', subtitle: 'Rate every purchase',
-                  onTap: () => context.push('/receipts'),
-                )),
-                const SizedBox(width: 10),
-                SizedBox(width: 180, child: _Pill(
-                  gradient: const [Color(0xFF22c55e), Color(0xFF15803d)],
-                  icon: Icons.auto_awesome, title: 'GuacScore', subtitle: 'Spending grade',
-                  onTap: () => context.push('/guacscore'),
-                )),
-                const SizedBox(width: 10),
-                SizedBox(width: 180, child: _Pill(
-                  gradient: const [Color(0xFFfcd34d), Color(0xFFca8a04)],
-                  icon: Icons.mark_email_unread_rounded, title: 'Inbox', subtitle: 'Mail + auto-receipts',
-                  onTap: () => context.push('/inbox'),
-                )),
-                const SizedBox(width: 10),
-                SizedBox(width: 180, child: _Pill(
-                  gradient: const [Color(0xFFa78bfa), Color(0xFF7c3aed)],
-                  icon: Icons.auto_fix_high, title: 'GuacWizard', subtitle: 'Bank Bite + insights',
-                  onTap: () => context.push('/guacwizard'),
-                )),
-                const SizedBox(width: 10),
-                SizedBox(width: 180, child: _Pill(
-                  gradient: const [Color(0xFFf472b6), Color(0xFFdb2777)],
-                  icon: Icons.card_giftcard_rounded, title: 'Rewards', subtitle: 'Loyalty + expiring',
-                  onTap: () => context.push('/rewards'),
-                )),
-                const SizedBox(width: 10),
-                SizedBox(width: 180, child: _Pill(
-                  gradient: const [Color(0xFFfde047), Color(0xFFca8a04)],
-                  icon: Icons.inventory_2, title: 'Stash', subtitle: 'Everything you own',
-                  onTap: () => context.push('/stash'),
-                )),
-                const SizedBox(width: 10),
-                SizedBox(width: 180, child: _Pill(
-                  gradient: const [Color(0xFFf9a8d4), Color(0xFFdb2777)],
-                  icon: Icons.local_offer, title: 'Steals', subtitle: 'AI price hunt',
-                  onTap: () => context.push('/steals'),
-                )),
-                const SizedBox(width: 10),
-                SizedBox(width: 180, child: _Pill(
-                  gradient: const [Color(0xFF67e8f9), Color(0xFF0891b2)],
-                  icon: Icons.directions_car_filled_rounded, title: 'Car Miles', subtitle: 'Trip log',
-                  onTap: () => context.push('/car-miles'),
-                )),
-                const SizedBox(width: 10),
-                SizedBox(width: 180, child: _Pill(
-                  gradient: const [Color(0xFF84cc16), Color(0xFF15803d), Color(0xFF064e3b)],
-                  emoji: '🥑', title: 'How It Works', subtitle: 'Meet Guac-AI in 7 cards',
-                  onTap: () => context.push('/how-it-works'),
-                )),
-              ],
-            ),
+          _SectionHeader(label: 'My Activity'),
+          const SizedBox(height: 8),
+          _VRow(
+            tint: const Color(0xFFfef3c7),
+            icon: '🥑', title: 'Worth It?',
+            subtitle: 'Rate every purchase',
+            onTap: () => context.push('/receipts'),
+          ),
+          _VRow(
+            tint: const Color(0xFFd1fae5),
+            iconWidget: const Icon(Icons.auto_awesome, color: Color(0xFF15803d)),
+            title: 'GuacScore',
+            subtitle: 'Spending grade',
+            onTap: () => context.push('/guacscore'),
+          ),
+          _VRow(
+            tint: const Color(0xFFede9fe),
+            iconWidget: const Icon(Icons.auto_fix_high, color: Color(0xFF7c3aed)),
+            title: 'GuacWizard',
+            subtitle: 'Bank Bite + insights',
+            onTap: () => context.push('/guacwizard'),
           ),
 
-          const SizedBox(height: 18),
-          _SectionHeader(label: 'More'),
-          const SizedBox(height: 6),
+          const SizedBox(height: 20),
+          _SectionHeader(label: 'Money'),
+          const SizedBox(height: 8),
+          _VRow(
+            tint: const Color(0xFFd1fae5),
+            iconWidget: const Icon(Icons.bar_chart_rounded, color: Color(0xFF15803d)),
+            title: 'Reports',
+            subtitle: 'Monthly totals + lifetime spend',
+            onTap: () => context.push('/reports'),
+          ),
+          _VRow(
+            tint: const Color(0xFFfee2e2),
+            iconWidget: const Icon(Icons.undo_rounded, color: Color(0xFFb91c1c)),
+            title: 'Returns',
+            subtitle: 'Open refund windows',
+            onTap: () => context.push('/returns'),
+          ),
+          _VRow(
+            tint: const Color(0xFFfce7f3),
+            iconWidget: const Icon(Icons.card_giftcard_rounded, color: Color(0xFFdb2777)),
+            title: 'Rewards',
+            subtitle: 'Loyalty + expiring',
+            onTap: () => context.push('/rewards'),
+          ),
+
+          const SizedBox(height: 20),
+          _SectionHeader(label: 'Shop'),
+          const SizedBox(height: 8),
+          _VRow(
+            tint: const Color(0xFFdbeafe),
+            iconWidget: const Icon(Icons.storefront_rounded, color: Color(0xFF1d4ed8)),
+            title: 'Stores',
+            subtitle: 'Spend by store',
+            onTap: () => context.push('/stores'),
+          ),
+          _VRow(
+            tint: const Color(0xFFfef3c7),
+            iconWidget: const Icon(Icons.inventory_2, color: Color(0xFFca8a04)),
+            title: 'Stash',
+            subtitle: 'Everything you own',
+            onTap: () => context.push('/stash'),
+          ),
+          _VRow(
+            tint: const Color(0xFFfce7f3),
+            iconWidget: const Icon(Icons.local_offer, color: Color(0xFFdb2777)),
+            title: 'Steals',
+            subtitle: 'AI price hunt',
+            onTap: () => context.push('/steals'),
+          ),
+
+          const SizedBox(height: 20),
+          _SectionHeader(label: 'Mail & retailers'),
+          const SizedBox(height: 8),
+          _VRow(
+            tint: const Color(0xFFd1fae5),
+            iconWidget: const Icon(Icons.link_rounded, color: Color(0xFF15803d)),
+            title: 'Connections',
+            subtitle: '37 retailers · auto-pull receipts',
+            onTap: () => context.push('/connections'),
+          ),
+          _VRow(
+            tint: const Color(0xFFbae6fd),
+            iconWidget: const Icon(Icons.mark_email_unread_rounded, color: Color(0xFF0369a1)),
+            title: 'Inbox',
+            subtitle: 'Mail + auto-receipts',
+            onTap: () => context.push('/inbox'),
+          ),
+
+          const SizedBox(height: 20),
+          _SectionHeader(label: 'Settings'),
+          const SizedBox(height: 8),
 
           // Biometric toggle — only shows on devices that support it
           if (_bioCapable)
@@ -482,53 +502,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ]),
           ),
 
-          // Diagnostic + support actions, styled as _Pill tiles to match
-          // the Security / Privacy / dashboard quick-action row. Two per
-          // line so they fit on a narrow phone without horizontal scroll.
-          const SizedBox(height: 14),
-          Row(children: [
-            Expanded(child: _Pill(
-              gradient: const [Color(0xFFfde68a), Color(0xFFd97706)],
-              icon: Icons.bug_report_outlined, title: 'Debug log', subtitle: 'View / upload',
-              onTap: () => _showDebugLog(),
-            )),
-            const SizedBox(width: 10),
-            Expanded(child: _Pill(
-              gradient: const [Color(0xFFfecdd3), Color(0xFFbe123c)],
-              icon: Icons.report_problem_outlined, title: 'Report a problem', subtitle: 'Tell us what broke',
-              onTap: () => context.go('/report-problem'),
-            )),
-          ]),
-
-          const SizedBox(height: 10),
-          Row(children: [
-            Expanded(child: _Pill(
-              gradient: const [Color(0xFFa7f3d0), Color(0xFF15803d)],
-              icon: Icons.link_rounded, title: 'Connections', subtitle: '37 retailers',
-              onTap: () => context.go('/connections'),
-            )),
-            const SizedBox(width: 10),
-            Expanded(child: _Pill(
-              gradient: const [Color(0xFFbae6fd), Color(0xFF0369a1)],
-              icon: Icons.mark_email_unread_rounded, title: 'Inbox', subtitle: 'Mail + auto-receipts',
-              onTap: () => context.go('/inbox'),
-            )),
-          ]),
-
-          const SizedBox(height: 10),
-          Row(children: [
-            Expanded(child: _Pill(
-              gradient: const [Color(0xFFa7f3d0), Color(0xFF15803d)],
-              icon: Icons.shield_outlined, title: 'Security', subtitle: 'Encryption + privacy',
-              onTap: () => UpdateService.openDownload('https://getguac.app/security'),
-            )),
-            const SizedBox(width: 10),
-            Expanded(child: _Pill(
-              gradient: const [Color(0xFFcbd5e1), Color(0xFF64748b)],
-              icon: Icons.privacy_tip, title: 'Privacy', subtitle: 'Manage on web',
-              onTap: () => UpdateService.openDownload('https://getguac.app/profile'),
-            )),
-          ]),
+          // Settings rows continued — Security + Privacy as single
+          // vertical rows so they line up with the rest of the
+          // simplified layout. Debug log + Report a problem removed
+          // from this surface (advanced support actions don't belong
+          // in everyday Profile chrome).
+          _VRow(
+            tint: const Color(0xFFd1fae5),
+            iconWidget: const Icon(Icons.shield_outlined, color: Color(0xFF15803d)),
+            title: 'Security',
+            subtitle: 'Encryption + privacy',
+            onTap: () => UpdateService.openDownload('https://getguac.app/security'),
+          ),
+          _VRow(
+            tint: const Color(0xFFe2e8f0),
+            iconWidget: const Icon(Icons.privacy_tip, color: Color(0xFF475569)),
+            title: 'Privacy',
+            subtitle: 'Manage on web',
+            onTap: () => UpdateService.openDownload('https://getguac.app/profile'),
+          ),
 
           const SizedBox(height: 20),
           // Sign-out + Check-for-update share a pill row so both
@@ -622,6 +614,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     //  more natural. The login screen is already the in-app welcome surface.)
   }
 
+  // Debug log dialog — kept for potential future reuse from a hidden
+  // gesture or settings sub-page, but no longer surfaced in the
+  // everyday Profile UI. Suppressed unused-element warning.
+  // ignore: unused_element
   Future<void> _showDebugLog() async {
     // Snapshot the live state into the log so there's always something useful
     // to inspect even on a fresh install where no flow has fired yet.
@@ -757,6 +753,74 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
+/// Single vertical-list row matching the Fetch reference Profile
+/// layout: a tinted square icon tile on the left, title + subtitle
+/// stacked to its right, optional chevron at the end. Used in the
+/// simplified Profile sections (My Activity / Money / Shop /
+/// Mail & retailers / Settings).
+class _VRow extends StatelessWidget {
+  final Color tint;
+  final String title;
+  final String subtitle;
+  final String? icon;        // Emoji (e.g. '🥑')
+  final Widget? iconWidget;  // Material icon (fallback when emoji isn't right)
+  final VoidCallback? onTap;
+  const _VRow({
+    required this.tint, required this.title, required this.subtitle,
+    this.icon, this.iconWidget, this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Ink(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: const Color(0xFFe5e7eb)),
+            ),
+            padding: const EdgeInsets.all(12),
+            child: Row(children: [
+              Container(
+                width: 48, height: 48,
+                decoration: BoxDecoration(
+                  color: tint, borderRadius: BorderRadius.circular(12),
+                ),
+                alignment: Alignment.center,
+                child: icon != null
+                  ? Text(icon!, style: const TextStyle(fontSize: 24))
+                  : (iconWidget ?? const SizedBox.shrink()),
+              ),
+              const SizedBox(width: 12),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+                Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+                const SizedBox(height: 2),
+                Text(subtitle,
+                  style: const TextStyle(fontSize: 12, color: Colors.black54, height: 1.35),
+                  maxLines: 2, overflow: TextOverflow.ellipsis,
+                ),
+              ])),
+              const Icon(Icons.chevron_right, color: Colors.black26),
+            ]),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// _Pill + _MenuTile removed from Profile — superseded by _VRow.
+// Keep these widgets in git history if you ever need that exact
+// shape (`_Pill` was the colorful gradient quick-action; `_MenuTile`
+// was the avatar-tile list row). Today the Profile uses _VRow
+// uniformly.
+// ignore: unused_element
 class _Pill extends StatelessWidget {
   final List<Color> gradient;
   final IconData? icon;
@@ -797,6 +861,7 @@ class _Pill extends StatelessWidget {
   }
 }
 
+// ignore: unused_element
 class _MenuTile extends StatelessWidget {
   final IconData icon;
   final Color iconColor;

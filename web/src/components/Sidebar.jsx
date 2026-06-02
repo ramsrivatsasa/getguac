@@ -6,7 +6,7 @@ import { createClient } from '../lib/supabase/client'
 import { useStore } from '../store'
 import {
   LayoutDashboard, Receipt, Gift, ShoppingCart, Car, User, X, Store, Undo2, Sparkles, ChevronsLeft, ChevronsRight, Package, Utensils, BadgeDollarSign, Banknote, Wand2, Mail, BarChart3,
-  Inbox as InboxIcon, Send, Trash2, Filter, ChevronDown, Home, MessageSquare,
+  Inbox as InboxIcon, Send, Trash2, Filter, ChevronDown, Home, MessageSquare, Link2,
 } from 'lucide-react'
 import clsx from 'clsx'
 import GuacMascot from './GuacMascot'
@@ -45,8 +45,9 @@ const sections = [
     // means something different).
     title: 'Chatter',
     items: [
-      { href: '/inbox', icon: Mail,           label: 'Inbox', emoji: '📬', hoverMascot: 'eating' },
-      { href: '/chat',  icon: MessageSquare,  label: 'Chat',  emoji: '💬', hoverMascot: 'happy' },
+      { href: '/inbox',       icon: Mail,          label: 'Inbox',       emoji: '📬', hoverMascot: 'eating' },
+      { href: '/connections', icon: Link2,         label: 'Connections', emoji: '🔌', hoverMascot: 'thumbsup' },
+      { href: '/chat',        icon: MessageSquare, label: 'Chat',        emoji: '💬', hoverMascot: 'happy' },
     ],
   },
   {

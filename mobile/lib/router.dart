@@ -23,6 +23,7 @@ import 'screens/inbox/inbox_detail_screen.dart';
 import 'screens/how_it_works/how_it_works_screen.dart';
 import 'screens/chat/chat_list_screen.dart';
 import 'screens/chat/chat_thread_screen.dart';
+import 'screens/connections/connections_screen.dart';
 import 'widgets/main_scaffold.dart';
 
 final appRouter = GoRouter(
@@ -68,6 +69,7 @@ final appRouter = GoRouter(
         GoRoute(path: '/shopping', builder: (_, __) => const ShoppingListScreen()),
         GoRoute(path: '/car-miles', builder: (_, __) => const CarMilesScreen()),
         GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
+        GoRoute(path: '/connections', builder: (_, __) => const ConnectionsScreen()),
         GoRoute(path: '/report-problem', builder: (_, state) {
           // Batch failure dialog and other callers can push() with
           // extra: {subject, description, context} to pre-fill.

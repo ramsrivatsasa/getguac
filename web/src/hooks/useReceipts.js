@@ -24,18 +24,25 @@ export function useReceipt(id) {
 // Bank statements indexed for badge rendering on the receipts list.
 // Returns a Map keyed by statement_import_id so callers can do an O(1)
 // lookup when rendering each row. Empty Map for users who never imported.
+//
+// IMPORTANT: queryKey ['bank_statements'] is SHARED with useBankData
+// (centralized for GuacScore + GuacWizard) and the /bank page's own
+// useQuery. To avoid cache-shape races (whichever fires first wins),
+// the queryFn returns the raw row ARRAY and we use TanStack `select`
+// to derive the Map per-call. Same cache entry, different shapes per
+// consumer, no race.
 export function useBankStatementMap() {
   return useQuery({
     queryKey: ['bank_statements'],
-    queryFn: async () => {
-      const rows = await getBankStatements()
+    queryFn: async () => await getBankStatements(),
+    staleTime: 1000 * 60 * 5,
+    select: (rows) => {
       const m = new Map()
-      for (const r of rows) {
-        if (r.statement_import_id) m.set(r.statement_import_id, r)
+      for (const r of (Array.isArray(rows) ? rows : [])) {
+        if (r?.statement_import_id) m.set(r.statement_import_id, r)
       }
       return m
     },
-    staleTime: 1000 * 60 * 5,
   })
 }
 

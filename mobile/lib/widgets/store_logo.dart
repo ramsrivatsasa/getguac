@@ -33,13 +33,20 @@ class StoreLogo extends StatelessWidget {
       child: Container(
         width: size,
         height: size,
+        // White fallback fill in case the favicon has transparency
+        // around its mark — without this you'd see whatever sits
+        // behind the tile leaking through.
         color: Colors.white,
-        padding: const EdgeInsets.all(4),
+        // No inner padding; previously a 4px gutter combined with
+        // BoxFit.contain left a visible white ring around brand
+        // marks like Office Depot (small red 'OD' inside a big white
+        // circle). cover fills the box, cropping if needed — fine
+        // for square favicons which is what 99% of brands serve.
         child: Image.network(
           url,
           width: size,
           height: size,
-          fit: BoxFit.contain,
+          fit: BoxFit.cover,
           errorBuilder: (_, __, ___) => _fallback(),
           // Skip placeholder shimmer on small avatars — image is
           // tiny enough that the load is near-instant on most

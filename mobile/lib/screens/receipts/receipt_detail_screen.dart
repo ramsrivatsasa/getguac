@@ -406,15 +406,9 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
           ]),
         ),
       ),
-      // ── Decorative avocado leaves ──────────────────────────────────
-      // GetGuac signature. Three tilted leaves at varying opacity,
-      // positioned in the corners so they don't crowd the logo.
-      const Positioned(top: 58, left: 30,
-        child: Text('🥑', style: TextStyle(fontSize: 18))),
-      const Positioned(top: 96, left: 56,
-        child: Opacity(opacity: 0.6, child: Text('✿', style: TextStyle(color: Colors.white, fontSize: 14)))),
-      const Positioned(top: 60, right: 92,
-        child: Opacity(opacity: 0.55, child: Text('✿', style: TextStyle(color: Colors.white, fontSize: 11)))),
+      // Decorative emojis removed — they read as misaligned "stars"
+      // floating around the logo and added no information. Clean
+      // gradient + centered store logo is the focal hierarchy now.
     ]);
   }
 

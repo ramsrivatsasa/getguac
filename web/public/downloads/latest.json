@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.25",
-  "name": "v0.3.25 — Connections: retailer setup hub (web + mobile)",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.25/app-arm64-v8a-release.apk",
-  "releaseNotes": "• New /connections screen on web + mobile. Lists 12 supported retailers (Walmart · Target · Costco · Sam's Club · Amazon · Instacart · Safeway · Trader Joe's · Whole Foods · Kroger · Best Buy · Home Depot) with step-by-step setup instructions to forward each retailer's receipt emails to your GetGuac alias.\n• Tap any retailer → bottom sheet with numbered setup steps + your alias to copy. Mark as 'active' when configured. Status persists per-user via the new user_connections table (migration_063).\n• Receipts that arrive from a retailer's email domain will eventually auto-promote that connection from 'active' → 'verified' (with receipts-seen count). Verification trigger comes in a follow-up; today the user marks setup themselves.\n• Same retailer catalog drives both platforms — add a new retailer once in lib/retailers.js + lib/data/retailers.dart and it shows everywhere."
+  "version": "v0.3.26",
+  "name": "v0.3.26 — store logo fills the circle · receipt hero cleaned up",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.26/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Store logos now fill their circle edge-to-edge (BoxFit.cover + no inner padding). Office Depot, Costco, etc. no longer show a tiny mark inside a big white ring.\n• Receipt detail hero stripped of decorative avocado/flower emojis — they read as misaligned 'stars' floating around the logo. The centered store logo + gradient is the focal hierarchy now."
 }

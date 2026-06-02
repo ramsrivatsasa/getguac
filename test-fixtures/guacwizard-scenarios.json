@@ -1,0 +1,173 @@
+{
+  "_doc": "20 GuacWizard scenarios — shared between web Node runner and mobile Dart test. Each scenario lists the summary + accounts that `computeWizardScore` receives. Both engines must produce the same score and the same reason set for every scenario. The web /api/guacwizard endpoint also runs the same function so the API and direct-lib paths cannot drift.",
+  "scenarios": [
+    {
+      "id": "perfect_no_data",
+      "title": "Brand-new user — no statements, no fees, no txns",
+      "description": "Cold start. No accounts, no data, no anything. Score baselines at 50 ('No bank data uploaded yet').",
+      "summary": { "totalInterest": 0, "totalFees": 0, "totalPayments": 0, "totalPurchases": 0, "totalRefunds": 0, "netDebtChange": 0 },
+      "accounts": [],
+      "expected_score": 50
+    },
+    {
+      "id": "perfect_clean_user",
+      "title": "Clean user — bank data exists, zero interest + fees, debt down",
+      "description": "Has accounts, paid off card in full, no interest, no fees, refunds + payments cover purchases. Score pegs 100.",
+      "summary": { "totalInterest": 0, "totalFees": 0, "totalPayments": 1200, "totalPurchases": 1000, "totalRefunds": 200, "netDebtChange": -400 },
+      "accounts": [{ "latestApr": 18.99 }],
+      "expected_score": 100
+    },
+    {
+      "id": "moderate_interest_only",
+      "title": "Carrying a small balance — moderate interest",
+      "description": "$50 in interest this period, no fees, no debt growth. -5 interest penalty → score 95.",
+      "summary": { "totalInterest": 50, "totalFees": 0, "totalPayments": 800, "totalPurchases": 600, "totalRefunds": 0, "netDebtChange": -200 },
+      "accounts": [{ "latestApr": 21.49 }],
+      "expected_score": 97
+    },
+    {
+      "id": "heavy_interest_capped_at_35",
+      "title": "Heavy interest — penalty hits the -35 cap",
+      "description": "$600 interest in a single period. (interest/10) = 60, capped at 35. Score drops 35.",
+      "summary": { "totalInterest": 600, "totalFees": 0, "totalPayments": 1000, "totalPurchases": 1000, "totalRefunds": 0, "netDebtChange": 0 },
+      "accounts": [{ "latestApr": 27.99 }],
+      "expected_score": 60
+    },
+    {
+      "id": "moderate_fees_only",
+      "title": "Moderate fees — late + foreign txn",
+      "description": "$50 in fees, no interest, no debt growth. (fees/5) = 10 penalty. Score 90.",
+      "summary": { "totalInterest": 0, "totalFees": 50, "totalPayments": 500, "totalPurchases": 500, "totalRefunds": 0, "netDebtChange": 0 },
+      "accounts": [{ "latestApr": 19.99 }],
+      "expected_score": 90
+    },
+    {
+      "id": "heavy_fees_capped_at_20",
+      "title": "Heavy fees — penalty hits the -20 cap",
+      "description": "$500 in fees (annual fee + multiple foreign txn fees). (fees/5) = 100, capped at 20. Score drops 20.",
+      "summary": { "totalInterest": 0, "totalFees": 500, "totalPayments": 1000, "totalPurchases": 1000, "totalRefunds": 0, "netDebtChange": 0 },
+      "accounts": [{ "latestApr": 18.99 }],
+      "expected_score": 80
+    },
+    {
+      "id": "debt_growth_penalty",
+      "title": "Debt grew this period",
+      "description": "$500 purchases, $50 payments, no refunds → netDebtChange = $450. (netDebt/50) = 9 penalty. Score 91.",
+      "summary": { "totalInterest": 0, "totalFees": 0, "totalPayments": 50, "totalPurchases": 500, "totalRefunds": 0, "netDebtChange": 450 },
+      "accounts": [{ "latestApr": 20.99 }],
+      "expected_score": 91
+    },
+    {
+      "id": "debt_growth_capped_at_20",
+      "title": "Debt growth penalty hits the -20 cap",
+      "description": "$2000 purchases minimal payments → netDebt $1800. (netDebt/50) = 36, capped at 20.",
+      "summary": { "totalInterest": 0, "totalFees": 0, "totalPayments": 100, "totalPurchases": 2000, "totalRefunds": 100, "netDebtChange": 1800 },
+      "accounts": [{ "latestApr": 23.99 }],
+      "expected_score": 80
+    },
+    {
+      "id": "debt_shrunk_small_bonus",
+      "title": "Debt shrunk — small bonus",
+      "description": "$200 paid down (more payments than purchases). +2 bonus from |netDebt|/100 = 2.",
+      "summary": { "totalInterest": 0, "totalFees": 0, "totalPayments": 300, "totalPurchases": 100, "totalRefunds": 0, "netDebtChange": -200 },
+      "accounts": [{ "latestApr": 19.99 }],
+      "expected_score": 100
+    },
+    {
+      "id": "debt_shrunk_bonus_capped_at_10",
+      "title": "Big debt paydown — bonus capped at +10",
+      "description": "Paid down $1500. |netDebt|/100 = 15, capped at 10. Bonus alone bumps a 100 → still 100 (max).",
+      "summary": { "totalInterest": 0, "totalFees": 0, "totalPayments": 1700, "totalPurchases": 200, "totalRefunds": 0, "netDebtChange": -1500 },
+      "accounts": [{ "latestApr": 19.99 }],
+      "expected_score": 100
+    },
+    {
+      "id": "high_apr_single_card",
+      "title": "Single card above 25% APR",
+      "description": "One card has 28% APR (predatory). -5 penalty. Score 95.",
+      "summary": { "totalInterest": 0, "totalFees": 0, "totalPayments": 500, "totalPurchases": 500, "totalRefunds": 0, "netDebtChange": 0 },
+      "accounts": [{ "latestApr": 28.49 }],
+      "expected_score": 95
+    },
+    {
+      "id": "high_apr_three_cards",
+      "title": "Three cards above 25% APR — -15 hit",
+      "description": "Three high-APR cards (cap-2 + retail card + emergency card). 3 × 5 = 15 penalty.",
+      "summary": { "totalInterest": 0, "totalFees": 0, "totalPayments": 1000, "totalPurchases": 1000, "totalRefunds": 0, "netDebtChange": 0 },
+      "accounts": [
+        { "latestApr": 27.99 },
+        { "latestApr": 29.49 },
+        { "latestApr": 31.99 }
+      ],
+      "expected_score": 85
+    },
+    {
+      "id": "compound_pain_interest_fees_high_apr",
+      "title": "Compound pain — interest + fees + high APR",
+      "description": "$80 interest, $30 fees, 27% APR card. Penalties: -8 interest, -6 fees, -5 APR = -19 → score 81.",
+      "summary": { "totalInterest": 80, "totalFees": 30, "totalPayments": 500, "totalPurchases": 500, "totalRefunds": 0, "netDebtChange": 0 },
+      "accounts": [{ "latestApr": 27.49 }],
+      "expected_score": 81
+    },
+    {
+      "id": "compound_pain_with_debt_growth",
+      "title": "Interest + fees + growing debt — heavy hit",
+      "description": "$100 interest, $50 fees, $400 net debt growth, 26% APR. -10 interest, -10 fees, -8 debt, -5 APR = -33 → 67.",
+      "summary": { "totalInterest": 100, "totalFees": 50, "totalPayments": 100, "totalPurchases": 500, "totalRefunds": 0, "netDebtChange": 400 },
+      "accounts": [{ "latestApr": 26.99 }],
+      "expected_score": 67
+    },
+    {
+      "id": "worst_case_floor_at_zero",
+      "title": "Pathological worst case — every penalty fires + clamps at 0",
+      "description": "Massive interest + massive fees + huge debt growth + four 30% APR cards. All penalties cap individually: -35 (interest) -20 (fees) -20 (debt) -20 (4 cards × 5) = -95. Score floor is 0, so a 100→5 result confirms the floor isn't being hit (we're testing it's not crossed). If accounts had been 5+ cards the score would hit 0.",
+      "summary": { "totalInterest": 1000, "totalFees": 1000, "totalPayments": 100, "totalPurchases": 5000, "totalRefunds": 0, "netDebtChange": 4900 },
+      "accounts": [
+        { "latestApr": 30 }, { "latestApr": 31 }, { "latestApr": 32 }, { "latestApr": 33 }
+      ],
+      "expected_score": 5
+    },
+    {
+      "id": "best_case_ceiling_at_100",
+      "title": "Best case — clean user + debt down + low APR — score clamps at 100",
+      "description": "Zero interest, zero fees, paid down $800, every card under 20% APR. Bonus alone would push past 100 → clamped to 100.",
+      "summary": { "totalInterest": 0, "totalFees": 0, "totalPayments": 1000, "totalPurchases": 200, "totalRefunds": 0, "netDebtChange": -800 },
+      "accounts": [
+        { "latestApr": 14.99 }, { "latestApr": 17.49 }
+      ],
+      "expected_score": 100
+    },
+    {
+      "id": "fees_only_no_statements_synthetic",
+      "title": "Fees imported but no statements — synthetic-account fallback",
+      "description": "User has bank_fees rows but no bank_statements. Old code returned baseline 50; the synthetic-account fallback now scores from the raw fee total. $90 fees → -18 penalty → score 82.",
+      "summary": { "totalInterest": 0, "totalFees": 90, "totalPayments": 0, "totalPurchases": 0, "totalRefunds": 0, "netDebtChange": 0 },
+      "accounts": [{ "latestApr": null }],
+      "expected_score": 82
+    },
+    {
+      "id": "no_debt_signal_only_purchases",
+      "title": "Only purchases logged — no debt-growth penalty",
+      "description": "$300 purchases, $300 payments (paid in full). netDebt = 0, no penalty.",
+      "summary": { "totalInterest": 0, "totalFees": 0, "totalPayments": 300, "totalPurchases": 300, "totalRefunds": 0, "netDebtChange": 0 },
+      "accounts": [{ "latestApr": 19.99 }],
+      "expected_score": 100
+    },
+    {
+      "id": "refunds_reduce_debt_change",
+      "title": "Refunds reduce net debt change (no growth penalty)",
+      "description": "$600 purchases, $400 refunds, $100 payments. netDebt = 600 - 400 - 100 = 100 → at boundary, no growth penalty (rule is >100).",
+      "summary": { "totalInterest": 0, "totalFees": 0, "totalPayments": 100, "totalPurchases": 600, "totalRefunds": 400, "netDebtChange": 100 },
+      "accounts": [{ "latestApr": 19.99 }],
+      "expected_score": 100
+    },
+    {
+      "id": "totalPurch_field_name_compat",
+      "title": "Field-name compat — totalPurch (web) vs totalPurchases (mobile)",
+      "description": "Engine accepts both spellings. Synthetic input here uses totalPurch (web spelling) with no totalPurchases. Score should still compute correctly.",
+      "summary": { "totalInterest": 25, "totalFees": 10, "totalPayments": 200, "totalPurch": 300, "totalRefunds": 0, "netDebtChange": 100 },
+      "accounts": [{ "latestApr": 22.49 }],
+      "expected_score": 95
+    }
+  ]
+}

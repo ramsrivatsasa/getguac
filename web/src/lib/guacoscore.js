@@ -1,5 +1,25 @@
 // GuacoScore™ — a 0-100 score of how worthy your spending has been.
 //
+// === CANONICAL ENGINE — DO NOT FORK ===
+// This file is the single source of truth for the GuacScore math.
+// Every platform (web, iOS, Android, future surfaces) reads from
+// this engine through one of:
+//   • Web — imports `calculateGuacoScore` directly (no network)
+//   • Mobile (Flutter) — calls /api/guacoscore via
+//     mobile/lib/services/guacoscore.dart::GuacoScoreApi.compute.
+//     A Dart port of the math is bundled for offline / test use;
+//     the test-fixtures/guacoscore.json suite asserts the JS and
+//     Dart implementations produce byte-identical scores.
+//   • Server cron / scripts / new platforms — hit /api/guacoscore
+//     directly.
+//
+// If you change the math here, update test-fixtures/guacoscore.json
+// to add a case that locks in the new behavior. The cross-platform
+// runner (web/scripts/test-score-engines.mjs +
+// mobile/test/services/guacoscore_test.dart) will reject the change
+// from any port that drifts.
+//
+// === MATH ===
 // Higher = more essential purchases.  Lower = more adhoc / regret.
 // Each rated purchase contributes a value scaled by its dollar amount, so
 // a $500 regret hurts the score more than a $5 regret. Unrated items are

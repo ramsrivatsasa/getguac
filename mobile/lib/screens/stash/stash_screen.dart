@@ -11,9 +11,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../widgets/guac_mascot.dart';
 import '../../widgets/category_picker_sheet.dart';
+import '../../widgets/fetch_card.dart';
+import '../../widgets/stash_actions_sheet.dart';
+import '../../services/stash_service.dart';
 import '../../categories.dart';
 
 const _kBrand = Color(0xFFca8a04);
@@ -43,6 +47,7 @@ class _StashScreenState extends State<StashScreen> {
   String? _categoryFilter;     // slug of selected category pill, null = "All"
   _Sort _sort = _Sort.recent;  // matches web's default SORT
   List<_StashItem> _items = [];
+  Map<String, int> _onHand = {};  // item_key → qty (from stash_inventory)
 
   @override
   void initState() {
@@ -57,13 +62,18 @@ class _StashScreenState extends State<StashScreen> {
       // Join via receipts so we get the date + receipt id without a second roundtrip.
       // Skip items belonging to receipts that came from a credit-card statement
       // (they don't have real per-line product data — Stash would just be noise).
+      // PostgrestTransformBuilder + a typed Future don't play nice in
+      // Future.wait without `<dynamic>` casts everywhere, and the second
+      // call is so cheap that serializing it costs us ~50ms. Keep it
+      // straightforward.
       final rows = await sb
           .from('receipt_items')
-          .select('item_name, qty, price, category, returned, receipt_id, receipts!inner(date, from_statement)')
+          .select('item_name, qty, price, category, returned, rating, receipt_id, receipts!inner(date, from_statement)')
           .eq('returned', false)
           .eq('receipts.from_statement', false)
           .order('item_name')
           .limit(2000);
+      _onHand = await StashService.fetchInventoryMap();
 
       final byName = <String, _StashItem>{};
       for (final r in rows as List) {
@@ -74,10 +84,12 @@ class _StashScreenState extends State<StashScreen> {
         final date = (r['receipts']?['date'] ?? '').toString();
         final rid = (r['receipt_id'] ?? '').toString();
         final cat = r['category'] as String?;
+        final rRaw = r['rating'];
+        final rating = rRaw is int ? rRaw : int.tryParse(rRaw?.toString() ?? '');
 
         final existing = byName[name.toLowerCase()];
         if (existing == null) {
-          byName[name.toLowerCase()] = _StashItem(name, qty, price * qty, date, rid, cat);
+          byName[name.toLowerCase()] = _StashItem(name, qty, price * qty, date, rid, cat, rating);
         } else {
           existing.qty += qty;
           existing.totalSpent += price * qty;
@@ -86,6 +98,11 @@ class _StashScreenState extends State<StashScreen> {
             existing.lastReceiptId = rid;
           }
           existing.category ??= cat;
+          // Keep the highest rating we've seen (mirrors "most recent
+          // rate stamps the product" — the upsert direction).
+          if (rating != null && (existing.rating == null || rating > existing.rating!)) {
+            existing.rating = rating;
+          }
         }
       }
 
@@ -262,48 +279,44 @@ class _StashScreenState extends State<StashScreen> {
                       ),
                     ),
                     SliverPadding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      sliver: SliverList.builder(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                      sliver: SliverList.separated(
                         itemCount: filtered.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 8),
                         itemBuilder: (ctx, idx) {
                           final i = filtered[idx];
                           final preset = i.category == null ? null : presetBySlug(i.category!);
-                          return Card(
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: _kBrand.withValues(alpha: 0.15),
-                                child: Text('×${i.qty}', style: const TextStyle(color: _kBrand, fontWeight: FontWeight.w800, fontSize: 12)),
-                              ),
-                              title: Text(i.name, style: const TextStyle(fontWeight: FontWeight.w700)),
-                              subtitle: Row(
-                                children: [
-                                  GestureDetector(
-                                    onTap: () => _openPicker(i),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                      decoration: BoxDecoration(
-                                        color: tintFor(preset?.color).withValues(alpha: 0.15),
-                                        border: Border.all(color: tintFor(preset?.color).withValues(alpha: 0.35)),
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: Text(
-                                        preset != null
-                                            ? '${preset.emoji} ${preset.label}'
-                                            : (i.category ?? '＋ Categorize'),
-                                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
-                                      ),
-                                    ),
-                                  ),
-                                  if (i.lastDate.isNotEmpty) ...[
-                                    const SizedBox(width: 8),
-                                    Text('last ${i.lastDate}', style: const TextStyle(fontSize: 11, color: Colors.black54)),
-                                  ],
-                                ],
-                              ),
-                              trailing: Text('\$${i.totalSpent.toStringAsFixed(2)}',
-                                style: const TextStyle(fontWeight: FontWeight.w800)),
-                              onTap: i.lastReceiptId.isEmpty ? null : () => context.go('/receipts/${i.lastReceiptId}'),
-                            ),
+                          // Tile tint follows the category's brand
+                          // color (or pale yellow fallback). Subtle —
+                          // gives a glance-able category cue without
+                          // dominating the card.
+                          final tint = preset == null
+                            ? const Color(0xFFfef9c3)
+                            : tintFor(preset.color).withValues(alpha: 0.18);
+                          // Decorate the subtitle with on-hand info when
+                          // we have it — "×3 · last May 30 · 2 on hand".
+                          final invKey = StashService.inventoryKey(i.name);
+                          final onHand = _onHand[invKey] ?? 0;
+                          final subtitle = onHand > 0
+                            ? '×${i.qty} · last ${_friendlyDate(i.lastDate)} · $onHand on hand'
+                            : '×${i.qty} · last ${_friendlyDate(i.lastDate)}';
+                          return FetchCard(
+                            title: i.name,
+                            subtitle: subtitle,
+                            imageEmoji: preset?.emoji ?? '📦',
+                            tint: tint,
+                            value: i.totalSpent,
+                            valueLabel: '\$',
+                            storeName: preset != null ? preset.label : 'Tap to categorize',
+                            storeColor: preset != null ? tintFor(preset.color) : const Color(0xFF6b7280),
+                            storeEmoji: preset?.emoji,
+                            rating: i.rating ?? 0,
+                            onRate: (n) => _rateItem(i, n),
+                            onTap: i.lastReceiptId.isEmpty
+                              ? () => _openPicker(i)
+                              : () => context.push('/receipts/${i.lastReceiptId}'),
+                            onShare: () => _shareItem(i),
+                            onMenu: () => _openActions(i),
                           );
                         },
                       ),
@@ -313,6 +326,78 @@ class _StashScreenState extends State<StashScreen> {
                 ),
           ),
     );
+  }
+
+  /// "2026-05-30" → "May 30", "2025-12-14" → "Dec 14, 2025". Drops
+  /// the year when it matches today so the subtitle stays short.
+  String _friendlyDate(String iso) {
+    if (iso.isEmpty) return '—';
+    final parts = iso.split('-');
+    if (parts.length < 3) return iso;
+    final months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    final m = int.tryParse(parts[1]) ?? 1;
+    final d = int.tryParse(parts[2]) ?? 1;
+    final thisYear = DateTime.now().year.toString();
+    final monthLabel = months[(m - 1).clamp(0, 11)];
+    return parts[0] == thisYear ? '$monthLabel $d' : '$monthLabel $d, ${parts[0]}';
+  }
+
+  /// Bulk-rate every receipt_item belonging to this product. Optimistic:
+  /// updates the local row instantly so the star fills before the
+  /// network roundtrip. Rolls back on failure.
+  Future<void> _rateItem(_StashItem item, int n) async {
+    final prev = item.rating;
+    setState(() => item.rating = n);
+    final count = await StashService.setProductRating(itemName: item.name, rating: n);
+    if (!mounted) return;
+    if (count == 0) {
+      setState(() => item.rating = prev);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not save rating')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Rated ${item.name} $n★ (across $count receipts)')),
+      );
+    }
+  }
+
+  /// Per-item bottom sheet — on-hand stepper + best prices + share +
+  /// add to Smashlist. Opened from the FetchCard's ⋮ menu icon.
+  Future<void> _openActions(_StashItem item) async {
+    final invKey = StashService.inventoryKey(item.name);
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => StashActionsSheet(
+        itemName: item.name,
+        category: item.category,
+        currentOnHand: _onHand[invKey] ?? 0,
+        onShare: () => _shareItem(item),
+        onAddToSmashlist: null,  // TODO: wire mobile add-to-smashlist
+      ),
+    );
+    // Re-pull inventory so the subtitle reflects any stepper changes
+    // made inside the sheet.
+    final fresh = await StashService.fetchInventoryMap();
+    if (mounted) setState(() => _onHand = fresh);
+  }
+
+  /// OS share-sheet handoff. Drops the user's item name + last-bought
+  /// date + GetGuac link onto whatever they pick. Reuses share_plus
+  /// which is already a transitive dep for the share-link infra.
+  Future<void> _shareItem(_StashItem item) async {
+    const url = 'https://getguac.app/stash';
+    final text = item.lastDate.isEmpty
+      ? 'I keep buying ${item.name} — tracking it on GetGuac. $url'
+      : 'Bought ${item.name} ×${item.qty} (last ${_friendlyDate(item.lastDate)}) — tracking on GetGuac. $url';
+    try {
+      await Share.share(text, subject: 'GetGuac · ${item.name}');
+    } catch (_) {/* user cancelled, ignore */}
   }
 
   Widget _emptyState() => ListView(children: const [

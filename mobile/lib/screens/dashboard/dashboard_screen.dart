@@ -24,6 +24,7 @@ import '../../widgets/payment_tile.dart';
 import '../../widgets/engagement_tile.dart';
 import '../../services/analysis_engine.dart';
 import '../../services/wizard_score.dart';
+import '../../services/guacoscore.dart' as guac_engine;
 import '../../services/timeframe_store.dart';
 
 const _kEmerald700 = Color(0xFF15803d);
@@ -553,8 +554,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           final agg = aggregateBankForWizard(bank: bank, startStr: since, endStr: null);
           wiz = computeWizardScore(summary: agg.summary, accounts: agg.accounts);
         }
-        // GuacScore — rated-purchase weighted average + bank-bite penalty
-        final guacScore = _computeGuacScore(spendingReceipts, bank, since);
+        // GuacScore — delegates to the centralized engine. Lifetime
+        // scope so the tile matches /guacanomics "All time" exactly.
+        final guacScore = _computeGuacScore(spendingReceipts, bank);
         // Horizontal-scroll row so all four engagement tiles read
         // as a single swipeable strip rather than a dense 2×2
         // grid. Each card has an onTap that routes to its detail
@@ -581,35 +583,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  _GuacScoreResult _computeGuacScore(List<Receipt> spendingReceipts, BankData bank, String sinceIso) {
-    final rated = spendingReceipts.where((r) => r.rating != null && r.totalAmount > 0).toList();
-    if (rated.isEmpty) return const _GuacScoreResult(score: null, grade: 'fresh', ratedCount: 0);
-    double weightedSum = 0, weightTotal = 0;
-    for (final r in rated) {
-      final w = r.totalAmount.abs();
-      final v = (r.rating! - 3) * 25;
-      weightedSum += v * w;
-      weightTotal += w;
-    }
-    final raw = weightTotal == 0 ? 50.0 : (weightedSum / weightTotal) + 50;
-    // Bank-bite penalty over the active window (mirrors web).
+  // Delegates to the central engine in services/guacoscore.dart
+  // (mirrors web/src/lib/guacoscore.js exactly).
+  //
+  // Scope: LIFETIME on both sides. `spendingReceipts` is the
+  // unfiltered (non-payment) receipt list and the bank-bite is
+  // the unfiltered sum of every fee + interest row. Mixing scopes
+  // (lifetime receipts vs period-scoped bankBite) created an
+  // artificially-tiny penalty ratio that made this tile show a
+  // higher score than /guacanomics in All-time mode. Web tile has
+  // the same fix; mobile now matches.
+  _GuacScoreResult _computeGuacScore(List<Receipt> spendingReceipts, BankData bank) {
     double interest = 0, fees = 0;
     for (final f in bank.fees) {
-      final d = (f['date'] ?? '').toString();
-      if (d.length < 10 || d.compareTo(sinceIso) < 0) continue;
       final v = (double.tryParse((f['amount'] ?? '0').toString()) ?? 0).abs();
       if (f['kind'] == 'interest') interest += v;
       else if (f['kind'] == 'fee' || f['kind'] == 'penalty') fees += v;
     }
-    int penalty = 0;
-    if ((interest + fees) > 0 && weightTotal > 0) {
-      final ratioHit = ((interest + fees) / weightTotal * 100).clamp(0.0, 25.0);
-      final dollarHit = (interest / 25) + (fees / 50);
-      penalty = (ratioHit + dollarHit).round().clamp(0, 25);
+    final result = guac_engine.calculateGuacoScore(
+      spendingReceipts.map((r) => guac_engine.GuacoScoreInputReceipt(
+        rating: r.rating,
+        totalAmount: r.totalAmount,
+      )).toList(),
+      bankBite: guac_engine.GuacoBankBite(interest: interest, fees: fees),
+    );
+    if (result.score == null) {
+      return _GuacScoreResult(score: null, grade: 'fresh', ratedCount: result.ratedCount);
     }
-    final score = (raw - penalty).clamp(0, 100).round();
-    final grade = score >= 80 ? 'rich' : score >= 65 ? 'celebrating' : score >= 50 ? 'thumbsup' : score >= 35 ? 'sleepy' : 'surprised';
-    return _GuacScoreResult(score: score, grade: grade, ratedCount: rated.length);
+    final s = result.score!;
+    final grade = s >= 80 ? 'rich' : s >= 65 ? 'celebrating' : s >= 50 ? 'thumbsup' : s >= 35 ? 'sleepy' : 'surprised';
+    return _GuacScoreResult(score: s, grade: grade, ratedCount: result.ratedCount);
   }
 
   Widget _guacScoreTile(_GuacScoreResult r) {

@@ -1,0 +1,234 @@
+{
+  "_doc": "20 GuacScore scenarios — shared between the web Node runner and the mobile Dart test. Each scenario lists receipts (with a relative-day offset from today and total_amount + rating) plus bank_fees. The runner sets `today` per execution, then derives ISO dates, runs the engine across surfaces (dashboard = lifetime, /guacanomics 30d / 90d / 12mo / all), and reports the score per surface. Cross-platform parity is asserted by both runners producing identical scores for every scenario.",
+  "scenarios": [
+    {
+      "id": "brand_new_user_no_rated",
+      "title": "Brand-new user — no rated receipts",
+      "description": "User just signed up, has no ratings yet. Score should be null and the UI shows the 'Just Starting' placeholder.",
+      "receipts": [],
+      "bank_fees": []
+    },
+    {
+      "id": "single_five_star",
+      "title": "Single 5★ receipt",
+      "description": "One rated purchase, 5 stars. Score should peg at 100 ('Smash Master').",
+      "receipts": [{ "days_ago": 5, "total_amount": 50, "rating": 5 }],
+      "bank_fees": []
+    },
+    {
+      "id": "single_one_star",
+      "title": "Single 1★ regret",
+      "description": "One rated purchase, 1 star. Score should bottom at 0 ('Just Starting').",
+      "receipts": [{ "days_ago": 5, "total_amount": 200, "rating": 1 }],
+      "bank_fees": []
+    },
+    {
+      "id": "single_three_star_neutral",
+      "title": "Single 3★ neutral",
+      "description": "One purchase rated middle-of-the-road. Score should land at 50 ('Treat Mode').",
+      "receipts": [{ "days_ago": 10, "total_amount": 80, "rating": 3 }],
+      "bank_fees": []
+    },
+    {
+      "id": "equal_weight_5_and_1_balance",
+      "title": "Equal-weight 5★ and 1★ → balances to 50",
+      "description": "Two receipts of equal dollar amount, one 5★ one 1★. Should land at exactly 50.",
+      "receipts": [
+        { "days_ago": 3, "total_amount": 100, "rating": 5 },
+        { "days_ago": 4, "total_amount": 100, "rating": 1 }
+      ],
+      "bank_fees": []
+    },
+    {
+      "id": "high_value_5star_outweighs_low_1star",
+      "title": "Big 5★ outweighs small 1★",
+      "description": "$500 essential outweighs $5 regret. Score should be very close to 100.",
+      "receipts": [
+        { "days_ago": 2, "total_amount": 500, "rating": 5 },
+        { "days_ago": 3, "total_amount": 5,   "rating": 1 }
+      ],
+      "bank_fees": []
+    },
+    {
+      "id": "high_value_1star_drags_score_down",
+      "title": "Big 1★ regret drags score down",
+      "description": "One $1000 regret + several small 4★ smart buys. Score lands low because the regret dominates the weighted average.",
+      "receipts": [
+        { "days_ago": 1, "total_amount": 1000, "rating": 1 },
+        { "days_ago": 2, "total_amount": 25,   "rating": 4 },
+        { "days_ago": 3, "total_amount": 25,   "rating": 4 },
+        { "days_ago": 4, "total_amount": 25,   "rating": 4 }
+      ],
+      "bank_fees": []
+    },
+    {
+      "id": "many_3star_neutral",
+      "title": "Many neutral 3★ buys",
+      "description": "Ten receipts all rated 3★. Score stays at 50.",
+      "receipts": [
+        { "days_ago": 1,  "total_amount": 40, "rating": 3 },
+        { "days_ago": 2,  "total_amount": 40, "rating": 3 },
+        { "days_ago": 3,  "total_amount": 40, "rating": 3 },
+        { "days_ago": 4,  "total_amount": 40, "rating": 3 },
+        { "days_ago": 5,  "total_amount": 40, "rating": 3 },
+        { "days_ago": 6,  "total_amount": 40, "rating": 3 },
+        { "days_ago": 7,  "total_amount": 40, "rating": 3 },
+        { "days_ago": 8,  "total_amount": 40, "rating": 3 },
+        { "days_ago": 9,  "total_amount": 40, "rating": 3 },
+        { "days_ago": 10, "total_amount": 40, "rating": 3 }
+      ],
+      "bank_fees": []
+    },
+    {
+      "id": "all_5star_lifetime",
+      "title": "All 5★ across many receipts",
+      "description": "User rates 8 purchases all as essentials. Score pegs 100.",
+      "receipts": [
+        { "days_ago": 5,   "total_amount": 60, "rating": 5 },
+        { "days_ago": 20,  "total_amount": 60, "rating": 5 },
+        { "days_ago": 50,  "total_amount": 60, "rating": 5 },
+        { "days_ago": 100, "total_amount": 60, "rating": 5 },
+        { "days_ago": 200, "total_amount": 60, "rating": 5 },
+        { "days_ago": 300, "total_amount": 60, "rating": 5 },
+        { "days_ago": 400, "total_amount": 60, "rating": 5 },
+        { "days_ago": 500, "total_amount": 60, "rating": 5 }
+      ],
+      "bank_fees": []
+    },
+    {
+      "id": "all_1star_huge_regret",
+      "title": "All 1★ — heavy regret",
+      "description": "Every rated purchase is 1★. Score bottoms at 0.",
+      "receipts": [
+        { "days_ago": 2,  "total_amount": 80, "rating": 1 },
+        { "days_ago": 4,  "total_amount": 80, "rating": 1 },
+        { "days_ago": 6,  "total_amount": 80, "rating": 1 },
+        { "days_ago": 8,  "total_amount": 80, "rating": 1 },
+        { "days_ago": 10, "total_amount": 80, "rating": 1 }
+      ],
+      "bank_fees": []
+    },
+    {
+      "id": "mixed_ratings_with_small_bankbite",
+      "title": "Mixed ratings + small bank fee penalty",
+      "description": "Mostly 4★ + a small annual fee. Score is high but penalized 1-2 points.",
+      "receipts": [
+        { "days_ago": 3,  "total_amount": 200, "rating": 4 },
+        { "days_ago": 7,  "total_amount": 150, "rating": 5 },
+        { "days_ago": 14, "total_amount": 120, "rating": 4 },
+        { "days_ago": 21, "total_amount": 80,  "rating": 3 }
+      ],
+      "bank_fees": [
+        { "days_ago": 10, "kind": "fee", "amount": 25 }
+      ]
+    },
+    {
+      "id": "huge_bankbite_caps_at_25",
+      "title": "Huge bank fees relative to spend → -25 penalty cap",
+      "description": "$30 essential + $500 interest. Penalty must cap at the documented max of -25 regardless of how lopsided the ratio is.",
+      "receipts": [
+        { "days_ago": 5, "total_amount": 30, "rating": 5 }
+      ],
+      "bank_fees": [
+        { "days_ago": 8, "kind": "interest", "amount": 500 }
+      ]
+    },
+    {
+      "id": "interest_only_bigger_penalty_than_fees",
+      "title": "Interest-only stings more than fees-only per dollar",
+      "description": "$100 5★ + $50 interest. Per-dollar coefficient is 1/25 for interest vs 1/50 for fees, so interest produces a bigger penalty than the same dollar amount in fees.",
+      "receipts": [
+        { "days_ago": 3, "total_amount": 100, "rating": 5 }
+      ],
+      "bank_fees": [
+        { "days_ago": 5, "kind": "interest", "amount": 50 }
+      ]
+    },
+    {
+      "id": "fees_only_lighter_penalty",
+      "title": "Fees-only — lighter penalty than the equivalent interest",
+      "description": "Same spend / same dollar bank-bite as the prior scenario, but the bite is all fees (no interest). Penalty should be SMALLER than the interest-only case.",
+      "receipts": [
+        { "days_ago": 3, "total_amount": 100, "rating": 5 }
+      ],
+      "bank_fees": [
+        { "days_ago": 5, "kind": "fee", "amount": 50 }
+      ]
+    },
+    {
+      "id": "returns_excluded_by_engine",
+      "title": "Returns (negative amounts) don't drag the score",
+      "description": "User returns a $200 5★ purchase. The negative total_amount is excluded from the rated set, so the remaining 1★ regret defines the score.",
+      "receipts": [
+        { "days_ago": 5, "total_amount": -200, "rating": 5 },
+        { "days_ago": 8, "total_amount": 50,   "rating": 1 }
+      ],
+      "bank_fees": []
+    },
+    {
+      "id": "payment_receipts_filtered",
+      "title": "Statement-import card payments filtered out",
+      "description": "User has 2 real purchases + 3 imported card-payment rows (store_name '[card payment] AmEx'). isPaymentReceipt must strip the payment rows before scoring.",
+      "receipts": [
+        { "days_ago": 3, "total_amount": 80,   "rating": 5 },
+        { "days_ago": 5, "total_amount": 120,  "rating": 4 },
+        { "days_ago": 7, "total_amount": -500, "rating": null, "store_name": "[card payment] AmEx Platinum" },
+        { "days_ago": 8, "total_amount": -300, "rating": null, "store_name": "[card payment] Chase Sapphire" },
+        { "days_ago": 9, "total_amount": -150, "rating": null, "store_name": "[card payment] Apple Card" }
+      ],
+      "bank_fees": []
+    },
+    {
+      "id": "old_receipts_excluded_30d",
+      "title": "Old receipts excluded from /guacanomics 30d view",
+      "description": "User has one 1★ regret from 200 days ago + recent 5★ buys. Dashboard tile (lifetime) shows a blended score; /guacanomics 30d shows pure 5★. Demonstrates scope-driven divergence.",
+      "receipts": [
+        { "days_ago": 200, "total_amount": 1000, "rating": 1 },
+        { "days_ago": 5,   "total_amount": 60,   "rating": 5 },
+        { "days_ago": 10,  "total_amount": 60,   "rating": 5 },
+        { "days_ago": 15,  "total_amount": 60,   "rating": 5 }
+      ],
+      "bank_fees": []
+    },
+    {
+      "id": "exact_90d_boundary",
+      "title": "Receipt at exactly the 90-day boundary",
+      "description": "Receipt date is exactly 90 days ago. With the midnight-snap fix it should be INCLUDED in the 90d window (>=since), not flicker based on the time of day the user opened the page.",
+      "receipts": [
+        { "days_ago": 90, "total_amount": 100, "rating": 4 },
+        { "days_ago": 91, "total_amount": 100, "rating": 4 }
+      ],
+      "bank_fees": []
+    },
+    {
+      "id": "lifetime_high_30d_low_divergence",
+      "title": "Lifetime high, 30-day low — scope divergence is expected",
+      "description": "User had a great year (lifetime 90+) but their last 30 days were all impulse buys (regret-heavy). Dashboard tile = lifetime score (high), /guacanomics 30d = recent score (low). This DIVERGENCE IS A FEATURE — both are correct.",
+      "receipts": [
+        { "days_ago": 365, "total_amount": 200, "rating": 5 },
+        { "days_ago": 300, "total_amount": 200, "rating": 5 },
+        { "days_ago": 250, "total_amount": 200, "rating": 5 },
+        { "days_ago": 200, "total_amount": 200, "rating": 5 },
+        { "days_ago": 150, "total_amount": 200, "rating": 5 },
+        { "days_ago": 100, "total_amount": 200, "rating": 5 },
+        { "days_ago": 10,  "total_amount": 80,  "rating": 1 },
+        { "days_ago": 15,  "total_amount": 60,  "rating": 2 },
+        { "days_ago": 20,  "total_amount": 40,  "rating": 1 }
+      ],
+      "bank_fees": []
+    },
+    {
+      "id": "only_unrated_receipts",
+      "title": "Receipts exist but none are rated yet",
+      "description": "User has 5 purchases logged but hasn't rated any. Score is null because `rating != null` filter excludes them all.",
+      "receipts": [
+        { "days_ago": 1, "total_amount": 50,  "rating": null },
+        { "days_ago": 2, "total_amount": 100, "rating": null },
+        { "days_ago": 3, "total_amount": 75,  "rating": null },
+        { "days_ago": 4, "total_amount": 200, "rating": null },
+        { "days_ago": 5, "total_amount": 30,  "rating": null }
+      ],
+      "bank_fees": []
+    }
+  ]
+}

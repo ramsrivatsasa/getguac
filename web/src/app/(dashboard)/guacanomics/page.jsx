@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
 import { useReceipts } from '../../../hooks/useReceipts'
 import { createClient } from '../../../lib/supabase/client'
+import { isPaymentReceipt } from '../../../lib/payment-rows'
 import { DollarSign, TrendingUp, Undo2, Receipt as ReceiptIcon, Banknote } from 'lucide-react'
 import GuacoScoreCard from '../../../components/GuacoScoreCard'
 import { CATEGORY_BY_SLUG } from '../../../lib/categories'
@@ -38,7 +39,17 @@ const RANGES = [
 
 export default function GuacanomicsPage() {
   const [range, setRange] = useState('90d')
-  const { data: receipts = [], isLoading } = useReceipts()
+  const { data: rawReceipts = [], isLoading } = useReceipts()
+
+  // Strip payment-receipt rows (statement imports paying down a card)
+  // exactly the way the dashboard does. Without this, /guacanomics
+  // counted those imports in Net Spent / Tax Paid / GuacScore weights,
+  // so the page disagreed with the dashboard tile for users with bank
+  // statements imported. Mirrors `spendingReceipts` in DashboardClient.
+  const receipts = useMemo(
+    () => rawReceipts.filter(r => !isPaymentReceipt(r)),
+    [rawReceipts]
+  )
 
   // Bank fees + interest — pulled separately because they're not on the receipts
   // table. Used for the "Bank Bite" tile and to pull down GuacScore.
@@ -48,9 +59,20 @@ export default function GuacanomicsPage() {
     queryFn: async () => { const { data } = await sb.from('bank_fees').select('kind, amount, date'); return data || [] },
   })
 
-  const bankBite = useMemo(() => {
+  // Single source of truth for the "since" cutoff. Snaps to midnight
+  // so the boundary doesn't depend on the time-of-day the user opened
+  // the page (was a real bug — a noon visit could include or exclude a
+  // 90-day-old receipt depending on the hour). Reused by both the
+  // GuacScore filter, the bankBite filter, and the insights compute.
+  const since = useMemo(() => {
     const cfg = RANGES.find(r => r.key === range)
-    const since = cfg.days ? new Date(Date.now() - cfg.days * 86400000) : null
+    if (!cfg.days) return null
+    const d = new Date(Date.now() - cfg.days * 86400000)
+    d.setHours(0, 0, 0, 0)
+    return d
+  }, [range])
+
+  const bankBite = useMemo(() => {
     const inRange = (d) => !since || new Date(d) >= since
     let interest = 0, fees = 0
     for (const f of bankFees) {
@@ -60,11 +82,9 @@ export default function GuacanomicsPage() {
       else if (f.kind === 'fee' || f.kind === 'penalty') fees += v
     }
     return { interest, fees, total: interest + fees }
-  }, [bankFees, range])
+  }, [bankFees, since])
 
   const insights = useMemo(() => {
-    const cfg = RANGES.find(r => r.key === range)
-    const since = cfg.days ? new Date(Date.now() - cfg.days * 24 * 60 * 60 * 1000) : null
     const inRange = receipts.filter(r => !since || new Date(r.date) >= since)
 
     const purchases = inRange.filter(r => parseFloat(r.total_amount || 0) >= 0)
@@ -168,7 +188,7 @@ export default function GuacanomicsPage() {
       avgRating, regretSpend, topTags,
       categoryBuckets,
     }
-  }, [receipts, range])
+  }, [receipts, since])
 
   return (
     <div className="space-y-6 max-w-7xl">
@@ -201,11 +221,7 @@ export default function GuacanomicsPage() {
       ) : (
         <>
           <GuacoScoreCard
-            receipts={receipts.filter(r => {
-              const cfg = RANGES.find(x => x.key === range)
-              const since = cfg.days ? new Date(Date.now() - cfg.days * 86400000) : null
-              return !since || new Date(r.date) >= since
-            })}
+            receipts={receipts.filter(r => !since || new Date(r.date) >= since)}
             bankBite={bankBite}
           />
 

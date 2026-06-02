@@ -232,7 +232,7 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
               big card on /guacanomics already uses a wider window;
               this matches that behavior. */}
           <Link href="/guacanomics" className="w-64 shrink-0 block">
-            <GuacScoreTileWithBankBite receipts={spendingReceipts} period={period} periodCount={periodCount} />
+            <GuacScoreTileWithBankBite receipts={spendingReceipts} />
           </Link>
           <div className="w-64 shrink-0"><GuacWizardTile /></div>
           <Link href="/shopping" className="w-64 shrink-0 block"><GuacMoneyTile /></Link>
@@ -401,19 +401,22 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
 // here via the same useQuery keys as BankTile so cache is shared.
 // Bank tiles silently render as $0 when no statements exist — the
 // row still shows transactions/spend/tax so it never disappears.
-// Dashboard GuacScore tile — wraps GuacoScoreCard so it includes
-// the same bankBite penalty (-interest, -fees over the active
-// window) that /guacanomics applies. Without this the dashboard
-// tile shows a higher score than /guacanomics for the same user.
-// Bank fees come from the shared `bank_fees` TanStack query; the
-// active time-frame comes from the store-driven (period, count).
-function GuacScoreTileWithBankBite({ receipts, period, periodCount }) {
+// Dashboard GuacScore tile — wraps GuacoScoreCard.
+//
+// Scope: LIFETIME, on both sides. Receipts come in unfiltered
+// (`spendingReceipts` is lifetime) so the bank-bite has to be
+// lifetime too — otherwise we'd be applying (this-period fees) /
+// (lifetime spend) as the penalty ratio, which is artificially
+// tiny and makes the dashboard score look higher than the
+// /guacanomics page when the user switches to "All time" there.
+//
+// This now matches /guacanomics in "All time" mode exactly. Other
+// ranges on the detail page are by-design scope-scoped views and
+// will read differently — that's not a bug.
+function GuacScoreTileWithBankBite({ receipts }) {
   const { fees: bankFees } = useBankData()
-  const sinceStr = periodStartDate(period, periodCount).toISOString().slice(0, 10)
   let interest = 0, fees = 0
   for (const f of bankFees) {
-    const d = String(f.date || '')
-    if (d.length < 10 || d < sinceStr) continue
     const v = Math.abs(Number(f.amount || 0))
     if (f.kind === 'interest') interest += v
     else if (f.kind === 'fee' || f.kind === 'penalty') fees += v

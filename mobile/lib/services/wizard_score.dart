@@ -1,7 +1,14 @@
-// Dart port of web/src/lib/wizardScore.js. Single source of truth
-// for the GuacWizard health score so the mobile dashboard tile +
-// the dedicated /guacwizard screen + the web app all produce the
-// same number.
+// GuacWizard health score — TWO paths, ONE source of truth.
+//
+// 1. Remote path (preferred): `WizardScoreApi.compute({days})` hits
+//    GET /api/guacwizard on the server, which runs the canonical
+//    `computeWizardScore` in web/src/lib/wizardScore.js. Same engine
+//    web uses → guaranteed identical scores.
+//
+// 2. Local Dart port (fallback): `computeWizardScore(...)` runs the
+//    same math locally so an offline / API-down build still scores.
+//    Validated against the JS via test-fixtures/score-engines.json +
+//    test-fixtures/guacwizard-scenarios.json (cross-platform).
 //
 // Input: aggregated bank totals over the active time-frame window.
 //   summary = { totalInterest, totalFees, totalPayments,
@@ -11,6 +18,9 @@
 // Output: WizardScoreResult { score (0-100, null if no summary),
 //                             reasons (list of label+why pairs) }
 
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'analysis_engine.dart' show BankData;
 
 class WizardSummary {
@@ -250,4 +260,58 @@ bool _inRange(String d, String? startStr, String? endStr) {
   if (startStr != null && d.compareTo(startStr) < 0) return false;
   if (endStr   != null && d.compareTo(endStr) >= 0) return false;
   return true;
+}
+
+// ── Remote engine (canonical path) ──────────────────────────────────
+
+class WizardScoreApi {
+  /// API base — points at production by default. Tests + local dev
+  /// override via the optional `apiBase` argument.
+  static const String defaultApiBase = 'https://getguac.app';
+
+  /// Compute the score for the signed-in user via the server-side
+  /// canonical engine.
+  ///
+  /// `days` 0 → lifetime score (matches the dashboard tile in
+  /// All-time mode). `days` N → trailing N-day window.
+  ///
+  /// Throws on auth failure or non-2xx so the caller can fall back
+  /// to the local engine for offline scenarios.
+  static Future<WizardScoreResult> compute({
+    int days = 0,
+    String apiBase = defaultApiBase,
+  }) async {
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session == null) throw Exception('not signed in');
+    final uri = Uri.parse('$apiBase/api/guacwizard${days > 0 ? '?days=$days' : ''}');
+    final res = await http.get(uri, headers: {
+      'Authorization': 'Bearer ${session.accessToken}',
+    });
+    if (res.statusCode >= 400) {
+      throw Exception('guacwizard ${res.statusCode}: ${res.body}');
+    }
+    final j = jsonDecode(res.body) as Map<String, dynamic>;
+    final scoreRaw = j['score'];
+    final reasonsList = (j['reasons'] as List?) ?? const [];
+    return WizardScoreResult(
+      score: scoreRaw is num ? scoreRaw.toInt() : null,
+      reasons: reasonsList.map((r) {
+        final m = r as Map;
+        return WizardReason(
+          (m['label'] ?? '').toString(),
+          (m['why'] ?? '').toString(),
+        );
+      }).toList(),
+    );
+  }
+
+  /// Convenience: call the API; on any failure return null so the
+  /// caller can transparently fall back to a local compute.
+  static Future<WizardScoreResult?> computeOrNull({
+    int days = 0,
+    String apiBase = defaultApiBase,
+  }) async {
+    try { return await compute(days: days, apiBase: apiBase); }
+    catch (_) { return null; }
+  }
 }

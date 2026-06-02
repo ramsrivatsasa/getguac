@@ -1,6 +1,10 @@
 // GuacScore — 0-100 spending-quality score, native Flutter version.
-// Mirrors the web's calculateGuacoScore logic: weighted by spend, rating 1-5
-// → value -50..+50, plus a "bank bite" penalty for interest + fees.
+//
+// Math is NOT defined here. Delegates to the canonical engine in
+// services/guacoscore.dart, which mirrors web/src/lib/guacoscore.js
+// line-for-line and is validated against the same fixture suite the
+// JS implementation runs. This screen only handles the UI surface +
+// the bank-fee fetch.
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -9,6 +13,7 @@ import '../../providers/receipt_provider.dart';
 import '../../widgets/guac_mascot.dart';
 import '../../widgets/timeframe_picker.dart';
 import '../../services/timeframe_store.dart';
+import '../../services/guacoscore.dart' as engine;
 import '../../payment_rows.dart';
 
 const _kBrand = Color(0xFF15803d);
@@ -119,33 +124,20 @@ class _GuacScoreScreenState extends State<GuacScoreScreen> {
   }
 
   _ScoreResult _calc(List receipts) {
-    final rated = receipts.where((r) => r.rating != null && r.totalAmount > 0).toList();
-    if (rated.isEmpty) return _ScoreResult(score: null, grade: _gradeFor(null), ratedCount: 0, weightedSpend: 0, bankPenalty: 0);
-
-    double weightedSum = 0, weightTotal = 0;
-    for (final r in rated) {
-      final w = r.totalAmount.abs();
-      final v = (r.rating! - 3) * 25;
-      weightedSum += v * w;
-      weightTotal += w;
-    }
-    final raw = weightTotal == 0 ? 50.0 : (weightedSum / weightTotal) + 50;
-
-    // Bank-bite penalty — mirrors web/src/lib/guacoscore.js#calculateGuacoScore.
-    //   ratioHit  = (interest + fees) / weightTotal * 100, capped at 25
-    //   dollarHit = interest/25 + fees/50  (interest stings 2× harder per $)
-    //   penalty   = min(25, round(ratioHit + dollarHit))
-    int penalty = 0;
-    final bite = _biteInterest + _biteFees;
-    if (bite > 0 && weightTotal > 0) {
-      final ratio = bite / weightTotal;
-      final ratioHit = (ratio * 100).clamp(0.0, 25.0);
-      final dollarHit = (_biteInterest / 25) + (_biteFees / 50);
-      penalty = (ratioHit + dollarHit).round().clamp(0, 25);
-    }
-
-    final score = (raw - penalty).clamp(0, 100).round();
-    return _ScoreResult(score: score, grade: _gradeFor(score), ratedCount: rated.length, weightedSpend: weightTotal, bankPenalty: penalty);
+    final result = engine.calculateGuacoScore(
+      receipts.map((r) => engine.GuacoScoreInputReceipt(
+        rating: r.rating,
+        totalAmount: (r.totalAmount as num).toDouble(),
+      )).toList(),
+      bankBite: engine.GuacoBankBite(interest: _biteInterest, fees: _biteFees),
+    );
+    return _ScoreResult(
+      score: result.score,
+      grade: _gradeFor(result.score),
+      ratedCount: result.ratedCount,
+      weightedSpend: result.weightedSpend,
+      bankPenalty: result.bankPenalty,
+    );
   }
 
   @override

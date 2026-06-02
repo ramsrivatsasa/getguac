@@ -1,10 +1,24 @@
 // GuacWizard health score — 0 to 100. Higher = healthier.
 //
-// Pulled out of /guacwizard/page.jsx so both the dedicated page AND
-// the dashboard tile compute the same number. Transparent on the
-// page (the breakdown is shown alongside) so the user sees why the
-// score moves.
+// === CANONICAL ENGINE — DO NOT FORK ===
+// Single source of truth for the GuacWizard math. Every surface
+// reads through one of these paths:
+//   • Web — imports `computeWizardScore` directly (no network)
+//   • Mobile (Flutter) — calls /api/guacwizard via
+//     mobile/lib/services/wizard_score.dart::WizardScoreApi.compute.
+//     A Dart port of the math is bundled for offline + test use;
+//     test-fixtures/score-engines.json asserts both implementations
+//     produce identical scores from identical input.
+//   • Server cron / scripts / future platforms — hit /api/guacwizard.
 //
+// If you change the math, add a fixture case to
+// test-fixtures/score-engines.json and a scenario to
+// test-fixtures/guacwizard-scenarios.json so the cross-platform
+// runners (web/scripts/test-guacwizard-scenarios.mjs +
+// mobile/test/services/guacwizard_scenarios_test.dart) lock the
+// new behavior in.
+//
+// === CONTRACT ===
 // Inputs come from bankAccountTotals(generateInsights(...)) which
 // aggregates bank_statements + bank_fees + bank_transactions into
 // summary + accounts shapes.

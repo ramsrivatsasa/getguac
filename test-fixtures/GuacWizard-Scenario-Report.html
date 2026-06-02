@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>GuacWizard Scenario Report — 2026-06-02</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; margin: 0; background: #f8fafc; color: #0f172a; }
+  header { background: linear-gradient(135deg, #1e40af, #6366f1); color: white; padding: 22px 32px; }
+  header h1 { margin: 0; font-size: 22px; }
+  header p { margin: 4px 0 0; opacity: 0.85; font-size: 12px; }
+  .banner { padding: 12px 32px; font-weight: 700; }
+  .banner.ok { background: #dcfce7; color: #166534; border-left: 4px solid #15803d; }
+  .banner.err { background: #fee2e2; color: #991b1b; border-left: 4px solid #dc2626; }
+  main { padding: 24px 32px; }
+  table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-radius: 10px; overflow: hidden; }
+  thead { background: #f1f5f9; }
+  th, td { border-bottom: 1px solid #e2e8f0; padding: 12px; vertical-align: top; text-align: left; }
+  th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: #475569; }
+  .scenario { max-width: 280px; }
+  .scenario .title { font-weight: 700; }
+  .scenario .id { font-family: ui-monospace, Menlo, monospace; font-size: 10px; color: #94a3b8; margin-top: 1px; }
+  .scenario .desc { color: #475569; margin-top: 5px; font-size: 11.5px; }
+  td.score { text-align: center; min-width: 110px; }
+  td.score .big { font-size: 28px; font-weight: 900; }
+  td.score .meta { font-size: 10px; color: #64748b; font-family: ui-monospace, Menlo, monospace; }
+  td.score.null    { background: #f8fafc; color: #94a3b8; }
+  td.score.healthy { background: #dcfce7; color: #14532d; }
+  td.score.fair    { background: #fef3c7; color: #78350f; }
+  td.score.watch   { background: #ffedd5; color: #7c2d12; }
+  td.score.urgent  { background: #fee2e2; color: #7f1d1d; }
+  ul.reasons { margin: 0; padding-left: 18px; }
+  ul.reasons li { font-size: 11.5px; color: #334155; margin-bottom: 2px; }
+  ul.reasons .rlabel { display: inline-block; min-width: 38px; font-family: ui-monospace, Menlo, monospace; font-weight: 700; color: #0f172a; }
+  td.checks ul { margin: 0; padding-left: 16px; }
+  td.checks li.pass { color: #166534; }
+  td.checks li.fail { color: #991b1b; font-weight: 600; }
+  td.checks .detail { font-family: ui-monospace, Menlo, monospace; font-size: 10.5px; color: #475569; }
+  tr.has-failure td.scenario { background: #fef2f2; }
+  footer { padding: 16px 32px; color: #64748b; font-size: 11px; }
+  @page { size: A4 landscape; margin: 14mm 12mm; }
+  @media print {
+    body { background: white; }
+    header { background: #1e40af; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    main { padding: 12px 0; }
+    table, thead, tr, td, th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    tr { break-inside: avoid; page-break-inside: avoid; }
+    thead { display: table-header-group; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>GuacWizard — 20-Scenario Cross-Platform Report</h1>
+  <p>Single canonical engine at <code>web/src/lib/wizardScore.js</code> · Web direct import · Mobile via <code>/api/guacwizard</code> · Dart fallback validated against the same fixture file · Generated 2026-06-02.</p>
+</header>
+<div class="banner ok">All 34 assertions passed across 20 scenarios — engines agree.</div>
+<main>
+  <table>
+    <thead>
+      <tr>
+        <th>Scenario</th>
+        <th>Score</th>
+        <th>Reasons (why)</th>
+        <th>Assertions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="">
+        <td class="scenario">
+          <div class="title">Brand-new user — no statements, no fees, no txns</div>
+          <div class="id">perfect_no_data</div>
+          <div class="desc">Cold start. No accounts, no data, no anything. Score baselines at 50 (&#39;No bank data uploaded yet&#39;).</div>
+        </td>
+        <td class="score watch">
+          <div class="big">50</div>
+          <div class="meta">expected 50</div>
+        </td>
+        <td class="reasons-cell"><ul class="reasons"><li><span class="rlabel">baseline</span> No bank data uploaded yet</li></ul></td>
+        <td class="checks"><ul><li class="pass">✓ score === 50</li><li class="pass">✓ reason: &quot;No bank data uploaded yet&quot;</li></ul></td>
+      </tr>
+    
+      <tr class="">
+        <td class="scenario">
+          <div class="title">Clean user — bank data exists, zero interest + fees, debt down</div>
+          <div class="id">perfect_clean_user</div>
+          <div class="desc">Has accounts, paid off card in full, no interest, no fees, refunds + payments cover purchases. Score pegs 100.</div>
+        </td>
+        <td class="score healthy">
+          <div class="big">100</div>
+          <div class="meta">expected 100</div>
+        </td>
+        <td class="reasons-cell"><ul class="reasons"><li><span class="rlabel">+4</span> Debt down $400.00</li></ul></td>
+        <td class="checks"><ul><li class="pass">✓ score === 100</li></ul></td>
+      </tr>
+    
+      <tr class="">
+        <td class="scenario">
+          <div class="title">Carrying a small balance — moderate interest</div>
+          <div class="id">moderate_interest_only</div>
+          <div class="desc">$50 in interest this period, no fees, no debt growth. -5 interest penalty → score 95.</div>
+        </td>
+        <td class="score healthy">
+          <div class="big">97</div>
+          <div class="meta">expected 97</div>
+        </td>
+        <td class="reasons-cell"><ul class="reasons"><li><span class="rlabel">-5</span> $50.00 in interest paid</li><li><span class="rlabel">+2</span> Debt down $200.00</li></ul></td>
+        <td class="checks"><ul><li class="pass">✓ score === 97</li><li class="pass">✓ reason: interest paid</li></ul></td>
+      </tr>
+    
+      <tr class="">
+        <td class="scenario">
+          <div class="title">Heavy interest — penalty hits the -35 cap</div>
+          <div class="id">heavy_interest_capped_at_35</div>
+          <div class="desc">$600 interest in a single period. (interest/10) = 60, capped at 35. Score drops 35.</div>
+        </td>
+        <td class="score fair">
+          <div class="big">60</div>
+          <div class="meta">expected 60</div>
+        </td>
+        <td class="reasons-cell"><ul class="reasons"><li><span class="rlabel">-35</span> $600.00 in interest paid</li><li><span class="rlabel">-5</span> 1 card(s) above 25% APR</li></ul></td>
+        <td class="checks"><ul><li class="pass">✓ score === 60</li><li class="pass">✓ reason: interest paid</li></ul></td>
+      </tr>
+    
+      <tr class="">
+        <td class="scenario">
+          <div class="title">Moderate fees — late + foreign txn</div>
+          <div class="id">moderate_fees_only</div>
+          <div class="desc">$50 in fees, no interest, no debt growth. (fees/5) = 10 penalty. Score 90.</div>
+        </td>
+        <td class="score healthy">
+          <div class="big">90</div>
+          <div class="meta">expected 90</div>
+        </td>
+        <td class="reasons-cell"><ul class="reasons"><li><span class="rlabel">-10</span> $50.00 in fees paid</li></ul></td>
+        <td class="checks"><ul><li class="pass">✓ score === 90</li><li class="pass">✓ reason: fees paid</li></ul></td>
+      </tr>
+    
+      <tr class="">
+        <td class="scenario">
+          <div class="title">Heavy fees — penalty hits the -20 cap</div>
+          <div class="id">heavy_fees_capped_at_20</div>
+          <div class="desc">$500 in fees (annual fee + multiple foreign txn fees). (fees/5) = 100, capped at 20. Score drops 20.</div>
+        </td>
+        <td class="score healthy">
+          <div class="big">80</div>
+          <div class="meta">expected 80</div>
+        </td>
+        <td class="reasons-cell"><ul class="reasons"><li><span class="rlabel">-20</span> $500.00 in fees paid</li></ul></td>
+        <td class="checks"><ul><li class="pass">✓ score === 80</li><li class="pass">✓ reason: fees paid</li></ul></td>
+      </tr>
+    
+      <tr class="">
+        <td class="scenario">
+          <div class="title">Debt grew this period</div>
+          <div class="id">debt_growth_penalty</div>
+          <div class="desc">$500 purchases, $50 payments, no refunds → netDebtChange = $450. (netDebt/50) = 9 penalty. Score 91.</div>
+        </td>
+        <td class="score healthy">
+          <div class="big">91</div>
+          <div class="meta">expected 91</div>
+        </td>
+        <td class="reasons-cell"><ul class="reasons"><li><span class="rlabel">-9</span> Debt grew by $450.00</li></ul></td>
+        <td class="checks"><ul><li class="pass">✓ score === 91</li><li class="pass">✓ reason: debt grew</li></ul></td>
+      </tr>
+    
+      <tr class="">
+        <td class="scenario">
+          <div class="title">Debt growth penalty hits the -20 cap</div>
+          <div class="id">debt_growth_capped_at_20</div>
+          <div class="desc">$2000 purchases minimal payments → netDebt $1800. (netDebt/50) = 36, capped at 20.</div>
+        </td>
+        <td class="score healthy">
+          <div class="big">80</div>
+          <div class="meta">expected 80</div>
+        </td>
+        <td class="reasons-cell"><ul class="reasons"><li><span class="rlabel">-20</span> Debt grew by $1800.00</li></ul></td>
+        <td class="checks"><ul><li class="pass">✓ score === 80</li><li class="pass">✓ reason: debt grew</li></ul></td>
+      </tr>
+    
+      <tr class="">
+        <td class="scenario">
+          <div class="title">Debt shrunk — small bonus</div>
+          <div class="id">debt_shrunk_small_bonus</div>
+          <div class="desc">$200 paid down (more payments than purchases). +2 bonus from |netDebt|/100 = 2.</div>
+        </td>
+        <td class="score healthy">
+          <div class="big">100</div>
+          <div class="meta">expected 100</div>
+        </td>
+        <td class="reasons-cell"><ul class="reasons"><li><span class="rlabel">+2</span> Debt down $200.00</li></ul></td>
+        <td class="checks"><ul><li class="pass">✓ score === 100</li><li class="pass">✓ reason: debt down</li></ul></td>
+      </tr>
+    
+      <tr class="">
+        <td class="scenario">
+          <div class="title">Big debt paydown — bonus capped at +10</div>
+          <div class="id">debt_shrunk_bonus_capped_at_10</div>
+          <div class="desc">Paid down $1500. |netDebt|/100 = 15, capped at 10. Bonus alone bumps a 100 → still 100 (max).</div>
+        </td>
+        <td class="score healthy">
+          <div class="big">100</div>
+          <div class="meta">expected 100</div>
+        </td>
+        <td class="reasons-cell"><ul class="reasons"><li><span class="rlabel">+10</span> Debt down $1500.00</li></ul></td>
+        <td class="checks"><ul><li class="pass">✓ score === 100</li><li class="pass">✓ reason: debt down</li></ul></td>
+      </tr>
+    
+      <tr class="">
+        <td class="scenario">
+          <div class="title">Single card above 25% APR</div>
+          <div class="id">high_apr_single_card</div>
+          <div class="desc">One card has 28% APR (predatory). -5 penalty. Score 95.</div>
+        </td>
+        <td class="score healthy">
+          <div class="big">95</div>
+          <div class="meta">expected 95</div>
+        </td>
+        <td class="reasons-cell"><ul class="reasons"><li><span class="rlabel">-5</span> 1 card(s) above 25% APR</li></ul></td>
+        <td class="checks"><ul><li class="pass">✓ score === 95</li><li class="pass">✓ reason: 1 card above 25% APR</li></ul></td>
+      </tr>
+    
+      <tr class="">
+        <td class="scenario">
+          <div class="title">Three cards above 25% APR — -15 hit</div>
+          <div class="id">high_apr_three_cards</div>
+          <div class="desc">Three high-APR cards (cap-2 + retail card + emergency card). 3 × 5 = 15 penalty.</div>
+        </td>
+        <td class="score healthy">
+          <div class="big">85</div>
+          <div class="meta">expected 85</div>
+        </td>
+        <td class="reasons-cell"><ul class="reasons"><li><span class="rlabel">-15</span> 3 card(s) above 25% APR</li></ul></td>
+        <td class="checks"><ul><li class="pass">✓ score === 85</li><li class="pass">✓ reason: 3 cards above 25% APR</li></ul></td>
+      </tr>
+    
+      <tr class="">
+        <td class="scenario">
+          <div class="title">Compound pain — interest + fees + high APR</div>
+          <div class="id">compound_pain_interest_fees_high_apr</div>
+          <div class="desc">$80 interest, $30 fees, 27% APR card. Penalties: -8 interest, -6 fees, -5 APR = -19 → score 81.</div>
+        </td>
+        <td class="score healthy">
+          <div class="big">81</div>
+          <div class="meta">expected 81</div>
+        </td>
+        <td class="reasons-cell"><ul class="reasons"><li><span class="rlabel">-8</span> $80.00 in interest paid</li><li><span class="rlabel">-6</span> $30.00 in fees paid</li><li><span class="rlabel">-5</span> 1 card(s) above 25% APR</li></ul></td>
+        <td class="checks"><ul><li class="pass">✓ score === 81</li></ul></td>
+      </tr>
+    
+      <tr class="">
+        <td class="scenario">
+          <div class="title">Interest + fees + growing debt — heavy hit</div>
+          <div class="id">compound_pain_with_debt_growth</div>
+          <div class="desc">$100 interest, $50 fees, $400 net debt growth, 26% APR. -10 interest, -10 fees, -8 debt, -5 APR = -33 → 67.</div>
+        </td>
+        <td class="score fair">
+          <div class="big">67</div>
+          <div class="meta">expected 67</div>
+        </td>
+        <td class="reasons-cell"><ul class="reasons"><li><span class="rlabel">-10</span> $100.00 in interest paid</li><li><span class="rlabel">-10</span> $50.00 in fees paid</li><li><span class="rlabel">-8</span> Debt grew by $400.00</li><li><span class="rlabel">-5</span> 1 card(s) above 25% APR</li></ul></td>
+        <td class="checks"><ul><li class="pass">✓ score === 67</li></ul></td>
+      </tr>
+    
+      <tr class="">
+        <td class="scenario">
+          <div class="title">Pathological worst case — every penalty fires + clamps at 0</div>
+          <div class="id">worst_case_floor_at_zero</div>
+          <div class="desc">Massive interest + massive fees + huge debt growth + four 30% APR cards. All penalties cap individually: -35 (interest) -20 (fees) -20 (debt) -20 (4 cards × 5) = -95. Score floor is 0, so a 100→5 result confirms the floor isn&#39;t being hit (we&#39;re testing it&#39;s not crossed). If accounts had been 5+ cards the score would hit 0.</div>
+        </td>
+        <td class="score urgent">
+          <div class="big">5</div>
+          <div class="meta">expected 5</div>
+        </td>
+        <td class="reasons-cell"><ul class="reasons"><li><span class="rlabel">-35</span> $1000.00 in interest paid</li><li><span class="rlabel">-20</span> $1000.00 in fees paid</li><li><span class="rlabel">-20</span> Debt grew by $4900.00</li><li><span class="rlabel">-20</span> 4 card(s) above 25% APR</li></ul></td>
+        <td class="checks"><ul><li class="pass">✓ score === 5</li><li class="pass">✓ score floors at 0 (no negatives leak through)</li></ul></td>
+      </tr>
+    
+      <tr class="">
+        <td class="scenario">
+          <div class="title">Best case — clean user + debt down + low APR — score clamps at 100</div>
+          <div class="id">best_case_ceiling_at_100</div>
+          <div class="desc">Zero interest, zero fees, paid down $800, every card under 20% APR. Bonus alone would push past 100 → clamped to 100.</div>
+        </td>
+        <td class="score healthy">
+          <div class="big">100</div>
+          <div class="meta">expected 100</div>
+        </td>
+        <td class="reasons-cell"><ul class="reasons"><li><span class="rlabel">+8</span> Debt down $800.00</li></ul></td>
+        <td class="checks"><ul><li class="pass">✓ score === 100</li><li class="pass">✓ score caps at 100</li></ul></td>
+      </tr>
+    
+      <tr class="">
+        <td class="scenario">
+          <div class="title">Fees imported but no statements — synthetic-account fallback</div>
+          <div class="id">fees_only_no_statements_synthetic</div>
+          <div class="desc">User has bank_fees rows but no bank_statements. Old code returned baseline 50; the synthetic-account fallback now scores from the raw fee total. $90 fees → -18 penalty → score 82.</div>
+        </td>
+        <td class="score healthy">
+          <div class="big">82</div>
+          <div class="meta">expected 82</div>
+        </td>
+        <td class="reasons-cell"><ul class="reasons"><li><span class="rlabel">-18</span> $90.00 in fees paid</li></ul></td>
+        <td class="checks"><ul><li class="pass">✓ score === 82</li><li class="pass">✓ reason: fees paid</li></ul></td>
+      </tr>
+    
+      <tr class="">
+        <td class="scenario">
+          <div class="title">Only purchases logged — no debt-growth penalty</div>
+          <div class="id">no_debt_signal_only_purchases</div>
+          <div class="desc">$300 purchases, $300 payments (paid in full). netDebt = 0, no penalty.</div>
+        </td>
+        <td class="score healthy">
+          <div class="big">100</div>
+          <div class="meta">expected 100</div>
+        </td>
+        <td class="reasons-cell"><em>(no reasons fired — neutral / cold-start path)</em></td>
+        <td class="checks"><ul><li class="pass">✓ score === 100</li></ul></td>
+      </tr>
+    
+      <tr class="">
+        <td class="scenario">
+          <div class="title">Refunds reduce net debt change (no growth penalty)</div>
+          <div class="id">refunds_reduce_debt_change</div>
+          <div class="desc">$600 purchases, $400 refunds, $100 payments. netDebt = 600 - 400 - 100 = 100 → at boundary, no growth penalty (rule is &gt;100).</div>
+        </td>
+        <td class="score healthy">
+          <div class="big">100</div>
+          <div class="meta">expected 100</div>
+        </td>
+        <td class="reasons-cell"><em>(no reasons fired — neutral / cold-start path)</em></td>
+        <td class="checks"><ul><li class="pass">✓ score === 100</li></ul></td>
+      </tr>
+    
+      <tr class="">
+        <td class="scenario">
+          <div class="title">Field-name compat — totalPurch (web) vs totalPurchases (mobile)</div>
+          <div class="id">totalPurch_field_name_compat</div>
+          <div class="desc">Engine accepts both spellings. Synthetic input here uses totalPurch (web spelling) with no totalPurchases. Score should still compute correctly.</div>
+        </td>
+        <td class="score healthy">
+          <div class="big">95</div>
+          <div class="meta">expected 95</div>
+        </td>
+        <td class="reasons-cell"><ul class="reasons"><li><span class="rlabel">-3</span> $25.00 in interest paid</li><li><span class="rlabel">-2</span> $10.00 in fees paid</li></ul></td>
+        <td class="checks"><ul><li class="pass">✓ score === 95</li></ul></td>
+      </tr>
+    </tbody>
+  </table>
+</main>
+<footer>
+  Cross-platform parity asserted by <code>mobile/test/services/guacwizard_scenarios_test.dart</code>, which reads the same <code>test-fixtures/guacwizard-scenarios.json</code> and runs the Dart engine. If both runners pass, web + iOS + Android agree on every scenario.
+</footer>
+</body>
+</html>

@@ -504,6 +504,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Row(children: [
             Expanded(child: _Pill(
               gradient: const [Color(0xFFa7f3d0), Color(0xFF15803d)],
+              icon: Icons.link_rounded, title: 'Connections', subtitle: '37 retailers',
+              onTap: () => context.go('/connections'),
+            )),
+            const SizedBox(width: 10),
+            Expanded(child: _Pill(
+              gradient: const [Color(0xFFbae6fd), Color(0xFF0369a1)],
+              icon: Icons.mark_email_unread_rounded, title: 'Inbox', subtitle: 'Mail + auto-receipts',
+              onTap: () => context.go('/inbox'),
+            )),
+          ]),
+
+          const SizedBox(height: 10),
+          Row(children: [
+            Expanded(child: _Pill(
+              gradient: const [Color(0xFFa7f3d0), Color(0xFF15803d)],
               icon: Icons.shield_outlined, title: 'Security', subtitle: 'Encryption + privacy',
               onTap: () => UpdateService.openDownload('https://getguac.app/security'),
             )),

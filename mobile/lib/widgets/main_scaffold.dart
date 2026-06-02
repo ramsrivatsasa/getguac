@@ -41,8 +41,9 @@ class _QuickAction {
 // Items shown in the long-press popover. Order matches the user's mental
 // model: communication first, then their finance brain, then the rest.
 const _quickActions = <_QuickAction>[
-  _QuickAction('/chat',       Icons.chat_bubble_outline,       'Chat',         'Family + friends',      Color(0xFF15803d), Color(0xFFd1fae5)),
-  _QuickAction('/inbox',      Icons.mark_email_unread_rounded, 'Inbox',        'Mail + auto-receipts',  Color(0xFFca8a04), Color(0xFFfef3c7)),
+  _QuickAction('/chat',        Icons.chat_bubble_outline,        'Chat',         'Family + friends',         Color(0xFF15803d), Color(0xFFd1fae5)),
+  _QuickAction('/inbox',       Icons.mark_email_unread_rounded,  'Inbox',        'Mail + auto-receipts',     Color(0xFFca8a04), Color(0xFFfef3c7)),
+  _QuickAction('/connections', Icons.link_rounded,               'Connections',  '37 retailers · auto-pull', Color(0xFF15803d), Color(0xFFd1fae5)),
   _QuickAction('/guacscore',  Icons.auto_awesome,              'GuacScore',    '0–100 spending grade',  Color(0xFF15803d), Color(0xFFd1fae5)),
   _QuickAction('/guacwizard', Icons.auto_fix_high,             'GuacWizard',   'Bank Bite + insights',  Color(0xFF7c3aed), Color(0xFFede9fe)),
   _QuickAction('/rewards',    Icons.card_giftcard_rounded,     'Rewards',      'Loyalty + expiring',    Color(0xFFdb2777), Color(0xFFfce7f3)),

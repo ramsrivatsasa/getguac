@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.28",
-  "name": "v0.3.28 — 37 retailers on Connections · green add buttons · left-aligned content",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.28/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Connections retailer catalog expanded from 12 to 37 major US retailers across grocery (Aldi, Publix, H-E-B, Wegmans, Stop & Shop, Giant, Sprouts), wholesale (BJ's), drugstore (CVS, Walgreens, Rite Aid), department (Macy's, Kohl's, Nordstrom, TJ Maxx, Marshalls, Ross), home (Lowe's, Wayfair, IKEA), electronics/office (Apple, Staples, Office Depot), dollar stores (Dollar Tree, Dollar General), online marketplaces (eBay, Etsy), food delivery (DoorDash, Uber Eats, Grubhub, Starbucks), and gas (Shell, Chevron).\n• Connections content left-aligned to the sidebar instead of centered (was a big dead zone on wide screens).\n• Per-retailer add buttons switched from violet to emerald GuacGreen — back on brand."
+  "version": "v0.3.29",
+  "name": "v0.3.29 — Connections discoverable on mobile (Profile tile + long-press menu)",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.29/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Connections is now reachable on mobile from two places:\n  → Profile screen: dedicated green tile in the quick-actions grid\n  → Long-press the ⋮ Menu tab in the bottom nav → 'Connections' entry in the popover\n• Route was already wired but had no entry point until now."
 }

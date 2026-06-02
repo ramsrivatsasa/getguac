@@ -144,22 +144,22 @@ class GetGuacApp extends StatelessWidget {
               TargetPlatform.windows: CupertinoPageTransitionsBuilder(),
             },
           ),
-          // Headers use Bricolage Grotesque — a contemporary display
-          // grotesk with a "Wonk" axis that gives letters a subtle off-
-          // square personality. Distinct from Fetch's neutral sans and
-          // from generic serifs. Body text stays on the system default
-          // (legibility matters most for receipts data).
+          // Headers use Plus Jakarta Sans — a geometric humanist sans
+          // with friendly curves. Recognizable in the hand without
+          // being odd, plays well with the emerald/lime palette, and
+          // reads cleanly at large AppBar sizes. Body text stays on
+          // the system default (legibility for receipts data).
           appBarTheme: AppBarTheme(
             backgroundColor: Colors.white,
             foregroundColor: kBrandPrimaryDk,
             elevation: 0,
             scrolledUnderElevation: 1,
             centerTitle: false,
-            titleTextStyle: GoogleFonts.bricolageGrotesque(
+            titleTextStyle: GoogleFonts.plusJakartaSans(
               color: kBrandPrimaryDk,
               fontSize: 22,
               fontWeight: FontWeight.w800,
-              letterSpacing: -0.4,
+              letterSpacing: -0.5,
             ),
           ),
           inputDecorationTheme: InputDecorationTheme(

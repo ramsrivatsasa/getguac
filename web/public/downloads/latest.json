@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.23",
-  "name": "v0.3.23 — branded app-bar typeface (Bricolage Grotesque) + GuacGreen receipt hero",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.23/app-arm64-v8a-release.apk",
-  "releaseNotes": "• AppBar titles across the app now render in Bricolage Grotesque — a contemporary display grotesk with a 'Wonk' axis that gives letters a subtle off-square personality. Distinct from Fetch's neutral sans and from generic serifs.\n• Receipt detail hero rebuilt away from the Fetch-look: GuacGreen emerald→lime gradient, store logo centered as the focal point (80px, white tile, ring), store name + total + date below it, smooth wave bottom edge (no more zigzag)."
+  "version": "v0.3.24",
+  "name": "v0.3.24 — header font: Plus Jakarta Sans",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.24/app-arm64-v8a-release.apk",
+  "releaseNotes": "• AppBar titles now render in Plus Jakarta Sans — a geometric humanist sans with friendly curves that pairs cleanly with the emerald/lime palette. Replaces Bricolage Grotesque from the prior build (too quirky in the hand)."
 }

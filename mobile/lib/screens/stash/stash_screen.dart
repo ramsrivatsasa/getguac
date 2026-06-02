@@ -18,6 +18,7 @@ import '../../widgets/category_picker_sheet.dart';
 import '../../widgets/fetch_card.dart';
 import '../../widgets/stash_actions_sheet.dart';
 import '../../services/stash_service.dart';
+import '../../services/stash_engine.dart' show formatPurchaseFrequency;
 import '../../categories.dart';
 
 const _kBrand = Color(0xFFca8a04);
@@ -32,9 +33,11 @@ class _StashItem {
   final String name;
   int qty;
   double totalSpent;
+  String firstDate = '';  // earliest buy — powers cadence label
   String lastDate;
   String lastReceiptId;
   String? category;
+  int timesBought = 0;    // count of receipt rows for this product
   int? rating;            // user's PERSONAL rating (max seen across rows).
   // Aggregate across the user's own multiple buys of this item — the
   // closest thing to a "community rating" until cross-user data lands.
@@ -97,11 +100,17 @@ class _StashScreenState extends State<StashScreen> {
         final existing = byName[name.toLowerCase()];
         if (existing == null) {
           final item = _StashItem(name, qty, price * qty, date, rid, cat, rating);
+          item.firstDate = date;
+          item.timesBought = 1;
           if (rating != null) { item.ratingCount = 1; item.ratingSum = rating; }
           byName[name.toLowerCase()] = item;
         } else {
           existing.qty += qty;
           existing.totalSpent += price * qty;
+          existing.timesBought += 1;
+          if (date.isNotEmpty && (existing.firstDate.isEmpty || date.compareTo(existing.firstDate) < 0)) {
+            existing.firstDate = date;
+          }
           if (date.compareTo(existing.lastDate) > 0) {
             existing.lastDate = date;
             existing.lastReceiptId = rid;
@@ -317,11 +326,12 @@ class _StashScreenState extends State<StashScreen> {
                           // last bought + lifetime total — reads like
                           // a description rather than a metadata row.
                           final subtitle = 'Bought ×${i.qty} · last ${_friendlyDate(i.lastDate)} · \$${i.totalSpent.toStringAsFixed(2)} total';
-                          // Where the category pill used to live we
-                          // now surface on-hand. Tap routes to the
-                          // actions sheet's stepper. Empty-state nudge
-                          // when the user hasn't counted yet.
-                          final stockLabel = onHand > 0 ? 'On hand: $onHand' : 'Tap to count';
+                          // On-hand pill — only render when set. The
+                          // ⋮ menu's stepper covers the "I haven't
+                          // counted yet" path so we don't need a
+                          // placeholder that visually shouts at the
+                          // user about every uncounted item.
+                          final stockLabel = onHand > 0 ? '$onHand on hand' : null;
                           return FetchCard(
                             title: i.name,
                             subtitle: subtitle,
@@ -330,6 +340,7 @@ class _StashScreenState extends State<StashScreen> {
                             value: i.totalSpent,
                             valueLabel: '\$',
                             valueIsPrefix: true,
+                            frequency: formatPurchaseFrequency(i.timesBought, i.firstDate, i.lastDate),
                             storeName: stockLabel,
                             storeColor: onHand > 0 ? const Color(0xFF15803d) : const Color(0xFF94a3b8),
                             storeEmoji: '📦',

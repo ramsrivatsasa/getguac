@@ -171,6 +171,46 @@ export function filterStash(items, { query = '', category = null } = {}) {
   })
 }
 
+/**
+ * Format a human-readable "purchase frequency" label for an item
+ * — fits under the price chip in the card. Centralized so web +
+ * mobile produce identical wording for the same input.
+ *
+ *   1 buy           → "First buy"
+ *   2 buys (any)    → "Bought 2×"          (one gap, ambiguous cadence)
+ *   3+ buys, avg <7d   → "Almost daily"
+ *                <14d → "Weekly"
+ *                <30d → "Every ~Nd"
+ *                <60d → "Monthly"
+ *                <90d → "Every ~6w"
+ *               <180d → "Quarterly"
+ *               <365d → "Yearly"
+ *              >=365d → "Rare buy"
+ *
+ * @param {number} timesBought
+ * @param {string} firstDate  ISO YYYY-MM-DD
+ * @param {string} lastDate   ISO YYYY-MM-DD
+ */
+export function formatPurchaseFrequency(timesBought, firstDate, lastDate) {
+  const n = Number(timesBought || 0)
+  if (n <= 0) return ''
+  if (n === 1) return 'First buy'
+  if (n === 2 || !firstDate || !lastDate || firstDate === lastDate) return `Bought ${n}×`
+  const t0 = new Date(firstDate).getTime()
+  const t1 = new Date(lastDate).getTime()
+  if (!Number.isFinite(t0) || !Number.isFinite(t1) || t1 <= t0) return `Bought ${n}×`
+  const days = Math.round((t1 - t0) / 86400000 / (n - 1))
+  if (days < 1)   return 'Almost daily'
+  if (days < 7)   return `Every ~${days}d`
+  if (days < 14)  return 'Weekly'
+  if (days < 30)  return `Every ~${days}d`
+  if (days < 60)  return 'Monthly'
+  if (days < 90)  return `Every ~${Math.round(days / 7)}w`
+  if (days < 180) return 'Quarterly'
+  if (days < 365) return `Every ~${Math.round(days / 30)}mo`
+  return 'Rare buy'
+}
+
 /** Counts items per category — fuels the filter pill row. */
 export function categoryCounts(items) {
   const m = new Map()
@@ -179,6 +219,82 @@ export function categoryCounts(items) {
     m.set(k, (m.get(k) || 0) + 1)
   }
   return m
+}
+
+/**
+ * Group items into { category-slug → items[] } buckets, with each
+ * bucket internally sorted by the same key as the top-level sort.
+ * Used by the accordion view (one section per category).
+ *
+ * Items without a category go under the synthetic `__uncategorized__`
+ * key so the UI can render a "Needs category" section at the end.
+ */
+export function groupByCategory(items, sort = 'recent') {
+  const groups = new Map()
+  for (const it of items) {
+    const k = it.category || '__uncategorized__'
+    if (!groups.has(k)) groups.set(k, [])
+    groups.get(k).push(it)
+  }
+  // Stable internal sort per bucket — same comparator as sortStash.
+  for (const [, list] of groups) {
+    list.splice(0, list.length, ...sortStash(list, sort))
+  }
+  return groups
+}
+
+/**
+ * === CENTRAL VIEW SELECTOR ===
+ * Single function the UI calls to translate (items, opts) into the
+ * exact data shape it should render. Encapsulates the rules:
+ *
+ *   - SEARCH IS GLOBAL — when `search` is set, ignore `category` so
+ *     the user can find any item without first picking the right pill.
+ *   - VIEW='accordion' ONLY APPLIES WHEN category='all' — picking a
+ *     specific category implies the user wants a flat list of just
+ *     those items, not a one-section accordion. So we fall back to
+ *     'grid' shape in that case.
+ *   - SEARCH NEVER ACCORDIONS — a search result is always flat,
+ *     regardless of view, because users expect a search to surface
+ *     matches not categorize them.
+ *
+ * Returns:
+ *   {
+ *     shape: 'flat' | 'accordion',
+ *     items:  [...]                  // when shape === 'flat'
+ *     groups: Map<category, items[]> // when shape === 'accordion'
+ *     totalShown: number
+ *   }
+ *
+ * Both web and mobile consume this so the rules can't drift.
+ */
+export function selectStashView(items, {
+  sort = 'recent',
+  search = '',
+  category = null,    // null/'all' = no category filter
+  view = 'grid',      // 'grid' | 'list' | 'accordion'
+} = {}) {
+  const hasSearch = String(search || '').trim().length > 0
+  // Search is global — bypass the category filter when active.
+  const effectiveCategory = hasSearch ? null : (category && category !== 'all' ? category : null)
+  const filtered = filterStash(items, { query: search, category: effectiveCategory })
+
+  // Accordion only fires when:
+  //   - view explicitly = 'accordion'
+  //   - no specific category is selected (i.e. user is on "All")
+  //   - no active search (search results stay flat)
+  if (view === 'accordion' && !effectiveCategory && !hasSearch) {
+    return {
+      shape: 'accordion',
+      groups: groupByCategory(filtered, sort),
+      totalShown: filtered.length,
+    }
+  }
+  return {
+    shape: 'flat',
+    items: sortStash(filtered, sort),
+    totalShown: filtered.length,
+  }
 }
 
 // ── helpers ─────────────────────────────────────────────────────────

@@ -38,6 +38,13 @@ class FetchCard extends StatelessWidget {
   final num? value;
   final String valueLabel;   // '', 'pts', '$', etc. (prefix or suffix)
   final bool valueIsPrefix;  // true → "$ 42", false → "42 $"
+  // Purchase-frequency label rendered directly below the value chip
+  // (e.g. "Every 2 weeks", "Monthly"). Generated centrally via
+  // stash_engine.dart#formatPurchaseFrequency so both web + mobile
+  // produce identical wording for the same input. Optional — when
+  // omitted, the slot collapses and the title can use the full
+  // vertical run.
+  final String? frequency;
 
   // Compact rating chips — tap to set, long-press for the picker.
   // `rating` is the user's PERSONAL rating (0–5; 0 = unrated). Render
@@ -75,6 +82,7 @@ class FetchCard extends StatelessWidget {
     this.value,
     this.valueLabel = '',
     this.valueIsPrefix = false,
+    this.frequency,
     this.rating = 0,
     this.onRate,
     this.communityRating,
@@ -154,24 +162,34 @@ class FetchCard extends StatelessWidget {
                 )),
                 if (value != null) ...[
                   const SizedBox(width: 8),
-                  Row(mainAxisSize: MainAxisSize.min, children: [
-                    Container(
-                      width: 20, height: 20,
-                      alignment: Alignment.center,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          colors: [Color(0xFFfbbf24), Color(0xFFf59e0b)],
-                          begin: Alignment.topLeft, end: Alignment.bottomRight,
+                  // Column so the frequency label can sit directly
+                  // under the value chip, right-aligned with it.
+                  Column(crossAxisAlignment: CrossAxisAlignment.end, mainAxisSize: MainAxisSize.min, children: [
+                    Row(mainAxisSize: MainAxisSize.min, children: [
+                      Container(
+                        width: 20, height: 20,
+                        alignment: Alignment.center,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            colors: [Color(0xFFfbbf24), Color(0xFFf59e0b)],
+                            begin: Alignment.topLeft, end: Alignment.bottomRight,
+                          ),
                         ),
+                        child: const Icon(Icons.star, size: 12, color: Colors.white),
                       ),
-                      child: const Icon(Icons.star, size: 12, color: Colors.white),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      valueIsPrefix ? '$valueLabel${_fmt(value!)}' : '${_fmt(value!)}$valueLabel',
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: Color(0xFF0f172a)),
-                    ),
+                      const SizedBox(width: 4),
+                      Text(
+                        valueIsPrefix ? '$valueLabel${_fmt(value!)}' : '${_fmt(value!)}$valueLabel',
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: Color(0xFF0f172a)),
+                      ),
+                    ]),
+                    if (frequency != null && frequency!.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(frequency!,
+                        style: const TextStyle(fontSize: 10, color: Color(0xFF64748b), fontWeight: FontWeight.w700),
+                      ),
+                    ],
                   ]),
                 ],
               ]),

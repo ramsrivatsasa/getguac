@@ -1,15 +1,17 @@
 'use client'
-import { useState, useMemo, Fragment, useCallback, useRef, memo } from 'react'
+import { useState, useMemo, useEffect, Fragment, useCallback, useRef, memo } from 'react'
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import {
-  Search, ShoppingCart, ExternalLink, Star, Store as StoreIcon, ChevronLeft, ChevronDown, ChevronRight, BadgeDollarSign, LayoutGrid, List
+  Search, ShoppingCart, ExternalLink, Star, Store as StoreIcon, ChevronLeft, ChevronDown, ChevronRight, BadgeDollarSign, LayoutGrid, List, Layers
 } from 'lucide-react'
 import { useQueryClient, useMutation } from '@tanstack/react-query'
 import { getStashItems, addToShoppingList, setStashProductCategory, setStashProductRating } from '../../../lib/db'
 import { guacImpactChip } from '../../../lib/guacImpact'
 import { fetchInventoryMap, setOnHand, inventoryKey, lowStockVerdict } from '../../../lib/inventory'
+import { selectStashView, formatPurchaseFrequency } from '../../../lib/stashEngine'
+import { imageCacheKey } from '../../../lib/productImage'
 import { CATEGORIES, CATEGORY_BY_SLUG, categoryClass } from '../../../lib/categories'
 import CategoryPicker, { CategoryCreatePill } from '../../../components/CategoryPicker'
 import GuacMascot from '../../../components/GuacMascot'
@@ -46,7 +48,7 @@ export default function StashPage() {
   const [search, setSearch] = useState('')
   const [activeCat, setActiveCat] = useState('all')
   const [sort, setSort] = useState('recent')
-  const [view, setView] = useState('grid')  // 'grid' | 'list'
+  const [view, setView] = useState('grid')  // 'grid' | 'list' | 'accordion'
   const [expanded, setExpanded] = useState(null)
   const [stealsItem, setStealsItem] = useState(null)
   // Horizontal-scroll ref for the category pill row. Same pattern as
@@ -58,6 +60,12 @@ export default function StashPage() {
     if (!el) return
     el.scrollBy({ left: dir * 260, behavior: 'smooth' })
   }
+
+  // Resolved product-image URLs keyed by raw item_name. Decorates
+  // each card with a real photo (cauliflower → cauliflower photo) so
+  // the user doesn't see a generic emoji for every item. Falls back
+  // to the category emoji when no image is found.
+  const [productImages, setProductImages] = useState({})
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ['stash'],
@@ -94,6 +102,7 @@ export default function StashPage() {
           times: 0,
           total_qty: 0,
           total_spend: 0,
+          first_date: '',  // earliest purchase — powers cadence label
           last_date: '',
           last_price: 0,
           last_receipt_id: '',
@@ -112,6 +121,7 @@ export default function StashPage() {
       e.total_qty += q
       e.total_spend += p
       const dt = r.receipts?.date || ''
+      if (dt && (!e.first_date || dt < e.first_date)) e.first_date = dt
       if (!e.last_date || dt > e.last_date) {
         e.last_date = dt
         e.last_price = p
@@ -219,12 +229,21 @@ export default function StashPage() {
 
   const multiStoreCount = items.filter(it => it.store_count > 1).length
 
+  // Central engine rules — see web/src/lib/stashEngine.js#selectStashView:
+  //   1. Search is GLOBAL — when a query is typed, ignore the category
+  //      filter so users can find any item without picking the right pill.
+  //   2. Accordion-by-category only fires when activeCat='all' AND no
+  //      search query (handled below in the render block).
   const filtered = useMemo(() => {
     const s = search.trim().toLowerCase()
+    const hasSearch = s.length > 0
     let list = items
-    if (activeCat === '_multi') list = list.filter(it => it.store_count > 1)
-    else if (activeCat !== 'all') list = list.filter(it => it.category === activeCat)
-    if (s) list = list.filter(it =>
+    // Apply category filter ONLY when no active search.
+    if (!hasSearch) {
+      if (activeCat === '_multi') list = list.filter(it => it.store_count > 1)
+      else if (activeCat !== 'all') list = list.filter(it => it.category === activeCat)
+    }
+    if (hasSearch) list = list.filter(it =>
       (it.item_name || '').toLowerCase().includes(s) ||
       (it.sku || '').toLowerCase().includes(s) ||
       (it.model || '').toLowerCase().includes(s) ||
@@ -241,6 +260,43 @@ export default function StashPage() {
     })
     return list
   }, [items, search, activeCat, sort])
+
+  // Accordion mode only applies when "All" is active + no search.
+  // In any other case, fall back to the flat grid/list rendering.
+  const hasSearch = search.trim().length > 0
+  const accordionMode = view === 'accordion' && activeCat === 'all' && !hasSearch
+  const accordionGroups = useMemo(() => {
+    if (!accordionMode) return null
+    const groups = new Map()
+    for (const it of filtered) {
+      const k = it.category || '__uncategorized__'
+      if (!groups.has(k)) groups.set(k, [])
+      groups.get(k).push(it)
+    }
+    return groups
+  }, [accordionMode, filtered])
+
+  // Batch-resolve product images via /api/product-image-batch.
+  // Fires when the unique item-name set changes. Results piled into
+  // state so each card can render a real photo when available.
+  useEffect(() => {
+    if (filtered.length === 0) return
+    let cancelled = false
+    const names = [...new Set(filtered.map(it => it.item_name).filter(Boolean))].slice(0, 80)
+    fetch('/api/product-image-batch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ names }),
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then(json => {
+        if (cancelled || !json?.byName) return
+        setProductImages(prev => ({ ...prev, ...json.byName }))
+      })
+      .catch(() => {/* degrade to emoji fallback */})
+    return () => { cancelled = true }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filtered.length, filtered[0]?.key])
 
   async function handleAddToSmashlist(it, store = null) {
     try {
@@ -355,6 +411,10 @@ export default function StashPage() {
             className={`p-1.5 rounded-full transition-all ${view === 'list' ? 'bg-white text-emerald-900 shadow-sm' : 'text-emerald-700/70 hover:text-emerald-900'}`}>
             <List size={14} />
           </button>
+          <button onClick={() => setView('accordion')} title="Grouped by category"
+            className={`p-1.5 rounded-full transition-all ${view === 'accordion' ? 'bg-white text-emerald-900 shadow-sm' : 'text-emerald-700/70 hover:text-emerald-900'}`}>
+            <Layers size={14} />
+          </button>
         </div>
         <span className="text-xs text-gray-400 tabular-nums">{filtered.length} shown</span>
       </div>
@@ -370,6 +430,32 @@ export default function StashPage() {
               : 'No matches in this category.'}
           </p>
         </div>
+      ) : accordionMode ? (
+        // Accordion grouping — one collapsible section per category,
+        // each containing a mini grid of its items. Only renders when
+        // "All" is selected (a specific category's accordion would
+        // be a single-section accordion = a flat list, defeating the
+        // purpose). Search results are always flat — see the central
+        // engine's selectStashView for the full rule set.
+        <div className="space-y-2">
+          {[...accordionGroups.entries()]
+            .sort((a, b) => b[1].length - a[1].length)
+            .map(([slug, group]) => {
+              const cat = CATEGORY_BY_SLUG[slug] || { emoji: '📦', label: slug === '__uncategorized__' ? 'Uncategorized' : slug, color: 'gray' }
+              return (
+                <CategorySection
+                  key={slug}
+                  cat={cat}
+                  items={group}
+                  expandedKey={expanded}
+                  onCardToggle={(key) => toggleExpand(key)}
+                  onAddToSmashlist={handleAddToSmashlist}
+                  onFindDeals={setStealsItem}
+                  productImages={productImages}
+                />
+              )
+            })}
+        </div>
       ) : view === 'grid' ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {filtered.map(it => (
@@ -380,6 +466,7 @@ export default function StashPage() {
               onToggle={() => toggleExpand(it.key)}
               onAddToSmashlist={(store) => handleAddToSmashlist(it, store)}
               onFindDeals={() => setStealsItem(it)}
+              imageUrl={productImages[it.item_name]}
             />
           ))}
         </div>
@@ -458,7 +545,50 @@ export default function StashPage() {
  * Visual parity with mobile FetchCard: tinted tile + sentence
  * subtitle + value top-right + dual rating chips + on-hand pill.
  */
-const StashCard = memo(function StashCard({ item, expanded, onToggle, onAddToSmashlist, onFindDeals }) {
+/**
+ * One collapsible accordion section per category, used by the
+ * accordion view. Header shows emoji + label + count and toggles
+ * the body open/closed. Defaults to expanded for the user's
+ * most-active categories.
+ */
+function CategorySection({ cat, items, expandedKey, onCardToggle, onAddToSmashlist, onFindDeals, productImages }) {
+  const [open, setOpen] = useState(true)
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">{cat.emoji}</span>
+          <span className="font-extrabold text-gray-900">{cat.label}</span>
+          <span className="text-xs font-bold text-gray-500 bg-gray-100 rounded-full px-2 py-0.5">
+            {items.length}
+          </span>
+        </div>
+        {open ? <ChevronDown size={18} className="text-gray-400" /> : <ChevronRight size={18} className="text-gray-400" />}
+      </button>
+      {open && (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 p-3 pt-0">
+          {items.map(it => (
+            <StashCard
+              key={it.key}
+              item={it}
+              expanded={expandedKey === it.key}
+              onToggle={() => onCardToggle(it.key)}
+              onAddToSmashlist={(store) => onAddToSmashlist(it, store)}
+              onFindDeals={() => onFindDeals(it)}
+              imageUrl={productImages[it.item_name]}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+const StashCard = memo(function StashCard({ item, expanded, onToggle, onAddToSmashlist, onFindDeals, imageUrl }) {
   const qc = useQueryClient()
   const cat = CATEGORY_BY_SLUG[item.category] || CATEGORY_BY_SLUG['misc']
   const tone = TONE_TINT[cat.color] || TONE_TINT.gray
@@ -488,10 +618,11 @@ const StashCard = memo(function StashCard({ item, expanded, onToggle, onAddToSma
   const lastDate = item.last_date ? friendlyDate(item.last_date) : ''
   const subtitle = `Bought ×${item.times} · last ${lastDate} · $${item.total_spend.toFixed(2)} total`
 
-  // On-hand pill replaces the old category pill in the card body.
-  // "On hand: N" when set, "Tap to count" placeholder otherwise.
+  // On-hand pill — only render when the user has actually counted.
+  // The previous "Tap to count" placeholder was confusing visual
+  // noise; the ⋮ menu's stepper still lets users set the count.
   const onHand = item.on_hand_qty
-  const stockLabel = onHand > 0 ? `On hand: ${onHand}` : 'Tap to count'
+  const stockLabel = onHand > 0 ? `${onHand} on hand` : null
 
   // Personal rating = rounded average across rated rows (matches the
   // old avg_rating semantic). Community rating fires only when there
@@ -505,7 +636,9 @@ const StashCard = memo(function StashCard({ item, expanded, onToggle, onAddToSma
         title={item.item_name}
         subtitle={subtitle}
         imageEmoji={cat.emoji}
+        imageUrl={imageUrl}
         tint={tone.tintHex || '#fef9c3'}
+        frequency={formatPurchaseFrequency(item.times, item.first_date, item.last_date)}
         urgency={item.low_stock?.state === 'urgent' ? item.low_stock.label
               : item.low_stock?.state === 'out'    ? '🛑 Out'
               : null}

@@ -159,12 +159,106 @@ List<StashItem> filterStash(
   }).toList();
 }
 
+/// Human-readable purchase-frequency label for the card.
+/// Mirrors web/src/lib/stashEngine.js#formatPurchaseFrequency.
+String formatPurchaseFrequency(int timesBought, String? firstDate, String? lastDate) {
+  if (timesBought <= 0) return '';
+  if (timesBought == 1) return 'First buy';
+  if (timesBought == 2 || firstDate == null || lastDate == null || firstDate.isEmpty || lastDate.isEmpty || firstDate == lastDate) {
+    return 'Bought $timesBought×';
+  }
+  final t0 = DateTime.tryParse(firstDate);
+  final t1 = DateTime.tryParse(lastDate);
+  if (t0 == null || t1 == null || !t1.isAfter(t0)) {
+    return 'Bought $timesBought×';
+  }
+  final days = (t1.difference(t0).inSeconds / 86400 / (timesBought - 1)).round();
+  if (days < 1)   return 'Almost daily';
+  if (days < 7)   return 'Every ~${days}d';
+  if (days < 14)  return 'Weekly';
+  if (days < 30)  return 'Every ~${days}d';
+  if (days < 60)  return 'Monthly';
+  if (days < 90)  return 'Every ~${(days / 7).round()}w';
+  if (days < 180) return 'Quarterly';
+  if (days < 365) return 'Every ~${(days / 30).round()}mo';
+  return 'Rare buy';
+}
+
 Map<String?, int> categoryCounts(List<StashItem> items) {
   final m = <String?, int>{};
   for (final it in items) {
     m[it.category] = (m[it.category] ?? 0) + 1;
   }
   return m;
+}
+
+/// Group items into { category-slug → items[] } buckets, each
+/// internally sorted by the same key as the top-level sort.
+/// Items without a category go under '__uncategorized__'.
+Map<String, List<StashItem>> groupByCategory(
+  List<StashItem> items, [
+  StashSort sort = StashSort.recent,
+]) {
+  final groups = <String, List<StashItem>>{};
+  for (final it in items) {
+    final k = it.category ?? '__uncategorized__';
+    groups.putIfAbsent(k, () => []).add(it);
+  }
+  for (final entry in groups.entries) {
+    groups[entry.key] = sortStash(entry.value, sort);
+  }
+  return groups;
+}
+
+enum StashShape { flat, accordion }
+enum StashView { grid, list, accordion }
+
+class StashViewResult {
+  final StashShape shape;
+  final List<StashItem> items;
+  final Map<String, List<StashItem>> groups;
+  final int totalShown;
+  const StashViewResult({
+    required this.shape,
+    this.items = const [],
+    this.groups = const {},
+    required this.totalShown,
+  });
+}
+
+/// === CENTRAL VIEW SELECTOR ===
+/// Mirrors web's selectStashView. Rules:
+///   - SEARCH IS GLOBAL — when query is set, ignore the category
+///     filter so users can find any item without picking the right
+///     pill first.
+///   - ACCORDION ONLY ON "ALL" — picking a specific category implies
+///     a flat list. So accordion view falls back to flat.
+///   - SEARCH NEVER ACCORDIONS — results are always flat.
+StashViewResult selectStashView(
+  List<StashItem> items, {
+  StashSort sort = StashSort.recent,
+  String search = '',
+  String? category,           // null/'all' = no category filter
+  StashView view = StashView.grid,
+}) {
+  final hasSearch = search.trim().isNotEmpty;
+  final effectiveCategory = hasSearch
+      ? null
+      : (category != null && category != 'all' ? category : null);
+  final filtered = filterStash(items, query: search, category: effectiveCategory);
+
+  if (view == StashView.accordion && effectiveCategory == null && !hasSearch) {
+    return StashViewResult(
+      shape: StashShape.accordion,
+      groups: groupByCategory(filtered, sort),
+      totalShown: filtered.length,
+    );
+  }
+  return StashViewResult(
+    shape: StashShape.flat,
+    items: sortStash(filtered, sort),
+    totalShown: filtered.length,
+  );
 }
 
 int _toInt(Object? v, int? fallback) {

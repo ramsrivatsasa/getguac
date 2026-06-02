@@ -40,6 +40,7 @@ export default function ItemRowCard({
   value,
   valueLabel = '',
   valueIsPrefix = false,
+  frequency,
   rating = 0,
   onRate,
   communityRating,
@@ -100,12 +101,19 @@ export default function ItemRowCard({
             {title}
           </h3>
           {value != null && (
-            <span className="flex items-center gap-1 shrink-0">
-              <span className="w-5 h-5 rounded-full bg-gradient-to-br from-amber-300 to-amber-500 text-white flex items-center justify-center">
-                <Star size={11} fill="currentColor" />
+            // Column so a purchase-frequency label can sit right
+            // under the price chip, right-aligned with it.
+            <div className="flex flex-col items-end shrink-0">
+              <span className="flex items-center gap-1">
+                <span className="w-5 h-5 rounded-full bg-gradient-to-br from-amber-300 to-amber-500 text-white flex items-center justify-center">
+                  <Star size={11} fill="currentColor" />
+                </span>
+                <span className="text-[14px] font-black text-gray-900">{valueText}</span>
               </span>
-              <span className="text-[14px] font-black text-gray-900">{valueText}</span>
-            </span>
+              {frequency && (
+                <span className="text-[10px] font-bold text-gray-500 mt-0.5">{frequency}</span>
+              )}
+            </div>
           )}
         </div>
 

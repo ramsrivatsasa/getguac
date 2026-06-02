@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.21",
-  "name": "v0.3.21 — Receipt detail rebrand: Fetch-style hero + clean card layout",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.21/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Mobile receipt detail screen rebranded to match the Fetch design pattern. Orange gradient hero with the receipt total as the big headline number, back/prev/next/image/edit action row up top, decorative sparkles, and a zigzag bottom edge for the torn-receipt look.\n• Below the hero: centered store name + 'date • total' subtitle. Worth-It? row replaces the old inline rating with a 44px avocado tile + tappable stars. Items render as a single clean list (name left, $ right) with subtle dividers — tap any item to open the per-item rating bottom sheet.\n• Bottom action footer with 'Snap another' (outline) and 'Done' / 'Skip rating' (filled) — matches the Fetch reference. Re-parse with Guac-AI button preserved.\n• Helper banner ('🔍 Rate this receipt to nudge your GuacScore') appears when the receipt is unrated."
+  "version": "v0.3.22",
+  "name": "v0.3.22 — Receipt detail: store logo at the top",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.22/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Receipt detail screen now shows the store's brand logo above the store name (matches the Fetch reference). Resolves via the existing logoUrlForStore helper — known stores get the real brand favicon, unknown stores fall back to a 🛒 tile in GetGuac green."
 }

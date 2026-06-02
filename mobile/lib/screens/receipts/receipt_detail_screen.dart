@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../providers/receipt_provider.dart';
 import '../../models/receipt_model.dart';
 import '../../widgets/worth_it_rating.dart';
+import '../../widgets/store_logo.dart';
 import '../../utils/date_format.dart';
 import '../../services/receipt_reparse_service.dart';
 
@@ -193,15 +194,25 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
               _buildHero(r, idx, total, hasPrev, hasNext, headlineValue, headlineLabel, ratedItemCount),
 
               // ── STORE INFO CARD ─────────────────────────────────────
+              // Store LOGO above the name (matches the Fetch reference's
+              // "Giant" header). Falls back to a leaf-emoji tile when no
+              // logo can be resolved (e.g. store name not yet mapped to
+              // a known domain). StoreLogo widget handles both cases.
               Container(
                 color: Colors.white,
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 18),
+                padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
                 child: Column(children: [
-                  // Store name centered, big, branded.
+                  StoreLogo(
+                    storeName: r.storeName,
+                    size: 56,
+                    fallbackEmoji: '🛒',
+                    emojiBg: const Color(0xFF15803d),
+                  ),
+                  const SizedBox(height: 10),
                   Text(r.storeName,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
-                      fontSize: 28, fontWeight: FontWeight.w900,
+                      fontSize: 24, fontWeight: FontWeight.w900,
                       color: Color(0xFF15803d), letterSpacing: -0.5,
                     ),
                     maxLines: 1, overflow: TextOverflow.ellipsis,

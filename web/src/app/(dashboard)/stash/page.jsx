@@ -1,10 +1,10 @@
 'use client'
-import { useState, useMemo, Fragment, useCallback, memo } from 'react'
+import { useState, useMemo, Fragment, useCallback, useRef, memo } from 'react'
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import {
-  Search, ShoppingCart, ExternalLink, Star, Store as StoreIcon, ChevronDown, ChevronRight, BadgeDollarSign, LayoutGrid, List
+  Search, ShoppingCart, ExternalLink, Star, Store as StoreIcon, ChevronLeft, ChevronDown, ChevronRight, BadgeDollarSign, LayoutGrid, List
 } from 'lucide-react'
 import { useQueryClient, useMutation } from '@tanstack/react-query'
 import { getStashItems, addToShoppingList, setStashProductCategory, setStashProductRating } from '../../../lib/db'
@@ -49,6 +49,15 @@ export default function StashPage() {
   const [view, setView] = useState('grid')  // 'grid' | 'list'
   const [expanded, setExpanded] = useState(null)
   const [stealsItem, setStealsItem] = useState(null)
+  // Horizontal-scroll ref for the category pill row. Same pattern as
+  // the dashboard's AllPaymentsScroll — arrow buttons paginate by
+  // roughly two chips per click, scrollbar is hidden via no-scrollbar.
+  const catScrollRef = useRef(null)
+  const scrollCats = (dir) => {
+    const el = catScrollRef.current
+    if (!el) return
+    el.scrollBy({ left: dir * 260, behavior: 'smooth' })
+  }
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ['stash'],
@@ -270,44 +279,59 @@ export default function StashPage() {
         </span>
       </div>
 
-      {/* Category chips — single horizontal scroll row.
-          Previously this wrapped onto 3+ rows on wide screens, which
-          made the page feel cluttered before the user got to the
-          actual product grid. Mobile Stash already used a horizontal
-          strip; this brings web to parity.
+      {/* Category chips — single horizontal scroll row with ← →
+          arrow buttons (matches the dashboard's AllPaymentsScroll
+          pattern). Scrollbar is hidden via no-scrollbar; the arrows
+          float on top and are the only scroll affordance. Outer
+          group enables hover-only fade-in of the arrows on desktop.
           - `flex-nowrap` keeps every chip in one line
-          - `shrink-0` (on each chip) prevents the chips from being
-            squashed when the container is narrower than their total
-          - `-mx-4 px-4` lets the leftmost chip start at the page edge
-            and gives the rightmost chip breathing room past the visible
-            edge so the scroll feels intentional
-          - `scrollbar-thin` keeps the scrollbar slim; on touch devices
-            the OS hides it anyway
-          - Right-edge fade is a sibling div positioned over the row to
-            hint at more content off-screen without taking pointer events. */}
-      <div className="relative -mx-4">
-        <div className="flex flex-nowrap gap-2 overflow-x-auto px-4 pb-2 scrollbar-thin scroll-smooth">
-          <CatChip active={activeCat === 'all'} onClick={() => setActiveCat('all')} emoji="🌈" label="All" count={items.length} />
-          {multiStoreCount > 0 && (
-            <CatChip
-              active={activeCat === '_multi'}
-              onClick={() => setActiveCat('_multi')}
-              emoji="🏬"
-              label="Multi-store"
-              count={multiStoreCount}
-              tone="amber"
-            />
-          )}
-          {CATEGORIES.map(c => {
-            const count = catCounts.get(c.slug) || 0
-            if (count === 0 && activeCat !== c.slug) return null
-            return (
-              <CatChip key={c.slug} active={activeCat === c.slug} onClick={() => setActiveCat(c.slug)} emoji={c.emoji} label={c.label} count={count} tone={c.color} />
-            )
-          })}
+          - `shrink-0` on each chip prevents compression
+          - `px-12` reserves space for the arrow buttons so they sit
+            outside the scroll area instead of overlapping the first
+            and last chip. */}
+      <div className="relative group px-12">
+        <style jsx>{`
+          .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+          .no-scrollbar::-webkit-scrollbar { display: none; }
+        `}</style>
+        <div ref={catScrollRef} className="no-scrollbar overflow-x-auto scroll-smooth pb-1">
+          <div className="flex flex-nowrap gap-2 min-w-max">
+            <CatChip active={activeCat === 'all'} onClick={() => setActiveCat('all')} emoji="🌈" label="All" count={items.length} />
+            {multiStoreCount > 0 && (
+              <CatChip
+                active={activeCat === '_multi'}
+                onClick={() => setActiveCat('_multi')}
+                emoji="🏬"
+                label="Multi-store"
+                count={multiStoreCount}
+                tone="amber"
+              />
+            )}
+            {CATEGORIES.map(c => {
+              const count = catCounts.get(c.slug) || 0
+              if (count === 0 && activeCat !== c.slug) return null
+              return (
+                <CatChip key={c.slug} active={activeCat === c.slug} onClick={() => setActiveCat(c.slug)} emoji={c.emoji} label={c.label} count={count} tone={c.color} />
+              )
+            })}
+          </div>
         </div>
-        {/* Right-edge fade — gradient overlay hints "there's more →". */}
-        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-50 to-transparent" />
+        <button
+          type="button"
+          aria-label="Scroll categories left"
+          onClick={() => scrollCats(-1)}
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white shadow-md border border-gray-200 flex items-center justify-center text-gray-700 hover:bg-gray-50 hover:text-emerald-700 opacity-70 group-hover:opacity-100 transition-opacity"
+        >
+          <ChevronLeft size={18} />
+        </button>
+        <button
+          type="button"
+          aria-label="Scroll categories right"
+          onClick={() => scrollCats(1)}
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white shadow-md border border-gray-200 flex items-center justify-center text-gray-700 hover:bg-gray-50 hover:text-emerald-700 opacity-70 group-hover:opacity-100 transition-opacity"
+        >
+          <ChevronRight size={18} />
+        </button>
       </div>
 
       {/* Search + sort + view toggle */}

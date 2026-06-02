@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.27",
-  "name": "v0.3.27 — engagement-tile widths align with PaymentTile row + +g alias on Connections",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.27/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Dashboard engagement tiles (GuacScore · GuacWizard · GuacMoney · Rewards) bumped 180px → 220px so they match the PaymentTile row below them. Top row no longer looks narrower than the bottom.\n• Connections page now shows the correct `+g` subaddress (rdasaradi+g@getguac.app) — that's the auto-parsing endpoint per /how-email-works. The bare @getguac.app address is for personal mail and stays untouched. Retailers go to +g."
+  "version": "v0.3.28",
+  "name": "v0.3.28 — 37 retailers on Connections · green add buttons · left-aligned content",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.28/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Connections retailer catalog expanded from 12 to 37 major US retailers across grocery (Aldi, Publix, H-E-B, Wegmans, Stop & Shop, Giant, Sprouts), wholesale (BJ's), drugstore (CVS, Walgreens, Rite Aid), department (Macy's, Kohl's, Nordstrom, TJ Maxx, Marshalls, Ross), home (Lowe's, Wayfair, IKEA), electronics/office (Apple, Staples, Office Depot), dollar stores (Dollar Tree, Dollar General), online marketplaces (eBay, Etsy), food delivery (DoorDash, Uber Eats, Grubhub, Starbucks), and gas (Shell, Chevron).\n• Connections content left-aligned to the sidebar instead of centered (was a big dead zone on wide screens).\n• Per-retailer add buttons switched from violet to emerald GuacGreen — back on brand."
 }

@@ -186,43 +186,12 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
           child: SingleChildScrollView(
             padding: EdgeInsets.zero,
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              // ── HERO ────────────────────────────────────────────────
-              // Orange gradient header with the total $ as the big white
-              // number. Top-row actions for back, prev/next, image view,
-              // edit. Decorative sparkles + zigzag bottom edge for the
-              // torn-receipt look.
+              // ── HERO (GuacGreen, store-logo centered inside) ────────
+              // Distinct from Fetch's orange-stars-zigzag treatment:
+              // emerald→lime gradient with the store logo as the
+              // centered focal point, total + date below it, and a
+              // smooth wave at the bottom instead of a torn zigzag.
               _buildHero(r, idx, total, hasPrev, hasNext, headlineValue, headlineLabel, ratedItemCount),
-
-              // ── STORE INFO CARD ─────────────────────────────────────
-              // Store LOGO above the name (matches the Fetch reference's
-              // "Giant" header). Falls back to a leaf-emoji tile when no
-              // logo can be resolved (e.g. store name not yet mapped to
-              // a known domain). StoreLogo widget handles both cases.
-              Container(
-                color: Colors.white,
-                padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
-                child: Column(children: [
-                  StoreLogo(
-                    storeName: r.storeName,
-                    size: 56,
-                    fallbackEmoji: '🛒',
-                    emojiBg: const Color(0xFF15803d),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(r.storeName,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 24, fontWeight: FontWeight.w900,
-                      color: Color(0xFF15803d), letterSpacing: -0.5,
-                    ),
-                    maxLines: 1, overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text('${formatDateShort(r.date)}  •  \$${r.totalAmount.toStringAsFixed(2)}',
-                    style: const TextStyle(fontSize: 14, color: Color(0xFF64748b), fontWeight: FontWeight.w600),
-                  ),
-                ]),
-              ),
 
               // ── WORTH IT? ROW (replaces "Receipt Points") ───────────
               if (!r.hideRatingUI)
@@ -348,94 +317,104 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
 
   // ── REBRAND HELPERS ───────────────────────────────────────────────
 
-  /// Fetch-style orange gradient header. Headline value is the receipt
-  /// total. Top-right action row mirrors the reference (image + edit).
-  /// Bottom edge is a zigzag custom-paint for the torn-receipt look.
+  /// GetGuac-branded hero — emerald→lime gradient, store logo centered
+  /// as the focal point, total + date below it, smooth wave at the
+  /// bottom. Action row pinned to the top. Avocado decorations instead
+  /// of stars/sparkles. Replaces the Fetch-look hero from v0.3.21.
   Widget _buildHero(Receipt r, int idx, int total, bool hasPrev, bool hasNext,
                     double headlineValue, String headlineLabel, int ratedItemCount) {
     return Stack(children: [
-      Container(
-        width: double.infinity,
-        padding: const EdgeInsets.fromLTRB(16, 50, 16, 36),
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFFf97316), Color(0xFFea580c)],
-            begin: Alignment.topLeft, end: Alignment.bottomRight,
+      ClipPath(
+        clipper: _WaveClipper(),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(16, 50, 16, 56),
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF15803d), Color(0xFF65a30d)],
+              begin: Alignment.topLeft, end: Alignment.bottomRight,
+            ),
           ),
-        ),
-        child: Column(children: [
-          // Top action row — back · counter · prev/next · image · edit
-          Row(children: [
-            _heroIconButton(icon: Icons.arrow_back, onTap: _goBack, tooltip: 'Back'),
-            const Spacer(),
-            if (total > 0)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(99),
+          child: Column(children: [
+            // Top action row — back · counter · prev/next · image · edit
+            Row(children: [
+              _heroIconButton(icon: Icons.arrow_back, onTap: _goBack, tooltip: 'Back'),
+              const Spacer(),
+              if (total > 0)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                  child: Text('${idx + 1} / $total',
+                    style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800)),
                 ),
-                child: Text('${idx + 1} / $total',
-                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800)),
-              ),
-            const SizedBox(width: 6),
-            _heroIconButton(icon: Icons.chevron_left, onTap: hasPrev ? _goPrev : null, tooltip: 'Previous'),
-            _heroIconButton(icon: Icons.chevron_right, onTap: hasNext ? _goNext : null, tooltip: 'Next'),
-            const SizedBox(width: 4),
-            if (r.receiptLink.isNotEmpty && !r.fromStatement)
-              _heroIconButton(icon: Icons.image_outlined, onTap: () => _viewImage(r.receiptLink), tooltip: 'View image'),
-            _heroIconButton(icon: Icons.edit_outlined, onTap: () => _showAddItemDialog(), tooltip: 'Add item'),
-          ]),
-          const SizedBox(height: 12),
-          // Headline number row — coin icon + big $ value
-          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              const SizedBox(width: 6),
+              _heroIconButton(icon: Icons.chevron_left, onTap: hasPrev ? _goPrev : null, tooltip: 'Previous'),
+              _heroIconButton(icon: Icons.chevron_right, onTap: hasNext ? _goNext : null, tooltip: 'Next'),
+              const SizedBox(width: 4),
+              if (r.receiptLink.isNotEmpty && !r.fromStatement)
+                _heroIconButton(icon: Icons.image_outlined, onTap: () => _viewImage(r.receiptLink), tooltip: 'View image'),
+              _heroIconButton(icon: Icons.edit_outlined, onTap: () => _showAddItemDialog(), tooltip: 'Add item'),
+            ]),
+            const SizedBox(height: 18),
+            // ── Store logo — centered focal point ────────────────────
+            // Big white tile (80px) with a soft glow ring. Replaces
+            // the star-coin + big-number that Fetch leads with.
             Container(
-              width: 32, height: 32,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.22),
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 2),
+                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.18), blurRadius: 14, offset: const Offset(0, 4))],
+                border: Border.all(color: Colors.white.withValues(alpha: 0.5), width: 3),
               ),
-              alignment: Alignment.center,
-              child: const Icon(Icons.star, size: 18, color: Colors.white),
+              child: ClipOval(
+                child: StoreLogo(
+                  storeName: r.storeName,
+                  size: 80,
+                  borderRadius: 40,
+                  fallbackEmoji: '🛒',
+                  emojiBg: const Color(0xFFca8a04),
+                ),
+              ),
             ),
-            const SizedBox(width: 10),
-            Text('\$${headlineValue.toStringAsFixed(2)}',
+            const SizedBox(height: 12),
+            // Store name on the hero, big white type
+            Text(r.storeName,
+              textAlign: TextAlign.center,
               style: const TextStyle(
-                color: Colors.white, fontSize: 38, fontWeight: FontWeight.w900,
-                letterSpacing: -1.0, height: 1.1,
+                color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900,
+                letterSpacing: -0.5,
               ),
+              maxLines: 1, overflow: TextOverflow.ellipsis,
             ),
-          ]),
-          const SizedBox(height: 2),
-          Text(headlineLabel,
-            style: const TextStyle(
-              color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800,
-              letterSpacing: 1.5,
-            ),
-          ),
-          if (ratedItemCount > 0 && r.rating == null) ...[
-            const SizedBox(height: 6),
-            Text('$ratedItemCount items · tap a star below to rate',
+            const SizedBox(height: 4),
+            Text('\$${headlineValue.toStringAsFixed(2)}  •  ${formatDateShort(r.date)}',
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.85), fontSize: 11, fontWeight: FontWeight.w600,
+                color: Colors.white.withValues(alpha: 0.92), fontSize: 13,
+                fontWeight: FontWeight.w700, letterSpacing: 0.2,
               ),
             ),
-          ],
-        ]),
-      ),
-      // Decorative sparkles top-corners (✦ unicode).
-      const Positioned(top: 60, left: 28, child: Text('✦', style: TextStyle(color: Colors.white70, fontSize: 14))),
-      const Positioned(top: 96, left: 48, child: Text('+', style: TextStyle(color: Colors.white60, fontSize: 14, fontWeight: FontWeight.w900))),
-      const Positioned(top: 70, right: 64, child: Text('✦', style: TextStyle(color: Colors.white60, fontSize: 11))),
-      // Zigzag bottom edge — torn-receipt look.
-      Positioned(
-        left: 0, right: 0, bottom: 0,
-        child: CustomPaint(
-          size: const Size(double.infinity, 14),
-          painter: _ZigzagPainter(color: const Color(0xFFf8fafc)),
+            if (ratedItemCount > 0 && r.rating == null) ...[
+              const SizedBox(height: 8),
+              Text('$ratedItemCount items · tap a star below to rate',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.85), fontSize: 11, fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ]),
         ),
       ),
+      // ── Decorative avocado leaves ──────────────────────────────────
+      // GetGuac signature. Three tilted leaves at varying opacity,
+      // positioned in the corners so they don't crowd the logo.
+      const Positioned(top: 58, left: 30,
+        child: Text('🥑', style: TextStyle(fontSize: 18))),
+      const Positioned(top: 96, left: 56,
+        child: Opacity(opacity: 0.6, child: Text('✿', style: TextStyle(color: Colors.white, fontSize: 14)))),
+      const Positioned(top: 60, right: 92,
+        child: Opacity(opacity: 0.55, child: Text('✿', style: TextStyle(color: Colors.white, fontSize: 11)))),
     ]);
   }
 
@@ -802,37 +781,26 @@ class _ImageViewerState extends State<_ImageViewer> {
   }
 }
 
-/// Zigzag bottom edge for the receipt hero — paints the "torn-receipt"
-/// look from the Fetch reference. Sits at the bottom of the hero and
-/// is filled with the page background color so the orange hero appears
-/// to have a torn edge.
-class _ZigzagPainter extends CustomPainter {
-  final Color color;
-  _ZigzagPainter({required this.color});
-
+/// Smooth wave bottom edge for the hero — replaces the v0.3.21
+/// zigzag (which was too close to Fetch's torn-receipt look) with
+/// a gentle sinusoidal curve. Clips the gradient container so the
+/// bottom rolls into the page rather than ending abruptly.
+class _WaveClipper extends CustomClipper<Path> {
   @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = color..style = PaintingStyle.fill;
-    // Triangle width — bigger = bolder zigzag. 12px feels right for the
-    // 14px-tall band height we render.
-    const w = 12.0;
-    final path = Path()..moveTo(0, size.height);
-    var x = 0.0;
-    var up = true;
-    while (x < size.width) {
-      x += w;
-      if (up) {
-        path.lineTo(x.clamp(0, size.width).toDouble(), 0);
-      } else {
-        path.lineTo(x.clamp(0, size.width).toDouble(), size.height);
-      }
-      up = !up;
-    }
-    path.lineTo(size.width, size.height);
+  Path getClip(Size size) {
+    final path = Path();
+    path.lineTo(0, size.height - 24);
+    // Two control points for an asymmetric S-wave that feels organic.
+    path.cubicTo(
+      size.width * 0.25, size.height - 50,
+      size.width * 0.65, size.height + 18,
+      size.width, size.height - 18,
+    );
+    path.lineTo(size.width, 0);
     path.close();
-    canvas.drawPath(path, paint);
+    return path;
   }
 
   @override
-  bool shouldRepaint(_ZigzagPainter old) => old.color != color;
+  bool shouldReclip(_WaveClipper old) => false;
 }

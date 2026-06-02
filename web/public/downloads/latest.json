@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.22",
-  "name": "v0.3.22 — Receipt detail: store logo at the top",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.22/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Receipt detail screen now shows the store's brand logo above the store name (matches the Fetch reference). Resolves via the existing logoUrlForStore helper — known stores get the real brand favicon, unknown stores fall back to a 🛒 tile in GetGuac green."
+  "version": "v0.3.23",
+  "name": "v0.3.23 — branded app-bar typeface (Bricolage Grotesque) + GuacGreen receipt hero",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.23/app-arm64-v8a-release.apk",
+  "releaseNotes": "• AppBar titles across the app now render in Bricolage Grotesque — a contemporary display grotesk with a 'Wonk' axis that gives letters a subtle off-square personality. Distinct from Fetch's neutral sans and from generic serifs.\n• Receipt detail hero rebuilt away from the Fetch-look: GuacGreen emerald→lime gradient, store logo centered as the focal point (80px, white tile, ring), store name + total + date below it, smooth wave bottom edge (no more zigzag)."
 }

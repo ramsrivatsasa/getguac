@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
@@ -143,16 +144,22 @@ class GetGuacApp extends StatelessWidget {
               TargetPlatform.windows: CupertinoPageTransitionsBuilder(),
             },
           ),
-          appBarTheme: const AppBarTheme(
+          // Headers use Bricolage Grotesque — a contemporary display
+          // grotesk with a "Wonk" axis that gives letters a subtle off-
+          // square personality. Distinct from Fetch's neutral sans and
+          // from generic serifs. Body text stays on the system default
+          // (legibility matters most for receipts data).
+          appBarTheme: AppBarTheme(
             backgroundColor: Colors.white,
             foregroundColor: kBrandPrimaryDk,
             elevation: 0,
             scrolledUnderElevation: 1,
             centerTitle: false,
-            titleTextStyle: TextStyle(
+            titleTextStyle: GoogleFonts.bricolageGrotesque(
               color: kBrandPrimaryDk,
-              fontSize: 20,
+              fontSize: 22,
               fontWeight: FontWeight.w800,
+              letterSpacing: -0.4,
             ),
           ),
           inputDecorationTheme: InputDecorationTheme(

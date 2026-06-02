@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.31",
-  "name": "v0.3.31 — Connections link on Rewards + Stores pages",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.31/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Connections is now one tap away from where users actually think about retailers:\n  - Web Rewards page: \"Set up retailers\" outline button in the header\n  - Web Stores page: \"Connect retailers\" outline button in the header\n  - Mobile Rewards: 🔗 icon button in the AppBar actions row → opens /connections\n• Pure navigation polish — no migration needed."
+  "version": "v0.3.32",
+  "name": "v0.3.32 — Reports / Returns / Stores on mobile · CSE rate limit · Connections links everywhere",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.32/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Three new screens on mobile that previously only existed on web:\n  → Reports — monthly spending totals, sorted newest-first, with lifetime total card on top\n  → Returns — receipts with open refund windows, sorted by days-left ascending (urgent first)\n  → Stores — distinct stores with receipt count + lifetime spend, searchable\n• Reachable from the Menu long-press popover (Profile tab).\n• Web /api/product-image-batch now per-user rate-limited (6 req/min) + batch cap reduced 80 → 20 names. Protects the Google CSE 100/day free tier from runaway loads.\n• Connections link added to web Inbox + Profile headers (was already on Rewards / Stores)."
 }

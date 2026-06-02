@@ -17,11 +17,28 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '../../../lib/supabase/server'
 import { resolveProductImages, imageCacheKey } from '../../../lib/productImage'
+import { rateLimit, userRateKey } from '../../../lib/apiGuard'
 
 export async function POST(req) {
   const sb = createClient()
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+
+  // Per-user rate limit — protects the Google CSE 100/day quota
+  // against a single user reloading Stash repeatedly. 6 calls/min
+  // covers a normal session (load + filter + sort + maybe one
+  // refresh) without throttling typical use, but blocks pathological
+  // patterns. Cache lookups happen ON the CSE side per name, so
+  // each rate-limit unit covers ONE batch of up to 20 names.
+  const rl = await rateLimit(userRateKey(user.id, 'product-image-batch'), {
+    limit: 6, windowMs: 60_000,
+  })
+  if (!rl.success) {
+    return NextResponse.json(
+      { error: 'rate_limited', images: {}, byName: {} },
+      { status: 429, headers: { 'Retry-After': '60' } }
+    )
+  }
 
   let body
   try { body = await req.json() }
@@ -29,9 +46,12 @@ export async function POST(req) {
 
   const names = Array.isArray(body?.names) ? body.names.filter(n => typeof n === 'string' && n.trim().length > 0) : []
   if (names.length === 0) return NextResponse.json({ images: {} })
-  // Cap the batch — Google CSE has a 100/day free tier; a runaway
-  // call here could burn it on a single page render.
-  const capped = names.slice(0, 80)
+  // Batch cap reduced 80 → 20 per request — one user's Stash load
+  // can't single-handedly burn the 100/day CSE free tier in one
+  // hit anymore. The client (web Stash) already dedupes names
+  // before posting; if a user has more, they'll hit cache on
+  // subsequent requests as the cache fills.
+  const capped = names.slice(0, 20)
 
   const map = await resolveProductImages(capped)
   const images = {}

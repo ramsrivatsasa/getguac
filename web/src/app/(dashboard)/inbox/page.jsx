@@ -1,11 +1,12 @@
 'use client'
 import { useEffect, useState, useCallback, useRef } from 'react'
+import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { PanelGroup, Panel, PanelResizeHandle } from 'react-resizable-panels'
 import toast from 'react-hot-toast'
 import {
-  Mail, Search, Inbox as InboxIcon, Star, Archive, Trash2, Reply, Send, Loader2, X, Sparkles, Filter, Edit3, RefreshCw, ChevronsLeft, ChevronsRight, ChevronDown, DownloadCloud,
+  Mail, Search, Inbox as InboxIcon, Star, Archive, Trash2, Reply, Send, Loader2, X, Sparkles, Filter, Edit3, RefreshCw, ChevronsLeft, ChevronsRight, ChevronDown, DownloadCloud, Link2,
 } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
 import { displayStoreName } from '../../../lib/store-name-normalize'
@@ -193,6 +194,13 @@ export default function InboxPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Link
+            href="/connections"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-emerald-200 text-emerald-700 text-sm font-bold hover:bg-emerald-50 transition-colors"
+            title="Set up retailers to email receipts here automatically"
+          >
+            <Link2 size={14} /> Connect retailers
+          </Link>
           <button
             onClick={() => list.refetch()}
             className="btn-secondary flex items-center gap-2"

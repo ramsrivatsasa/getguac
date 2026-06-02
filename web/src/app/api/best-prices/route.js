@@ -1,5 +1,11 @@
-// Scans the live web (via Gemini + Google Search grounding) for the current best
-// prices of a given product at major US retailers. Returns a sorted list.
+// POST /api/best-prices  (PLURAL)
+//
+// NATIONWIDE retailer scan — current prices for a product at major
+// US retailers (Walmart / Target / Costco / Amazon etc). Uses Gemini
+// + Google Search grounding. Returns a sorted list.
+//
+// NOT a duplicate of /api/best-price (singular) — that one is the
+// LOCAL-stores-by-lat/lng variant. See best-price/route.js.
 
 import { enhanceSearchQuery } from '../../../lib/guacSearch'
 import { profileToPromptContext } from '../../../lib/userProfile'

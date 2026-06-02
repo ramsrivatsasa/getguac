@@ -1,9 +1,10 @@
 'use client'
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { createClient } from '../../../lib/supabase/client'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { Save, CreditCard, Plus, Trash2 } from 'lucide-react'
+import { Save, CreditCard, Plus, Trash2, Link2 } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
 import PrivacyPanel from '../../../components/PrivacyPanel'
 import EmailAliasPicker from '../../../components/EmailAliasPicker'
@@ -53,9 +54,17 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <div className="flex items-center gap-3">
-        <GuacMascot expression="sitting" size={56} />
-        <h1 className="page-title">My Profile</h1>
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-3">
+          <GuacMascot expression="sitting" size={56} />
+          <h1 className="page-title">My Profile</h1>
+        </div>
+        <Link
+          href="/connections"
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-emerald-200 text-emerald-700 text-sm font-bold hover:bg-emerald-50 transition-colors"
+        >
+          <Link2 size={14} /> Connections
+        </Link>
       </div>
 
       <div className="card space-y-4">

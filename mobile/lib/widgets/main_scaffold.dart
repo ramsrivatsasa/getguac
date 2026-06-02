@@ -49,6 +49,9 @@ const _quickActions = <_QuickAction>[
   _QuickAction('/rewards',    Icons.card_giftcard_rounded,     'Rewards',      'Loyalty + expiring',    Color(0xFFdb2777), Color(0xFFfce7f3)),
   _QuickAction('/stash',      Icons.inventory_2,               'Stash',        'Everything you own',    Color(0xFFca8a04), Color(0xFFfef3c7)),
   _QuickAction('/steals',     Icons.local_offer,               'Steals',       'AI price hunt',         Color(0xFFdb2777), Color(0xFFfce7f3)),
+  _QuickAction('/reports',    Icons.bar_chart_rounded,         'Reports',      'Monthly totals',        Color(0xFF15803d), Color(0xFFd1fae5)),
+  _QuickAction('/returns',    Icons.undo_rounded,              'Returns',      'Open refund windows',   Color(0xFFb91c1c), Color(0xFFfee2e2)),
+  _QuickAction('/stores',     Icons.storefront_rounded,        'Stores',       'Spend by store',        Color(0xFF1d4ed8), Color(0xFFdbeafe)),
   _QuickAction('/profile',    Icons.person,                    'Profile',      'Account + settings',    Color(0xFF7c3aed), Color(0xFFede9fe)),
 ];
 
@@ -182,7 +185,9 @@ class _MainScaffoldState extends State<MainScaffold> with WidgetsBindingObserver
     }
     if (loc.startsWith('/inbox')      || loc.startsWith('/guacscore')  ||
         loc.startsWith('/guacwizard') || loc.startsWith('/stash')      ||
-        loc.startsWith('/steals')     || loc.startsWith('/rewards')) {
+        loc.startsWith('/steals')     || loc.startsWith('/rewards')    ||
+        loc.startsWith('/connections')|| loc.startsWith('/reports')    ||
+        loc.startsWith('/returns')    || loc.startsWith('/stores')) {
       return 4;  // Profile (these are reached via the Profile long-press menu)
     }
     return 0;

@@ -1,9 +1,14 @@
 // POST /api/best-price
 //
-// Returns the cheapest current price for an item at stores near the
-// caller, using Gemini 2.5 Flash with the Google Search grounding tool.
-// Results are cached in public.price_lookups for 24h to keep API spend
-// near-zero and the response fast for repeat queries.
+// LOCAL price lookup — cheapest current price for an item at stores
+// NEAR the caller's lat/lng. Uses Gemini 2.5 Flash with the Google
+// Search grounding tool. Cached in public.price_lookups for 24h.
+//
+// NOT a duplicate of /api/best-prices (plural) — that route scans
+// the major nationwide retailers regardless of location. Both endpoints
+// answer different shopping questions:
+//   /api/best-price   — "where can I buy this near me cheapest?"
+//   /api/best-prices  — "what do Walmart / Target / Costco etc. charge?"
 //
 // Request:
 //   { item_name: string, lat?: number, lng?: number }

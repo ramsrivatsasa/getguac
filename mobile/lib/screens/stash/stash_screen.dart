@@ -242,31 +242,39 @@ class _StashScreenState extends State<StashScreen> {
                                 ),
                               ),
                             ]),
-                            const SizedBox(height: 10),
+                            const SizedBox(height: 12),
                             // Category filter pill row — "All" first,
                             // then every category the user has stash
-                            // items in. Mirrors web's CatChip strip.
+                            // items in. Horizontal scroll mirrors the
+                            // web CatChip strip (which is now also a
+                            // single horizontal row, not a wrapped grid).
+                            // Each pill carries its category color so
+                            // the active state is visually tied to the
+                            // category (matches web's per-tone gradient).
                             SizedBox(
-                              height: 32,
+                              height: 40,
                               child: ListView(
                                 scrollDirection: Axis.horizontal,
                                 children: [
                                   _CatPill(
+                                    emoji: '🌈',
                                     label: 'All',
                                     count: _items.length,
                                     active: _categoryFilter == null,
+                                    tone: _kBrand,
                                     onTap: () => setState(() => _categoryFilter = null),
                                   ),
                                   for (final entry in categoryCounts.entries
                                       .where((e) => e.key != null)
                                       .toList()..sort((a, b) => b.value.compareTo(a.value)))
                                     Padding(
-                                      padding: const EdgeInsets.only(left: 6),
+                                      padding: const EdgeInsets.only(left: 8),
                                       child: _CatPill(
                                         label: presetBySlug(entry.key!)?.label ?? entry.key!,
-                                        emoji: presetBySlug(entry.key!)?.emoji,
+                                        emoji: presetBySlug(entry.key!)?.emoji ?? '📦',
                                         count: entry.value,
                                         active: _categoryFilter == entry.key,
+                                        tone: tintFor(presetBySlug(entry.key!)?.color),
                                         onTap: () => setState(() => _categoryFilter = entry.key),
                                       ),
                                     ),
@@ -419,51 +427,76 @@ class _StashScreenState extends State<StashScreen> {
 /// Single-tap category filter pill — small rounded badge with the
 /// category emoji (if any), label, count. Active pill renders in
 /// brand-tinted background. Mirrors web's CatChip behaviour.
+/// Compact category-filter pill — emoji bubble + label + count badge.
+/// Active state uses the category's brand tone (passed as `tone`) so
+/// active emerald-categories glow green, fuchsia ones glow pink, etc.
+/// Mirrors web's CatChip with mobile-appropriate sizing.
 class _CatPill extends StatelessWidget {
   final String label;
   final String? emoji;
   final int count;
   final bool active;
+  final Color tone;
   final VoidCallback onTap;
   const _CatPill({
     required this.label, required this.count,
-    required this.active, required this.onTap, this.emoji,
+    required this.active, required this.onTap,
+    required this.tone, this.emoji,
   });
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      borderRadius: BorderRadius.circular(24),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 140),
+        padding: const EdgeInsets.fromLTRB(4, 4, 12, 4),
         decoration: BoxDecoration(
-          color: active ? const Color(0xFFca8a04).withValues(alpha: 0.12) : const Color(0xFFf3f4f6),
-          border: Border.all(color: active ? const Color(0xFFca8a04) : const Color(0xFFe5e7eb)),
-          borderRadius: BorderRadius.circular(20),
+          gradient: active
+            ? LinearGradient(colors: [tone, tone.withValues(alpha: 0.7)])
+            : null,
+          color: active ? null : const Color(0xFFf9fafb),
+          border: Border.all(
+            color: active ? Colors.white : const Color(0xFFe5e7eb),
+            width: active ? 2 : 1,
+          ),
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: active
+            ? [BoxShadow(color: tone.withValues(alpha: 0.35), blurRadius: 8, offset: const Offset(0, 2))]
+            : null,
         ),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
-          if (emoji != null) ...[
-            Text(emoji!, style: const TextStyle(fontSize: 12)),
-            const SizedBox(width: 4),
-          ],
+          // Emoji bubble — circle, accent-colored when inactive (so the
+          // pill always has a colorful anchor), washed white when active.
+          Container(
+            width: 26, height: 26,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: active ? Colors.white.withValues(alpha: 0.3) : tone.withValues(alpha: 0.18),
+            ),
+            child: Text(emoji ?? '📦', style: const TextStyle(fontSize: 14)),
+          ),
+          const SizedBox(width: 7),
           Text(label,
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 12,
               fontWeight: FontWeight.w800,
-              color: active ? const Color(0xFF78350f) : const Color(0xFF374151),
+              color: active ? Colors.white : const Color(0xFF374151),
+              letterSpacing: 0.1,
             )),
-          const SizedBox(width: 6),
+          const SizedBox(width: 7),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
             decoration: BoxDecoration(
-              color: active ? const Color(0xFFca8a04) : const Color(0xFFd1d5db),
+              color: active ? Colors.white.withValues(alpha: 0.3) : const Color(0xFFe5e7eb),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Text('$count',
               style: TextStyle(
-                fontSize: 9, fontWeight: FontWeight.w900,
-                color: active ? Colors.white : const Color(0xFF374151),
+                fontSize: 10, fontWeight: FontWeight.w900,
+                color: active ? Colors.white : const Color(0xFF6b7280),
               )),
           ),
         ]),

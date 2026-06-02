@@ -269,26 +269,44 @@ export default function StashPage() {
         </span>
       </div>
 
-      {/* Category chips */}
-      <div className="flex flex-wrap gap-2">
-        <CatChip active={activeCat === 'all'} onClick={() => setActiveCat('all')} emoji="🌈" label="All" count={items.length} />
-        {multiStoreCount > 0 && (
-          <CatChip
-            active={activeCat === '_multi'}
-            onClick={() => setActiveCat('_multi')}
-            emoji="🏬"
-            label="Multi-store"
-            count={multiStoreCount}
-            tone="amber"
-          />
-        )}
-        {CATEGORIES.map(c => {
-          const count = catCounts.get(c.slug) || 0
-          if (count === 0 && activeCat !== c.slug) return null
-          return (
-            <CatChip key={c.slug} active={activeCat === c.slug} onClick={() => setActiveCat(c.slug)} emoji={c.emoji} label={c.label} count={count} tone={c.color} />
-          )
-        })}
+      {/* Category chips — single horizontal scroll row.
+          Previously this wrapped onto 3+ rows on wide screens, which
+          made the page feel cluttered before the user got to the
+          actual product grid. Mobile Stash already used a horizontal
+          strip; this brings web to parity.
+          - `flex-nowrap` keeps every chip in one line
+          - `shrink-0` (on each chip) prevents the chips from being
+            squashed when the container is narrower than their total
+          - `-mx-4 px-4` lets the leftmost chip start at the page edge
+            and gives the rightmost chip breathing room past the visible
+            edge so the scroll feels intentional
+          - `scrollbar-thin` keeps the scrollbar slim; on touch devices
+            the OS hides it anyway
+          - Right-edge fade is a sibling div positioned over the row to
+            hint at more content off-screen without taking pointer events. */}
+      <div className="relative -mx-4">
+        <div className="flex flex-nowrap gap-2 overflow-x-auto px-4 pb-2 scrollbar-thin scroll-smooth">
+          <CatChip active={activeCat === 'all'} onClick={() => setActiveCat('all')} emoji="🌈" label="All" count={items.length} />
+          {multiStoreCount > 0 && (
+            <CatChip
+              active={activeCat === '_multi'}
+              onClick={() => setActiveCat('_multi')}
+              emoji="🏬"
+              label="Multi-store"
+              count={multiStoreCount}
+              tone="amber"
+            />
+          )}
+          {CATEGORIES.map(c => {
+            const count = catCounts.get(c.slug) || 0
+            if (count === 0 && activeCat !== c.slug) return null
+            return (
+              <CatChip key={c.slug} active={activeCat === c.slug} onClick={() => setActiveCat(c.slug)} emoji={c.emoji} label={c.label} count={count} tone={c.color} />
+            )
+          })}
+        </div>
+        {/* Right-edge fade — gradient overlay hints "there's more →". */}
+        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-50 to-transparent" />
       </div>
 
       {/* Search + sort + view toggle */}
@@ -844,7 +862,7 @@ function CatChip({ active, onClick, emoji, label, count, tone }) {
   const grad = TONE_GRADIENT[tone] || 'from-emerald-300 to-lime-400'
   return (
     <button type="button" onClick={onClick}
-      className={`group inline-flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border-2 font-semibold text-xs transition-all hover:scale-[1.04] ${
+      className={`group shrink-0 inline-flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border-2 font-semibold text-xs transition-all hover:scale-[1.04] ${
         active
           ? `bg-gradient-to-br ${grad} text-white border-white shadow-lg ring-1 ring-emerald-200`
           : 'bg-white text-gray-700 border-gray-200 hover:border-emerald-300 shadow-sm'

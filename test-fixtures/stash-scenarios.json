@@ -1,0 +1,253 @@
+{
+  "_doc": "20 Stash aggregation scenarios. Each scenario lists raw `receipt_items` rows (web Supabase shape, with embedded `receipts` join) plus assertions about the aggregated output. Both web stashEngine.js and mobile stash_engine.dart consume the same rows; both must produce the same aggregated list.",
+  "scenarios": [
+    {
+      "id": "empty_stash",
+      "title": "Empty user — no receipt_items at all",
+      "description": "New user, no purchases logged. Output is the empty list.",
+      "rows": [],
+      "expect_count": 0,
+      "expect": []
+    },
+    {
+      "id": "single_item_single_receipt",
+      "title": "Single item from a single receipt",
+      "description": "One receipt with one line item. One stash entry, qty 1, totalSpent = price.",
+      "rows": [
+        { "id": 1, "item_name": "Milk Gallon", "qty": 1, "price": 4.99, "category": "grocery", "rating": null, "returned": false, "receipt_id": "r1", "receipts": { "date": "2026-05-30", "store_name": "Costco", "from_statement": false } }
+      ],
+      "expect_count": 1,
+      "expect": [
+        { "key": "milk gallon", "qty": 1, "totalSpent": 4.99, "timesBought": 1, "lastDate": "2026-05-30", "category": "grocery", "ratingCount": 0 }
+      ]
+    },
+    {
+      "id": "two_receipts_same_item_merged",
+      "title": "Two receipts of the same item merge into one stash entry",
+      "description": "Same item_name bought twice on different days. One row, qty=2, totalSpent summed, lastDate = the later date.",
+      "rows": [
+        { "id": 1, "item_name": "Bananas", "qty": 2, "price": 0.79, "category": "produce", "rating": null, "returned": false, "receipt_id": "r1", "receipts": { "date": "2026-05-20", "store_name": "Costco", "from_statement": false } },
+        { "id": 2, "item_name": "Bananas", "qty": 3, "price": 0.79, "category": "produce", "rating": null, "returned": false, "receipt_id": "r2", "receipts": { "date": "2026-05-25", "store_name": "Costco", "from_statement": false } }
+      ],
+      "expect_count": 1,
+      "expect": [
+        { "key": "bananas", "qty": 5, "totalSpent": 3.95, "timesBought": 2, "lastDate": "2026-05-25", "lastReceiptId": "r2" }
+      ]
+    },
+    {
+      "id": "case_insensitive_merge",
+      "title": "Case-insensitive merge — \"MILK\" and \"Milk\" share a key",
+      "description": "Different casing of the same product. Engine lowercases the key so both rows merge.",
+      "rows": [
+        { "id": 1, "item_name": "MILK", "qty": 1, "price": 5.00, "returned": false, "receipt_id": "r1", "receipts": { "date": "2026-05-25", "store_name": "Costco", "from_statement": false } },
+        { "id": 2, "item_name": "Milk", "qty": 1, "price": 5.00, "returned": false, "receipt_id": "r2", "receipts": { "date": "2026-05-26", "store_name": "Costco", "from_statement": false } }
+      ],
+      "expect_count": 1,
+      "expect": [
+        { "key": "milk", "qty": 2, "totalSpent": 10.00 }
+      ]
+    },
+    {
+      "id": "sku_preferred_over_name_for_merge",
+      "title": "SKU-based merge — different names same SKU collapse",
+      "description": "\"Coca-Cola 12oz\" and \"Coke 12oz\" share a SKU and merge into one stash item under the SKU key.",
+      "rows": [
+        { "id": 1, "sku": "049000000443", "item_name": "Coca-Cola 12oz", "qty": 1, "price": 1.99, "returned": false, "receipt_id": "r1", "receipts": { "date": "2026-05-10", "store_name": "Walmart", "from_statement": false } },
+        { "id": 2, "sku": "049000000443", "item_name": "Coke 12oz", "qty": 1, "price": 1.79, "returned": false, "receipt_id": "r2", "receipts": { "date": "2026-05-20", "store_name": "Target", "from_statement": false } }
+      ],
+      "expect_count": 1,
+      "expect": [
+        { "key": "049000000443", "qty": 2, "totalSpent": 3.78, "storeCount": 2 }
+      ]
+    },
+    {
+      "id": "returned_items_excluded",
+      "title": "Returned items don't enter the stash",
+      "description": "A returned receipt_item (returned=true) is filtered before aggregation. Only non-returned rows remain.",
+      "rows": [
+        { "id": 1, "item_name": "Headphones", "qty": 1, "price": 200, "returned": false, "receipt_id": "r1", "receipts": { "date": "2026-05-10", "store_name": "BestBuy", "from_statement": false } },
+        { "id": 2, "item_name": "Speaker",    "qty": 1, "price": 80,  "returned": true,  "receipt_id": "r2", "receipts": { "date": "2026-05-12", "store_name": "BestBuy", "from_statement": false } }
+      ],
+      "expect_count": 1,
+      "expect": [{ "key": "headphones", "qty": 1 }]
+    },
+    {
+      "id": "statement_imports_excluded",
+      "title": "Statement-import rows excluded (from_statement=true)",
+      "description": "Receipt rows that came from a credit-card statement import aren't real product purchases. Engine filters them out of the stash.",
+      "rows": [
+        { "id": 1, "item_name": "Eggs",    "qty": 1, "price": 5,   "returned": false, "receipt_id": "r1", "receipts": { "date": "2026-05-10", "store_name": "Costco", "from_statement": false } },
+        { "id": 2, "item_name": "Mystery", "qty": 1, "price": 100, "returned": false, "receipt_id": "r2", "receipts": { "date": "2026-05-12", "store_name": "AmEx",   "from_statement": true } }
+      ],
+      "expect_count": 1,
+      "expect": [{ "key": "eggs" }]
+    },
+    {
+      "id": "empty_item_name_excluded",
+      "title": "Rows with blank item_name are excluded",
+      "description": "Corrupt rows (no name) can't render in the stash. Engine drops them silently.",
+      "rows": [
+        { "id": 1, "item_name": "",     "qty": 1, "price": 5, "returned": false, "receipt_id": "r1", "receipts": { "date": "2026-05-10", "store_name": "Costco", "from_statement": false } },
+        { "id": 2, "item_name": "   ",  "qty": 1, "price": 5, "returned": false, "receipt_id": "r2", "receipts": { "date": "2026-05-10", "store_name": "Costco", "from_statement": false } },
+        { "id": 3, "item_name": "Apples","qty": 2,"price": 1, "returned": false, "receipt_id": "r3", "receipts": { "date": "2026-05-10", "store_name": "Costco", "from_statement": false } }
+      ],
+      "expect_count": 1,
+      "expect": [{ "key": "apples", "qty": 2 }]
+    },
+    {
+      "id": "latest_receipt_metadata_wins",
+      "title": "Latest receipt's date / store / category wins",
+      "description": "Three buys across stores. lastDate = most-recent date; lastStore = that store; category = most-recent category.",
+      "rows": [
+        { "id": 1, "item_name": "Bread", "qty": 1, "price": 3, "category": "grocery",   "returned": false, "receipt_id": "r1", "receipts": { "date": "2026-04-01", "store_name": "Costco", "from_statement": false } },
+        { "id": 2, "item_name": "Bread", "qty": 1, "price": 3, "category": "groceries", "returned": false, "receipt_id": "r2", "receipts": { "date": "2026-05-15", "store_name": "Trader Joes", "from_statement": false } },
+        { "id": 3, "item_name": "Bread", "qty": 1, "price": 3, "category": "bakery",    "returned": false, "receipt_id": "r3", "receipts": { "date": "2026-05-30", "store_name": "Whole Foods", "from_statement": false } }
+      ],
+      "expect_count": 1,
+      "expect": [
+        { "key": "bread", "qty": 3, "lastDate": "2026-05-30", "lastReceiptId": "r3", "lastStore": "Whole Foods", "category": "bakery" }
+      ]
+    },
+    {
+      "id": "multi_store_distinct_count",
+      "title": "Same item across stores — distinct store count is right",
+      "description": "Same SKU bought at 3 different stores. storeCount = 3, stores list contains all three.",
+      "rows": [
+        { "id": 1, "sku": "X123", "item_name": "Olive Oil", "qty": 1, "price": 12, "returned": false, "receipt_id": "r1", "receipts": { "date": "2026-05-01", "store_name": "Costco",       "from_statement": false } },
+        { "id": 2, "sku": "X123", "item_name": "Olive Oil", "qty": 1, "price": 13, "returned": false, "receipt_id": "r2", "receipts": { "date": "2026-05-02", "store_name": "Trader Joes",  "from_statement": false } },
+        { "id": 3, "sku": "X123", "item_name": "Olive Oil", "qty": 1, "price": 14, "returned": false, "receipt_id": "r3", "receipts": { "date": "2026-05-03", "store_name": "Whole Foods",  "from_statement": false } }
+      ],
+      "expect_count": 1,
+      "expect": [
+        { "key": "x123", "storeCount": 3 }
+      ]
+    },
+    {
+      "id": "rating_max_and_avg",
+      "title": "Ratings — max + avg computed across all rated rows",
+      "description": "Three buys of the same item rated 3, 5, 4. ratingMax=5, ratingAvg=4.0, ratingCount=3.",
+      "rows": [
+        { "id": 1, "item_name": "Yogurt", "qty": 1, "price": 5, "rating": 3, "returned": false, "receipt_id": "r1", "receipts": { "date": "2026-05-01", "store_name": "Costco", "from_statement": false } },
+        { "id": 2, "item_name": "Yogurt", "qty": 1, "price": 5, "rating": 5, "returned": false, "receipt_id": "r2", "receipts": { "date": "2026-05-02", "store_name": "Costco", "from_statement": false } },
+        { "id": 3, "item_name": "Yogurt", "qty": 1, "price": 5, "rating": 4, "returned": false, "receipt_id": "r3", "receipts": { "date": "2026-05-03", "store_name": "Costco", "from_statement": false } }
+      ],
+      "expect_count": 1,
+      "expect": [
+        { "key": "yogurt", "ratingMax": 5, "ratingAvg": 4.0, "ratingCount": 3 }
+      ]
+    },
+    {
+      "id": "rating_null_ignored",
+      "title": "Unrated rows don't affect ratingAvg",
+      "description": "Two buys — one rated 5, one unrated. ratingCount=1, ratingAvg=5 (the null row is excluded from the average).",
+      "rows": [
+        { "id": 1, "item_name": "Tea",   "qty": 1, "price": 3, "rating": 5,    "returned": false, "receipt_id": "r1", "receipts": { "date": "2026-05-01", "store_name": "Costco", "from_statement": false } },
+        { "id": 2, "item_name": "Tea",   "qty": 1, "price": 3, "rating": null, "returned": false, "receipt_id": "r2", "receipts": { "date": "2026-05-02", "store_name": "Costco", "from_statement": false } }
+      ],
+      "expect_count": 1,
+      "expect": [{ "key": "tea", "ratingCount": 1, "ratingAvg": 5.0, "ratingMax": 5 }]
+    },
+    {
+      "id": "qty_strings_coerced",
+      "title": "qty as string coerced to int",
+      "description": "Supabase sometimes returns numeric columns as strings. Engine coerces qty and price defensively.",
+      "rows": [
+        { "id": 1, "item_name": "Apples", "qty": "3", "price": "1.25", "returned": false, "receipt_id": "r1", "receipts": { "date": "2026-05-10", "store_name": "Costco", "from_statement": false } }
+      ],
+      "expect_count": 1,
+      "expect": [{ "key": "apples", "qty": 3, "totalSpent": 3.75 }]
+    },
+    {
+      "id": "category_falls_back_to_receipt_category",
+      "title": "Item-level category null → falls back to receipt-level category",
+      "description": "When a row has no item.category but its parent receipt is categorized, that category propagates.",
+      "rows": [
+        { "id": 1, "item_name": "Coffee Filters", "qty": 1, "price": 5, "category": null, "returned": false, "receipt_id": "r1", "receipts": { "date": "2026-05-10", "store_name": "Costco", "category": "household", "from_statement": false } }
+      ],
+      "expect_count": 1,
+      "expect": [{ "key": "coffee filters", "category": "household" }]
+    },
+    {
+      "id": "large_qty_aggregate",
+      "title": "10+ receipts of same item — qty and timesBought sum correctly",
+      "description": "Heavy aggregation stress: 10 separate receipts each with 2 qty. qty=20, timesBought=10.",
+      "rows": [
+        { "id": 1,  "item_name": "Coffee Beans", "qty": 2, "price": 12, "returned": false, "receipt_id": "r1",  "receipts": { "date": "2026-05-01", "store_name": "Costco", "from_statement": false } },
+        { "id": 2,  "item_name": "Coffee Beans", "qty": 2, "price": 12, "returned": false, "receipt_id": "r2",  "receipts": { "date": "2026-05-03", "store_name": "Costco", "from_statement": false } },
+        { "id": 3,  "item_name": "Coffee Beans", "qty": 2, "price": 12, "returned": false, "receipt_id": "r3",  "receipts": { "date": "2026-05-05", "store_name": "Costco", "from_statement": false } },
+        { "id": 4,  "item_name": "Coffee Beans", "qty": 2, "price": 12, "returned": false, "receipt_id": "r4",  "receipts": { "date": "2026-05-07", "store_name": "Costco", "from_statement": false } },
+        { "id": 5,  "item_name": "Coffee Beans", "qty": 2, "price": 12, "returned": false, "receipt_id": "r5",  "receipts": { "date": "2026-05-09", "store_name": "Costco", "from_statement": false } },
+        { "id": 6,  "item_name": "Coffee Beans", "qty": 2, "price": 12, "returned": false, "receipt_id": "r6",  "receipts": { "date": "2026-05-11", "store_name": "Costco", "from_statement": false } },
+        { "id": 7,  "item_name": "Coffee Beans", "qty": 2, "price": 12, "returned": false, "receipt_id": "r7",  "receipts": { "date": "2026-05-13", "store_name": "Costco", "from_statement": false } },
+        { "id": 8,  "item_name": "Coffee Beans", "qty": 2, "price": 12, "returned": false, "receipt_id": "r8",  "receipts": { "date": "2026-05-15", "store_name": "Costco", "from_statement": false } },
+        { "id": 9,  "item_name": "Coffee Beans", "qty": 2, "price": 12, "returned": false, "receipt_id": "r9",  "receipts": { "date": "2026-05-17", "store_name": "Costco", "from_statement": false } },
+        { "id": 10, "item_name": "Coffee Beans", "qty": 2, "price": 12, "returned": false, "receipt_id": "r10", "receipts": { "date": "2026-05-19", "store_name": "Costco", "from_statement": false } }
+      ],
+      "expect_count": 1,
+      "expect": [{ "key": "coffee beans", "qty": 20, "timesBought": 10, "totalSpent": 240 }]
+    },
+    {
+      "id": "mixed_items_distinct_entries",
+      "title": "Mixed product list — distinct items each get their own entry",
+      "description": "Receipt with 4 different products. Aggregator produces 4 separate stash items.",
+      "rows": [
+        { "id": 1, "item_name": "Apples",  "qty": 1, "price": 3, "returned": false, "receipt_id": "r1", "receipts": { "date": "2026-05-10", "store_name": "Costco", "from_statement": false } },
+        { "id": 2, "item_name": "Bananas", "qty": 1, "price": 1, "returned": false, "receipt_id": "r1", "receipts": { "date": "2026-05-10", "store_name": "Costco", "from_statement": false } },
+        { "id": 3, "item_name": "Carrots", "qty": 1, "price": 2, "returned": false, "receipt_id": "r1", "receipts": { "date": "2026-05-10", "store_name": "Costco", "from_statement": false } },
+        { "id": 4, "item_name": "Dates",   "qty": 1, "price": 4, "returned": false, "receipt_id": "r1", "receipts": { "date": "2026-05-10", "store_name": "Costco", "from_statement": false } }
+      ],
+      "expect_count": 4
+    },
+    {
+      "id": "sort_recent_orders_by_lastDate_desc",
+      "title": "Sort by 'recent' — newest lastDate first",
+      "description": "Three items, different lastDates. sortStash('recent') orders newest first.",
+      "rows": [
+        { "id": 1, "item_name": "Old", "qty": 1, "price": 1, "returned": false, "receipt_id": "r1", "receipts": { "date": "2026-01-01", "store_name": "Costco", "from_statement": false } },
+        { "id": 2, "item_name": "Mid", "qty": 1, "price": 1, "returned": false, "receipt_id": "r2", "receipts": { "date": "2026-03-15", "store_name": "Costco", "from_statement": false } },
+        { "id": 3, "item_name": "New", "qty": 1, "price": 1, "returned": false, "receipt_id": "r3", "receipts": { "date": "2026-05-30", "store_name": "Costco", "from_statement": false } }
+      ],
+      "expect_count": 3,
+      "expect_sort": "recent",
+      "expect_order": ["new", "mid", "old"]
+    },
+    {
+      "id": "sort_spent_orders_by_totalSpent_desc",
+      "title": "Sort by 'spent' — highest totalSpent first",
+      "description": "Three items, different totals. sortStash('spent') orders most-expensive first.",
+      "rows": [
+        { "id": 1, "item_name": "Cheap",  "qty": 1, "price": 5,   "returned": false, "receipt_id": "r1", "receipts": { "date": "2026-05-01", "store_name": "Costco", "from_statement": false } },
+        { "id": 2, "item_name": "Mid",    "qty": 1, "price": 50,  "returned": false, "receipt_id": "r2", "receipts": { "date": "2026-05-01", "store_name": "Costco", "from_statement": false } },
+        { "id": 3, "item_name": "Pricey", "qty": 1, "price": 500, "returned": false, "receipt_id": "r3", "receipts": { "date": "2026-05-01", "store_name": "Costco", "from_statement": false } }
+      ],
+      "expect_count": 3,
+      "expect_sort": "spent",
+      "expect_order": ["pricey", "mid", "cheap"]
+    },
+    {
+      "id": "filter_by_category",
+      "title": "filterStash by category — only items in that category",
+      "description": "Filter to category='produce'. Only the produce item survives.",
+      "rows": [
+        { "id": 1, "item_name": "Apples",  "qty": 1, "price": 3, "category": "produce",   "returned": false, "receipt_id": "r1", "receipts": { "date": "2026-05-10", "store_name": "Costco", "from_statement": false } },
+        { "id": 2, "item_name": "Detergent","qty": 1,"price": 8, "category": "household", "returned": false, "receipt_id": "r2", "receipts": { "date": "2026-05-12", "store_name": "Costco", "from_statement": false } }
+      ],
+      "expect_count": 2,
+      "filter_category": "produce",
+      "expect_filtered_count": 1
+    },
+    {
+      "id": "filter_by_query",
+      "title": "filterStash by query — case-insensitive name + sku match",
+      "description": "Search 'tea' matches Green Tea AND Green TEA Bags (and a SKU containing 'tea'). Detergent doesn't match.",
+      "rows": [
+        { "id": 1, "item_name": "Green Tea",      "qty": 1, "price": 4, "returned": false, "receipt_id": "r1", "receipts": { "date": "2026-05-10", "store_name": "Costco", "from_statement": false } },
+        { "id": 2, "item_name": "Green TEA Bags", "qty": 1, "price": 6, "returned": false, "receipt_id": "r2", "receipts": { "date": "2026-05-11", "store_name": "Costco", "from_statement": false } },
+        { "id": 3, "item_name": "Detergent",      "qty": 1, "price": 8, "returned": false, "receipt_id": "r3", "receipts": { "date": "2026-05-12", "store_name": "Costco", "from_statement": false } }
+      ],
+      "expect_count": 3,
+      "filter_query": "tea",
+      "expect_filtered_count": 2
+    }
+  ]
+}

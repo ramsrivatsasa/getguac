@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Stash Aggregator Scenario Report</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; margin: 0; background: #f8fafc; color: #0f172a; }
+  header { background: linear-gradient(135deg, #ca8a04, #f59e0b); color: white; padding: 22px 32px; }
+  header h1 { margin: 0; font-size: 22px; }
+  header p { margin: 4px 0 0; opacity: 0.9; font-size: 12px; }
+  .banner { padding: 12px 32px; font-weight: 700; }
+  .banner.ok { background: #dcfce7; color: #166534; border-left: 4px solid #15803d; }
+  .banner.err { background: #fee2e2; color: #991b1b; border-left: 4px solid #dc2626; }
+  main { padding: 24px 32px; }
+  table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-radius: 10px; overflow: hidden; }
+  thead { background: #f1f5f9; }
+  th, td { border-bottom: 1px solid #e2e8f0; padding: 12px; vertical-align: top; text-align: left; }
+  th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: #475569; }
+  .scenario { max-width: 280px; }
+  .scenario .title { font-weight: 700; }
+  .scenario .id { font-family: ui-monospace, Menlo, monospace; font-size: 10px; color: #94a3b8; margin-top: 1px; }
+  .scenario .desc { color: #475569; margin-top: 5px; font-size: 11.5px; }
+  ul.items, td.checks ul { margin: 0; padding-left: 18px; }
+  ul.items li { font-size: 11.5px; color: #334155; margin-bottom: 2px; }
+  ul.items code { background: #fef9c3; padding: 1px 6px; border-radius: 4px; font-family: ui-monospace, Menlo, monospace; }
+  td.checks li.pass { color: #166534; font-size: 11.5px; }
+  td.checks li.fail { color: #991b1b; font-weight: 600; font-size: 11.5px; }
+  td.checks .detail { font-family: ui-monospace, Menlo, monospace; font-size: 10.5px; color: #475569; }
+  tr.has-failure td.scenario { background: #fef2f2; }
+  footer { padding: 16px 32px; color: #64748b; font-size: 11px; }
+  @page { size: A4 landscape; margin: 14mm 12mm; }
+  @media print {
+    body { background: white; }
+    header { background: #ca8a04; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    main { padding: 12px 0; }
+    table, thead, tr, td, th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    tr { break-inside: avoid; page-break-inside: avoid; }
+    thead { display: table-header-group; }
+  }
+</style></head>
+<body>
+<header>
+  <h1>Stash — Aggregator Scenario Report</h1>
+  <p>Canonical engine at <code>web/src/lib/stashEngine.js</code> · Web direct import · Mobile via <code>mobile/lib/services/stash_engine.dart</code>.</p>
+</header>
+<div class="banner ok">All 74 assertions passed across 20 scenarios — web + mobile aggregators agree.</div>
+<main>
+  <table>
+    <thead><tr><th>Scenario</th><th>Aggregated items</th><th>Assertions</th></tr></thead>
+    <tbody>
+      <tr class="">
+        <td class="scenario">
+          <div class="title">Empty user — no receipt_items at all</div>
+          <div class="id">empty_stash</div>
+          <div class="desc">New user, no purchases logged. Output is the empty list.</div>
+        </td>
+        <td class="items-cell"><em>(empty)</em></td>
+        <td class="checks"><ul><li class="pass">✓ expect_count === 0</li></ul></td>
+      </tr>
+    
+      <tr class="">
+        <td class="scenario">
+          <div class="title">Single item from a single receipt</div>
+          <div class="id">single_item_single_receipt</div>
+          <div class="desc">One receipt with one line item. One stash entry, qty 1, totalSpent = price.</div>
+        </td>
+        <td class="items-cell"><ul class="items"><li><code>milk gallon</code> · qty 1 · $4.99</li></ul></td>
+        <td class="checks"><ul><li class="pass">✓ expect_count === 1</li><li class="pass">✓ key=&quot;milk gallon&quot; present</li><li class="pass">✓ milk gallon.qty === 1</li><li class="pass">✓ milk gallon.totalSpent === 4.99</li><li class="pass">✓ milk gallon.timesBought === 1</li><li class="pass">✓ milk gallon.lastDate === &quot;2026-05-30&quot;</li><li class="pass">✓ milk gallon.category === &quot;grocery&quot;</li><li class="pass">✓ milk gallon.ratingCount === 0</li></ul></td>
+      </tr>
+    
+      <tr class="">
+        <td class="scenario">
+          <div class="title">Two receipts of the same item merge into one stash entry</div>
+          <div class="id">two_receipts_same_item_merged</div>
+          <div class="desc">Same item_name bought twice on different days. One row, qty=2, totalSpent summed, lastDate = the later date.</div>
+        </td>
+        <td class="items-cell"><ul class="items"><li><code>bananas</code> · qty 5 · $3.95</li></ul></td>
+        <td class="checks"><ul><li class="pass">✓ expect_count === 1</li><li class="pass">✓ key=&quot;bananas&quot; present</li><li class="pass">✓ bananas.qty === 5</li><li class="pass">✓ bananas.totalSpent === 3.95</li><li class="pass">✓ bananas.timesBought === 2</li><li class="pass">✓ bananas.lastDate === &quot;2026-05-25&quot;</li><li class="pass">✓ bananas.lastReceiptId === &quot;r2&quot;</li></ul></td>
+      </tr>
+    
+      <tr class="">
+        <td class="scenario">
+          <div class="title">Case-insensitive merge — &quot;MILK&quot; and &quot;Milk&quot; share a key</div>
+          <div class="id">case_insensitive_merge</div>
+          <div class="desc">Different casing of the same product. Engine lowercases the key so both rows merge.</div>
+        </td>
+        <td class="items-cell"><ul class="items"><li><code>milk</code> · qty 2 · $10.00</li></ul></td>
+        <td class="checks"><ul><li class="pass">✓ expect_count === 1</li><li class="pass">✓ key=&quot;milk&quot; present</li><li class="pass">✓ milk.qty === 2</li><li class="pass">✓ milk.totalSpent === 10</li></ul></td>
+      </tr>
+    
+      <tr class="">
+        <td class="scenario">
+          <div class="title">SKU-based merge — different names same SKU collapse</div>
+          <div class="id">sku_preferred_over_name_for_merge</div>
+          <div class="desc">&quot;Coca-Cola 12oz&quot; and &quot;Coke 12oz&quot; share a SKU and merge into one stash item under the SKU key.</div>
+        </td>
+        <td class="items-cell"><ul class="items"><li><code>049000000443</code> · qty 2 · $3.78 · 2 stores</li></ul></td>
+        <td class="checks"><ul><li class="pass">✓ expect_count === 1</li><li class="pass">✓ key=&quot;049000000443&quot; present</li><li class="pass">✓ 049000000443.qty === 2</li><li class="pass">✓ 049000000443.totalSpent === 3.78</li><li class="pass">✓ 049000000443.storeCount === 2</li></ul></td>
+      </tr>
+    
+      <tr class="">
+        <td class="scenario">
+          <div class="title">Returned items don&#39;t enter the stash</div>
+          <div class="id">returned_items_excluded</div>
+          <div class="desc">A returned receipt_item (returned=true) is filtered before aggregation. Only non-returned rows remain.</div>
+        </td>
+        <td class="items-cell"><ul class="items"><li><code>headphones</code> · qty 1 · $200.00</li></ul></td>
+        <td class="checks"><ul><li class="pass">✓ expect_count === 1</li><li class="pass">✓ key=&quot;headphones&quot; present</li><li class="pass">✓ headphones.qty === 1</li></ul></td>
+      </tr>
+    
+      <tr class="">
+        <td class="scenario">
+          <div class="title">Statement-import rows excluded (from_statement=true)</div>
+          <div class="id">statement_imports_excluded</div>
+          <div class="desc">Receipt rows that came from a credit-card statement import aren&#39;t real product purchases. Engine filters them out of the stash.</div>
+        </td>
+        <td class="items-cell"><ul class="items"><li><code>eggs</code> · qty 1 · $5.00</li></ul></td>
+        <td class="checks"><ul><li class="pass">✓ expect_count === 1</li><li class="pass">✓ key=&quot;eggs&quot; present</li></ul></td>
+      </tr>
+    
+      <tr class="">
+        <td class="scenario">
+          <div class="title">Rows with blank item_name are excluded</div>
+          <div class="id">empty_item_name_excluded</div>
+          <div class="desc">Corrupt rows (no name) can&#39;t render in the stash. Engine drops them silently.</div>
+        </td>
+        <td class="items-cell"><ul class="items"><li><code>apples</code> · qty 2 · $2.00</li></ul></td>
+        <td class="checks"><ul><li class="pass">✓ expect_count === 1</li><li class="pass">✓ key=&quot;apples&quot; present</li><li class="pass">✓ apples.qty === 2</li></ul></td>
+      </tr>
+    
+      <tr class="">
+        <td class="scenario">
+          <div class="title">Latest receipt&#39;s date / store / category wins</div>
+          <div class="id">latest_receipt_metadata_wins</div>
+          <div class="desc">Three buys across stores. lastDate = most-recent date; lastStore = that store; category = most-recent category.</div>
+        </td>
+        <td class="items-cell"><ul class="items"><li><code>bread</code> · qty 3 · $9.00 · 3 stores</li></ul></td>
+        <td class="checks"><ul><li class="pass">✓ expect_count === 1</li><li class="pass">✓ key=&quot;bread&quot; present</li><li class="pass">✓ bread.qty === 3</li><li class="pass">✓ bread.lastDate === &quot;2026-05-30&quot;</li><li class="pass">✓ bread.lastReceiptId === &quot;r3&quot;</li><li class="pass">✓ bread.lastStore === &quot;Whole Foods&quot;</li><li class="pass">✓ bread.category === &quot;bakery&quot;</li></ul></td>
+      </tr>
+    
+      <tr class="">
+        <td class="scenario">
+          <div class="title">Same item across stores — distinct store count is right</div>
+          <div class="id">multi_store_distinct_count</div>
+          <div class="desc">Same SKU bought at 3 different stores. storeCount = 3, stores list contains all three.</div>
+        </td>
+        <td class="items-cell"><ul class="items"><li><code>x123</code> · qty 3 · $39.00 · 3 stores</li></ul></td>
+        <td class="checks"><ul><li class="pass">✓ expect_count === 1</li><li class="pass">✓ key=&quot;x123&quot; present</li><li class="pass">✓ x123.storeCount === 3</li></ul></td>
+      </tr>
+    
+      <tr class="">
+        <td class="scenario">
+          <div class="title">Ratings — max + avg computed across all rated rows</div>
+          <div class="id">rating_max_and_avg</div>
+          <div class="desc">Three buys of the same item rated 3, 5, 4. ratingMax=5, ratingAvg=4.0, ratingCount=3.</div>
+        </td>
+        <td class="items-cell"><ul class="items"><li><code>yogurt</code> · qty 3 · $15.00 · 4.0★</li></ul></td>
+        <td class="checks"><ul><li class="pass">✓ expect_count === 1</li><li class="pass">✓ key=&quot;yogurt&quot; present</li><li class="pass">✓ yogurt.ratingMax === 5</li><li class="pass">✓ yogurt.ratingAvg === 4</li><li class="pass">✓ yogurt.ratingCount === 3</li></ul></td>
+      </tr>
+    
+      <tr class="">
+        <td class="scenario">
+          <div class="title">Unrated rows don&#39;t affect ratingAvg</div>
+          <div class="id">rating_null_ignored</div>
+          <div class="desc">Two buys — one rated 5, one unrated. ratingCount=1, ratingAvg=5 (the null row is excluded from the average).</div>
+        </td>
+        <td class="items-cell"><ul class="items"><li><code>tea</code> · qty 2 · $6.00 · 5.0★</li></ul></td>
+        <td class="checks"><ul><li class="pass">✓ expect_count === 1</li><li class="pass">✓ key=&quot;tea&quot; present</li><li class="pass">✓ tea.ratingCount === 1</li><li class="pass">✓ tea.ratingAvg === 5</li><li class="pass">✓ tea.ratingMax === 5</li></ul></td>
+      </tr>
+    
+      <tr class="">
+        <td class="scenario">
+          <div class="title">qty as string coerced to int</div>
+          <div class="id">qty_strings_coerced</div>
+          <div class="desc">Supabase sometimes returns numeric columns as strings. Engine coerces qty and price defensively.</div>
+        </td>
+        <td class="items-cell"><ul class="items"><li><code>apples</code> · qty 3 · $3.75</li></ul></td>
+        <td class="checks"><ul><li class="pass">✓ expect_count === 1</li><li class="pass">✓ key=&quot;apples&quot; present</li><li class="pass">✓ apples.qty === 3</li><li class="pass">✓ apples.totalSpent === 3.75</li></ul></td>
+      </tr>
+    
+      <tr class="">
+        <td class="scenario">
+          <div class="title">Item-level category null → falls back to receipt-level category</div>
+          <div class="id">category_falls_back_to_receipt_category</div>
+          <div class="desc">When a row has no item.category but its parent receipt is categorized, that category propagates.</div>
+        </td>
+        <td class="items-cell"><ul class="items"><li><code>coffee filters</code> · qty 1 · $5.00</li></ul></td>
+        <td class="checks"><ul><li class="pass">✓ expect_count === 1</li><li class="pass">✓ key=&quot;coffee filters&quot; present</li><li class="pass">✓ coffee filters.category === &quot;household&quot;</li></ul></td>
+      </tr>
+    
+      <tr class="">
+        <td class="scenario">
+          <div class="title">10+ receipts of same item — qty and timesBought sum correctly</div>
+          <div class="id">large_qty_aggregate</div>
+          <div class="desc">Heavy aggregation stress: 10 separate receipts each with 2 qty. qty=20, timesBought=10.</div>
+        </td>
+        <td class="items-cell"><ul class="items"><li><code>coffee beans</code> · qty 20 · $240.00</li></ul></td>
+        <td class="checks"><ul><li class="pass">✓ expect_count === 1</li><li class="pass">✓ key=&quot;coffee beans&quot; present</li><li class="pass">✓ coffee beans.qty === 20</li><li class="pass">✓ coffee beans.timesBought === 10</li><li class="pass">✓ coffee beans.totalSpent === 240</li></ul></td>
+      </tr>
+    
+      <tr class="">
+        <td class="scenario">
+          <div class="title">Mixed product list — distinct items each get their own entry</div>
+          <div class="id">mixed_items_distinct_entries</div>
+          <div class="desc">Receipt with 4 different products. Aggregator produces 4 separate stash items.</div>
+        </td>
+        <td class="items-cell"><ul class="items"><li><code>apples</code> · qty 1 · $3.00</li><li><code>bananas</code> · qty 1 · $1.00</li><li><code>carrots</code> · qty 1 · $2.00</li><li><code>dates</code> · qty 1 · $4.00</li></ul></td>
+        <td class="checks"><ul><li class="pass">✓ expect_count === 4</li></ul></td>
+      </tr>
+    
+      <tr class="">
+        <td class="scenario">
+          <div class="title">Sort by &#39;recent&#39; — newest lastDate first</div>
+          <div class="id">sort_recent_orders_by_lastDate_desc</div>
+          <div class="desc">Three items, different lastDates. sortStash(&#39;recent&#39;) orders newest first.</div>
+        </td>
+        <td class="items-cell"><ul class="items"><li><code>old</code> · qty 1 · $1.00</li><li><code>mid</code> · qty 1 · $1.00</li><li><code>new</code> · qty 1 · $1.00</li></ul></td>
+        <td class="checks"><ul><li class="pass">✓ expect_count === 3</li><li class="pass">✓ sort &#39;recent&#39; order = [new, mid, old]</li></ul></td>
+      </tr>
+    
+      <tr class="">
+        <td class="scenario">
+          <div class="title">Sort by &#39;spent&#39; — highest totalSpent first</div>
+          <div class="id">sort_spent_orders_by_totalSpent_desc</div>
+          <div class="desc">Three items, different totals. sortStash(&#39;spent&#39;) orders most-expensive first.</div>
+        </td>
+        <td class="items-cell"><ul class="items"><li><code>cheap</code> · qty 1 · $5.00</li><li><code>mid</code> · qty 1 · $50.00</li><li><code>pricey</code> · qty 1 · $500.00</li></ul></td>
+        <td class="checks"><ul><li class="pass">✓ expect_count === 3</li><li class="pass">✓ sort &#39;spent&#39; order = [pricey, mid, cheap]</li></ul></td>
+      </tr>
+    
+      <tr class="">
+        <td class="scenario">
+          <div class="title">filterStash by category — only items in that category</div>
+          <div class="id">filter_by_category</div>
+          <div class="desc">Filter to category=&#39;produce&#39;. Only the produce item survives.</div>
+        </td>
+        <td class="items-cell"><ul class="items"><li><code>apples</code> · qty 1 · $3.00</li><li><code>detergent</code> · qty 1 · $8.00</li></ul></td>
+        <td class="checks"><ul><li class="pass">✓ expect_count === 2</li><li class="pass">✓ filter category=&#39;produce&#39; → 1</li></ul></td>
+      </tr>
+    
+      <tr class="">
+        <td class="scenario">
+          <div class="title">filterStash by query — case-insensitive name + sku match</div>
+          <div class="id">filter_by_query</div>
+          <div class="desc">Search &#39;tea&#39; matches Green Tea AND Green TEA Bags (and a SKU containing &#39;tea&#39;). Detergent doesn&#39;t match.</div>
+        </td>
+        <td class="items-cell"><ul class="items"><li><code>green tea</code> · qty 1 · $4.00</li><li><code>green tea bags</code> · qty 1 · $6.00</li><li><code>detergent</code> · qty 1 · $8.00</li></ul></td>
+        <td class="checks"><ul><li class="pass">✓ expect_count === 3</li><li class="pass">✓ filter query=&#39;tea&#39; → 2</li></ul></td>
+      </tr>
+    </tbody>
+  </table>
+</main>
+<footer>
+  Cross-platform parity asserted by <code>mobile/test/services/stash_scenarios_test.dart</code>, reading the same <code>test-fixtures/stash-scenarios.json</code>.
+</footer>
+</body></html>

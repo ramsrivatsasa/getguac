@@ -68,35 +68,73 @@ export async function resolveProductImage(itemName) {
     }
   } catch {}
 
-  // 2. Cache miss — call Google CSE if configured.
+  // 2. Cache miss — try Wikipedia first (free, no key, great for
+  // generic groceries like "Cauliflower" / "Mint" / "Olive Oil"),
+  // then fall back to Google CSE (paid, broad coverage for brand
+  // names) when configured. The order means we never burn the CSE
+  // quota on items Wikipedia already has.
+  let imageUrl = null
+  let source = null
+  let raw = null
+
+  // ── Try Wikipedia ─────────────────────────────────────────────────
+  // Strip qty/size suffixes ("Cauliflower 1.5LB" → "Cauliflower") so
+  // the lookup hits the article. Title-cased for path matching.
+  const cleaned = cleanProductNameForLookup(itemName)
+  if (cleaned.length >= 3) {
+    try {
+      const wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(cleaned.replace(/ /g, '_'))}`
+      const res = await fetch(wikiUrl, {
+        headers: {
+          'Accept': 'application/json',
+          // Wikipedia asks for a contact-ID UA. They tolerate a
+          // generic one if traffic is low.
+          'User-Agent': 'GetGuac/0.3 (https://getguac.app)',
+        },
+        signal: AbortSignal.timeout(6000),
+      })
+      if (res.ok) {
+        const data = await res.json().catch(() => null)
+        const thumb = data?.thumbnail?.source
+        if (thumb) {
+          imageUrl = thumb
+          source = 'wikipedia'
+          raw = { wiki_title: data?.title || cleaned }
+        }
+      }
+    } catch (e) {
+      if (typeof console !== 'undefined') {
+        console.warn('[productImage] wiki call failed:', e.message)
+      }
+    }
+  }
+
+  // ── Fall back to Google CSE (if configured) ──────────────────────
   const apiKey = process.env.GOOGLE_CSE_API_KEY
   const cx = process.env.GOOGLE_CSE_CX
-  if (!apiKey || !cx) return null
-
-  let imageUrl = null
-  let raw = null
-  try {
-    const u = new URL('https://www.googleapis.com/customsearch/v1')
-    u.searchParams.set('key', apiKey)
-    u.searchParams.set('cx', cx)
-    u.searchParams.set('q', itemName)
-    u.searchParams.set('searchType', 'image')
-    u.searchParams.set('num', '1')
-    u.searchParams.set('imgSize', 'large')
-    u.searchParams.set('safe', 'active')
-    const res = await fetch(u.toString(), {
-      method: 'GET',
-      // 8-second cap so a stuck CSE response can't pin a share-create
-      // call. The user's share still works without an image.
-      signal: AbortSignal.timeout(8000),
-    })
-    raw = await res.json().catch(() => null)
-    if (res.ok && raw?.items?.length > 0) {
-      imageUrl = raw.items[0].link || null
-    }
-  } catch (e) {
-    if (typeof console !== 'undefined') {
-      console.warn('[productImage] CSE call failed:', e.message)
+  if (!imageUrl && apiKey && cx) {
+    try {
+      const u = new URL('https://www.googleapis.com/customsearch/v1')
+      u.searchParams.set('key', apiKey)
+      u.searchParams.set('cx', cx)
+      u.searchParams.set('q', itemName)
+      u.searchParams.set('searchType', 'image')
+      u.searchParams.set('num', '1')
+      u.searchParams.set('imgSize', 'large')
+      u.searchParams.set('safe', 'active')
+      const res = await fetch(u.toString(), {
+        method: 'GET',
+        signal: AbortSignal.timeout(8000),
+      })
+      raw = await res.json().catch(() => null)
+      if (res.ok && raw?.items?.length > 0) {
+        imageUrl = raw.items[0].link || null
+        source = 'google_cse'
+      }
+    } catch (e) {
+      if (typeof console !== 'undefined') {
+        console.warn('[productImage] CSE call failed:', e.message)
+      }
     }
   }
 
@@ -106,13 +144,45 @@ export async function resolveProductImage(itemName) {
     await sb.from('product_images').upsert({
       cache_key: key,
       image_url: imageUrl,
-      source: 'google_cse',
-      raw: raw ? { items_count: raw.items?.length || 0 } : null,
+      source: source || (apiKey ? 'cse_miss' : 'wiki_miss'),
+      raw,
       checked_at: new Date().toISOString(),
     }, { onConflict: 'cache_key' })
   } catch {}
 
   return imageUrl
+}
+
+/**
+ * Clean a raw item name to a generic concept Wikipedia is likely
+ * to know.
+ *   "Cauliflower 1.5LB"   → "Cauliflower"
+ *   "MINT 1 OZ"           → "Mint"
+ *   "Organic Avocado HASS" → "Avocado"
+ *   "Fresh Strawberries 2lb" → "Strawberries"
+ *
+ * Pure function so it can be tested without a network call.
+ */
+export function cleanProductNameForLookup(rawName) {
+  if (!rawName) return ''
+  let s = String(rawName).trim()
+  // Strip qty/size suffix: "Cauliflower 1.5LB" → "Cauliflower"
+  s = s.replace(/\s+\d+(\.\d+)?\s*(lb|lbs|oz|kg|g|ml|l|ct|count|pack|pk|x\d+|-pack)\b.*$/i, '')
+  // Strip trailing bare number: "Mint 1" → "Mint"
+  s = s.replace(/\s+\d+(\.\d+)?\s*$/, '')
+  s = s.replace(/\s{2,}/g, ' ').trim()
+  // Strip leading "Organic"/"Fresh"/"Frozen" etc.
+  const STRIP = ['organic','fresh','frozen','roasted','raw','whole','natural','pure','premium','kirkland','great value']
+  const lower = s.toLowerCase()
+  for (const p of STRIP) {
+    if (lower.startsWith(`${p} `)) { s = s.slice(p.length + 1).trim(); break }
+  }
+  // Drop trailing all-caps variety codes ("Avocado HASS" → "Avocado")
+  const parts = s.split(/\s+/)
+  if (parts.length > 1 && /^[A-Z]{2,5}$/.test(parts[parts.length - 1])) parts.pop()
+  s = parts.join(' ')
+  // Title-case (Wikipedia paths are case-sensitive)
+  return s.toLowerCase().replace(/\b\w/g, c => c.toUpperCase())
 }
 
 // Bulk variant — resolves a set of item names in parallel. Used by

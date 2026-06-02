@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.29",
-  "name": "v0.3.29 — Connections discoverable on mobile (Profile tile + long-press menu)",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.29/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Connections is now reachable on mobile from two places:\n  → Profile screen: dedicated green tile in the quick-actions grid\n  → Long-press the ⋮ Menu tab in the bottom nav → 'Connections' entry in the popover\n• Route was already wired but had no entry point until now."
+  "version": "v0.3.30",
+  "name": "v0.3.30 — new launcher icon: GetGuac mascot (no more wizard hat)",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.30/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Android launcher icon replaced with the GetGuac brand mascot — friendly avocado on the GuacGreen→lime gradient. The old wizard-hat avocado (from an earlier brand draft) is retired.\n• Generated via the existing mascot SVG (happy.svg) rendered through headless Chrome, then run through flutter_launcher_icons to produce all five Android density buckets + the adaptive-icon foreground/background pair."
 }

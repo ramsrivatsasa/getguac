@@ -175,7 +175,13 @@ class _RewardsScreenState extends State<RewardsScreen> {
               ),
               IconButton(icon: const Icon(Icons.delete), onPressed: _deleteSelected, tooltip: 'Delete'),
             ]
-          : null,
+          : [
+              IconButton(
+                icon: const Icon(Icons.link_rounded),
+                tooltip: 'Connect retailers',
+                onPressed: () => context.go('/connections'),
+              ),
+            ],
       ),
       floatingActionButton: _selectionMode ? null : FloatingActionButton(onPressed: _addReward, child: const Icon(Icons.add)),
       body: RefreshIndicator(

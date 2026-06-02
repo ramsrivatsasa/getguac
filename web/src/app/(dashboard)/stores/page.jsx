@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
-import { Store, Phone, Globe, MapPin, ChevronRight, ChevronDown, Search, Trash2, AlertTriangle, Shield, ExternalLink } from 'lucide-react'
+import { Store, Phone, Globe, MapPin, ChevronRight, ChevronDown, Search, Trash2, AlertTriangle, Shield, ExternalLink, Link2 } from 'lucide-react'
 import { getStores, deleteStore, getAllStoreDefaultPolicies } from '../../../lib/db'
 import { normalizeStoreName, displayStoreName } from '../../../lib/store-name-normalize'
 import { useConfirm } from '../../../components/ConfirmDialog'
@@ -141,12 +141,20 @@ export default function StoresPage() {
 
   return (
     <div className="space-y-5 max-w-5xl">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3">
           <div className="p-2.5 bg-blue-100 rounded-xl"><Store className="text-blue-800" size={22} /></div>
           <h1 className="page-title">Stores</h1>
         </div>
-        <span className="text-sm text-gray-400">{stores.length} store{stores.length !== 1 ? 's' : ''}</span>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/connections"
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-emerald-200 text-emerald-700 text-sm font-bold hover:bg-emerald-50 transition-colors"
+          >
+            <Link2 size={15} /> Connect retailers
+          </Link>
+          <span className="text-sm text-gray-400">{stores.length} store{stores.length !== 1 ? 's' : ''}</span>
+        </div>
       </div>
 
       <div className="flex items-center gap-2 flex-wrap">

@@ -3,7 +3,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRewards, useUpsertReward, useDeleteReward } from '../../../hooks/useRewards'
 import toast from 'react-hot-toast'
-import { Trash2, Eye } from 'lucide-react'
+import { Trash2, Eye, Link2 } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
 import { displayStoreName } from '../../../lib/store-name-normalize'
 import { useConfirm } from '../../../components/ConfirmDialog'
@@ -53,9 +53,17 @@ export default function RewardsPage() {
 
   return (
     <div className="space-y-5 max-w-7xl">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <h1 className="page-title">Rewards</h1>
-        <button onClick={() => setShowForm(v => !v)} className="btn-primary"><GuacMascot expression="happy" size={22} /> Add Reward</button>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/connections"
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-emerald-200 text-emerald-700 text-sm font-bold hover:bg-emerald-50 transition-colors"
+          >
+            <Link2 size={15} /> Set up retailers
+          </Link>
+          <button onClick={() => setShowForm(v => !v)} className="btn-primary"><GuacMascot expression="happy" size={22} /> Add Reward</button>
+        </div>
       </div>
 
       {showForm && (

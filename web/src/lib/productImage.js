@@ -80,31 +80,34 @@ export async function resolveProductImage(itemName) {
   // ── Try Wikipedia ─────────────────────────────────────────────────
   // Strip qty/size suffixes ("Cauliflower 1.5LB" → "Cauliflower") so
   // the lookup hits the article. Title-cased for path matching.
+  //
+  // Many common-food articles redirect through a disambig page that
+  // has no thumbnail (Mint, Salt, Lemon) — for those we try a second
+  // pass with `_(food)` appended (Wikipedia's standard disambig
+  // suffix for food articles).
   const cleaned = cleanProductNameForLookup(itemName)
   if (cleaned.length >= 3) {
-    try {
-      const wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(cleaned.replace(/ /g, '_'))}`
-      const res = await fetch(wikiUrl, {
-        headers: {
-          'Accept': 'application/json',
-          // Wikipedia asks for a contact-ID UA. They tolerate a
-          // generic one if traffic is low.
-          'User-Agent': 'GetGuac/0.3 (https://getguac.app)',
-        },
-        signal: AbortSignal.timeout(6000),
-      })
-      if (res.ok) {
-        const data = await res.json().catch(() => null)
-        const thumb = data?.thumbnail?.source
-        if (thumb) {
-          imageUrl = thumb
-          source = 'wikipedia'
-          raw = { wiki_title: data?.title || cleaned }
-        }
-      }
-    } catch (e) {
-      if (typeof console !== 'undefined') {
-        console.warn('[productImage] wiki call failed:', e.message)
+    // Alias map for common food terms whose Wikipedia article lives
+    // under a non-obvious title. We try the alias FIRST so we skip
+    // the disambig dance. Easy to extend — add a pair whenever a new
+    // Stash item misses for predictable reasons.
+    const WIKI_ALIASES = {
+      'Mint':         'Mentha',
+      'Pepper':       'Black pepper',
+      'Coconut Milk': 'Coconut milk',
+      'Hot Sauce':    'Hot sauce',
+    }
+    const alias = WIKI_ALIASES[cleaned]
+    const candidates = alias
+      ? [alias, cleaned, `${cleaned} (food)`]
+      : [cleaned, `${cleaned} (food)`]
+    for (const candidate of candidates) {
+      const r = await wikipediaSummary(candidate)
+      if (r?.thumbnail) {
+        imageUrl = r.thumbnail
+        source = 'wikipedia'
+        raw = { wiki_title: r.title || candidate, wiki_candidate: candidate }
+        break
       }
     }
   }
@@ -154,6 +157,32 @@ export async function resolveProductImage(itemName) {
 }
 
 /**
+ * Single Wikipedia REST summary fetch. Returns { thumbnail, title }
+ * or null on miss/error. Pulled out so the resolver can call it
+ * twice (once with the base name, once with `_(food)` suffix to
+ * skip past disambig pages that lack thumbnails).
+ */
+async function wikipediaSummary(title) {
+  try {
+    const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title.replace(/ /g, '_'))}`
+    const res = await fetch(url, {
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'GetGuac/0.3 (https://getguac.app)',
+      },
+      signal: AbortSignal.timeout(6000),
+    })
+    if (!res.ok) return null
+    const data = await res.json().catch(() => null)
+    const thumb = data?.thumbnail?.source
+    if (!thumb) return null
+    return { thumbnail: thumb, title: data?.title || title }
+  } catch (_) {
+    return null
+  }
+}
+
+/**
  * Clean a raw item name to a generic concept Wikipedia is likely
  * to know.
  *   "Cauliflower 1.5LB"   → "Cauliflower"
@@ -166,6 +195,10 @@ export async function resolveProductImage(itemName) {
 export function cleanProductNameForLookup(rawName) {
   if (!rawName) return ''
   let s = String(rawName).trim()
+  // Strip multi-word units first: "Coconut Milk 13.5 fl oz" →
+  // "Coconut Milk". Pattern is "<number> fl oz/floz" optionally
+  // followed by anything else.
+  s = s.replace(/\s+\d+(\.\d+)?\s*fl\.?\s*oz\.?.*$/i, '')
   // Strip qty/size suffix: "Cauliflower 1.5LB" → "Cauliflower"
   s = s.replace(/\s+\d+(\.\d+)?\s*(lb|lbs|oz|kg|g|ml|l|ct|count|pack|pk|x\d+|-pack)\b.*$/i, '')
   // Strip trailing bare number: "Mint 1" → "Mint"

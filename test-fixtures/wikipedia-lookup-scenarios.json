@@ -1,0 +1,25 @@
+{
+  "_doc": "20 scenarios for the Wikipedia image-lookup pipeline. Two things under test: (1) cleanProductNameForLookup — pure name normalization that maps a raw receipt-line name to the Wikipedia article slug; (2) live Wikipedia REST hits — whether the cleaned name actually returns a thumbnail. The pure transformation is verified in every run; the live hits are gated behind WIKI_NETWORK=1 so the suite stays fast and deterministic by default. Add WIKI_NETWORK=1 to run the network portion.",
+  "scenarios": [
+    { "id": "plain_cauliflower",   "raw": "Cauliflower",            "expectClean": "Cauliflower",   "expectHasImage": true,  "note": "Baseline — name already matches the article title." },
+    { "id": "qty_suffix_lb",       "raw": "Cauliflower 1.5LB",      "expectClean": "Cauliflower",   "expectHasImage": true,  "note": "Strip '1.5LB' qty suffix." },
+    { "id": "qty_suffix_oz",       "raw": "MINT 1 OZ",              "expectClean": "Mint",          "expectHasImage": true,  "note": "Strip '1 OZ' suffix + title-case (was UPPERCASE)." },
+    { "id": "qty_suffix_count",    "raw": "Eggs 12 count",          "expectClean": "Eggs",          "expectHasImage": true,  "note": "Strip 'count' (synonym of CT) suffix." },
+    { "id": "qty_suffix_pack",     "raw": "Yogurt 4-pack",          "expectClean": "Yogurt",        "expectHasImage": true,  "note": "Strip hyphen-pack qty suffix." },
+    { "id": "qty_trailing_bare",   "raw": "Banana 6",               "expectClean": "Banana",        "expectHasImage": true,  "note": "Trailing bare number is qty too." },
+    { "id": "organic_prefix",      "raw": "Organic Avocado",        "expectClean": "Avocado",       "expectHasImage": true,  "note": "Strip leading 'Organic'." },
+    { "id": "fresh_prefix",        "raw": "Fresh Strawberries 2lb", "expectClean": "Strawberries",  "expectHasImage": true,  "note": "Strip leading 'Fresh' + qty suffix." },
+    { "id": "frozen_prefix",       "raw": "Frozen Peas",            "expectClean": "Peas",          "expectHasImage": true,  "note": "Strip leading 'Frozen'." },
+    { "id": "kirkland_prefix",     "raw": "Kirkland Almonds",       "expectClean": "Almonds",       "expectHasImage": true,  "note": "Strip brand prefix 'Kirkland' (Costco store brand)." },
+    { "id": "variety_code_hass",   "raw": "Avocado HASS",           "expectClean": "Avocado",       "expectHasImage": true,  "note": "Strip trailing all-caps variety code (HASS = Hass variety)." },
+    { "id": "two_word_match",      "raw": "Olive Oil",              "expectClean": "Olive Oil",     "expectHasImage": true,  "note": "Two-word product, no transformation needed." },
+    { "id": "two_word_with_qty",   "raw": "Coconut Milk 13.5 fl oz","expectClean": "Coconut Milk",  "expectHasImage": true,  "note": "Multi-word + multi-word 'fl oz' unit suffix." },
+    { "id": "uppercase_only",      "raw": "BROCCOLI",               "expectClean": "Broccoli",      "expectHasImage": true,  "note": "All-caps → title-case." },
+    { "id": "spaces_normalized",   "raw": "  Apple    Pie  ",       "expectClean": "Apple Pie",     "expectHasImage": true,  "note": "Strip leading/trailing/duplicate whitespace." },
+    { "id": "single_char_skip",    "raw": "X",                      "expectClean": "X",             "expectHasImage": false, "note": "Too short — engine bails before the lookup; resolver returns null." },
+    { "id": "empty_string",        "raw": "",                       "expectClean": "",              "expectHasImage": false, "note": "Empty → empty; no lookup; null." },
+    { "id": "brand_misses",        "raw": "Bic Soleil 3 Razors",    "expectClean": "Bic Soleil 3 Razors", "expectHasImage": false, "note": "No Wikipedia page for a specific razor SKU — falls through to CSE (if configured) or null." },
+    { "id": "salt_simple_food",    "raw": "SALT",                   "expectClean": "Salt",          "expectHasImage": true,  "note": "Tiny common word — should still resolve to /Salt." },
+    { "id": "lemon",               "raw": "Lemon 1",                "expectClean": "Lemon",         "expectHasImage": true,  "note": "Common produce + bare-number qty stripping." }
+  ]
+}

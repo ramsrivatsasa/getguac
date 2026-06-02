@@ -1,7 +1,6 @@
 {
-  "version": "v0.3.12",
-  "name": "v0.3.12 — Aggregator parity fix + GuacWizard hero card + 31-case test suite",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.12/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Web bankAccountTotals: synthetic-account fallback when user has bank_fees but no bank_statements. Closes the gap where web showed GuacWizard=50 (baseline) while mobile showed 88 (real data). Both engines now produce identical numbers.\n• /guacwizard hero card on mobile — matches the web's emerald-tinted card with avocado mascot + GuacWizard title + score X/100. Score computed from the same Dart engine the dashboard tile uses.\n• Test infrastructure: 31 cross-platform fixture cases (23 score-formula + 8 aggregation-pipeline). Web JS + Mobile Dart both pass all 31. Test report at test-fixtures/TEST_REPORT.html (open in browser → Ctrl+P → Save as PDF).\n• AnomaliesCard + SubscriptionsCard moved to right under the feature-pill row (matches user-requested layout).",
-  "publishedAt": "2026-06-01"
+  "version": "v0.3.13",
+  "name": "v0.3.13 — Mobile Stash gets Sort + Category filter pills",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.13/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Mobile Stash now matches web's sort + filter UI: dropdown for Recent / A-Z / Top $ / Most owned, plus horizontal-scroll category pill row above the item list (tap a category emoji to filter, tap All to clear). Counts shown per pill.\n• calculateGuacoScore Dart port + 17-case cross-platform fixture suite. Web 51/51, Mobile 55/55 — same engines, identical numbers.\n• Mobile /guacanomics gets the 5 summary tiles the web shows (Net Spent · Refunded · Bank Bite · Receipts · Tax Paid).\n• Web's bankAccountTotals fixed — synthesizes a placeholder account when user has bank_fees but no statements (closes the 50/100 baseline-trap mismatch with mobile)."
 }

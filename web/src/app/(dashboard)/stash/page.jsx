@@ -12,6 +12,7 @@ import { guacImpactChip } from '../../../lib/guacImpact'
 import { fetchInventoryMap, setOnHand, inventoryKey, lowStockVerdict } from '../../../lib/inventory'
 import { selectStashView, formatPurchaseFrequency } from '../../../lib/stashEngine'
 import { imageCacheKey } from '../../../lib/productImage'
+import { fetchLikeStats, toggleLike, formatLikeCount } from '../../../lib/productLikes'
 import { CATEGORIES, CATEGORY_BY_SLUG, categoryClass } from '../../../lib/categories'
 import CategoryPicker, { CategoryCreatePill } from '../../../components/CategoryPicker'
 import GuacMascot from '../../../components/GuacMascot'
@@ -66,6 +67,11 @@ export default function StashPage() {
   // the user doesn't see a generic emoji for every item. Falls back
   // to the category emoji when no image is found.
   const [productImages, setProductImages] = useState({})
+  // Like-stats map keyed by item cache key — { totalLikes, likedByMe }.
+  // Populated on Stash load via /api/.../product-likes batch RPC.
+  // Optimistically updated on heart-click so the count + heart fill
+  // bounce immediately rather than after the network round-trip.
+  const [likeStats, setLikeStats] = useState(new Map())
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ['stash'],
@@ -298,6 +304,42 @@ export default function StashPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filtered.length, filtered[0]?.key])
 
+  // Batch-fetch like stats for the current Stash. Same trigger as
+  // the image fetch — re-fires when the visible items change. Each
+  // item is keyed by its imageCacheKey (== productLikes item_key)
+  // so the stash engine + likes engine share the same normalization.
+  useEffect(() => {
+    if (filtered.length === 0) return
+    let cancelled = false
+    const keys = [...new Set(filtered.map(it => imageCacheKey(it.item_name)).filter(Boolean))].slice(0, 100)
+    fetchLikeStats(keys)
+      .then(m => { if (!cancelled) setLikeStats(m) })
+      .catch(() => {/* table may not exist yet (pre-migration) — silent */})
+    return () => { cancelled = true }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filtered.length, filtered[0]?.key])
+
+  // Toggle like with optimistic UI — bump the count + flip the heart
+  // before the server confirms so the click feels instant. Rolls
+  // back if the server rejects (e.g. user not signed in).
+  const handleToggleLove = useCallback(async (itemName) => {
+    const key = imageCacheKey(itemName)
+    if (!key) return
+    const prev = likeStats.get(key) || { totalLikes: 0, likedByMe: false }
+    const optimistic = {
+      totalLikes: Math.max(0, prev.totalLikes + (prev.likedByMe ? -1 : 1)),
+      likedByMe: !prev.likedByMe,
+    }
+    setLikeStats(m => { const next = new Map(m); next.set(key, optimistic); return next })
+    try {
+      const real = await toggleLike(key)
+      setLikeStats(m => { const next = new Map(m); next.set(key, { totalLikes: real.totalLikes, likedByMe: real.liked }); return next })
+    } catch (e) {
+      setLikeStats(m => { const next = new Map(m); next.set(key, prev); return next })
+      toast.error(e.message || 'Could not save like')
+    }
+  }, [likeStats])
+
   async function handleAddToSmashlist(it, store = null) {
     try {
       // `store` may be:
@@ -458,17 +500,24 @@ export default function StashPage() {
         </div>
       ) : view === 'grid' ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {filtered.map(it => (
-            <StashCard
-              key={it.key}
-              item={it}
-              expanded={expanded === it.key}
-              onToggle={() => toggleExpand(it.key)}
-              onAddToSmashlist={(store) => handleAddToSmashlist(it, store)}
-              onFindDeals={() => setStealsItem(it)}
-              imageUrl={productImages[it.item_name]}
-            />
-          ))}
+          {filtered.map(it => {
+            const likeKey = imageCacheKey(it.item_name)
+            const ls = likeStats.get(likeKey)
+            return (
+              <StashCard
+                key={it.key}
+                item={it}
+                expanded={expanded === it.key}
+                onToggle={() => toggleExpand(it.key)}
+                onAddToSmashlist={(store) => handleAddToSmashlist(it, store)}
+                onFindDeals={() => setStealsItem(it)}
+                imageUrl={productImages[it.item_name]}
+                loveCount={ls?.totalLikes}
+                likedByMe={ls?.likedByMe || false}
+                onToggleLove={() => handleToggleLove(it.item_name)}
+              />
+            )
+          })}
         </div>
       ) : (
         <div className="card p-0 overflow-hidden">
@@ -588,7 +637,7 @@ function CategorySection({ cat, items, expandedKey, onCardToggle, onAddToSmashli
   )
 }
 
-const StashCard = memo(function StashCard({ item, expanded, onToggle, onAddToSmashlist, onFindDeals, imageUrl }) {
+const StashCard = memo(function StashCard({ item, expanded, onToggle, onAddToSmashlist, onFindDeals, imageUrl, loveCount, likedByMe, onToggleLove }) {
   const qc = useQueryClient()
   const cat = CATEGORY_BY_SLUG[item.category] || CATEGORY_BY_SLUG['misc']
   const tone = TONE_TINT[cat.color] || TONE_TINT.gray
@@ -652,6 +701,9 @@ const StashCard = memo(function StashCard({ item, expanded, onToggle, onAddToSma
         onRate={(n) => rerate.mutate(n)}
         communityRating={showCommunity ? item.avg_rating : undefined}
         communityRatingCount={showCommunity ? item.rating_count : undefined}
+        loveCount={loveCount}
+        likedByMe={likedByMe}
+        onToggleLove={onToggleLove}
         onMenu={onToggle}
         onShare={() => onFindDeals?.()}
         onTap={item.last_receipt_id ? () => { window.location.href = `/receipts/${item.last_receipt_id}` } : undefined}

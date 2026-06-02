@@ -57,9 +57,15 @@ class FetchCard extends StatelessWidget {
   final double? communityRating;
   final num? communityRatingCount;
 
-  // Bottom-left engagement — heart toggle (saved/unsaved).
+  // Bottom-left engagement — heart toggle. When `loveCount` is set,
+  // the heart shows "♥ N" using the central formatLikeCount helper
+  // so web + mobile word counts identically. `likedByMe` controls
+  // whether the heart renders filled.
   final bool saved;
   final VoidCallback? onToggleSave;
+  final num? loveCount;       // total users who liked (null = hide count)
+  final bool likedByMe;       // fill the heart with pink when true
+  final VoidCallback? onToggleLove;
 
   // Actions
   final VoidCallback? onTap;
@@ -89,6 +95,9 @@ class FetchCard extends StatelessWidget {
     this.communityRatingCount,
     this.saved = false,
     this.onToggleSave,
+    this.loveCount,
+    this.likedByMe = false,
+    this.onToggleLove,
     this.onTap,
     this.onShare,
     this.onMenu,
@@ -249,7 +258,33 @@ class FetchCard extends StatelessWidget {
                     isPersonal: false,
                   ),
                 ],
-                if (onToggleSave != null) ...[
+                // Love chip — heart icon + count of users who liked
+                // this product. Renders when loveCount is set OR
+                // onToggleLove is wired. Falls back to a plain heart
+                // for surfaces that just want save/unsave (no count).
+                if (onToggleLove != null || loveCount != null) ...[
+                  const SizedBox(width: 6),
+                  InkResponse(
+                    onTap: onToggleLove,
+                    radius: 18,
+                    child: Row(mainAxisSize: MainAxisSize.min, children: [
+                      Icon(
+                        likedByMe ? Icons.favorite : Icons.favorite_border,
+                        size: 16,
+                        color: likedByMe ? const Color(0xFFec4899) : const Color(0xFF94a3b8),
+                      ),
+                      if (loveCount != null && loveCount! > 0) ...[
+                        const SizedBox(width: 3),
+                        Text(_fmt(loveCount!),
+                          style: const TextStyle(
+                            fontSize: 11, fontWeight: FontWeight.w800,
+                            color: Color(0xFF64748b),
+                          ),
+                        ),
+                      ],
+                    ]),
+                  ),
+                ] else if (onToggleSave != null) ...[
                   const SizedBox(width: 4),
                   InkResponse(
                     onTap: onToggleSave,

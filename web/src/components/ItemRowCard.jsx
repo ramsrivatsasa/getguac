@@ -47,6 +47,9 @@ export default function ItemRowCard({
   communityRatingCount,
   saved = false,
   onToggleSave,
+  loveCount,
+  likedByMe = false,
+  onToggleLove,
   onTap,
   onShare,
   onMenu,
@@ -171,7 +174,19 @@ export default function ItemRowCard({
             </span>
           )}
 
-          {onToggleSave && (
+          {(onToggleLove || loveCount != null) ? (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onToggleLove?.() }}
+              className="ml-1 inline-flex items-center gap-1 text-gray-400 hover:text-pink-500 transition-colors"
+              aria-label={likedByMe ? 'Unlike' : 'Like'}
+            >
+              <Heart size={16} fill={likedByMe ? '#ec4899' : 'none'} color={likedByMe ? '#ec4899' : 'currentColor'} />
+              {loveCount != null && loveCount > 0 && (
+                <span className="text-[11px] font-extrabold text-gray-500">{fmt(loveCount)}</span>
+              )}
+            </button>
+          ) : onToggleSave ? (
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); onToggleSave() }}
@@ -180,7 +195,7 @@ export default function ItemRowCard({
             >
               <Heart size={16} fill={saved ? '#ec4899' : 'none'} color={saved ? '#ec4899' : 'currentColor'} />
             </button>
-          )}
+          ) : null}
           {onShare && (
             <button
               type="button"

@@ -7,6 +7,7 @@
 // the bank-fee fetch.
 
 import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../providers/receipt_provider.dart';
@@ -315,6 +316,19 @@ class _GuacScoreScreenState extends State<GuacScoreScreen> {
                 ),
               ),
             const SizedBox(height: 24),
+            // ── Spending Trend (line chart) ─────────────────────────
+            // Monthly buckets from the active window. Mirrors web's
+            // Charts component for /guacanomics. fl_chart line plot
+            // with rounded tooltips + amber/emerald gradient stroke.
+            _spendingTrendCard(_monthlyBuckets(purchases)),
+            const SizedBox(height: 12),
+            // ── Worth It? (donut pie) ───────────────────────────────
+            // Rating-distribution by SPEND (not count) — each slice
+            // is the dollar share of that rating's purchases. Five
+            // bands (1★ Regret → 5★ Essential) with the GuacScore-
+            // palette. Auto-hides when no rated purchases exist.
+            _worthItDonut(purchases),
+            const SizedBox(height: 24),
             const Text('How the score works', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
             const SizedBox(height: 8),
             const Text(
@@ -331,6 +345,197 @@ class _GuacScoreScreenState extends State<GuacScoreScreen> {
 
   /// Single tile in the summary scroll row — gradient-free, matches
   /// the web /guacanomics tiles: pale icon block + label + big bold
+  /// Bucket the in-window purchases by YYYY-MM month → total $.
+  /// Sparse months are omitted (no zero-fill between data points)
+  /// since the chart auto-fits the x-range to whatever it has.
+  List<MapEntry<String, double>> _monthlyBuckets(List purchases) {
+    final m = <String, double>{};
+    for (final r in purchases) {
+      final d = r.date as String? ?? '';
+      if (d.length < 7) continue;
+      final ym = d.substring(0, 7); // YYYY-MM
+      m[ym] = (m[ym] ?? 0) + (r.totalAmount as num).toDouble();
+    }
+    final list = m.entries.toList()..sort((a, b) => a.key.compareTo(b.key));
+    return list;
+  }
+
+  /// Spending Trend card — fl_chart LineChart of monthly $ totals.
+  /// Empty-state when there are fewer than 2 months of data.
+  Widget _spendingTrendCard(List<MapEntry<String, double>> buckets) {
+    if (buckets.length < 2) {
+      return _chartShell(
+        title: '📈 Spending Trend',
+        subtitle: 'Need at least 2 months of purchases to chart.',
+        child: const SizedBox.shrink(),
+      );
+    }
+    final spots = <FlSpot>[];
+    double maxY = 0;
+    for (var i = 0; i < buckets.length; i++) {
+      final v = buckets[i].value;
+      spots.add(FlSpot(i.toDouble(), v));
+      if (v > maxY) maxY = v;
+    }
+    // 20% headroom above the highest point so the line never kisses
+    // the top of the chart and labels have room.
+    final yMax = maxY <= 0 ? 100.0 : maxY * 1.2;
+    return _chartShell(
+      title: '📈 Spending Trend',
+      subtitle: '${buckets.length} months · peak \$${maxY.toStringAsFixed(0)}',
+      child: SizedBox(
+        height: 160,
+        child: LineChart(LineChartData(
+          minY: 0,
+          maxY: yMax,
+          gridData: const FlGridData(show: false),
+          borderData: FlBorderData(show: false),
+          titlesData: FlTitlesData(
+            leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            bottomTitles: AxisTitles(sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 22,
+              interval: (buckets.length / 4).ceilToDouble().clamp(1, 12),
+              getTitlesWidget: (v, _) {
+                final i = v.toInt();
+                if (i < 0 || i >= buckets.length) return const SizedBox();
+                final yyyymm = buckets[i].key;
+                final mm = int.tryParse(yyyymm.substring(5)) ?? 1;
+                const labels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                return Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(labels[(mm - 1).clamp(0, 11)],
+                    style: const TextStyle(fontSize: 10, color: Colors.black54),
+                  ),
+                );
+              },
+            )),
+          ),
+          lineBarsData: [
+            LineChartBarData(
+              spots: spots,
+              isCurved: true,
+              gradient: const LinearGradient(colors: [Color(0xFF15803d), Color(0xFFca8a04)]),
+              barWidth: 3,
+              dotData: const FlDotData(show: false),
+              belowBarData: BarAreaData(
+                show: true,
+                gradient: LinearGradient(
+                  colors: [const Color(0xFF15803d).withValues(alpha: 0.18), Colors.transparent],
+                  begin: Alignment.topCenter, end: Alignment.bottomCenter,
+                ),
+              ),
+            ),
+          ],
+        )),
+      ),
+    );
+  }
+
+  /// Worth It? donut — fl_chart PieChart with one slice per rating
+  /// (1★ → 5★), sized by spend $ in that bucket. Centered total $
+  /// in the donut hole. Auto-hides when no rated purchases exist.
+  Widget _worthItDonut(List purchases) {
+    final byRating = <int, double>{};
+    for (final r in purchases) {
+      final rating = r.rating as int?;
+      if (rating == null || rating < 1 || rating > 5) continue;
+      final amt = (r.totalAmount as num).toDouble();
+      if (amt <= 0) continue;
+      byRating[rating] = (byRating[rating] ?? 0) + amt;
+    }
+    if (byRating.isEmpty) {
+      return _chartShell(
+        title: '🥑 Worth It?',
+        subtitle: 'Rate purchases on the Receipts screen to see this.',
+        child: const SizedBox.shrink(),
+      );
+    }
+    final total = byRating.values.fold<double>(0, (a, b) => a + b);
+    const colors = {
+      5: Color(0xFF10b981), // emerald — Essential
+      4: Color(0xFF84cc16), // lime    — Important
+      3: Color(0xFFf59e0b), // amber   — OK
+      2: Color(0xFFf97316), // orange  — Splurge
+      1: Color(0xFFe11d48), // rose    — Regret
+    };
+    const labels = {
+      5: '💎 Essential', 4: '✅ Important', 3: '🙂 OK',
+      2: '🍿 Splurge',   1: '🙈 Regret',
+    };
+    final sections = <PieChartSectionData>[];
+    final legend = <Widget>[];
+    for (final n in [5, 4, 3, 2, 1]) {
+      final v = byRating[n] ?? 0;
+      if (v <= 0) continue;
+      final pct = v / total * 100;
+      sections.add(PieChartSectionData(
+        value: v, color: colors[n]!, radius: 26,
+        showTitle: pct >= 10,
+        title: '${pct.toStringAsFixed(0)}%',
+        titleStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.white),
+      ));
+      legend.add(Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: Row(children: [
+          Container(width: 10, height: 10, decoration: BoxDecoration(color: colors[n], borderRadius: BorderRadius.circular(2))),
+          const SizedBox(width: 6),
+          Expanded(child: Text(labels[n]!, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700))),
+          Text('\$${v.toStringAsFixed(0)}', style: const TextStyle(fontSize: 11, color: Colors.black54)),
+        ]),
+      ));
+    }
+    return _chartShell(
+      title: '🥑 Worth It?',
+      subtitle: '\$${total.toStringAsFixed(0)} rated · ${sections.length} bands',
+      child: SizedBox(
+        height: 150,
+        child: Row(children: [
+          SizedBox(
+            width: 150, height: 150,
+            child: Stack(alignment: Alignment.center, children: [
+              PieChart(PieChartData(
+                sections: sections,
+                centerSpaceRadius: 38,
+                sectionsSpace: 2,
+                startDegreeOffset: -90,
+              )),
+              Column(mainAxisSize: MainAxisSize.min, children: [
+                Text('\$${total.toStringAsFixed(0)}',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
+                const Text('rated', style: TextStyle(fontSize: 10, color: Colors.black54)),
+              ]),
+            ]),
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: legend)),
+        ]),
+      ),
+    );
+  }
+
+  /// Shared wrapper card for the two charts — title + subtitle +
+  /// content with consistent padding/border so they read as a pair.
+  Widget _chartShell({required String title, required String subtitle, required Widget child}) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFe5e7eb)),
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
+        const SizedBox(height: 2),
+        Text(subtitle, style: const TextStyle(fontSize: 11, color: Colors.black54)),
+        const SizedBox(height: 12),
+        child,
+      ]),
+    );
+  }
+
   /// value + small subtext.
   Widget _summaryTile({
     required String label, required IconData icon,

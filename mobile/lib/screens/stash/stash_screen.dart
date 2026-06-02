@@ -19,6 +19,8 @@ import '../../widgets/fetch_card.dart';
 import '../../widgets/stash_actions_sheet.dart';
 import '../../services/stash_service.dart';
 import '../../services/stash_engine.dart' show formatPurchaseFrequency;
+import '../../services/product_likes_service.dart';
+import '../../services/product_image_service.dart';
 import '../../categories.dart';
 
 const _kBrand = Color(0xFFca8a04);
@@ -58,6 +60,8 @@ class _StashScreenState extends State<StashScreen> {
   _Sort _sort = _Sort.recent;  // matches web's default SORT
   List<_StashItem> _items = [];
   Map<String, int> _onHand = {};  // item_key → qty (from stash_inventory)
+  Map<String, String> _productImages = {};  // raw item_name → image URL (server-resolved)
+  Map<String, LikeStats> _likeStats = {};   // item_key → {totalLikes, likedByMe}
 
   @override
   void initState() {
@@ -129,6 +133,20 @@ class _StashScreenState extends State<StashScreen> {
 
       final list = byName.values.toList()..sort((a, b) => b.lastDate.compareTo(a.lastDate));
       if (mounted) setState(() { _items = list; _loading = false; });
+
+      // Fire-and-forget decoration calls — images + like stats. Each
+      // returns an empty map on failure so the UI degrades gracefully
+      // (no real photo / no love-count chip) without erroring out.
+      // Both keyed by the SAME normalization (ProductImageService.cacheKey
+      // == web imageCacheKey) so server + client stay correlated.
+      final names = list.map((i) => i.name).toList();
+      ProductImageService.resolveBatch(names).then((m) {
+        if (mounted) setState(() => _productImages = m);
+      });
+      final keys = names.map(ProductImageService.cacheKey).toList();
+      ProductLikesService.fetchStats(keys).then((m) {
+        if (mounted) setState(() => _likeStats = m);
+      });
     } catch (_) {
       if (mounted) setState(() => _loading = false);
     }
@@ -332,15 +350,21 @@ class _StashScreenState extends State<StashScreen> {
                           // placeholder that visually shouts at the
                           // user about every uncounted item.
                           final stockLabel = onHand > 0 ? '$onHand on hand' : null;
+                          final likeKey = ProductImageService.cacheKey(i.name);
+                          final ls = _likeStats[likeKey];
                           return FetchCard(
                             title: i.name,
                             subtitle: subtitle,
                             imageEmoji: preset?.emoji ?? '📦',
+                            imageUrl: _productImages[i.name],
                             tint: tint,
                             value: i.totalSpent,
                             valueLabel: '\$',
                             valueIsPrefix: true,
                             frequency: formatPurchaseFrequency(i.timesBought, i.firstDate, i.lastDate),
+                            loveCount: ls?.totalLikes,
+                            likedByMe: ls?.likedByMe ?? false,
+                            onToggleLove: () => _toggleLove(i),
                             storeName: stockLabel,
                             storeColor: onHand > 0 ? const Color(0xFF15803d) : const Color(0xFF94a3b8),
                             storeEmoji: '📦',
@@ -380,6 +404,34 @@ class _StashScreenState extends State<StashScreen> {
     final thisYear = DateTime.now().year.toString();
     final monthLabel = months[(m - 1).clamp(0, 11)];
     return parts[0] == thisYear ? '$monthLabel $d' : '$monthLabel $d, ${parts[0]}';
+  }
+
+  /// Optimistic love toggle — bump count + flip the heart before
+  /// the server round-trip so the click feels instant. Rolls back on
+  /// failure (e.g. not signed in, table missing pre-migration).
+  Future<void> _toggleLove(_StashItem item) async {
+    final key = ProductImageService.cacheKey(item.name);
+    if (key.isEmpty) return;
+    final prev = _likeStats[key] ?? const LikeStats(totalLikes: 0, likedByMe: false);
+    final optimistic = LikeStats(
+      totalLikes: (prev.totalLikes + (prev.likedByMe ? -1 : 1)).clamp(0, 1 << 30),
+      likedByMe: !prev.likedByMe,
+    );
+    setState(() => _likeStats = {..._likeStats, key: optimistic});
+    try {
+      final real = await ProductLikesService.toggleLike(key);
+      if (!mounted) return;
+      setState(() => _likeStats = {
+        ..._likeStats,
+        key: LikeStats(totalLikes: real.totalLikes, likedByMe: real.liked),
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _likeStats = {..._likeStats, key: prev});
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not save like: $e')),
+      );
+    }
   }
 
   /// Bulk-rate every receipt_item belonging to this product. Optimistic:

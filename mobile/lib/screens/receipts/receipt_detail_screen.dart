@@ -159,32 +159,16 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
     final hasPrev = idx > 0;
     final hasNext = idx >= 0 && idx < total - 1;
 
+    // ── Headline number for the hero ─────────────────────────────────
+    // Fetch shows "500 points" in the hero. GetGuac's equivalent is
+    // the receipt total — that's what users care about per-receipt.
+    // Rating impact (a "guac delta") rendered in the secondary slot.
+    final headlineValue = r.totalAmount.abs();
+    final headlineLabel = r.isReturn ? 'REFUNDED' : 'TOTAL';
+    final ratedItemCount = _items.where((it) => !it.returned).length;
+
     return Scaffold(
-      appBar: AppBar(
-        leading: BackButton(onPressed: _goBack),
-        title: Text(r.storeName, overflow: TextOverflow.ellipsis),
-        actions: [
-          if (total > 0)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 4),
-              child: Text(
-                '${idx + 1}/$total',
-                style: const TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w700),
-              ),
-            ),
-          IconButton(
-            icon: const Icon(Icons.chevron_left),
-            onPressed: hasPrev ? _goPrev : null,
-            tooltip: 'Previous',
-          ),
-          IconButton(
-            icon: const Icon(Icons.chevron_right),
-            onPressed: hasNext ? _goNext : null,
-            tooltip: 'Next',
-          ),
-          IconButton(icon: const Icon(Icons.close), tooltip: 'Close', onPressed: _goBack),
-        ],
-      ),
+      backgroundColor: const Color(0xFFf8fafc),
       body: PopScope(
         canPop: false,
         onPopInvoked: (didPop) { if (!didPop) _goBack(); },
@@ -199,319 +183,450 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
             else if (v > 400) _goNext();    // finger moves right
           },
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.zero,
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              // Hint banner — fades once user has navigated at least once. (Always on for now.)
+              // ── HERO ────────────────────────────────────────────────
+              // Orange gradient header with the total $ as the big white
+              // number. Top-row actions for back, prev/next, image view,
+              // edit. Decorative sparkles + zigzag bottom edge for the
+              // torn-receipt look.
+              _buildHero(r, idx, total, hasPrev, hasNext, headlineValue, headlineLabel, ratedItemCount),
+
+              // ── STORE INFO CARD ─────────────────────────────────────
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                margin: const EdgeInsets.only(bottom: 10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFf0fdf4),
-                  borderRadius: BorderRadius.circular(99),
-                  border: Border.all(color: const Color(0xFFa7f3d0)),
-                ),
-                child: const Text(
-                  '← swipe for prev / next → · double-tap to close',
-                  style: TextStyle(fontSize: 10, color: Color(0xFF065f46), fontWeight: FontWeight.w700),
-                  textAlign: TextAlign.center,
-                ),
+                color: Colors.white,
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 18),
+                child: Column(children: [
+                  // Store name centered, big, branded.
+                  Text(r.storeName,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 28, fontWeight: FontWeight.w900,
+                      color: Color(0xFF15803d), letterSpacing: -0.5,
+                    ),
+                    maxLines: 1, overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text('${formatDateShort(r.date)}  •  \$${r.totalAmount.toStringAsFixed(2)}',
+                    style: const TextStyle(fontSize: 14, color: Color(0xFF64748b), fontWeight: FontWeight.w600),
+                  ),
+                ]),
               ),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    // Source badge for statement-imported entries
-                    if (r.fromStatement || r.isReturn)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                        margin: const EdgeInsets.only(bottom: 12),
-                        decoration: BoxDecoration(
-                          color: r.isReturn ? const Color(0xFFfee2e2) : const Color(0xFFf3f4f6),
-                          borderRadius: BorderRadius.circular(99),
-                        ),
-                        child: Row(mainAxisSize: MainAxisSize.min, children: [
-                          Icon(r.isReturn ? Icons.undo : Icons.account_balance_wallet_outlined,
-                            size: 12, color: r.isReturn ? const Color(0xFF991b1b) : const Color(0xFF6b7280)),
-                          const SizedBox(width: 4),
-                          Text(
-                            r.isReturn ? 'Refund / return' : 'From credit-card statement',
-                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800,
-                              color: r.isReturn ? const Color(0xFF991b1b) : const Color(0xFF374151)),
-                          ),
-                        ]),
-                      ),
 
-                    // Worth-It rating — only for real purchases, not statement imports or returns
-                    if (!r.hideRatingUI)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                        margin: const EdgeInsets.only(bottom: 12),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFf0fdf4),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFFa7f3d0)),
-                        ),
-                        child: Row(children: [
-                          const Icon(Icons.thumbs_up_down_outlined, size: 18, color: Color(0xFF15803d)),
-                          const SizedBox(width: 8),
-                          const Text('Worth it?',
-                            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: Color(0xFF064e3b))),
-                          const Spacer(),
-                          WorthItRating(
-                            value: r.rating,
-                            showLabel: true,
-                            size: 24,
-                            onChanged: (v) async {
-                              await context.read<ReceiptProvider>().updateReceipt(r.id, {'rating': v});
-                              if (mounted) setState(() => _receipt = Receipt(
-                                id: r.id, storeName: r.storeName, date: r.date,
-                                totalAmount: r.totalAmount, taxPaid: r.taxPaid,
-                                rewardNo: r.rewardNo, receiptLink: r.receiptLink,
-                                businessPurchase: r.businessPurchase, processed: r.processed,
-                                category: r.category, rating: v,
-                                fromStatement: r.fromStatement, isReturn: r.isReturn,
-                              ));
-                            },
-                          ),
-                        ]),
+              // ── WORTH IT? ROW (replaces "Receipt Points") ───────────
+              if (!r.hideRatingUI)
+                Container(
+                  color: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    border: Border(
+                      top: BorderSide(color: Color(0xFFf1f5f9)),
+                      bottom: BorderSide(color: Color(0xFFf1f5f9)),
+                    ),
+                  ),
+                  child: Row(children: [
+                    Container(
+                      width: 44, height: 44,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFfef3c7),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                    _row('Store', r.storeName),
-                    _row('Date', formatDateShort(r.date)),
-                    _row('Total Amount', '\$${r.totalAmount.toStringAsFixed(2)}'),
-                    _row('Tax Paid', '\$${r.taxPaid.toStringAsFixed(2)}'),
-                    _row('Reward No', r.rewardNo.isEmpty ? '—' : r.rewardNo),
-                    _row('Business', r.businessPurchase ? 'Yes' : 'No'),
-
-                    // Receipt image(s). Single-page receipts get one button;
-                    // multi-page receipts (long-receipt camera flow) show
-                    // page chips so the user can tap any specific page.
-                    if (r.receiptLink.isNotEmpty && !r.fromStatement)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 14),
-                        child: r.extraPageUrls.isEmpty
-                          ? SizedBox(
-                              width: double.infinity,
-                              child: FilledButton.icon(
-                                onPressed: () => _viewImage(r.receiptLink),
-                                icon: const Icon(Icons.photo_camera_back_outlined, size: 20),
-                                label: const Text('View Receipt Image',
-                                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: const Color(0xFF15803d),
-                                  padding: const EdgeInsets.symmetric(vertical: 14),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                ),
-                              ),
-                            )
-                          : Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(children: [
-                                  const Icon(Icons.photo_library_outlined, size: 16, color: Color(0xFF15803d)),
-                                  const SizedBox(width: 6),
-                                  Text('${r.extraPageUrls.length + 1} pages',
-                                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF064e3b))),
-                                  const SizedBox(width: 6),
-                                  const Text('· tap to view',
-                                    style: TextStyle(fontSize: 11, color: Colors.black54)),
-                                ]),
-                                const SizedBox(height: 8),
-                                SizedBox(
-                                  height: 110,
-                                  child: ListView.separated(
-                                    scrollDirection: Axis.horizontal,
-                                    itemCount: 1 + r.extraPageUrls.length,
-                                    separatorBuilder: (_, __) => const SizedBox(width: 8),
-                                    itemBuilder: (_, i) {
-                                      final url = i == 0 ? r.receiptLink : r.extraPageUrls[i - 1];
-                                      return GestureDetector(
-                                        onTap: () => _viewImage(url),
-                                        child: Container(
-                                          width: 80,
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(10),
-                                            border: Border.all(color: const Color(0xFFa7f3d0), width: 1),
-                                            image: DecorationImage(
-                                              image: NetworkImage(url),
-                                              fit: BoxFit.cover,
-                                              onError: (_, __) {},
-                                            ),
-                                          ),
-                                          alignment: Alignment.bottomRight,
-                                          padding: const EdgeInsets.all(4),
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                                            decoration: BoxDecoration(
-                                              color: Colors.black.withValues(alpha: 0.6),
-                                              borderRadius: BorderRadius.circular(8),
-                                            ),
-                                            child: Text('${i + 1}',
-                                              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w800)),
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ),
-                      ),
-
-                    // Re-parse — re-runs the AI on the source (email body or
-                    // image) and refills the receipt. Hidden for statement-
-                    // imported rows since there's no source to re-parse.
-                    if (!r.fromStatement)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 10),
-                        child: SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton.icon(
-                            onPressed: _reparse,
-                            icon: const Icon(Icons.auto_fix_high, size: 18, color: Color(0xFF15803d)),
-                            label: const Text('Re-parse with Guac-AI',
-                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF15803d))),
-                            style: OutlinedButton.styleFrom(
-                              side: const BorderSide(color: Color(0xFF15803d), width: 1.5),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            ),
-                          ),
-                        ),
-                      ),
+                      alignment: Alignment.center,
+                      child: const Text('🥑', style: TextStyle(fontSize: 24)),
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(child: Text('Worth it?',
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF0f172a)),
+                    )),
+                    WorthItRating(
+                      value: r.rating,
+                      showLabel: false,
+                      size: 22,
+                      onChanged: (v) async {
+                        await context.read<ReceiptProvider>().updateReceipt(r.id, {'rating': v});
+                        if (mounted) setState(() => _receipt = Receipt(
+                          id: r.id, storeName: r.storeName, date: r.date,
+                          totalAmount: r.totalAmount, taxPaid: r.taxPaid,
+                          rewardNo: r.rewardNo, receiptLink: r.receiptLink,
+                          businessPurchase: r.businessPurchase, processed: r.processed,
+                          category: r.category, rating: v,
+                          fromStatement: r.fromStatement, isReturn: r.isReturn,
+                        ));
+                      },
+                    ),
                   ]),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Items', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  TextButton.icon(
-                    onPressed: () => _showAddItemDialog(),
-                    icon: const Icon(Icons.add, size: 18), label: const Text('Add Item'),
+
+              // ── ITEMS LIST (clean rows like the screenshot) ─────────
+              if (_items.isNotEmpty)
+                Container(
+                  color: Colors.white,
+                  child: Column(children: [
+                    for (var i = 0; i < _items.length; i++) ...[
+                      _buildFetchItemRow(_items[i], r),
+                      if (i < _items.length - 1)
+                        const Divider(height: 1, indent: 20, endIndent: 20, color: Color(0xFFf1f5f9)),
+                    ],
+                  ]),
+                ),
+
+              // ── SOURCE NOTE (statement / return) ────────────────────
+              if (r.fromStatement || r.isReturn || _items.isEmpty) _buildSourceNote(r),
+
+              // ── HELPER BANNER ───────────────────────────────────────
+              // "Missing points for this receipt?" equivalent — prompts
+              // the user to take action that improves their GuacScore.
+              if (r.rating == null && !r.hideRatingUI && _items.isNotEmpty)
+                Container(
+                  margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFf5f3ff),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFFe9d5ff)),
                   ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              if (_items.isEmpty)
-                if (r.fromStatement)
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFf3f4f6),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFe5e7eb)),
+                  child: Row(children: [
+                    Container(
+                      width: 36, height: 36,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
+                      child: const Text('🔍', style: TextStyle(fontSize: 18)),
                     ),
-                    child: Row(children: const [
-                      Text('💳', style: TextStyle(fontSize: 22)),
-                      SizedBox(width: 10),
-                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text('Straight from your card statement',
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF374151))),
-                        SizedBox(height: 2),
-                        Text("Banks only share the total — no per-item breakdown.\nSnap or forward the original receipt to unlock items + Worth-It scoring.",
-                          style: TextStyle(fontSize: 11, color: Color(0xFF6b7280), height: 1.4)),
-                      ])),
-                    ]),
-                  )
-                else if (r.isReturn)
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFfee2e2),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFfecaca)),
+                    const SizedBox(width: 10),
+                    const Expanded(child: Text(
+                      'Rate this receipt to nudge your GuacScore.',
+                      style: TextStyle(fontSize: 12, color: Color(0xFF5b21b6), fontWeight: FontWeight.w700, height: 1.4),
+                    )),
+                  ]),
+                ),
+
+              // ── RE-PARSE BUTTON ─────────────────────────────────────
+              if (!r.fromStatement)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: OutlinedButton.icon(
+                    onPressed: _reparse,
+                    icon: const Icon(Icons.auto_fix_high, size: 18, color: Color(0xFF15803d)),
+                    label: const Text('Re-parse with Guac-AI',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF15803d))),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Color(0xFF15803d), width: 1.5),
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      minimumSize: const Size.fromHeight(44),
                     ),
-                    child: Row(children: const [
-                      Text('↩️', style: TextStyle(fontSize: 22)),
-                      SizedBox(width: 10),
-                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text('Refund / return',
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF991b1b))),
-                        SizedBox(height: 2),
-                        Text("Money came back — no items to track here.",
-                          style: TextStyle(fontSize: 11, color: Color(0xFFb91c1c))),
-                      ])),
-                    ]),
-                  )
-                else
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFf0fdf4),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFa7f3d0)),
-                    ),
-                    child: Row(children: const [
-                      Text('🥑', style: TextStyle(fontSize: 22)),
-                      SizedBox(width: 10),
-                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text('Nothing chopped yet',
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF064e3b))),
-                        SizedBox(height: 2),
-                        Text("Tap Add Item to log each line by hand,\nor re-scan a clearer photo so Guac-AI can pull them in.",
-                          style: TextStyle(fontSize: 11, color: Color(0xFF065f46), height: 1.4)),
-                      ])),
-                    ]),
-                  )
-              else
-                ..._items.map((item) => Card(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 10, 10, 10),
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          Text(item.itemName, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-                          const SizedBox(height: 2),
-                          Text('SKU: ${item.sku.isEmpty ? '—' : item.sku} • Qty: ${item.qty} • \$${item.price.toStringAsFixed(2)}',
-                            style: const TextStyle(fontSize: 11, color: Colors.black54)),
-                        ])),
-                        if (item.returned)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFfee2e2),
-                              borderRadius: BorderRadius.circular(99),
-                            ),
-                            child: const Text('Returned', style: TextStyle(color: Color(0xFF991b1b), fontSize: 9, fontWeight: FontWeight.w800)),
-                          ),
-                      ]),
-                      const SizedBox(height: 4),
-                      // Hide rating UI on returned items and on statement-imported
-                      // receipts (those line items don't represent rateable purchases).
-                      if (!item.returned && !r.fromStatement && !r.isReturn)
-                        WorthItRating(
-                          value: item.rating,
-                          size: 18,
-                          onChanged: (v) async {
-                            await context.read<ReceiptProvider>().updateItem(item.id, {'rating': v});
-                            final items = await context.read<ReceiptProvider>().getItems(widget.id);
-                            if (mounted) setState(() => _items = items);
-                          },
-                        ),
-                    ]),
                   ),
-                )),
-              const SizedBox(height: 60),
+                ),
+
+              const SizedBox(height: 100), // breathing room for the floating footer
             ]),
+          ),
+        ),
+      ),
+      // ── FLOATING ACTION FOOTER ──────────────────────────────────────
+      // Two buttons matching the Fetch reference: outline "Snap another"
+      // (returns to /receipts with the camera trigger) + filled primary
+      // "Done" (returns to /receipts list).
+      bottomNavigationBar: _buildActionFooter(r),
+    );
+  }
+
+  // ── REBRAND HELPERS ───────────────────────────────────────────────
+
+  /// Fetch-style orange gradient header. Headline value is the receipt
+  /// total. Top-right action row mirrors the reference (image + edit).
+  /// Bottom edge is a zigzag custom-paint for the torn-receipt look.
+  Widget _buildHero(Receipt r, int idx, int total, bool hasPrev, bool hasNext,
+                    double headlineValue, String headlineLabel, int ratedItemCount) {
+    return Stack(children: [
+      Container(
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(16, 50, 16, 36),
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFFf97316), Color(0xFFea580c)],
+            begin: Alignment.topLeft, end: Alignment.bottomRight,
+          ),
+        ),
+        child: Column(children: [
+          // Top action row — back · counter · prev/next · image · edit
+          Row(children: [
+            _heroIconButton(icon: Icons.arrow_back, onTap: _goBack, tooltip: 'Back'),
+            const Spacer(),
+            if (total > 0)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(99),
+                ),
+                child: Text('${idx + 1} / $total',
+                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800)),
+              ),
+            const SizedBox(width: 6),
+            _heroIconButton(icon: Icons.chevron_left, onTap: hasPrev ? _goPrev : null, tooltip: 'Previous'),
+            _heroIconButton(icon: Icons.chevron_right, onTap: hasNext ? _goNext : null, tooltip: 'Next'),
+            const SizedBox(width: 4),
+            if (r.receiptLink.isNotEmpty && !r.fromStatement)
+              _heroIconButton(icon: Icons.image_outlined, onTap: () => _viewImage(r.receiptLink), tooltip: 'View image'),
+            _heroIconButton(icon: Icons.edit_outlined, onTap: () => _showAddItemDialog(), tooltip: 'Add item'),
+          ]),
+          const SizedBox(height: 12),
+          // Headline number row — coin icon + big $ value
+          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+            Container(
+              width: 32, height: 32,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.22),
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2),
+              ),
+              alignment: Alignment.center,
+              child: const Icon(Icons.star, size: 18, color: Colors.white),
+            ),
+            const SizedBox(width: 10),
+            Text('\$${headlineValue.toStringAsFixed(2)}',
+              style: const TextStyle(
+                color: Colors.white, fontSize: 38, fontWeight: FontWeight.w900,
+                letterSpacing: -1.0, height: 1.1,
+              ),
+            ),
+          ]),
+          const SizedBox(height: 2),
+          Text(headlineLabel,
+            style: const TextStyle(
+              color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800,
+              letterSpacing: 1.5,
+            ),
+          ),
+          if (ratedItemCount > 0 && r.rating == null) ...[
+            const SizedBox(height: 6),
+            Text('$ratedItemCount items · tap a star below to rate',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.85), fontSize: 11, fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ]),
+      ),
+      // Decorative sparkles top-corners (✦ unicode).
+      const Positioned(top: 60, left: 28, child: Text('✦', style: TextStyle(color: Colors.white70, fontSize: 14))),
+      const Positioned(top: 96, left: 48, child: Text('+', style: TextStyle(color: Colors.white60, fontSize: 14, fontWeight: FontWeight.w900))),
+      const Positioned(top: 70, right: 64, child: Text('✦', style: TextStyle(color: Colors.white60, fontSize: 11))),
+      // Zigzag bottom edge — torn-receipt look.
+      Positioned(
+        left: 0, right: 0, bottom: 0,
+        child: CustomPaint(
+          size: const Size(double.infinity, 14),
+          painter: _ZigzagPainter(color: const Color(0xFFf8fafc)),
+        ),
+      ),
+    ]);
+  }
+
+  Widget _heroIconButton({required IconData icon, VoidCallback? onTap, String? tooltip}) {
+    final enabled = onTap != null;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: Material(
+        color: Colors.white.withValues(alpha: enabled ? 0.18 : 0.08),
+        shape: const CircleBorder(),
+        child: InkWell(
+          onTap: onTap,
+          customBorder: const CircleBorder(),
+          child: Tooltip(
+            message: tooltip ?? '',
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Icon(icon, size: 18, color: Colors.white.withValues(alpha: enabled ? 1.0 : 0.4)),
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _row(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13)),
-          Flexible(child: Text(value, textAlign: TextAlign.end, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13))),
-        ],
+  /// Single item row matching the Fetch reference — name on the left,
+  /// price on the right, hairline divider between rows. Tappable to
+  /// open the worth-it rating in a quick action sheet.
+  Widget _buildFetchItemRow(ReceiptItem item, Receipt r) {
+    final canRate = !item.returned && !r.fromStatement && !r.isReturn;
+    return InkWell(
+      onTap: canRate ? () => _showItemRatingSheet(item) : null,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 14, 20, 14),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(item.itemName,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF0f172a)),
+              maxLines: 1, overflow: TextOverflow.ellipsis,
+            ),
+            if (item.qty > 1 || item.rating != null) ...[
+              const SizedBox(height: 2),
+              Row(children: [
+                if (item.qty > 1)
+                  Text('Qty ${item.qty}',
+                    style: const TextStyle(fontSize: 11, color: Color(0xFF94a3b8), fontWeight: FontWeight.w600),
+                  ),
+                if (item.qty > 1 && item.rating != null) const SizedBox(width: 8),
+                if (item.rating != null) Row(children: [
+                  for (var n = 1; n <= 5; n++)
+                    Icon(n <= item.rating! ? Icons.star : Icons.star_outline,
+                      size: 11, color: const Color(0xFFf59e0b)),
+                ]),
+              ]),
+            ],
+          ])),
+          const SizedBox(width: 12),
+          Text('\$${(item.price * item.qty).toStringAsFixed(2)}',
+            style: TextStyle(
+              fontSize: 14, fontWeight: FontWeight.w800,
+              color: item.returned ? const Color(0xFF94a3b8) : const Color(0xFF0f172a),
+              decoration: item.returned ? TextDecoration.lineThrough : null,
+            ),
+          ),
+        ]),
       ),
     );
   }
+
+  /// Bottom-sheet star picker for a single item — opened on tap. Same
+  /// UX as the FetchCard's rating picker but scoped to the receipt
+  /// item rather than the product aggregate.
+  void _showItemRatingSheet(ReceiptItem item) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Container(
+            width: 40, height: 4,
+            decoration: BoxDecoration(color: Colors.black26, borderRadius: BorderRadius.circular(2)),
+          ),
+          const SizedBox(height: 14),
+          const Text('Worth it?', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 4),
+          Text(item.itemName,
+            style: const TextStyle(fontSize: 13, color: Color(0xFF64748b)),
+            maxLines: 2, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 18),
+          WorthItRating(
+            value: item.rating,
+            showLabel: false,
+            size: 40,
+            onChanged: (v) async {
+              await context.read<ReceiptProvider>().updateItem(item.id, {'rating': v});
+              final items = await context.read<ReceiptProvider>().getItems(widget.id);
+              if (mounted) setState(() => _items = items);
+              if (mounted) Navigator.of(context).pop();
+            },
+          ),
+        ]),
+      ),
+    );
+  }
+
+  /// Source/empty-state explainer block. Renders for statement-imported
+  /// rows (no per-item data), returns (negative amounts), or receipts
+  /// with no items yet.
+  Widget _buildSourceNote(Receipt r) {
+    if (r.fromStatement) {
+      return _noteBox(
+        bg: const Color(0xFFf3f4f6), border: const Color(0xFFe5e7eb),
+        emoji: '💳',
+        title: 'Straight from your card statement',
+        body: 'Banks only share the total — no per-item breakdown. Snap or forward the original receipt to unlock items + Worth-It scoring.',
+        titleColor: const Color(0xFF374151), bodyColor: const Color(0xFF6b7280),
+      );
+    }
+    if (r.isReturn) {
+      return _noteBox(
+        bg: const Color(0xFFfee2e2), border: const Color(0xFFfecaca),
+        emoji: '↩️', title: 'Refund / return',
+        body: 'Money came back — no items to track here.',
+        titleColor: const Color(0xFF991b1b), bodyColor: const Color(0xFFb91c1c),
+      );
+    }
+    return _noteBox(
+      bg: const Color(0xFFf0fdf4), border: const Color(0xFFa7f3d0),
+      emoji: '🥑', title: 'Nothing chopped yet',
+      body: 'Tap Add Item to log each line by hand, or re-scan a clearer photo so Guac-AI can pull them in.',
+      titleColor: const Color(0xFF064e3b), bodyColor: const Color(0xFF065f46),
+    );
+  }
+
+  Widget _noteBox({required Color bg, required Color border, required String emoji,
+                   required String title, required String body,
+                   required Color titleColor, required Color bodyColor}) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: bg, borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: border),
+      ),
+      child: Row(children: [
+        Text(emoji, style: const TextStyle(fontSize: 22)),
+        const SizedBox(width: 10),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(title, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: titleColor)),
+          const SizedBox(height: 2),
+          Text(body, style: TextStyle(fontSize: 11, color: bodyColor, height: 1.4)),
+        ])),
+      ]),
+    );
+  }
+
+  /// Sticky bottom action footer matching the Fetch reference —
+  /// outline "Snap another" + filled primary "Done."
+  Widget _buildActionFooter(Receipt r) {
+    return SafeArea(
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          border: Border(top: BorderSide(color: Color(0xFFf1f5f9))),
+        ),
+        child: Row(children: [
+          Expanded(child: OutlinedButton.icon(
+            onPressed: () => context.go('/receipts?capture=1'),
+            icon: const Icon(Icons.camera_alt_outlined, size: 18),
+            label: const Text('Snap another'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: const Color(0xFF15803d),
+              side: const BorderSide(color: Color(0xFF15803d), width: 1.5),
+              minimumSize: const Size.fromHeight(48),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          )),
+          const SizedBox(width: 10),
+          Expanded(child: FilledButton.icon(
+            onPressed: _goBack,
+            icon: const Icon(Icons.check, size: 18),
+            label: Text(r.rating != null ? 'Done' : 'Skip rating'),
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFF15803d),
+              minimumSize: const Size.fromHeight(48),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          )),
+        ]),
+      ),
+    );
+  }
+  // _row removed in the Fetch-style rebrand — store/date/total now
+  // render as a centered block in the hero + store-info card. If a
+  // future surface wants the old key→value row layout, lift it from
+  // the git history (commit 5f1109d~).
 
   void _showAddItemDialog() {
     final nameCtrl = TextEditingController();
@@ -674,4 +789,39 @@ class _ImageViewerState extends State<_ImageViewer> {
       ),
     );
   }
+}
+
+/// Zigzag bottom edge for the receipt hero — paints the "torn-receipt"
+/// look from the Fetch reference. Sits at the bottom of the hero and
+/// is filled with the page background color so the orange hero appears
+/// to have a torn edge.
+class _ZigzagPainter extends CustomPainter {
+  final Color color;
+  _ZigzagPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = color..style = PaintingStyle.fill;
+    // Triangle width — bigger = bolder zigzag. 12px feels right for the
+    // 14px-tall band height we render.
+    const w = 12.0;
+    final path = Path()..moveTo(0, size.height);
+    var x = 0.0;
+    var up = true;
+    while (x < size.width) {
+      x += w;
+      if (up) {
+        path.lineTo(x.clamp(0, size.width).toDouble(), 0);
+      } else {
+        path.lineTo(x.clamp(0, size.width).toDouble(), size.height);
+      }
+      up = !up;
+    }
+    path.lineTo(size.width, size.height);
+    path.close();
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(_ZigzagPainter old) => old.color != color;
 }

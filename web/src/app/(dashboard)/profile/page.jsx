@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { createClient } from '../../../lib/supabase/client'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { Save, CreditCard, Plus, Trash2, Link2 } from 'lucide-react'
+import { Save, CreditCard, Plus, Trash2, Link2, Gift } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
 import PrivacyPanel from '../../../components/PrivacyPanel'
 import EmailAliasPicker from '../../../components/EmailAliasPicker'
@@ -59,13 +59,42 @@ export default function ProfilePage() {
           <GuacMascot expression="sitting" size={56} />
           <h1 className="page-title">My Profile</h1>
         </div>
-        <Link
-          href="/connections"
-          className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-emerald-200 text-emerald-700 text-sm font-bold hover:bg-emerald-50 transition-colors"
-        >
-          <Link2 size={14} /> Connections
-        </Link>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Link
+            href="/invite"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-emerald-200 text-emerald-700 text-sm font-bold hover:bg-emerald-50 transition-colors"
+          >
+            <Gift size={14} /> Invite friends
+          </Link>
+          <Link
+            href="/connections"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-emerald-200 text-emerald-700 text-sm font-bold hover:bg-emerald-50 transition-colors"
+          >
+            <Link2 size={14} /> Connections
+          </Link>
+        </div>
       </div>
+
+      {/* Invite friends tile — the "vertical list of tiles" lives in
+          mobile Profile (see mobile/lib/screens/profile/profile_screen.dart
+          _VRow rows). On web the Profile is form-shaped, so we surface
+          the invite entry as a high-contrast row here. */}
+      <Link
+        href="/invite"
+        className="block bg-gradient-to-br from-emerald-500 via-emerald-600 to-green-700 text-white rounded-2xl p-4 hover:shadow-lg hover:-translate-y-0.5 transition-all"
+      >
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-white/15 flex items-center justify-center">
+            <Gift size={22} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-extrabold text-base">Invite friends → 3 Smash days each</p>
+            <p className="text-xs text-emerald-50/90 mt-0.5">
+              Share your code; you both get a 🔥 boost when they sign up.
+            </p>
+          </div>
+        </div>
+      </Link>
 
       <div className="card space-y-4">
         <div className="flex items-center gap-4 pb-2">

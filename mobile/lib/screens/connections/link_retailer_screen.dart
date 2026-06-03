@@ -129,7 +129,20 @@ class _LinkRetailerScreenState extends State<LinkRetailerScreen> {
     }
     return Scaffold(
       appBar: AppBar(
-        title: Text('Link ${_retailer!.name}'),
+        title: Row(mainAxisSize: MainAxisSize.min, children: [
+          Flexible(child: Text('Link ${_retailer!.name}', overflow: TextOverflow.ellipsis)),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: const Color(0xFFfef3c7),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: const Text('BETA',
+              style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Color(0xFF92400e)),
+            ),
+          ),
+        ]),
         actions: [
           if (_initialized)
             TextButton(
@@ -139,6 +152,15 @@ class _LinkRetailerScreenState extends State<LinkRetailerScreen> {
         ],
       ),
       body: Column(children: [
+        Container(
+          width: double.infinity,
+          color: const Color(0xFFfef3c7),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: const Text(
+            '⚠️  Beta feature — may break without notice. Reach out to support if a pull fails.',
+            style: TextStyle(fontSize: 11, color: Color(0xFF92400e), fontWeight: FontWeight.w700),
+          ),
+        ),
         Container(
           color: const Color(0xFFf0fdf4),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

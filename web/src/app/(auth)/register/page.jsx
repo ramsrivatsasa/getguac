@@ -8,6 +8,7 @@ import GuacMascot from '../../../components/GuacMascot'
 import PrivacyNote from '../../../components/PrivacyNote'
 import { Check, X, Loader2, AlertCircle, AtSign, Eye, EyeOff } from 'lucide-react'
 import { createClient as createBrowserClient } from '../../../lib/supabase/client'
+import ReferralCapture from '../../../components/ReferralCapture'
 const VALID_USERNAME_RE = /^[a-z0-9]([a-z0-9._-]{1,30}[a-z0-9])?$/
 // Cloudflare Turnstile site key — public, safe to ship in the client
 // bundle. When unset (local dev / before keys are provisioned in
@@ -166,6 +167,10 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-900 via-green-800 to-lime-700 p-4 py-8 font-sans">
+      {/* Capture ?ref=<CODE> on register too — direct deep-links to
+          /register?ref=ABC123 should also seed localStorage so the
+          post-signup hook on the dashboard credits both sides. */}
+      <ReferralCapture />
       <div className="w-full max-w-lg space-y-6">
         <div className="text-center">
           <div className="inline-flex justify-center">

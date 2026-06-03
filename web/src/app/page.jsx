@@ -5,6 +5,7 @@ import {
   Sparkles, Wand2, Star, Gift, ShoppingCart, Tag, Shield, ArrowRight, Package, BadgeDollarSign, Banknote, Brain, Trophy, Smile, PieChart
 } from 'lucide-react'
 import GuacMascot from '../components/GuacMascot'
+import ReferralCapture from '../components/ReferralCapture'
 
 export default async function Home() {
   // Logged-in users skip the landing page
@@ -14,6 +15,9 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-lime-50 text-gray-800 font-sans">
+      {/* Capture ?ref=<CODE> on landing — stashed to localStorage and
+          applied on first dashboard load post-signup. Renders nothing. */}
+      <ReferralCapture />
       {/* NAV */}
       <header className="sticky top-0 z-30 backdrop-blur bg-white/70 border-b border-emerald-100">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">

@@ -295,6 +295,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             subtitle: 'Loyalty + expiring',
             onTap: () => context.push('/rewards'),
           ),
+          _VRow(
+            tint: const Color(0xFFd1fae5),
+            iconWidget: const Icon(Icons.person_add_alt_1, color: Color(0xFF15803d)),
+            title: 'Invite friends',
+            subtitle: '3 Smash days each when they sign up',
+            onTap: () => context.push('/invite'),
+          ),
 
           const SizedBox(height: 20),
           _SectionHeader(label: 'Shop'),

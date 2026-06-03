@@ -71,6 +71,13 @@ dependencies:
   url_launcher: ^6.3.0
   shared_preferences: ^2.2.3
   geolocator: ^12.0.0
+
+  # Crash + error reporting. Initialized only when --dart-define=SENTRY_DSN
+  # is non-empty (see main.dart) so debug/local builds stay quiet.
+  sentry_flutter: ^8.10.0
+  # Behavioral analytics. Initialized only when --dart-define=POSTHOG_KEY
+  # is non-empty. Identifies users on Supabase auth state change.
+  posthog_flutter: ^4.10.0
   # In-app APK download + install. Lets us drop the new build into the
   # app's cache dir (auto-cleaned by Android) instead of leaving it in
   # the user's Downloads folder forever.

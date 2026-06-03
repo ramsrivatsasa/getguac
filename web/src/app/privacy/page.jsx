@@ -13,7 +13,7 @@ export const metadata = {
   description: 'What GetGuac collects, what it can see, who else can see it, and how to delete it. Plain language.',
 }
 
-const LAST_UPDATED = 'May 28, 2026'
+const LAST_UPDATED = 'June 3, 2026'
 
 export default function PrivacyPage() {
   return (
@@ -80,37 +80,46 @@ export default function PrivacyPage() {
           <p>The free <span className="font-mono">@getguac.app</span> address that comes with your username is for receiving merchant receipts. We parse incoming messages to extract receipts; we do not read message bodies for any other purpose, and we don't send anything from your address without your explicit action.</p>
         </Section>
 
-        <Section icon={Trash2} title="5. Deleting Your Data">
+        <Section icon={ShieldCheck} title="5. Retailer Connections (Beta)">
+          <p>If you choose to <strong>link a retailer account</strong> (Connections page → "Link account"), you sign into that retailer's own website inside an isolated browser session on your device. <strong>We never see your credentials.</strong> Username and password are typed into the retailer's own HTML form, on the retailer's own origin.</p>
+          <p>What we do see, only after you've signed in and only on the retailer's order-history page: the order metadata our extractor reads (store name, date, total, line items). We store these as receipts in your account, the same way email-forwarded receipts are stored.</p>
+          <p>The browser session — including any auth cookies the retailer set — is <strong>discarded when you close the linking screen</strong>. We don't store passwords, tokens, or any persistent credential. To pull receipts again later, you sign in again.</p>
+          <p>This feature is <strong>in beta</strong> and may break without notice. Some retailers' Terms of Service prohibit automated access to their sites; by using this feature you accept that risk. If a retailer requests that we disable a linker, we will do so promptly.</p>
+        </Section>
+
+        <Section icon={Trash2} title="6. Deleting Your Data">
           <p>You can delete your entire account from your <Link href="/profile" className="text-emerald-700 font-semibold hover:underline">profile page</Link>. One click. Hard delete in 24 hours. Backups age out within 30 days.</p>
           <p>You can also delete individual receipts, rewards, household memberships, and chat messages at any time — those deletes are immediate.</p>
         </Section>
 
-        <Section icon={ShieldCheck} title="6. Your Rights">
+        <Section icon={ShieldCheck} title="7. Your Rights">
           <p>If you're in the EU/UK/California or another jurisdiction with data-protection laws, you can request: a copy of your data, correction of inaccurate data, deletion, or a portable export. Most of this is already self-serve in the app (profile → export / delete). For anything else, email us.</p>
           <p>We respond within 30 days. We don't charge for these requests.</p>
         </Section>
 
-        <Section icon={Database} title="7. Cookies & Tracking">
+        <Section icon={Database} title="8. Cookies & Tracking">
           <p>We use exactly one cookie: your sign-in session. No analytics cookies, no advertising pixels, no cross-site trackers. The few server-side analytics we collect (page-view counts, error rates) are aggregated and not tied to your identity in the dashboards we look at.</p>
         </Section>
 
-        <Section icon={ShieldCheck} title="8. Third Parties We Use">
+        <Section icon={ShieldCheck} title="9. Third Parties We Use">
           <ul className="list-disc ml-5 space-y-1.5">
             <li><strong>Supabase</strong> — our database + auth + storage host. They cannot read your row-level-security-protected data; they hold the encrypted-at-rest copy.</li>
             <li><strong>Google Gemini / Groq</strong> — receipt parsing. Only the receipt photo + text is sent, no account identifiers, and Anthropic's <em>and</em> Google's terms forbid them from training on this data.</li>
             <li><strong>Vercel</strong> — runtime hosting + CDN. They see request metadata, not response bodies.</li>
+            <li><strong>Sentry</strong> — crash + error reporting. We send the error stack and a coarse user identifier (so a single user's repeated crashes group together). No receipt content, no balances.</li>
+            <li><strong>PostHog</strong> — behavioral analytics. We send screen-view events and product-action events (e.g. "smashed a list item"). No receipt content, no PII beyond the user ID.</li>
           </ul>
         </Section>
 
-        <Section icon={Mail} title="9. Children">
+        <Section icon={Mail} title="10. Children">
           <p>GetGuac is not directed at children under 13. If we learn we have a sub-13 account, we delete it.</p>
         </Section>
 
-        <Section icon={ShieldCheck} title="10. Changes to This Policy">
+        <Section icon={ShieldCheck} title="11. Changes to This Policy">
           <p>If we change what we collect, who can see it, or how it's protected, we'll post the new policy here with a new "last updated" date and email you before the change takes effect for any data we already hold.</p>
         </Section>
 
-        <Section icon={Mail} title="11. Contact">
+        <Section icon={Mail} title="12. Contact">
           <p>Privacy questions go to <a href="mailto:privacy@getguac.app" className="text-emerald-700 font-semibold hover:underline">privacy@getguac.app</a>. Security reports (please) to <a href="mailto:security@getguac.app" className="text-emerald-700 font-semibold hover:underline">security@getguac.app</a>.</p>
         </Section>
 

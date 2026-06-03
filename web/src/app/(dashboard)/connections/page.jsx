@@ -27,6 +27,7 @@ import { createClient } from '../../../lib/supabase/client'
 import { RETAILERS } from '../../../lib/retailers'
 import { StoreLogo } from '../../../components/StoreLogo'
 import GuacMascot from '../../../components/GuacMascot'
+import { track } from '../../../lib/analytics'
 
 export default function ConnectionsPage() {
   const sb = createClient()
@@ -190,6 +191,7 @@ export default function ConnectionsPage() {
           onClose={() => setOpenRetailer(null)}
           onMarkActive={() => {
             setStatus.mutate({ retailerId: openRetailer.id, status: 'active' })
+            track('connection_marked_active', { retailer_id: openRetailer.id })
             toast.success(`${openRetailer.name} marked active`)
             setOpenRetailer(null)
           }}
@@ -278,8 +280,8 @@ function SetupDialog({ retailer, alias, existingStatus, onClose, onMarkActive })
                 <p className="text-xs font-black uppercase tracking-wider text-emerald-800">
                   Link account directly
                 </p>
-                <span className="text-[9px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 rounded-full px-1.5 py-0.5">
-                  Preview
+                <span className="text-[9px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800 rounded-full px-1.5 py-0.5">
+                  Beta
                 </span>
               </div>
               <p className="text-[13px] text-gray-700 leading-relaxed mb-3">

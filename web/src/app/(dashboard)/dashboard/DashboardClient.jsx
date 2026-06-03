@@ -24,6 +24,7 @@ import { computeDashboardAnalysis } from '../../../lib/analysisEngine'
 import { periodStartDate } from '../../../lib/timeframe'
 import { useBankData } from '../../../lib/useBankData'
 import TimeframePicker from '../../../components/TimeframePicker'
+import PostSignupReferralApply from '../../../components/PostSignupReferralApply'
 const PERIODS = ['daily', 'weekly', 'monthly', 'yearly']
 
 // Dropdown options for "how many <period>s back to include"
@@ -148,6 +149,10 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
 
   return (
     <div className="space-y-6 max-w-7xl">
+      {/* If the user signed up via /?ref=<CODE>, this fires once on
+          first dashboard load to credit 3 Smash days to both sides.
+          Renders nothing — pure side-effect island. */}
+      <PostSignupReferralApply />
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
           <h1 className="page-title">Good day, {firstName} 👋</h1>

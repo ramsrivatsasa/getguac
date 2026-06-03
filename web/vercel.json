@@ -16,6 +16,10 @@
     {
       "path": "/api/notify/dispatch",
       "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/cron/usage-snapshot",
+      "schedule": "0 8 * * *"
     }
   ]
 }

@@ -8,9 +8,9 @@
 // in the morning before scanning. The count starts at the most recent
 // activity day and walks backward until it hits a gap.
 
-export function computeSmashDays(receipts = []) {
+export function computeSmashDays(receipts = [], bonus = 0) {
   if (!Array.isArray(receipts) || receipts.length === 0) {
-    return { smashDays: 0, lastActiveIso: null }
+    return { smashDays: bonus || 0, lastActiveIso: null }
   }
   // Collect distinct YYYY-MM-DD strings the user logged activity on.
   const days = new Set()
@@ -32,7 +32,7 @@ export function computeSmashDays(receipts = []) {
   let cursor
   if (days.has(todayIso)) cursor = new Date(todayIso + 'T00:00:00Z')
   else if (days.has(yestIso)) cursor = new Date(yestIso + 'T00:00:00Z')
-  else return { smashDays: 0, lastActiveIso: [...days].sort().pop() }
+  else return { smashDays: bonus || 0, lastActiveIso: [...days].sort().pop() }
 
   let smashDays = 0
   while (true) {
@@ -41,5 +41,6 @@ export function computeSmashDays(receipts = []) {
     smashDays++
     cursor.setUTCDate(cursor.getUTCDate() - 1)
   }
-  return { smashDays, lastActiveIso: [...days].sort().pop() }
+  // Referral bonus (profiles.smash_days_bonus) adds to the streak count.
+  return { smashDays: smashDays + (bonus || 0), lastActiveIso: [...days].sort().pop() }
 }

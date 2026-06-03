@@ -1,17 +1,30 @@
 # getguac
 
-A new Flutter project.
+GetGuac Flutter app (Android + iOS).
 
-## Getting Started
+## Build-time environment variables
 
-This project is a starting point for a Flutter application.
+Pass via `--dart-define` to enable optional services. Each is gated on a
+non-empty value — leave empty (or omit) to disable the service entirely.
 
-A few resources to get you started if this is your first Flutter project:
+```
+--dart-define=SENTRY_DSN=          # crash + error reporting
+--dart-define=POSTHOG_KEY=         # behavioral analytics
+--dart-define=POSTHOG_HOST=https://us.i.posthog.com
+--dart-define=FIREBASE_ENABLED=    # push notifications (requires google-services.json)
+```
+
+Example release build:
+
+```
+flutter build apk --release \
+  --dart-define=SENTRY_DSN=https://...ingest.sentry.io/... \
+  --dart-define=POSTHOG_KEY=phc_... \
+  --dart-define=FIREBASE_ENABLED=true
+```
+
+## Getting started
 
 - [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
 - [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
 - [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.

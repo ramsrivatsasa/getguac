@@ -12,7 +12,7 @@ export const metadata = {
   description: 'The rules of using GetGuac. Plain language; no surprise fees, no buried clauses.',
 }
 
-const LAST_UPDATED = 'May 28, 2026'
+const LAST_UPDATED = 'June 3, 2026'
 
 export default function TermsPage() {
   return (
@@ -69,27 +69,39 @@ export default function TermsPage() {
           </ul>
         </Section>
 
-        <Section icon={ShieldCheck} title="5. Your Data">
+        <Section icon={ShieldCheck} title="5. Retailer Connections (Beta)">
+          <p>Our Connections feature lets you forward retailer receipts via email (always supported) or, for selected retailers, link an account by signing into the retailer's site inside our mobile app. <strong>The credential-linking flow is in beta.</strong></p>
+          <p>By using the credential-linking flow you acknowledge:</p>
+          <ul className="list-disc ml-5 space-y-1.5">
+            <li>You're authorized to sign into the retailer account on your own behalf, and the order data we read belongs to you.</li>
+            <li>Some retailers' Terms of Service prohibit automated access. You — not GetGuac — are responsible for your relationship with that retailer.</li>
+            <li>The session is held only in your device's WebView and discarded when you close the linking screen. We never store credentials.</li>
+            <li>We may disable any retailer linker at any time, including upon request from the retailer.</li>
+            <li>The feature may break without notice when a retailer changes their site.</li>
+          </ul>
+        </Section>
+
+        <Section icon={ShieldCheck} title="6. Your Data">
           <p>See the <Link href="/privacy" className="text-emerald-700 font-semibold hover:underline">Privacy Policy</Link> and <Link href="/security" className="text-emerald-700 font-semibold hover:underline">Security page</Link> for specifics on what we store, who can see it, and how to delete it. You own your data; we hold it on your behalf.</p>
         </Section>
 
-        <Section icon={FileText} title="6. Subscriptions & Pricing">
+        <Section icon={FileText} title="7. Subscriptions & Pricing">
           <p>Today, GetGuac is free. If we add paid features, you'll see the price and what you get before being charged — never auto-upgraded. If we change these terms, we'll tell you at next sign-in and again the first time the change is relevant to you (e.g. if a free feature moves behind a paywall).</p>
         </Section>
 
-        <Section icon={FileText} title="7. Termination">
+        <Section icon={FileText} title="8. Termination">
           <p>You can delete your account and all data at any time from your <Link href="/profile" className="text-emerald-700 font-semibold hover:underline">profile page</Link> — one click, no questions, hard delete in 24 hours. We can terminate accounts that break the rules in section 4, but we'll email you first unless the abuse is severe (e.g. active phishing).</p>
         </Section>
 
-        <Section icon={FileText} title="8. No Warranty (the lawyer part)">
+        <Section icon={FileText} title="9. No Warranty (the lawyer part)">
           <p>GetGuac is provided "as-is." We can't guarantee 100% uptime, perfect receipt parsing, or that predictions will match what you actually buy. Use it as a helpful tool, not as the source of truth for any number that matters legally or financially.</p>
         </Section>
 
-        <Section icon={FileText} title="9. Changes to These Terms">
+        <Section icon={FileText} title="10. Changes to These Terms">
           <p>If we change these terms, we'll post the new version here with a new "last updated" date and notify signed-in users at next sign-in. Continued use after changes means you accept them. If you don't, delete your account — we won't be mad.</p>
         </Section>
 
-        <Section icon={FileText} title="10. Contact">
+        <Section icon={FileText} title="11. Contact">
           <p>Questions? <a href="mailto:hello@getguac.app" className="text-emerald-700 font-semibold hover:underline">hello@getguac.app</a>. We read every email.</p>
         </Section>
 

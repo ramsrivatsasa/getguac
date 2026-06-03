@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
@@ -15,6 +16,11 @@ import 'services/debug_log.dart';
 import 'services/update_service.dart';
 import 'services/receipt_outbox.dart';
 import 'services/push_notifications.dart';
+import 'services/analytics_service.dart';
+
+// Env-var-gated DSN/keys. Empty string = service disabled. Passed via
+// --dart-define=SENTRY_DSN=... and --dart-define=POSTHOG_KEY=... at build.
+const String _sentryDsn = String.fromEnvironment('SENTRY_DSN');
 
 // Brand palette — matches the web app (emerald + lime).
 const kBrandPrimary    = Color(0xFF15803d); // emerald-700 — main brand
@@ -24,6 +30,28 @@ const kBrandSurface    = Color(0xFFf0fdf4); // emerald-50 — soft background
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Sentry gate — when SENTRY_DSN is empty we skip init entirely and just
+  // run the app directly. SentryFlutter.init wraps runApp() so the Zone
+  // it sets up captures uncaught errors automatically; when disabled we
+  // call _bootstrap() ourselves.
+  if (_sentryDsn.isNotEmpty) {
+    await SentryFlutter.init(
+      (options) {
+        options.dsn = _sentryDsn;
+        options.tracesSampleRate = 0.1;
+        // Avoid sending PII unless explicitly opted in. The DebugLog
+        // already pseudonymizes via session_id + user_id.
+        options.sendDefaultPii = false;
+      },
+      appRunner: _bootstrap,
+    );
+  } else {
+    await _bootstrap();
+  }
+}
+
+Future<void> _bootstrap() async {
 
   // Global error capture — FlutterError.onError for framework errors,
   // PlatformDispatcher.onError for uncaught async errors. Both feed the
@@ -99,6 +127,10 @@ void main() async {
   // device. No-ops cleanly if Firebase isn't configured for this
   // build (no google-services.json / GoogleService-Info.plist).
   unawaited(PushNotifications.instance.init());
+
+  // PostHog setup + Supabase auth subscription. No-ops when
+  // --dart-define=POSTHOG_KEY is empty.
+  unawaited(AnalyticsService.init());
 
   runApp(const GetGuacApp());
 }

@@ -1,4 +1,5 @@
 /** @type {import('next').NextConfig} */
+import { withSentryConfig } from '@sentry/nextjs'
 
 // Security headers — applied to every response. The CSP is deliberately tight
 // for app pages; we relax it only where third-party scripts are required
@@ -61,4 +62,17 @@ const nextConfig = {
   },
 }
 
-export default nextConfig
+// Wrap with Sentry's Next.js plugin. The wrapper is a no-op when
+// NEXT_PUBLIC_SENTRY_DSN is absent (free-tier-friendly): no DSN means
+// source-map upload is skipped and the Sentry SDK in the bundle stays
+// uninitialized at runtime.
+export default withSentryConfig(nextConfig, {
+  // Pass --silent in CI to keep build logs quiet. Auth token only needed
+  // for source-map upload; absent token = no upload, build still succeeds.
+  silent: true,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  // We disable source-map upload entirely when there's no auth token, so
+  // a missing token never breaks the Vercel build.
+  disableServerWebpackPlugin: !process.env.SENTRY_AUTH_TOKEN,
+  disableClientWebpackPlugin: !process.env.SENTRY_AUTH_TOKEN,
+})

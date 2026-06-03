@@ -15,9 +15,9 @@ class SmashDaysResult {
   SmashDaysResult({required this.smashDays, this.lastActiveIso});
 }
 
-SmashDaysResult computeSmashDays(List<Receipt> receipts) {
+SmashDaysResult computeSmashDays(List<Receipt> receipts, {int bonus = 0}) {
   if (receipts.isEmpty) {
-    return SmashDaysResult(smashDays: 0, lastActiveIso: null);
+    return SmashDaysResult(smashDays: bonus, lastActiveIso: null);
   }
 
   // Collect every distinct YYYY-MM-DD the user has at least one
@@ -51,7 +51,7 @@ SmashDaysResult computeSmashDays(List<Receipt> receipts) {
     cursor = DateTime(now.year, now.month, now.day).subtract(const Duration(days: 1));
   } else {
     final sortedDays = days.toList()..sort();
-    return SmashDaysResult(smashDays: 0, lastActiveIso: sortedDays.last);
+    return SmashDaysResult(smashDays: bonus, lastActiveIso: sortedDays.last);
   }
 
   var smashDays = 0;
@@ -62,5 +62,6 @@ SmashDaysResult computeSmashDays(List<Receipt> receipts) {
     cursor = cursor.subtract(const Duration(days: 1));
   }
   final sortedDays = days.toList()..sort();
-  return SmashDaysResult(smashDays: smashDays, lastActiveIso: sortedDays.last);
+  // Referral bonus (profiles.smash_days_bonus) adds to the streak count.
+  return SmashDaysResult(smashDays: smashDays + bonus, lastActiveIso: sortedDays.last);
 }

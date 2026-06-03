@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.35",
-  "name": "v0.3.35 — app icon: Apple avocado mascot",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.35/app-arm64-v8a-release.apk",
-  "releaseNotes": "• New app icon: Apple's avocado emoji on the GetGuac emerald-700 squircle background. Both the legacy icon (Android 5-7) and the adaptive icon (Android 8+) regenerated from the same source so every launcher gets the right thing.\n• Web Connections: 'Link account directly' callout now visible on Amazon (and any retailer the mobile WebView can link). Routes to /download for the actual link since browser sandboxing blocks the flow on web."
+  "version": "v0.3.36",
+  "name": "v0.3.36 — app icon: flat-cartoon avocado",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.36/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Swapped the app icon avocado from Apple's realistic 3D style to Twemoji's flat-cartoon style — closer to the mascot look. Still sits on the same emerald-700 squircle.\n• Twemoji ships as a 600x600 SVG so it renders crisp at every Android density (mdpi through xxxhdpi). No more upscaling artifacts."
 }

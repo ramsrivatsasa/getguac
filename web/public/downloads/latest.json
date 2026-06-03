@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.34",
-  "name": "v0.3.34 — white canvas + route fade-slide + WebView linking scaffold",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.34/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Mobile + web canvases both pure white now (was slate-50/lime gradient). Cards, tiles, and gradients keep their own colors; the page background stays neutral so brand chrome reads cleanly.\n• Route transitions on mobile: every navigation now runs a 220ms cross-fade + 1.5% slide-up. Was missing entirely on context.go() replace-style nav (which is most of the bottom-nav tab + sidebar). Cupertino edge-swipe still works as before on push.\n• Phase-1 scaffolding for retailer credential linking: WebView screen at /connections/link/<id>, JS-extraction framework with an Amazon orders-page DOM scraper as the proof-of-concept. Marked clearly as PoC — full backend ingest + multi-retailer support is Phase 2.\n• /connections/link/<retailer> only surfaces a 'Link account (PoC)' button when an extractor exists for that retailer (currently Amazon only). Other retailers continue with the email-forwarding setup steps."
+  "version": "v0.3.35",
+  "name": "v0.3.35 — app icon: Apple avocado mascot",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.35/app-arm64-v8a-release.apk",
+  "releaseNotes": "• New app icon: Apple's avocado emoji on the GetGuac emerald-700 squircle background. Both the legacy icon (Android 5-7) and the adaptive icon (Android 8+) regenerated from the same source so every launcher gets the right thing.\n• Web Connections: 'Link account directly' callout now visible on Amazon (and any retailer the mobile WebView can link). Routes to /download for the actual link since browser sandboxing blocks the flow on web."
 }

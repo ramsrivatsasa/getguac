@@ -15,7 +15,14 @@ import { useState, useEffect, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
-import { ChevronRight, Check, Copy, Mail, Plus, X } from 'lucide-react'
+import { ChevronRight, Check, Copy, Mail, Plus, X, Smartphone, Link2 } from 'lucide-react'
+
+// Retailers that the mobile WebView credential-linker supports.
+// Kept in sync with mobile/lib/data/retailer_extractors.dart.
+// Web can't run cross-origin JS inside the retailer's site (browser
+// same-origin policy), so the web CTA here just points to the mobile
+// app instead of attempting the link itself.
+const LINKABLE_IN_MOBILE = new Set(['amazon'])
 import { createClient } from '../../../lib/supabase/client'
 import { RETAILERS } from '../../../lib/retailers'
 import { StoreLogo } from '../../../components/StoreLogo'
@@ -105,14 +112,16 @@ export default function ConnectionsPage() {
         </div>
       </header>
 
-      {/* Email-alias card — the "common destination" for every forwarder */}
-      <section className="bg-gradient-to-br from-emerald-50 to-lime-50 border border-emerald-200 rounded-2xl p-5 mb-7">
+      {/* Email-alias card — the "common destination" for every forwarder.
+          Flat white to match the rest of the canvas; the emerald icon
+          tile is the only brand accent. */}
+      <section className="bg-white border border-gray-200 rounded-2xl p-5 mb-7">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-xl bg-emerald-600 text-white flex items-center justify-center">
             <Mail size={22} />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold uppercase tracking-wider text-emerald-700">Your GetGuac inbox</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-gray-500">Your GetGuac inbox</p>
             <p className="font-bold text-gray-900 truncate text-base">
               {aliasEmail || 'Loading your alias…'}
             </p>
@@ -120,13 +129,13 @@ export default function ConnectionsPage() {
           {aliasEmail && (
             <button
               onClick={copyAlias}
-              className="px-3 py-2 rounded-lg bg-white border border-emerald-200 text-emerald-700 text-xs font-bold hover:bg-emerald-50 inline-flex items-center gap-1.5"
+              className="px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 text-xs font-bold hover:bg-gray-50 inline-flex items-center gap-1.5"
             >
               <Copy size={13} /> Copy
             </button>
           )}
         </div>
-        <p className="text-xs text-emerald-800/80 mt-3 leading-relaxed">
+        <p className="text-xs text-gray-600 mt-3 leading-relaxed">
           The <span className="font-mono font-bold">+g</span> subaddress auto-parses every receipt that lands
           here. Your regular <span className="font-mono">@getguac.app</span> address (without the +g) is for
           signups + personal mail and stays untouched. Each retailer below has step-by-step instructions
@@ -205,11 +214,16 @@ function RetailerRow({ retailer, conn, onClick, onDismiss }) {
         emojiClassName="bg-gray-100 text-gray-700"
       />
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <p className="font-bold text-gray-900">{retailer.name}</p>
           {isVerified && (
             <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-black bg-emerald-100 text-emerald-800">
               <Check size={9} /> VERIFIED
+            </span>
+          )}
+          {LINKABLE_IN_MOBILE.has(retailer.id) && (
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <Link2 size={9} /> LINKABLE
             </span>
           )}
         </div>
@@ -257,8 +271,36 @@ function SetupDialog({ retailer, alias, existingStatus, onClose, onMarkActive })
         </header>
 
         <div className="p-5">
+          {LINKABLE_IN_MOBILE.has(retailer.id) && (
+            <div className="mb-5 p-4 rounded-2xl border-2 border-emerald-200 bg-emerald-50/40">
+              <div className="flex items-center gap-2 mb-1.5">
+                <Link2 size={16} className="text-emerald-700" />
+                <p className="text-xs font-black uppercase tracking-wider text-emerald-800">
+                  Link account directly
+                </p>
+                <span className="text-[9px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 rounded-full px-1.5 py-0.5">
+                  Preview
+                </span>
+              </div>
+              <p className="text-[13px] text-gray-700 leading-relaxed mb-3">
+                Sign in to {retailer.name} in the GetGuac mobile app — we&apos;ll pull your
+                recent orders in one tap. No email forwarding needed.
+              </p>
+              <Link
+                href="/download"
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white border-2 border-emerald-300 text-emerald-800 text-sm font-bold hover:bg-emerald-50 no-underline"
+              >
+                <Smartphone size={15} /> Open in mobile app
+              </Link>
+              <p className="text-[10px] text-gray-500 mt-2 leading-relaxed">
+                Web browsers can&apos;t safely log into other sites on your behalf, so this
+                lives in the mobile app only.
+              </p>
+            </div>
+          )}
+
           <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-3">
-            Setup steps
+            {LINKABLE_IN_MOBILE.has(retailer.id) ? 'Or use email forwarding' : 'Setup steps'}
           </h4>
           <ol className="space-y-3">
             {retailer.setupSteps.map((step, i) => (

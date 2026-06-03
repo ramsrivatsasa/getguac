@@ -21,19 +21,11 @@ export default async function DashboardPage() {
     sb.from('profiles').select('first_name').eq('id', user?.id || '').single(),
   ])
 
-  // Region — pinned to US while the app is in US-only mode. The
-  // tester is in India hitting prod for the US version; without this
-  // override they'd see a 🇮🇳 IN chip on a US-branded experience. Flip
-  // back to `headers().get('x-vercel-ip-country')` when we're ready
-  // to actually localize per region.
-  const country = 'US'
-
   return (
     <DashboardClient
       initialReceipts={receipts ?? []}
       initialRewards={rewards ?? []}
       firstName={profile?.first_name ?? 'User'}
-      country={country}
     />
   )
 }

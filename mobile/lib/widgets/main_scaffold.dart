@@ -244,7 +244,27 @@ class _MainScaffoldState extends State<MainScaffold> with WidgetsBindingObserver
           child: GestureDetector(
             behavior: HitTestBehavior.translucent,
             onHorizontalDragEnd: (d) => _handleHorizontalSwipe(context, idx, d),
-            child: widget.child,
+            // Cross-fade between routes when the user navigates via
+            // context.go (which replaces rather than pushes — Cupertino
+            // slide doesn't fire on replace). The keyed AnimatedSwitcher
+            // detects the route change and runs a 220ms fade-through so
+            // tab + sidebar nav doesn't feel "instant teleport."
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 220),
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeIn,
+              transitionBuilder: (child, anim) => FadeTransition(
+                opacity: anim,
+                child: SlideTransition(
+                  position: Tween<Offset>(begin: const Offset(0, 0.015), end: Offset.zero).animate(anim),
+                  child: child,
+                ),
+              ),
+              child: KeyedSubtree(
+                key: ValueKey(GoRouterState.of(context).matchedLocation),
+                child: widget.child,
+              ),
+            ),
           ),
         ),
       ]),

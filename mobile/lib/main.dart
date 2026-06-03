@@ -127,7 +127,11 @@ class GetGuacApp extends StatelessWidget {
             secondary: kBrandAccent,
             surface: Colors.white,
           ),
-          scaffoldBackgroundColor: const Color(0xFFf8fafc),
+          // Pure white canvas to match the web app (changed from
+          // slate-50). Cards, tiles, and gradients keep their own
+          // colors; this just keeps the page background neutral so
+          // brand chrome reads cleanly.
+          scaffoldBackgroundColor: Colors.white,
           // Edge-swipe-to-go-back on EVERY platform. Cupertino's
           // page-transition builder ships the iOS-style drag-from-
           // left-edge gesture (drag right, screen behind slides

@@ -7,8 +7,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/retailers.dart';
+import '../../data/retailer_extractors.dart';
 import '../../widgets/store_logo.dart';
 import '../../widgets/guac_mascot.dart';
+import 'link_retailer_screen.dart' show LinkRetailerScreen;
+
+/// Thin wrapper to keep the import name semantic-stable when this
+/// file is read in isolation.
+class LinkRetailerScreenRoute extends StatelessWidget {
+  final String retailerId;
+  const LinkRetailerScreenRoute({super.key, required this.retailerId});
+  @override
+  Widget build(BuildContext context) => LinkRetailerScreen(retailerId: retailerId);
+}
 
 class ConnectionsScreen extends StatefulWidget {
   const ConnectionsScreen({super.key});
@@ -336,24 +347,57 @@ class _RetailerSetupSheet extends StatelessWidget {
           ],
         ],
       )),
-      // CTA bar pinned to the bottom
+      // CTA bar pinned to the bottom. When the retailer has a
+      // WebView extractor (currently only Amazon, Phase-1 PoC), we
+      // surface an extra "Link account (PoC)" button above the
+      // standard "I've completed setup" CTA.
       Padding(
         padding: EdgeInsets.fromLTRB(16, 4, 16, MediaQuery.of(context).viewPadding.bottom + 12),
-        child: SizedBox(
-          width: double.infinity,
-          child: FilledButton.icon(
-            onPressed: retailer.captureOnly ? null : onMarkActive,
-            icon: const Icon(Icons.check),
-            label: Text(retailer.captureOnly
-              ? 'Camera-only — no email setup'
-              : (isActive ? "I've updated my setup" : "I've completed setup")),
-            style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF15803d),
-              minimumSize: const Size.fromHeight(50),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          if (retailerExtractors.containsKey(retailer.id)) ...[
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  // Use a small delay so the sheet animates out
+                  // before the WebView screen pushes in.
+                  Future.delayed(const Duration(milliseconds: 200), () {
+                    if (context.mounted) {
+                      Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) => LinkRetailerScreenRoute(retailerId: retailer.id),
+                      ));
+                    }
+                  });
+                },
+                icon: const Icon(Icons.lock_open, size: 16),
+                label: const Text('Link account (PoC)'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF1d4ed8),
+                  side: const BorderSide(color: Color(0xFF1d4ed8), width: 1.5),
+                  minimumSize: const Size.fromHeight(44),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: retailer.captureOnly ? null : onMarkActive,
+              icon: const Icon(Icons.check),
+              label: Text(retailer.captureOnly
+                ? 'Camera-only — no email setup'
+                : (isActive ? "I've updated my setup" : "I've completed setup")),
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFF15803d),
+                minimumSize: const Size.fromHeight(50),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
             ),
           ),
-        ),
+        ]),
       ),
     ]);
   }

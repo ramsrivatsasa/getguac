@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.33",
-  "name": "v0.3.33 — Profile redesigned as vertical-scroll card list",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.33/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Profile screen redesigned to match the simple vertical-scroll pattern. Horizontal-scroll Guac-AI strip + 2-column pill grid replaced with single-column card rows grouped into clear sections:\n  → My Activity (Worth It · GuacScore · GuacWizard)\n  → Money (Reports · Returns · Rewards)\n  → Shop (Stores · Stash · Steals)\n  → Mail & retailers (Connections · Inbox)\n  → Settings (biometric · mailbox · Security · Privacy)\n• Stores added to Profile (was previously only in the Menu long-press popover).\n• Debug log + Report a problem pills removed from everyday Profile chrome (still reachable via app-lock screen + crash flows).\n• Duplicate Inbox pill removed."
+  "version": "v0.3.34",
+  "name": "v0.3.34 — white canvas + route fade-slide + WebView linking scaffold",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.34/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Mobile + web canvases both pure white now (was slate-50/lime gradient). Cards, tiles, and gradients keep their own colors; the page background stays neutral so brand chrome reads cleanly.\n• Route transitions on mobile: every navigation now runs a 220ms cross-fade + 1.5% slide-up. Was missing entirely on context.go() replace-style nav (which is most of the bottom-nav tab + sidebar). Cupertino edge-swipe still works as before on push.\n• Phase-1 scaffolding for retailer credential linking: WebView screen at /connections/link/<id>, JS-extraction framework with an Amazon orders-page DOM scraper as the proof-of-concept. Marked clearly as PoC — full backend ingest + multi-retailer support is Phase 2.\n• /connections/link/<retailer> only surfaces a 'Link account (PoC)' button when an extractor exists for that retailer (currently Amazon only). Other retailers continue with the email-forwarding setup steps."
 }

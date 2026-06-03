@@ -3,7 +3,11 @@
 @tailwind utilities;
 
 @layer base {
-  body { @apply bg-gradient-to-br from-slate-50 via-emerald-50/20 to-lime-50/20 text-gray-800 antialiased min-h-screen text-[14px]; }
+  /* Plain white canvas — was a green/lime tinted gradient that
+     competed with brand-green accents on cards. Buttons + GuacScore
+     tiles still use the emerald palette; the canvas stays neutral
+     so colored chrome pops cleanly. */
+  body { @apply bg-white text-gray-800 antialiased min-h-screen text-[14px]; }
   h1, h2, h3 { @apply tracking-tight; }
   /* Force form controls to inherit the page font instead of the browser default */
   input, select, textarea, button, option { font-family: inherit; }

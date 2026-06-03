@@ -24,6 +24,7 @@ import 'screens/how_it_works/how_it_works_screen.dart';
 import 'screens/chat/chat_list_screen.dart';
 import 'screens/chat/chat_thread_screen.dart';
 import 'screens/connections/connections_screen.dart';
+import 'screens/connections/link_retailer_screen.dart';
 import 'screens/reports/reports_screen.dart';
 import 'screens/returns/returns_screen.dart';
 import 'screens/stores/stores_screen.dart';
@@ -73,6 +74,8 @@ final appRouter = GoRouter(
         GoRoute(path: '/car-miles', builder: (_, __) => const CarMilesScreen()),
         GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
         GoRoute(path: '/connections', builder: (_, __) => const ConnectionsScreen()),
+        GoRoute(path: '/connections/link/:id', builder: (_, state) =>
+          LinkRetailerScreen(retailerId: state.pathParameters['id']!)),
         GoRoute(path: '/reports',     builder: (_, __) => const ReportsScreen()),
         GoRoute(path: '/returns',     builder: (_, __) => const ReturnsScreen()),
         GoRoute(path: '/stores',      builder: (_, __) => const StoresScreen()),

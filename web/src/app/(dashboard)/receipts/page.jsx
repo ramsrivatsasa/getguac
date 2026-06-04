@@ -26,6 +26,8 @@ import GuacMascot from '../../../components/GuacMascot'
 import CategoryPicker from '../../../components/CategoryPicker'
 import PreTripPanel from '../../../components/PreTripPanel'
 import { ShimmerBox } from '../../../components/animated'
+import LottieAnimation from '../../../components/LottieAnimation'
+import emptyReceiptsLottie from '../../../lottie/empty-receipts.json'
 
 const EMPTY = { store_name: '', date: '', total_amount: '', tax_paid: '', reward_no: '', business_purchase: false }
 
@@ -1290,7 +1292,7 @@ export default function ReceiptsPage() {
             onClick={handleQuickClick}
             className="py-10 px-6 text-center flex flex-col items-center gap-3 cursor-pointer rounded-xl border-2 border-dashed border-gray-300 hover:border-blue-400 hover:bg-blue-50/30 transition-colors m-4"
           >
-            <GuacMascot expression="relaxing" size={140} />
+            <LottieAnimation data={emptyReceiptsLottie} size={160} fallback="📥" />
             <p className="text-gray-700 font-semibold">Drag screenshots here</p>
             <p className="text-sm text-gray-500 max-w-md">
               Drop a screenshot from an Amazon, Doordash, Uber Eats, Instacart, or Walmart

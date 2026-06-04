@@ -19,6 +19,16 @@
 import { useEffect, useState } from 'react'
 import Lottie from 'lottie-react'
 
+// SSR-safe reduced-motion probe — lottie-web ignores the media query
+// by default, so users with vestibular sensitivities still see the
+// animation. We short-circuit to the fallback emoji when reduce-motion
+// is set, matching the same treatment AnimatedMascot uses.
+function prefersReducedMotion() {
+  if (typeof window === 'undefined') return false
+  try { return window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches === true }
+  catch { return false }
+}
+
 export default function LottieAnimation({
   data,
   src,
@@ -26,10 +36,16 @@ export default function LottieAnimation({
   loop = true,
   autoplay = true,
   fallback = '🥑',
+  label,
   className = '',
 }) {
   const [animationData, setAnimationData] = useState(data || null)
   const [err, setErr] = useState(null)
+  // Re-read prefers-reduced-motion on mount so the same JS bundle can
+  // serve users on both settings. Static on first paint; if the user
+  // flips the OS setting mid-session we don't re-evaluate (acceptable).
+  const [reduced, setReduced] = useState(false)
+  useEffect(() => { setReduced(prefersReducedMotion()) }, [])
 
   useEffect(() => {
     // If we already have inline data, nothing to fetch.
@@ -49,14 +65,17 @@ export default function LottieAnimation({
     return () => { cancelled = true }
   }, [src, data])
 
-  if (err || !animationData) {
+  // Fallback path: no data, fetch failed, OR reduced-motion is on.
+  // In all three cases render the emoji glyph at the same footprint
+  // so the layout doesn't shift between motion and non-motion users.
+  if (err || !animationData || reduced) {
     return (
       <span
         role="img"
-        aria-label="lottie placeholder"
+        aria-label={label || (reduced ? 'animation paused' : err ? 'animation unavailable' : 'animation loading')}
         className={`inline-flex items-center justify-center ${className}`}
         style={{ width: size, height: size, fontSize: size * 0.6, lineHeight: 1 }}
-        title={err ? `Lottie failed: ${err}` : 'Lottie loading…'}
+        title={err ? `Lottie failed: ${err}` : reduced ? 'Reduced-motion preference is on' : 'Lottie loading…'}
       >
         {fallback}
       </span>
@@ -64,7 +83,12 @@ export default function LottieAnimation({
   }
 
   return (
-    <div className={className} style={{ width: size, height: size }}>
+    <div
+      className={className}
+      style={{ width: size, height: size }}
+      role="img"
+      aria-label={label || 'animation'}
+    >
       <Lottie
         animationData={animationData}
         loop={loop}

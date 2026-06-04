@@ -7,6 +7,9 @@ import { Store, Phone, Globe, MapPin, ChevronRight, ChevronDown, Search, Trash2,
 import { getStores, deleteStore, getAllStoreDefaultPolicies } from '../../../lib/db'
 import { normalizeStoreName, displayStoreName } from '../../../lib/store-name-normalize'
 import { useConfirm } from '../../../components/ConfirmDialog'
+import LottieAnimation from '../../../components/LottieAnimation'
+import emptyListLottie from '../../../lottie/empty-list.json'
+import thinkingLottie from '../../../lottie/thinking.json'
 function normalizePhone(p) {
   if (!p) return ''
   return String(p).replace(/\D+/g, '')
@@ -218,10 +221,14 @@ export default function StoresPage() {
       )}
 
       {isLoading ? (
-        <div className="py-12 text-center text-gray-400">Loading stores…</div>
+        <div className="py-12 text-center text-gray-400 flex flex-col items-center gap-3">
+          <LottieAnimation data={thinkingLottie} size={140} fallback="🏬" />
+          <p>Loading stores…</p>
+        </div>
       ) : filtered.length === 0 ? (
-        <div className="py-12 text-center text-gray-400">
-          {stores.length === 0 ? 'No stores yet — they are created automatically when you scan receipts.' : 'No results.'}
+        <div className="py-12 text-center text-gray-400 flex flex-col items-center gap-3">
+          <LottieAnimation data={emptyListLottie} size={160} fallback="🏬" />
+          <p>{stores.length === 0 ? 'No stores yet — they are created automatically when you scan receipts.' : 'No results.'}</p>
         </div>
       ) : (
         <div className="card p-0 divide-y divide-gray-50">

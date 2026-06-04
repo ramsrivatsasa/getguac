@@ -17,6 +17,8 @@ import { displayStoreName } from '../lib/store-name-normalize'
 import { logoUrlForStore } from '../lib/store-logo'
 import { fetchRecent as fetchRecentGuacMoney, sourceLabel as guacMoneySourceLabel } from '../lib/guacMoney'
 import FadeUpStagger from './animated/FadeUpStagger'
+import LottieAnimation from './LottieAnimation'
+import emptyListLottie from '../lottie/empty-list.json'
 
 const ICONS = {
   receipt: <Receipt size={13} className="text-emerald-700" />,
@@ -102,9 +104,12 @@ export function ActivityFeed({ receipts = [] }) {
           <Clock size={14} className="text-emerald-700" />
           <h3 className="font-bold text-gray-800 text-sm">Recent activity</h3>
         </div>
-        <p className="text-xs text-gray-500">
-          Scan a receipt or add an item to your Smashlist — your activity will land here.
-        </p>
+        <div className="flex flex-col items-center gap-2 py-2">
+          <LottieAnimation data={emptyListLottie} size={120} fallback="⏰" />
+          <p className="text-xs text-gray-500 text-center">
+            Scan a receipt or add an item to your Smashlist — your activity will land here.
+          </p>
+        </div>
       </div>
     )
   }

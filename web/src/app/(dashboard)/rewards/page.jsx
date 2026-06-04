@@ -5,6 +5,9 @@ import { useRewards, useUpsertReward, useDeleteReward } from '../../../hooks/use
 import toast from 'react-hot-toast'
 import { Trash2, Eye, Link2 } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
+import LottieAnimation from '../../../components/LottieAnimation'
+import emptyListLottie from '../../../lottie/empty-list.json'
+import thinkingLottie from '../../../lottie/thinking.json'
 import { displayStoreName } from '../../../lib/store-name-normalize'
 import { useConfirm } from '../../../components/ConfirmDialog'
 
@@ -101,9 +104,15 @@ export default function RewardsPage() {
 
       <div className="card p-0 overflow-hidden">
         {isLoading ? (
-          <div className="py-12 text-center text-gray-400">Loading…</div>
+          <div className="py-12 text-center text-gray-400 flex flex-col items-center gap-3">
+            <LottieAnimation data={thinkingLottie} size={140} fallback="🎁" />
+            <p>Loading…</p>
+          </div>
         ) : rewards.length === 0 ? (
-          <div className="py-12 text-center text-gray-400">No rewards yet.</div>
+          <div className="py-12 text-center text-gray-400 flex flex-col items-center gap-3">
+            <LottieAnimation data={emptyListLottie} size={160} fallback="🎁" />
+            <p>No rewards yet.</p>
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

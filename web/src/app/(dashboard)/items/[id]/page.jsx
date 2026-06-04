@@ -23,6 +23,9 @@ import { createClient } from '../../../../lib/supabase/client'
 import { updateReceiptItem, setStashProductCategory, addToShoppingList } from '../../../../lib/db'
 import { formatDateShort } from '../../../../lib/dateFormat'
 import CategoryPicker from '../../../../components/CategoryPicker'
+import LottieAnimation from '../../../../components/LottieAnimation'
+import thinkingLottie from '../../../../lottie/thinking.json'
+import errorBlobLottie from '../../../../lottie/error-blob.json'
 import { StoreLogo } from '../../../../components/StoreLogo'
 import { CountUp, FadeUpStagger, SlideUp } from '../../../../components/animated'
 
@@ -179,8 +182,19 @@ export default function ItemDetailPage() {
     } catch (e) { toast.error(e.message) }
   }
 
-  if (isLoading) return <div className="text-gray-400 py-10 text-center">Loading…</div>
-  if (!item)     return <div className="text-rose-500 py-10 text-center">Item not found.</div>
+  if (isLoading) return (
+    <div className="text-gray-400 py-10 text-center flex flex-col items-center gap-3">
+      <LottieAnimation data={thinkingLottie} size={140} fallback="🥑" />
+      <p>Loading…</p>
+    </div>
+  )
+  if (!item) return (
+    <div className="text-rose-500 py-10 text-center flex flex-col items-center gap-3">
+      <LottieAnimation data={errorBlobLottie} size={140} fallback="🫠" />
+      <p>Item not found.</p>
+      <Link href="/stash" className="text-sm text-emerald-700 font-semibold hover:underline">Back to stash</Link>
+    </div>
+  )
 
   const isCharity = item.category === 'charity'
   const isReturn  = item.returned || item.receipt?.is_return

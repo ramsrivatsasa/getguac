@@ -9,6 +9,10 @@ import { formatDateShort } from '../../../../lib/dateFormat'
 import toast from 'react-hot-toast'
 import { ArrowLeft, Save, Store, Phone, Globe, MapPin, Receipt, ChevronRight, Hash, Navigation, Crosshair, Loader2, Shield, ExternalLink, X, Link2 } from 'lucide-react'
 import { displayStoreName } from '../../../../lib/store-name-normalize'
+import LottieAnimation from '../../../../components/LottieAnimation'
+import emptyListLottie from '../../../../lottie/empty-list.json'
+import thinkingLottie from '../../../../lottie/thinking.json'
+import errorBlobLottie from '../../../../lottie/error-blob.json'
 export default function StoreDetailPage() {
   const { id } = useParams()
   const router = useRouter()
@@ -76,8 +80,18 @@ export default function StoreDetailPage() {
     return null
   }
 
-  if (isLoading) return <div className="py-16 text-center text-gray-400">Loading…</div>
-  if (!store) return <div className="py-16 text-center text-red-500">Store not found</div>
+  if (isLoading) return (
+    <div className="py-16 text-center text-gray-400 flex flex-col items-center gap-3">
+      <LottieAnimation data={thinkingLottie} size={140} fallback="🏬" />
+      <p>Loading…</p>
+    </div>
+  )
+  if (!store) return (
+    <div className="py-16 text-center text-red-500 flex flex-col items-center gap-3">
+      <LottieAnimation data={errorBlobLottie} size={140} fallback="🏬" />
+      <p>Store not found</p>
+    </div>
+  )
 
   const locations = store.store_locations || []
   const totalSpend = receipts.reduce((sum, r) => sum + parseFloat(r.total_amount || 0), 0)
@@ -241,7 +255,10 @@ export default function StoreDetailPage() {
           <span className="text-sm text-gray-400 ml-auto">{receipts.length}</span>
         </div>
         {receipts.length === 0 ? (
-          <p className="text-sm text-gray-400 py-10 text-center">No receipts yet for this store.</p>
+          <div className="text-sm text-gray-400 py-10 text-center flex flex-col items-center gap-3">
+            <LottieAnimation data={emptyListLottie} size={140} fallback="🧾" />
+            <p>No receipts yet for this store.</p>
+          </div>
         ) : (
           [...byLocation.values()].filter(g => g.items.length > 0).map(({ loc, items }) => (
             <div key={loc?.id || 'none'}>

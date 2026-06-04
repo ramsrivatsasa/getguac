@@ -9,6 +9,9 @@ import {
 } from 'lucide-react'
 import { PieChart, Pie, Cell, Tooltip as RTooltip, ResponsiveContainer } from 'recharts'
 import GuacMascot from '../../../components/GuacMascot'
+import LottieAnimation from '../../../components/LottieAnimation'
+import emptyListLottie from '../../../lottie/empty-list.json'
+import thinkingLottie from '../../../lottie/thinking.json'
 import { subDays, subWeeks, subMonths, subYears } from 'date-fns'
 import { useReceipts, useReceipt } from '../../../hooks/useReceipts'
 import { setReceiptValidation, setItemValidation } from '../../../lib/db'
@@ -211,10 +214,13 @@ export default function ValidatePage() {
       {/* List */}
       <div className="card p-0 overflow-hidden">
         {isLoading ? (
-          <div className="py-12 text-center text-gray-400">Loading…</div>
+          <div className="py-12 text-center text-gray-400 flex flex-col items-center gap-3">
+            <LottieAnimation data={thinkingLottie} size={140} fallback="🥑" />
+            <p>Loading…</p>
+          </div>
         ) : filtered.length === 0 ? (
           <div className="py-10 text-center flex flex-col items-center gap-3">
-            <GuacMascot expression="relaxing" size={140} />
+            <LottieAnimation data={emptyListLottie} size={160} fallback="🥑" />
             <p className="text-gray-500">No transactions match. Try widening the period or clearing the filter.</p>
           </div>
         ) : (

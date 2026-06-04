@@ -4,6 +4,9 @@ import { useParams, useRouter } from 'next/navigation'
 import { useRewards, useUpsertReward } from '../../../../hooks/useRewards'
 import toast from 'react-hot-toast'
 import { ArrowLeft, Save, X } from 'lucide-react'
+import LottieAnimation from '../../../../components/LottieAnimation'
+import thinkingLottie from '../../../../lottie/thinking.json'
+import errorBlobLottie from '../../../../lottie/error-blob.json'
 export default function RewardDetailPage() {
   const { id } = useParams()
   const router = useRouter()
@@ -14,8 +17,18 @@ export default function RewardDetailPage() {
   const current = local ?? reward
   const s = k => e => setLocal(p => ({ ...(p ?? reward), [k]: e.target.value }))
 
-  if (isLoading) return <div className="py-16 text-center text-gray-400">Loading…</div>
-  if (!current) return <div className="py-16 text-center text-red-500">Reward not found</div>
+  if (isLoading) return (
+    <div className="py-16 text-center text-gray-400 flex flex-col items-center gap-3">
+      <LottieAnimation data={thinkingLottie} size={140} fallback="🎁" />
+      <p>Loading…</p>
+    </div>
+  )
+  if (!current) return (
+    <div className="py-16 text-center text-red-500 flex flex-col items-center gap-3">
+      <LottieAnimation data={errorBlobLottie} size={140} fallback="🎁" />
+      <p>Reward not found</p>
+    </div>
+  )
 
   return (
     <div className="space-y-6 max-w-2xl">

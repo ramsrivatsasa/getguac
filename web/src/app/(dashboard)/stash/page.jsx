@@ -22,6 +22,8 @@ import { StoreLogo } from '../../../components/StoreLogo'
 import { ShareItemButton } from '../../../components/ShareItemButton'
 import ItemRowCard from '../../../components/ItemRowCard'
 import { FadeUpStagger, ShimmerBox } from '../../../components/animated'
+import LottieAnimation from '../../../components/LottieAnimation'
+import emptyListLottie from '../../../lottie/empty-list.json'
 
 const SORTS = [
   { key: 'recent',     label: 'Most recent' },
@@ -480,7 +482,7 @@ export default function StashPage() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="card py-10 text-center flex flex-col items-center gap-3">
-          <GuacMascot expression="relaxing" size={140} />
+          <LottieAnimation data={emptyListLottie} size={160} fallback="🥑" />
           <p className="text-gray-500 max-w-sm">
             {items.length === 0
               ? <>No items yet. <Link href="/receipts" className="text-emerald-700 font-semibold hover:underline">Add your first receipt</Link> to start your stash.</>

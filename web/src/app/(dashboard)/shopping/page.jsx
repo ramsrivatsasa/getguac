@@ -6,6 +6,8 @@ import { SHOPPING_LISTS, SHOPPING_LIST_META } from '../../../lib/db'
 import toast from 'react-hot-toast'
 import { Trash2, CheckCircle, Circle, X, Sparkles, Wand2, Zap, Store as StoreIcon, MapPin, Star, Share2, ShoppingCart, BadgeDollarSign, ChevronDown, ChevronRight, MessageCircle, Phone, Mail, Copy } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
+import LottieAnimation from '../../../components/LottieAnimation'
+import emptyListLottie from '../../../lottie/empty-list.json'
 import { groupPredictionsByStore } from '../../../lib/prediction-feedback'
 import { displayStoreName } from '../../../lib/store-name-normalize'
 import { createClient } from '../../../lib/supabase/client'
@@ -1054,7 +1056,7 @@ export default function ShoppingPage() {
             <div className="py-12 text-center text-gray-400">Loading…</div>
           ) : filteredOwn.length === 0 ? (
             <div className="py-10 text-center flex flex-col items-center gap-3">
-              <GuacMascot expression="relaxing" size={140} />
+              <LottieAnimation data={emptyListLottie} size={160} fallback="🛒" />
               <p className="text-gray-500 max-w-sm">
                 {activeList === 'all'
                   ? (filteredSuggestions.length > 0

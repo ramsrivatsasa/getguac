@@ -12,7 +12,7 @@
 
 import Link from 'next/link'
 import LottieAnimation from '../components/LottieAnimation'
-import blobLottie from '../lottie/blob.json'
+import searchingLottie from '../lottie/searching.json'
 
 export const metadata = {
   title: 'Page not found — GetGuac',
@@ -24,7 +24,7 @@ export default function NotFound() {
       <div className="max-w-md text-center">
         <div className="flex items-center justify-center mb-6">
           <LottieAnimation
-            data={blobLottie}
+            data={searchingLottie}
             size={240}
             fallback="🔍"
           />

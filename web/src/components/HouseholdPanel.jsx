@@ -12,6 +12,8 @@ import {
 import { openThreadWith } from '../lib/dms'
 import { getDisplayNames, formatName, initialFor } from '../lib/displayNames'
 import { useConfirm } from './ConfirmDialog'
+import LottieAnimation from './LottieAnimation'
+import thinkingLottie from '../lottie/thinking.json'
 
 // Single Profile-page component that handles every household
 // interaction: create / invite / member list / leave / chat. Reads +
@@ -71,7 +73,10 @@ export default function HouseholdPanel() {
 
   if (isLoading) {
     return (
-      <div className="card py-6 text-center text-gray-400 text-sm">Loading household…</div>
+      <div className="card py-6 text-center text-gray-400 text-sm flex flex-col items-center gap-3">
+        <LottieAnimation data={thinkingLottie} size={120} fallback="🏠" />
+        <p>Loading household…</p>
+      </div>
     )
   }
 

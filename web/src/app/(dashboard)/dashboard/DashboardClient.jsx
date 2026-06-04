@@ -28,6 +28,8 @@ import PostSignupReferralApply from '../../../components/PostSignupReferralApply
 import { computeSmashDays } from '../../../lib/smashDays'
 import mascotBus from '../../../lib/mascotEventBus'
 import { CountUp, FadeUpStagger } from '../../../components/animated'
+import LottieAnimation from '../../../components/LottieAnimation'
+import emptyListLottie from '../../../lottie/empty-list.json'
 const PERIODS = ['daily', 'weekly', 'monthly', 'yearly']
 
 // Dropdown options for "how many <period>s back to include"
@@ -344,7 +346,10 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
             </Link>
           </div>
           {initialRewards.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-6">No rewards yet</p>
+            <div className="text-sm text-gray-400 text-center py-6 flex flex-col items-center gap-2">
+              <LottieAnimation data={emptyListLottie} size={100} fallback="💰" />
+              <p>No rewards yet</p>
+            </div>
           ) : (
             <div className="space-y-3">
               {initialRewards.slice(0, 4).map(r => (

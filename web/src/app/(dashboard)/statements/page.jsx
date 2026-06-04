@@ -9,6 +9,8 @@ import {
   Upload, Loader2, FileText, Image as ImageIcon, Check, ShieldCheck, ShoppingBag, Undo2, AlertTriangle, Percent, CreditCard, ChevronDown, ChevronRight, Briefcase, Banknote
 } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
+import LottieAnimation from '../../../components/LottieAnimation'
+import thinkingLottie from '../../../lottie/thinking.json'
 import { CATEGORIES, CATEGORY_BY_SLUG } from '../../../lib/categories'
 import { useConfirm } from '../../../components/ConfirmDialog'
 // Sections used to group rows in the preview. Each kind picks a section.
@@ -280,7 +282,7 @@ export default function StatementsPage() {
           <input {...getInputProps()} />
           {parsing ? (
             <div className="flex flex-col items-center gap-3">
-              <Loader2 className="animate-spin text-emerald-600" size={32} />
+              <LottieAnimation data={thinkingLottie} size={140} fallback="📄" />
               <p className="text-sm font-medium text-gray-700">Reading your statement…</p>
             </div>
           ) : file ? (

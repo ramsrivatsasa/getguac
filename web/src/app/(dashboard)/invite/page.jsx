@@ -20,6 +20,8 @@ import toast from 'react-hot-toast'
 import { Copy, Share2, UserPlus, CheckCircle2, Hourglass } from 'lucide-react'
 import { createClient } from '../../../lib/supabase/client'
 import GuacMascot from '../../../components/GuacMascot'
+import LottieAnimation from '../../../components/LottieAnimation'
+import celebrateLottie from '../../../lottie/celebrate.json'
 import { track } from '../../../lib/analytics'
 import { SuccessPop } from '../../../components/animated'
 import mascotBus from '../../../lib/mascotEventBus'
@@ -211,9 +213,9 @@ export default function InvitePage() {
           People you've invited ({sentRefs.length})
         </h2>
         {sentRefs.length === 0 ? (
-          <div className="bg-white border border-gray-100 rounded-2xl p-5 text-sm text-gray-500 flex items-center gap-3">
-            <UserPlus size={18} className="text-gray-400" />
-            No one yet — share your code above to get started.
+          <div className="bg-white border border-gray-100 rounded-2xl p-5 text-sm text-gray-500 flex flex-col items-center gap-3">
+            <LottieAnimation data={celebrateLottie} size={140} fallback="🥳" />
+            <p className="flex items-center gap-2"><UserPlus size={18} className="text-gray-400" />No one yet — share your code above to get started.</p>
           </div>
         ) : (
           <ul className="space-y-2">

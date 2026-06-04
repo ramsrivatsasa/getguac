@@ -13,6 +13,9 @@ import CategoryPicker from '../../../../components/CategoryPicker'
 import { displayStoreName } from '../../../../lib/store-name-normalize'
 import mascotBus from '../../../../lib/mascotEventBus'
 import { TapScale, SuccessPop, CountUp } from '../../../../components/animated'
+import LottieAnimation from '../../../../components/LottieAnimation'
+import thinkingLottie from '../../../../lottie/thinking.json'
+import errorBlobLottie from '../../../../lottie/error-blob.json'
 
 const RECEIPT_RATING_META = {
   5: { label: 'Essential', emoji: '💎' },
@@ -114,8 +117,19 @@ export default function ReceiptDetailPage() {
     })
   }
 
-  if (isLoading) return <div className="py-16 text-center text-gray-400">Loading receipt…</div>
-  if (!current) return <div className="py-16 text-center text-red-500">Receipt not found</div>
+  if (isLoading) return (
+    <div className="py-16 text-center text-gray-400 flex flex-col items-center gap-3">
+      <LottieAnimation data={thinkingLottie} size={140} fallback="🧾" />
+      <p>Loading receipt…</p>
+    </div>
+  )
+  if (!current) return (
+    <div className="py-16 text-center text-red-500 flex flex-col items-center gap-3">
+      <LottieAnimation data={errorBlobLottie} size={140} fallback="🧾" />
+      <p>Receipt not found</p>
+      <Link href="/receipts" className="text-sm text-emerald-700 font-semibold hover:underline">Back to receipts</Link>
+    </div>
+  )
 
   // Sort items so unrated ones appear first (so they're easier to rate).
   const items = [...(current.receipt_items ?? [])].sort((a, b) => {

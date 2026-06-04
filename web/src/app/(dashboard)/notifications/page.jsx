@@ -7,6 +7,8 @@
 
 import { useEffect, useState } from 'react'
 import { Bell, Gift, Package, TrendingUp, AlertTriangle, ShoppingCart, MoonStar, Clock } from 'lucide-react'
+import LottieAnimation from '../../../components/LottieAnimation'
+import thinkingLottie from '../../../lottie/thinking.json'
 
 const CATEGORIES = [
   { key: 'rewards_expiring', icon: Gift,           label: 'Reward expiring',         desc: 'Heads-up when a reward expires within 7 days.' },
@@ -42,7 +44,10 @@ export default function NotificationsPage() {
     return (
       <div className="max-w-2xl space-y-4">
         <h1 className="page-title">Notifications</h1>
-        <div className="card text-gray-400 py-8 text-center text-sm">Loading…</div>
+        <div className="card text-gray-400 py-8 text-center text-sm flex flex-col items-center gap-3">
+          <LottieAnimation data={thinkingLottie} size={140} fallback="🔔" />
+          <p>Loading…</p>
+        </div>
       </div>
     )
   }

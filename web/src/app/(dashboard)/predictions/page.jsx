@@ -4,6 +4,9 @@ import { useAliases, useUpdateAliasStatus } from '../../../hooks/useAliases'
 import toast from 'react-hot-toast'
 import { CheckCircle, XCircle, RotateCcw, Sparkles, Filter } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
+import LottieAnimation from '../../../components/LottieAnimation'
+import thinkingLottie from '../../../lottie/thinking.json'
+import emptyListLottie from '../../../lottie/empty-list.json'
 
 const FILTERS = [
   { value: 'all',       label: 'All' },
@@ -74,10 +77,13 @@ export default function PredictionsPage() {
 
       <div className="card p-0 overflow-hidden">
         {isLoading ? (
-          <div className="py-12 text-center text-gray-400">Loading…</div>
+          <div className="py-12 text-center text-gray-400 flex flex-col items-center gap-3">
+            <LottieAnimation data={thinkingLottie} size={140} fallback="🔮" />
+            <p>Loading…</p>
+          </div>
         ) : filtered.length === 0 ? (
           <div className="py-12 text-center flex flex-col items-center gap-3">
-            <GuacMascot expression="sitting" size={140} />
+            <LottieAnimation data={emptyListLottie} size={160} fallback="🔮" />
             <p className="text-gray-500 max-w-md">
               {aliases.length === 0
                 ? "No merges yet. After your first 'Predict now' run, items the predictor decides are the same product will show up here."

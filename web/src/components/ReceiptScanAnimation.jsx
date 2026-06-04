@@ -2,14 +2,19 @@
 // Full-screen scan animation that pops while a receipt is parsing.
 //
 // Visual: a centered "receipt strip" SVG with a moving scan-line, our
-// avocado mascot perched on top with a tiny floating magnifying glass,
+// AnimatedMascot perched on top with a tiny floating magnifying glass,
 // and a rotating status copy ("Looking for the store…", "Tallying line
 // items…", "Saving to your stash…") so the wait feels like progress.
+//
+// Lighter, friendlier treatment — soft white-glass backdrop instead
+// of the heavy emerald wash so the receipt SVG + character read as
+// the focus, not the dim.
 //
 // Mounts at the very top of the z-stack — beats toasts, modals, FABs.
 // Self-hides instantly when `count` drops to 0.
 
 import { useEffect, useState } from 'react'
+import AnimatedMascot from './AnimatedMascot'
 
 const TICKER = [
   'Looking for the store name…',
@@ -36,15 +41,17 @@ export default function ReceiptScanAnimation({ count = 0 }) {
       role="status"
       aria-live="polite"
     >
-      {/* Dim background so the rest of the UI fades but stays click-
-          through (pointer-events-none on the wrapper). */}
-      <div className="absolute inset-0 bg-emerald-950/55 backdrop-blur-sm" />
+      {/* Soft frosted-glass backdrop — readable + light, not the
+          heavy emerald wash that competed with the character. */}
+      <div className="absolute inset-0 bg-white/75 backdrop-blur-md" />
 
       <div className="relative flex flex-col items-center pointer-events-auto">
-        {/* Floating mascot above the receipt */}
+        {/* AnimatedMascot replaces the bare 🥑 emoji — gets the same
+            idle breathing + responds to global mascotBus events too.
+            The 🔍 loupe still swings beside it for character. */}
         <div className="relative mascot-bob">
-          <div className="text-7xl drop-shadow-lg">🥑</div>
-          <span className="absolute -right-4 -bottom-2 text-3xl loupe-swing" aria-hidden>🔍</span>
+          <AnimatedMascot expression="happy" size={88} idle={true} />
+          <span className="absolute -right-2 -bottom-1 text-3xl loupe-swing drop-shadow-md" aria-hidden>🔍</span>
         </div>
 
         {/* Receipt strip with traveling scan line */}

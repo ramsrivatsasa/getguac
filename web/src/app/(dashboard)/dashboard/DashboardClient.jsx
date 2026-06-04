@@ -1,6 +1,6 @@
 'use client'
 import { formatDateShort } from '../../../lib/dateFormat'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useStore } from '../../../store'
 import Link from 'next/link'
@@ -25,6 +25,8 @@ import { periodStartDate } from '../../../lib/timeframe'
 import { useBankData } from '../../../lib/useBankData'
 import TimeframePicker from '../../../components/TimeframePicker'
 import PostSignupReferralApply from '../../../components/PostSignupReferralApply'
+import { computeSmashDays } from '../../../lib/smashDays'
+import mascotBus from '../../../lib/mascotEventBus'
 const PERIODS = ['daily', 'weekly', 'monthly', 'yearly']
 
 // Dropdown options for "how many <period>s back to include"
@@ -85,6 +87,32 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
   // — they're paying down the card balance. They live in /bank instead.
   const spendingReceipts = initialReceipts.filter(r => !isPaymentReceipt(r))
   const filtered = filterByPeriod(spendingReceipts)
+
+  // Referral bonus — adds to the Smash-days streak count (migration_064
+  // writes profiles.smash_days_bonus when a referral is credited).
+  // Fetched once per dashboard mount; cheap.
+  const sb = createSbClient()
+  const { data: smashBonus = 0 } = useQuery({
+    queryKey: ['profile_smash_days_bonus'],
+    queryFn: async () => {
+      const { data: { user } } = await sb.auth.getUser()
+      if (!user) return 0
+      const { data } = await sb.from('profiles').select('smash_days_bonus').eq('id', user.id).maybeSingle()
+      return Number(data?.smash_days_bonus ?? 0)
+    },
+    staleTime: 60_000,
+  })
+
+  // Smash-days milestone — celebrate every 7-day stretch (7, 14, 21…).
+  // mascotBus.celebrateOnce uses a stable key backed by localStorage so
+  // each milestone fires exactly once across reloads. Effect (not in
+  // render path) so it dispatches AFTER the first paint.
+  useEffect(() => {
+    const days = computeSmashDays(spendingReceipts, smashBonus).smashDays
+    if (days > 0 && days % 7 === 0) {
+      mascotBus.celebrateOnce(`smash_days_${days}`, `${days} Smash days`)
+    }
+  }, [spendingReceipts, smashBonus])
   const rangeLabel = `Last ${periodCount} ${UNIT_LABEL[period]}${periodCount === 1 ? '' : 's'}`
   const totalSpend = filtered.reduce((s, r) => s + parseFloat(r.total_amount || 0), 0)
   const totalTax = filtered.reduce((s, r) => s + parseFloat(r.tax_paid || 0), 0)

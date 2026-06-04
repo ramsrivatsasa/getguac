@@ -10,6 +10,7 @@ import { CATEGORIES } from '../../../../lib/categories'
 import { isItemNonReturnable } from '../../../../lib/non-returnable'
 import CategoryPicker from '../../../../components/CategoryPicker'
 import { displayStoreName } from '../../../../lib/store-name-normalize'
+import mascotBus from '../../../../lib/mascotEventBus'
 
 const RECEIPT_RATING_META = {
   5: { label: 'Essential', emoji: '💎' },
@@ -230,6 +231,7 @@ export default function ReceiptDetailPage() {
                   onClick={() => {
                     handleFieldChange('rating', n)
                     handleFieldChange('validated_at', new Date().toISOString())
+                    mascotBus.celebrate('Rated!')
                   }}
                   title={info.label}
                   className={`flex flex-col items-center gap-1 py-2 rounded-2xl border-2 transition-all ${
@@ -506,11 +508,14 @@ export default function ReceiptDetailPage() {
                               key={n}
                               type="button"
                               title={label}
-                              onClick={() => updateItem.mutate({
-                                id: item.id,
-                                rating: n,
-                                validated_at: new Date().toISOString(),
-                              })}
+                              onClick={() => {
+                                updateItem.mutate({
+                                  id: item.id,
+                                  rating: n,
+                                  validated_at: new Date().toISOString(),
+                                })
+                                mascotBus.celebrate('Rated!')
+                              }}
                               className={`w-6 h-6 rounded-full flex items-center justify-center text-xs transition-all ${
                                 active ? 'bg-emerald-100 ring-2 ring-emerald-500 scale-110' : 'hover:bg-emerald-50 opacity-60 hover:opacity-100'
                               }`}>

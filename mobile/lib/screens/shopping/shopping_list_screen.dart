@@ -12,6 +12,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../services/guac_money_service.dart';
+import '../../services/mascot_event_bus.dart';
 import '../../services/share_service.dart';
 import '../../widgets/store_logo.dart';
 import '../../widgets/top_app_bar_actions.dart';
@@ -155,11 +156,15 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
   }
 
   Future<void> _toggle(_Item it) async {
+    final wasApproved = it.approved;
     setState(() => it.approved = !it.approved);
     try {
       await _sb.from('shopping_list').update({'approved': it.approved}).eq('id', it.id);
+      // Mascot wiggles only on the "Smashed!" direction (false → true).
+      // Unchecking shouldn't celebrate.
+      if (!wasApproved) mascotBus.wiggle();
     } catch (_) {
-      if (mounted) setState(() => it.approved = !it.approved);
+      if (mounted) setState(() => it.approved = wasApproved);
     }
   }
 

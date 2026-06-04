@@ -35,10 +35,20 @@ async function countYesterday(sb, table, col = 'created_at') {
   return c ?? 0
 }
 
+function authorized(req) {
+  // x-vercel-cron is CLIENT-settable, never use it alone. Match the
+  // pattern from /api/cron/normalize-stores: validate CRON_SECRET via
+  // header or Authorization: Bearer.
+  const secret = process.env.CRON_SECRET
+  if (!secret) return process.env.NODE_ENV === 'development'  // dev convenience
+  const header = req.headers.get('x-cron-secret')
+              || req.headers.get('authorization')?.replace(/^Bearer\s+/i, '')
+  return header === secret
+}
+
 export async function GET(req) {
-  // Vercel cron sends a header so we can trust the caller; refuse other invokes.
-  if (req.headers.get('x-vercel-cron') !== '1' && process.env.NODE_ENV !== 'development') {
-    return NextResponse.json({ error: 'cron-only' }, { status: 401 })
+  if (!authorized(req)) {
+    return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   }
 
   const sb = admin()

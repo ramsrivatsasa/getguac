@@ -26,8 +26,9 @@ const LINKABLE_IN_MOBILE = new Set(['amazon'])
 import { createClient } from '../../../lib/supabase/client'
 import { RETAILERS } from '../../../lib/retailers'
 import { StoreLogo } from '../../../components/StoreLogo'
-import GuacMascot from '../../../components/GuacMascot'
+import AnimatedMascot from '../../../components/AnimatedMascot'
 import { track } from '../../../lib/analytics'
+import mascotBus from '../../../lib/mascotEventBus'
 
 export default function ConnectionsPage() {
   const sb = createClient()
@@ -104,7 +105,7 @@ export default function ConnectionsPage() {
     // left a big dead zone on wide screens.
     <div className="max-w-3xl pb-20">
       <header className="flex items-start gap-4 mb-6">
-        <GuacMascot expression="sitting" size={70} />
+        <AnimatedMascot expression="sitting" size={70} />
         <div className="flex-1 min-w-0">
           <h1 className="page-title">Connections</h1>
           <p className="text-sm text-gray-500 mt-1">
@@ -193,6 +194,7 @@ export default function ConnectionsPage() {
             setStatus.mutate({ retailerId: openRetailer.id, status: 'active' })
             track('connection_marked_active', { retailer_id: openRetailer.id })
             toast.success(`${openRetailer.name} marked active`)
+            mascotBus.bounce()
             setOpenRetailer(null)
           }}
         />

@@ -15,6 +15,7 @@ import { ShareItemButton as SharedShareItemButton } from '../../../components/Sh
 import { fireConfetti } from '../../../lib/confetti'
 import { logAutoAddCheapest, formatGuacMoney } from '../../../lib/guacMoney'
 import { useConfirm } from '../../../components/ConfirmDialog'
+import mascotBus from '../../../lib/mascotEventBus'
 
 // Same tone palette as /stash so Buy Again cards visually rhyme with
 // the Stash grid. Maps the per-Smashlist color (Pantry=emerald,
@@ -196,9 +197,11 @@ export default function ShoppingPage() {
           // Was approved → now back to "pending"; goes back into Buy Again.
           toast.success('Moved back to Buy Again')
         } else {
-          // Was a Buy Again suggestion → now on the curated Smashlist.
+          // Was a Buy Again suggestion → now on the curated Smashlist —
+          // the user just "smashed" it. Mascot wiggles in response.
           const list = item.list_name || 'Pantry'
           toast.success(`Added to ${list} ✓`)
+          mascotBus.wiggle()
         }
       }
     })

@@ -110,7 +110,7 @@ export default function InvitePage() {
           <p className="text-sm text-gray-500 mt-1">
             Share your code. When a friend signs up with it, you each get{' '}
             <strong className="text-emerald-700">{REWARD_DAYS} Smash days</strong> on
-            your 🔥 streak.
+            your 🔥 chip.
           </p>
         </div>
       </header>
@@ -185,7 +185,7 @@ export default function InvitePage() {
           <li>They sign up at getguac.app and the code lands with them.</li>
           <li>
             On their first dashboard load, we credit{' '}
-            <strong>{REWARD_DAYS} Smash days</strong> to your 🔥 streak — and{' '}
+            <strong>{REWARD_DAYS} Smash days</strong> to your 🔥 chip — and{' '}
             <strong>{REWARD_DAYS} more</strong> to theirs.
           </li>
           <li>One bonus per new user. Self-referrals don't count.</li>

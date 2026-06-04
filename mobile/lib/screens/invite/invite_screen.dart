@@ -243,7 +243,7 @@ class _InviteScreenState extends State<InviteScreen> {
                           '• Share your code with a friend.\n'
                           '• They sign up at getguac.app and the code goes with them.\n'
                           '• On their first dashboard load, you each get '
-                          '$_rewardDays Smash days on your 🔥 streak.\n'
+                          '$_rewardDays Smash days on your 🔥 chip.\n'
                           '• One bonus per new user. Self-referrals don\'t count.',
                           style: TextStyle(
                               fontSize: 12,

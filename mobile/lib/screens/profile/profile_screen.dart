@@ -7,7 +7,7 @@ import '../../providers/auth_provider.dart';
 import '../../services/biometric_service.dart';
 import '../../services/update_service.dart';
 import '../../services/debug_log.dart';
-import '../../widgets/guac_mascot.dart';
+import '../../widgets/animated_mascot.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -204,7 +204,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          const Center(child: GuacMascot(size: 110)),
+          const Center(child: AnimatedMascot(size: 110, idle: true)),
           const SizedBox(height: 12),
           if (firstName.toString().isNotEmpty)
             Center(child: Text('$firstName $lastName'.trim(),

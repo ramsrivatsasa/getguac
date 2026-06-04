@@ -8,6 +8,7 @@ import 'screens/auth/app_lock_screen.dart';
 import 'screens/dashboard/dashboard_screen.dart';
 import 'screens/receipts/receipts_screen.dart';
 import 'screens/receipts/receipt_detail_screen.dart';
+import 'screens/items/item_detail_screen.dart';
 import 'screens/rewards/rewards_screen.dart';
 import 'screens/rewards/reward_detail_screen.dart';
 import 'screens/shopping/shopping_list_screen.dart';
@@ -69,6 +70,7 @@ final appRouter = GoRouter(
           ),
         ),
         GoRoute(path: '/receipts/:id', builder: (_, state) => ReceiptDetailScreen(id: state.pathParameters['id']!)),
+        GoRoute(path: '/items/:id', builder: (_, state) => ItemDetailScreen(id: state.pathParameters['id']!)),
         GoRoute(path: '/rewards', builder: (_, __) => const RewardsScreen()),
         GoRoute(path: '/rewards/:id', builder: (_, state) => RewardDetailScreen(id: state.pathParameters['id']!)),
         GoRoute(path: '/shopping', builder: (_, __) => const ShoppingListScreen()),

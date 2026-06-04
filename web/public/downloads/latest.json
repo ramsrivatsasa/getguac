@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.36",
-  "name": "v0.3.36 — app icon: flat-cartoon avocado",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.36/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Swapped the app icon avocado from Apple's realistic 3D style to Twemoji's flat-cartoon style — closer to the mascot look. Still sits on the same emerald-700 squircle.\n• Twemoji ships as a 600x600 SVG so it renders crisp at every Android density (mdpi through xxxhdpi). No more upscaling artifacts."
+  "version": "v0.3.39",
+  "name": "v0.3.39 — flat receipt hero + item-detail redesign + mascot animations + P0 fixes",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.39/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Receipt detail screen: flat white hero (no more heavy emerald gradient + wave), dark ink on white, action row pinned to top. Matches the rest of the app canvas.\n• Item detail screen: brand-new Fetch-style design with pastel-gradient hero, big title, Buy-N badge, lifetime-spend chip, cadence pill row, Where-You've-Bought-It, Recent Receipts (tappable to receipt detail). Same on web.\n• Mascot animations on key events: bounce on receipt save, wiggle on smashlist mark-done, celebrate (with 12-particle confetti!) on Worth-It rate + referral apply + 7-day Smash-days milestones.\n• Pre-launch hardening: smashDays UTC/local drift fixed (web now matches mobile day boundary), referral smash_days_bonus is now actually added to your dashboard streak, /admin/cost cron auth tightened to CRON_SECRET (no more header-only bypass).\n• Mobile item-detail query now filters user_id server-side instead of client-side — less bandwidth, defense-in-depth on top of RLS.\n• Affiliate-tagging scaffold landed (web/src/lib/affiliate.js) for Amazon Associates + Skimlinks. Code is ready; just needs you to drop your tracking ID into NEXT_PUBLIC_AMAZON_ASSOC_TAG to start earning."
 }

@@ -5,6 +5,7 @@ import {
   getReceipts, getReceipt, upsertReceipt, deleteReceipt, upsertReceiptItem, updateReceiptItem, uploadReceipt, ensureStoreReward, getBankStatements
 } from '../lib/db'
 import { saveReceiptViaOutbox } from '../lib/receipt-outbox'
+import mascotBus from '../lib/mascotEventBus'
 export function useReceipts(filters = {}) {
   return useQuery({
     queryKey: ['receipts', filters],
@@ -131,9 +132,13 @@ export function useAddReceipt() {
 
       return { id: result.receipt_id, merged: Boolean(result.merged) }
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       _invalidateAllReceiptQueries(qc)
       router.refresh()
+      // Mascot bounces on real online saves. Queued (offline) saves
+      // skip the animation — the user hasn't visibly "won" yet; the
+      // mascot will react when the flush eventually succeeds.
+      if (result && !result.queued) mascotBus.bounce()
     },
   })
 }

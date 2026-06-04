@@ -14,6 +14,7 @@
 import { useEffect, useRef } from 'react'
 import toast from 'react-hot-toast'
 import { createClient } from '../lib/supabase/client'
+import mascotBus from '../lib/mascotEventBus'
 
 const STORAGE_KEY = 'pending_referral_code'
 
@@ -54,6 +55,9 @@ export default function PostSignupReferralApply() {
         toast.success(
           data.message || `+${data.smash_days_credited || 3} Smash days — invite applied`,
           { duration: 5000 },
+        )
+        mascotBus.celebrate(
+          `+${data.smash_days_credited || 3} Smash days`,
         )
       }
       // Silent on business rejections (already used / self-referral /

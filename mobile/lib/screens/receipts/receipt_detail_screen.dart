@@ -9,6 +9,7 @@ import '../../widgets/worth_it_rating.dart';
 import '../../widgets/store_logo.dart';
 import '../../utils/date_format.dart';
 import '../../services/receipt_reparse_service.dart';
+import '../../services/mascot_event_bus.dart';
 
 class ReceiptDetailScreen extends StatefulWidget {
   final String id;
@@ -186,11 +187,10 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
           child: SingleChildScrollView(
             padding: EdgeInsets.zero,
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              // ── HERO (GuacGreen, store-logo centered inside) ────────
-              // Distinct from Fetch's orange-stars-zigzag treatment:
-              // emerald→lime gradient with the store logo as the
-              // centered focal point, total + date below it, and a
-              // smooth wave at the bottom instead of a torn zigzag.
+              // ── HERO ──────────────────────────────────────────────
+              // Flat white. Store logo + name + total/date centered,
+              // action row on top. Replaces the heavy emerald gradient
+              // header — same canvas as the rest of the app.
               _buildHero(r, idx, total, hasPrev, hasNext, headlineValue, headlineLabel, ratedItemCount),
 
               // ── WORTH IT? ROW (replaces "Receipt Points") ───────────
@@ -225,6 +225,9 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
                       size: 22,
                       onChanged: (v) async {
                         await context.read<ReceiptProvider>().updateReceipt(r.id, {'rating': v});
+                        // Mascot celebrates a fresh rating — null (clear) is
+                        // a quieter signal so we only fire on a real rating.
+                        if (v != null) mascotBus.celebrate('Rated!');
                         if (mounted) setState(() => _receipt = Receipt(
                           id: r.id, storeName: r.storeName, date: r.date,
                           totalAmount: r.totalAmount, taxPaid: r.taxPaid,
@@ -317,99 +320,76 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
 
   // ── REBRAND HELPERS ───────────────────────────────────────────────
 
-  /// GetGuac-branded hero — emerald→lime gradient, store logo centered
-  /// as the focal point, total + date below it, smooth wave at the
-  /// bottom. Action row pinned to the top. Avocado decorations instead
-  /// of stars/sparkles. Replaces the Fetch-look hero from v0.3.21.
+  /// Flat-white receipt hero. White canvas matches the rest of the
+  /// app — the user pushed back on a "bulky green" gradient header.
+  /// Store logo + name + total + date stacked center, action row pinned
+  /// to the top, no gradient, no wave clipper. Dark ink on white.
   Widget _buildHero(Receipt r, int idx, int total, bool hasPrev, bool hasNext,
                     double headlineValue, String headlineLabel, int ratedItemCount) {
-    return Stack(children: [
-      ClipPath(
-        clipper: _WaveClipper(),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(16, 50, 16, 56),
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFF15803d), Color(0xFF65a30d)],
-              begin: Alignment.topLeft, end: Alignment.bottomRight,
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(8, 44, 8, 20),
+      color: Colors.white,
+      child: Column(children: [
+        // Top action row — back · counter · prev/next · image · edit
+        Row(children: [
+          _heroIconButton(icon: Icons.arrow_back, onTap: _goBack, tooltip: 'Back'),
+          const Spacer(),
+          if (total > 0)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: const Color(0xFFf3f4f6),
+                borderRadius: BorderRadius.circular(99),
+              ),
+              child: Text('${idx + 1} / $total',
+                style: const TextStyle(color: Color(0xFF374151), fontSize: 11, fontWeight: FontWeight.w800)),
+            ),
+          const SizedBox(width: 6),
+          _heroIconButton(icon: Icons.chevron_left, onTap: hasPrev ? _goPrev : null, tooltip: 'Previous'),
+          _heroIconButton(icon: Icons.chevron_right, onTap: hasNext ? _goNext : null, tooltip: 'Next'),
+          const SizedBox(width: 4),
+          if (r.receiptLink.isNotEmpty && !r.fromStatement)
+            _heroIconButton(icon: Icons.image_outlined, onTap: () => _viewImage(r.receiptLink), tooltip: 'View image'),
+          _heroIconButton(icon: Icons.edit_outlined, onTap: () => _showAddItemDialog(), tooltip: 'Add item'),
+        ]),
+        const SizedBox(height: 14),
+        // Store logo — flat tile, no shadow, no ring (just clean)
+        ClipOval(
+          child: StoreLogo(
+            storeName: r.storeName,
+            size: 64,
+            borderRadius: 32,
+            fallbackEmoji: '🛒',
+            emojiBg: const Color(0xFFf3f4f6),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Text(r.storeName,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: Color(0xFF111827), fontSize: 20, fontWeight: FontWeight.w900,
+            letterSpacing: -0.4,
+          ),
+          maxLines: 1, overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: 2),
+        Text('\$${headlineValue.toStringAsFixed(2)}  •  ${formatDateShort(r.date)}',
+          style: const TextStyle(
+            color: Color(0xFF6b7280), fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        if (ratedItemCount > 0 && r.rating == null) ...[
+          const SizedBox(height: 6),
+          Text('$ratedItemCount items · tap a star below to rate',
+            style: const TextStyle(
+              color: Color(0xFF9ca3af), fontSize: 11, fontWeight: FontWeight.w600,
             ),
           ),
-          child: Column(children: [
-            // Top action row — back · counter · prev/next · image · edit
-            Row(children: [
-              _heroIconButton(icon: Icons.arrow_back, onTap: _goBack, tooltip: 'Back'),
-              const Spacer(),
-              if (total > 0)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.18),
-                    borderRadius: BorderRadius.circular(99),
-                  ),
-                  child: Text('${idx + 1} / $total',
-                    style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800)),
-                ),
-              const SizedBox(width: 6),
-              _heroIconButton(icon: Icons.chevron_left, onTap: hasPrev ? _goPrev : null, tooltip: 'Previous'),
-              _heroIconButton(icon: Icons.chevron_right, onTap: hasNext ? _goNext : null, tooltip: 'Next'),
-              const SizedBox(width: 4),
-              if (r.receiptLink.isNotEmpty && !r.fromStatement)
-                _heroIconButton(icon: Icons.image_outlined, onTap: () => _viewImage(r.receiptLink), tooltip: 'View image'),
-              _heroIconButton(icon: Icons.edit_outlined, onTap: () => _showAddItemDialog(), tooltip: 'Add item'),
-            ]),
-            const SizedBox(height: 18),
-            // ── Store logo — centered focal point ────────────────────
-            // Big white tile (80px) with a soft glow ring. Replaces
-            // the star-coin + big-number that Fetch leads with.
-            Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.18), blurRadius: 14, offset: const Offset(0, 4))],
-                border: Border.all(color: Colors.white.withValues(alpha: 0.5), width: 3),
-              ),
-              child: ClipOval(
-                child: StoreLogo(
-                  storeName: r.storeName,
-                  size: 80,
-                  borderRadius: 40,
-                  fallbackEmoji: '🛒',
-                  emojiBg: const Color(0xFFca8a04),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            // Store name on the hero, big white type
-            Text(r.storeName,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900,
-                letterSpacing: -0.5,
-              ),
-              maxLines: 1, overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 4),
-            Text('\$${headlineValue.toStringAsFixed(2)}  •  ${formatDateShort(r.date)}',
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.92), fontSize: 13,
-                fontWeight: FontWeight.w700, letterSpacing: 0.2,
-              ),
-            ),
-            if (ratedItemCount > 0 && r.rating == null) ...[
-              const SizedBox(height: 8),
-              Text('$ratedItemCount items · tap a star below to rate',
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.85), fontSize: 11, fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ]),
-        ),
-      ),
-      // Decorative emojis removed — they read as misaligned "stars"
-      // floating around the logo and added no information. Clean
-      // gradient + centered store logo is the focal hierarchy now.
-    ]);
+        ],
+      ]),
+    );
   }
 
   Widget _heroIconButton({required IconData icon, VoidCallback? onTap, String? tooltip}) {
@@ -417,7 +397,7 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2),
       child: Material(
-        color: Colors.white.withValues(alpha: enabled ? 0.18 : 0.08),
+        color: enabled ? const Color(0xFFf3f4f6) : const Color(0xFFf9fafb),
         shape: const CircleBorder(),
         child: InkWell(
           onTap: onTap,
@@ -426,7 +406,7 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
             message: tooltip ?? '',
             child: Padding(
               padding: const EdgeInsets.all(8),
-              child: Icon(icon, size: 18, color: Colors.white.withValues(alpha: enabled ? 1.0 : 0.4)),
+              child: Icon(icon, size: 18, color: enabled ? const Color(0xFF374151) : const Color(0xFFd1d5db)),
             ),
           ),
         ),
@@ -509,6 +489,7 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
             size: 40,
             onChanged: (v) async {
               await context.read<ReceiptProvider>().updateItem(item.id, {'rating': v});
+              if (v != null) mascotBus.celebrate('Rated!');
               final items = await context.read<ReceiptProvider>().getItems(widget.id);
               if (mounted) setState(() => _items = items);
               if (mounted) Navigator.of(context).pop();
@@ -775,26 +756,3 @@ class _ImageViewerState extends State<_ImageViewer> {
   }
 }
 
-/// Smooth wave bottom edge for the hero — replaces the v0.3.21
-/// zigzag (which was too close to Fetch's torn-receipt look) with
-/// a gentle sinusoidal curve. Clips the gradient container so the
-/// bottom rolls into the page rather than ending abruptly.
-class _WaveClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) {
-    final path = Path();
-    path.lineTo(0, size.height - 24);
-    // Two control points for an asymmetric S-wave that feels organic.
-    path.cubicTo(
-      size.width * 0.25, size.height - 50,
-      size.width * 0.65, size.height + 18,
-      size.width, size.height - 18,
-    );
-    path.lineTo(size.width, 0);
-    path.close();
-    return path;
-  }
-
-  @override
-  bool shouldReclip(_WaveClipper old) => false;
-}

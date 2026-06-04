@@ -8,8 +8,10 @@ import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/retailers.dart';
 import '../../data/retailer_extractors.dart';
+import '../../services/mascot_event_bus.dart';
 import '../../widgets/store_logo.dart';
 import '../../widgets/guac_mascot.dart';
+import '../../widgets/animated_mascot.dart';
 import 'link_retailer_screen.dart' show LinkRetailerScreen;
 
 /// Thin wrapper to keep the import name semantic-stable when this
@@ -78,6 +80,7 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
       }, onConflict: 'user_id,retailer_id');
       if (mounted) {
         setState(() => _statusById = {..._statusById, r.id: 'active'});
+        mascotBus.bounce();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('${r.name} marked active')),
         );
@@ -129,7 +132,7 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
             children: [
               // Intro + alias card
               Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const GuacMascot(mood: MascotMood.relaxing, size: 56),
+                const AnimatedMascot(mood: MascotMood.relaxing, size: 56),
                 const SizedBox(width: 12),
                 Expanded(child: Padding(
                   padding: const EdgeInsets.only(top: 6),

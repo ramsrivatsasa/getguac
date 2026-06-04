@@ -15,7 +15,6 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -80,24 +79,9 @@ class DebugLog {
     if (kDebugMode) {
       debugPrint('[$tag/$level] $message ${meta ?? ""}');
     }
-    // Forward errors to Sentry when initialized. Sentry.captureMessage
-    // returns synchronously into a queue and is safe to call when Sentry
-    // wasn't init'd (becomes a no-op via the noop hub). We wrap in
-    // try/catch belt-and-suspenders so logging never throws.
-    if (level == 'error') {
-      try {
-        Sentry.captureMessage(
-          '[$tag] $message',
-          level: SentryLevel.error,
-          withScope: (scope) {
-            if (meta != null) {
-              scope.setContexts('debug_log_meta', meta);
-            }
-            scope.setTag('debug_log_tag', tag);
-          },
-        );
-      } catch (_) {}
-    }
+    // sentry_flutter pulled — Gradle compile issue against current AGP.
+    // When the SDK is re-added, fan error-level events into
+    // Sentry.captureMessage here.
     if (level == 'error' || level == 'warn') {
       // No debounce — error/warn events upload right away. We still keep
       // them in the buffer until the upload returns successfully, so a

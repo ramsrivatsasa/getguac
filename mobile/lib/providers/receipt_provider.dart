@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/receipt_model.dart';
 import '../services/receipt_outbox.dart';
+import '../services/mascot_event_bus.dart';
 
 const _kReceiptListCols =
     'id, store_name, date, total_amount, tax_paid, reward_no, '
@@ -202,6 +203,8 @@ class ReceiptProvider extends ChangeNotifier {
     // 5. Online success — refresh the list so the new row appears.
     _lastLoaded = null;
     unawaited(loadReceipts(force: true));
+    // Mascot reacts to the save landing — subtle bounce, fire-and-forget.
+    mascotBus.bounce();
     return (id: result.receiptId, error: null, merged: result.merged, queued: false);
   }
 

@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../services/update_service.dart';
 import '../../widgets/guac_mascot.dart';
+import '../../widgets/animated_mascot.dart';
 
 const _kBrand = Color(0xFF15803d);
 const _kBrandLight = Color(0xFFd1fae5);
@@ -174,7 +175,7 @@ class _InboxScreenState extends State<InboxScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Row(mainAxisSize: MainAxisSize.min, children: [
-          GuacMascot(mood: MascotMood.happy, size: 32),
+          AnimatedMascot(mood: MascotMood.happy, size: 32),
           SizedBox(width: 8),
           Text('Inbox'),
         ]),

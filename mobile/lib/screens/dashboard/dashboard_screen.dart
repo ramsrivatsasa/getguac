@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
@@ -23,6 +24,7 @@ import '../../widgets/feature_pill.dart';
 import '../../widgets/payment_tile.dart';
 import '../../widgets/engagement_tile.dart';
 import '../../services/analysis_engine.dart';
+import '../../services/mascot_event_bus.dart';
 import '../../services/wizard_score.dart';
 import '../../services/guacoscore.dart' as guac_engine;
 import '../../services/timeframe_store.dart';
@@ -60,10 +62,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // round-trip overlaps with the rest of the page mount.
   late Future<BankData> _bankDataFuture;
 
+  // Referral bonus — adds to the Smash-days streak count. Written by
+  // the apply_referral_code RPC into profiles.smash_days_bonus.
+  // Loaded once per mount and passed to every computeSmashDays call.
+  int _smashDaysBonus = 0;
+
   @override
   void initState() {
     super.initState();
     _bankDataFuture = fetchBankData();
+    _loadSmashDaysBonus();
     // Hydrate the persisted time-frame from SharedPreferences so the
     // mobile dashboard remembers the user's last selection across
     // app launches — same UX guarantee the web Zustand store gives
@@ -87,6 +95,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
     // default (1-month, 10-cap) is too narrow.
     context.read<ReceiptProvider>().loadReceipts(period: ReceiptPeriod.all);
     context.read<RewardProvider>().loadRewards();
+  }
+
+  Future<void> _loadSmashDaysBonus() async {
+    try {
+      final sb = Supabase.instance.client;
+      final user = sb.auth.currentUser;
+      if (user == null) return;
+      final row = await sb.from('profiles')
+        .select('smash_days_bonus')
+        .eq('id', user.id)
+        .maybeSingle();
+      final n = (row?['smash_days_bonus'] as int?) ?? 0;
+      if (mounted && n != _smashDaysBonus) {
+        setState(() => _smashDaysBonus = n);
+      }
+    } catch (_) {/* best-effort */}
   }
 
   void _onTimeframeChanged() {
@@ -232,6 +256,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
     // _paymentTileScroll + _engagementStrip which compute their own
     // totals + deltas, so the locals are gone.
     final rangeLabel = 'Last $_periodCount ${_kUnitLabel[_period]}${_periodCount == 1 ? '' : 's'}';
+
+    // Smash-days milestone — celebrate every 7-day stretch (7, 14, 21…).
+    // celebrateOnce uses a stable key (`smash_days_7`) backed by
+    // shared_preferences so the mascot fires exactly once per stretch
+    // across cold starts. Runs in post-frame to avoid firing during a
+    // build pass.
+    final smashDays = computeSmashDays(spendingReceipts, bonus: _smashDaysBonus).smashDays;
+    if (smashDays > 0 && smashDays % 7 == 0) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        mascotBus.celebrateOnce('smash_days_$smashDays',
+            message: '$smashDays Smash days');
+      });
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFf9fafb),
@@ -882,7 +919,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         // the streak is alive (animate-pulse on web becomes a static
         // flame icon on mobile — same color signal without the spin).
         Expanded(child: () {
-          final smash = computeSmashDays(filtered).smashDays;
+          final smash = computeSmashDays(filtered, bonus: _smashDaysBonus).smashDays;
           return _StatTile(
             label: 'Smash days',
             value: smash == 0 ? '0' : '$smash',

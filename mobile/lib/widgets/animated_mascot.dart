@@ -56,6 +56,10 @@ class _AnimatedMascotState extends State<AnimatedMascot>
   StreamSubscription<MascotEvent>? _sub;
   final _rand = math.Random();
   List<_ConfettiDot> _dots = const [];
+  // True while a bounce is the active scale-controller animation —
+  // build() reads _bounceFrame() instead of treating _scaleAnim.value
+  // as a uniform scale (since bounce uses non-uniform X/Y scaling).
+  bool _isBounce = false;
 
   @override
   void initState() {
@@ -141,36 +145,38 @@ class _AnimatedMascotState extends State<AnimatedMascot>
   void _playBounce() {
     _scaleCtrl.stop();
     _scaleCtrl.value = 0;
-    // Two-stage bounce (up-down-up-settle) over 1.1s — more visible
-    // than a single 420ms pop.
-    _scaleAnim = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween(begin: 1.0, end: 1.22).chain(
-          CurveTween(curve: Curves.easeOutBack),
-        ),
-        weight: 30,
-      ),
-      TweenSequenceItem(
-        tween: Tween(begin: 1.22, end: 0.92).chain(
-          CurveTween(curve: Curves.easeIn),
-        ),
-        weight: 25,
-      ),
-      TweenSequenceItem(
-        tween: Tween(begin: 0.92, end: 1.10).chain(
-          CurveTween(curve: Curves.easeOut),
-        ),
-        weight: 23,
-      ),
-      TweenSequenceItem(
-        tween: Tween(begin: 1.10, end: 1.0).chain(
-          CurveTween(curve: Curves.easeInOut),
-        ),
-        weight: 22,
-      ),
-    ]).animate(_scaleCtrl);
-    _scaleCtrl.duration = const Duration(milliseconds: 1100);
-    _scaleCtrl.forward();
+    _isBounce = true;
+    // Soft-body squash-and-stretch bounce. We can't do X/Y scale
+    // independently with a single Animation<double>, so we drive a
+    // unit progress 0→1 and let the build() Transform compose squash
+    // (X<Y) and stretch (X>Y) inversely via _bounceFrame. 1200ms
+    // matches the web AnimatedMascot.
+    _scaleAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _scaleCtrl, curve: Curves.easeInOut),
+    );
+    _scaleCtrl.duration = const Duration(milliseconds: 1200);
+    _scaleCtrl.forward().then((_) { if (mounted) _isBounce = false; });
+  }
+
+  // Translate unit progress 0..1 → (scaleX, scaleY, translateY)
+  // matching the squash-and-stretch keyframes on web. Six waypoints
+  // at offsets 0 / .20 / .45 / .65 / .82 / 1.0.
+  static (double, double, double) _bounceFrame(double t) {
+    const stops = [0.0, 0.20, 0.45, 0.65, 0.82, 1.0];
+    const sx = [1.0, 0.86, 1.16, 0.94, 1.04, 1.0];
+    const sy = [1.0, 1.16, 0.86, 1.06, 0.96, 1.0];
+    const ty = [0.0, -0.12, -0.04, -0.08, 0.0, 0.0];   // fraction of mascot height
+    for (var i = 0; i < stops.length - 1; i++) {
+      if (t <= stops[i + 1]) {
+        final p = (t - stops[i]) / (stops[i + 1] - stops[i]);
+        return (
+          sx[i] + (sx[i + 1] - sx[i]) * p,
+          sy[i] + (sy[i + 1] - sy[i]) * p,
+          ty[i] + (ty[i + 1] - ty[i]) * p,
+        );
+      }
+    }
+    return (1.0, 1.0, 0.0);
   }
 
   void _playWiggle() {
@@ -252,11 +258,24 @@ class _AnimatedMascotState extends State<AnimatedMascot>
     return AnimatedBuilder(
       animation: Listenable.merge([_scaleCtrl, _rotCtrl, _idleCtrl, _confettiCtrl]),
       builder: (ctx, _) {
-        final eventScale = _scaleCtrl.isAnimating || _scaleCtrl.value != 0
-            ? _scaleAnim.value
-            : 1.0;
+        // Bounce mode: derive (sx, sy, ty) from the unit-progress
+        // _scaleAnim via _bounceFrame so we get the squash-and-stretch
+        // deformation matching the web side. All other modes (pulse,
+        // celebrate-composed) use _scaleAnim.value as a uniform scale.
+        double sx, sy;
+        double ty = 0;
+        if (_isBounce && (_scaleCtrl.isAnimating || _scaleCtrl.value > 0)) {
+          final f = _bounceFrame(_scaleAnim.value);
+          sx = f.$1; sy = f.$2; ty = f.$3 * mascotH;
+        } else {
+          final eventScale = _scaleCtrl.isAnimating || _scaleCtrl.value != 0
+              ? _scaleAnim.value
+              : 1.0;
+          sx = sy = eventScale;
+        }
         final idleScale = widget.idle ? _idleAnim.value : 1.0;
-        final scale = eventScale * idleScale;
+        sx *= idleScale;
+        sy *= idleScale;
         final rot = _rotCtrl.isAnimating || _rotCtrl.value != 0
             ? _rotAnim.value
             : 0.0;
@@ -268,11 +287,15 @@ class _AnimatedMascotState extends State<AnimatedMascot>
             clipBehavior: Clip.none,
             alignment: Alignment.center,
             children: [
-              Transform.scale(
-                scale: scale,
-                child: Transform.rotate(
-                  angle: rot,
-                  child: GuacMascot(mood: widget.mood, size: widget.size),
+              Transform.translate(
+                offset: Offset(0, ty),
+                child: Transform(
+                  alignment: Alignment.center,
+                  transform: Matrix4.diagonal3Values(sx, sy, 1),
+                  child: Transform.rotate(
+                    angle: rot,
+                    child: GuacMascot(mood: widget.mood, size: widget.size),
+                  ),
                 ),
               ),
               if (_confettiCtrl.value > 0)

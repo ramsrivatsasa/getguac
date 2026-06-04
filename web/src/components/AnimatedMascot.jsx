@@ -150,50 +150,61 @@ export default function AnimatedMascot({
 // stays Apple/Google-tasteful, just slower + more emphatic.
 
 function playBounce(el) {
+  // Squash-and-stretch bounce — separate X / Y scales so the mascot
+  // actually deforms like a soft body instead of just resizing
+  // uniformly. Reads as the iconscout-style "alive" character bounce.
   return el.animate(
     [
-      { transform: 'scale(1)' },
-      { transform: 'scale(1.22)', offset: 0.30 },
-      { transform: 'scale(0.92)', offset: 0.55 },
-      { transform: 'scale(1.10)', offset: 0.78 },
-      { transform: 'scale(0.98)', offset: 0.90 },
-      { transform: 'scale(1)' },
+      { transform: 'scaleX(1)    scaleY(1)    translateY(0)' },
+      { transform: 'scaleX(0.86) scaleY(1.16) translateY(-12%)', offset: 0.20 },
+      { transform: 'scaleX(1.16) scaleY(0.86) translateY(-4%)',  offset: 0.45 },
+      { transform: 'scaleX(0.94) scaleY(1.06) translateY(-8%)',  offset: 0.65 },
+      { transform: 'scaleX(1.04) scaleY(0.96) translateY(0)',    offset: 0.82 },
+      { transform: 'scaleX(1)    scaleY(1)    translateY(0)' },
     ],
-    { duration: 1100, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' }, // ease-out-back-ish
+    { duration: 1200, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' },
   )
 }
 
 function playWiggle(el) {
-  // Three full back-and-forths instead of one — reads as a "happy
-  // dance" rather than a single flinch.
+  // Head-tilt wiggle with translation — leans into each rotation
+  // instead of pivoting in place, like a character looking around.
+  // Six oscillations decaying in amplitude, total 1400ms.
   return el.animate(
     [
-      { transform: 'rotate(0deg)' },
-      { transform: 'rotate(-10deg)', offset: 0.12 },
-      { transform: 'rotate(10deg)',  offset: 0.30 },
-      { transform: 'rotate(-8deg)',  offset: 0.50 },
-      { transform: 'rotate(8deg)',   offset: 0.70 },
-      { transform: 'rotate(-4deg)',  offset: 0.86 },
-      { transform: 'rotate(0deg)' },
+      { transform: 'rotate(0deg)    translateX(0)' },
+      { transform: 'rotate(-12deg)  translateX(-3%)', offset: 0.12 },
+      { transform: 'rotate(12deg)   translateX(3%)',  offset: 0.30 },
+      { transform: 'rotate(-9deg)   translateX(-2%)', offset: 0.48 },
+      { transform: 'rotate(9deg)    translateX(2%)',  offset: 0.66 },
+      { transform: 'rotate(-4deg)   translateX(-1%)', offset: 0.82 },
+      { transform: 'rotate(2deg)    translateX(0)',   offset: 0.92 },
+      { transform: 'rotate(0deg)    translateX(0)' },
     ],
-    { duration: 1200, easing: 'ease-in-out' },
+    { duration: 1400, easing: 'ease-in-out' },
   )
 }
 
 function playPulse(el) {
-  // Three pulses over 1.8s instead of two over 800ms — softer breath
-  // that's actually noticeable.
+  // Heartbeat-style pulse — double-tap each beat (TUM-tum) like a
+  // real heart. Three full beats over 2.0s.
   return el.animate(
     [
       { transform: 'scale(1)' },
-      { transform: 'scale(1.08)' },
-      { transform: 'scale(1)' },
-      { transform: 'scale(1.08)' },
-      { transform: 'scale(1)' },
-      { transform: 'scale(1.08)' },
+      { transform: 'scale(1.10)', offset: 0.08 },
+      { transform: 'scale(0.98)', offset: 0.16 },
+      { transform: 'scale(1.06)', offset: 0.22 },
+      { transform: 'scale(1)',    offset: 0.32 },
+      { transform: 'scale(1.10)', offset: 0.40 },
+      { transform: 'scale(0.98)', offset: 0.48 },
+      { transform: 'scale(1.06)', offset: 0.54 },
+      { transform: 'scale(1)',    offset: 0.64 },
+      { transform: 'scale(1.10)', offset: 0.72 },
+      { transform: 'scale(0.98)', offset: 0.80 },
+      { transform: 'scale(1.06)', offset: 0.86 },
       { transform: 'scale(1)' },
     ],
-    { duration: 1800, easing: 'ease-in-out' },
+    { duration: 2000, easing: 'ease-in-out' },
   )
 }
 

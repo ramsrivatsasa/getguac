@@ -69,11 +69,11 @@ class _AnimatedMascotState extends State<AnimatedMascot>
     // (e.g. wiggle's 1.2s) happen in the play methods below.
     _scaleCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1100),
+      duration: const Duration(milliseconds: 1800),
     );
     _rotCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 2200),
     );
     _idleCtrl = AnimationController(
       vsync: this,
@@ -81,7 +81,7 @@ class _AnimatedMascotState extends State<AnimatedMascot>
     );
     _confettiCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2400),
+      duration: const Duration(milliseconds: 4000),
     );
 
     _scaleAnim = const AlwaysStoppedAnimation(1.0);
@@ -154,7 +154,7 @@ class _AnimatedMascotState extends State<AnimatedMascot>
     _scaleAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _scaleCtrl, curve: Curves.easeInOut),
     );
-    _scaleCtrl.duration = const Duration(milliseconds: 1200);
+    _scaleCtrl.duration = const Duration(milliseconds: 1800);
     _scaleCtrl.forward().then((_) { if (mounted) _isBounce = false; });
   }
 
@@ -193,7 +193,7 @@ class _AnimatedMascotState extends State<AnimatedMascot>
       TweenSequenceItem(tween: Tween(begin:   8.0 * deg, end:  -4.0 * deg).chain(CurveTween(curve: Curves.easeInOut)), weight: 16),
       TweenSequenceItem(tween: Tween(begin:  -4.0 * deg, end:   0.0).chain(CurveTween(curve: Curves.easeIn)),          weight: 14),
     ]).animate(_rotCtrl);
-    _rotCtrl.duration = const Duration(milliseconds: 1200);
+    _rotCtrl.duration = const Duration(milliseconds: 2200);
     _rotCtrl.forward();
   }
 
@@ -210,7 +210,7 @@ class _AnimatedMascotState extends State<AnimatedMascot>
       TweenSequenceItem(tween: Tween(begin: 1.0,  end: 1.08).chain(CurveTween(curve: Curves.easeInOut)), weight: 1),
       TweenSequenceItem(tween: Tween(begin: 1.08, end: 1.0 ).chain(CurveTween(curve: Curves.easeInOut)), weight: 1),
     ]).animate(_scaleCtrl);
-    _scaleCtrl.duration = const Duration(milliseconds: 1800);
+    _scaleCtrl.duration = const Duration(milliseconds: 3000);
     _scaleCtrl.forward();
   }
 

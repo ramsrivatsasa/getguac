@@ -162,7 +162,7 @@ function playBounce(el) {
       { transform: 'scaleX(1.04) scaleY(0.96) translateY(0)',    offset: 0.82 },
       { transform: 'scaleX(1)    scaleY(1)    translateY(0)' },
     ],
-    { duration: 1200, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' },
+    { duration: 1800, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' },
   )
 }
 
@@ -181,7 +181,7 @@ function playWiggle(el) {
       { transform: 'rotate(2deg)    translateX(0)',   offset: 0.92 },
       { transform: 'rotate(0deg)    translateX(0)' },
     ],
-    { duration: 1400, easing: 'ease-in-out' },
+    { duration: 2200, easing: 'ease-in-out' },
   )
 }
 
@@ -204,7 +204,7 @@ function playPulse(el) {
       { transform: 'scale(1.06)', offset: 0.86 },
       { transform: 'scale(1)' },
     ],
-    { duration: 2000, easing: 'ease-in-out' },
+    { duration: 3000, easing: 'ease-in-out' },
   )
 }
 
@@ -241,7 +241,7 @@ function playConfetti(canvas, size, rafRef) {
   }
 
   const start = performance.now()
-  const duration = 2400  // was 1100; user asked for longer-running anims
+  const duration = 4000  // bumped 2400→4000ms; user wanted the celebration to land harder
 
   function frame(now) {
     const progress = Math.min(1, (now - start) / duration)

@@ -115,40 +115,56 @@ export default function AnimatedMascot({
   )
 }
 
+// Durations stretched per user request — "animations that run for more
+// time". Big bounce + multi-cycle wiggle + a longer pulse give a more
+// visible, celebratory beat. Easing curves preserved so the feel
+// stays Apple/Google-tasteful, just slower + more emphatic.
+
 function playBounce(el) {
   el.animate(
     [
       { transform: 'scale(1)' },
-      { transform: 'scale(1.18)', offset: 0.5 },
-      { transform: 'scale(0.95)', offset: 0.75 },
+      { transform: 'scale(1.22)', offset: 0.30 },
+      { transform: 'scale(0.92)', offset: 0.55 },
+      { transform: 'scale(1.10)', offset: 0.78 },
+      { transform: 'scale(0.98)', offset: 0.90 },
       { transform: 'scale(1)' },
     ],
-    { duration: 420, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' }, // ease-out-back-ish
+    { duration: 1100, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' }, // ease-out-back-ish
   )
 }
 
 function playWiggle(el) {
+  // Three full back-and-forths instead of one — reads as a "happy
+  // dance" rather than a single flinch.
   el.animate(
     [
       { transform: 'rotate(0deg)' },
-      { transform: 'rotate(-8deg)', offset: 0.25 },
-      { transform: 'rotate(8deg)',  offset: 0.75 },
+      { transform: 'rotate(-10deg)', offset: 0.12 },
+      { transform: 'rotate(10deg)',  offset: 0.30 },
+      { transform: 'rotate(-8deg)',  offset: 0.50 },
+      { transform: 'rotate(8deg)',   offset: 0.70 },
+      { transform: 'rotate(-4deg)',  offset: 0.86 },
       { transform: 'rotate(0deg)' },
     ],
-    { duration: 360, easing: 'ease-in-out' },
+    { duration: 1200, easing: 'ease-in-out' },
   )
 }
 
 function playPulse(el) {
+  // Three pulses over 1.8s instead of two over 800ms — softer breath
+  // that's actually noticeable.
   el.animate(
     [
       { transform: 'scale(1)' },
-      { transform: 'scale(1.06)' },
+      { transform: 'scale(1.08)' },
       { transform: 'scale(1)' },
-      { transform: 'scale(1.06)' },
+      { transform: 'scale(1.08)' },
+      { transform: 'scale(1)' },
+      { transform: 'scale(1.08)' },
       { transform: 'scale(1)' },
     ],
-    { duration: 800, easing: 'ease-in-out' },
+    { duration: 1800, easing: 'ease-in-out' },
   )
 }
 
@@ -168,22 +184,24 @@ function playConfetti(canvas, size) {
 
   const cx = w / 2
   const cy = h / 2
+  // Doubled to 24 dots so the longer animation has visual density
+  // throughout its life — fewer dots looked sparse at 2.5s.
   const dots = []
-  for (let i = 0; i < 12; i++) {
+  for (let i = 0; i < 24; i++) {
     const angle = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 1.4
-    const speed = 60 + Math.random() * 60
+    const speed = 90 + Math.random() * 90       // farther travel for the longer window
     dots.push({
       angle,
       speed,
       color: CONFETTI_COLORS[(Math.random() * CONFETTI_COLORS.length) | 0],
       size: 5 + Math.random() * 3,
       rotation: Math.random() * Math.PI,
-      rotationVel: (Math.random() - 0.5) * 4,
+      rotationVel: (Math.random() - 0.5) * 6,
     })
   }
 
   const start = performance.now()
-  const duration = 1100
+  const duration = 2400  // was 1100; user asked for longer-running anims
 
   function frame(now) {
     const progress = Math.min(1, (now - start) / duration)
@@ -193,7 +211,9 @@ function playConfetti(canvas, size) {
     for (const d of dots) {
       const dist = d.speed * ease
       const dx = Math.cos(d.angle) * dist
-      const dy = Math.sin(d.angle) * dist + progress * progress * 28
+      // Gravity arc gets stronger at the longer duration so dots
+      // visibly fall instead of drifting flat off-screen.
+      const dy = Math.sin(d.angle) * dist + progress * progress * 80
 
       ctx.save()
       ctx.globalAlpha = Math.max(0, fade)

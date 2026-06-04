@@ -60,13 +60,16 @@ class _AnimatedMascotState extends State<AnimatedMascot>
   @override
   void initState() {
     super.initState();
+    // Durations bumped per user request — "animations that run for more
+    // time". Each ctrl gets a sensible default; per-animation overrides
+    // (e.g. wiggle's 1.2s) happen in the play methods below.
     _scaleCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 420),
+      duration: const Duration(milliseconds: 1100),
     );
     _rotCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 360),
+      duration: const Duration(milliseconds: 1200),
     );
     _idleCtrl = AnimationController(
       vsync: this,
@@ -74,7 +77,7 @@ class _AnimatedMascotState extends State<AnimatedMascot>
     );
     _confettiCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1100),
+      duration: const Duration(milliseconds: 2400),
     );
 
     _scaleAnim = const AlwaysStoppedAnimation(1.0);
@@ -134,27 +137,35 @@ class _AnimatedMascotState extends State<AnimatedMascot>
   void _playBounce() {
     _scaleCtrl.stop();
     _scaleCtrl.value = 0;
+    // Two-stage bounce (up-down-up-settle) over 1.1s — more visible
+    // than a single 420ms pop.
     _scaleAnim = TweenSequence<double>([
       TweenSequenceItem(
-        tween: Tween(begin: 1.0, end: 1.18).chain(
+        tween: Tween(begin: 1.0, end: 1.22).chain(
           CurveTween(curve: Curves.easeOutBack),
         ),
-        weight: 50,
+        weight: 30,
       ),
       TweenSequenceItem(
-        tween: Tween(begin: 1.18, end: 0.95).chain(
+        tween: Tween(begin: 1.22, end: 0.92).chain(
           CurveTween(curve: Curves.easeIn),
         ),
         weight: 25,
       ),
       TweenSequenceItem(
-        tween: Tween(begin: 0.95, end: 1.0).chain(
+        tween: Tween(begin: 0.92, end: 1.10).chain(
           CurveTween(curve: Curves.easeOut),
         ),
-        weight: 25,
+        weight: 23,
+      ),
+      TweenSequenceItem(
+        tween: Tween(begin: 1.10, end: 1.0).chain(
+          CurveTween(curve: Curves.easeInOut),
+        ),
+        weight: 22,
       ),
     ]).animate(_scaleCtrl);
-    _scaleCtrl.duration = const Duration(milliseconds: 420);
+    _scaleCtrl.duration = const Duration(milliseconds: 1100);
     _scaleCtrl.forward();
   }
 
@@ -162,57 +173,52 @@ class _AnimatedMascotState extends State<AnimatedMascot>
     _rotCtrl.stop();
     _rotCtrl.value = 0;
     const deg = math.pi / 180;
+    // Three full back-and-forths over 1.2s — reads as a "happy dance"
+    // instead of one flinch.
     _rotAnim = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween(begin: 0.0, end: -8.0 * deg).chain(
-          CurveTween(curve: Curves.easeOut),
-        ),
-        weight: 1,
-      ),
-      TweenSequenceItem(
-        tween: Tween(begin: -8.0 * deg, end: 8.0 * deg).chain(
-          CurveTween(curve: Curves.easeInOut),
-        ),
-        weight: 2,
-      ),
-      TweenSequenceItem(
-        tween: Tween(begin: 8.0 * deg, end: 0.0).chain(
-          CurveTween(curve: Curves.easeIn),
-        ),
-        weight: 1,
-      ),
+      TweenSequenceItem(tween: Tween(begin: 0.0,         end: -10.0 * deg).chain(CurveTween(curve: Curves.easeOut)),   weight: 12),
+      TweenSequenceItem(tween: Tween(begin: -10.0 * deg, end:  10.0 * deg).chain(CurveTween(curve: Curves.easeInOut)), weight: 18),
+      TweenSequenceItem(tween: Tween(begin:  10.0 * deg, end:  -8.0 * deg).chain(CurveTween(curve: Curves.easeInOut)), weight: 20),
+      TweenSequenceItem(tween: Tween(begin:  -8.0 * deg, end:   8.0 * deg).chain(CurveTween(curve: Curves.easeInOut)), weight: 20),
+      TweenSequenceItem(tween: Tween(begin:   8.0 * deg, end:  -4.0 * deg).chain(CurveTween(curve: Curves.easeInOut)), weight: 16),
+      TweenSequenceItem(tween: Tween(begin:  -4.0 * deg, end:   0.0).chain(CurveTween(curve: Curves.easeIn)),          weight: 14),
     ]).animate(_rotCtrl);
+    _rotCtrl.duration = const Duration(milliseconds: 1200);
     _rotCtrl.forward();
   }
 
   void _playPulse() {
     _scaleCtrl.stop();
     _scaleCtrl.value = 0;
-    // Two breaths, 1.0 -> 1.06 -> 1.0 -> 1.06 -> 1.0 over ~800ms.
+    // Three breaths over ~1.8s — softer than bounce, longer than the
+    // previous two-beat 800ms so the user actually notices the cue.
     _scaleAnim = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.06).chain(CurveTween(curve: Curves.easeInOut)), weight: 1),
-      TweenSequenceItem(tween: Tween(begin: 1.06, end: 1.0).chain(CurveTween(curve: Curves.easeInOut)), weight: 1),
-      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.06).chain(CurveTween(curve: Curves.easeInOut)), weight: 1),
-      TweenSequenceItem(tween: Tween(begin: 1.06, end: 1.0).chain(CurveTween(curve: Curves.easeInOut)), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: 1.0,  end: 1.08).chain(CurveTween(curve: Curves.easeInOut)), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: 1.08, end: 1.0 ).chain(CurveTween(curve: Curves.easeInOut)), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: 1.0,  end: 1.08).chain(CurveTween(curve: Curves.easeInOut)), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: 1.08, end: 1.0 ).chain(CurveTween(curve: Curves.easeInOut)), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: 1.0,  end: 1.08).chain(CurveTween(curve: Curves.easeInOut)), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: 1.08, end: 1.0 ).chain(CurveTween(curve: Curves.easeInOut)), weight: 1),
     ]).animate(_scaleCtrl);
-    _scaleCtrl.duration = const Duration(milliseconds: 800);
+    _scaleCtrl.duration = const Duration(milliseconds: 1800);
     _scaleCtrl.forward();
   }
 
   void _playConfetti() {
     _confettiCtrl.stop();
-    _dots = List.generate(12, (_) {
-      // Random angle in the upper hemisphere so dots burst outward
-      // from the mascot rather than drifting straight down.
+    // 24 dots (was 12) so the longer 2.4s burst stays visually dense
+    // throughout. Faster initial speed + stronger gravity arc handled
+    // by the painter so dots visibly fall instead of fading flat.
+    _dots = List.generate(24, (_) {
       final angle = -math.pi / 2 + (_rand.nextDouble() - 0.5) * math.pi * 1.4;
-      final speed = 60 + _rand.nextDouble() * 60;
+      final speed = 90 + _rand.nextDouble() * 90;
       return _ConfettiDot(
         angle: angle,
         speed: speed,
         color: _confettiColors[_rand.nextInt(_confettiColors.length)],
         size: 5 + _rand.nextDouble() * 3,
         rotation: _rand.nextDouble() * math.pi,
-        rotationVel: (_rand.nextDouble() - 0.5) * 4,
+        rotationVel: (_rand.nextDouble() - 0.5) * 6,
       );
     });
     _confettiCtrl.value = 0;
@@ -328,7 +334,9 @@ class _ConfettiPainter extends CustomPainter {
       final ease = 1 - math.pow(1 - progress, 2.0).toDouble();
       final dist = d.speed * ease;
       final dx = math.cos(d.angle) * dist;
-      final dy = math.sin(d.angle) * dist + (progress * progress * 28);
+      // Stronger gravity (was 28) so dots visibly fall over the longer
+      // 2.4s burst instead of drifting flat off-frame.
+      final dy = math.sin(d.angle) * dist + (progress * progress * 80);
       final paint = Paint()
         ..color = d.color.withValues(alpha: fade)
         ..style = PaintingStyle.fill;

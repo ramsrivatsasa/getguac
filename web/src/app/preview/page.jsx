@@ -11,6 +11,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import AnimatedMascot from '../../components/AnimatedMascot'
+import ReceiptScanAnimation from '../../components/ReceiptScanAnimation'
 import mascotBus from '../../lib/mascotEventBus'
 import {
   CountUp,
@@ -24,12 +25,20 @@ import {
 } from '../../components/animated'
 import {
   Sparkles, Zap, Heart, Trophy, ArrowLeft,
-  TrendingUp, Loader2, Bell, CheckCircle2, AlertTriangle, RefreshCw,
+  TrendingUp, Bell, CheckCircle2, AlertTriangle, RefreshCw, Square, ScanLine,
 } from 'lucide-react'
 
 export default function PreviewPage() {
   const [log, setLog] = useState([])
   const fire = (name, fn) => { fn(); setLog((L) => [{ name, at: new Date().toLocaleTimeString() }, ...L].slice(0, 10)) }
+
+  // Receipt-scan overlay state — when scanCount > 0 the full-screen
+  // search animation (mascot + 🔍 loupe + scan line + rotating ticker)
+  // mounts. The component self-hides when count drops back to 0.
+  const [scanCount, setScanCount] = useState(0)
+  // Unmount cleanup: if the user navigates away while the overlay is
+  // up, the next visit shouldn't inherit a stuck count.
+  useEffect(() => () => setScanCount(0), [])
 
   return (
     <div className="min-h-screen bg-white">
@@ -53,6 +62,37 @@ export default function PreviewPage() {
             Works on desktop and mobile browsers. Respects <code className="text-xs">prefers-reduced-motion</code>.
           </p>
         </section>
+
+        {/* ── SEARCH ANIMATION (the receipt-scan overlay) ──────────── */}
+        <Showcase
+          title="Search animation"
+          sub="Full-screen overlay shown while a receipt is parsing. Avocado bobs, magnifying glass 🔍 swings, scan line sweeps the receipt SVG, ticker rotates through 5 status copy lines every 1.4s."
+          file="components/ReceiptScanAnimation.jsx"
+        >
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={() => setScanCount(1)}
+              className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold inline-flex items-center gap-2"
+            >
+              <ScanLine size={15} /> Scan 1 receipt
+            </button>
+            <button
+              onClick={() => setScanCount(3)}
+              className="px-4 py-2.5 rounded-xl bg-emerald-600/80 hover:bg-emerald-700/90 text-white font-bold inline-flex items-center gap-2"
+            >
+              <ScanLine size={15} /> Scan 3 receipts (multi)
+            </button>
+            <button
+              onClick={() => setScanCount(0)}
+              className="px-4 py-2.5 rounded-xl bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-bold inline-flex items-center gap-2"
+            >
+              <Square size={15} /> Close overlay
+            </button>
+          </div>
+          <p className="text-xs text-gray-500 mt-3">
+            Status: <strong>{scanCount === 0 ? 'hidden' : `showing (count = ${scanCount})`}</strong>. The overlay sits on top of the whole page (z-300), background dims with backdrop-blur. Self-closes — no spinner, just rotating ticker copy until you click Close.
+          </p>
+        </Showcase>
 
         {/* ── MASCOT EVENTS ──────────────────────────────────────────── */}
         <Showcase
@@ -195,6 +235,11 @@ export default function PreviewPage() {
           Direct URL only · not linked from navigation · ignores <code>prefers-reduced-motion</code> = static fallback
         </p>
       </main>
+
+      {/* Receipt-scan overlay — full-screen, z-300, self-hides when
+          scanCount drops to 0. Driven by the Search-animation showcase
+          buttons + the showreel script. */}
+      <ReceiptScanAnimation count={scanCount} />
     </div>
   )
 }

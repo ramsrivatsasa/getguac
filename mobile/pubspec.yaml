@@ -1,7 +1,7 @@
 name: getguac
 description: GetGuac — Smart receipt & rewards management
 publish_to: 'none'
-version: 0.3.40+132
+version: 0.3.41+133
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -76,10 +76,18 @@ dependencies:
   # compiles fail against our AGP version. AnalyticsService stays as
   # a no-op stub so call sites don't break. Re-add when we've debugged
   # the Gradle issue with a real DSN to verify against.
+
+  # Character-quality JSON animations (mirror of web's lottie-react
+  # pipeline). Bundles the same 7 source files from web/src/lottie/
+  # under assets/lottie/ so the mobile UI can show the same blob /
+  # celebrate / empty-state / searching animations. Pure-Dart package,
+  # no native code — should not hit the Kotlin/AGP compile issues that
+  # forced sentry_flutter + posthog_flutter out.
   # In-app APK download + install. Lets us drop the new build into the
   # app's cache dir (auto-cleaned by Android) instead of leaving it in
   # the user's Downloads folder forever.
   open_filex: ^4.5.0
+  lottie: ^3.1.2
   # On-device speech recognition for the voice → receipt flow. Wraps
   # Android SpeechRecognizer + iOS SFSpeechRecognizer behind one Dart
   # API. We use the highest-level call (`listen()` → `onResult`) so
@@ -113,3 +121,4 @@ flutter:
   assets:
     - assets/mascot/
     - assets/icon/
+    - assets/lottie/

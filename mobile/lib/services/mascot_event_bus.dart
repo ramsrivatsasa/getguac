@@ -21,6 +21,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 enum MascotAnimation { bounce, wiggle, pulse, celebrate }
@@ -43,11 +44,44 @@ class MascotEventBus {
 
   Stream<MascotEvent> get stream => _ctrl.stream;
 
-  void bounce() => _ctrl.add(const MascotEvent(MascotAnimation.bounce));
-  void wiggle() => _ctrl.add(const MascotEvent(MascotAnimation.wiggle));
-  void pulse() => _ctrl.add(const MascotEvent(MascotAnimation.pulse));
-  void celebrate([String? message]) =>
-      _ctrl.add(MascotEvent(MascotAnimation.celebrate, message: message));
+  // Haptics are best-effort. On platforms without a vibrator (web,
+  // desktop, locked devices) the call is a no-op but historically
+  // some embeddings have thrown PlatformException, so we swallow.
+  void _safeHaptic(Future<void> Function() fn) {
+    try {
+      // Don't await — fire-and-forget. Catch async errors too.
+      fn().catchError((_) {});
+    } catch (_) {
+      // Sync throw — also ignore.
+    }
+  }
+
+  void bounce() {
+    _ctrl.add(const MascotEvent(MascotAnimation.bounce));
+    _safeHaptic(HapticFeedback.lightImpact);
+  }
+
+  void wiggle() {
+    _ctrl.add(const MascotEvent(MascotAnimation.wiggle));
+    _safeHaptic(HapticFeedback.selectionClick);
+  }
+
+  void pulse() {
+    _ctrl.add(const MascotEvent(MascotAnimation.pulse));
+    _safeHaptic(HapticFeedback.lightImpact);
+  }
+
+  void celebrate([String? message]) {
+    _ctrl.add(MascotEvent(MascotAnimation.celebrate, message: message));
+    // Double-tap success cue: medium thump, then a lighter follow-up
+    // 200ms later. The follow-up is scheduled rather than awaited so
+    // the call returns immediately and the two haptics don't block
+    // each other.
+    _safeHaptic(HapticFeedback.mediumImpact);
+    Future<void>.delayed(const Duration(milliseconds: 200), () {
+      _safeHaptic(HapticFeedback.lightImpact);
+    });
+  }
 
   // Idempotent milestone celebrate. Returns true if it actually fired.
   // Tracks already-fired keys in SharedPreferences under a single key

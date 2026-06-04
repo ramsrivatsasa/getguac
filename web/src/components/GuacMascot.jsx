@@ -1,5 +1,17 @@
 'use client'
 
+// ╔══════════════════════════════════════════════════════════════════╗
+// ║  🔒 DO NOT CHANGE — the GetGuac brand mascot SVG.                ║
+// ║  The avocado character, its shape, eyes, pit, expressions, and   ║
+// ║  poses are LOCKED by the user (2026-06-04). No SVG redraw, no    ║
+// ║  swap to Lottie, no separable-parts re-author, no body          ║
+// ║  redesign. If you think it needs a refresh — ASK FIRST.          ║
+// ║                                                                  ║
+// ║  Animation of the mascot via the AnimatedMascot wrapper          ║
+// ║  (bounce/wiggle/pulse/celebrate/idle) is still OK — that         ║
+// ║  applies transforms to the whole mascot, not its internals.      ║
+// ╚══════════════════════════════════════════════════════════════════╝
+//
 // On-brand SVG avocado mascot. Expressions and poses for every moment.
 //
 //   <GuacMascot expression="happy" />        // default cheerful avocado

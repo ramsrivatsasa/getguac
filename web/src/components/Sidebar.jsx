@@ -110,10 +110,16 @@ export default function Sidebar({ isAdmin }) {
           collapsed ? 'lg:justify-center px-3' : 'px-5 justify-between'
         )}>
           <Link href="/dashboard" className="flex items-center gap-3 min-w-0">
+            {/* ╔═════════════════════════════════════════════════════╗
+                ║  🔒 DO NOT CHANGE — the GetGuac brand logo.         ║
+                ║  Static 🥑 emoji in emerald-gradient rounded square ║
+                ║  + "GetGuac" + "money's wingman" tagline.           ║
+                ║  Locked by user 2026-06-04. No animation, no swap   ║
+                ║  to AnimatedMascot, no Lottie, no SVG redraw, no    ║
+                ║  emoji change. If you think it needs a refresh —    ║
+                ║  ASK FIRST.                                         ║
+                ╚═════════════════════════════════════════════════════╝ */}
             <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-lime-300 via-emerald-400 to-emerald-700 shadow-md ring-2 ring-white flex items-center justify-center shrink-0">
-              {/* Static 🥑 emoji — rolled back from AnimatedMascot per
-                  user request. Brand logo stays still; in-app screens
-                  use AnimatedMascot for their own mascots. */}
               <span className="text-2xl leading-none" aria-label="GetGuac">🥑</span>
             </div>
             {!collapsed && (

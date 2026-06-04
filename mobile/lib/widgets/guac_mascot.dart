@@ -1,3 +1,14 @@
+// ╔══════════════════════════════════════════════════════════════════╗
+// ║  🔒 DO NOT CHANGE — the GetGuac brand mascot SVG (mobile).       ║
+// ║  Mirror of web/src/components/GuacMascot.jsx. The avocado        ║
+// ║  character + the 3 SVG asset files (happy / rich / relaxing)     ║
+// ║  are LOCKED by the user (2026-06-04). No asset swap, no redraw,  ║
+// ║  no Lottie replacement, no separable-parts re-author. ASK FIRST. ║
+// ║                                                                  ║
+// ║  Animating the whole mascot via AnimatedMascot (scale/rotate/    ║
+// ║  translate/confetti) is still OK — that's the wrapper.           ║
+// ╚══════════════════════════════════════════════════════════════════╝
+//
 // On-brand SVG mascot — mirrors the web's <GuacMascot/>.
 // Three variants for now: happy (default), rich (Steals), relaxing (empty states).
 import 'package:flutter/material.dart';

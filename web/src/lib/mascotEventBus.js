@@ -25,8 +25,12 @@
 //   pulse     — soft heartbeat. Ambient ack.
 //   celebrate — combo + confetti. Worth-It rating / referral applied
 //               / smash-days milestone.
+//   spin      — full 360° rotation. For freshness / refresh moments.
+//   flip      — quick 180° + 180° (front-to-back-to-front).
+//   jump      — high arc translateY (the mascot LEAPS).
+//   dance     — translate side-to-side with rotation (loop 2x).
 
-const ANIMATIONS = ['bounce', 'wiggle', 'pulse', 'celebrate']
+const ANIMATIONS = ['bounce', 'wiggle', 'pulse', 'celebrate', 'spin', 'flip', 'jump', 'dance']
 export const MASCOT_EVENT = 'getguac:mascot'
 
 const _target =
@@ -44,6 +48,10 @@ export function bounce() { fire('bounce') }
 export function wiggle() { fire('wiggle') }
 export function pulse() { fire('pulse') }
 export function celebrate(message) { fire('celebrate', message) }
+export function spin() { fire('spin') }
+export function flip() { fire('flip') }
+export function jump() { fire('jump') }
+export function dance() { fire('dance') }
 
 // Idempotent milestone celebrate. Caller passes a stable key
 // ('smash_days_7'); we use localStorage to remember whether it has
@@ -81,5 +89,5 @@ export function subscribeMascot(handler) {
 // Default export keeps the call sites readable:
 //   import mascotBus from '@/lib/mascotEventBus'
 //   mascotBus.bounce()
-const mascotBus = { bounce, wiggle, pulse, celebrate, celebrateOnce, subscribe: subscribeMascot }
+const mascotBus = { bounce, wiggle, pulse, celebrate, celebrateOnce, spin, flip, jump, dance, subscribe: subscribeMascot }
 export default mascotBus

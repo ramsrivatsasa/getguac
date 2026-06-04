@@ -61,9 +61,13 @@ export default function AnimatedMascot({
       // Cancel any prior event animation before starting a new one.
       try { eventAnimRef.current?.cancel() } catch (_) {}
       switch (ev.animation) {
-        case 'bounce':  eventAnimRef.current = playBounce(el); return
-        case 'wiggle':  eventAnimRef.current = playWiggle(el); return
-        case 'pulse':   eventAnimRef.current = playPulse(el);  return
+        case 'bounce':   eventAnimRef.current = playBounce(el); return
+        case 'wiggle':   eventAnimRef.current = playWiggle(el); return
+        case 'pulse':    eventAnimRef.current = playPulse(el);  return
+        case 'spin':     eventAnimRef.current = playSpin(el);   return
+        case 'flip':     eventAnimRef.current = playFlip(el);   return
+        case 'jump':     eventAnimRef.current = playJump(el);   return
+        case 'dance':    eventAnimRef.current = playDance(el);  return
         case 'celebrate':
           eventAnimRef.current = playBounce(el)
           playWiggle(el)
@@ -150,16 +154,16 @@ export default function AnimatedMascot({
 // stays Apple/Google-tasteful, just slower + more emphatic.
 
 function playBounce(el) {
-  // Squash-and-stretch bounce — separate X / Y scales so the mascot
-  // actually deforms like a soft body instead of just resizing
-  // uniformly. Reads as the iconscout-style "alive" character bounce.
+  // Amplified squash-and-stretch — translateY doubled (-12% → -24%)
+  // so the mascot visibly leaves the baseline. Squash compression
+  // and stretch percentages also pushed for a more "alive" feel.
   return el.animate(
     [
       { transform: 'scaleX(1)    scaleY(1)    translateY(0)' },
-      { transform: 'scaleX(0.86) scaleY(1.16) translateY(-12%)', offset: 0.20 },
-      { transform: 'scaleX(1.16) scaleY(0.86) translateY(-4%)',  offset: 0.45 },
-      { transform: 'scaleX(0.94) scaleY(1.06) translateY(-8%)',  offset: 0.65 },
-      { transform: 'scaleX(1.04) scaleY(0.96) translateY(0)',    offset: 0.82 },
+      { transform: 'scaleX(0.82) scaleY(1.20) translateY(-24%)', offset: 0.20 },
+      { transform: 'scaleX(1.20) scaleY(0.82) translateY(-8%)',  offset: 0.45 },
+      { transform: 'scaleX(0.92) scaleY(1.08) translateY(-16%)', offset: 0.65 },
+      { transform: 'scaleX(1.06) scaleY(0.94) translateY(0)',    offset: 0.82 },
       { transform: 'scaleX(1)    scaleY(1)    translateY(0)' },
     ],
     { duration: 1800, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' },
@@ -167,17 +171,16 @@ function playBounce(el) {
 }
 
 function playWiggle(el) {
-  // Head-tilt wiggle with translation — leans into each rotation
-  // instead of pivoting in place, like a character looking around.
-  // Six oscillations decaying in amplitude, total 1400ms.
+  // Amplified wiggle — translateX bumped ±3% → ±8% so the mascot
+  // visibly leans across, not just tilts in place.
   return el.animate(
     [
       { transform: 'rotate(0deg)    translateX(0)' },
-      { transform: 'rotate(-12deg)  translateX(-3%)', offset: 0.12 },
-      { transform: 'rotate(12deg)   translateX(3%)',  offset: 0.30 },
-      { transform: 'rotate(-9deg)   translateX(-2%)', offset: 0.48 },
-      { transform: 'rotate(9deg)    translateX(2%)',  offset: 0.66 },
-      { transform: 'rotate(-4deg)   translateX(-1%)', offset: 0.82 },
+      { transform: 'rotate(-14deg)  translateX(-8%)', offset: 0.12 },
+      { transform: 'rotate(14deg)   translateX(8%)',  offset: 0.30 },
+      { transform: 'rotate(-11deg)  translateX(-6%)', offset: 0.48 },
+      { transform: 'rotate(11deg)   translateX(6%)',  offset: 0.66 },
+      { transform: 'rotate(-5deg)   translateX(-2%)', offset: 0.82 },
       { transform: 'rotate(2deg)    translateX(0)',   offset: 0.92 },
       { transform: 'rotate(0deg)    translateX(0)' },
     ],
@@ -186,25 +189,88 @@ function playWiggle(el) {
 }
 
 function playPulse(el) {
-  // Heartbeat-style pulse — double-tap each beat (TUM-tum) like a
-  // real heart. Three full beats over 2.0s.
+  // Heartbeat-style pulse — TUM-tum × 3 over 3.0s, now WITH a bob
+  // (translateY) on each TUM so the mascot lifts a little when its
+  // heart hits hardest. Previously scale-only; user wanted motion.
   return el.animate(
     [
-      { transform: 'scale(1)' },
-      { transform: 'scale(1.10)', offset: 0.08 },
-      { transform: 'scale(0.98)', offset: 0.16 },
-      { transform: 'scale(1.06)', offset: 0.22 },
-      { transform: 'scale(1)',    offset: 0.32 },
-      { transform: 'scale(1.10)', offset: 0.40 },
-      { transform: 'scale(0.98)', offset: 0.48 },
-      { transform: 'scale(1.06)', offset: 0.54 },
-      { transform: 'scale(1)',    offset: 0.64 },
-      { transform: 'scale(1.10)', offset: 0.72 },
-      { transform: 'scale(0.98)', offset: 0.80 },
-      { transform: 'scale(1.06)', offset: 0.86 },
-      { transform: 'scale(1)' },
+      { transform: 'scale(1)    translateY(0)' },
+      { transform: 'scale(1.12) translateY(-6%)', offset: 0.08 },
+      { transform: 'scale(0.98) translateY(0)',   offset: 0.16 },
+      { transform: 'scale(1.08) translateY(-3%)', offset: 0.22 },
+      { transform: 'scale(1)    translateY(0)',   offset: 0.32 },
+      { transform: 'scale(1.12) translateY(-6%)', offset: 0.40 },
+      { transform: 'scale(0.98) translateY(0)',   offset: 0.48 },
+      { transform: 'scale(1.08) translateY(-3%)', offset: 0.54 },
+      { transform: 'scale(1)    translateY(0)',   offset: 0.64 },
+      { transform: 'scale(1.12) translateY(-6%)', offset: 0.72 },
+      { transform: 'scale(0.98) translateY(0)',   offset: 0.80 },
+      { transform: 'scale(1.08) translateY(-3%)', offset: 0.86 },
+      { transform: 'scale(1)    translateY(0)' },
     ],
     { duration: 3000, easing: 'ease-in-out' },
+  )
+}
+
+// === NEW EVENTS ===
+
+function playSpin(el) {
+  // Full 360° rotation — fresh / refresh moment. Slight scale dip at
+  // the halfway point so it doesn't feel like a uniform wheel.
+  return el.animate(
+    [
+      { transform: 'rotate(0deg)   scale(1)' },
+      { transform: 'rotate(180deg) scale(0.92)', offset: 0.5 },
+      { transform: 'rotate(360deg) scale(1)' },
+    ],
+    { duration: 1500, easing: 'cubic-bezier(0.65, 0, 0.35, 1)' },
+  )
+}
+
+function playFlip(el) {
+  // Quick front→back→front via Y-axis 3D flip. perspective set on
+  // the element by the wrapper's CSS so the flip looks dimensional.
+  return el.animate(
+    [
+      { transform: 'perspective(600px) rotateY(0deg)' },
+      { transform: 'perspective(600px) rotateY(180deg)', offset: 0.5 },
+      { transform: 'perspective(600px) rotateY(360deg)' },
+    ],
+    { duration: 1200, easing: 'cubic-bezier(0.5, 0, 0.5, 1)' },
+  )
+}
+
+function playJump(el) {
+  // High arc — mascot leaves the baseline by ~40% of its height,
+  // squashes on landing. Multi-stage so the air time has anticipation
+  // (crouch) + apex + landing recovery.
+  return el.animate(
+    [
+      { transform: 'translateY(0)    scaleX(1)    scaleY(1)' },
+      { transform: 'translateY(4%)   scaleX(1.10) scaleY(0.88)', offset: 0.12 }, // crouch
+      { transform: 'translateY(-40%) scaleX(0.92) scaleY(1.12)', offset: 0.45 }, // apex
+      { transform: 'translateY(-30%) scaleX(0.94) scaleY(1.08)', offset: 0.60 }, // descend
+      { transform: 'translateY(4%)   scaleX(1.18) scaleY(0.78)', offset: 0.85 }, // squash
+      { transform: 'translateY(0)    scaleX(1)    scaleY(1)' },
+    ],
+    { duration: 1600, easing: 'cubic-bezier(0.34, 1.4, 0.64, 1)' },
+  )
+}
+
+function playDance(el) {
+  // Side-to-side groove. Combines translateX + rotation + small bob.
+  // Two full cycles over 2.4s.
+  return el.animate(
+    [
+      { transform: 'translateX(0)    translateY(0)   rotate(0deg)' },
+      { transform: 'translateX(-12%) translateY(-4%) rotate(-10deg)', offset: 0.15 },
+      { transform: 'translateX(12%)  translateY(-2%) rotate(10deg)',  offset: 0.35 },
+      { transform: 'translateX(-10%) translateY(-4%) rotate(-9deg)',  offset: 0.55 },
+      { transform: 'translateX(10%)  translateY(-2%) rotate(9deg)',   offset: 0.75 },
+      { transform: 'translateX(-4%)  translateY(0)   rotate(-3deg)',  offset: 0.90 },
+      { transform: 'translateX(0)    translateY(0)   rotate(0deg)' },
+    ],
+    { duration: 2400, easing: 'ease-in-out' },
   )
 }
 

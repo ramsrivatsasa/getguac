@@ -13,6 +13,7 @@ import Link from 'next/link'
 import AnimatedMascot from '../../components/AnimatedMascot'
 import AnimatedEmoji from '../../components/AnimatedEmoji'
 import LottieAnimation from '../../components/LottieAnimation'
+import FlyingMascots from '../../components/FlyingMascots'
 import blobLottie from '../../lottie/blob.json'
 import ReceiptScanAnimation from '../../components/ReceiptScanAnimation'
 import mascotBus from '../../lib/mascotEventBus'
@@ -29,6 +30,7 @@ import {
 import {
   Sparkles, Zap, Heart, Trophy, ArrowLeft,
   TrendingUp, Bell, CheckCircle2, AlertTriangle, RefreshCw, Square, ScanLine,
+  RotateCw, FlipHorizontal, ArrowUp, Music,
 } from 'lucide-react'
 
 export default function PreviewPage() {
@@ -163,11 +165,29 @@ export default function PreviewPage() {
             <p className="text-xs text-gray-400 mt-3">Idle breathe loop (1.02× over 4s)</p>
           </div>
           <div className="grid sm:grid-cols-2 gap-3 mt-4">
-            <Trigger label="bounce"    sub="Receipt save"             icon={Zap}     color="emerald" onClick={() => fire('bounce',    () => mascotBus.bounce())} />
-            <Trigger label="wiggle"    sub="Smashlist mark-as-bought" icon={Heart}   color="rose"    onClick={() => fire('wiggle',    () => mascotBus.wiggle())} />
-            <Trigger label="pulse"     sub="Needs-attention CTA"      icon={Sparkles} color="amber"  onClick={() => fire('pulse',     () => mascotBus.pulse())} />
-            <Trigger label="celebrate" sub="Worth-It rate · referral" icon={Trophy}  color="violet"  onClick={() => fire('celebrate', () => mascotBus.celebrate('Rated!'))} />
+            <Trigger label="bounce"    sub="Receipt save · -24% lift"      icon={Zap}     color="emerald" onClick={() => fire('bounce',    () => mascotBus.bounce())} />
+            <Trigger label="wiggle"    sub="Smashlist mark · ±8% sideways" icon={Heart}   color="rose"    onClick={() => fire('wiggle',    () => mascotBus.wiggle())} />
+            <Trigger label="pulse"     sub="Heartbeat × 3 · with bob"      icon={Sparkles} color="amber"  onClick={() => fire('pulse',     () => mascotBus.pulse())} />
+            <Trigger label="celebrate" sub="Worth-It · referral · 24-dot"  icon={Trophy}  color="violet"  onClick={() => fire('celebrate', () => mascotBus.celebrate('Rated!'))} />
+            <Trigger label="spin"      sub="Full 360° · 1.5s"              icon={RotateCw} color="emerald" onClick={() => fire('spin',      () => mascotBus.spin())} />
+            <Trigger label="flip"      sub="Y-axis 3D flip · 1.2s"         icon={FlipHorizontal} color="rose"    onClick={() => fire('flip',      () => mascotBus.flip())} />
+            <Trigger label="jump"      sub="-40% arc with anticipation"   icon={ArrowUp}  color="amber"  onClick={() => fire('jump',      () => mascotBus.jump())} />
+            <Trigger label="dance"     sub="Side-to-side groove · 2.4s"    icon={Music}    color="violet"  onClick={() => fire('dance',     () => mascotBus.dance())} />
           </div>
+        </Showcase>
+
+        {/* ── FLYING MASCOTS ─────────────────────────────────────────── */}
+        <Showcase
+          title="Flying mascots"
+          sub="Multiple avocados flying across a track at different speeds, heights, sizes, and angles. Composition of the locked GuacMascot — the character itself is unchanged."
+          file="components/FlyingMascots.jsx"
+        >
+          <div className="rounded-3xl border border-gray-200 bg-gradient-to-r from-sky-50/40 via-white to-emerald-50/40 overflow-hidden">
+            <FlyingMascots count={8} height={180} direction="auto" bob={true} />
+          </div>
+          <p className="text-[11px] text-gray-500 mt-3 leading-relaxed">
+            8 mascots, mixed directions (4 left-to-right, 4 right-to-left). Each picks a deterministic-per-index variant of size, vertical position, speed, rotation, and mood. Bobs vertically on a sin wave during flight. <code>FlyingMascots count height direction loop bob</code>.
+          </p>
         </Showcase>
 
         {/* ── COUNTUP ────────────────────────────────────────────────── */}

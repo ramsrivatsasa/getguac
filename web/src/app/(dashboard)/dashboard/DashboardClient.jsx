@@ -27,6 +27,7 @@ import TimeframePicker from '../../../components/TimeframePicker'
 import PostSignupReferralApply from '../../../components/PostSignupReferralApply'
 import { computeSmashDays } from '../../../lib/smashDays'
 import mascotBus from '../../../lib/mascotEventBus'
+import { CountUp, FadeUpStagger } from '../../../components/animated'
 const PERIODS = ['daily', 'weekly', 'monthly', 'yearly']
 
 // Dropdown options for "how many <period>s back to include"
@@ -244,7 +245,11 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
           (GuacScore → /guacanomics, GuacWizard → /guacwizard,
           GuacMoney → /shopping, Rewards → /rewards). */}
       <div className="-mx-2 px-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="flex gap-3 min-w-max">
+        {/* Engagement strip — FadeUpStagger gives each tile a 40ms
+            offset entrance on initial paint. Each tile carries its
+            own CountUp internally for hero numbers, so timeframe
+            flips also smooth-retally inside without needing a key. */}
+        <FadeUpStagger className="flex gap-3 min-w-max" delayMs={50}>
           {/* GuacScore reads lifetime rated purchases, not just the
               current period filter — otherwise a 3-month dashboard
               window with no rated purchases inside it shows score=0
@@ -257,7 +262,7 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
           <div className="w-64 shrink-0"><GuacWizardTile /></div>
           <Link href="/shopping" className="w-64 shrink-0 block"><GuacMoneyTile /></Link>
           <div className="w-64 shrink-0"><RewardsTile count={initialRewards.length} /></div>
-        </div>
+        </FadeUpStagger>
       </div>
 
       {/* Spending anomalies sits ABOVE the financial-tile scroll so
@@ -379,8 +384,11 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {filtered.slice(0, 8).map(r => (
-                <tr key={r.id} className="hover:bg-gray-50/50">
+              {filtered.slice(0, 8).map((r, idx) => (
+                <tr
+                  key={r.id}
+                  style={{ animationDelay: `${idx * 35}ms`, animationDuration: '220ms' }}
+                  className="hover:bg-gray-50/50 anim-fadeup">
                   <td className="px-5 py-3 font-medium">
                     <Link href={`/receipts/${r.id}`} className="hover:text-blue-700">{displayStoreName(r.store_name)}</Link>
                   </td>
@@ -484,17 +492,23 @@ function AllPaymentsScroll({ spendingReceipts, period, periodCount }) {
   })
 
   const money = (n) => `$${Number(n || 0).toFixed(2)}`
-  // Tiles in user's requested order. Each entry: config-key, value
-  // formatter, metric-key (used to look up current + delta).
+  // Tiles in user's requested order. Each entry carries:
+  //   - the raw numeric value (drives the CountUp tween inside
+  //     PaymentTile so timeframe flips smooth-retally instead of
+  //     flash-cutting)
+  //   - a display prefix ('$' for money, '' for the integer count)
+  // The string fallback `format(value)` is still passed as `value`
+  // so SSR / no-JS / reduced-motion users see a correctly formatted
+  // number on first paint.
   const TILES = [
-    { key: 'transactions', value: analysis.metrics.transactions.current,            format: (v) => v },
-    { key: 'totalSpent',   value: analysis.metrics.totalSpent.current,              format: money },
-    { key: 'taxPaid',      value: analysis.metrics.taxPaid.current,                 format: money },
-    { key: 'purchases',    value: analysis.metrics.purchases.current,               format: money },
-    { key: 'payments',     value: analysis.metrics.payments.current,                format: money },
-    { key: 'interestPaid', value: analysis.metrics.interestPaid.current,            format: money },
-    { key: 'feesPaid',     value: analysis.metrics.feesPaid.current,                format: money },
-    { key: 'bankFees',     value: analysis.metrics.bankFees.current,                format: money },
+    { key: 'transactions', value: analysis.metrics.transactions.current, format: (v) => v,    prefix: '' },
+    { key: 'totalSpent',   value: analysis.metrics.totalSpent.current,   format: money,       prefix: '$' },
+    { key: 'taxPaid',      value: analysis.metrics.taxPaid.current,      format: money,       prefix: '$' },
+    { key: 'purchases',    value: analysis.metrics.purchases.current,    format: money,       prefix: '$' },
+    { key: 'payments',     value: analysis.metrics.payments.current,     format: money,       prefix: '$' },
+    { key: 'interestPaid', value: analysis.metrics.interestPaid.current, format: money,       prefix: '$' },
+    { key: 'feesPaid',     value: analysis.metrics.feesPaid.current,     format: money,       prefix: '$' },
+    { key: 'bankFees',     value: analysis.metrics.bankFees.current,     format: money,       prefix: '$' },
   ]
 
   // Smooth-scroll the row by roughly one tile (~172px = w-40 + gap).
@@ -516,21 +530,26 @@ function AllPaymentsScroll({ spendingReceipts, period, periodCount }) {
         .no-scrollbar::-webkit-scrollbar { display: none; }
       `}</style>
       <div ref={scrollRef} className="no-scrollbar overflow-x-auto scroll-smooth pb-1">
-        <div className="flex gap-3 min-w-max">
-          {TILES.map(({ key, value, format }) => {
+        {/* FadeUpStagger gives the financial scroll a 1-shot
+            entrance on mount; subsequent timeframe flips animate
+            the numeric values inside each PaymentTile via CountUp. */}
+        <FadeUpStagger className="flex gap-3 min-w-max" delayMs={45}>
+          {TILES.map(({ key, value, format, prefix }) => {
             const m = analysis.metrics[key]
             return (
               <PaymentTile
                 key={key}
                 {...PAYMENT_TILE_CONFIGS[key]}
                 value={format(value)}
+                numericValue={Number(value) || 0}
+                prefix={prefix}
                 deltaLabel={m.deltaLabel}
                 deltaArrow={m.deltaArrow}
                 deltaGoodWhen={METRIC_DIRECTIONS[key]}
               />
             )
           })}
-        </div>
+        </FadeUpStagger>
       </div>
       <button
         type="button"
@@ -605,7 +624,10 @@ function GuacWizardTile() {
           </>
         ) : score != null ? (
           <>
-            <p className={`text-xl font-black ${tone.value} tabular-nums leading-tight`}>{score}<span className="text-xs font-bold opacity-60 ml-0.5">/ 100</span></p>
+            <p className={`text-xl font-black ${tone.value} tabular-nums leading-tight`}>
+              <CountUp value={score} duration={520} />
+              <span className="text-xs font-bold opacity-60 ml-0.5">/ 100</span>
+            </p>
             <p className={`text-[10px] font-semibold mt-0.5 ${tone.sub}`}>health score</p>
           </>
         ) : (
@@ -636,7 +658,7 @@ function GuacMoneyTile() {
       <div className="min-w-0 flex-1 relative z-10">
         <p className="text-[10px] uppercase tracking-wider font-bold text-emerald-700">GuacMoney</p>
         <p className="text-xl font-black text-emerald-900 tabular-nums leading-tight">
-          {isLoading ? '—' : formatGuacMoney(total)}
+          {isLoading ? '—' : <CountUp value={Number(total) || 0} duration={520} format={formatGuacMoney} />}
         </p>
         <p className="text-[10px] font-semibold mt-0.5 text-emerald-700">
           {active ? 'saved' : 'tap Cheapest →'}
@@ -668,7 +690,9 @@ function RewardsTile({ count }) {
       </div>
       <div className="min-w-0 flex-1 relative z-10">
         <p className={`text-[10px] uppercase tracking-wider font-bold ${active ? 'text-rose-700' : 'text-gray-500'}`}>Rewards</p>
-        <p className={`text-xl font-black ${active ? 'text-rose-900' : 'text-gray-900'} tabular-nums leading-tight`}>{count}</p>
+        <p className={`text-xl font-black ${active ? 'text-rose-900' : 'text-gray-900'} tabular-nums leading-tight`}>
+          <CountUp value={count} duration={420} />
+        </p>
         <p className={`text-[10px] font-semibold mt-0.5 ${active ? 'text-rose-700' : 'text-gray-500'}`}>
           {active ? 'available' : 'none yet'}
         </p>

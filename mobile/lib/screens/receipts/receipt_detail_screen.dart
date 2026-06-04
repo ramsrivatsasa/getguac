@@ -10,6 +10,7 @@ import '../../widgets/store_logo.dart';
 import '../../utils/date_format.dart';
 import '../../services/receipt_reparse_service.dart';
 import '../../services/mascot_event_bus.dart';
+import '../../widgets/animated_primitives.dart';
 
 class ReceiptDetailScreen extends StatefulWidget {
   final String id;
@@ -374,12 +375,27 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
           maxLines: 1, overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: 2),
-        Text('\$${headlineValue.toStringAsFixed(2)}  •  ${formatDateShort(r.date)}',
-          style: const TextStyle(
-            color: Color(0xFF6b7280), fontSize: 13,
-            fontWeight: FontWeight.w600,
+        // Count-up the headline dollar so prev/next navigation between
+        // receipts tweens the number rather than snapping. Hyphen-date
+        // is appended via a sibling Text (CountUp can only own one
+        // formatter call).
+        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+          CountUp(
+            value: headlineValue,
+            duration: const Duration(milliseconds: 480),
+            formatter: (v) => '\$${v.toStringAsFixed(2)}',
+            style: const TextStyle(
+              color: Color(0xFF6b7280), fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
           ),
-        ),
+          Text('  •  ${formatDateShort(r.date)}',
+            style: const TextStyle(
+              color: Color(0xFF6b7280), fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ]),
         if (ratedItemCount > 0 && r.rating == null) ...[
           const SizedBox(height: 6),
           Text('$ratedItemCount items · tap a star below to rate',
@@ -396,12 +412,13 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
     final enabled = onTap != null;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2),
-      child: Material(
-        color: enabled ? const Color(0xFFf3f4f6) : const Color(0xFFf9fafb),
-        shape: const CircleBorder(),
-        child: InkWell(
-          onTap: onTap,
-          customBorder: const CircleBorder(),
+      child: TapScale(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(99),
+        pressedScale: 0.88,
+        child: Material(
+          color: enabled ? const Color(0xFFf3f4f6) : const Color(0xFFf9fafb),
+          shape: const CircleBorder(),
           child: Tooltip(
             message: tooltip ?? '',
             child: Padding(

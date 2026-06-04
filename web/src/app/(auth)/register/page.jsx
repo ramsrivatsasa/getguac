@@ -172,7 +172,8 @@ export default function RegisterPage() {
           post-signup hook on the dashboard credits both sides. */}
       <ReferralCapture />
       <div className="w-full max-w-lg space-y-6">
-        <div className="text-center">
+        <div className="text-center anim-logo-in">
+          {/* anim-logo-in entrance — first impression on signup. */}
           <div className="inline-flex justify-center">
             <GuacMascot expression="celebrating" size={110} />
           </div>

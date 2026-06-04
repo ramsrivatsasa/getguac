@@ -8,6 +8,7 @@ import { periodStartDate, timeframeLabel } from '../../../lib/timeframe'
 import { useStore } from '../../../store'
 import GuacMascot from '../../../components/GuacMascot'
 import TimeframePicker from '../../../components/TimeframePicker'
+import { CountUp, FadeUpStagger } from '../../../components/animated'
 import { TrendingUp, TrendingDown, AlertTriangle, Percent, CreditCard, Banknote, Sparkles } from 'lucide-react'
 const SEVERITY_STYLE = {
   good:    { card: 'bg-emerald-50 border-emerald-200', label: 'text-emerald-700' },
@@ -78,7 +79,12 @@ export default function GuacWizardPage() {
           <div className="flex items-center gap-3">
             <div className="text-right">
               <p className="text-[10px] uppercase tracking-wider font-bold text-emerald-700">Wizard score</p>
-              <p className="text-4xl font-black text-emerald-900 leading-none">{score}<span className="text-base font-bold opacity-60"> / 100</span></p>
+              <p className="text-4xl font-black text-emerald-900 leading-none">
+                {/* CountUp from zero — sells the assemble-the-score
+                    feel on the dedicated GuacWizard page. */}
+                <CountUp value={Number(score) || 0} duration={680} from={0} />
+                <span className="text-base font-bold opacity-60"> / 100</span>
+              </p>
               <p className="text-[10px] text-emerald-800 mt-0.5">{tfLabel}</p>
             </div>
           </div>
@@ -113,7 +119,11 @@ export default function GuacWizardPage() {
             <p className="mt-2">Nothing to report for this period. Try a longer window.</p>
           </div>
         ) : (
-          insights.map(i => {
+          // Staggered fade-up — each insight lands 45ms after the
+          // previous so the wizard "writes" its findings instead of
+          // dumping them all at once.
+          <FadeUpStagger inline delayMs={50}>
+          {insights.map(i => {
             const s = SEVERITY_STYLE[i.severity] || SEVERITY_STYLE.neutral
             return (
               <div key={i.id} className={`card border ${s.card}`}>
@@ -132,7 +142,8 @@ export default function GuacWizardPage() {
                 </div>
               </div>
             )
-          })
+          })}
+          </FadeUpStagger>
         )}
       </div>
 

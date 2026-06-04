@@ -16,6 +16,7 @@ import '../../services/mascot_event_bus.dart';
 import '../../services/share_service.dart';
 import '../../widgets/store_logo.dart';
 import '../../widgets/top_app_bar_actions.dart';
+import '../../widgets/animated_primitives.dart';
 
 const _kBrand = Color(0xFF15803d);
 
@@ -331,6 +332,13 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
           ? 'Added $okCount/${targets.length} via cheapest store · +\$${totalSaved.toStringAsFixed(2)} GuacMoney 🥑'
           : 'Added $okCount/${targets.length} via cheapest store ✓';
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg), duration: const Duration(seconds: 4)));
+        // Celebrate parity with the web's fireConfetti — Auto-Add is
+        // the GuacMoney engagement loop's hero moment.
+        if (okCount > 0) {
+          mascotBus.celebrate(totalSaved > 0
+              ? '+\$${totalSaved.toStringAsFixed(2)} saved'
+              : 'Added $okCount');
+        }
       }
       await _load();
     } catch (e) {
@@ -410,7 +418,23 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
 
         Expanded(
           child: _loading
-            ? const Center(child: CircularProgressIndicator())
+            ? ListView.builder(
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                itemCount: 5,
+                itemBuilder: (_, i) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Row(children: [
+                    const ShimmerBox(width: 36, height: 36, radius: 18),
+                    const SizedBox(width: 12),
+                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: const [
+                      ShimmerBox(width: 160, height: 14),
+                      SizedBox(height: 8),
+                      ShimmerBox(width: 80, height: 11),
+                    ])),
+                    const ShimmerBox(width: 24, height: 24, radius: 6),
+                  ]),
+                ),
+              )
             : _loadError != null
               ? _errorView()
               : inList.isEmpty
@@ -466,7 +490,9 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
 
   Widget _itemTile(_Item it, {required bool isPredicted}) {
     final picked = isPredicted && _selectedBuyAgain.contains(it.id);
-    return Dismissible(
+    return FadeUpOnMount(
+      key: ValueKey('item-anim-${it.id}'),
+      child: Dismissible(
       key: ValueKey(it.id),
       background: Container(color: Colors.red, alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20), child: const Icon(Icons.delete, color: Colors.white)),
@@ -504,11 +530,17 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
               size: 36,
               emojiBg: _kBrand,
             ),
-        title: Text(it.name, style: TextStyle(
-          fontWeight: FontWeight.w600,
-          decoration: it.approved ? TextDecoration.lineThrough : null,
-          color: it.approved ? Colors.black54 : null,
-        )),
+        title: AnimatedDefaultTextStyle(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            decoration: it.approved ? TextDecoration.lineThrough : TextDecoration.none,
+            color: it.approved ? Colors.black54 : const Color(0xFF111827),
+          ),
+          child: Text(it.name),
+        ),
         subtitle: Row(children: [
           Text('×${it.qty}', style: const TextStyle(fontSize: 12, color: Colors.black54)),
           if (it.storeNameDisplay != null && it.storeNameDisplay!.isNotEmpty) ...[
@@ -539,6 +571,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
               onChanged: (_) => _toggle(it),
               activeColor: _kBrand,
             ),
+      ),
       ),
     );
   }

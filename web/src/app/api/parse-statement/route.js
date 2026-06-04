@@ -217,9 +217,25 @@ async function callGroqForFile({ apiKey, mimeType, buffer }) {
   })
 }
 
+// Magic-byte sniff for PDF (%PDF == 0x25 0x50 0x44 0x46). Browsers and
+// curl lie about file.type, so the MIME hint alone is not enough — we
+// confirm the first 4 bytes match before handing attacker-controlled
+// bytes to pdf-parse (CVE history). For images we trust the MIME hint
+// because the downstream provider treats them as opaque blobs.
+function looksLikePdf(buf) {
+  return buf?.length >= 4 && buf[0] === 0x25 && buf[1] === 0x50 && buf[2] === 0x44 && buf[3] === 0x46
+}
+
 export async function POST(request) {
   try {
-    const rl = await rateLimit(rateKey(request, 'parse-statement'), { limit: 5, windowMs: 60_000 })
+    // Auth — statements contain PII (account numbers, balances). Reject
+    // anonymous callers outright; previously this endpoint was open and
+    // would burn Gemini quota on attacker-controlled PDFs.
+    const sb = createClient()
+    const { data: { user } } = await sb.auth.getUser()
+    if (!user) return Response.json({ error: 'Sign in required.' }, { status: 401 })
+
+    const rl = await rateLimit(rateKey(request, `parse-statement:${user.id}`), { limit: 5, windowMs: 60_000 })
     if (!rl.ok) return Response.json({ error: `Too many parses. Try again in ${rl.retryAfter}s.` }, { status: 429 })
 
     const geminiKey = process.env.GEMINI_API_KEY
@@ -239,6 +255,12 @@ export async function POST(request) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer())
+
+    // Magic-byte gate for PDFs — refuse renamed-extension uploads BEFORE
+    // pdf-parse touches the bytes. /api/receipts/from-pdf does the same.
+    if (mimeType === 'application/pdf' && !looksLikePdf(buffer)) {
+      return Response.json({ error: 'File is not a valid PDF (magic bytes mismatch).' }, { status: 415 })
+    }
     const base64 = buffer.toString('base64')
 
     let result, geminiError = null

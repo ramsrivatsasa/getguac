@@ -27,6 +27,21 @@ const SYSTEM_PROMPT = `You extract structured data from retail receipts. The rec
 - An e-receipt email (HTML or plain text)
 - An order confirmation email
 - A receipt FORWARDED inside another email (with "Forwarded message", "From:", "To:", "Date:", "Subject:" headers and the user's own signature)
+- A SCREENSHOT of an online-order confirmation page or email (Amazon, Doordash, Uber Eats, Instacart, Shipt, Grubhub, Walmart Online, Target Pickup, Costco.com, Whole Foods, Sephora, Best Buy, etc.). These have a website chrome / app UI around them — IGNORE the chrome (browser tabs, app navigation bars, status bars, share buttons) and extract the order content.
+
+ONLINE-ORDER SCREENSHOTS — common label mappings (treat as receipt fields):
+- "Restaurant" / "From" / "Sold by" / "Order from" → store_name (the merchant)
+- "Delivery from" / "Pickup from" → store_name
+- "Subtotal" → items-only number, NOT the final total
+- "Delivery fee" / "Service fee" / "Driver tip" / "Tip" / "Priority fee" / "Small order fee" / "Bag fee" → each is a SEPARATE line item with a descriptive item_name and category "eats" (food delivery) or matching context, NOT folded into tax
+- "Taxes & Fees" combined → split if possible, otherwise put the explicit "Tax" amount in tax_paid and any fee remainder as its own item
+- "Order Total" / "Grand Total" / "Total" / "You paid" / "Total Charged" → total_amount (this is the FINAL number the user paid, AFTER tax + fees + tip)
+- "Estimated total" on Amazon → total_amount only if no GRAND TOTAL is shown
+- Order date labels: "Ordered on", "Order placed", "Delivered on", "Placed", "Order date" → date (transaction date; prefer "Order placed" over "Delivered on")
+- Item rows: name on the left, qty often as "x 2" or "(2)", price on the right. Combo / meal items keep the full combo name. Modifiers ("No onions", "Extra cheese") stay with the parent item — do not create separate lines for them.
+- Online-order screenshots almost never have a payment_last4 visible; leave null when not shown. They may show "Visa ending in 1234" → payment_method: "Visa", payment_last4: "1234".
+
+The screenshot may also be of a banking-app transaction detail page (Chase, Capital One, etc.) — those are NOT receipts (no line items, just an amount + merchant). Treat as is_receipt: true if there's a clear merchant + amount + date, with empty items.
 
 Return ONLY a single JSON object. No prose, no markdown fences. Schema:
 

@@ -25,6 +25,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../widgets/store_logo.dart';
 import '../../utils/date_format.dart';
 import '../../services/product_image_service.dart';
+import '../../widgets/animated_primitives.dart';
 
 class ItemDetailScreen extends StatefulWidget {
   final String id;
@@ -313,15 +314,21 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
           ),
           if (stores.isNotEmpty) ...[
             const SizedBox(height: 4),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: _buildStoresCard(stores),
+            FadeUpOnMount(
+              delay: const Duration(milliseconds: 120),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: _buildStoresCard(stores),
+              ),
             ),
           ],
           const SizedBox(height: 16),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: _buildRecentReceiptsCard(allRows.take(5).toList()),
+          FadeUpOnMount(
+            delay: const Duration(milliseconds: 200),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _buildRecentReceiptsCard(allRows.take(5).toList()),
+            ),
           ),
           const SizedBox(height: 32),
         ]),
@@ -458,7 +465,10 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
             child: Row(mainAxisSize: MainAxisSize.min, children: [
               const Text('🥑', style: TextStyle(fontSize: 14)),
               const SizedBox(width: 4),
-              Text('\$${totalSpent.toStringAsFixed(2)}',
+              CountUp(
+                value: totalSpent,
+                duration: const Duration(milliseconds: 600),
+                formatter: (v) => '\$${v.toStringAsFixed(2)}',
                 style: const TextStyle(
                   color: Color(0xFF065f46), fontSize: 14, fontWeight: FontWeight.w900,
                 ),

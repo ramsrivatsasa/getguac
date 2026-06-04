@@ -137,6 +137,48 @@ class ReceiptProvider extends ChangeNotifier {
   /// Offline: if the network is down or /api/receipts/save times out,
   /// the save is QUEUED in shared_preferences and replayed on next app
   /// launch / online flush. Returns `queued: true` in that case.
+  /// Voice-capture save path. Takes the already-parsed receipt (server
+  /// turned a transcript into the same shape /api/parse-receipt returns)
+  /// and a [validationComment] that gets persisted to the row's
+  /// validation_comment column. No image file because the voice flow
+  /// doesn't produce one — we deliberately leave receipt_link empty so
+  /// the dashboard can still surface "voice-only" rows for audit later.
+  /// Mirrors [addParsedReceipt] but without the upload step.
+  Future<({String? id, String? error, bool merged, bool queued})> addVoiceReceipt(
+    Map<String, dynamic> parsed, {
+    required String validationComment,
+  }) async {
+    final uid = _sb.auth.currentUser?.id;
+    if (uid == null) {
+      return (id: null, error: 'Not signed in', merged: false, queued: false);
+    }
+
+    final today = DateTime.now().toIso8601String().substring(0, 10);
+    final dateField = (parsed['date'] is String &&
+                      RegExp(r'^\d{4}-\d{2}-\d{2}').hasMatch(parsed['date'] as String))
+        ? (parsed['date'] as String).substring(0, 10)
+        : today;
+
+    final payload = <String, dynamic>{
+      'parsed': {
+        ...parsed,
+        'date': dateField,
+      },
+      'validation_comment': validationComment,
+    };
+    final result = await ReceiptOutbox.trySave(payload);
+    if (result.error != null) {
+      return (id: null, error: result.error, merged: false, queued: false);
+    }
+    if (result.queued) {
+      return (id: null, error: null, merged: false, queued: true);
+    }
+    _lastLoaded = null;
+    unawaited(loadReceipts(force: true));
+    mascotBus.bounce();
+    return (id: result.receiptId, error: null, merged: result.merged, queued: false);
+  }
+
   Future<({String? id, String? error, bool merged, bool queued})> addParsedReceipt(
     Map<String, dynamic> parsed,
     File imageFile, {

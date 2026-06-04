@@ -7,6 +7,7 @@
 // the foreground content stays readable.
 
 import './emoji-floats.css'
+import CountUp from './animated/CountUp'
 
 // Each tone is a Tailwind gradient class for the chip (warm reds
 // through brand greens) plus a matching stroke color used by the
@@ -146,9 +147,16 @@ function deltaSubtextClass(deltaArrow, deltaGoodWhen) {
 export default function PaymentTile({
   emoji, tone, label, value, pattern, decor,
   deltaLabel, deltaArrow, deltaGoodWhen = 'neutral',
+  // Optional animated-number mode. When `numericValue` is supplied,
+  // we tween it through CountUp (sync'd 350ms by default) and use
+  // `value` as the format template (e.g. '$' prefix). If absent, we
+  // fall back to rendering `value` verbatim like before — keeps the
+  // simple consumer call sites working unchanged.
+  numericValue, prefix = '', decimals,
 }) {
   const t = TONE[tone] || TONE.red
   const d = decor || {}
+  const animated = numericValue != null && Number.isFinite(Number(numericValue))
   return (
     <div className="payment-tile-card snap-start shrink-0 w-56 relative overflow-hidden flex items-center gap-3 bg-white rounded-2xl border border-gray-200 shadow-sm p-3 hover:shadow-md transition-all">
       <VectorPattern pattern={pattern} stroke={t.stroke} pos={d.patternPos} />
@@ -159,7 +167,18 @@ export default function PaymentTile({
       </div>
       <div className="min-w-0 flex-1 relative z-10">
         <p className="text-[11px] text-gray-500 font-medium leading-tight truncate">{label}</p>
-        <p className="text-lg font-black text-gray-900 tabular-nums leading-tight mt-0.5 truncate">{value}</p>
+        {animated ? (
+          <CountUp
+            value={Number(numericValue)}
+            duration={350}
+            prefix={prefix}
+            decimals={decimals ?? (prefix === '$' ? 2 : 0)}
+            as="p"
+            className="text-lg font-black text-gray-900 leading-tight mt-0.5 truncate block"
+          />
+        ) : (
+          <p className="text-lg font-black text-gray-900 tabular-nums leading-tight mt-0.5 truncate">{value}</p>
+        )}
         {deltaLabel && deltaLabel !== '—' && (
           <p className={`text-[11px] font-semibold mt-0.5 ${deltaSubtextClass(deltaArrow, deltaGoodWhen)}`}>
             {deltaLabel} vs prior

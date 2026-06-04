@@ -7,10 +7,12 @@ import { ArrowLeft, Save, Plus, Shield, MapPin, Phone, Hash, Sparkles, MessageCi
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { addToShoppingList, setStashProductCategory } from '../../../../lib/db'
 import { CATEGORIES } from '../../../../lib/categories'
+import { ITEM_TAG_META } from '../../../../lib/itemTagVocab'
 import { isItemNonReturnable } from '../../../../lib/non-returnable'
 import CategoryPicker from '../../../../components/CategoryPicker'
 import { displayStoreName } from '../../../../lib/store-name-normalize'
 import mascotBus from '../../../../lib/mascotEventBus'
+import { TapScale, SuccessPop, CountUp } from '../../../../components/animated'
 
 const RECEIPT_RATING_META = {
   5: { label: 'Essential', emoji: '💎' },
@@ -33,6 +35,10 @@ export default function ReceiptDetailPage() {
   const updateItem = useUpdateReceiptItem()
   const [localReceipt, setLocalReceipt] = useState(null)
   const [showItemForm, setShowItemForm] = useState(false)
+  // Bumped on every rating tap so SuccessPop fires the checkmark
+  // animation on top of the chosen rating pill. State, not ref, so
+  // the child re-renders and reads the new trigger value.
+  const [ratingPop, setRatingPop] = useState(0)
   const [newItem, setNewItem] = useState({ sku: '', model: '', item_name: '', purchase_date: '', qty: 1, price: '', warranty_info: '', item_manual: '', return_date: '', returned: false })
 
   const current = localReceipt ?? receipt
@@ -225,23 +231,32 @@ export default function ReceiptDetailPage() {
               const info = RECEIPT_RATING_META[n]
               const active = current.rating === n
               return (
-                <button
-                  key={n}
-                  type="button"
-                  onClick={() => {
-                    handleFieldChange('rating', n)
-                    handleFieldChange('validated_at', new Date().toISOString())
-                    mascotBus.celebrate('Rated!')
-                  }}
-                  title={info.label}
-                  className={`flex flex-col items-center gap-1 py-2 rounded-2xl border-2 transition-all ${
-                    active
-                      ? 'border-emerald-500 bg-emerald-50 shadow-sm scale-[1.03]'
-                      : 'border-gray-100 hover:border-emerald-200 hover:bg-emerald-50/50'
-                  }`}>
-                  <span className="text-xl">{info.emoji}</span>
-                  <span className={`text-[10px] font-bold uppercase tracking-wide ${active ? 'text-emerald-800' : 'text-gray-500'}`}>{info.label}</span>
-                </button>
+                <TapScale key={n}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleFieldChange('rating', n)
+                      handleFieldChange('validated_at', new Date().toISOString())
+                      mascotBus.celebrate('Rated!')
+                      // Bump triggers SuccessPop on the chosen pill;
+                      // the check draws into the pill so the user
+                      // sees the value lock in.
+                      setRatingPop(p => p + 1)
+                    }}
+                    title={info.label}
+                    className={`relative flex flex-col items-center gap-1 py-2 rounded-2xl border-2 transition-all ${
+                      active
+                        ? 'border-emerald-500 bg-emerald-50 shadow-sm scale-[1.03]'
+                        : 'border-gray-100 hover:border-emerald-200 hover:bg-emerald-50/50'
+                    }`}>
+                    <span className="text-xl">{info.emoji}</span>
+                    <span className={`text-[10px] font-bold uppercase tracking-wide ${active ? 'text-emerald-800' : 'text-gray-500'}`}>{info.label}</span>
+                    {/* Fires only on the freshly-chosen rating —
+                        ratingPop bumps each tap; SuccessPop's effect
+                        clears after 900ms so additional taps re-fire. */}
+                    {active && <SuccessPop trigger={ratingPop} size={24} />}
+                  </button>
+                </TapScale>
               )
             })}
           </div>
@@ -482,7 +497,21 @@ export default function ReceiptDetailPage() {
                   <tr key={item.id}>
                     <td className="px-3 py-1 text-gray-400">{item.sku || '—'}</td>
                     <td className="px-3 py-1 text-gray-400">{item.model || '—'}</td>
-                    <td className="px-3 py-1 font-medium">{item.item_name}</td>
+                    <td className="px-3 py-1 font-medium">
+                      <span>{item.item_name}</span>
+                      {/* Guac-AI semantic tag chip — small inline pill, only
+                          rendered when the tagger filled ai_tag with a value
+                          from the fixed vocabulary (lib/itemTagVocab.js). */}
+                      {item.ai_tag && ITEM_TAG_META[item.ai_tag] && (
+                        <span
+                          className={`ml-1.5 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold border ${ITEM_TAG_META[item.ai_tag].tone}`}
+                          title={`Guac-AI tag: ${ITEM_TAG_META[item.ai_tag].label}`}
+                        >
+                          <span>{ITEM_TAG_META[item.ai_tag].emoji}</span>
+                          <span>{ITEM_TAG_META[item.ai_tag].label}</span>
+                        </span>
+                      )}
+                    </td>
                     <td className="px-3 py-1">
                       <CategoryPicker
                         size="xs"

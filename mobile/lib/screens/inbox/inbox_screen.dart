@@ -9,6 +9,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../services/update_service.dart';
 import '../../widgets/guac_mascot.dart';
 import '../../widgets/animated_mascot.dart';
+import '../../widgets/animated_primitives.dart';
 
 const _kBrand = Color(0xFF15803d);
 const _kBrandLight = Color(0xFFd1fae5);
@@ -273,7 +274,22 @@ class _InboxScreenState extends State<InboxScreen> {
         ),
         Expanded(
           child: _loading
-            ? const Center(child: CircularProgressIndicator())
+            ? ListView.builder(
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                itemCount: 7,
+                itemBuilder: (_, i) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Row(children: [
+                    const ShimmerBox(width: 36, height: 36, radius: 18),
+                    const SizedBox(width: 12),
+                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: const [
+                      ShimmerBox(width: 180, height: 13),
+                      SizedBox(height: 6),
+                      ShimmerBox(width: 240, height: 11),
+                    ])),
+                  ]),
+                ),
+              )
             : _messages.isEmpty
               ? _emptyState()
               : RefreshIndicator(
@@ -281,12 +297,16 @@ class _InboxScreenState extends State<InboxScreen> {
                   child: ListView.separated(
                     itemCount: _messages.length,
                     separatorBuilder: (_, __) => const Divider(height: 1, indent: 12, endIndent: 12),
-                    itemBuilder: (_, i) => _MessageTile(
-                      m: _messages[i],
-                      onTap: () async {
-                        await context.push('/inbox/${_messages[i].id}');
-                        _load();  // refresh state after returning
-                      },
+                    itemBuilder: (_, i) => FadeUpOnMount(
+                      key: ValueKey('inbox-row-${_messages[i].id}'),
+                      delay: i < 8 ? Duration(milliseconds: i * 35) : Duration.zero,
+                      child: _MessageTile(
+                        m: _messages[i],
+                        onTap: () async {
+                          await context.push('/inbox/${_messages[i].id}');
+                          _load();  // refresh state after returning
+                        },
+                      ),
                     ),
                   ),
                 ),
@@ -298,7 +318,7 @@ class _InboxScreenState extends State<InboxScreen> {
   Widget _emptyState() {
     return ListView(children: [
       const SizedBox(height: 80),
-      const Center(child: GuacMascot(mood: MascotMood.relaxing, size: 130)),
+      const Center(child: AnimatedMascot(mood: MascotMood.relaxing, size: 130, idle: true)),
       const SizedBox(height: 16),
       Center(child: Text(
         _filter == 'unread' ? 'All caught up.'

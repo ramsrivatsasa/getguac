@@ -13,6 +13,9 @@ import '../../services/update_service.dart';
 import '../../services/debug_log.dart';
 import '../../services/app_lock_service.dart';
 import '../../widgets/guac_mascot.dart';
+import '../../widgets/animated_mascot.dart';
+import '../../widgets/animated_primitives.dart';
+import '../../services/mascot_event_bus.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -32,6 +35,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _bioEnabled = false;
   bool _showPassword = false;
   String _versionLabel = '';
+  int _shakeTrigger = 0;
 
   @override
   void initState() {
@@ -387,6 +391,10 @@ class _LoginScreenState extends State<LoginScreen> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
       }
+      // Wiggle the form + the mascot so the user immediately sees the
+      // error in motion, not just a toast text.
+      setState(() => _shakeTrigger++);
+      mascotBus.wiggle();
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -409,8 +417,10 @@ class _LoginScreenState extends State<LoginScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               child: Column(
                 children: [
-                  // Avocado mascot — SVG matches the web brand
-                  const GuacMascot(size: 96),
+                  // Avocado mascot — SVG matches the web brand.
+                  // Idle breathe gives the login screen ambient life;
+                  // mascotBus.wiggle on failed sign-in shakes it too.
+                  const AnimatedMascot(size: 96, idle: true),
                   const SizedBox(height: 8),
                   const Text(
                     'GetGuac',
@@ -427,7 +437,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: TextStyle(color: Colors.white70, fontSize: 12),
                   ),
                   const SizedBox(height: 16),
-                  Card(
+                  ShakeOnError(
+                    trigger: _shakeTrigger,
+                    child: SlideInFromBottom(
+                      child: Card(
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                     elevation: 10,
                     shadowColor: Colors.black54,
@@ -608,6 +621,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ),
+                  ),
+                  ),
                   ),
                   const SizedBox(height: 8),
                   Text(

@@ -12,6 +12,7 @@ import '../../services/mascot_event_bus.dart';
 import '../../widgets/store_logo.dart';
 import '../../widgets/guac_mascot.dart';
 import '../../widgets/animated_mascot.dart';
+import '../../widgets/animated_primitives.dart';
 import 'link_retailer_screen.dart' show LinkRetailerScreen;
 
 /// Thin wrapper to keep the import name semantic-stable when this
@@ -126,7 +127,23 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Connections')),
       body: _loading
-        ? const Center(child: CircularProgressIndicator())
+        ? ListView.builder(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+            itemCount: 6,
+            itemBuilder: (_, __) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Row(children: [
+                const ShimmerBox(width: 42, height: 42, radius: 21),
+                const SizedBox(width: 12),
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: const [
+                  ShimmerBox(width: 140, height: 14),
+                  SizedBox(height: 6),
+                  ShimmerBox(width: 80, height: 11),
+                ])),
+                const ShimmerBox(width: 32, height: 32, radius: 16),
+              ]),
+            ),
+          )
         : ListView(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
             children: [
@@ -195,7 +212,9 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
   }
 
   Widget _retailerRow(Retailer r, {required bool isActive}) {
-    return Padding(
+    return FadeUpOnMount(
+      key: ValueKey('retailer-row-${r.id}-$isActive'),
+      child: Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Material(
         color: Colors.white,
@@ -244,6 +263,7 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
             ]),
           ),
         ),
+      ),
       ),
     );
   }

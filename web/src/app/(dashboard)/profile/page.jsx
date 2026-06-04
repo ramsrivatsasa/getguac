@@ -53,7 +53,10 @@ export default function ProfilePage() {
   const sp = k => e => setPayForm(p => ({ ...p, [k]: e.target.value }))
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    // anim-slideup gives the whole profile a single soft entrance.
+    // Cheap (one keyframe instead of staggering N children) and
+    // keeps the page feeling deliberate after navigating to it.
+    <div className="space-y-6 max-w-2xl anim-slideup">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3">
           <GuacMascot expression="sitting" size={56} />

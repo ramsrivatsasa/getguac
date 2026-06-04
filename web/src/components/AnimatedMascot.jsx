@@ -26,6 +26,15 @@ import mascotBus from '../lib/mascotEventBus'
 
 const CONFETTI_COLORS = ['#15803d', '#a3e635', '#facc15', '#f472b6', '#60a5fa']
 
+// SSR-safe reduced-motion check. matchMedia is undefined during
+// server rendering; default to "respect motion" so the SSR output is
+// never falsely accessibility-friendly.
+function prefersReducedMotion() {
+  if (typeof window === 'undefined') return false
+  try { return window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches === true }
+  catch { return false }
+}
+
 export default function AnimatedMascot({
   expression = 'happy',
   size = 140,
@@ -35,24 +44,44 @@ export default function AnimatedMascot({
   const wrapRef = useRef(null)
   const canvasRef = useRef(null)
   const idleAnimRef = useRef(null)
+  // Track the current event-animation so a new event can cancel it
+  // mid-flight — otherwise rapid event spam stacks WAAPI animations on
+  // the same property and the visual gets stuck on the last frame.
+  const eventAnimRef = useRef(null)
+  const confettiRafRef = useRef(null)
 
   useEffect(() => {
     return mascotBus.subscribe((ev) => {
+      // Accessibility: respect prefers-reduced-motion. Subscribers in
+      // other parts of the app still fire (they may have non-motion
+      // side effects), but the mascot itself stays still.
+      if (prefersReducedMotion()) return
       const el = wrapRef.current
       if (!el) return
+      // Cancel any prior event animation before starting a new one.
+      try { eventAnimRef.current?.cancel() } catch (_) {}
       switch (ev.animation) {
-        case 'bounce':  return playBounce(el)
-        case 'wiggle':  return playWiggle(el)
-        case 'pulse':   return playPulse(el)
+        case 'bounce':  eventAnimRef.current = playBounce(el); return
+        case 'wiggle':  eventAnimRef.current = playWiggle(el); return
+        case 'pulse':   eventAnimRef.current = playPulse(el);  return
         case 'celebrate':
-          playBounce(el)
+          eventAnimRef.current = playBounce(el)
           playWiggle(el)
-          playConfetti(canvasRef.current, size)
+          confettiRafRef.current = playConfetti(canvasRef.current, size, confettiRafRef)
           return
         default: return
       }
     })
   }, [size])
+
+  // Unmount cleanup — cancel any in-flight animation or RAF loop so
+  // the closure doesn't keep referencing a detached canvas / element.
+  useEffect(() => {
+    return () => {
+      try { eventAnimRef.current?.cancel() } catch (_) {}
+      if (confettiRafRef.current) cancelAnimationFrame(confettiRafRef.current)
+    }
+  }, [])
 
   // Idle breathing — kept separate so event animations stack on top
   // without fighting the idle loop. We pause it briefly during event
@@ -121,7 +150,7 @@ export default function AnimatedMascot({
 // stays Apple/Google-tasteful, just slower + more emphatic.
 
 function playBounce(el) {
-  el.animate(
+  return el.animate(
     [
       { transform: 'scale(1)' },
       { transform: 'scale(1.22)', offset: 0.30 },
@@ -137,7 +166,7 @@ function playBounce(el) {
 function playWiggle(el) {
   // Three full back-and-forths instead of one — reads as a "happy
   // dance" rather than a single flinch.
-  el.animate(
+  return el.animate(
     [
       { transform: 'rotate(0deg)' },
       { transform: 'rotate(-10deg)', offset: 0.12 },
@@ -154,7 +183,7 @@ function playWiggle(el) {
 function playPulse(el) {
   // Three pulses over 1.8s instead of two over 800ms — softer breath
   // that's actually noticeable.
-  el.animate(
+  return el.animate(
     [
       { transform: 'scale(1)' },
       { transform: 'scale(1.08)' },
@@ -168,8 +197,8 @@ function playPulse(el) {
   )
 }
 
-function playConfetti(canvas, size) {
-  if (!canvas) return
+function playConfetti(canvas, size, rafRef) {
+  if (!canvas) return null
   // Resize backing store to match displayed size — required for
   // crisp rendering on HiDPI. Done lazily so we don't pay the cost
   // until the canvas is actually painted on.
@@ -229,12 +258,17 @@ function playConfetti(canvas, size) {
       ctx.restore()
     }
     if (progress < 1) {
-      requestAnimationFrame(frame)
+      // Track the RAF id so the parent's unmount cleanup can cancel it.
+      const id = requestAnimationFrame(frame)
+      if (rafRef) rafRef.current = id
     } else {
       ctx.clearRect(0, 0, w, h)
+      if (rafRef) rafRef.current = null
     }
   }
-  requestAnimationFrame(frame)
+  const initial = requestAnimationFrame(frame)
+  if (rafRef) rafRef.current = initial
+  return initial
 }
 
 function roundedRect(ctx, x, y, w, h, r) {

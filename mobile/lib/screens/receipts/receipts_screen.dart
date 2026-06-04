@@ -8,7 +8,10 @@ import '../../providers/receipt_provider.dart';
 import '../../models/receipt_model.dart';
 import '../../utils/date_format.dart';
 import '../../services/receipt_parse_service.dart';
+import '../../services/voice_capture_service.dart';
 import '../../categories.dart' as cat;
+import '../../widgets/animated_primitives.dart';
+import '../../services/mascot_event_bus.dart';
 
 class ReceiptsScreen extends StatefulWidget {
   /// Optional initial store filter from a deep-link like
@@ -166,9 +169,45 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
     super.dispose();
   }
 
+  /// Bottom-sheet source picker. Lets the user EITHER snap a fresh photo
+  /// OR pick a screenshot / image already in their gallery — important
+  /// because plenty of "receipts" arrive as Amazon / Doordash / Uber Eats /
+  /// Instacart confirmation screenshots saved to the camera roll, not
+  /// physical receipts in front of a camera.
+  Future<ImageSource?> _pickImageSource() async {
+    return showModalBottomSheet<ImageSource>(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => SafeArea(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          const SizedBox(height: 8),
+          Container(width: 36, height: 4, decoration: BoxDecoration(
+            color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2),
+          )),
+          const SizedBox(height: 8),
+          ListTile(
+            leading: const Icon(Icons.camera_alt, color: Color(0xFF064e3b)),
+            title: const Text('Take a photo', style: TextStyle(fontWeight: FontWeight.w700)),
+            subtitle: const Text('Snap a paper receipt'),
+            onTap: () => Navigator.of(ctx).pop(ImageSource.camera),
+          ),
+          ListTile(
+            leading: const Icon(Icons.photo_library_outlined, color: Color(0xFF064e3b)),
+            title: const Text('Pick from gallery', style: TextStyle(fontWeight: FontWeight.w700)),
+            subtitle: const Text('Amazon, Doordash, Uber Eats… any screenshot'),
+            onTap: () => Navigator.of(ctx).pop(ImageSource.gallery),
+          ),
+          const SizedBox(height: 8),
+        ]),
+      ),
+    );
+  }
+
   Future<void> _captureReceipt() async {
+    final source = await _pickImageSource();
+    if (source == null || !mounted) return;
     final picker = ImagePicker();
-    final img = await picker.pickImage(source: ImageSource.camera);
+    final img = await picker.pickImage(source: source);
     if (img == null || !mounted) return;
 
     final uid = context.read<AppAuthProvider>().currentUser?.id;
@@ -223,6 +262,74 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
     showDialog(
       context: context,
       builder: (ctx) => _AddReceiptDialog(uid: uid, imageFile: file, prefill: parsed),
+    );
+  }
+
+  /// Voice → receipt capture. Mirrors the web flow:
+  ///   1. Mic dialog records a transcript via [VoiceCaptureService].
+  ///   2. Transcript → /api/receipts/from-voice → Gemini fills the schema.
+  ///   3. Open the existing Add Receipt dialog pre-filled, with the original
+  ///      transcript stashed for the save call so the new row carries
+  ///      `validation_comment = [voice] <transcript>` for later audit.
+  /// We always pop the review dialog instead of silently saving — speech
+  /// recognition is noisy enough that a human-in-the-loop step is the only
+  /// way to keep the data clean.
+  Future<void> _captureVoice() async {
+    final uid = context.read<AppAuthProvider>().currentUser?.id;
+    if (uid == null) return;
+    final service = VoiceCaptureService();
+    final available = await service.isAvailable();
+    if (!mounted) return;
+    if (!available) {
+      // TODO(voice): re-enable when the speech_to_text plugin runs cleanly
+      // on this device. Surface a friendly nudge instead of crashing.
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Voice capture isn't available on this device yet. Use the camera instead."),
+        duration: Duration(seconds: 4),
+      ));
+      return;
+    }
+    final transcript = await showDialog<String?>(
+      context: context,
+      builder: (ctx) => _VoiceCaptureDialog(service: service),
+    );
+    if (!mounted || transcript == null || transcript.trim().isEmpty) return;
+
+    // Parse via Gemini on the server.
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const AlertDialog(
+        content: Padding(
+          padding: EdgeInsets.symmetric(vertical: 8),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2)),
+            SizedBox(width: 14),
+            Flexible(child: Text('Guac-AI is parsing your voice receipt…')),
+          ]),
+        ),
+      ),
+    );
+    final result = await VoiceCaptureService.parseTranscript(transcript);
+    if (!mounted) return;
+    Navigator.of(context, rootNavigator: true).pop();  // dismiss loader
+
+    if (!result.ok) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(result.error ?? 'Voice parse failed'),
+        duration: const Duration(seconds: 4),
+      ));
+      return;
+    }
+
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (ctx) => _AddReceiptDialog(
+        uid: uid,
+        prefill: result.data!,
+        voiceTranscript: transcript,
+      ),
     );
   }
 
@@ -375,6 +482,7 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
               IconButton(icon: const Icon(Icons.delete), onPressed: _deleteSelected, tooltip: 'Delete'),
             ]
           : [
+              IconButton(icon: const Icon(Icons.mic_none), onPressed: _captureVoice, tooltip: 'Voice'),
               IconButton(icon: const Icon(Icons.camera_alt), onPressed: _captureReceipt, tooltip: 'Camera'),
             ],
       ),
@@ -422,14 +530,52 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
             // Force a refetch scoped to whatever chip the user has selected.
             // Falls back to the provider's last period if for some reason
             // our local selection hasn't been satisfied yet.
-            onRefresh: () => context.read<ReceiptProvider>()
-              .loadReceipts(period: _selectedPeriod, force: true),
+            onRefresh: () async {
+              await context.read<ReceiptProvider>()
+                .loadReceipts(period: _selectedPeriod, force: true);
+              // Small mascot bounce on successful refresh — gives the
+              // pull-to-refresh gesture a payoff beyond "spinner stops".
+              if (mounted) mascotBus.bounce();
+            },
             child: loading
-            ? const Center(child: CircularProgressIndicator())
+            ? ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                itemCount: 6,
+                itemBuilder: (_, i) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Row(children: [
+                    const ShimmerBox(width: 40, height: 40, radius: 10),
+                    const SizedBox(width: 12),
+                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: const [
+                      ShimmerBox(width: 160, height: 14),
+                      SizedBox(height: 8),
+                      ShimmerBox(width: 100, height: 11),
+                    ])),
+                    const ShimmerBox(width: 56, height: 18),
+                  ]),
+                ),
+              )
             : filtered.isEmpty
               ? ListView(children: const [
-                  SizedBox(height: 120),
-                  Center(child: Text('No receipts yet. Pull to refresh or tap + to add.', style: TextStyle(color: Colors.grey))),
+                  SizedBox(height: 100),
+                  Center(child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 28),
+                    child: Column(children: [
+                      Icon(Icons.receipt_long, size: 40, color: Color(0xFF9ca3af)),
+                      SizedBox(height: 10),
+                      Text(
+                        'No receipts yet',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Color(0xFF374151), fontWeight: FontWeight.w800, fontSize: 15),
+                      ),
+                      SizedBox(height: 6),
+                      Text(
+                        'Tap the camera to scan a paper receipt — or pick a screenshot of an Amazon, Doordash, Uber Eats, Instacart, or Walmart order from your gallery. Guac-AI reads them all.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.grey, fontSize: 12.5, height: 1.4),
+                      ),
+                    ]),
+                  )),
                 ])
               : ListView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -437,7 +583,15 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
                   itemBuilder: (_, i) {
                     final r = filtered[i];
                     final isSelected = _selected.contains(r.id);
-                    return Card(
+                    // Each row keyed by id so inserts from background
+                    // email-pull tween in cleanly rather than snapping
+                    // the whole list. Index-based stagger only kicks in
+                    // for the first 8 rows so scrolling far down isn't
+                    // gated on a long stagger chain.
+                    return FadeUpOnMount(
+                      key: ValueKey('receipt-row-${r.id}'),
+                      delay: i < 8 ? Duration(milliseconds: i * 40) : Duration.zero,
+                      child: Card(
                       color: isSelected ? Colors.blue.shade50 : null,
                       child: ListTile(
                         leading: _selectionMode
@@ -508,6 +662,7 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
                         onTap: _selectionMode ? () => _toggle(r.id) : () => context.go('/receipts/${r.id}'),
                         onLongPress: () => _toggle(r.id),
                       ),
+                    ),
                     );
                   },
                 ),
@@ -535,7 +690,13 @@ class _AddReceiptDialog extends StatefulWidget {
   final File? imageFile;
   final Receipt? existing;
   final ParsedReceipt? prefill;
-  const _AddReceiptDialog({required this.uid, this.imageFile, this.existing, this.prefill});
+  /// When non-null, this row came from the voice-capture flow. We thread
+  /// the original transcript into receipts.validation_comment so we can
+  /// grep `[voice]` rows later to audit accuracy. No image is uploaded.
+  final String? voiceTranscript;
+  const _AddReceiptDialog({
+    required this.uid, this.imageFile, this.existing, this.prefill, this.voiceTranscript,
+  });
   @override
   State<_AddReceiptDialog> createState() => _AddReceiptDialogState();
 }
@@ -585,6 +746,31 @@ class _AddReceiptDialogState extends State<_AddReceiptDialog> {
         'reward_no': _rewardNo.text,
         'business_purchase': _business,
       });
+    } else if (widget.voiceTranscript != null) {
+      // Voice path — route through the server save pipeline so dedup,
+      // Tier 2, store resolve, items, refund policies all run identically
+      // to the photo path. validation_comment captures the transcript for
+      // later accuracy audits.
+      final p = widget.prefill;
+      final parsed = <String, dynamic>{
+        'store_name': _store.text,
+        'date': _date,
+        'total_amount': double.tryParse(_amount.text) ?? 0,
+        'tax_paid': double.tryParse(_tax.text) ?? 0,
+        'is_return': false,
+        'category': p?.category,
+        'items': p == null ? [] : p.items.map((it) => {
+          'item_name': it.itemName,
+          'qty': it.qty,
+          'price': it.price ?? 0,
+          'category': it.category,
+        }).toList(),
+        'business_purchase': _business,
+      };
+      await provider.addVoiceReceipt(
+        parsed,
+        validationComment: '[voice] ${widget.voiceTranscript}',
+      );
     } else {
       final receipt = Receipt(
         id: '', storeName: _store.text, date: _date,
@@ -599,12 +785,44 @@ class _AddReceiptDialogState extends State<_AddReceiptDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final isVoice = widget.voiceTranscript != null;
     return AlertDialog(
-      title: Text(widget.existing != null ? 'Edit Receipt' : 'Add Receipt'),
+      title: Text(widget.existing != null
+        ? 'Edit Receipt'
+        : isVoice ? 'Review Voice Receipt' : 'Add Receipt'),
       content: SingleChildScrollView(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           if (widget.imageFile != null) ...[
             Image.file(widget.imageFile!, height: 120, fit: BoxFit.cover),
+            const SizedBox(height: 12),
+          ],
+          if (isVoice) ...[
+            // Surface the heard transcript so the user knows what they're
+            // reviewing. Voice recognition mishears brand names and amounts
+            // constantly — this banner makes the audit step impossible to miss.
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFf0fdf4),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFd1fae5)),
+              ),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                const Row(children: [
+                  Icon(Icons.mic, size: 14, color: Color(0xFF065f46)),
+                  SizedBox(width: 6),
+                  Text('Heard:', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF065f46))),
+                ]),
+                const SizedBox(height: 4),
+                Text(widget.voiceTranscript!,
+                  style: const TextStyle(fontSize: 12, color: Color(0xFF065f46), fontStyle: FontStyle.italic)),
+                const SizedBox(height: 6),
+                const Text(
+                  'Voice can mishear amounts and store names — double-check below.',
+                  style: TextStyle(fontSize: 10.5, color: Color(0xFF047857)),
+                ),
+              ]),
+            ),
             const SizedBox(height: 12),
           ],
           TextField(controller: _store, decoration: const InputDecoration(labelText: 'Store Name*')),
@@ -681,6 +899,147 @@ class _CategoryChip extends StatelessWidget {
         const SizedBox(width: 4),
         Text(preset.label, style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: tint)),
       ]),
+    );
+  }
+}
+
+/// Push-to-talk dialog that captures a single spoken utterance and returns
+/// the final transcript on dismiss. Mirrors the web VoiceCapture component.
+/// When the underlying recognizer is unavailable (older OS / denied perms),
+/// the caller short-circuits before this dialog opens — but we still defend
+/// against it here in case the runtime state changes mid-screen.
+class _VoiceCaptureDialog extends StatefulWidget {
+  final VoiceCaptureService service;
+  const _VoiceCaptureDialog({required this.service});
+  @override
+  State<_VoiceCaptureDialog> createState() => _VoiceCaptureDialogState();
+}
+
+class _VoiceCaptureDialogState extends State<_VoiceCaptureDialog>
+    with SingleTickerProviderStateMixin {
+  String _partial = '';
+  String _finalText = '';
+  bool _listening = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    // Make sure the mic indicator doesn't linger after dismiss.
+    widget.service.cancel();
+    super.dispose();
+  }
+
+  Future<void> _toggle() async {
+    if (_listening) {
+      await widget.service.stop();
+      setState(() => _listening = false);
+      return;
+    }
+    setState(() {
+      _error = null;
+      _partial = '';
+      _finalText = '';
+      _listening = true;
+    });
+    final result = await widget.service.listenOnce(
+      onPartial: (t) {
+        if (mounted) setState(() => _partial = t);
+      },
+    );
+    if (!mounted) return;
+    setState(() {
+      _listening = false;
+      if (result != null && result.isNotEmpty) {
+        _finalText = result;
+        _partial = '';
+      } else if (_partial.isEmpty) {
+        _error = "Didn't catch anything. Tap the mic and try again.";
+      } else {
+        _finalText = _partial;
+        _partial = '';
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final text = _finalText.isNotEmpty ? _finalText : _partial;
+    return AlertDialog(
+      title: const Text('Voice → Receipt'),
+      content: SingleChildScrollView(
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          const Text(
+            'Say something like "Thirty bucks at Costco on groceries."',
+            style: TextStyle(fontSize: 12, color: Colors.black54),
+          ),
+          const SizedBox(height: 12),
+          Center(
+            child: InkWell(
+              onTap: _toggle,
+              borderRadius: BorderRadius.circular(40),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: 70, height: 70,
+                decoration: BoxDecoration(
+                  color: _listening ? const Color(0xFFef4444) : const Color(0xFF10b981),
+                  borderRadius: BorderRadius.circular(40),
+                  boxShadow: [
+                    BoxShadow(
+                      color: (_listening ? const Color(0xFFef4444) : const Color(0xFF10b981)).withValues(alpha: 0.35),
+                      blurRadius: _listening ? 18 : 8,
+                      spreadRadius: _listening ? 2 : 0,
+                    ),
+                  ],
+                ),
+                child: Icon(_listening ? Icons.stop : Icons.mic, color: Colors.white, size: 30),
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Center(
+            child: Text(
+              _listening ? 'Listening… tap to stop' : 'Tap mic to start',
+              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.black54),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            constraints: const BoxConstraints(minHeight: 60),
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: const Color(0xFFf9fafb),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFFe5e7eb)),
+            ),
+            child: Text(
+              text.isEmpty ? 'Your spoken receipt will appear here…' : text,
+              style: TextStyle(
+                fontSize: 13,
+                color: text.isEmpty ? Colors.black38 : Colors.black87,
+                fontStyle: _partial.isNotEmpty && _finalText.isEmpty ? FontStyle.italic : FontStyle.normal,
+              ),
+            ),
+          ),
+          if (_error != null) ...[
+            const SizedBox(height: 8),
+            Text(_error!, style: const TextStyle(color: Color(0xFFb91c1c), fontSize: 12)),
+          ],
+          const SizedBox(height: 8),
+          const Text(
+            'Heads up: voice recognition varies by accent and noise. You will review the parsed fields before saving.',
+            style: TextStyle(fontSize: 10.5, color: Colors.black45),
+          ),
+        ]),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.of(context).pop(null), child: const Text('Cancel')),
+        ElevatedButton(
+          onPressed: _listening || (_finalText.isEmpty && _partial.isEmpty)
+              ? null
+              : () => Navigator.of(context).pop((_finalText.isNotEmpty ? _finalText : _partial).trim()),
+          child: const Text('Parse this'),
+        ),
+      ],
     );
   }
 }

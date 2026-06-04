@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
 import { bankAccountTotals, PERIODS } from '../../../lib/financeInsights'
+import { CountUp } from '../../../components/animated'
 const FEE_KIND_TONE = {
   interest: 'bg-orange-100 text-orange-800 border-orange-200',
   fee:      'bg-amber-100 text-amber-800 border-amber-200',
@@ -1286,7 +1287,12 @@ function BigTotal({ label, value, icon: Icon, tone, sub }) {
         </div>
         <div className="min-w-0 flex-1">
           <p className={`text-[11px] uppercase tracking-wider font-bold ${t.accent}`}>{label}</p>
-          <p className={`text-2xl font-extrabold ${t.text} mt-0.5`}>${Number(value || 0).toFixed(2)}</p>
+          {/* CountUp tweens the bank-bite total so the hero number
+              lands the "you lost $X this period" punch like Mint's
+              old hero numbers. */}
+          <p className={`text-2xl font-extrabold ${t.text} mt-0.5`}>
+            <CountUp value={Number(value) || 0} duration={620} prefix="$" decimals={2} />
+          </p>
           {sub && <p className={`text-[11px] ${t.accent} mt-1`}>{sub}</p>}
         </div>
       </div>

@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../services/mascot_event_bus.dart';
 
 class InviteScreen extends StatefulWidget {
   const InviteScreen({super.key});
@@ -73,6 +74,10 @@ class _InviteScreenState extends State<InviteScreen> {
 
   Future<void> _copy(String text, String label) async {
     await Clipboard.setData(ClipboardData(text: text));
+    // Haptic + mascot pulse on copy — referrals are a celebration
+    // moment, the button should feel tangible not silent.
+    await HapticFeedback.lightImpact();
+    mascotBus.pulse();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('$label copied'), duration: const Duration(seconds: 1)),

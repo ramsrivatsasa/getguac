@@ -38,6 +38,7 @@ import {
   lookupStoreDefaultPolicies,
 } from './email-to-receipt'
 import { applyCategoryRules } from './categorizeRules'
+import { categorizeReceiptInline, tagItemsInline } from './guacAiEnrich'
 
 /**
  * @param {object} sb        Supabase client bound to the caller's identity
@@ -56,6 +57,11 @@ import { applyCategoryRules } from './categorizeRules'
  * @param {string} [opts.user_category]     User-picked category (form override).
  *                                          When set, beats Tier 2 inference AND
  *                                          AI parse — category_source becomes 'user'.
+ * @param {string} [opts.source]            Input modality the receipt was captured
+ *                                          from: 'image' | 'pdf' | 'email' | 'manual'
+ *                                          | 'statement'. Stored as receipts.source
+ *                                          (migration_069). Null/undefined for
+ *                                          rows that pre-date the column.
  * @returns {Promise<{ receipt_id: string, merged: boolean }>}
  */
 export async function saveReceipt(sb, userId, parsed, opts = {}) {
@@ -202,6 +208,10 @@ export async function saveReceipt(sb, userId, parsed, opts = {}) {
     processed: Array.isArray(flatParsed.items) && flatParsed.items.length > 0,
     validation_comment: opts.validation_comment || null,
     reward_no: rewardNo || null,
+    // Source taxonomy — see migration_069_receipts_source.sql.
+    // Only set when the caller passed a known tag so older clients
+    // that don't know the column keep working (the column is nullable).
+    ...(opts.source ? { source: opts.source } : {}),
   }
   if (Array.isArray(opts.extra_page_urls) && opts.extra_page_urls.length > 0) {
     insertRow.extra_page_urls = opts.extra_page_urls
@@ -247,7 +257,34 @@ export async function saveReceipt(sb, userId, parsed, opts = {}) {
     if (itemErr) console.warn('[save-receipt] item insert failed:', itemErr.message)
   }
 
-  // 7. Refund policies. Two tier:
+  // 7. Guac-AI enrichment (best-effort, awaited but never throws).
+  //
+  //   a) If the receipt landed with NO real category (the rule engine,
+  //      Tier 2, and AI parse all whiffed → finalCategory is null/'misc'),
+  //      call the inline categorize helper so the next list render shows
+  //      a real chip instead of "Uncategorized".
+  //   b) If items were inserted (they all start with ai_tag = null), call
+  //      the inline tag helper to fill ai_tag for each.
+  //
+  // Both helpers are guarded — opts.skipEnrichment bypasses them, used by
+  // batch backfill routes so we don't recurse from there.
+  if (!opts.skipEnrichment) {
+    const needsCat = !finalCategory || finalCategory === 'misc' || finalCategory === 'uncategorized'
+    if (needsCat) {
+      await categorizeReceiptInline(sb, userId, {
+        id: receiptId,
+        store_name: insertRow.store_name,
+        total_amount: insertRow.total_amount,
+      }, items)
+        .catch((e) => console.warn('[save-receipt] inline categorize skipped:', e.message))
+    }
+    if (items.length > 0) {
+      await tagItemsInline(sb, receiptId, insertRow.store_name)
+        .catch((e) => console.warn('[save-receipt] inline tag skipped:', e.message))
+    }
+  }
+
+  // 8. Refund policies. Two tier:
   //    a) AI extracted policies from the receipt body → use those.
   //    b) Otherwise look up curated store defaults (Amazon 30d, Costco lifetime, ...).
   if (Array.isArray(flatParsed.refund_policies) && flatParsed.refund_policies.length > 0) {

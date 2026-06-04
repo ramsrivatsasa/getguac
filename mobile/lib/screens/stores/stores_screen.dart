@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../widgets/store_logo.dart';
+import '../../widgets/animated_primitives.dart';
 
 class StoresScreen extends StatefulWidget {
   const StoresScreen({super.key});
@@ -69,7 +70,23 @@ class _StoresScreenState extends State<StoresScreen> {
         ],
       ),
       body: _loading
-        ? const Center(child: CircularProgressIndicator())
+        ? ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: 8,
+            itemBuilder: (_, __) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Row(children: [
+                const ShimmerBox(width: 40, height: 40, radius: 20),
+                const SizedBox(width: 12),
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: const [
+                  ShimmerBox(width: 140, height: 14),
+                  SizedBox(height: 6),
+                  ShimmerBox(width: 100, height: 11),
+                ])),
+                const ShimmerBox(width: 60, height: 16),
+              ]),
+            ),
+          )
         : Column(children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
@@ -92,7 +109,10 @@ class _StoresScreenState extends State<StoresScreen> {
                     itemCount: filtered.length,
                     itemBuilder: (_, i) {
                       final r = filtered[i];
-                      return Card(
+                      return FadeUpOnMount(
+                        key: ValueKey('store-row-${r.name}'),
+                        delay: i < 8 ? Duration(milliseconds: i * 35) : Duration.zero,
+                        child: Card(
                         margin: const EdgeInsets.only(bottom: 8),
                         child: ListTile(
                           leading: StoreLogo(storeName: r.name, size: 40),
@@ -106,6 +126,7 @@ class _StoresScreenState extends State<StoresScreen> {
                             style: const TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF065f46))),
                           onTap: () => context.push('/receipts?store=${Uri.encodeComponent(r.name)}'),
                         ),
+                      ),
                       );
                     },
                   ),

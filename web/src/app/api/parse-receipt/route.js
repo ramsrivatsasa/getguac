@@ -20,7 +20,20 @@ const GROQ_TEXT_MODEL   = process.env.GROQ_TEXT_MODEL   || 'llama-3.3-70b-versat
 const GROQ_VISION_MODEL = process.env.GROQ_VISION_MODEL || 'meta-llama/llama-4-scout-17b-16e-instruct'
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions'
 
-const SYSTEM_PROMPT = `You extract structured data from retail receipts (in-store, e-receipt emails, and order confirmations).
+const SYSTEM_PROMPT = `You extract structured data from retail receipts. The input may be:
+- A traditional cash-register receipt (photo or scan)
+- An e-receipt email (HTML or plain text)
+- An order confirmation email
+- A SCREENSHOT of an online-order confirmation page or email (Amazon order, Doordash / Uber Eats / Grubhub order summary, Instacart, Shipt, Walmart Online, Target Pickup, Costco.com, Whole Foods, Sephora, Best Buy, etc.)
+
+For online-order screenshots: IGNORE surrounding app chrome (browser tabs, navigation bars, status bars, share buttons) and extract the order content. Map online-order field labels to receipt fields:
+- "Restaurant" / "From" / "Sold by" / "Order from" / "Delivery from" / "Pickup from" → store_name (the merchant)
+- "Subtotal" is the items-only number, NOT the final total
+- "Delivery fee" / "Service fee" / "Driver tip" / "Tip" / "Priority fee" / "Small order fee" / "Bag fee" → each is a SEPARATE item line (item_name describes the fee, category "eats" for food delivery or matching context), NOT folded into tax
+- "Order Total" / "Grand Total" / "You paid" / "Total Charged" / "Estimated total" → total_amount (the FINAL number AFTER tax + fees + tip)
+- Order date labels: "Ordered on", "Order placed", "Delivered on", "Placed", "Order date" → date (prefer "Order placed" over "Delivered on")
+- Item rows: name left, qty often "x 2" or "(2)", price right. Combo / meal items keep the full combo name. Modifiers ("No onions", "Extra cheese") stay with the parent — do not create separate lines.
+- "Visa ending in 1234" → payment_method: "Visa", payment_last4: "1234". Most screenshots show no last-4 — leave null.
 
 Return ONLY a single JSON object. No prose, no markdown fences. Schema:
 
@@ -209,8 +222,16 @@ async function callGroqForFile({ apiKey, mimeType, buffer, userContextSuffix = '
 // ── Route handler ──────────────────────────────────────────────────
 export async function POST(request) {
   try {
-    // Rate limit — 10 parses/min per IP+session
-    const rl = await rateLimit(rateKey(request, 'parse-receipt'), { limit: 10, windowMs: 60_000 })
+    // Auth — anonymous Gemini quota abuse blocker. The endpoint used to
+    // burn API calls for unauth'd POSTs; cap it to signed-in users +
+    // a per-user rate limit instead of IP+session.
+    const supabase = createApiClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return Response.json({ error: 'Sign in required to parse receipts.' }, { status: 401 })
+    }
+
+    const rl = await rateLimit(rateKey(request, `parse-receipt:${user.id}`), { limit: 10, windowMs: 60_000 })
     if (!rl.ok) {
       return Response.json(
         { error: `Too many parses. Try again in ${rl.retryAfter}s.` },
@@ -225,13 +246,11 @@ export async function POST(request) {
     }
 
     // Per-user few-shot context — one cheap query, baked into every Gemini
-    // and Groq call this request makes. Anonymous calls and brand-new users
-    // get "" (base behavior). See lib/user-context.js for the contract.
-    // Wrapped in try/catch because a context-fetch failure must NEVER block
-    // a parse: degraded personalization is fine; a 500 here is not.
+    // and Groq call this request makes. Wrapped in try/catch because a
+    // context-fetch failure must NEVER block a parse: degraded
+    // personalization is fine; a 500 here is not.
     let userContextSuffix = ''
     try {
-      const supabase = createApiClient()
       userContextSuffix = await buildUserContextPrompt(supabase)
     } catch (e) {
       console.warn('[parse-receipt] user-context fetch failed (continuing without):', e.message)

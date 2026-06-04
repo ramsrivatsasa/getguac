@@ -1,7 +1,7 @@
 name: getguac
 description: GetGuac — Smart receipt & rewards management
 publish_to: 'none'
-version: 0.3.39+131
+version: 0.3.40+132
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -80,6 +80,14 @@ dependencies:
   # app's cache dir (auto-cleaned by Android) instead of leaving it in
   # the user's Downloads folder forever.
   open_filex: ^4.5.0
+  # On-device speech recognition for the voice → receipt flow. Wraps
+  # Android SpeechRecognizer + iOS SFSpeechRecognizer behind one Dart
+  # API. We use the highest-level call (`listen()` → `onResult`) so
+  # no platform channels need touching. If a future AGP/Kotlin bump
+  # breaks this (like sentry_flutter did), remove this line — the
+  # VoiceCaptureService falls back to a "not available" state and
+  # the UI gracefully shows a TODO instead of crashing.
+  speech_to_text: ^7.0.0
   # ML Kit Document Scanner + wakelock_plus removed in v0.2.69. The
   # dashboard FAB and the multi-page scanner flow that used them were
   # removed — capture is now a single-photo camera button on the

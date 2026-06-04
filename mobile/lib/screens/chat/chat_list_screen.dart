@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../services/dms_service.dart';
 import '../../services/display_names_service.dart';
+import '../../widgets/animated_primitives.dart';
 
 const _kBrand = Color(0xFF15803d);
 
@@ -159,11 +160,15 @@ class _ChatListScreenState extends State<ChatListScreen> {
                 ),
               )
             else
-              ..._threads.map((t) {
+              ..._threads.asMap().entries.map((entry) {
+                final t = entry.value;
                 final row = _names[t.peerId];
                 final name = DisplayNamesService.formatName(row, t.peerId);
                 final initial = DisplayNamesService.initialFor(row, t.peerId);
-                return Material(
+                return FadeUpOnMount(
+                  key: ValueKey('thread-${t.id}'),
+                  delay: entry.key < 8 ? Duration(milliseconds: entry.key * 35) : Duration.zero,
+                  child: Material(
                   color: Colors.white,
                   child: InkWell(
                     onTap: () => context.go('/chat/${t.id}'),
@@ -189,6 +194,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                         const Icon(Icons.chevron_right, color: Colors.black26),
                       ]),
                     ),
+                  ),
                   ),
                 );
               }),

@@ -15,6 +15,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../widgets/guac_mascot.dart';
+import '../../widgets/animated_primitives.dart';
 
 const _kEmerald700 = Color(0xFF15803d);
 const _kEmerald800 = Color(0xFF166534);
@@ -38,10 +39,13 @@ class HowItWorksScreen extends StatelessWidget {
         children: [
           const _Hero(),
           const SizedBox(height: 20),
-          ..._chapters.map((c) => Padding(
-            padding: const EdgeInsets.only(bottom: 14),
-            child: _ChapterCard(chapter: c),
-          )),
+          for (var i = 0; i < _chapters.length; i++) FadeUpOnMount(
+            delay: Duration(milliseconds: 80 + i * 50),
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 14),
+              child: _ChapterCard(chapter: _chapters[i]),
+            ),
+          ),
           const SizedBox(height: 8),
           const _ClosingCard(),
           const SizedBox(height: 24),

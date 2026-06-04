@@ -112,7 +112,9 @@ export default function ReturnsPage() {
         })}
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      {/* Keyed cross-fade on tab change — the 160ms anim-crossfade
+          ease keeps tab swaps from snapping the content block. */}
+      <div key={tab} className="grid grid-cols-3 gap-3 anim-crossfade">
         {tab === 'returned' ? (
           <>
             <div className="card text-center py-3">

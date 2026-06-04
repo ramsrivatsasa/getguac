@@ -267,7 +267,10 @@ function Thread({ threadId, peerName, onBack }) {
             const mine = m.user_id === meId
             return (
               <div key={m.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[75%] rounded-2xl px-3 py-1.5 text-sm leading-snug ${
+                {/* anim-bubble-in: 180ms scale 0.96→1 + fade. Makes
+                    incoming AND outgoing bubbles ease into place
+                    instead of snapping. */}
+                <div className={`anim-bubble-in max-w-[75%] rounded-2xl px-3 py-1.5 text-sm leading-snug ${
                   mine
                     ? 'bg-emerald-600 text-white rounded-br-md'
                     : 'bg-white text-gray-800 ring-1 ring-gray-100 rounded-bl-md'

@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import '../../widgets/guac_mascot.dart';
+import '../../services/mascot_event_bus.dart';
 
 const _kBrand = Color(0xFF15803d);
 const _kBrandDk = Color(0xFF064e3b);
@@ -165,6 +166,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Welcome to GetGuac, @${body['username'] ?? _ctrls['username']!.text}! Sign in to continue. 🥑')),
         );
+        // First-impression celebration so the very first taste of the
+        // app is a brand-mascot bounce + confetti.
+        mascotBus.celebrate('Welcome!');
+        await Future.delayed(const Duration(milliseconds: 650));
+        if (!mounted) return;
         context.go('/login');
       }
     } catch (e) {

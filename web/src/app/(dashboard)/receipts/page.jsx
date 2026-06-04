@@ -11,7 +11,7 @@ import { useConfirm } from '../../../components/ConfirmDialog'
 import { useQuery } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { formatDateShort } from '../../../lib/dateFormat'
-import { Upload, Trash2, Eye, Search, Download, Loader2, Sparkles, X, Shield, Camera, ChevronDown, ChevronRight, Undo2, ShoppingCart, Monitor, Link2, Tag, RefreshCw, Copy } from 'lucide-react'
+import { Upload, Trash2, Eye, Search, Download, Loader2, Sparkles, X, Shield, Camera, ChevronDown, ChevronRight, Undo2, ShoppingCart, Monitor, Link2, Tag, RefreshCw, Copy, FileText, Mic } from 'lucide-react'
 import { guessCategory } from '../../../lib/categorizeRules'
 import { normalizeStoreName, displayStoreName } from '../../../lib/store-name-normalize'
 import { RECEIPT_CHIP_IDS, parseReceiptsUrlParams, chipToDateFrom } from '../../../lib/receipts-deeplink'
@@ -21,9 +21,11 @@ import { createClient as createSbClient } from '../../../lib/supabase/client'
 import { useQueryClient } from '@tanstack/react-query'
 import CameraCapture from '../../../components/CameraCapture'
 import ScreenshotCapture from '../../../components/ScreenshotCapture'
+import VoiceCapture from '../../../components/VoiceCapture'
 import GuacMascot from '../../../components/GuacMascot'
 import CategoryPicker from '../../../components/CategoryPicker'
 import PreTripPanel from '../../../components/PreTripPanel'
+import { ShimmerBox } from '../../../components/animated'
 
 const EMPTY = { store_name: '', date: '', total_amount: '', tax_paid: '', reward_no: '', business_purchase: false }
 
@@ -232,11 +234,16 @@ export default function ReceiptsPage() {
         storeInfo,
         locationInfo,
         refundPolicies,
+        // Threaded through to receipts.validation_comment when this save
+        // originated from the voice flow. Lets us grep for `[voice]`
+        // rows to audit voice-parse accuracy later.
+        validation_comment: voiceComment || undefined,
       },
       {
         onSuccess: () => {
           toast.success(existingId ? 'Receipt updated' : 'Receipt saved')
           setForm(EMPTY); setFile(null); setParsedItems([]); setRefundPolicies([]); setLocationInfo(null); setShowForm(false)
+          setVoiceComment(null)
         },
         onError: err => toast.error(err.message),
       }
@@ -255,6 +262,7 @@ export default function ReceiptsPage() {
   function handleCancel() {
     setShowForm(false); setForm(EMPTY); setFile(null); setParsedItems([])
     setDuplicate(null); setStoreInfo(null); setLocationInfo(null); setRefundPolicies([])
+    setVoiceComment(null)
   }
 
   function updatePolicy(i, field, val) {
@@ -446,6 +454,121 @@ export default function ReceiptsPage() {
   const [cameraOpen, setCameraOpen] = useState(false)
   const handleCameraClick = () => setCameraOpen(true)
   const handleCameraCapture = (file) => onQuickDrop([file])
+
+  // Voice capture: dictate a receipt instead of photographing it. The
+  // modal records a transcript via the browser SpeechRecognition API
+  // and hands it to /api/receipts/from-voice; Gemini fills the same
+  // shape /api/parse-receipt returns, so the existing review form
+  // works unchanged. We open showForm with the parsed result instead
+  // of saving silently — speech recognition is too noisy to skip the
+  // human-in-the-loop review step.
+  const [voiceOpen, setVoiceOpen] = useState(false)
+  const [voiceParsing, setVoiceParsing] = useState(false)
+  const handleVoiceClick = () => setVoiceOpen(true)
+  const handleVoiceTranscript = useCallback(async (transcript) => {
+    if (!transcript) return
+    setVoiceOpen(false)
+    setVoiceParsing(true)
+    const t = toast.loading('Parsing voice receipt…')
+    try {
+      const res = await fetch('/api/receipts/from-voice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transcript }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || `Voice parse failed (${res.status})`)
+      // Pop the manual-review form open, pre-filled with the parsed
+      // fields. The user verifies and taps Save — we DON'T auto-save
+      // because voice accuracy varies enough that a silent insert
+      // would create bad rows.
+      setForm(prev => ({
+        ...prev,
+        store_name: data.store_name || prev.store_name,
+        date: data.date || prev.date,
+        total_amount: data.total_amount ?? prev.total_amount,
+        tax_paid: data.tax_paid ?? prev.tax_paid,
+      }))
+      setParsedItems(Array.isArray(data.items) ? data.items : [])
+      setStoreInfo({
+        store_name: data.store_name,
+        address: '', phone_no: '', website: '',
+      })
+      setLocationInfo(null)
+      setRefundPolicies([])
+      // Stamp the in-flight save with the original transcript so the
+      // resulting row's validation_comment audits voice-parse accuracy.
+      // The receipts.source column doesn't exist yet — we route through
+      // validation_comment which IS in the schema. Format is stable
+      // enough for future grep: `[voice] <transcript>`.
+      setVoiceComment(`[voice] ${transcript}`)
+      setShowForm(true)
+      toast.success('Voice parsed — review before saving', { id: t, duration: 3500 })
+    } catch (err) {
+      toast.error(err.message || 'Voice parse failed', { id: t })
+    } finally {
+      setVoiceParsing(false)
+    }
+  }, [])
+  // Holds the audit comment for the NEXT save (cleared after Save / Cancel).
+  // Set by the voice flow above; the manual photo/file flow leaves it null.
+  const [voiceComment, setVoiceComment] = useState(null)
+
+  // PDF-only upload. Utility bills, internet invoices, subscription
+  // statements, pay stubs — these come as PDFs that drop into a desktop
+  // download folder. Posts to /api/receipts/from-pdf which validates
+  // magic bytes, parses via Gemini→Groq, and saves source='pdf'. This
+  // is desktop-only on purpose; mobile PDF share-sheet flow is a
+  // separate problem (iOS share extensions are their own can of worms).
+  const pdfFileRef = useRef(null)
+  const [pdfBusy, setPdfBusy] = useState(0)
+  const handlePdfClick = () => pdfFileRef.current?.click()
+  const handlePdfChange = async (e) => {
+    const files = Array.from(e.target.files || [])
+    e.target.value = ''
+    if (!files.length) return
+    if (!user?.id) { toast.error('Sign in first'); return }
+    setPdfBusy(files.length)
+    let ok = 0
+    let lastId = null
+    for (const f of files) {
+      try {
+        // Client-side guard mirrors the server check — refuse anything
+        // the browser doesn't tag as application/pdf OR whose name doesn't
+        // end in .pdf. The server still magic-byte-sniffs as the source
+        // of truth (browsers lie), but this saves a round-trip on
+        // obviously-wrong drops.
+        const looksPdf = (f.type === 'application/pdf') || /\.pdf$/i.test(f.name || '')
+        if (!looksPdf) {
+          toast.error(`${f.name}: not a PDF`)
+          continue
+        }
+        const fd = new FormData()
+        fd.append('file', f)
+        const res = await fetch('/api/receipts/from-pdf', { method: 'POST', body: fd })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) {
+          throw new Error(data?.error || `Server error (${res.status})`)
+        }
+        ok++
+        lastId = data.receipt_id || lastId
+        const store = data.parsed?.store_name || 'Receipt'
+        const total = Number(data.parsed?.total_amount || 0).toFixed(2)
+        toast.success(`${store} • $${total} saved from PDF`)
+      } catch (err) {
+        toast.error(`${f.name}: ${err.message}`)
+      } finally {
+        setPdfBusy(n => Math.max(0, n - 1))
+      }
+    }
+    qc.invalidateQueries({ queryKey: ['receipts'] })
+    qc.invalidateQueries({ queryKey: ['reports'] })
+    if (files.length === 1 && ok === 1 && lastId) {
+      router.push(`/receipts/${lastId}`)
+    } else if (files.length > 1) {
+      toast(`PDFs processed — ${ok}/${files.length} saved`)
+    }
+  }
 
   // Screen capture: pick another monitor / window / tab and grab one frame.
   // Useful for grabbing a receipt that's already on screen (email body, PDF
@@ -771,6 +894,7 @@ export default function ReceiptsPage() {
     <div className="space-y-5 max-w-7xl">
       <CameraCapture open={cameraOpen} onClose={() => setCameraOpen(false)} onCapture={handleCameraCapture} />
       <ScreenshotCapture open={screenOpen} onClose={() => setScreenOpen(false)} onCapture={(f) => onQuickDrop([f])} />
+      <VoiceCapture open={voiceOpen} onClose={() => setVoiceOpen(false)} onTranscript={handleVoiceTranscript} />
       {/* Full-page drop overlay — interactive (it IS the drop target).
           pointer-events-auto so the drop actually registers. */}
       {pageDragging && !showForm && (
@@ -780,7 +904,10 @@ export default function ReceiptsPage() {
           onDrop={handleOverlayDrop}
         >
           <div className="rounded-2xl border-4 border-dashed border-blue-500 bg-white/95 px-10 py-8 flex flex-col items-center gap-3 shadow-2xl pointer-events-none">
-            <Upload size={48} className="text-blue-600 animate-bounce" />
+            {/* Paper-drop reads as "drop your receipt here". Replaces
+                the too-generic animate-bounce with a softer 8px lift
+                using a backOut curve. */}
+            <Upload size={48} className="text-blue-600 anim-paper-drop" />
             <p className="text-xl font-semibold text-blue-800">Drop to auto-add</p>
             <p className="text-sm text-gray-500">PDF or images — we&apos;ll scan and save each one</p>
           </div>
@@ -803,7 +930,7 @@ export default function ReceiptsPage() {
             {quickBusy > 0 ? (
               <><Loader2 size={15} className="animate-spin" /><span>Scanning {quickBusy} file{quickBusy === 1 ? '' : 's'}…</span></>
             ) : (
-              <><Upload size={15} /><span>Drop, click, or paste (Ctrl+V) to upload</span></>
+              <><Upload size={15} /><span>Drop receipt or order screenshot (Ctrl+V to paste)</span></>
             )}
           </button>
           <input
@@ -817,9 +944,41 @@ export default function ReceiptsPage() {
           <button type="button" onClick={handleCameraClick} className="btn-secondary" title="Take a photo of the receipt">
             <Camera size={16} /> Camera
           </button>
+          <button
+            type="button"
+            onClick={handleVoiceClick}
+            disabled={voiceParsing}
+            className="btn-secondary"
+            title="Dictate a receipt — e.g. &quot;thirty bucks at Costco on groceries&quot;"
+          >
+            {voiceParsing ? <Loader2 size={16} className="animate-spin" /> : <Mic size={16} />}
+            Voice
+          </button>
           <button type="button" onClick={handleScreenClick} className="btn-secondary" title="Capture a receipt that's open on another screen, window, or tab">
             <Monitor size={16} /> Screen
           </button>
+          {/* PDF-only upload. Utility bills, internet invoices,
+              subscription statements, pay stubs — drop them as PDFs. The
+              server validates magic bytes and parses via Gemini→Groq. */}
+          <button
+            type="button"
+            onClick={handlePdfClick}
+            disabled={pdfBusy > 0}
+            className="btn-secondary"
+            title="Upload a PDF invoice, utility bill, statement, or subscription receipt"
+          >
+            {pdfBusy > 0
+              ? <><Loader2 size={14} className="animate-spin" /> {pdfBusy} PDF{pdfBusy === 1 ? '' : 's'}…</>
+              : <><FileText size={16} /> Drop PDF</>}
+          </button>
+          <input
+            ref={pdfFileRef}
+            type="file"
+            multiple
+            accept="application/pdf,.pdf"
+            className="hidden"
+            onChange={handlePdfChange}
+          />
           {unreconciledStatementCount > 0 && (
             <button
               type="button"
@@ -1102,11 +1261,42 @@ export default function ReceiptsPage() {
       {/* Table */}
       <div className="card p-0 overflow-hidden">
         {isLoading ? (
-          <div className="py-12 text-center text-gray-400">Loading receipts…</div>
+          // ShimmerBox skeletons stand in while the receipts query
+          // resolves. Eight rows is enough to fill a typical viewport
+          // without flashing tons of placeholders.
+          <div className="px-4 py-4 space-y-2" aria-busy="true">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <ShimmerBox className="h-4 w-4" rounded="lg" />
+                <ShimmerBox className="h-4 flex-1" rounded="lg" />
+                <ShimmerBox className="h-4 w-16" rounded="lg" />
+                <ShimmerBox className="h-4 w-20" rounded="lg" />
+              </div>
+            ))}
+          </div>
         ) : filtered.length === 0 ? (
-          <div className="py-10 text-center flex flex-col items-center gap-3">
+          // First-run empty state doubles as a drag-and-drop zone for
+          // screenshots and receipt photos. Anything dropped (or clicked
+          // through the hidden file input) flows into the SAME quick-parse
+          // pipeline as the header upload button, so users discover the
+          // feature without needing to find the small dropzone up top.
+          <div
+            onDragOver={(e) => { e.preventDefault(); e.stopPropagation() }}
+            onDrop={(e) => {
+              e.preventDefault(); e.stopPropagation()
+              const files = Array.from(e.dataTransfer?.files || [])
+              if (files.length) onQuickDrop(files)
+            }}
+            onClick={handleQuickClick}
+            className="py-10 px-6 text-center flex flex-col items-center gap-3 cursor-pointer rounded-xl border-2 border-dashed border-gray-300 hover:border-blue-400 hover:bg-blue-50/30 transition-colors m-4"
+          >
             <GuacMascot expression="relaxing" size={140} />
-            <p className="text-gray-500">No receipts. Drop one above to get started.</p>
+            <p className="text-gray-700 font-semibold">Drag screenshots here</p>
+            <p className="text-sm text-gray-500 max-w-md">
+              Drop a screenshot from an Amazon, Doordash, Uber Eats, Instacart, or Walmart
+              order — or a regular receipt photo / PDF. Guac-AI will read it and file it
+              automatically. You can also paste (Ctrl/Cmd+V) or click here to pick a file.
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -1136,13 +1326,22 @@ export default function ReceiptsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {filtered.map(r => {
+                {filtered.map((r, idx) => {
                   const isExpanded = expandedId === r.id
+                  // Soft fade-in keyed on receipt id. New rows from
+                  // background email-imports slide into the table with
+                  // a 180ms entrance instead of flash-cutting. Cap the
+                  // stagger at the first 8 visible rows so a large
+                  // table doesn't fade in for seconds.
+                  const animStyle = idx < 8
+                    ? { animationDelay: `${idx * 30}ms`, animationDuration: '220ms' }
+                    : undefined
                   return (
                     <Fragment key={r.id}>
                       <tr
                         onClick={() => router.push(`/receipts/${r.id}`)}
-                        className={`hover:bg-blue-50/40 cursor-pointer transition-colors ${selected.has(r.id) ? 'bg-blue-50/60' : ''}`}>
+                        style={animStyle}
+                        className={`hover:bg-blue-50/40 cursor-pointer transition-colors anim-fadeup ${selected.has(r.id) ? 'bg-blue-50/60' : ''}`}>
                         <td className="pl-4 pr-2 py-1" onClick={e => e.stopPropagation()}>
                           <input type="checkbox" className="w-4 h-4 rounded cursor-pointer" checked={selected.has(r.id)}
                             onChange={() => toggleOne(r.id)} aria-label={`Select ${r.store_name}`} />

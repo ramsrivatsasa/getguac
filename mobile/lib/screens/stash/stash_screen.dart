@@ -22,6 +22,7 @@ import '../../services/stash_engine.dart' show formatPurchaseFrequency;
 import '../../services/product_likes_service.dart';
 import '../../services/product_image_service.dart';
 import '../../categories.dart';
+import '../../widgets/animated_primitives.dart';
 
 const _kBrand = Color(0xFFca8a04);
 
@@ -352,7 +353,15 @@ class _StashScreenState extends State<StashScreen> {
                           final stockLabel = onHand > 0 ? '$onHand on hand' : null;
                           final likeKey = ProductImageService.cacheKey(i.name);
                           final ls = _likeStats[likeKey];
-                          return FetchCard(
+                          // Per-row entrance keyed by inventory key so
+                          // newly-bought items fade in and existing
+                          // items stay still during scroll. Stagger
+                          // capped at first 8 rows so re-mounts further
+                          // down don't gate scrolling.
+                          return FadeUpOnMount(
+                            key: ValueKey('stash-row-$invKey'),
+                            delay: idx < 8 ? Duration(milliseconds: idx * 40) : Duration.zero,
+                            child: FetchCard(
                             title: i.name,
                             subtitle: subtitle,
                             imageEmoji: preset?.emoji ?? '📦',
@@ -381,6 +390,7 @@ class _StashScreenState extends State<StashScreen> {
                               ? () => _openActions(i)
                               : () => context.push('/receipts/${i.lastReceiptId}'),
                             onMenu: () => _openActions(i),
+                          ),
                           );
                         },
                       ),

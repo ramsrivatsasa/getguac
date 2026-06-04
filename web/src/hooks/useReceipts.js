@@ -69,6 +69,11 @@ export function useAddReceipt() {
     mutationFn: async ({
       receipt, file, userId, items = [], storeInfo = null,
       locationInfo = null, refundPolicies = [],
+      // Free-form audit note threaded through to receipts.validation_comment.
+      // Voice-capture path uses this to stamp the row with the original
+      // transcript so we can audit voice-parse accuracy later (no schema
+      // change needed; validation_comment already exists).
+      validation_comment = null,
     }) => {
       // Edit path — keep direct-upsert. saveReceipt is CREATE-only.
       if (receipt.id) {
@@ -114,6 +119,7 @@ export function useAddReceipt() {
         receipt_link,
         business_purchase: Boolean(receipt.business_purchase),
         user_category: receipt.category || undefined,
+        validation_comment: validation_comment || undefined,
       })
 
       // 4. Queued (offline) — return a synthetic shape; the row will exist

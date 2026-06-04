@@ -97,10 +97,16 @@ export default function PredictionsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {filtered.map(a => {
+                {filtered.map((a, idx) => {
                   const style = STATUS_STYLE[a.status] || STATUS_STYLE.auto
+                  // 30ms stagger fade-in keyed on alias_key so newly
+                  // confirmed/rejected rows that survive the filter
+                  // re-animate gently. Capped at 8 rows.
+                  const animStyle = idx < 8
+                    ? { animationDelay: `${idx * 30}ms`, animationDuration: '220ms' }
+                    : undefined
                   return (
-                    <tr key={a.alias_key} className="hover:bg-gray-50/50">
+                    <tr key={a.alias_key} style={animStyle} className="hover:bg-gray-50/50 anim-fadeup">
                       <td className="px-4 py-3 font-medium text-gray-700">{a.alias_key}</td>
                       <td className="px-4 py-3">
                         <div className="font-medium">{a.canonical_display_name || a.canonical_key}</div>

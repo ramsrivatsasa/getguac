@@ -21,6 +21,7 @@ import BestPricesModal from '../../../components/BestPricesModal'
 import { StoreLogo } from '../../../components/StoreLogo'
 import { ShareItemButton } from '../../../components/ShareItemButton'
 import ItemRowCard from '../../../components/ItemRowCard'
+import { FadeUpStagger, ShimmerBox } from '../../../components/animated'
 
 const SORTS = [
   { key: 'recent',     label: 'Most recent' },
@@ -469,7 +470,14 @@ export default function StashPage() {
       </div>
 
       {isLoading ? (
-        <div className="card py-12 text-center text-gray-400">Loading stash…</div>
+        // Shimmer skeletons — give the user a layout hint while
+        // the stash query resolves. Six tiles is a reasonable
+        // mid-density.
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3" aria-busy="true">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <ShimmerBox key={i} className="h-40 w-full" rounded="2xl" />
+          ))}
+        </div>
       ) : filtered.length === 0 ? (
         <div className="card py-10 text-center flex flex-col items-center gap-3">
           <GuacMascot expression="relaxing" size={140} />
@@ -506,26 +514,37 @@ export default function StashPage() {
             })}
         </div>
       ) : view === 'grid' ? (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        // FadeUpStagger gives each product card a 40ms-spaced entrance
+        // on initial paint AND on filter/sort change (since changing
+        // the filter remounts this branch). Capped at 12 cards so
+        // long stashes settle quickly.
+        <FadeUpStagger
+          className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 anim-crossfade"
+          delayMs={40}
+        >
           {filtered.map(it => {
             const likeKey = imageCacheKey(it.item_name)
             const ls = likeStats.get(likeKey)
+            // Wrapper div is needed because StashCard is memo'd and
+            // doesn't forward className/style — FadeUpStagger applies
+            // its animation classes to the immediate child.
             return (
-              <StashCard
-                key={it.key}
-                item={it}
-                expanded={expanded === it.key}
-                onToggle={() => toggleExpand(it.key)}
-                onAddToSmashlist={(store) => handleAddToSmashlist(it, store)}
-                onFindDeals={() => setStealsItem(it)}
-                imageUrl={productImages[it.item_name]}
-                loveCount={ls?.totalLikes}
-                likedByMe={ls?.likedByMe || false}
-                onToggleLove={() => handleToggleLove(it.item_name)}
-              />
+              <div key={it.key}>
+                <StashCard
+                  item={it}
+                  expanded={expanded === it.key}
+                  onToggle={() => toggleExpand(it.key)}
+                  onAddToSmashlist={(store) => handleAddToSmashlist(it, store)}
+                  onFindDeals={() => setStealsItem(it)}
+                  imageUrl={productImages[it.item_name]}
+                  loveCount={ls?.totalLikes}
+                  likedByMe={ls?.likedByMe || false}
+                  onToggleLove={() => handleToggleLove(it.item_name)}
+                />
+              </div>
             )
           })}
-        </div>
+        </FadeUpStagger>
       ) : (
         <div className="card p-0 overflow-hidden">
           <table className="w-full text-sm">

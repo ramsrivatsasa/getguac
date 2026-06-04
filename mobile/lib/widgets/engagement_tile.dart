@@ -21,6 +21,10 @@ class EngagementTile extends StatelessWidget {
   final Color subColor;
   final String? themeEmoji;      // top-right watermark
   final VoidCallback? onTap;
+  /// When supplied, replaces the value Text node with the given
+  /// widget — used by the dashboard to plug in a CountUp without
+  /// every caller having to know about that primitive.
+  final Widget? valueOverlay;
 
   const EngagementTile({
     super.key,
@@ -37,6 +41,7 @@ class EngagementTile extends StatelessWidget {
     this.iconChild,
     this.themeEmoji,
     this.onTap,
+    this.valueOverlay,
   });
 
   @override
@@ -102,7 +107,7 @@ class EngagementTile extends StatelessWidget {
                           maxLines: 1, overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 2),
-                        Text(value,
+                        valueOverlay ?? Text(value,
                           style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: valueColor, height: 1.05),
                           maxLines: 1, overflow: TextOverflow.ellipsis,
                         ),

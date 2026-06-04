@@ -24,6 +24,7 @@ import { updateReceiptItem, setStashProductCategory, addToShoppingList } from '.
 import { formatDateShort } from '../../../../lib/dateFormat'
 import CategoryPicker from '../../../../components/CategoryPicker'
 import { StoreLogo } from '../../../../components/StoreLogo'
+import { CountUp, FadeUpStagger, SlideUp } from '../../../../components/animated'
 
 // Pull the item + its parent receipt + store in a single round-trip.
 async function getItem(id) {
@@ -244,8 +245,10 @@ export default function ItemDetailPage() {
         onBack={() => router.back()}
       />
 
-      {/* Floating white card pulled up over the hero */}
-      <div className="relative -mt-8 bg-white rounded-3xl shadow-sm px-5 pt-5 pb-6 space-y-4">
+      {/* Floating white card pulled up over the hero. SlideUp gives
+          the white block a 320ms entrance so it lands AFTER the hero
+          has painted — the page assembles itself top-down. */}
+      <SlideUp className="relative -mt-8 bg-white rounded-3xl shadow-sm px-5 pt-5 pb-6 space-y-4">
         {/* Status pill — Smashlist "Buy N" signal if any 90-day buys, else "In your kitchen" */}
         {buys90 > 0 ? (
           <span className="inline-flex px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-violet-100 text-violet-700">
@@ -271,10 +274,13 @@ export default function ItemDetailPage() {
           </p>
         </div>
 
-        {/* Money / coin row — GuacScore-y emerald chip with the lifetime total */}
+        {/* Money / coin row — GuacScore-y emerald chip with the lifetime total.
+            CountUp tweens the dollar figure on mount so "lifetime spent" lands
+            with the same retally cadence as the dashboard hero numbers. */}
         <div className="flex items-center gap-3">
           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-800 text-sm font-extrabold tabular-nums">
-            <span aria-hidden>🥑</span> ${totalSpent.toFixed(2)}
+            <span aria-hidden>🥑</span>
+            <CountUp value={Number(totalSpent) || 0} duration={520} prefix="$" decimals={2} from={0} />
           </span>
           <span className="text-xs text-gray-500 tabular-nums">
             spent across {sortedRows.length} buy{sortedRows.length === 1 ? '' : 's'}
@@ -294,7 +300,7 @@ export default function ItemDetailPage() {
             <ShoppingCart size={15} /> Add to Smashlist
           </button>
         )}
-      </div>
+      </SlideUp>
 
       {/* Where you've bought it (replaces "Excludes") */}
       {stores.length > 0 && (
@@ -302,7 +308,9 @@ export default function ItemDetailPage() {
           <h2 className="font-semibold text-gray-900 text-sm mb-3 flex items-center gap-2">
             <MapPin size={14} className="text-emerald-600" /> Where you've bought it
           </h2>
-          <ul className="divide-y divide-gray-100">
+          {/* Staggered fade-in on mount — each store row lands with
+              a 35ms offset so the list reads as building itself up. */}
+          <FadeUpStagger as="ul" className="divide-y divide-gray-100" delayMs={35}>
             {stores.map(s => (
               <li key={s.name} className="flex items-center gap-3 py-2.5">
                 <StoreLogo storeName={s.name} size={32} fallbackEmoji="🏬" emojiBg="#15803d" />
@@ -314,7 +322,7 @@ export default function ItemDetailPage() {
                 </div>
               </li>
             ))}
-          </ul>
+          </FadeUpStagger>
         </section>
       )}
 
@@ -323,7 +331,7 @@ export default function ItemDetailPage() {
         <h2 className="font-semibold text-gray-900 text-sm mb-3 flex items-center gap-2">
           <Receipt size={14} className="text-sky-600" /> Recent receipts
         </h2>
-        <ul className="divide-y divide-gray-100">
+        <FadeUpStagger as="ul" className="divide-y divide-gray-100" delayMs={35}>
           {sortedRows.slice(0, 5).map(r => (
             <li key={r.id}>
               <Link
@@ -347,7 +355,7 @@ export default function ItemDetailPage() {
               </Link>
             </li>
           ))}
-        </ul>
+        </FadeUpStagger>
       </section>
 
       {/* Category + returned controls — kept exactly as before so bulk

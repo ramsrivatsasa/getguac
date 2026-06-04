@@ -23,6 +23,7 @@ import '../../widgets/feature_card.dart';
 import '../../widgets/feature_pill.dart';
 import '../../widgets/payment_tile.dart';
 import '../../widgets/engagement_tile.dart';
+import '../../widgets/animated_primitives.dart';
 import '../../services/analysis_engine.dart';
 import '../../services/mascot_event_bus.dart';
 import '../../services/wizard_score.dart';
@@ -320,9 +321,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 8),
             _periodCountRow(filtered.length, rangeLabel),
             const SizedBox(height: 12),
-            _engagementStrip(spendingReceipts, rewards.length),
-            const SizedBox(height: 10),
-            _paymentTileScroll(spendingReceipts),
+            // Timeframe-keyed cross-fade so flipping the period pill row
+            // doesn't hard-swap the metric grid — feels like a retally,
+            // not a refresh. The combined key forces AnimatedSwitcher to
+            // rebuild whenever either dimension changes.
+            AnimatedCrossFadeKey(
+              child: Column(
+                key: ValueKey('${_periodKey()}_$_periodCount'),
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _engagementStrip(spendingReceipts, rewards.length),
+                  const SizedBox(height: 10),
+                  _paymentTileScroll(spendingReceipts),
+                ],
+              ),
+            ),
             const SizedBox(height: 18),
 
             // _featureSections() (Smart shopping + Quick actions
@@ -671,8 +684,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
       value = '$s';
       subtext = '${r.ratedCount} rated';
     }
+    // Count-up overlay for the score number — synchronises with the
+    // value displayed by EngagementTile so the user sees the score
+    // tween from previous to current rather than snapping.
+    final scoreCounter = r.score == null
+        ? null
+        : CountUp(
+            value: r.score!.toDouble(),
+            duration: const Duration(milliseconds: 600),
+            formatter: (v) => v.round().toString(),
+            style: TextStyle(
+              fontSize: 18, fontWeight: FontWeight.w900,
+              color: tone.value, height: 1.05,
+            ),
+          );
     return EngagementTile(
-      label: 'GUACSCORE', value: value, subtext: subtext,
+      label: 'GUACSCORE',
+      value: value,
+      subtext: subtext,
+      valueOverlay: scoreCounter,
       bg: tone.bg, ringColor: tone.ring, chip: tone.chip,
       labelColor: tone.label, valueColor: tone.value, subColor: tone.sub,
       themeEmoji: '😋',
@@ -724,10 +754,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
         final active = total > 0;
         final loading = snap.connectionState == ConnectionState.waiting && !snap.hasData;
         final tone = active ? kToneEmerald : kToneSlate;
+        final overlay = loading
+            ? null
+            : CountUp(
+                value: total,
+                duration: const Duration(milliseconds: 480),
+                formatter: (v) => formatGuacMoney(v),
+                style: TextStyle(
+                  fontSize: 18, fontWeight: FontWeight.w900,
+                  color: tone.value, height: 1.05,
+                ),
+              );
         return EngagementTile(
           label: 'GUACMONEY',
           value: loading ? '—' : formatGuacMoney(total),
           subtext: active ? 'saved' : 'tap Cheapest →',
+          valueOverlay: overlay,
           bg: tone.bg, ringColor: tone.ring, chip: tone.chip,
           labelColor: tone.label, valueColor: tone.value, subColor: tone.sub,
           icon: Icons.savings_outlined,
@@ -747,6 +789,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return EngagementTile(
       label: 'REWARDS', value: '$count',
       subtext: active ? 'available' : 'none yet',
+      valueOverlay: CountUp(
+        value: count.toDouble(),
+        duration: const Duration(milliseconds: 480),
+        formatter: (v) => v.round().toString(),
+        style: TextStyle(
+          fontSize: 18, fontWeight: FontWeight.w900,
+          color: tone.value, height: 1.05,
+        ),
+      ),
       bg: tone.bg, ringColor: tone.ring, chip: tone.chip,
       labelColor: tone.label, valueColor: tone.value, subColor: tone.sub,
       icon: Icons.card_giftcard_rounded,

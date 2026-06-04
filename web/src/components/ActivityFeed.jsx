@@ -16,6 +16,7 @@ import { getShoppingList } from '../lib/db'
 import { displayStoreName } from '../lib/store-name-normalize'
 import { logoUrlForStore } from '../lib/store-logo'
 import { fetchRecent as fetchRecentGuacMoney, sourceLabel as guacMoneySourceLabel } from '../lib/guacMoney'
+import FadeUpStagger from './animated/FadeUpStagger'
 
 const ICONS = {
   receipt: <Receipt size={13} className="text-emerald-700" />,
@@ -117,11 +118,15 @@ export function ActivityFeed({ receipts = [] }) {
           last {events.length}
         </span>
       </div>
-      <ul className="divide-y divide-gray-100">
+      {/* Staggered fade-in so the timeline reads top-down like a
+          real feed instead of a static list dump. Cap at first 8
+          rows for the stagger; anything below is instant so a long
+          feed doesn't take seconds to settle. */}
+      <FadeUpStagger as="ul" className="divide-y divide-gray-100" delayMs={35} maxItems={8}>
         {events.map((e, i) => (
           <ActivityRow key={`${e.kind}-${e.ts}-${i}`} event={e} />
         ))}
-      </ul>
+      </FadeUpStagger>
     </div>
   )
 }

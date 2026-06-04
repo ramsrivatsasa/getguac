@@ -10,6 +10,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../widgets/animated_primitives.dart';
 
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});
@@ -65,7 +66,23 @@ class _ReportsScreenState extends State<ReportsScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Reports')),
       body: _loading
-        ? const Center(child: CircularProgressIndicator())
+        ? ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: 8,
+            itemBuilder: (_, i) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: i == 0
+                ? const ShimmerBox(height: 90, radius: 18)
+                : Row(children: [
+                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: const [
+                      ShimmerBox(width: 140, height: 14),
+                      SizedBox(height: 6),
+                      ShimmerBox(width: 80, height: 11),
+                    ])),
+                    const ShimmerBox(width: 70, height: 16),
+                  ]),
+            ),
+          )
         : _buckets.isEmpty
           ? const Center(child: Padding(
               padding: EdgeInsets.all(32),
@@ -90,15 +107,23 @@ class _ReportsScreenState extends State<ReportsScreen> {
                       const Text('LIFETIME TOTAL',
                         style: TextStyle(fontSize: 11, color: Colors.white70, fontWeight: FontWeight.w900, letterSpacing: 1.4)),
                       const SizedBox(height: 4),
-                      Text('\$${_grandTotal.toStringAsFixed(2)}',
-                        style: const TextStyle(fontSize: 32, color: Colors.white, fontWeight: FontWeight.w900)),
+                      CountUp(
+                        value: _grandTotal,
+                        duration: const Duration(milliseconds: 700),
+                        formatter: (v) => '\$${v.toStringAsFixed(2)}',
+                        style: const TextStyle(fontSize: 32, color: Colors.white, fontWeight: FontWeight.w900),
+                      ),
                       const SizedBox(height: 2),
                       Text('${_buckets.length} month${_buckets.length == 1 ? '' : 's'} of data',
                         style: const TextStyle(fontSize: 12, color: Colors.white70, fontWeight: FontWeight.w700)),
                     ]),
                   ),
                   const SizedBox(height: 16),
-                  for (final b in _buckets) _bucketTile(b),
+                  for (var i = 0; i < _buckets.length; i++) FadeUpOnMount(
+                    key: ValueKey('bucket-${_buckets[i].ym}'),
+                    delay: i < 8 ? Duration(milliseconds: i * 40) : Duration.zero,
+                    child: _bucketTile(_buckets[i]),
+                  ),
                 ],
               ),
             ),

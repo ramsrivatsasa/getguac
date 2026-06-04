@@ -334,7 +334,16 @@ class _NavButton extends StatelessWidget {
             Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(item.icon, size: 22, color: active ? Colors.white : item.color),
+                // Active icon scales up slightly for tactile feedback.
+                // easeOutBack gives a small "bounce" past 1.0 then
+                // settles — iOS-style. Matches the AnimatedContainer's
+                // 180ms duration so icon + pill resolve together.
+                AnimatedScale(
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOutBack,
+                  scale: active ? 1.12 : 1.0,
+                  child: Icon(item.icon, size: 22, color: active ? Colors.white : item.color),
+                ),
                 const SizedBox(height: 2),
                 Text(
                   item.label,

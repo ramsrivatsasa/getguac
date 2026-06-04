@@ -10,6 +10,7 @@ import GuacMascot from '../../../components/GuacMascot'
 import { StoreLogo } from '../../../components/StoreLogo'
 import { ShareItemButton } from '../../../components/ShareItemButton'
 import { displayStoreName } from '../../../lib/store-name-normalize'
+import { FadeUpStagger } from '../../../components/animated'
 
 export default function StealsPage() {
   const [query, setQuery] = useState('')
@@ -127,18 +128,21 @@ export default function StealsPage() {
           <p className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">
             ⚡ One-tap from your Stash
           </p>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {/* Stagger entrance — each steal card lands 40ms after the
+              previous so the row reads as building itself up. */}
+          <FadeUpStagger className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3" delayMs={40}>
             {topItems.map((it, i) => (
-              <StealCard
-                key={i}
-                item={it}
-                badge={it.last_price > 0 ? `last $${it.last_price.toFixed(2)}` : 'top spender'}
-                subtitle={it.sku ? `SKU ${it.sku}` : (it.category || 'no SKU')}
-                onFindSteals={() => setPicked(it)}
-                compact
-              />
+              <div key={i}>
+                <StealCard
+                  item={it}
+                  badge={it.last_price > 0 ? `last $${it.last_price.toFixed(2)}` : 'top spender'}
+                  subtitle={it.sku ? `SKU ${it.sku}` : (it.category || 'no SKU')}
+                  onFindSteals={() => setPicked(it)}
+                  compact
+                />
+              </div>
             ))}
-          </div>
+          </FadeUpStagger>
         </div>
       )}
 

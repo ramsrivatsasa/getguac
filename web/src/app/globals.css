@@ -37,3 +37,223 @@
   .stat-card  { @apply bg-white rounded-xl shadow-sm border border-emerald-100/60 flex items-center gap-2 p-2 sm:p-2.5 hover:shadow transition-shadow; }
   .page-title { @apply text-xl sm:text-2xl font-extrabold text-gray-900 tracking-tight; }
 }
+
+@layer utilities {
+  /* ────────────────────────────────────────────────────────────────
+     Animation system — shared by web/src/components/animated/*.jsx.
+     Curves match Apple/Linear: easeOutQuint for entrances,
+     easeInOutQuint for emphasis swaps, small backOut for taps.
+     Every animation is gated by prefers-reduced-motion below so
+     accessibility-first users get static layouts.
+     ──────────────────────────────────────────────────────────────── */
+
+  /* Fade + lift entrance. Used by FadeUpStagger to stagger lists. */
+  @keyframes anim-fadeup {
+    0%   { opacity: 0; transform: translateY(6px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  .anim-fadeup {
+    animation-name: anim-fadeup;
+    animation-duration: 320ms;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    animation-fill-mode: both;
+  }
+
+  /* Slide-up + fade. Larger translate than fadeup; for hero blocks. */
+  @keyframes anim-slideup {
+    0%   { opacity: 0; transform: translateY(14px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  .anim-slideup {
+    animation-name: anim-slideup;
+    animation-duration: 320ms;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    animation-fill-mode: both;
+  }
+
+  /* Shimmer skeleton — a linear gradient sweeping left → right. */
+  @keyframes anim-shimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  .anim-shimmer {
+    background-image: linear-gradient(90deg,
+      rgba(229, 231, 235, 0) 0%,
+      rgba(255, 255, 255, 0.85) 50%,
+      rgba(229, 231, 235, 0) 100%);
+    background-size: 200% 100%;
+    background-repeat: no-repeat;
+    animation: anim-shimmer 1.4s ease-in-out infinite;
+  }
+
+  /* Tap scale — the .tap-scale class is applied by TapScale.jsx; the
+     transform itself is driven by the inline style on press. The
+     transition is what gives the release its soft snap. */
+  .tap-scale {
+    transition: transform 140ms cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: transform;
+  }
+
+  /* Filter cross-fade — keyed wrapper transitioning between filtered
+     views. Used by /stash and /returns tab swaps. 180ms is short
+     enough that the swap feels instant; the fade only smooths edges. */
+  @keyframes anim-crossfade {
+    0%   { opacity: 0.4; }
+    100% { opacity: 1; }
+  }
+  .anim-crossfade {
+    animation: anim-crossfade 180ms ease-out both;
+  }
+
+  /* SuccessPop — the small ring + check that appears on save/rate.
+     Single combined keyframe so the inner ring scales up then
+     settles, and the wrapper fades out at the tail. */
+  @keyframes anim-success-pop {
+    0%   { opacity: 0; transform: scale(0.7); }
+    40%  { opacity: 1; transform: scale(1.08); }
+    70%  { opacity: 1; transform: scale(1.0); }
+    100% { opacity: 0; transform: scale(1.0); }
+  }
+  .anim-success-pop {
+    animation-name: anim-success-pop;
+    animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation-fill-mode: forwards;
+  }
+
+  /* Checkmark stroke draw — used inside SuccessPop. dasharray = path
+     length-ish; offset eases from full → 0 so the stroke "draws in". */
+  @keyframes anim-check-draw {
+    0%   { stroke-dasharray: 24; stroke-dashoffset: 24; opacity: 0; }
+    30%  { opacity: 1; }
+    100% { stroke-dasharray: 24; stroke-dashoffset: 0; opacity: 1; }
+  }
+  .anim-check-draw {
+    animation: anim-check-draw 360ms cubic-bezier(0.22, 1, 0.36, 1) 80ms forwards;
+  }
+
+  /* Shake — invalid input / wrong password feedback. Three tight
+     wiggles, no rotation. 260ms total. */
+  @keyframes anim-shake {
+    0%, 100% { transform: translateX(0); }
+    20%      { transform: translateX(-5px); }
+    40%      { transform: translateX(4px); }
+    60%      { transform: translateX(-3px); }
+    80%      { transform: translateX(2px); }
+  }
+  .anim-shake {
+    animation: anim-shake 260ms ease-out;
+  }
+
+  /* Paper drop — replaces animate-bounce on the receipts page upload
+     icon. Subtle 8px lift, eases back down with a small overshoot. */
+  @keyframes anim-paper-drop {
+    0%, 100% { transform: translateY(-8px); }
+    50%      { transform: translateY(0); }
+  }
+  .anim-paper-drop {
+    animation: anim-paper-drop 1.6s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+  }
+
+  /* Strikethrough wipe — for the smash button checking off a list
+     item. clip-path inset grows from right→0 so the strike "wipes
+     across" the text. 250ms feels rewarding. */
+  @keyframes anim-strike-wipe {
+    0%   { clip-path: inset(0 100% 0 0); }
+    100% { clip-path: inset(0 0% 0 0); }
+  }
+  .anim-strike-wipe {
+    animation: anim-strike-wipe 250ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  /* Logo intro — auth pages on mount. Slight overshoot lands on 1.0. */
+  @keyframes anim-logo-in {
+    0%   { opacity: 0; transform: scale(0.92); }
+    60%  { opacity: 1; transform: scale(1.04); }
+    100% { opacity: 1; transform: scale(1.0); }
+  }
+  .anim-logo-in {
+    animation: anim-logo-in 360ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
+  /* Slide-from-right — message-thread swaps in /inbox and /chat. */
+  @keyframes anim-slide-right {
+    0%   { opacity: 0; transform: translateX(10px); }
+    100% { opacity: 1; transform: translateX(0); }
+  }
+  .anim-slide-right {
+    animation: anim-slide-right 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* Bubble pop — chat messages, rating chips. Tiny scale-in + fade. */
+  @keyframes anim-bubble-in {
+    0%   { opacity: 0; transform: scale(0.96); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  .anim-bubble-in {
+    animation: anim-bubble-in 180ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* Scanning spotlight — for /steals empty state. A soft radial
+     highlight that drifts across so "still looking" reads as
+     ongoing. Looped. */
+  @keyframes anim-scan-spotlight {
+    0%   { background-position: -30% 50%; }
+    100% { background-position: 130% 50%; }
+  }
+  .anim-scan-spotlight {
+    background-image: radial-gradient(ellipse 30% 40% at left center,
+      rgba(16, 185, 129, 0.22), transparent 65%);
+    background-repeat: no-repeat;
+    background-size: 80% 100%;
+    animation: anim-scan-spotlight 3.6s ease-in-out infinite;
+  }
+
+  /* Pill pop — for the active sidebar/tab pill background sliding
+     into place on route change. Scale on X only, anchored center. */
+  @keyframes anim-pill-pop {
+    0%   { transform: scaleX(0.85); opacity: 0.6; }
+    100% { transform: scaleX(1); opacity: 1; }
+  }
+  .anim-pill-pop {
+    transform-origin: center;
+    animation: anim-pill-pop 140ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  /* Subtle row collapse on remove — height animation isn't possible
+     with auto, but max-height with overflow:hidden looks identical
+     for short rows. Caller wraps the row in .anim-row-exit. */
+  @keyframes anim-row-exit {
+    0%   { opacity: 1; max-height: 200px; transform: translateX(0); }
+    100% { opacity: 0; max-height: 0;     transform: translateX(12px); padding-top: 0; padding-bottom: 0; }
+  }
+  .anim-row-exit {
+    animation: anim-row-exit 220ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    overflow: hidden;
+  }
+
+  /* Honor the user's motion preference. Every keyframe above is
+     opt-out via this media query — animations either snap or
+     play minimally so vestibular users don't get nausea-inducing
+     parallax. */
+  @media (prefers-reduced-motion: reduce) {
+    .anim-fadeup,
+    .anim-slideup,
+    .anim-shimmer,
+    .anim-crossfade,
+    .anim-success-pop,
+    .anim-check-draw,
+    .anim-shake,
+    .anim-paper-drop,
+    .anim-strike-wipe,
+    .anim-logo-in,
+    .anim-slide-right,
+    .anim-bubble-in,
+    .anim-scan-spotlight,
+    .anim-pill-pop,
+    .anim-row-exit {
+      animation: none !important;
+      transition: none !important;
+    }
+    .tap-scale { transition: none !important; }
+  }
+}

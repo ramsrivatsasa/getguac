@@ -11,6 +11,7 @@ import '../../services/timeframe_store.dart';
 import '../../services/wizard_score.dart';
 import '../../services/analysis_engine.dart';
 import '../../widgets/timeframe_picker.dart';
+import '../../widgets/animated_primitives.dart';
 
 const _kBrand = Color(0xFF7c3aed);
 
@@ -153,14 +154,24 @@ class _GuacWizardScreenState extends State<GuacWizardScreen> {
         Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
           Text('WIZARD SCORE', style: TextStyle(fontSize: 9, letterSpacing: 0.5, fontWeight: FontWeight.w800, color: tone.sub)),
           const SizedBox(height: 4),
-          RichText(
-            text: TextSpan(children: [
-              TextSpan(text: score == null ? '—' : '$score',
-                style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: tone.text, height: 1)),
-              TextSpan(text: ' / 100',
+          // Score number tweens on every period change so flipping
+          // the timeframe pill reads as a retally — same easing the
+          // GuacScore arc uses.
+          Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+            score == null
+              ? Text('—', style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: tone.text, height: 1))
+              : CountUp(
+                  value: score.toDouble(),
+                  duration: const Duration(milliseconds: 600),
+                  formatter: (v) => v.round().toString(),
+                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: tone.text, height: 1),
+                ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(' / 100',
                 style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: tone.sub)),
-            ]),
-          ),
+            ),
+          ]),
           const SizedBox(height: 2),
           Text(_periodLabel(),
             style: TextStyle(fontSize: 9, color: tone.sub, fontWeight: FontWeight.w600)),

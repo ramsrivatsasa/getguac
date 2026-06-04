@@ -11,6 +11,7 @@ import {
 import GuacMascot from '../../../components/GuacMascot'
 import { displayStoreName } from '../../../lib/store-name-normalize'
 import { useConfirm } from '../../../components/ConfirmDialog'
+import { FadeUpStagger, ShimmerBox } from '../../../components/animated'
 
 const FILTERS = [
   { value: '',         label: 'All' },
@@ -246,21 +247,39 @@ export default function InboxPage() {
               </div>
               <div className="flex-1 overflow-y-auto divide-y divide-gray-50">
                 {list.isLoading ? (
-                  <div className="p-10 text-center text-gray-400 text-sm flex items-center justify-center gap-2">
-                    <Loader2 size={14} className="animate-spin" /> Loading…
+                  // Shimmer skeleton rows — match the row height of
+                  // the real list so the layout doesn't jump when
+                  // data lands.
+                  <div className="p-3 space-y-2" aria-busy="true">
+                    {Array.from({ length: 7 }).map((_, i) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <ShimmerBox className="h-8 w-8" rounded="full" />
+                        <div className="flex-1 space-y-1">
+                          <ShimmerBox className="h-3 w-3/5" rounded="lg" />
+                          <ShimmerBox className="h-3 w-4/5" rounded="lg" />
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 ) : messages.length === 0 ? (
                   <EmptyState folder={folder} filter={filter} />
                 ) : (
-                  messages.map(m => (
-                    <MessageRow
-                      key={m.id}
-                      m={m}
-                      selected={selectedId === m.id}
-                      onClick={() => setSelectedId(m.id)}
-                      onToggleStar={() => patch.mutate({ id: m.id, starred: !m.starred })}
-                    />
-                  ))
+                  // Staggered fade-up for the message list. Wrap in
+                  // div containers so cloneElement can attach the
+                  // animation class without expecting MessageRow to
+                  // forward className.
+                  <FadeUpStagger delayMs={28} maxItems={10} inline>
+                    {messages.map(m => (
+                      <div key={m.id}>
+                        <MessageRow
+                          m={m}
+                          selected={selectedId === m.id}
+                          onClick={() => setSelectedId(m.id)}
+                          onToggleStar={() => patch.mutate({ id: m.id, starred: !m.starred })}
+                        />
+                      </div>
+                    ))}
+                  </FadeUpStagger>
                 )}
               </div>
             </section>
@@ -270,7 +289,10 @@ export default function InboxPage() {
 
           {/* Preview panel */}
           <Panel defaultSize={47} minSize={25}>
-            <section className="h-full bg-white flex flex-col">
+            {/* Keyed wrapper triggers a 220ms slide-from-right
+                whenever the selected thread changes — the swap reads
+                as a navigation, not a content replacement. */}
+            <section key={selectedId || 'empty'} className="h-full bg-white flex flex-col anim-slide-right">
               {selectedId && message.data?.message ? (
                 <MessagePreview
                   m={message.data.message}

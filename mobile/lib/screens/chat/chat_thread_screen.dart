@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../services/dms_service.dart';
 import '../../services/display_names_service.dart';
+import '../../widgets/animated_primitives.dart';
 
 const _kBrand = Color(0xFF15803d);
 
@@ -174,7 +175,15 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                       itemBuilder: (_, i) {
                         final m = _messages[i];
                         final mine = m.userId == _meId;
-                        return Align(
+                        // Each new bubble pops in: outgoing scales from
+                        // 0.94 -> 1.0 + fades, incoming just fades.
+                        // Realtime-pushed messages therefore feel
+                        // conversational, not "another row appeared".
+                        return FadeUpOnMount(
+                          key: ValueKey('msg-${m.id}'),
+                          duration: const Duration(milliseconds: 220),
+                          translateY: mine ? 4 : 6,
+                          child: Align(
                           alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
                           child: Container(
                             constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
@@ -200,6 +209,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                                   color: mine ? Colors.white70 : Colors.black38,
                                 )),
                             ]),
+                          ),
                           ),
                         );
                       },

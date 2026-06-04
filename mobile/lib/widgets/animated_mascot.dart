@@ -116,6 +116,10 @@ class _AnimatedMascotState extends State<AnimatedMascot>
 
   void _onEvent(MascotEvent ev) {
     if (!mounted) return;
+    // Respect OS-level "remove animations" / "reduce motion" toggle.
+    // When MediaQuery.disableAnimations is true, every event is a
+    // no-op so users with vestibular sensitivities aren't ambushed.
+    if (MediaQuery.maybeOf(context)?.disableAnimations ?? false) return;
     switch (ev.animation) {
       case MascotAnimation.bounce:
         _playBounce();

@@ -162,8 +162,12 @@ export default function Sidebar({ isAdmin }) {
                         className={clsx(
                           'group flex items-center rounded-2xl text-sm transition-all',
                           collapsed ? 'lg:justify-center lg:px-2 lg:py-1.5 px-3 py-1.5 gap-2.5' : 'gap-2.5 px-3 py-1.5',
+                          // Active pill pops with anim-pill-pop on route
+                          // change — a 140ms scaleX 0.85→1 anchored
+                          // center. Keyed by `active`, so we get a fresh
+                          // animation each time the user lands here.
                           active
-                            ? 'bg-gradient-to-r from-emerald-100 to-lime-100 text-emerald-900 font-semibold shadow-sm ring-1 ring-emerald-200/60'
+                            ? 'anim-pill-pop bg-gradient-to-r from-emerald-100 to-lime-100 text-emerald-900 font-semibold shadow-sm ring-1 ring-emerald-200/60'
                             : 'text-gray-600 hover:bg-emerald-50 hover:text-emerald-900'
                         )}
                       >

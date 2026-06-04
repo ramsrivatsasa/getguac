@@ -21,12 +21,18 @@ import { Copy, Share2, UserPlus, CheckCircle2, Hourglass } from 'lucide-react'
 import { createClient } from '../../../lib/supabase/client'
 import GuacMascot from '../../../components/GuacMascot'
 import { track } from '../../../lib/analytics'
+import { SuccessPop } from '../../../components/animated'
+import mascotBus from '../../../lib/mascotEventBus'
 
 const REWARD_DAYS = 3
 
 export default function InvitePage() {
   const sb = createClient()
   const [busy, setBusy] = useState(false)
+  // Bumped on every successful copy so the SuccessPop fires beside
+  // the copy button. Counter, not boolean, so two rapid copies fire
+  // two pops back-to-back.
+  const [copyPop, setCopyPop] = useState(0)
 
   const { data: user } = useQuery({
     queryKey: ['user'],
@@ -73,6 +79,10 @@ export default function InvitePage() {
     try {
       await navigator.clipboard.writeText(text)
       toast.success(`${label} copied`)
+      // Referrals are a celebration moment — pop the mascot + fire
+      // the local SuccessPop on the button so the copy feels earned.
+      setCopyPop(p => p + 1)
+      mascotBus.pulse()
       if (label === 'Link' || label === 'Share link') {
         track('referral_link_copied')
       }
@@ -128,9 +138,12 @@ export default function InvitePage() {
             <button
               type="button"
               onClick={() => copy(code, 'Code')}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-sm font-bold backdrop-blur transition"
+              className="relative inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-sm font-bold backdrop-blur transition hover:scale-[1.04] active:scale-95"
             >
               <Copy size={14} /> Copy
+              {/* SuccessPop fires the check + ring on the button each
+                  time the user copies. */}
+              <SuccessPop trigger={copyPop} size={28} />
             </button>
           )}
         </div>

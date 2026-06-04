@@ -99,7 +99,7 @@ const RECEIPT_ITEM_COLUMNS = [
   'qty', 'price', 'store_name_id', 'warranty_info', 'item_manual',
   'return_date', 'returned', 'refund_policy_id',
   'rating', 'validation_tags', 'validation_comment', 'validated_at',
-  'category', 'store_item_id',
+  'category', 'store_item_id', 'health_tier', 'ai_tag',
 ]
 
 function pickItemColumns(item) {

@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import { calculateGuacoScore } from '../lib/guacoscore'
 import GuacMascot from './GuacMascot'
+import CountUp from './animated/CountUp'
 
 const GRADE_TINT = {
   emerald: { stroke: '#10b981', text: 'text-emerald-700', bg: 'from-emerald-50 to-lime-100',  ring: 'ring-emerald-200' },
@@ -52,7 +53,11 @@ export default function GuacoScoreCard({ receipts = [], bankBite = null, size = 
             />
           </svg>
           <div className="absolute inset-0 flex items-center justify-center">
-            <p className={`font-extrabold tabular-nums ${tint.text} text-sm`}>{displayScore}</p>
+            {/* CountUp tweens the score number in sync with the
+                ring's stroke-dashoffset transition above (600ms).
+                Number + arc finish together instead of the number
+                snapping while the arc eases. */}
+            <CountUp value={displayScore} duration={600} className={`font-extrabold ${tint.text} text-sm`} />
           </div>
         </div>
         <div className="min-w-0 flex-1">
@@ -85,7 +90,9 @@ export default function GuacoScoreCard({ receipts = [], bankBite = null, size = 
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <p className={`font-extrabold tabular-nums ${tint.text} text-3xl`}>{displayScore}</p>
+            {/* Hero count-up — tweens whenever the period filter or
+                rating data changes; sync'd to the 600ms ring fill. */}
+            <CountUp value={displayScore} duration={600} as="p" className={`font-extrabold ${tint.text} text-3xl`} />
             <p className="text-[9px] uppercase tracking-wider font-bold text-gray-500 -mt-1">/ 100</p>
           </div>
         </div>

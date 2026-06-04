@@ -8,6 +8,7 @@ import '../../services/biometric_service.dart';
 import '../../services/update_service.dart';
 import '../../services/debug_log.dart';
 import '../../widgets/animated_mascot.dart';
+import '../../widgets/animated_primitives.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -779,7 +780,8 @@ class _VRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return FadeUpOnMount(
+      child: Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Material(
         color: Colors.white,
@@ -817,6 +819,7 @@ class _VRow extends StatelessWidget {
             ]),
           ),
         ),
+      ),
       ),
     );
   }

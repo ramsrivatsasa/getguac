@@ -16,6 +16,7 @@ import '../../widgets/timeframe_picker.dart';
 import '../../services/timeframe_store.dart';
 import '../../services/guacoscore.dart' as engine;
 import '../../payment_rows.dart';
+import '../../widgets/animated_primitives.dart';
 
 const _kBrand = Color(0xFF15803d);
 
@@ -187,18 +188,32 @@ class _GuacScoreScreenState extends State<GuacScoreScreen> {
                 border: Border.all(color: tone.withValues(alpha: 0.3), width: 2),
               ),
               child: Row(children: [
+                // Both the arc fill (TweenAnimationBuilder<double>) and
+                // the numeric value (CountUp) tween from 0 to the score
+                // over 700ms — matches the web GuacoScoreCard ease so
+                // mobile and web breathe with the same cadence.
                 Stack(alignment: Alignment.center, children: [
-                  SizedBox(
-                    width: 140, height: 140,
-                    child: CircularProgressIndicator(
-                      value: r.score! / 100,
-                      strokeWidth: 12,
-                      backgroundColor: Colors.white,
-                      valueColor: AlwaysStoppedAnimation(tone),
+                  TweenAnimationBuilder<double>(
+                    tween: Tween<double>(begin: 0, end: r.score! / 100),
+                    duration: const Duration(milliseconds: 700),
+                    curve: Curves.easeOutCubic,
+                    builder: (ctx, v, _) => SizedBox(
+                      width: 140, height: 140,
+                      child: CircularProgressIndicator(
+                        value: v,
+                        strokeWidth: 12,
+                        backgroundColor: Colors.white,
+                        valueColor: AlwaysStoppedAnimation(tone),
+                      ),
                     ),
                   ),
                   Column(mainAxisSize: MainAxisSize.min, children: [
-                    Text('${r.score}', style: TextStyle(fontSize: 44, fontWeight: FontWeight.w900, color: tone)),
+                    CountUp(
+                      value: r.score!.toDouble(),
+                      duration: const Duration(milliseconds: 700),
+                      formatter: (v) => v.round().toString(),
+                      style: TextStyle(fontSize: 44, fontWeight: FontWeight.w900, color: tone),
+                    ),
                     const Text('/ 100', style: TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w700)),
                   ]),
                 ]),

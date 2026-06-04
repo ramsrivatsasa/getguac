@@ -5,6 +5,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/reward_provider.dart';
 import '../../models/reward_model.dart';
 import '../../utils/date_format.dart';
+import '../../widgets/animated_primitives.dart';
 
 class RewardsScreen extends StatefulWidget {
   const RewardsScreen({super.key});
@@ -187,7 +188,23 @@ class _RewardsScreenState extends State<RewardsScreen> {
       body: RefreshIndicator(
         onRefresh: () => context.read<RewardProvider>().loadRewards(force: true),
         child: loading
-        ? const Center(child: CircularProgressIndicator())
+        ? ListView.builder(
+            padding: const EdgeInsets.all(12),
+            itemCount: 6,
+            itemBuilder: (_, __) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Row(children: [
+                const ShimmerBox(width: 40, height: 40, radius: 20),
+                const SizedBox(width: 12),
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: const [
+                  ShimmerBox(width: 160, height: 14),
+                  SizedBox(height: 6),
+                  ShimmerBox(width: 120, height: 11),
+                ])),
+                const ShimmerBox(width: 56, height: 18),
+              ]),
+            ),
+          )
         : rewards.isEmpty
           ? ListView(children: const [SizedBox(height: 200), Center(child: Text('No rewards yet. Tap + to add.', style: TextStyle(color: Colors.grey)))])
           : ListView.builder(
@@ -196,7 +213,10 @@ class _RewardsScreenState extends State<RewardsScreen> {
               itemBuilder: (_, i) {
                 final r = rewards[i];
                 final isSelected = _selected.contains(r.id);
-                return Card(
+                return FadeUpOnMount(
+                  key: ValueKey('reward-row-${r.id}'),
+                  delay: i < 8 ? Duration(milliseconds: i * 40) : Duration.zero,
+                  child: Card(
                   color: isSelected ? Colors.blue.shade50 : null,
                   child: ListTile(
                     leading: _selectionMode
@@ -223,6 +243,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
                     onTap: _selectionMode ? () => _toggle(r.id) : () => context.go('/rewards/${r.id}'),
                     onLongPress: () => _toggle(r.id),
                   ),
+                ),
                 );
               },
             ),

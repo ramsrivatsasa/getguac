@@ -7,6 +7,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../widgets/animated_primitives.dart';
 
 class ReturnsScreen extends StatefulWidget {
   const ReturnsScreen({super.key});
@@ -75,7 +76,23 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Returns')),
       body: _loading
-        ? const Center(child: CircularProgressIndicator())
+        ? ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: 5,
+            itemBuilder: (_, __) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Row(children: [
+                const ShimmerBox(width: 48, height: 48, radius: 12),
+                const SizedBox(width: 12),
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: const [
+                  ShimmerBox(width: 140, height: 14),
+                  SizedBox(height: 6),
+                  ShimmerBox(width: 180, height: 11),
+                ])),
+                const ShimmerBox(width: 60, height: 14),
+              ]),
+            ),
+          )
         : _rows.isEmpty
           ? const Center(child: Padding(
               padding: EdgeInsets.all(32),
@@ -92,7 +109,10 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
                   final r = _rows[i];
                   final urgent = r.daysLeft <= 7;
                   final soon = r.daysLeft <= 30;
-                  return Card(
+                  return FadeUpOnMount(
+                    key: ValueKey('return-row-${r.id}'),
+                    delay: i < 8 ? Duration(milliseconds: i * 40) : Duration.zero,
+                    child: Card(
                     margin: const EdgeInsets.only(bottom: 8),
                     child: ListTile(
                       leading: Container(
@@ -116,6 +136,7 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
                         style: const TextStyle(fontWeight: FontWeight.w800)),
                       onTap: () => context.push('/receipts/${r.id}'),
                     ),
+                  ),
                   );
                 },
               ),

@@ -78,9 +78,28 @@ export async function POST(_request, { params }) {
     safeDate = parsedDateIso && !dateMatchesEmail ? parsedDateIso : undefined
   } else if (rcpt.receipt_link) {
     // Path B: image-linked receipt — fetch the image and run vision parse.
+    //
+    // SSRF guard: receipt_link is written by clients (web + mobile) and
+    // could be coerced to point at internal addresses (169.254.169.254
+    // metadata, localhost, RFC1918, etc.). Allow ONLY https + our known
+    // hosts (Supabase storage, getguac.app CDN). Anything else: refuse.
+    let url
+    try { url = new URL(rcpt.receipt_link) }
+    catch { return Response.json({ error: 'receipt_link is not a valid URL' }, { status: 400 }) }
+    const host = url.hostname.toLowerCase()
+    const allowedSuffixes = [
+      '.supabase.co',     // Supabase storage public URLs
+      '.supabase.in',
+      'supabase.co',
+      'getguac.app',
+    ]
+    const allowed = url.protocol === 'https:' && allowedSuffixes.some(s => host === s || host.endsWith(s))
+    if (!allowed) {
+      return Response.json({ error: `receipt_link host not allowed: ${host}` }, { status: 400 })
+    }
     let buffer, mimeType
     try {
-      const imgRes = await fetch(rcpt.receipt_link)
+      const imgRes = await fetch(url.toString(), { redirect: 'error' })  // no redirects → no host-pivot
       if (!imgRes.ok) throw new Error(`Image fetch failed (${imgRes.status})`)
       mimeType = imgRes.headers.get('content-type') || 'image/jpeg'
       // Sanity: only accept image / PDF

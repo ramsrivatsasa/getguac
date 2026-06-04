@@ -119,8 +119,11 @@ export default function RewardsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {rewards.map(r => (
-                  <tr key={r.id} className={`hover:bg-gray-50/50 ${selected.has(r.id) ? 'bg-blue-50/60' : ''}`}>
+                {rewards.map((r, idx) => (
+                  <tr
+                    key={r.id}
+                    style={idx < 8 ? { animationDelay: `${idx * 28}ms`, animationDuration: '220ms' } : undefined}
+                    className={`hover:bg-gray-50/50 anim-fadeup ${selected.has(r.id) ? 'bg-blue-50/60' : ''}`}>
                     <td className="pl-4 pr-2 py-3">
                       <input type="checkbox" className="w-4 h-4 rounded cursor-pointer" checked={selected.has(r.id)}
                         onChange={() => toggleOne(r.id)} aria-label={`Select ${r.reward_title}`} />

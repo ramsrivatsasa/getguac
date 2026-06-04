@@ -6,6 +6,7 @@ import { createClient } from '../../../lib/supabase/client'
 import toast from 'react-hot-toast'
 import GuacMascot from '../../../components/GuacMascot'
 import { Eye, EyeOff } from 'lucide-react'
+import { ShakeOnError } from '../../../components/animated'
 
 // useSearchParams() requires a Suspense boundary above it for Next 14's
 // static page generation — same gotcha that froze production once already
@@ -32,6 +33,10 @@ function LoginPageInner() {
   const [resetting, setResetting] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
+  // Bumped on every failed sign-in so the form shakes briefly.
+  // Same pattern as the SuccessPop trigger — a counter prop so the
+  // animation fires every error, not just the first.
+  const [errorShake, setErrorShake] = useState(0)
 
   // Surface OAuth-callback errors as a toast. /auth/callback bounces
   // failed Google logins back to /login?oauth_error=... so we read it
@@ -112,6 +117,10 @@ function LoginPageInner() {
           )
         } else {
           toast.error(data.error || 'Invalid username or password')
+          // Form-shake feedback — three tight wiggles, no rotation.
+          // Bump even on email-not-confirmed so users always get
+          // motion feedback for "no, something's wrong".
+          setErrorShake(x => x + 1)
         }
         setLoading(false)
         return
@@ -152,7 +161,9 @@ function LoginPageInner() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-900 via-green-800 to-lime-700 p-4 font-sans">
       <div className="w-full max-w-md space-y-6">
-        <div className="text-center">
+        <div className="text-center anim-logo-in">
+          {/* anim-logo-in: 360ms scale 0.92→1.04→1 with a slight
+              overshoot. Tasteful entrance for the brand mark. */}
           <div className="inline-flex items-center justify-center mb-2">
             <GuacMascot expression="angel" size={130} />
           </div>
@@ -160,7 +171,10 @@ function LoginPageInner() {
           <p className="text-emerald-100 mt-1 text-sm">Money's wingman — every dollar earns its smash.</p>
         </div>
 
-        <div className="card shadow-2xl">
+        {/* ShakeOnError fires a 260ms three-wiggle whenever the
+            sign-in attempt fails so the user gets motion feedback
+            on top of the toast. */}
+        <ShakeOnError trigger={errorShake} className="card shadow-2xl">
           <h2 className="text-xl font-bold text-gray-900 mb-6">Sign In</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -246,7 +260,7 @@ function LoginPageInner() {
               Trouble logging in?
             </button>
           </div>
-        </div>
+        </ShakeOnError>
       </div>
 
       {/* Forgot-password modal */}

@@ -1,7 +1,7 @@
 'use client'
 import { useMemo } from 'react'
 import Link from 'next/link'
-import { AlertTriangle, TrendingUp, ArrowRight, EyeOff, ChevronDown, ChevronUp } from 'lucide-react'
+import { AlertTriangle, TrendingUp, ArrowRight, EyeOff, ChevronDown, ChevronUp, Sparkles } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { detectAnomalies } from '../lib/spending-anomalies'
 
@@ -16,12 +16,20 @@ import { detectAnomalies } from '../lib/spending-anomalies'
 const DISMISS_KEY = 'getguac.anomalies-panel.dismissed.v1'
 const TOP_N = 3
 
+// Build the cache-key for a Guac-AI narrative. Must match the server's
+// makeKey() in /api/anomalies/narrate so cache hits work.
+function narrativeKey(a) {
+  return `${a.kind}:${a.storeKey || a.category || 'na'}:${a._periodStart || ''}`
+}
+
 export default function AnomaliesPanel({ receipts = [] }) {
   const [dismissed, setDismissed] = useState(false)
   // Collapsed by default — the full list took up too much vertical
   // space on the dashboard (3 rows × ~50px + header + padding). Header
   // alone is ~60px and expands on click.
   const [expanded, setExpanded] = useState(false)
+  // Guac-AI narratives — { '<kind>:<bucket>:<period_start>': '<sentence>' }
+  const [narratives, setNarratives] = useState({})
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -30,8 +38,50 @@ export default function AnomaliesPanel({ receipts = [] }) {
     } catch {}
   }, [])
 
-  const anomalies = useMemo(() => detectAnomalies(receipts), [receipts])
+  const anomalies = useMemo(() => {
+    const list = detectAnomalies(receipts)
+    // Stamp each anomaly with a stable period_start (start of the
+    // current 30d window) so the narrative cache-key is reproducible
+    // across re-renders within the same window.
+    const periodStart = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10)
+    return list.map(a => ({ ...a, _periodStart: periodStart }))
+  }, [receipts])
   const topAnomalies = anomalies.slice(0, TOP_N)
+
+  // Fetch Guac-AI narratives for the top anomalies. One call per panel
+  // mount with new top-N — the route caches server-side so repeat panel
+  // renders cost ~0 tokens. Best-effort: if it 404s or errors, we just
+  // show the existing body text.
+  useEffect(() => {
+    if (topAnomalies.length === 0) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const payload = topAnomalies.map(a => ({
+          kind: a.kind,
+          bucket: a.storeKey || a.category || 'na',
+          period_start: a._periodStart,
+          title: a.title,
+          body: a.body,
+          amount: a.amount,
+          priorAvg: a.priorAvg,
+          multiple: a.multiple,
+          merchant: a.merchant,
+          category: a.category,
+        }))
+        const res = await fetch('/api/anomalies/narrate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ anomalies: payload }),
+        })
+        if (!res.ok) return
+        const data = await res.json()
+        if (!cancelled && data?.narratives) setNarratives(data.narratives)
+      } catch { /* ignore — panel falls back to a.body */ }
+    })()
+    return () => { cancelled = true }
+    // Re-fetch only when the top-N anomaly identities change.
+  }, [topAnomalies.map(a => narrativeKey(a)).join('|')]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (topAnomalies.length === 0 || dismissed) return null
 
@@ -90,7 +140,12 @@ export default function AnomaliesPanel({ receipts = [] }) {
           <p className={`text-[10px] ${tone.body} mb-1`}>
             Compared to your last 3 windows of the same length
           </p>
-          {topAnomalies.map((a, i) => (
+          {topAnomalies.map((a, i) => {
+            // Prefer the Guac-AI narrative when present; fall back to the
+            // detector's template body so the row is never blank.
+            const blurb = narratives[narrativeKey(a)] || a.body
+            const isAi  = !!narratives[narrativeKey(a)]
+            return (
             <Link
               key={`${a.kind}:${a.storeKey || a.category || i}`}
               href={a.actionUrl}
@@ -101,11 +156,15 @@ export default function AnomaliesPanel({ receipts = [] }) {
                   {a.severity === 'flag' && <TrendingUp size={11} className={tone.iconColor} />}
                   {a.title}
                 </p>
-                <p className={`text-[10px] ${tone.body} truncate mt-0.5`}>{a.body}</p>
+                <p className={`text-[10px] ${tone.body} mt-0.5 flex items-start gap-1`}>
+                  {isAi && <Sparkles size={9} className={`${tone.iconColor} mt-0.5 shrink-0`} />}
+                  <span className="line-clamp-2">{blurb}</span>
+                </p>
               </div>
               <ArrowRight size={13} className={`${tone.iconColor} opacity-50 group-hover:opacity-100 transition-opacity shrink-0 mt-1`} />
             </Link>
-          ))}
+            )
+          })}
           {anomalies.length > TOP_N && (
             <p className={`text-[10px] ${tone.body} text-right`}>
               +{anomalies.length - TOP_N} more

@@ -169,8 +169,11 @@ function ResetPasswordInner() {
           )}
 
           {stage === 'done' && (
-            <div className="text-center py-6">
-              <CheckCircle2 className="mx-auto text-emerald-600" size={42} />
+            // anim-success-pop wraps the checkmark — a scale-in with
+            // a small overshoot lands the win-state. Whole block
+            // also slides up so the success doesn't appear flat.
+            <div className="text-center py-6 anim-slideup">
+              <CheckCircle2 className="mx-auto text-emerald-600 anim-success-pop" size={42} style={{ animationDuration: '900ms' }} />
               <p className="text-emerald-800 font-bold mt-2">Password updated.</p>
               <p className="text-sm text-gray-500 mt-1">Redirecting you to sign in…</p>
             </div>

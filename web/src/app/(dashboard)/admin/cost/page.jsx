@@ -8,7 +8,8 @@ import { useEffect, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '../../../../lib/supabase/client'
-import { Database, AlertCircle, TrendingUp, ExternalLink } from 'lucide-react'
+import { Database, AlertCircle, TrendingUp, ExternalLink, Sparkles, Tags } from 'lucide-react'
+import toast from 'react-hot-toast'
 
 // Supabase free-tier ceilings (May 2026). Bump when you upgrade plans.
 const CEILINGS = {
@@ -23,6 +24,49 @@ export default function AdminCostPage() {
   const [rows, setRows] = useState(null)
   const [err, setErr]   = useState(null)
   const [authed, setAuthed] = useState(null)
+  const [recatBusy, setRecatBusy] = useState(false)
+  const [tagBusy, setTagBusy]     = useState(false)
+
+  // ── Guac-AI enrichment admin actions ─────────────────────────────────
+  // Both call the same shape: a per-user batch endpoint that re-runs the
+  // AI step on receipts/items that didn't get a result on the first save.
+  // Conservative — never touches a row where category_source = 'user'.
+  async function handleRecategorize() {
+    setRecatBusy(true)
+    try {
+      const res  = await fetch('/api/receipts/categorize-batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),       // empty body = "all uncategorized for me"
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data?.error || 'Categorize-batch failed')
+      const ruleN = data.rule_hits || 0
+      const aiN   = data.ai_hits   || 0
+      toast.success(
+        `Recategorized ${data.updated}/${data.matched} receipts (rules: ${ruleN}, AI: ${aiN})`,
+        { duration: 4000 },
+      )
+    } catch (e) {
+      toast.error(`Recategorize failed: ${e.message}`)
+    } finally { setRecatBusy(false) }
+  }
+
+  async function handleTagItems() {
+    setTagBusy(true)
+    try {
+      const res  = await fetch('/api/items/tag-batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),       // empty body = "all untagged for me"
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data?.error || 'Tag-batch failed')
+      toast.success(`Tagged ${data.updated}/${data.matched} items`, { duration: 4000 })
+    } catch (e) {
+      toast.error(`Tag items failed: ${e.message}`)
+    } finally { setTagBusy(false) }
+  }
 
   useEffect(() => {
     (async () => {
@@ -102,6 +146,47 @@ export default function AdminCostPage() {
               </div>
             )
           })}
+        </div>
+      </section>
+
+      {/* Guac-AI enrichment backfill actions. Conservative — they only
+          touch rows that have NULL / 'misc' / 'uncategorized' category
+          (for receipts) or NULL ai_tag (for items). A row the user already
+          curated is never overwritten. */}
+      <section className="mb-7">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-3">Guac-AI enrichment</h2>
+        <div className="grid sm:grid-cols-2 gap-2 text-sm">
+          <button
+            type="button"
+            onClick={handleRecategorize}
+            disabled={recatBusy}
+            className="flex items-start gap-3 px-3 py-2.5 rounded-xl bg-white border border-gray-200 hover:border-emerald-300 hover:shadow-sm disabled:opacity-60 text-left"
+            title="Re-runs the categorize step on any receipt where category is NULL / 'misc'. Skips user-curated rows."
+          >
+            <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
+              <Sparkles size={16} className="text-emerald-700" />
+            </div>
+            <div className="min-w-0">
+              <p className="font-bold text-gray-900">{recatBusy ? 'Working…' : 'Re-categorize uncategorized'}</p>
+              <p className="text-[11px] text-gray-500">Sweeps NULL / misc receipts through rules + Gemini.</p>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleTagItems}
+            disabled={tagBusy}
+            className="flex items-start gap-3 px-3 py-2.5 rounded-xl bg-white border border-gray-200 hover:border-emerald-300 hover:shadow-sm disabled:opacity-60 text-left"
+            title="Runs the Guac-AI item-tagger on every receipt_items row whose ai_tag is NULL."
+          >
+            <div className="w-8 h-8 rounded-lg bg-sky-50 flex items-center justify-center shrink-0">
+              <Tags size={16} className="text-sky-700" />
+            </div>
+            <div className="min-w-0">
+              <p className="font-bold text-gray-900">{tagBusy ? 'Working…' : 'Tag untagged items'}</p>
+              <p className="text-[11px] text-gray-500">Backfills ai_tag (household / kid / health / treat …).</p>
+            </div>
+          </button>
         </div>
       </section>
 

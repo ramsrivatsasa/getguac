@@ -6,6 +6,7 @@ import '../../models/car_miles_model.dart';
 import '../../services/share_intent_service.dart';
 import '../../services/location_distance_service.dart';
 import '../../utils/date_format.dart';
+import '../../widgets/animated_primitives.dart';
 
 const _kBrand = Color(0xFF15803d);
 const _kTripCols = 'id, start_date, end_date, total_miles, description, category, from_address, to_address';
@@ -281,7 +282,23 @@ class _CarMilesScreenState extends State<CarMilesScreen> {
         child: const Icon(Icons.add),
       ),
       body: _loading
-        ? const Center(child: CircularProgressIndicator())
+        ? ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: 6,
+            itemBuilder: (_, __) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Row(children: [
+                const ShimmerBox(width: 36, height: 36, radius: 8),
+                const SizedBox(width: 12),
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: const [
+                  ShimmerBox(width: 180, height: 14),
+                  SizedBox(height: 6),
+                  ShimmerBox(width: 110, height: 11),
+                ])),
+                const ShimmerBox(width: 60, height: 14),
+              ]),
+            ),
+          )
         : RefreshIndicator(
             onRefresh: _load,
             child: ListView(
@@ -299,7 +316,8 @@ class _CarMilesScreenState extends State<CarMilesScreen> {
                     child: Center(child: Text('No trips yet. Tap + to log one.', style: TextStyle(color: Colors.black54))),
                   )
                 else
-                  ..._trips.map((t) {
+                  ..._trips.asMap().entries.map((entry) {
+                    final t = entry.value;
                     final hasFrom  = t.fromAddress.trim().isNotEmpty;
                     final hasTo    = t.toAddress.trim().isNotEmpty;
                     final hasRoute = hasFrom || hasTo;
@@ -309,7 +327,10 @@ class _CarMilesScreenState extends State<CarMilesScreen> {
                       : (hasRoute
                           ? '${_short(t.fromAddress, fallback: 'From')} → ${_short(t.toAddress, fallback: 'To')}'
                           : '${t.category} trip');
-                    return Card(
+                    return FadeUpOnMount(
+                      key: ValueKey('trip-${t.id}'),
+                      delay: entry.key < 8 ? Duration(milliseconds: entry.key * 40) : Duration.zero,
+                      child: Card(
                       child: ListTile(
                         leading: Icon(
                           _categoryIcon(t.category),
@@ -349,6 +370,7 @@ class _CarMilesScreenState extends State<CarMilesScreen> {
                           ],
                         ),
                       ),
+                    ),
                     );
                   }),
               ],

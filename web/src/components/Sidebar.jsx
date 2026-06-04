@@ -10,7 +10,6 @@ import {
 } from 'lucide-react'
 import clsx from 'clsx'
 import GuacMascot from './GuacMascot'
-import AnimatedMascot from './AnimatedMascot'
 
 // Every item gets a `hoverMascot` expression. It's hidden by default and
 // fades in when the cursor is over the row. Pick the expression that best
@@ -111,11 +110,11 @@ export default function Sidebar({ isAdmin }) {
           collapsed ? 'lg:justify-center px-3' : 'px-5 justify-between'
         )}>
           <Link href="/dashboard" className="flex items-center gap-3 min-w-0">
-            <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-lime-300 via-emerald-400 to-emerald-700 shadow-md ring-2 ring-white flex items-center justify-center shrink-0 overflow-visible">
-              {/* AnimatedMascot subscribes to the global mascotBus, so the
-                  brand square reacts whenever any screen fires an event
-                  (receipt saved, item smashed, rating given, …). */}
-              <AnimatedMascot expression="happy" size={36} />
+            <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-lime-300 via-emerald-400 to-emerald-700 shadow-md ring-2 ring-white flex items-center justify-center shrink-0">
+              {/* Static 🥑 emoji — rolled back from AnimatedMascot per
+                  user request. Brand logo stays still; in-app screens
+                  use AnimatedMascot for their own mascots. */}
+              <span className="text-2xl leading-none" aria-label="GetGuac">🥑</span>
             </div>
             {!collapsed && (
               <div className="min-w-0 font-sans">

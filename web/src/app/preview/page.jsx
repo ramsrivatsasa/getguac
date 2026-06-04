@@ -12,6 +12,8 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import AnimatedMascot from '../../components/AnimatedMascot'
 import AnimatedEmoji from '../../components/AnimatedEmoji'
+import LottieAnimation from '../../components/LottieAnimation'
+import blobLottie from '../../lottie/blob.json'
 import ReceiptScanAnimation from '../../components/ReceiptScanAnimation'
 import mascotBus from '../../lib/mascotEventBus'
 import {
@@ -63,6 +65,29 @@ export default function PreviewPage() {
             Works on desktop and mobile browsers. Respects <code className="text-xs">prefers-reduced-motion</code>.
           </p>
         </section>
+
+        {/* ── LOTTIE (CHARACTER-QUALITY ANIMATIONS) ─────────────────── */}
+        <Showcase
+          title="Lottie character animations"
+          sub="iconscout / lottiefiles style. Drop a .json file into web/src/lottie/, import it, render with <LottieAnimation data={file} />. Hot-link URLs also supported via the src prop."
+          file="components/LottieAnimation.jsx + lottie/blob.json"
+        >
+          <div className="grid sm:grid-cols-3 gap-4">
+            <LottieCard title="Bundled (in-repo)" sub="lottie/blob.json — pulsing emerald blob, hand-authored. Always works.">
+              <LottieAnimation data={blobLottie} size={140} />
+            </LottieCard>
+            <LottieCard title="Hot-link slot A" sub="Drop a public lottiefiles.com URL here. Falls back to 🐱 if it fails.">
+              <LottieAnimation src="https://lottie.host/41c4ec8a-3a44-4f72-8e3e-3a4d2c8ff2a1/kitten.json" size={140} fallback="🐱" />
+            </LottieCard>
+            <LottieCard title="Hot-link slot B" sub="Same — swap to whatever animation you like.">
+              <LottieAnimation src="https://lottie.host/41c4ec8a-3a44-4f72-8e3e-3a4d2c8ff2a1/error-blob.json" size={140} fallback="🫠" />
+            </LottieCard>
+          </div>
+          <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50/50 p-4 text-xs text-amber-900 leading-relaxed">
+            <strong>Heads up:</strong> the two hot-link slots show emoji fallbacks until you paste real lottiefiles.com URLs.
+            From <a href="https://iconscout.com/lottie-animations/kitten" target="_blank" rel="noopener noreferrer" className="underline font-bold">iconscout</a> or <a href="https://lottiefiles.com" target="_blank" rel="noopener noreferrer" className="underline font-bold">lottiefiles.com</a>: click an animation → Download → JSON → drop into <code>web/src/lottie/</code> and reference via the <code>data</code> prop, OR copy the "Hosted lottie" URL and paste into the <code>src</code> prop of either card above.
+          </div>
+        </Showcase>
 
         {/* ── ANIMATED EMOJIS ────────────────────────────────────────── */}
         <Showcase
@@ -474,6 +499,16 @@ function Trigger({ label, sub, icon: Icon, color, onClick }) {
       </div>
       <p className="text-xs opacity-75">{sub}</p>
     </button>
+  )
+}
+
+function LottieCard({ title, sub, children }) {
+  return (
+    <div className="rounded-2xl border border-gray-200 bg-white p-4 flex flex-col items-center text-center">
+      <div className="h-36 flex items-center justify-center">{children}</div>
+      <p className="text-xs font-black text-gray-900 mt-2">{title}</p>
+      <p className="text-[11px] text-gray-500 mt-0.5 leading-relaxed">{sub}</p>
+    </div>
   )
 }
 

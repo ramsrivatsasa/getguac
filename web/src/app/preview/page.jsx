@@ -11,6 +11,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import AnimatedMascot from '../../components/AnimatedMascot'
+import AnimatedEmoji from '../../components/AnimatedEmoji'
 import ReceiptScanAnimation from '../../components/ReceiptScanAnimation'
 import mascotBus from '../../lib/mascotEventBus'
 import {
@@ -62,6 +63,38 @@ export default function PreviewPage() {
             Works on desktop and mobile browsers. Respects <code className="text-xs">prefers-reduced-motion</code>.
           </p>
         </section>
+
+        {/* ── ANIMATED EMOJIS ────────────────────────────────────────── */}
+        <Showcase
+          title="Animated emojis"
+          sub="8 named animations + tap-to-burst (8-dot radial confetti). Apply via <AnimatedEmoji char='🥑' anim='bob' />. Per-char random delay so a grid doesn't pulse in sync."
+          file="components/AnimatedEmoji.jsx + globals.css @keyframes anim-emoji-*"
+        >
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <EmojiTile char="🥑" anim="bob"       label="bob" />
+            <EmojiTile char="💸" anim="spin"      label="spin" />
+            <EmojiTile char="🛒" anim="jiggle"    label="jiggle" />
+            <EmojiTile char="🧾" anim="drop"      label="drop" />
+            <EmojiTile char="👋" anim="wave"      label="wave" />
+            <EmojiTile char="❤️"  anim="heartBeat" label="heartBeat" />
+            <EmojiTile char="🥳" anim="dance"     label="dance" />
+            <EmojiTile char="🎉" anim="party"     label="party" />
+          </div>
+          <div className="mt-5 rounded-2xl border-2 border-emerald-200 bg-emerald-50/40 p-5">
+            <p className="text-xs font-bold uppercase tracking-wider text-emerald-800 mb-3">Tap to react</p>
+            <div className="flex gap-3 flex-wrap items-center">
+              <AnimatedEmoji char="🥑" anim="bob"       size={56} tapBurst label="avocado" />
+              <AnimatedEmoji char="💰" anim="heartBeat" size={56} tapBurst label="money bag" />
+              <AnimatedEmoji char="🔥" anim="dance"     size={56} tapBurst label="fire" />
+              <AnimatedEmoji char="⭐" anim="spin"      size={56} tapBurst label="star" />
+              <AnimatedEmoji char="🎉" anim="party"     size={56} tapBurst label="party popper" />
+              <AnimatedEmoji char="🚀" anim="bob"       size={56} tapBurst label="rocket" />
+            </div>
+            <p className="text-[11px] text-gray-500 mt-3 leading-relaxed">
+              Each tap fires 8 burst dots radiating outward over 600ms. Cheap CSS-only — no canvas, no new deps.
+            </p>
+          </div>
+        </Showcase>
 
         {/* ── SEARCH ANIMATION (the receipt-scan overlay) ──────────── */}
         <Showcase
@@ -441,6 +474,17 @@ function Trigger({ label, sub, icon: Icon, color, onClick }) {
       </div>
       <p className="text-xs opacity-75">{sub}</p>
     </button>
+  )
+}
+
+function EmojiTile({ char, anim, label }) {
+  return (
+    <div className="rounded-2xl border border-gray-200 bg-white p-4 flex flex-col items-center justify-center text-center">
+      <div className="h-12 flex items-center justify-center">
+        <AnimatedEmoji char={char} anim={anim} size={42} label={label} />
+      </div>
+      <code className="text-[11px] font-bold text-emerald-700 mt-1">{label}</code>
+    </div>
   )
 }
 

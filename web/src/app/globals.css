@@ -250,10 +250,99 @@
     .anim-bubble-in,
     .anim-scan-spotlight,
     .anim-pill-pop,
-    .anim-row-exit {
+    .anim-row-exit,
+    .anim-emoji-bob,
+    .anim-emoji-spin,
+    .anim-emoji-jiggle,
+    .anim-emoji-drop,
+    .anim-emoji-wave,
+    .anim-emoji-heartbeat,
+    .anim-emoji-dance,
+    .anim-emoji-party,
+    .anim-emoji-burst-dot {
       animation: none !important;
       transition: none !important;
     }
     .tap-scale { transition: none !important; }
+  }
+
+  /* ────────────────────────────────────────────────────────────────
+     Emoji animations — every named animation supported by
+     <AnimatedEmoji>. Keep keyframes self-contained (no external vars
+     except --bdx/--bdy on burst dots) so they Just Work when applied
+     to any emoji character.
+
+     Durations are tuned for "alive but not noisy". Each loop has a
+     prime-number duration so a grid of mixed emojis doesn't pulse in
+     sync, and AnimatedEmoji adds a per-char randomized animation-delay
+     on top so even matching anims stagger.
+     ──────────────────────────────────────────────────────────────── */
+
+  .anim-emoji-bob       { animation: anim-emoji-bob 3.2s ease-in-out infinite; display: inline-block; }
+  .anim-emoji-spin      { animation: anim-emoji-spin 4.8s linear infinite; display: inline-block; }
+  .anim-emoji-jiggle    { animation: anim-emoji-jiggle 2.2s ease-in-out infinite; display: inline-block; transform-origin: 50% 90%; }
+  .anim-emoji-drop      { animation: anim-emoji-drop 700ms cubic-bezier(0.34, 1.56, 0.64, 1) both, anim-emoji-bob 3.2s 700ms ease-in-out infinite; display: inline-block; }
+  .anim-emoji-wave      { animation: anim-emoji-wave 2.6s ease-in-out infinite; display: inline-block; transform-origin: 70% 90%; }
+  .anim-emoji-heartbeat { animation: anim-emoji-heartbeat 1.4s ease-in-out infinite; display: inline-block; }
+  .anim-emoji-dance     { animation: anim-emoji-dance 3s ease-in-out infinite; display: inline-block; transform-origin: 50% 90%; }
+  .anim-emoji-party     { animation: anim-emoji-party 2s cubic-bezier(0.34, 1.56, 0.64, 1) infinite; display: inline-block; }
+
+  @keyframes anim-emoji-bob {
+    0%, 100% { transform: translateY(0)   rotate(-1deg); }
+    50%      { transform: translateY(-12%) rotate(2deg); }
+  }
+  @keyframes anim-emoji-spin {
+    0%   { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  @keyframes anim-emoji-jiggle {
+    0%, 100% { transform: rotate(0deg); }
+    20%      { transform: rotate(-9deg); }
+    40%      { transform: rotate(8deg); }
+    60%      { transform: rotate(-6deg); }
+    80%      { transform: rotate(5deg); }
+  }
+  @keyframes anim-emoji-drop {
+    0%   { transform: translateY(-80%) scale(0.6); opacity: 0; }
+    60%  { transform: translateY(8%)   scale(1.1); opacity: 1; }
+    80%  { transform: translateY(-4%)  scale(0.96); }
+    100% { transform: translateY(0)    scale(1); }
+  }
+  @keyframes anim-emoji-wave {
+    0%, 60%, 100% { transform: rotate(0deg); }
+    10%, 30%, 50% { transform: rotate(-22deg); }
+    20%, 40%      { transform: rotate(18deg); }
+  }
+  @keyframes anim-emoji-heartbeat {
+    0%, 100% { transform: scale(1); }
+    14%      { transform: scale(1.22); }
+    28%      { transform: scale(1.0); }
+    42%      { transform: scale(1.18); }
+    70%      { transform: scale(1.0); }
+  }
+  @keyframes anim-emoji-dance {
+    0%, 100% { transform: translateY(0)    rotate(-6deg); }
+    25%      { transform: translateY(-8%)  rotate(6deg); }
+    50%      { transform: translateY(0)    rotate(-4deg); }
+    75%      { transform: translateY(-6%)  rotate(8deg); }
+  }
+  @keyframes anim-emoji-party {
+    0%, 100% { transform: rotate(-8deg) scale(1); }
+    25%      { transform: rotate(10deg) scale(1.18); }
+    50%      { transform: rotate(-6deg) scale(0.92); }
+    75%      { transform: rotate(8deg)  scale(1.12); }
+  }
+
+  /* Tap-burst dot — single shot 600ms radial fly-out. Uses CSS vars
+     --bdx / --bdy set inline so each of the 8 dots can travel in a
+     different direction without authoring 8 keyframes. */
+  .anim-emoji-burst-dot {
+    animation: anim-emoji-burst 600ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: transform, opacity;
+  }
+  @keyframes anim-emoji-burst {
+    0%   { transform: translate(-50%, -50%) translate(0, 0)              scale(0.4); opacity: 0; }
+    20%  { opacity: 1; }
+    100% { transform: translate(-50%, -50%) translate(var(--bdx), var(--bdy)) scale(0.6); opacity: 0; }
   }
 }

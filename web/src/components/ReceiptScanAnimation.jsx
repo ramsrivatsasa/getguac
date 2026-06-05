@@ -45,17 +45,19 @@ export default function ReceiptScanAnimation({ count = 0 }) {
       <div className="absolute inset-0 bg-white/75 backdrop-blur-md" />
 
       <div className="relative flex flex-col items-center pointer-events-auto">
-        {/* Search/scan Lottie — a magnifying glass sweeping a receipt-like
-            report with sparkles, shown while we parse. Sits above the
-            receipt strip + the rotating Guac-AI parsing report below. */}
-        <LottieAnimation data={searchScanLottie} size={190} loop label="Scanning your receipt" fallback="🔍" />
+        {/* Scan Lottie + the maracas avocado side by side — matches the
+            reference: the magnifier sweeps the report on the left while the
+            mascot celebrates (mirrored) on the right. */}
+        <div className="flex items-center justify-center gap-2">
+          <LottieAnimation data={searchScanLottie} size={190} loop label="Scanning your receipt" fallback="🔍" />
+          {/* finalized maracas variant, mirrored horizontally via inline style */}
+          <span className="inline-block shrink-0" style={{ transform: 'scaleX(-1)' }}>
+            <GuacMascotAnimated animation="maracas" size={150} />
+          </span>
+        </div>
 
         {/* Rotating ticker copy */}
-        <div className="mt-5 pl-2 pr-4 py-1 rounded-full bg-white/95 shadow-md border border-emerald-100 flex items-center gap-2">
-          {/* maracas avocado shaking next to the status text (finalized variant),
-              mirrored horizontally via inline style so it works regardless of
-              Tailwind scale-utility config. */}
-          <span className="inline-block" style={{ transform: 'scaleX(-1)' }}><GuacMascotAnimated animation="maracas" size={42} /></span>
+        <div className="mt-4 px-5 py-2 rounded-full bg-white/95 shadow-md border border-emerald-100 flex items-center gap-2">
           <span className="text-sm font-bold text-emerald-900">{TICKER[tick]}</span>
           {count > 1 && (
             <span className="text-[10px] font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full">

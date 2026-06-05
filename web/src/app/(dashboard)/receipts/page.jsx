@@ -20,6 +20,7 @@ import { isItemNonReturnable } from '../../../lib/non-returnable'
 import { createClient as createSbClient } from '../../../lib/supabase/client'
 import { useQueryClient } from '@tanstack/react-query'
 import CameraCapture from '../../../components/CameraCapture'
+import ReceiptScanAnimation from '../../../components/ReceiptScanAnimation'
 import ScreenshotCapture from '../../../components/ScreenshotCapture'
 import VoiceCapture from '../../../components/VoiceCapture'
 import GuacMascot from '../../../components/GuacMascot'
@@ -897,6 +898,11 @@ export default function ReceiptsPage() {
       <CameraCapture open={cameraOpen} onClose={() => setCameraOpen(false)} onCapture={handleCameraCapture} />
       <ScreenshotCapture open={screenOpen} onClose={() => setScreenOpen(false)} onCapture={(f) => onQuickDrop([f])} />
       <VoiceCapture open={voiceOpen} onClose={() => setVoiceOpen(false)} onTranscript={handleVoiceTranscript} />
+      {/* Search-mascot scan overlay while a row is re-parsing — count =
+          number of receipts mid-reparse (shows the "{n} receipts" badge
+          for a bulk re-parse). Previously a re-parse only spun a small
+          row icon, so it looked like nothing happened. */}
+      <ReceiptScanAnimation count={reparsing.size} />
       {/* Full-page drop overlay — interactive (it IS the drop target).
           pointer-events-auto so the drop actually registers. */}
       {pageDragging && !showForm && (

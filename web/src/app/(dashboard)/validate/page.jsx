@@ -1,5 +1,5 @@
 'use client'
-import { useState, useMemo, Fragment } from 'react'
+import { useState, useMemo, useRef, Fragment } from 'react'
 import Link from 'next/link'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
@@ -67,6 +67,14 @@ export default function ValidatePage() {
 
   const { data: receipts = [], isLoading } = useReceipts()
 
+  // Stable display order. The default 'unrated' sort would send a row to the
+  // bottom the instant you rate it — so rating a receipt in the grid made the
+  // row jump away under your cursor (looked like the table was re-sorting).
+  // We snapshot the order and KEEP rows in place while you rate; the order
+  // only re-derives when you change period / count / search / sort (or
+  // reload). The pie + stat cards still update live.
+  const orderRef = useRef({ key: '', ids: [] })
+
   const filtered = useMemo(() => {
     const cutoff = periodStart(period, count)
     const s = search.trim().toLowerCase()
@@ -77,7 +85,7 @@ export default function ValidatePage() {
         (r.id || '').toLowerCase().includes(s)
       )
     }
-    list = [...list].sort((a, b) => {
+    let sorted = [...list].sort((a, b) => {
       const ra = a.rating ?? -1
       const rb = b.rating ?? -1
       switch (sort) {
@@ -91,7 +99,25 @@ export default function ValidatePage() {
         default: return 0
       }
     })
-    return list
+
+    // Keep rows where they are while rating. Within the same period/count/
+    // search/sort "session", preserve prior positions for rows still present
+    // (a just-rated row stays put), appending any genuinely new rows in their
+    // freshly-sorted position. Changing a filter or the sort dropdown re-derives.
+    const sessionKey = `${period}|${count}|${s}|${sort}`
+    const prev = orderRef.current
+    if (prev.key === sessionKey && prev.ids.length) {
+      const byId = new Map(sorted.map(r => [r.id, r]))
+      const stable = []
+      for (const id of prev.ids) {
+        const row = byId.get(id)
+        if (row) { stable.push(row); byId.delete(id) }
+      }
+      for (const r of sorted) if (byId.has(r.id)) stable.push(r)
+      sorted = stable
+    }
+    orderRef.current = { key: sessionKey, ids: sorted.map(r => r.id) }
+    return sorted
   }, [receipts, period, count, search, sort])
 
   const ratedCount = filtered.filter(r => r.rating != null).length

@@ -3,16 +3,23 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getStore, updateStore, getReceipts, getStoreReturnPolicies } from '../../../../lib/db'
+import { getStore, updateStore, getReceipts, getStoreReturnPolicies, getRewards } from '../../../../lib/db'
 import { useBankStatementMap } from '../../../../hooks/useReceipts'
 import { formatDateShort } from '../../../../lib/dateFormat'
 import toast from 'react-hot-toast'
-import { ArrowLeft, Save, Store, Phone, Globe, MapPin, Receipt, ChevronRight, Hash, Navigation, Crosshair, Loader2, Shield, ExternalLink, X, Link2 } from 'lucide-react'
-import { displayStoreName } from '../../../../lib/store-name-normalize'
+import { ArrowLeft, Save, Store, Phone, Globe, MapPin, Receipt, ChevronRight, Hash, Navigation, Crosshair, Loader2, Shield, ExternalLink, X, Link2, CreditCard } from 'lucide-react'
+import { displayStoreName, storeGroupKey } from '../../../../lib/store-name-normalize'
 import LottieAnimation from '../../../../components/LottieAnimation'
 import emptyListLottie from '../../../../lottie/empty-list.json'
 import thinkingLottie from '../../../../lottie/thinking.json'
 import errorBlobLottie from '../../../../lottie/error-blob.json'
+
+// Placeholder reward_no shape the server mints before a real member # is
+// known ("GG-" + 8 base36 chars) — mirrors lib/save-receipt.js. Only REAL
+// numbers are shown.
+const PLACEHOLDER_REWARD_RE = /^GG-[A-Z0-9]{8}$/
+function isPlaceholderReward(n) { return !n || PLACEHOLDER_REWARD_RE.test(String(n)) }
+
 export default function StoreDetailPage() {
   const { id } = useParams()
   const router = useRouter()
@@ -37,6 +44,14 @@ export default function StoreDetailPage() {
     queryKey: ['store-return-policies', store?.store_name],
     queryFn: () => getStoreReturnPolicies(store?.store_name),
     enabled: !!store?.store_name,
+  })
+
+  // Reward / membership number for this store lives in the `rewards` table
+  // (one row per chain), matched by alias-aware storeGroupKey.
+  const { data: rewards = [] } = useQuery({
+    queryKey: ['rewards'],
+    queryFn: getRewards,
+    staleTime: 1000 * 60 * 5,
   })
 
   const [form, setForm] = useState({ store_name: '', address: '', phone_no: '', website: '' })
@@ -96,6 +111,16 @@ export default function StoreDetailPage() {
   const locations = store.store_locations || []
   const totalSpend = receipts.reduce((sum, r) => sum + parseFloat(r.total_amount || 0), 0)
 
+  // Resolve this store's real member/reward number from the rewards table
+  // (alias-aware match; prefer a real number over a placeholder).
+  const storeKey = storeGroupKey(store.store_name)
+  const rewardRow = rewards.reduce((best, r) => {
+    if (storeGroupKey(r.store_name) !== storeKey) return best
+    if (!best || (isPlaceholderReward(best.reward_no) && !isPlaceholderReward(r.reward_no))) return r
+    return best
+  }, null)
+  const rewardNo = rewardRow && !isPlaceholderReward(rewardRow.reward_no) ? rewardRow.reward_no : null
+
   // Group receipts by location for the by-location view
   const byLocation = new Map()
   for (const loc of locations) byLocation.set(loc.id, { loc, items: [] })
@@ -144,6 +169,16 @@ export default function StoreDetailPage() {
           <p className="text-2xl font-semibold mt-1">${totalSpend.toFixed(2)}</p>
         </div>
       </div>
+
+      {rewardNo && (
+        <div className="card flex items-center gap-3 border-violet-200 bg-violet-50/40">
+          <div className="p-2.5 bg-violet-100 rounded-xl shrink-0"><CreditCard className="text-violet-700" size={20} /></div>
+          <div className="min-w-0">
+            <p className="text-xs text-violet-700/80 uppercase tracking-wide font-semibold">Member / Reward Number</p>
+            <p className="text-lg font-bold text-violet-900 font-mono truncate">{rewardNo}</p>
+          </div>
+        </div>
+      )}
 
       <div className="card">
         <h3 className="font-semibold text-gray-800 mb-4">Store Details</h3>

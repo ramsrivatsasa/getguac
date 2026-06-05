@@ -10,6 +10,7 @@ import { CATEGORIES } from '../../../../lib/categories'
 import { ITEM_TAG_META } from '../../../../lib/itemTagVocab'
 import { isItemNonReturnable } from '../../../../lib/non-returnable'
 import CategoryPicker from '../../../../components/CategoryPicker'
+import ReceiptScanAnimation from '../../../../components/ReceiptScanAnimation'
 import { displayStoreName } from '../../../../lib/store-name-normalize'
 import mascotBus from '../../../../lib/mascotEventBus'
 import { TapScale, SuccessPop, CountUp } from '../../../../components/animated'
@@ -156,6 +157,10 @@ export default function ReceiptDetailPage() {
 
   return (
     <div className="space-y-6 max-w-4xl">
+      {/* Full-screen search-mascot scan overlay while a re-parse runs — the
+          same animation the upload flow shows, so Re-parse no longer looks
+          like nothing is happening (only a tiny spinner before). */}
+      <ReceiptScanAnimation count={reparseFromEmail.isPending ? 1 : 0} />
       <div className="flex items-center gap-3 flex-wrap">
         <button onClick={() => router.back()} className="btn-ghost p-1.5"><ArrowLeft size={20} /></button>
         <h1 className="page-title flex-1 min-w-0 truncate">Receipt — {displayStoreName(current.store_name)}</h1>

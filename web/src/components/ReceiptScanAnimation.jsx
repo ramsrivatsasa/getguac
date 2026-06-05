@@ -13,6 +13,7 @@
 import { useEffect, useState } from 'react'
 import LottieAnimation from './LottieAnimation'
 import searchScanLottie from '../lottie/search-scan.json'
+import talkLottie from '../lottie/talk.json'
 import GuacMascotAnimated from './GuacMascotAnimated'
 
 const TICKER = [
@@ -48,23 +49,33 @@ export default function ReceiptScanAnimation({ count = 0 }) {
         {/* Search/scan Lottie — magnifier sweeping the report */}
         <LottieAnimation data={searchScanLottie} size={190} loop label="Scanning your receipt" fallback="🔍" />
 
-        {/* Maracas avocado (mirrored). overflow-visible + side padding so the
-            FULL mascot shows — the maracas swing past the SVG edge and were
-            getting clipped before. */}
-        <span className="inline-block shrink-0 overflow-visible px-3" style={{ transform: 'scaleX(-1)' }}>
-          <GuacMascotAnimated animation="maracas" size={150} className="overflow-visible" />
-        </span>
+        {/* Mascot anchor. Fixed footprint (= mascot size) so nothing here
+            ever shifts when the status text grows — the bubble below is
+            absolutely positioned and grows symmetrically from centre. */}
+        <div className="relative shrink-0">
+          {/* Maracas avocado (mirrored). overflow-visible so the maracas can
+              swing past the SVG edge without being clipped. Mirroring lives
+              ONLY on this span — the bubble is a sibling so its text stays
+              the right way round. */}
+          <span className="inline-block overflow-visible px-3" style={{ transform: 'scaleX(-1)' }}>
+            <GuacMascotAnimated animation="maracas" size={150} className="overflow-visible" />
+          </span>
 
-        {/* Speech bubble — looks like the mascot is announcing the live
-            status ("Saving to your Stash…"). Tail points left toward it. */}
-        <div className="relative self-start mt-8 max-w-[230px] rounded-2xl bg-white shadow-lg px-5 py-2.5 flex items-center gap-2">
-          <span className="text-sm font-bold text-emerald-900">{TICKER[tick]}</span>
-          {count > 1 && (
-            <span className="text-[10px] font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full">
-              {count} receipts
-            </span>
-          )}
-          <span className="absolute left-0 top-7 -translate-x-full w-0 h-0 border-[9px] border-transparent border-r-white" aria-hidden="true" />
+          {/* Talking speech bubble, overlaid ON TOP of the mascot and centred
+              on it. Absolute + left-1/2/-translate-x-1/2 means the status text
+              expands evenly around centre, so a longer line never nudges the
+              mascot sideways. */}
+          <div className="absolute left-1/2 -translate-x-1/2 -top-3 flex flex-col items-center pointer-events-none">
+            <LottieAnimation data={talkLottie} size={64} loop label="Guac is working" fallback="💬" />
+            <div className="-mt-1 whitespace-nowrap max-w-[280px] rounded-2xl bg-white shadow-xl px-4 py-2 flex items-center gap-2">
+              <span className="text-sm font-bold text-emerald-900">{TICKER[tick]}</span>
+              {count > 1 && (
+                <span className="text-[10px] font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full">
+                  {count} receipts
+                </span>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

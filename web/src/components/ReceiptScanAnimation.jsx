@@ -13,6 +13,7 @@
 import { useEffect, useState } from 'react'
 import LottieAnimation from './LottieAnimation'
 import searchScanLottie from '../lottie/search-scan.json'
+import GuacMascotAnimated from './GuacMascotAnimated'
 
 const TICKER = [
   'Looking for the store name…',
@@ -50,7 +51,9 @@ export default function ReceiptScanAnimation({ count = 0 }) {
         <LottieAnimation data={searchScanLottie} size={190} loop label="Scanning your receipt" fallback="🔍" />
 
         {/* Rotating ticker copy */}
-        <div className="mt-5 px-4 py-2 rounded-full bg-white/95 shadow-md border border-emerald-100 flex items-center gap-2">
+        <div className="mt-5 pl-2 pr-4 py-1 rounded-full bg-white/95 shadow-md border border-emerald-100 flex items-center gap-2">
+          {/* maracas avocado shaking next to the status text (finalized variant) */}
+          <GuacMascotAnimated animation="maracas" size={42} />
           <span className="text-sm font-bold text-emerald-900">{TICKER[tick]}</span>
           {count > 1 && (
             <span className="text-[10px] font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full">

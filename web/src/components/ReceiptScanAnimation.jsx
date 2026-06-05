@@ -1,16 +1,11 @@
 'use client'
 // Full-screen scan animation that pops while a receipt is parsing.
 //
-// Visual: a centered "receipt strip" SVG with a moving scan-line, a
-// search/scan Lottie perched on top (a magnifying glass sweeping a
-// report with sparkles), and a rotating Guac-AI status report
-// ("Looking for the store…", "Tallying line items…", "Saving to your
-// stash…") so the wait feels like progress. Multi-receipt batches show
-// a "{count} receipts" badge.
-//
-// Lighter, friendlier treatment — soft white-glass backdrop instead
-// of the heavy emerald wash so the receipt SVG + character read as
-// the focus, not the dim.
+// Visual: a centered search/scan Lottie (a magnifying glass sweeping a
+// report with a $ coin + sparkles) over a soft white-glass backdrop,
+// plus a rotating Guac-AI status report ("Looking for the store…",
+// "Tallying line items…", "Saving to your stash…") so the wait feels
+// like progress. Multi-receipt batches show a "{count} receipts" badge.
 //
 // Mounts at the very top of the z-stack — beats toasts, modals, FABs.
 // Self-hides instantly when `count` drops to 0.
@@ -52,35 +47,7 @@ export default function ReceiptScanAnimation({ count = 0 }) {
         {/* Search/scan Lottie — a magnifying glass sweeping a receipt-like
             report with sparkles, shown while we parse. Sits above the
             receipt strip + the rotating Guac-AI parsing report below. */}
-        <LottieAnimation data={searchScanLottie} size={170} loop label="Scanning your receipt" fallback="🔍" />
-
-        {/* Receipt strip with traveling scan line */}
-        <div className="mt-4 relative receipt-pop">
-          <svg width="180" height="220" viewBox="0 0 180 220" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-            {/* Paper */}
-            <defs>
-              <linearGradient id="r-paper" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#ffffff"/>
-                <stop offset="100%" stopColor="#f8fafc"/>
-              </linearGradient>
-            </defs>
-            <path d="M10 6 H170 V200 L160 210 L150 200 L140 210 L130 200 L120 210 L110 200 L100 210 L90 200 L80 210 L70 200 L60 210 L50 200 L40 210 L30 200 L20 210 L10 200 Z"
-              fill="url(#r-paper)" stroke="#e2e8f0" strokeWidth="1.5"/>
-            {/* Header bar */}
-            <rect x="30" y="22" width="120" height="10" rx="3" fill="#15803d" opacity="0.9"/>
-            {/* Lines */}
-            {[48, 64, 80, 96, 112, 128, 144].map((y, i) => (
-              <rect key={y} x="22" y={y} width={i % 2 === 0 ? 130 : 100} height="6" rx="2" fill="#e5e7eb"/>
-            ))}
-            {/* Total bar */}
-            <rect x="22" y="166" width="140" height="14" rx="3" fill="#fef3c7"/>
-            <rect x="100" y="170" width="50" height="6" rx="2" fill="#d97706"/>
-          </svg>
-          {/* The scan line — emerald gradient that sweeps top-to-bottom */}
-          <div className="absolute inset-x-2 top-2 bottom-3 overflow-hidden rounded-md pointer-events-none">
-            <div className="scan-line absolute left-0 right-0 h-1.5 rounded-full bg-gradient-to-r from-transparent via-emerald-400/90 to-transparent shadow-[0_0_18px_4px_rgba(52,211,153,0.6)]" />
-          </div>
-        </div>
+        <LottieAnimation data={searchScanLottie} size={190} loop label="Scanning your receipt" fallback="🔍" />
 
         {/* Rotating ticker copy */}
         <div className="mt-5 px-4 py-2 rounded-full bg-white/95 shadow-md border border-emerald-100 flex items-center gap-2">
@@ -92,25 +59,6 @@ export default function ReceiptScanAnimation({ count = 0 }) {
           )}
         </div>
       </div>
-
-      <style jsx>{`
-        .receipt-pop  { animation: receipt-pop 360ms cubic-bezier(0.16, 1, 0.3, 1) both; }
-        .scan-line    { animation: scan-line 1.6s linear infinite; }
-
-        @keyframes receipt-pop {
-          from { opacity: 0; transform: translateY(10px) scale(0.94); }
-          to   { opacity: 1; transform: translateY(0)    scale(1); }
-        }
-        @keyframes scan-line {
-          0%   { transform: translateY(-20%); opacity: 0.2; }
-          10%  { opacity: 1; }
-          90%  { opacity: 1; }
-          100% { transform: translateY(220%); opacity: 0.2; }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .receipt-pop, .scan-line { animation: none; }
-        }
-      `}</style>
     </div>
   )
 }

@@ -3,13 +3,19 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
-import { Store, Phone, Globe, MapPin, ChevronRight, ChevronDown, Search, Trash2, AlertTriangle, Shield, ExternalLink, Link2 } from 'lucide-react'
-import { getStores, deleteStore, getAllStoreDefaultPolicies } from '../../../lib/db'
-import { normalizeStoreName, displayStoreName } from '../../../lib/store-name-normalize'
+import { Store, Phone, Globe, MapPin, ChevronRight, ChevronDown, Search, Trash2, AlertTriangle, Shield, ExternalLink, Link2, CreditCard } from 'lucide-react'
+import { getStores, deleteStore, getAllStoreDefaultPolicies, getRewards } from '../../../lib/db'
+import { normalizeStoreName, storeGroupKey, displayStoreName } from '../../../lib/store-name-normalize'
 import { useConfirm } from '../../../components/ConfirmDialog'
 import LottieAnimation from '../../../components/LottieAnimation'
 import emptyListLottie from '../../../lottie/empty-list.json'
 import thinkingLottie from '../../../lottie/thinking.json'
+// Placeholder reward_no shape the server mints before a real member #
+// is known ("GG-" + 8 base36 chars). Mirrors PLACEHOLDER_REWARD_RE in
+// lib/save-receipt.js — we only surface REAL numbers on this page.
+const PLACEHOLDER_REWARD_RE = /^GG-[A-Z0-9]{8}$/
+function isPlaceholderReward(n) { return !n || PLACEHOLDER_REWARD_RE.test(String(n)) }
+
 function normalizePhone(p) {
   if (!p) return ''
   return String(p).replace(/\D+/g, '')
@@ -83,6 +89,38 @@ export default function StoresPage() {
     if (!policyMap || !store?.store_name) return null
     const key = normalizeStoreName(store.store_name)
     return key ? policyMap.get(key) || null : null
+  }
+
+  // Reward / membership numbers live in the `rewards` table (one row per
+  // store chain). Fetch once and index by normalized store name so each
+  // row shows its member # without a per-store round-trip.
+  const { data: rewards } = useQuery({
+    queryKey: ['rewards'],
+    queryFn: getRewards,
+    staleTime: 1000 * 60 * 5,
+  })
+
+  // Key by storeGroupKey (alias-aware) — a rewards row named "COSTCO
+  // WHOLESALE" must match a store row named "Costco"; normalizeStoreName
+  // alone wouldn't collapse those variants, storeGroupKey does.
+  const rewardMap = (() => {
+    const m = new Map()
+    for (const r of rewards || []) {
+      const key = storeGroupKey(r.store_name)
+      if (!key) continue
+      const prev = m.get(key)
+      // Prefer a real number over a placeholder when a store has both rows.
+      if (!prev || (isPlaceholderReward(prev.reward_no) && !isPlaceholderReward(r.reward_no))) {
+        m.set(key, r)
+      }
+    }
+    return m
+  })()
+
+  function rewardFor(store) {
+    if (!store?.store_name) return null
+    const key = storeGroupKey(store.store_name)
+    return key ? rewardMap.get(key) || null : null
   }
 
   const del = useMutation({
@@ -262,6 +300,7 @@ export default function StoresPage() {
                         by normalized name. Click bubbles up to the row's Link
                         so it lands on the detail page, where the full policy
                         card lives. */}
+                    <RewardChip reward={rewardFor(store)} className="mr-2" />
                     <PolicyChip policy={policyFor(store)} className="mr-3" />
                     <ChevronRight size={16} className="text-gray-300 group-hover:text-blue-500 shrink-0 ml-4" />
                   </Link>
@@ -297,6 +336,9 @@ export default function StoresPage() {
                     <p className="font-semibold text-gray-800">{g.display}</p>
                     <p className="text-xs text-gray-400">{g.stores.length} locations</p>
                   </div>
+                  {/* Membership # is chain-wide, so it rides on the group
+                      header (same number for every location below). */}
+                  <RewardChip reward={rewardFor(g.stores[0])} className="mr-2" />
                   {/* Same chip on the merchant-group header; all locations
                       share the chain's curated policy. */}
                   <PolicyChip policy={policyFor(g.stores[0])} className="mr-3" />
@@ -336,6 +378,22 @@ export default function StoresPage() {
         </div>
       )}
     </div>
+  )
+}
+
+// Compact membership / reward-number chip rendered on each store row.
+// Only REAL numbers surface — placeholder "GG-XXXXXXXX" tokens are an
+// internal stand-in and stay hidden until a receipt re-parse captures
+// the real member # (e.g. Costco "111968768028").
+function RewardChip({ reward, className = '' }) {
+  if (!reward || isPlaceholderReward(reward.reward_no)) return null
+  return (
+    <span
+      className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-violet-50 text-violet-700 border-violet-100 ${className}`}
+      title={`Member / reward number: ${reward.reward_no}`}
+    >
+      <CreditCard size={10} /> {reward.reward_no}
+    </span>
   )
 }
 

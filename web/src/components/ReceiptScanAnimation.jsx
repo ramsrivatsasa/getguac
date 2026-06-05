@@ -2,9 +2,11 @@
 // Full-screen scan animation that pops while a receipt is parsing.
 //
 // Visual: a centered "receipt strip" SVG with a moving scan-line, our
-// AnimatedMascot perched on top with a tiny floating magnifying glass,
-// and a rotating status copy ("Looking for the store…", "Tallying line
-// items…", "Saving to your stash…") so the wait feels like progress.
+// search mascot perched on top (the avocado HOLDING a magnifying glass
+// that sweeps as it "scans"), and a rotating Guac-AI status report
+// ("Looking for the store…", "Tallying line items…", "Saving to your
+// stash…") so the wait feels like progress. Multi-receipt batches show
+// a "{count} receipts" badge.
 //
 // Lighter, friendlier treatment — soft white-glass backdrop instead
 // of the heavy emerald wash so the receipt SVG + character read as
@@ -14,7 +16,7 @@
 // Self-hides instantly when `count` drops to 0.
 
 import { useEffect, useState } from 'react'
-import AnimatedMascot from './AnimatedMascot'
+import GuacMascotAnimated from './GuacMascotAnimated'
 
 const TICKER = [
   'Looking for the store name…',
@@ -46,13 +48,10 @@ export default function ReceiptScanAnimation({ count = 0 }) {
       <div className="absolute inset-0 bg-white/75 backdrop-blur-md" />
 
       <div className="relative flex flex-col items-center pointer-events-auto">
-        {/* AnimatedMascot replaces the bare 🥑 emoji — gets the same
-            idle breathing + responds to global mascotBus events too.
-            The 🔍 loupe still swings beside it for character. */}
-        <div className="relative mascot-bob">
-          <AnimatedMascot expression="happy" size={88} idle={true} />
-          <span className="absolute -right-2 -bottom-1 text-3xl loupe-swing drop-shadow-md" aria-hidden>🔍</span>
-        </div>
+        {/* Our search mascot — the avocado holds a real magnifying glass
+            that sweeps side-to-side as it "scans" (its own bob + arm
+            sweep), replacing the old happy mascot + 🔍 emoji. */}
+        <GuacMascotAnimated animation="search" size={120} />
 
         {/* Receipt strip with traveling scan line */}
         <div className="mt-4 relative receipt-pop">
@@ -94,19 +93,9 @@ export default function ReceiptScanAnimation({ count = 0 }) {
       </div>
 
       <style jsx>{`
-        .mascot-bob   { animation: mascot-bob 1.8s ease-in-out infinite; }
-        .loupe-swing  { display: inline-block; transform-origin: 60% 40%; animation: loupe-swing 1.4s ease-in-out infinite; }
         .receipt-pop  { animation: receipt-pop 360ms cubic-bezier(0.16, 1, 0.3, 1) both; }
         .scan-line    { animation: scan-line 1.6s linear infinite; }
 
-        @keyframes mascot-bob {
-          0%, 100% { transform: translateY(0)  rotate(-1deg); }
-          50%      { transform: translateY(-8px) rotate(1.5deg); }
-        }
-        @keyframes loupe-swing {
-          0%, 100% { transform: rotate(-12deg); }
-          50%      { transform: rotate(18deg); }
-        }
         @keyframes receipt-pop {
           from { opacity: 0; transform: translateY(10px) scale(0.94); }
           to   { opacity: 1; transform: translateY(0)    scale(1); }
@@ -118,7 +107,7 @@ export default function ReceiptScanAnimation({ count = 0 }) {
           100% { transform: translateY(220%); opacity: 0.2; }
         }
         @media (prefers-reduced-motion: reduce) {
-          .mascot-bob, .loupe-swing, .receipt-pop, .scan-line { animation: none; }
+          .receipt-pop, .scan-line { animation: none; }
         }
       `}</style>
     </div>

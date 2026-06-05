@@ -53,8 +53,8 @@ Return ONLY a single JSON object. No prose, no markdown fences. Schema:
   "total_amount": number,                // positive purchases, NEGATIVE for returns
   "tax_paid": number,                    // negative on returns
   "payment_method": string|null,
-  "payment_last4": string|null,
-  "member_number": string|null,           // The store loyalty / membership / rewards account number printed on the receipt (Costco "Member:", CVS ExtraCare, Kroger Plus, Sephora Beauty Insider, gas-station rewards, etc.). EXCLUDE the credit-card number (already captured as payment_last4). Return null when no membership identifier is printed.
+  "payment_last4": string|null,           // Last 4 of the TENDER/payment card ONLY (VISA/MC/DEBIT/ACCT/CARD# payment block). A masked value next to Customer/BonusCard/Rewards or under a /rewards footer URL is a LOYALTY number → goes in member_number, leave this null.
+  "member_number": string|null,           // The store loyalty / membership / rewards account number printed on the receipt (Costco "Member:", CVS ExtraCare, Kroger Plus, Sephora Beauty Insider, Giant Food "Customer", gas-station rewards, etc.). Return EXACTLY as printed, INCLUDING mask glyphs — e.g. Giant "Customer 4*****6108" → "4*****6108". NOT the payment card (exclude the credit-card last-4 → payment_last4). Return null when no membership identifier is printed.
   "is_return": boolean,
   "is_receipt": boolean,                 // TRUE for any receipt / invoice / order confirmation. FALSE for non-receipt photos (selfie, cat, landscape, blank paper, screenshot of something else).
   "non_receipt_subject": string|null,    // When is_receipt=false: short 2-3 word description of what you DID see, lowercase ("a person", "a cat", "a sunset", "a blank page", "a screenshot of a chat"). When is_receipt=true: null.
@@ -87,6 +87,14 @@ COSTCO (very common — look hard, the member number is almost always present): 
   "Membership Number: 1234 5678 9012"     → "1234 5678 9012"
 COSTCO DISAMBIGUATION — a Costco receipt is full of numbers; the member number is NOT any of: the per-item 6–7 digit ITEM number printed before each product line, the Whse/Warehouse #, the Register/Trn#/Op# (operator), the date/time, the SUBTOTAL/TAX/TOTAL amounts, or the credit-card last-4. Choose ONLY the long ~11–12 digit number attached to Member/Membership.
 DO NOT return the credit-card last-4 here (already captured in payment_last4). DO NOT invent a number — return null only when nothing membership-shaped is printed anywhere.
+GROCERY / MASKED LOYALTY NUMBERS (Giant Food, Stop & Shop, Food Lion, Harris Teeter, Safeway, ACME, Kroger, and similar) — many loyalty / "BonusCard" / "Customer" numbers are printed MASKED for privacy: some leading character(s), a run of mask glyphs, then the last few visible digits. The mask glyph may be "*", "x", "X", or "#". CAPTURE THE MASKED STRING EXACTLY AS PRINTED — keep every mask glyph, hyphen and space; do NOT unmask, reconstruct the hidden digits, drop the glyphs, or return only the trailing digits. These almost always sit in the FOOTER (beneath a "www.<store>.com/rewards" or "CARD SAVINGS" line and a row of asterisks), NOT the top — so scan the bottom.
+  "Customer 4*****6108"        → "4*****6108"
+  "BonusCard 9****1234"        → "9****1234"
+  "****6108" / "XXXXXX6108"    → "****6108" / "XXXXXX6108"   (no leading digit is fine)
+  "Club Card S****6108"        → "S****6108"                 (a letter prefix is fine)
+PAYMENT-CARD DISAMBIGUATION (BOTH directions) — a masked value next to "Customer"/"BonusCard"/"Rewards"/"Member" or under a "/rewards" URL is the member_number, EVEN when it starts with 4 and ends in 4 digits like a Visa: e.g. "Customer 4*****6108" → member_number "4*****6108" and payment_last4 STAYS null (the leading 4 is a coincidence, NOT a card BIN — never split out "6108" as a card last-4). Conversely, a masked number in the TENDER/payment block (a "VISA/MC/DEBIT/CREDIT", "ACCOUNT/ACCT #", or "CARD #" line) is payment_last4, NOT member_number.
+"Customer" ALONE IS NOT A TRIGGER — only treat "Customer" as a loyalty label when a value containing a mask glyph OR ≥4 consecutive digits sits on the SAME line right after it. IGNORE "Customer Copy", "Merchant Copy", "Customer Service", "Customer Care/Support", "Valued Customer", and any phone number. Also NEVER capture as member_number: survey/sweepstakes/feedback codes (under a "/survey", "/feedback" or "/tellus" URL), $-prefixed or decimal-cents amounts (e.g. "CARD SAVINGS $62.09"), store/register/transaction IDs, AID/AUTH/APPROVAL/REF codes, the store phone, or cashier/manager names.
+ONLY emit a masked value when actual mask glyphs are present; if the candidate is ALL digits, treat it as a FULL number (Costco 11–12 digit logic above) — never fabricate a masked "last 4" of a full number.
 
 NOT-A-RECEIPT — if the input is clearly NOT a receipt (a selfie / portrait, a pet, a landscape, a screenshot of a chat, a blank piece of paper, an unrelated product photo, etc.), set:
   is_receipt: false

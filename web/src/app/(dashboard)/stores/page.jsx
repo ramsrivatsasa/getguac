@@ -10,6 +10,7 @@ import { useConfirm } from '../../../components/ConfirmDialog'
 import LottieAnimation from '../../../components/LottieAnimation'
 import emptyListLottie from '../../../lottie/empty-list.json'
 import thinkingLottie from '../../../lottie/thinking.json'
+import MascotLoading from '../../../components/MascotLoading'
 // Placeholder reward_no shape the server mints before a real member #
 // is known ("GG-" + 8 base36 chars). Mirrors PLACEHOLDER_REWARD_RE in
 // lib/save-receipt.js — we only surface REAL numbers on this page.
@@ -259,10 +260,7 @@ export default function StoresPage() {
       )}
 
       {isLoading ? (
-        <div className="py-12 text-center text-gray-400 flex flex-col items-center gap-3">
-          <LottieAnimation data={thinkingLottie} size={140} fallback="🏬" />
-          <p>Loading stores…</p>
-        </div>
+        <MascotLoading label="Loading stores…" />
       ) : filtered.length === 0 ? (
         <div className="py-12 text-center text-gray-400 flex flex-col items-center gap-3">
           <LottieAnimation data={emptyListLottie} size={160} fallback="🏬" />

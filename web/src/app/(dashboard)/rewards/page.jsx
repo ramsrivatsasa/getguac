@@ -8,6 +8,7 @@ import GuacMascot from '../../../components/GuacMascot'
 import LottieAnimation from '../../../components/LottieAnimation'
 import emptyListLottie from '../../../lottie/empty-list.json'
 import thinkingLottie from '../../../lottie/thinking.json'
+import MascotLoading from '../../../components/MascotLoading'
 import { displayStoreName } from '../../../lib/store-name-normalize'
 import { useConfirm } from '../../../components/ConfirmDialog'
 
@@ -104,10 +105,7 @@ export default function RewardsPage() {
 
       <div className="card p-0 overflow-hidden">
         {isLoading ? (
-          <div className="py-12 text-center text-gray-400 flex flex-col items-center gap-3">
-            <LottieAnimation data={thinkingLottie} size={140} fallback="🎁" />
-            <p>Loading…</p>
-          </div>
+          <MascotLoading label="Loading…" />
         ) : rewards.length === 0 ? (
           <div className="py-12 text-center text-gray-400 flex flex-col items-center gap-3">
             <LottieAnimation data={emptyListLottie} size={160} fallback="🎁" />

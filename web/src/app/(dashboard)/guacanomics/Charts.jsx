@@ -33,8 +33,8 @@ export default function Charts({ insights }) {
                   formatter={v => `$${Number(v).toFixed(2)}`}
                 />
                 <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} iconType="circle" />
-                <Line type="monotone" dataKey="spent" name="Spent" stroke="#e11d48" strokeWidth={2} dot={{ r: 2.5, fill: '#e11d48', strokeWidth: 0 }} activeDot={{ r: 5 }} />
-                <Line type="monotone" dataKey="refunded" name="Refunded" stroke="#10b981" strokeWidth={2} dot={{ r: 2.5, fill: '#10b981', strokeWidth: 0 }} activeDot={{ r: 5 }} />
+                <Line type="monotone" dataKey="spent" name="Spent" stroke="#e11d48" strokeWidth={2} dot={{ r: 2.5, fill: '#e11d48', strokeWidth: 0 }} activeDot={{ r: 5 }} isAnimationActive={false} />
+                <Line type="monotone" dataKey="refunded" name="Refunded" stroke="#10b981" strokeWidth={2} dot={{ r: 2.5, fill: '#10b981', strokeWidth: 0 }} activeDot={{ r: 5 }} isAnimationActive={false} />
               </LineChart>
             </ResponsiveContainer>
           )}
@@ -57,7 +57,7 @@ export default function Charts({ insights }) {
                   <Pie
                     data={insights.ratingBuckets.filter(b => b.spend > 0).map(b => ({ name: `${b.emoji} ${b.label}`, value: b.spend, color: b.color }))}
                     dataKey="value" nameKey="name" cx="50%" cy="50%"
-                    innerRadius={50} outerRadius={72} paddingAngle={2} strokeWidth={0}>
+                    innerRadius={50} outerRadius={72} paddingAngle={2} strokeWidth={0} isAnimationActive={false}>
                     {insights.ratingBuckets.filter(b => b.spend > 0).map((b, i) => <Cell key={i} fill={b.color} />)}
                   </Pie>
                   <Tooltip
@@ -97,7 +97,7 @@ export default function Charts({ insights }) {
                   contentStyle={{ borderRadius: 12, border: '1px solid #d1fae5', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', fontSize: 12 }}
                   formatter={(v, name) => name === 'spent' ? `$${Number(v).toFixed(2)}` : v}
                 />
-                <Bar dataKey="spent" fill="#10b981" radius={[0, 8, 8, 0]} maxBarSize={22} />
+                <Bar dataKey="spent" fill="#10b981" radius={[0, 8, 8, 0]} maxBarSize={22} isAnimationActive={false} />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -114,7 +114,7 @@ export default function Charts({ insights }) {
             <ResponsiveContainer width="100%" height={240}>
               <PieChart>
                 <Pie data={insights.purchaseVsReturn} dataKey="value" nameKey="name"
-                  cx="50%" cy="50%" innerRadius={62} outerRadius={88} paddingAngle={2} strokeWidth={0}>
+                  cx="50%" cy="50%" innerRadius={62} outerRadius={88} paddingAngle={2} strokeWidth={0} isAnimationActive={false}>
                   {insights.purchaseVsReturn.map((_, i) => <Cell key={i} fill={PIE_COLORS[i]} />)}
                 </Pie>
                 <Tooltip
@@ -138,7 +138,7 @@ export default function Charts({ insights }) {
             <ResponsiveContainer width="100%" height={240}>
               <PieChart>
                 <Pie data={insights.categoryBuckets} dataKey="spend" nameKey="label"
-                  cx="50%" cy="50%" innerRadius={62} outerRadius={92} paddingAngle={2} strokeWidth={0}>
+                  cx="50%" cy="50%" innerRadius={62} outerRadius={92} paddingAngle={2} strokeWidth={0} isAnimationActive={false}>
                   {insights.categoryBuckets.map((c, i) => <Cell key={i} fill={c.color} />)}
                 </Pie>
                 <Tooltip
@@ -197,7 +197,7 @@ export default function Charts({ insights }) {
                     dataKey="value"
                     nameKey="name"
                     cx="50%" cy="50%"
-                    innerRadius={40} outerRadius={75} paddingAngle={3}
+                    innerRadius={40} outerRadius={75} paddingAngle={3} isAnimationActive={false}
                   >
                     {insights.ratingBuckets.filter(b => b.spend > 0).map((b, i) => <Cell key={i} fill={b.color} />)}
                   </Pie>

@@ -208,7 +208,7 @@ export default function ValidatePage() {
               <p className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-1 text-center">Spend by Rating</p>
               <ResponsiveContainer width="100%" height={180}>
                 <PieChart>
-                  <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={40} outerRadius={70} paddingAngle={3}>
+                  <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={40} outerRadius={70} paddingAngle={3} isAnimationActive={false}>
                     {pieData.map((d, i) => <Cell key={i} fill={d.fill} />)}
                   </Pie>
                   <RTooltip formatter={(v, _n, p) => [`$${Number(v).toFixed(2)} (${p.payload.count})`, p.payload.name]} />

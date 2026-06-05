@@ -1,9 +1,9 @@
 'use client'
 // Full-screen scan animation that pops while a receipt is parsing.
 //
-// Visual: a centered "receipt strip" SVG with a moving scan-line, our
-// search mascot perched on top (the avocado HOLDING a magnifying glass
-// that sweeps as it "scans"), and a rotating Guac-AI status report
+// Visual: a centered "receipt strip" SVG with a moving scan-line, a
+// search/scan Lottie perched on top (a magnifying glass sweeping a
+// report with sparkles), and a rotating Guac-AI status report
 // ("Looking for the store…", "Tallying line items…", "Saving to your
 // stash…") so the wait feels like progress. Multi-receipt batches show
 // a "{count} receipts" badge.
@@ -16,7 +16,8 @@
 // Self-hides instantly when `count` drops to 0.
 
 import { useEffect, useState } from 'react'
-import GuacMascotAnimated from './GuacMascotAnimated'
+import LottieAnimation from './LottieAnimation'
+import searchScanLottie from '../lottie/search-scan.json'
 
 const TICKER = [
   'Looking for the store name…',
@@ -48,10 +49,10 @@ export default function ReceiptScanAnimation({ count = 0 }) {
       <div className="absolute inset-0 bg-white/75 backdrop-blur-md" />
 
       <div className="relative flex flex-col items-center pointer-events-auto">
-        {/* Our search mascot — the avocado holds a real magnifying glass
-            that sweeps side-to-side as it "scans" (its own bob + arm
-            sweep), replacing the old happy mascot + 🔍 emoji. */}
-        <GuacMascotAnimated animation="search" size={120} />
+        {/* Search/scan Lottie — a magnifying glass sweeping a receipt-like
+            report with sparkles, shown while we parse. Sits above the
+            receipt strip + the rotating Guac-AI parsing report below. */}
+        <LottieAnimation data={searchScanLottie} size={170} loop label="Scanning your receipt" fallback="🔍" />
 
         {/* Receipt strip with traveling scan line */}
         <div className="mt-4 relative receipt-pop">

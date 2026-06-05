@@ -29,6 +29,7 @@ import PreTripPanel from '../../../components/PreTripPanel'
 import { ShimmerBox } from '../../../components/animated'
 import LottieAnimation from '../../../components/LottieAnimation'
 import emptyReceiptsLottie from '../../../lottie/empty-receipts.json'
+import searchScanLottie from '../../../lottie/search-scan.json'
 
 const EMPTY = { store_name: '', date: '', total_amount: '', tax_paid: '', reward_no: '', business_purchase: false }
 
@@ -1044,7 +1045,7 @@ export default function ReceiptsPage() {
               <input {...getInputProps()} />
               {parsing ? (
                 <div className="flex flex-col items-center gap-2 text-amber-700">
-                  <Loader2 size={22} className="animate-spin" />
+                  <LottieAnimation data={searchScanLottie} size={108} loop label="Scanning your receipt" fallback="🔍" />
                   <p className="text-sm font-medium">Scanning receipt with Guac-AI…</p>
                 </div>
               ) : file ? (

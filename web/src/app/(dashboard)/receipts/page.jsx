@@ -1554,7 +1554,7 @@ export default function ReceiptsPage() {
                                     {r.is_return && <span className="inline-flex items-center text-[9px] px-1 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-100">Refund</span>}
                                     {r.receipt_link && <a href={r.receipt_link} target="_blank" rel="noreferrer" className="text-blue-500 hover:text-blue-700" title="Open receipt link"><Download size={11} /></a>}
                                   </div>
-                                  <div className="text-[10px] text-gray-400 mt-0.5">tax ${r.tax_paid.toFixed(2)} · created {(r.created_at || '').slice(0,10)}</div>
+                                  <div className="text-[10px] text-gray-400 mt-0.5">tax ${Number(r.tax_paid || 0).toFixed(2)} · created {(r.created_at || '').slice(0,10)}</div>
                                 </td>
                                 <td className="px-2 py-1.5 text-right text-gray-500">{r.reason}</td>
                               </tr>

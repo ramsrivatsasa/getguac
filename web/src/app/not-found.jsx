@@ -1,18 +1,9 @@
-// Custom 404 page — replaces Next.js's default with a character
-// Lottie + Smashlist-style copy. Renders for any URL that doesn't
-// match a route, including deep links that go stale.
-//
-// The Lottie slot uses src="" — until you drop a real 404 JSON in
-// place, LottieAnimation gracefully renders the fallback emoji. To
-// wire in the iconscout 404 character: download the .json, save to
-// web/src/lottie/404.json, then change this file to:
-//
-//   import notFoundLottie from '../lottie/404.json'
-//   <LottieAnimation data={notFoundLottie} size={240} />
+// Custom 404 page — replaces Next.js's default with our mascot
+// (holding a magnifying glass, "searching" for the page) + Smashlist-
+// style copy. Renders for any URL that doesn't match a route.
 
 import Link from 'next/link'
-import LottieAnimation from '../components/LottieAnimation'
-import searchingLottie from '../lottie/searching.json'
+import GuacMascotAnimated from '../components/GuacMascotAnimated'
 
 export const metadata = {
   title: 'Page not found — GetGuac',
@@ -23,11 +14,7 @@ export default function NotFound() {
     <div className="min-h-screen bg-white flex items-center justify-center px-4">
       <div className="max-w-md text-center">
         <div className="flex items-center justify-center mb-6">
-          <LottieAnimation
-            data={searchingLottie}
-            size={240}
-            fallback="🔍"
-          />
+          <GuacMascotAnimated animation="search" size={200} />
         </div>
         <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-gray-900 mb-2">
           Oops, page not found
@@ -50,9 +37,6 @@ export default function NotFound() {
             See receipts
           </Link>
         </div>
-        <p className="text-[11px] text-gray-400 mt-10">
-          Drop a 404-character Lottie JSON into <code className="font-mono">web/src/lottie/404.json</code> and update <code className="font-mono">app/not-found.jsx</code> to wire it in.
-        </p>
       </div>
     </div>
   )

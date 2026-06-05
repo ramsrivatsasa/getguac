@@ -1,16 +1,13 @@
-// ╔══════════════════════════════════════════════════════════════════╗
-// ║  🔒 DO NOT CHANGE — the GetGuac brand mascot SVG (mobile).       ║
-// ║  Mirror of web/src/components/GuacMascot.jsx. The avocado        ║
-// ║  character + the 3 SVG asset files (happy / rich / relaxing)     ║
-// ║  are LOCKED by the user (2026-06-04). No asset swap, no redraw,  ║
-// ║  no Lottie replacement, no separable-parts re-author. ASK FIRST. ║
-// ║                                                                  ║
-// ║  Animating the whole mascot via AnimatedMascot (scale/rotate/    ║
-// ║  translate/confetti) is still OK — that's the wrapper.           ║
-// ╚══════════════════════════════════════════════════════════════════╝
-//
 // On-brand SVG mascot — mirrors the web's <GuacMascot/>.
-// Three variants for now: happy (default), rich (Steals), relaxing (empty states).
+//
+// 🔄 2026-06-05 (user-approved): the brand mascot was REPLACED with the
+// NEW avocado character (face-up, white eyes, amber belly seed) to match
+// the web. The 3 mood SVGs in assets/mascot/ (happy / rich / relaxing)
+// were regenerated to the new design — rich = shades + cash, relaxing =
+// shades + drink, both with the longer arms. viewBox is now 220×290.
+//
+// Animating the whole mascot via AnimatedMascot (scale/rotate/translate/
+// confetti) is still the wrapper layer and unchanged.
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -34,7 +31,7 @@ class GuacMascot extends StatelessWidget {
     return SvgPicture.asset(
       _asset,
       width: size,
-      height: size * (280 / 220),
+      height: size * (290 / 220),
       semanticsLabel: 'GetGuac avocado mascot',
     );
   }

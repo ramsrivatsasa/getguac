@@ -93,6 +93,9 @@ Amazon order emails specifically list: Items / Shipping & handling / Total befor
 TAX — extract the explicit "Sales Tax:", "Tax:", or "Estimated tax:" line ONLY. Don't compute or guess.
 SANITY CHECK after extraction: if total_amount > 30 AND tax_paid / total_amount < 0.02, you likely picked the wrong total (probably grabbed Items subtotal + a small fee labelled "tax"). Re-scan the receipt and find the higher GRAND TOTAL number that pairs with this tax. Typical US sales tax is 4-10% of the post-tax total.
 
+MEMBER NUMBER — capture the store loyalty / membership / rewards identifier. Scan the WHOLE receipt incl. the top header and bottom footer; return digits/chars exactly as printed (no labels). Examples: "MEMBER: 111222333"→"111222333", "ExtraCare Card 1234567890"→"1234567890", "Kroger Plus xxx-xxx-1234"→"xxx-xxx-1234".
+COSTCO (look hard — usually present): an ~11–12 DIGIT number by the word "Member"/"Membership", typically near the TOP under the warehouse address, OFTEN WITH NO COLON, e.g. "Member 111222333444" or "Member 111 222 333 444"; on Costco.com it's "Membership Number"/"Member ID". Capture the full 11–12 digit string. It is NOT the per-item 6–7 digit item number, the Whse/Register/Trn/Op number, any amount, or the card last-4. EXCLUDE the credit-card last-4. Return null only if no membership identifier is printed anywhere.
+
 DATE EXTRACTION — critical. Many receipts get forwarded weeks or months AFTER the
 transaction; the email's "Date:" header is NOT the transaction date.
 - The transaction date is printed on the receipt body, typically next to one of:

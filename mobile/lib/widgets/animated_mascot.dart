@@ -252,7 +252,7 @@ class _AnimatedMascotState extends State<AnimatedMascot>
     // dots can drift past the bounds without clipping or grabbing
     // hit-tests from sibling widgets.
     final mascotW = widget.size;
-    final mascotH = widget.size * (280 / 220); // matches GuacMascot
+    final mascotH = widget.size * (290 / 220); // matches GuacMascot (new mascot is 220×290)
     final overlaySize = widget.size * 2.4;
 
     return AnimatedBuilder(

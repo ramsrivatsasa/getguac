@@ -74,16 +74,19 @@ Rules:
 - For returns, all money is negative AND is_return true AND each returned line has returned: true.
 - date = transaction date printed on the receipt (NOT email forward date).
 
-MEMBER NUMBER — capture any loyalty / membership / rewards / account identifier printed on the receipt that ties the user to this merchant's program. Examples (return the digits/characters as printed, no labels):
+MEMBER NUMBER — capture any loyalty / membership / rewards / account identifier printed on the receipt that ties the user to this merchant's program. Scan the ENTIRE receipt — the header at the very TOP and the footer at the very BOTTOM (membership lines are often in those edges, not the body). Return the digits/characters exactly as printed, no labels:
   "MEMBER: 111222333"                     → "111222333"
   "Member# 111222333"                     → "111222333"
   "ExtraCare Card 1234567890"             → "1234567890"
   "Kroger Plus Card xxx-xxx-1234"         → "xxx-xxx-1234"
   "Sephora Beauty Insider 12345"          → "12345"
   "Shell Fuel Rewards 555-555-1234"       → "555-555-1234"
-  "Costco Executive Member 1234 5678 9012"→ "1234 5678 9012"
   "Marriott Bonvoy 9876543"               → "9876543"
-DO NOT return the credit-card last-4 here (already captured in payment_last4). DO NOT invent a number — return null if nothing membership-shaped is printed.
+COSTCO (very common — look hard, the member number is almost always present): it is an ~11–12 DIGIT number tied to the word "Member" / "Membership", usually printed near the TOP of the warehouse receipt (under the warehouse address) — FREQUENTLY WITH NO COLON, e.g. "Member 111222333444" or "Member 111 222 333 444"; on Costco.com order pages it appears as "Membership Number" / "Member ID". Capture the full 11–12 digit string (keep spaces as printed).
+  "Member 111222333444"                   → "111222333444"
+  "Membership Number: 1234 5678 9012"     → "1234 5678 9012"
+COSTCO DISAMBIGUATION — a Costco receipt is full of numbers; the member number is NOT any of: the per-item 6–7 digit ITEM number printed before each product line, the Whse/Warehouse #, the Register/Trn#/Op# (operator), the date/time, the SUBTOTAL/TAX/TOTAL amounts, or the credit-card last-4. Choose ONLY the long ~11–12 digit number attached to Member/Membership.
+DO NOT return the credit-card last-4 here (already captured in payment_last4). DO NOT invent a number — return null only when nothing membership-shaped is printed anywhere.
 
 NOT-A-RECEIPT — if the input is clearly NOT a receipt (a selfie / portrait, a pet, a landscape, a screenshot of a chat, a blank piece of paper, an unrelated product photo, etc.), set:
   is_receipt: false

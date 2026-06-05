@@ -16,6 +16,7 @@ import { createApiClient } from '../../../../../lib/supabase/server'
 import { rateLimit, userRateKey } from '../../../../../lib/apiGuard'
 import { parseReceiptFromText, parseReceiptFromFile } from '../../../../../lib/parse-receipt-engine'
 import { resolveStoreAndLocation, writeRefundPolicies, lookupStoreDefaultPolicies, stripEmailWrapper } from '../../../../../lib/email-to-receipt'
+import { _ensureStoreRewardServer } from '../../../../../lib/save-receipt'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
@@ -132,6 +133,16 @@ export async function POST(_request, { params }) {
   // Resolve store + location FKs (best-effort)
   const { store_id, store_location_id } = await resolveStoreAndLocation(sb, parsed)
 
+  // Reward / membership number — run the SAME resolver the initial save uses
+  // (store reconciliation + placeholder-upgrade), so a re-parse can finally
+  // populate (or upgrade) the member # in reward_no. Previously reparse never
+  // wrote reward_no, so member numbers stayed blank after a re-parse.
+  let rewardNo = ''
+  if (parsed.store_name) {
+    rewardNo = await _ensureStoreRewardServer(sb, user.id, parsed.store_name, parsed.member_number || null)
+      .catch((e) => { console.warn('[reparse] ensureStoreReward skipped:', e.message); return '' })
+  }
+
   const { data: updated, error: upErr } = await sb.from('receipts').update({
     store_name: parsed.store_name || 'Receipt by email',
     store_id,
@@ -143,6 +154,9 @@ export async function POST(_request, { params }) {
     payment_last4: parsed.payment_last4 || null,
     is_return: Boolean(parsed.is_return),
     category: parsed.category || null,
+    // only set when the resolver returned something — never wipe an existing
+    // reward_no with a blank (e.g. store_name missing or resolver error)
+    ...(rewardNo ? { reward_no: rewardNo } : {}),
     processed: true,
   }).eq('id', receiptId).eq('user_id', user.id).select().single()
   if (upErr) return Response.json({ error: upErr.message }, { status: 500 })

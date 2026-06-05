@@ -362,7 +362,7 @@ function _isPlaceholderReward(n) {
  * Best-effort: returns '' on any failure so receipt save never blocks
  * on the rewards table.
  */
-async function _ensureStoreRewardServer(sb, userId, storeName, parsedMemberNumber = null) {
+export async function _ensureStoreRewardServer(sb, userId, storeName, parsedMemberNumber = null) {
   if (!sb || !userId || !storeName) return ''
   const parsed = (parsedMemberNumber && String(parsedMemberNumber).trim()) || null
 

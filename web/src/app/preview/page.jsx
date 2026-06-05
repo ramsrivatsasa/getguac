@@ -11,6 +11,8 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import AnimatedMascot from '../../components/AnimatedMascot'
+import GuacMascot from '../../components/GuacMascot'
+import GuacMascotAnimated from '../../components/GuacMascotAnimated'
 import AnimatedEmoji from '../../components/AnimatedEmoji'
 import LottieAnimation from '../../components/LottieAnimation'
 import FlyingMascots from '../../components/FlyingMascots'
@@ -173,6 +175,76 @@ export default function PreviewPage() {
             <Trigger label="flip"      sub="Y-axis 3D flip · 1.2s"         icon={FlipHorizontal} color="rose"    onClick={() => fire('flip',      () => mascotBus.flip())} />
             <Trigger label="jump"      sub="-40% arc with anticipation"   icon={ArrowUp}  color="amber"  onClick={() => fire('jump',      () => mascotBus.jump())} />
             <Trigger label="dance"     sub="Side-to-side groove · 2.4s"    icon={Music}    color="violet"  onClick={() => fire('dance',     () => mascotBus.dance())} />
+          </div>
+        </Showcase>
+
+        {/* ── MASCOT POSES (the NEW mascot, every old expression) ────── */}
+        <Showcase
+          title="Mascot poses"
+          sub="The NEW avocado character (face-up, white eyes, amber belly seed) re-posed for every old expression. Same <GuacMascot expression='…' /> API — all ~45 call sites across the app render these automatically."
+          file="components/GuacMascot.jsx"
+        >
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <PoseCard label="happy" sub="default cheerful">
+              <GuacMascot expression="happy" size={120} />
+            </PoseCard>
+            <PoseCard label="sleepy" sub="closed eyes + Zzz">
+              <GuacMascot expression="sleepy" size={120} />
+            </PoseCard>
+            <PoseCard label="surprised" sub="wide eyes + o">
+              <GuacMascot expression="surprised" size={120} />
+            </PoseCard>
+            <PoseCard label="celebrating" sub="grin + arms + sparkles">
+              <GuacMascot expression="celebrating" size={120} />
+            </PoseCard>
+            <PoseCard label="thumbsup" sub="arm + thumb">
+              <GuacMascot expression="thumbsup" size={120} />
+            </PoseCard>
+            <PoseCard label="angel" sub="halo + wings">
+              <GuacMascot expression="angel" size={120} />
+            </PoseCard>
+            <PoseCard label="sleeping" sub="lying down + Zzz">
+              <GuacMascot expression="sleeping" size={120} />
+            </PoseCard>
+            <PoseCard label="sitting" sub="feet poking out">
+              <GuacMascot expression="sitting" size={120} />
+            </PoseCard>
+            <PoseCard label="eating" sub="arm + fork">
+              <GuacMascot expression="eating" size={120} />
+            </PoseCard>
+            <PoseCard label="relaxing" sub="shades + drink">
+              <GuacMascot expression="relaxing" size={120} />
+            </PoseCard>
+            <PoseCard label="rich" sub="shades + cash">
+              <GuacMascot expression="rich" size={120} />
+            </PoseCard>
+            <PoseCard label="standing" sub="2 arms + 2 legs">
+              <GuacMascot expression="standing" size={120} />
+            </PoseCard>
+          </div>
+        </Showcase>
+
+        {/* ── ANIMATED ACTION MASCOTS ───────────────────────────────── */}
+        <Showcase
+          title="Animated action mascots"
+          sub="Our hand-drawn avocado (GuacMascotAnimated, CSS keyframes) in three looping actions — wave, flex, maracas. Built from the GuacMascotAlt layout; arms are additive overlays. No deps."
+          file="components/GuacMascotAnimated.jsx"
+          action={
+            <Link href="/preview/mascot-actions" className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-bold">
+              Open full page →
+            </Link>
+          }
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <PoseCard label="wave" sub="bob + hand wave">
+              <GuacMascotAnimated animation="wave" size={130} />
+            </PoseCard>
+            <PoseCard label="flex" sub="arms pump + bounce">
+              <GuacMascotAnimated animation="flex" size={130} />
+            </PoseCard>
+            <PoseCard label="maracas" sub="shades + shake">
+              <GuacMascotAnimated animation="maracas" size={130} />
+            </PoseCard>
           </div>
         </Showcase>
 
@@ -519,6 +591,16 @@ function Trigger({ label, sub, icon: Icon, color, onClick }) {
       </div>
       <p className="text-xs opacity-75">{sub}</p>
     </button>
+  )
+}
+
+function PoseCard({ label, sub, children }) {
+  return (
+    <div className="rounded-2xl border border-gray-200 bg-gradient-to-br from-emerald-50/40 via-white to-lime-50/40 p-4 flex flex-col items-center text-center">
+      <div className="h-40 flex items-center justify-center">{children}</div>
+      <code className="text-[11px] font-black text-emerald-700 mt-1">{label}</code>
+      <p className="text-[10px] text-gray-500 mt-0.5">{sub}</p>
+    </div>
   )
 }
 

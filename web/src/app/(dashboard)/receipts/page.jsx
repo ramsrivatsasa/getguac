@@ -11,7 +11,7 @@ import { useConfirm } from '../../../components/ConfirmDialog'
 import { useQuery } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { formatDateShort } from '../../../lib/dateFormat'
-import { Upload, Trash2, Eye, Search, Download, Loader2, Sparkles, X, Shield, Camera, ChevronDown, ChevronRight, Undo2, ShoppingCart, Monitor, Link2, Tag, RefreshCw, Copy, FileText, Mic } from 'lucide-react'
+import { Upload, Trash2, Eye, Search, Download, Loader2, Sparkles, X, Shield, Camera, ChevronDown, ChevronRight, Undo2, ShoppingCart, Monitor, Link2, Tag, RefreshCw, Copy, FileText, Mic, Plus } from 'lucide-react'
 import { guessCategory } from '../../../lib/categorizeRules'
 import { normalizeStoreName, displayStoreName } from '../../../lib/store-name-normalize'
 import { RECEIPT_CHIP_IDS, parseReceiptsUrlParams, chipToDateFrom } from '../../../lib/receipts-deeplink'
@@ -580,6 +580,20 @@ export default function ReceiptsPage() {
   const [screenOpen, setScreenOpen] = useState(false)
   const handleScreenClick = () => setScreenOpen(true)
 
+  // Floating "Add" menu — collapses Camera / Voice / Screen / Drop PDF behind
+  // a single trigger so the header doesn't sprawl into a row of pills. Closes
+  // on outside-click or Escape.
+  const [addMenuOpen, setAddMenuOpen] = useState(false)
+  const addMenuRef = useRef(null)
+  useEffect(() => {
+    if (!addMenuOpen) return
+    const onDoc = (e) => { if (addMenuRef.current && !addMenuRef.current.contains(e.target)) setAddMenuOpen(false) }
+    const onKey = (e) => { if (e.key === 'Escape') setAddMenuOpen(false) }
+    document.addEventListener('mousedown', onDoc)
+    document.addEventListener('keydown', onKey)
+    return () => { document.removeEventListener('mousedown', onDoc); document.removeEventListener('keydown', onKey) }
+  }, [addMenuOpen])
+
   // Auto-categorize: rule-based first pass (free, instant), AI fallback for
   // anything unmatched. Targets receipts with no category or "misc". Updates
   // are batched per row but parallelized for speed.
@@ -950,36 +964,47 @@ export default function ReceiptsPage() {
             className="hidden"
             onChange={handleQuickChange}
           />
-          <button type="button" onClick={handleCameraClick} className="btn-secondary" title="Take a photo of the receipt">
-            <Camera size={16} /> Camera
-          </button>
-          <button
-            type="button"
-            onClick={handleVoiceClick}
-            disabled={voiceParsing}
-            className="btn-secondary"
-            title="Dictate a receipt — e.g. &quot;thirty bucks at Costco on groceries&quot;"
-          >
-            {voiceParsing ? <Loader2 size={16} className="animate-spin" /> : <Mic size={16} />}
-            Voice
-          </button>
-          <button type="button" onClick={handleScreenClick} className="btn-secondary" title="Capture a receipt that's open on another screen, window, or tab">
-            <Monitor size={16} /> Screen
-          </button>
-          {/* PDF-only upload. Utility bills, internet invoices,
-              subscription statements, pay stubs — drop them as PDFs. The
-              server validates magic bytes and parses via Gemini→Groq. */}
-          <button
-            type="button"
-            onClick={handlePdfClick}
-            disabled={pdfBusy > 0}
-            className="btn-secondary"
-            title="Upload a PDF invoice, utility bill, statement, or subscription receipt"
-          >
-            {pdfBusy > 0
-              ? <><Loader2 size={14} className="animate-spin" /> {pdfBusy} PDF{pdfBusy === 1 ? '' : 's'}…</>
-              : <><FileText size={16} /> Drop PDF</>}
-          </button>
+          {/* Floating "Add" menu — Camera / Voice / Screen / Drop PDF tucked
+              behind one trigger instead of a sprawling row of pills. */}
+          <div className="relative shrink-0" ref={addMenuRef}>
+            <button
+              type="button"
+              onClick={() => setAddMenuOpen((o) => !o)}
+              className="btn-secondary"
+              aria-haspopup="menu"
+              aria-expanded={addMenuOpen}
+              title="Add a receipt another way"
+            >
+              {(voiceParsing || pdfBusy > 0)
+                ? <Loader2 size={16} className="animate-spin" />
+                : <Plus size={16} className={`transition-transform ${addMenuOpen ? 'rotate-45' : ''}`} />}
+              Add
+            </button>
+            {addMenuOpen && (
+              <div role="menu" className="absolute right-0 top-full mt-2 z-30 w-48 rounded-2xl bg-white shadow-xl ring-1 ring-gray-100 p-1.5 anim-fadeup">
+                <button role="menuitem" type="button" onClick={() => { setAddMenuOpen(false); handleCameraClick() }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors">
+                  <Camera size={16} /> Camera
+                </button>
+                <button role="menuitem" type="button" disabled={voiceParsing} onClick={() => { setAddMenuOpen(false); handleVoiceClick() }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors disabled:opacity-50">
+                  {voiceParsing ? <Loader2 size={16} className="animate-spin" /> : <Mic size={16} />} Voice
+                </button>
+                <button role="menuitem" type="button" onClick={() => { setAddMenuOpen(false); handleScreenClick() }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors">
+                  <Monitor size={16} /> Screen
+                </button>
+                {/* PDF-only upload. Utility bills, internet invoices,
+                    subscription statements, pay stubs — parsed via Gemini→Groq. */}
+                <button role="menuitem" type="button" disabled={pdfBusy > 0} onClick={() => { setAddMenuOpen(false); handlePdfClick() }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors disabled:opacity-50">
+                  {pdfBusy > 0
+                    ? <><Loader2 size={16} className="animate-spin" /> {pdfBusy} PDF{pdfBusy === 1 ? '' : 's'}…</>
+                    : <><FileText size={16} /> Drop PDF</>}
+                </button>
+              </div>
+            )}
+          </div>
           <input
             ref={pdfFileRef}
             type="file"

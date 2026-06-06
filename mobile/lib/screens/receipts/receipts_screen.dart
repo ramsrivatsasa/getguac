@@ -11,6 +11,7 @@ import '../../services/receipt_parse_service.dart';
 import '../../services/voice_capture_service.dart';
 import '../../categories.dart' as cat;
 import '../../widgets/animated_primitives.dart';
+import '../../widgets/receipt_scan_overlay.dart';
 import '../../services/mascot_event_bus.dart';
 
 class ReceiptsScreen extends StatefulWidget {
@@ -169,43 +170,12 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
     super.dispose();
   }
 
-  /// Bottom-sheet source picker. Lets the user EITHER snap a fresh photo
-  /// OR pick a screenshot / image already in their gallery — important
-  /// because plenty of "receipts" arrive as Amazon / Doordash / Uber Eats /
-  /// Instacart confirmation screenshots saved to the camera roll, not
-  /// physical receipts in front of a camera.
-  Future<ImageSource?> _pickImageSource() async {
-    return showModalBottomSheet<ImageSource>(
-      context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (ctx) => SafeArea(
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          const SizedBox(height: 8),
-          Container(width: 36, height: 4, decoration: BoxDecoration(
-            color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2),
-          )),
-          const SizedBox(height: 8),
-          ListTile(
-            leading: const Icon(Icons.camera_alt, color: Color(0xFF064e3b)),
-            title: const Text('Take a photo', style: TextStyle(fontWeight: FontWeight.w700)),
-            subtitle: const Text('Snap a paper receipt'),
-            onTap: () => Navigator.of(ctx).pop(ImageSource.camera),
-          ),
-          ListTile(
-            leading: const Icon(Icons.photo_library_outlined, color: Color(0xFF064e3b)),
-            title: const Text('Pick from gallery', style: TextStyle(fontWeight: FontWeight.w700)),
-            subtitle: const Text('Amazon, Doordash, Uber Eats… any screenshot'),
-            onTap: () => Navigator.of(ctx).pop(ImageSource.gallery),
-          ),
-          const SizedBox(height: 8),
-        ]),
-      ),
-    );
-  }
-
-  Future<void> _captureReceipt() async {
-    final source = await _pickImageSource();
-    if (source == null || !mounted) return;
+  /// Capture a receipt photo from [source], show the full-screen scan overlay
+  /// (mascot + scan-line + rotating ticker) while Guac-AI reads it, then open
+  /// the review dialog — prefilled on success, blank-with-photo on failure.
+  /// Shared by the camera/gallery items in the floating "+ Add" menu.
+  Future<void> _captureFromSource(ImageSource source) async {
+    if (!mounted) return;
     final picker = ImagePicker();
     final img = await picker.pickImage(source: source);
     if (img == null || !mounted) return;
@@ -214,29 +184,14 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
     if (uid == null) return;
 
     final file = File(img.path);
-    // Show a quick "Guac-AI is scanning" loader while we send the photo to
-    // /api/parse-receipt. The web flow does this too; mobile used to skip it
-    // entirely so the user had to type every field by hand.
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const AlertDialog(
-        content: Padding(
-          padding: EdgeInsets.symmetric(vertical: 8),
-          child: Row(mainAxisSize: MainAxisSize.min, children: [
-            SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2)),
-            SizedBox(width: 14),
-            Flexible(child: Text('Guac-AI is reading your receipt…')),
-          ]),
-        ),
-      ),
-    );
+    // Full-screen scan overlay while we send the photo to /api/parse-receipt —
+    // mirrors the web parsing animation (mascot + speech bubble + scan line).
+    ReceiptScanOverlay.show(context);
     // One automatic retry on transient errors so a single AI hiccup doesn't
     // drop the user into an empty edit form.
     ParseResult result = await ReceiptParseService.parseImage(file);
     if (!result.ok) result = await ReceiptParseService.parseImage(file);
-    if (!mounted) return;
-    Navigator.of(context, rootNavigator: true).pop();  // dismiss loader
+    ReceiptScanOverlay.hide();
     if (!mounted) return;
 
     if (!result.ok) {
@@ -295,24 +250,11 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
     );
     if (!mounted || transcript == null || transcript.trim().isEmpty) return;
 
-    // Parse via Gemini on the server.
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const AlertDialog(
-        content: Padding(
-          padding: EdgeInsets.symmetric(vertical: 8),
-          child: Row(mainAxisSize: MainAxisSize.min, children: [
-            SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2)),
-            SizedBox(width: 14),
-            Flexible(child: Text('Guac-AI is parsing your voice receipt…')),
-          ]),
-        ),
-      ),
-    );
+    // Full-screen scan overlay while Gemini parses the spoken receipt.
+    ReceiptScanOverlay.show(context);
     final result = await VoiceCaptureService.parseTranscript(transcript);
+    ReceiptScanOverlay.hide();
     if (!mounted) return;
-    Navigator.of(context, rootNavigator: true).pop();  // dismiss loader
 
     if (!result.ok) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -329,6 +271,44 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
         uid: uid,
         prefill: result.data!,
         voiceTranscript: transcript,
+      ),
+    );
+  }
+
+  /// Floating "+ Add" menu — a bottom-sheet of capture options shown when the
+  /// FAB is tapped. Mobile supports Camera / Gallery / Voice (Screen + PDF are
+  /// web-only). Each tile runs its handler after the sheet closes.
+  void _openAddMenu() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => SafeArea(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          const SizedBox(height: 8),
+          Container(width: 36, height: 4, decoration: BoxDecoration(
+            color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2),
+          )),
+          const SizedBox(height: 8),
+          ListTile(
+            leading: const Icon(Icons.camera_alt, color: Color(0xFF064e3b)),
+            title: const Text('Take a photo', style: TextStyle(fontWeight: FontWeight.w700)),
+            subtitle: const Text('Snap a paper receipt'),
+            onTap: () { Navigator.of(ctx).pop(); _captureFromSource(ImageSource.camera); },
+          ),
+          ListTile(
+            leading: const Icon(Icons.photo_library_outlined, color: Color(0xFF064e3b)),
+            title: const Text('Pick from gallery', style: TextStyle(fontWeight: FontWeight.w700)),
+            subtitle: const Text('Amazon, Doordash, Uber Eats… any screenshot'),
+            onTap: () { Navigator.of(ctx).pop(); _captureFromSource(ImageSource.gallery); },
+          ),
+          ListTile(
+            leading: const Icon(Icons.mic_none, color: Color(0xFF064e3b)),
+            title: const Text('Voice', style: TextStyle(fontWeight: FontWeight.w700)),
+            subtitle: const Text('Dictate a receipt — e.g. "thirty bucks at Costco"'),
+            onTap: () { Navigator.of(ctx).pop(); _captureVoice(); },
+          ),
+          const SizedBox(height: 8),
+        ]),
       ),
     );
   }
@@ -481,11 +461,19 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
               ),
               IconButton(icon: const Icon(Icons.delete), onPressed: _deleteSelected, tooltip: 'Delete'),
             ]
-          : [
-              IconButton(icon: const Icon(Icons.mic_none), onPressed: _captureVoice, tooltip: 'Voice'),
-              IconButton(icon: const Icon(Icons.camera_alt), onPressed: _captureReceipt, tooltip: 'Camera'),
-            ],
+          : const [],
       ),
+      // Floating "+ Add" menu — collapses the capture options (Camera /
+      // Gallery / Voice) behind one button instead of a row of app-bar icons.
+      floatingActionButton: _selectionMode
+        ? null
+        : FloatingActionButton.extended(
+            onPressed: _openAddMenu,
+            backgroundColor: const Color(0xFF15803d),
+            foregroundColor: Colors.white,
+            icon: const Icon(Icons.add),
+            label: const Text('Add'),
+          ),
       body: Column(children: [
         // Period chips — scope the query to save load time on big accounts
         Container(

@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import 'package:http/http.dart' as http;
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -16,6 +18,42 @@ import '../../widgets/guac_mascot.dart';
 import '../../widgets/animated_mascot.dart';
 import '../../widgets/animated_primitives.dart';
 import '../../services/mascot_event_bus.dart';
+
+/// Login mascot — picks a RANDOM avocado once per mount so the welcome
+/// screen varies: the Mexican maracas dancer + sombrero avocado (Lottie),
+/// or the happy / rich / relaxing SVG moods (which also wiggle on a failed
+/// sign-in via the mascot event bus).
+class _LoginMascot extends StatefulWidget {
+  final double size;
+  const _LoginMascot({this.size = 96});
+  @override
+  State<_LoginMascot> createState() => _LoginMascotState();
+}
+
+class _LoginMascotState extends State<_LoginMascot> {
+  // Picked once on mount; stays stable across rebuilds (e.g. the failed-
+  // sign-in wiggle) so the character never flickers mid-session.
+  late final int _pick = math.Random().nextInt(5);
+
+  @override
+  Widget build(BuildContext context) {
+    final s = widget.size;
+    switch (_pick) {
+      case 0:
+        return Lottie.asset('assets/lottie/our-mascot-maracas.json',
+            width: s * 1.3, height: s * 1.3, repeat: true);
+      case 1:
+        return Lottie.asset('assets/lottie/mexican-avocado.json',
+            width: s * 1.3, height: s * 1.3, repeat: true);
+      case 2:
+        return AnimatedMascot(size: s, idle: true, mood: MascotMood.rich);
+      case 3:
+        return AnimatedMascot(size: s, idle: true, mood: MascotMood.relaxing);
+      default:
+        return AnimatedMascot(size: s, idle: true, mood: MascotMood.happy);
+    }
+  }
+}
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -417,10 +455,10 @@ class _LoginScreenState extends State<LoginScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               child: Column(
                 children: [
-                  // Avocado mascot — SVG matches the web brand.
-                  // Idle breathe gives the login screen ambient life;
-                  // mascotBus.wiggle on failed sign-in shakes it too.
-                  const AnimatedMascot(size: 96, idle: true),
+                  // Avocado mascot — a RANDOM one each time the login screen
+                  // mounts (Mexican maracas dancer, sombrero avocado, or the
+                  // happy/rich/relaxing moods) so the welcome feels alive.
+                  const _LoginMascot(size: 96),
                   const SizedBox(height: 8),
                   const Text(
                     'GetGuac',

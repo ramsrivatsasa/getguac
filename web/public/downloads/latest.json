@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.41",
-  "name": "v0.3.41 — receipt scan animation + floating Add menu (mobile)",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.41/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Receipts: a full-screen scan animation now plays while a photographed OR dictated receipt is being read — the Guac mascot with a sweeping magnifier, a scan-line tracking down a paper receipt, and a rotating status ticker (Looking for the store… → Saving to your Stash 🥑). Replaces the plain spinner.\n• Receipts: the capture options are collapsed behind a single floating “+ Add” button — Take a photo / Pick from gallery / Voice — instead of separate app-bar icons.\n• Data continues to sync live from getguac.app."
+  "version": "v0.3.43",
+  "name": "v0.3.43 — Costco membership autofill, new scan animation, random login mascot",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.43/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Receipts: the membership / loyalty number now auto-fills the Reward No field when you scan (Costco “Member”, Giant “Customer”, etc.) — previously it was read on the server but dropped before the form.\n• Receipts: a full-screen scan animation now plays while a photographed OR dictated receipt is read — the maracas avocado + a sweeping magnifier + an animated status bubble (Looking for the store… → Saving to your Stash 🥑).\n• Receipts: capture options are collapsed behind a single floating “+ Add” button (Take a photo / Pick from gallery / Voice).\n• Login: a random avocado greets you each time — the Mexican maracas dancer, the sombrero avocado, or the happy / rich / relaxing moods."
 }

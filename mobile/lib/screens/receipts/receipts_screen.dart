@@ -707,7 +707,9 @@ class _AddReceiptDialogState extends State<_AddReceiptDialog> {
     _store    = TextEditingController(text: e?.storeName ?? p?.storeName ?? '');
     _amount   = TextEditingController(text: e?.totalAmount.toString() ?? (p?.totalAmount != null && p!.totalAmount > 0 ? p.totalAmount.toStringAsFixed(2) : ''));
     _tax      = TextEditingController(text: e?.taxPaid.toString()     ?? (p?.taxPaid     != null && p!.taxPaid     > 0 ? p.taxPaid.toStringAsFixed(2)     : ''));
-    _rewardNo = TextEditingController(text: e?.rewardNo ?? '');
+    // Prefill Reward No from the AI-extracted membership number (Costco
+    // "Member:", Giant "Customer", etc.) when adding from a scan.
+    _rewardNo = TextEditingController(text: e?.rewardNo ?? (p?.memberNumber.isNotEmpty == true ? p!.memberNumber : ''));
     _date     = e?.date ?? p?.date ?? DateTime.now().toIso8601String().substring(0, 10);
     _business = e?.businessPurchase ?? false;
   }

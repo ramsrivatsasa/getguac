@@ -19,6 +19,7 @@ class ParsedReceipt {
   final double taxPaid;
   final String paymentMethod;
   final String paymentLast4;
+  final String memberNumber;   // store loyalty/membership no (Costco "Member:", etc.) — prefills Reward No
   final bool isReturn;
   final String? category;
   final List<ParsedItem> items;
@@ -31,6 +32,7 @@ class ParsedReceipt {
     required this.taxPaid,
     required this.paymentMethod,
     required this.paymentLast4,
+    required this.memberNumber,
     required this.isReturn,
     required this.category,
     required this.items,
@@ -44,6 +46,9 @@ class ParsedReceipt {
     taxPaid:       (m['tax_paid']     is num) ? (m['tax_paid']     as num).toDouble() : double.tryParse('${m['tax_paid']}')     ?? 0,
     paymentMethod: (m['payment_method'] ?? '').toString(),
     paymentLast4:  (m['payment_last4']  ?? '').toString(),
+    // Server returns the membership/loyalty no under `member_number` (falls back
+    // to `reward_no` for older server shapes). Prefills the Reward No field.
+    memberNumber:  (m['member_number'] ?? m['reward_no'] ?? '').toString(),
     isReturn:      m['is_return'] == true,
     category:      (m['category'] as String?)?.isNotEmpty == true ? m['category'] as String : null,
     items:         (m['items'] as List? ?? const []).map((it) => ParsedItem.fromMap(it as Map<String, dynamic>)).toList(),

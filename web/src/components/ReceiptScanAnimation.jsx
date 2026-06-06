@@ -76,8 +76,8 @@ export default function ReceiptScanAnimation({ count = 0 }) {
             positioned out of flow. */}
         <div className="relative shrink-0">
           {/* Maracas avocado. overflow-visible so the maracas swing past the
-              SVG edge without being clipped. Mirror lives only on this span. */}
-          <span className="inline-block overflow-visible px-3" style={{ transform: 'scaleX(-1)' }}>
+              SVG edge without being clipped. */}
+          <span className="inline-block overflow-visible px-3">
             <GuacMascotAnimated animation="maracas" size={160} className="overflow-visible" />
           </span>
 

@@ -33,21 +33,20 @@ class _LoginMascot extends StatefulWidget {
 class _LoginMascotState extends State<_LoginMascot> {
   // Picked once on mount; stays stable across rebuilds (e.g. the failed-
   // sign-in wiggle) so the character never flickers mid-session.
-  late final int _pick = math.Random().nextInt(5);
+  late final int _pick = math.Random().nextInt(4);
 
   @override
   Widget build(BuildContext context) {
     final s = widget.size;
     switch (_pick) {
       case 0:
+        // OUR branded maracas avocado — the same mascot used in the receipt
+        // scan overlay (assets/lottie/our-mascot-maracas.json).
         return Lottie.asset('assets/lottie/our-mascot-maracas.json',
             width: s * 1.3, height: s * 1.3, repeat: true);
       case 1:
-        return Lottie.asset('assets/lottie/mexican-avocado.json',
-            width: s * 1.3, height: s * 1.3, repeat: true);
-      case 2:
         return AnimatedMascot(size: s, idle: true, mood: MascotMood.rich);
-      case 3:
+      case 2:
         return AnimatedMascot(size: s, idle: true, mood: MascotMood.relaxing);
       default:
         return AnimatedMascot(size: s, idle: true, mood: MascotMood.happy);
@@ -455,9 +454,9 @@ class _LoginScreenState extends State<LoginScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               child: Column(
                 children: [
-                  // Avocado mascot — a RANDOM one each time the login screen
-                  // mounts (Mexican maracas dancer, sombrero avocado, or the
-                  // happy/rich/relaxing moods) so the welcome feels alive.
+                  // OUR avocado mascot — a RANDOM one each time the login
+                  // screen mounts (the branded maracas dancer, or the
+                  // happy / rich / relaxing moods) so the welcome feels alive.
                   const _LoginMascot(size: 96),
                   const SizedBox(height: 8),
                   const Text(

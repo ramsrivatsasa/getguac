@@ -274,6 +274,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFf9fafb),
       appBar: _buildAppBar(),
+      // Quick "Add Receipt" — taps through to /receipts and auto-opens the
+      // capture menu (Take photo / Gallery / Voice). Brought back after it was
+      // dropped in the v0.2.69 simplification.
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => context.go('/receipts?add=1'),
+        backgroundColor: const Color(0xFF15803d),
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.camera_alt),
+        label: const Text('Add Receipt', style: TextStyle(fontWeight: FontWeight.w800)),
+      ),
       body: RefreshIndicator(
         onRefresh: () async {
           final receiptProv = context.read<ReceiptProvider>();

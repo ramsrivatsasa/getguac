@@ -35,7 +35,11 @@ class ReceiptsScreen extends StatefulWidget {
   /// verbatim instead of forcing a day-bucket roundtrip.
   final String? initialDateFrom;
 
-  const ReceiptsScreen({super.key, this.initialStoreFilter, this.initialPeriod, this.initialDateFrom});
+  /// When true (deep link /receipts?add=1 — e.g. the dashboard "Add Receipt"
+  /// button), the capture menu opens automatically on first frame.
+  final bool openAdd;
+
+  const ReceiptsScreen({super.key, this.initialStoreFilter, this.initialPeriod, this.initialDateFrom, this.openAdd = false});
   @override
   State<ReceiptsScreen> createState() => _ReceiptsScreenState();
 }
@@ -76,6 +80,12 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
   @override
   void initState() {
     super.initState();
+    // Deep-link "add" (dashboard Add Receipt button) → pop the capture menu.
+    if (widget.openAdd) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _openAddMenu();
+      });
+    }
     _selectedPeriod = _parseChipId(widget.initialPeriod);
     _deepLinkCutoff = widget.initialDateFrom;
     if (context.read<AppAuthProvider>().currentUser?.id != null) {
@@ -471,8 +481,8 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
             onPressed: _openAddMenu,
             backgroundColor: const Color(0xFF15803d),
             foregroundColor: Colors.white,
-            icon: const Icon(Icons.add),
-            label: const Text('Add'),
+            icon: const Icon(Icons.camera_alt),
+            label: const Text('Add Receipt', style: TextStyle(fontWeight: FontWeight.w800)),
           ),
       body: Column(children: [
         // Period chips — scope the query to save load time on big accounts

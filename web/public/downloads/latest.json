@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.43",
-  "name": "v0.3.43 — Costco membership autofill, new scan animation, random login mascot",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.43/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Receipts: the membership / loyalty number now auto-fills the Reward No field when you scan (Costco “Member”, Giant “Customer”, etc.) — previously it was read on the server but dropped before the form.\n• Receipts: a full-screen scan animation now plays while a photographed OR dictated receipt is read — the maracas avocado + a sweeping magnifier + an animated status bubble (Looking for the store… → Saving to your Stash 🥑).\n• Receipts: capture options are collapsed behind a single floating “+ Add” button (Take a photo / Pick from gallery / Voice).\n• Login: a random avocado greets you each time — the Mexican maracas dancer, the sombrero avocado, or the happy / rich / relaxing moods."
+  "version": "v0.3.44",
+  "name": "v0.3.44 — Dashboard “Add Receipt” button is back + brand login mascots",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.44/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Dashboard: the “Add Receipt” button is back — tap it to snap a photo, pick a screenshot from your gallery, or dictate a receipt (it was dropped in an earlier simplification).\n• Login: the welcome avocado is now always one of OUR brand mascots, picked at random (the maracas dancer + happy / rich / relaxing moods).\n• Receipts: the membership / loyalty number now auto-fills the Reward No field when you scan (Costco “Member”, Giant “Customer”).\n• Receipts: a full-screen scan animation plays while a receipt is read — the maracas avocado + a sweeping magnifier + an animated status bubble.\n• Receipts: capture options live behind one “Add Receipt” button (Take a photo / Pick from gallery / Voice)."
 }

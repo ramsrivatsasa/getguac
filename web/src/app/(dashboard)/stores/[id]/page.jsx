@@ -108,7 +108,24 @@ export default function StoreDetailPage() {
     </div>
   )
 
-  const locations = store.store_locations || []
+  // Dedup locations that are really the same physical store — same store
+  // number, or the same address after normalising case/abbreviations. E.g.
+  // "14390 Chantilly Crossing" and "14390 CHANTILLY CROSSING LN" both = #334.
+  const normLocKey = (loc) => `${loc.address || ''} ${loc.zip || ''}`.toLowerCase()
+    .replace(/\b(ln|lane|st|street|rd|road|ave|avenue|blvd|dr|drive|ste|suite|unit|apt)\b/g, '')
+    .replace(/[^a-z0-9]/g, '')
+  const locKey = (loc) => loc.store_no ? `no:${String(loc.store_no).trim().toLowerCase()}` : `addr:${normLocKey(loc)}`
+  const _rawLocations = store.store_locations || []
+  const _seenLoc = new Map()
+  for (const loc of _rawLocations) {
+    const k = locKey(loc)
+    const cur = _seenLoc.get(k)
+    // Keep the more complete row (longer address) as the canonical one.
+    if (!cur || (loc.address || '').length > (cur.address || '').length) _seenLoc.set(k, loc)
+  }
+  const _canonLocId = new Map()
+  for (const loc of _rawLocations) _canonLocId.set(loc.id, _seenLoc.get(locKey(loc)).id)
+  const locations = [..._seenLoc.values()]
   const totalSpend = receipts.reduce((sum, r) => sum + parseFloat(r.total_amount || 0), 0)
 
   // Resolve this store's real member/reward number from the rewards table
@@ -126,7 +143,9 @@ export default function StoreDetailPage() {
   for (const loc of locations) byLocation.set(loc.id, { loc, items: [] })
   byLocation.set('_none', { loc: null, items: [] })
   for (const r of receipts) {
-    const key = r.store_location_id && byLocation.has(r.store_location_id) ? r.store_location_id : '_none'
+    // Map the receipt's location to its canonical (deduped) location.
+    const canonId = r.store_location_id ? _canonLocId.get(r.store_location_id) : null
+    const key = canonId && byLocation.has(canonId) ? canonId : '_none'
     byLocation.get(key).items.push(r)
   }
 

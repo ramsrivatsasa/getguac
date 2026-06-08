@@ -164,7 +164,7 @@ Match strategy:
 2. If exact SKU not found, search for SIMILAR products (same product type at major retailers).
 3. Best-fit retailers (Guac-Search hint${enhanced.category ? `, category: ${enhanced.category}` : ''}): ${suggestedStores}.
 
-Write ONE line per product (max 8). Use this EXACT pipe-delimited format (keep every pipe even when a field is blank):
+List AS MANY distinct matching products as you can find — aim for 15–20 — spanning different brands, models, configurations and retailers that fit the request (do NOT limit to one per store; show the variety a shopper would see on Google Shopping). Write ONE line per product. Use this EXACT pipe-delimited format (keep every pipe even when a field is blank):
 STORE | $PRICE | $ORIGINAL_PRICE_IF_ON_SALE | PRODUCT TITLE | RATING(0-5) | REVIEW_COUNT | KEY SPECS | IMAGE_URL | PRODUCT_URL
 
 Example:
@@ -206,7 +206,7 @@ Output ONLY a JSON array (no prose, no markdown fences). Each element:
   "matched_name": string
 }
 
-Drop any line that doesn't have a numeric price. Sort cheapest first. Max 8 entries.`
+Drop any line that doesn't have a numeric price. Sort cheapest first. Keep up to 24 entries.`
       const stage2 = await runGemini(stage2Prompt, { withSearch: false })
       parsed = safeParseJsonArray(stage2.text)
       console.log('[best-prices stage 2]', { results: parsed.length, sample: parsed[0] })

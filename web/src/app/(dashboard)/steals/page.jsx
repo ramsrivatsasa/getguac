@@ -9,7 +9,7 @@ import {
 } from 'lucide-react'
 import { getStashItems, getReceipts, getRewards } from '../../../lib/db'
 import { predictReplenishItems, expiringRewards } from '../../../lib/userProfile'
-import { SEARCH_SPECS, detectCategory, buildRefinedQuery, specSummary } from '../../../lib/searchSpecs'
+import { SEARCH_SPECS, SEARCH_CATEGORY_KEYS, detectCategory, buildRefinedQuery, specSummary } from '../../../lib/searchSpecs'
 import { useSavedSearches, useAddSavedSearch, useDeleteSavedSearch } from '../../../hooks/useSavedSearches'
 import { touchSavedSearch } from '../../../lib/savedSearches'
 import GuacMascot from '../../../components/GuacMascot'
@@ -29,6 +29,7 @@ async function fetchBestPrices({ item_name, stashItems }) {
 
 export default function StealsPage() {
   const [query, setQuery] = useState('')
+  const [manualCategory, setManualCategory] = useState('')
   const [specs, setSpecs] = useState({})
   const [activeQuery, setActiveQuery] = useState('')
   // Client-side refine filters (instant — applied to the returned results).
@@ -37,7 +38,7 @@ export default function StealsPage() {
   const [minRating, setMinRating] = useState('')
   const [sortBy, setSortBy] = useState('price')
 
-  const category = useMemo(() => detectCategory(query), [query])
+  const category = manualCategory || detectCategory(query)
   const spec = category ? SEARCH_SPECS[category] : null
 
   const { data: rows = [] } = useQuery({ queryKey: ['stash'], queryFn: getStashItems, staleTime: 60_000 })
@@ -89,11 +90,15 @@ export default function StealsPage() {
     runSearch(category ? buildRefinedQuery(query, category, specs) : query.trim())
   }
   function onQueryChange(v) {
-    if (detectCategory(v) !== category) setSpecs({})
+    if (!manualCategory && detectCategory(v) !== category) setSpecs({})
     setQuery(v)
   }
+  function onCategoryChange(val) {
+    setManualCategory(val)
+    setSpecs({})
+  }
   function runSaved(s) {
-    setQuery(s.query); setSpecs(s.specs || {})
+    setQuery(s.query); setSpecs(s.specs || {}); setManualCategory(s.category || '')
     runSearch(s.query)
     touchSavedSearch(s.id).catch(() => {})
   }
@@ -160,34 +165,33 @@ export default function StealsPage() {
         </button>
       </form>
 
-      {/* Configurable criteria — appears when we recognise the category. */}
-      {spec && (
-        <div className="card border-emerald-200/70">
-          <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
-            <span className="text-xs font-bold uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
-              <Sliders size={13} /> Search criteria · {spec.label}
-            </span>
+      {/* Configure what to search — pick a category and its spec dropdowns
+          appear. Works alongside the freeform search bar above. */}
+      <div className="card border-emerald-200/70">
+        <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+          <span className="text-xs font-bold uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
+            <Sliders size={13} /> Configure your search
+          </span>
+          {spec && (
             <button onClick={handleSave} className="text-xs font-bold text-emerald-700 hover:underline flex items-center gap-1">
               <Bookmark size={12} /> Save search
             </button>
-          </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {spec.fields.map(f => (
-              <div key={f.key}>
-                <label className="label">{f.label}</label>
-                <select className="input" value={specs[f.key] || ''}
-                  onChange={e => setSpecs(s => ({ ...s, [f.key]: e.target.value }))}>
-                  <option value="">Any</option>
-                  {f.options.map(o => <option key={o} value={o}>{o}</option>)}
-                </select>
-              </div>
-            ))}
-          </div>
-          <button onClick={handleSearch} className="btn-primary mt-3">
-            <BadgeDollarSign size={15} /> Find Steals
-          </button>
+          )}
         </div>
-      )}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div>
+            <label className="label">Category</label>
+            <select className="input" value={manualCategory} onChange={e => onCategoryChange(e.target.value)}>
+              <option value="">{detectCategory(query) ? `Auto · ${SEARCH_SPECS[detectCategory(query)].label}` : 'Any / auto-detect'}</option>
+              {SEARCH_CATEGORY_KEYS.map(k => <option key={k} value={k}>{SEARCH_SPECS[k].label}</option>)}
+            </select>
+          </div>
+          <SpecDropdowns spec={spec} specs={specs} setSpecs={setSpecs} />
+        </div>
+        <button onClick={handleSearch} disabled={!query.trim() && !spec} className="btn-primary mt-3">
+          <BadgeDollarSign size={15} /> Find Steals
+        </button>
+      </div>
 
       {/* ── Results experience (Google-Shopping style) ── */}
       {hasSearch ? (
@@ -197,6 +201,15 @@ export default function StealsPage() {
             <p className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
               <Sliders size={12} /> Refine
             </p>
+            {spec && (
+              <div className="space-y-2.5 pb-3 border-b border-gray-100">
+                <SpecDropdowns spec={spec} specs={specs} setSpecs={setSpecs} />
+                <button onClick={handleSearch} disabled={search.isPending}
+                  className="btn-primary w-full text-xs py-1.5 justify-center disabled:opacity-50">
+                  <BadgeDollarSign size={13} /> Update results
+                </button>
+              </div>
+            )}
             <div>
               <label className="label">Price range</label>
               <div className="flex items-center gap-2">
@@ -363,6 +376,22 @@ export default function StealsPage() {
       )}
     </div>
   )
+}
+
+// Spec dropdowns for the active category — reused in the configure card AND
+// the results refine sidebar. Returns an array of field blocks.
+function SpecDropdowns({ spec, specs, setSpecs }) {
+  if (!spec) return null
+  return spec.fields.map(f => (
+    <div key={f.key}>
+      <label className="label">{f.label}</label>
+      <select className="input" value={specs[f.key] || ''}
+        onChange={e => setSpecs(s => ({ ...s, [f.key]: e.target.value }))}>
+        <option value="">Any</option>
+        {f.options.map(o => <option key={o} value={o}>{o}</option>)}
+      </select>
+    </div>
+  ))
 }
 
 // Google-Shopping-style product card.

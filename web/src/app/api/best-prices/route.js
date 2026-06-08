@@ -58,6 +58,40 @@ function safeParseJsonArray(raw) {
   return arr
 }
 
+// SerpApi — Google Shopping results. PRIMARY product source when SERPAPI_KEY
+// is set: real photos, ratings, review counts, sale prices, store names.
+// Returns the same enriched shape as the Gemini fallback. A direct merchant
+// link is used when SerpApi supplies a non-Google one; otherwise the card
+// falls back to the retailer's own on-site search (never a Google page).
+async function serpApiShopping(query) {
+  const key = process.env.SERPAPI_KEY
+  if (!key) return []
+  const url = `https://serpapi.com/search.json?engine=google_shopping&gl=us&hl=en&num=40&q=${encodeURIComponent(query)}&api_key=${key}`
+  const res = await fetch(url)
+  if (!res.ok) throw new Error(`SerpApi ${res.status}`)
+  const json = await res.json()
+  const items = Array.isArray(json.shopping_results) ? json.shopping_results : []
+  return items.map(it => {
+    const price = Number(it.extracted_price) || 0
+    const orig = Number(it.old_price_extracted ?? it.extracted_old_price) || 0
+    const link = String(it.link || '')
+    return {
+      store: String(it.source || it.seller || '').trim(),
+      price,
+      original_price: orig > price ? orig : 0,
+      url: link && !/\bgoogle\.[a-z.]+\//i.test(link) ? link : '',
+      image: String(it.thumbnail || ''),
+      title: String(it.title || ''),
+      rating: Math.min(5, Math.max(0, Number(it.rating) || 0)),
+      review_count: Math.max(0, Math.round(Number(it.reviews) || 0)),
+      specs: Array.isArray(it.extensions) ? it.extensions.join(' · ') : String(it.extensions || ''),
+      available: true,
+      notes: String(it.delivery || '').trim(),
+      matched_name: String(it.title || ''),
+    }
+  }).filter(r => r.store && r.price > 0).slice(0, 30)
+}
+
 export async function POST(request) {
   try {
     // Rate limit — 15 calls/min per IP+session. Each call costs Gemini tokens.
@@ -70,9 +104,6 @@ export async function POST(request) {
     }
 
     const apiKey = process.env.GEMINI_API_KEY
-    if (!apiKey) {
-      return Response.json({ error: 'GEMINI_API_KEY not set — required for web search.' }, { status: 500 })
-    }
 
     // Input validation
     const body = await request.json().catch(() => null)
@@ -96,6 +127,38 @@ export async function POST(request) {
     const suggestedStores = enhanced.suggestedStores.length > 0
       ? enhanced.suggestedStores.join(', ')
       : 'Walmart, Amazon, Target, Best Buy, Home Depot, Lowe\'s, Costco, BJ\'s, Sam\'s Club, Wegmans, Trader Joe\'s, Whole Foods, Kroger, Sephora, Ulta, Macy\'s'
+
+    const enhancementOut = {
+      original:        enhanced.original,
+      enhanced:        enhanced.enhanced,
+      applied_aliases: enhanced.appliedAliases,
+      category:        enhanced.category,
+      matched_stash:   enhanced.matchedStashItem ? {
+        item_name: enhanced.matchedStashItem.item_name,
+        sku:       enhanced.matchedStashItem.sku,
+      } : null,
+    }
+
+    // ── PRIMARY: SerpApi Google Shopping (real photos / ratings / prices) ──
+    if (process.env.SERPAPI_KEY) {
+      try {
+        const serp = await serpApiShopping(query)
+        if (serp.length > 0) {
+          return Response.json({
+            query, broadened_query: null, mode: 'serpapi',
+            results: serp, sources: [], enhancement: enhancementOut,
+            _model: 'serpapi:google_shopping',
+          })
+        }
+      } catch (e) {
+        console.error('[best-prices] SerpApi failed, falling back to Gemini:', e.message)
+      }
+    }
+
+    // Gemini fallback needs a key. (Only reached if SerpApi is unset/empty.)
+    if (!apiKey) {
+      return Response.json({ error: 'No price source configured — set SERPAPI_KEY or GEMINI_API_KEY.' }, { status: 500 })
+    }
 
     const buildPrompt = (q, broaden = false) => `You are Guac-AI, a smart deal finder. Search Google right now for current prices of:
 

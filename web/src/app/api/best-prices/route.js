@@ -164,14 +164,19 @@ Match strategy:
 2. If exact SKU not found, search for SIMILAR products (same product type at major retailers).
 3. Best-fit retailers (Guac-Search hint${enhanced.category ? `, category: ${enhanced.category}` : ''}): ${suggestedStores}.
 
-Write a SHORT plain-text summary (one line per store, max 8 stores). Format each line exactly:
-STORE: $PRICE — Product name — URL (optional)
+Write ONE line per product (max 8). Use this EXACT pipe-delimited format (keep every pipe even when a field is blank):
+STORE | $PRICE | $ORIGINAL_PRICE_IF_ON_SALE | PRODUCT TITLE | RATING(0-5) | REVIEW_COUNT | KEY SPECS | IMAGE_URL | PRODUCT_URL
 
 Example:
-Home Depot: $5.97 — Homer 5 Gallon Orange Lid — https://homedepot.com/...
-Lowe's: $6.48 — 5-Gallon HDPE Lid — https://lowes.com/...
+Best Buy | $379.99 | $600 | Lenovo IdeaPad Slim 3 15.6" | 4.5 | 52 | 256 GB SSD · 8 GB RAM · Silver | https://pisces.bbystatic.com/image.jpg | https://bestbuy.com/...
+Dell | $559.99 |  | Dell 15 Laptop, Windows 11 | 4.6 | 3000 | 512 GB SSD · 16 GB RAM · Carbon Black |  | https://dell.com/...
 
-If you can't find a price for a store, skip it. If you find approximate ranges, pick the typical price and add "(approx)" at the end.`
+Rules:
+- ORIGINAL_PRICE only when the item is on sale (current < original); otherwise leave it blank.
+- IMAGE_URL: a direct https link to the product photo if you can find one; else blank.
+- RATING is stars out of 5; REVIEW_COUNT is the number of reviews; blank if unknown.
+- KEY SPECS: a short "·"-separated summary of the specs that matter for this category.
+- Skip a product if you can't find its price. For approximate prices, append "(approx)" to KEY SPECS.`
 
     let { text: stage1Text, json } = await runGemini(stage1Prompt, { withSearch: true })
     console.log('[best-prices stage 1]', { query, raw_text: stage1Text?.slice(0, 600) })
@@ -188,10 +193,16 @@ ${stage1Text}
 Output ONLY a JSON array (no prose, no markdown fences). Each element:
 {
   "store": string,
-  "price": number,           // dollars only, no "$"
-  "url": string,             // "" if none in the research
+  "price": number,            // current price, dollars only, no "$"
+  "original_price": number,   // 0 if not on sale
+  "url": string,              // product page URL, "" if none
+  "image": string,            // direct product image URL, "" if none
+  "title": string,            // full product title
+  "rating": number,           // 0 if unknown, else 0-5
+  "review_count": number,     // 0 if unknown
+  "specs": string,            // short "·"-separated spec summary, "" if none
   "available": true,
-  "notes": string,           // e.g. "(approx)" if the research said so
+  "notes": string,            // e.g. "(approx)" if the research said so
   "matched_name": string
 }
 
@@ -248,13 +259,24 @@ You MUST return at least 3 entries.`
     console.log('[best-prices final]', { query, broadened, mode, results: parsed.length })
 
     const results = parsed
-      .map(r => ({
-        store: String(r.store || '').trim(),
-        price: Number(r.price) || 0,
-        url: String(r.url || ''),
-        available: r.available !== false,
-        notes: String(r.notes || '').trim(),
-      }))
+      .map(r => {
+        const price = Number(r.price) || 0
+        const orig = Number(r.original_price) || 0
+        return {
+          store: String(r.store || '').trim(),
+          price,
+          original_price: orig > price ? orig : 0,   // only a real sale counts
+          url: String(r.url || ''),
+          image: String(r.image || '').trim(),
+          title: String(r.title || r.matched_name || '').trim(),
+          rating: Math.min(5, Math.max(0, Number(r.rating) || 0)),
+          review_count: Math.max(0, Math.round(Number(r.review_count) || 0)),
+          specs: String(r.specs || '').trim(),
+          available: r.available !== false,
+          notes: String(r.notes || '').trim(),
+          matched_name: String(r.matched_name || r.title || '').trim(),
+        }
+      })
       .filter(r => r.store && r.price > 0)
       .sort((a, b) => a.price - b.price)
 

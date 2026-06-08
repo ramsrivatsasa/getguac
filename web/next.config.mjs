@@ -60,6 +60,21 @@ const nextConfig = {
       { source: '/(.*)', headers: securityHeaders },
     ]
   },
+  // Branded webmail: anything hitting webmail.getguac.app is redirected to our
+  // own inbox (getguac.app/inbox) — a full, on-brand mail client — instead of
+  // Migadu's unbranded RoundCube. The Host condition means it only fires for
+  // the webmail subdomain and never affects getguac.app itself. Requires the
+  // subdomain to be assigned to this Vercel project (Settings → Domains).
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'webmail.getguac.app' }],
+        destination: 'https://getguac.app/inbox',
+        permanent: false,
+      },
+    ]
+  },
 }
 
 // Wrap with Sentry's Next.js plugin. The wrapper is a no-op when

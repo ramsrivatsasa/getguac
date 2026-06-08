@@ -12,6 +12,7 @@ import { predictReplenishItems, expiringRewards } from '../../../lib/userProfile
 import { SEARCH_SPECS, SEARCH_CATEGORY_KEYS, detectCategory, buildRefinedQuery, specSummary } from '../../../lib/searchSpecs'
 import { useSavedSearches, useAddSavedSearch, useDeleteSavedSearch } from '../../../hooks/useSavedSearches'
 import { touchSavedSearch } from '../../../lib/savedSearches'
+import { storeDealUrl } from '../../../lib/storeSearch'
 import GuacMascot from '../../../components/GuacMascot'
 import { StoreLogo } from '../../../components/StoreLogo'
 import { displayStoreName } from '../../../lib/store-name-normalize'
@@ -122,35 +123,6 @@ export default function StealsPage() {
         <span className="text-[10px] uppercase tracking-wider font-bold text-emerald-700 bg-emerald-100 px-2 py-1 rounded-full">🥑 Guac-AI Powered</span>
       </div>
 
-      {/* Saved searches — click a row to re-run it against the live web. */}
-      {saved.length > 0 && (
-        <div className="card">
-          <p className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2 flex items-center gap-1.5">
-            <Bookmark size={12} /> Saved searches
-          </p>
-          <div className="divide-y divide-gray-50">
-            {saved.map(s => (
-              <div key={s.id}
-                onClick={() => runSaved(s)}
-                className="flex items-center gap-2.5 py-2 -mx-1 px-1 rounded-lg cursor-pointer hover:bg-emerald-50/60 transition-colors">
-                <span className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0"><Search size={13} /></span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-gray-800 truncate">{s.label}</p>
-                  <p className="text-[11px] text-gray-500 truncate">
-                    {s.category ? (SEARCH_SPECS[s.category]?.label || s.category) : 'Search'}
-                    {specSummary(s.category, s.specs) ? ` · ${specSummary(s.category, s.specs)}` : ''}
-                  </p>
-                </div>
-                <button onClick={e => { e.stopPropagation(); delSaved.mutate(s.id) }}
-                  className="w-7 h-7 rounded-full text-rose-500 hover:bg-rose-50 flex items-center justify-center shrink-0" title="Delete">
-                  <Trash2 size={13} />
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Search box */}
       <form onSubmit={handleSearch} className="card flex items-center gap-3">
         <Search size={16} className="text-emerald-600 shrink-0" />
@@ -192,6 +164,35 @@ export default function StealsPage() {
           <BadgeDollarSign size={15} /> Find Steals
         </button>
       </div>
+
+      {/* Saved searches — click a row to re-run it against the live web. */}
+      {saved.length > 0 && (
+        <div className="card">
+          <p className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2 flex items-center gap-1.5">
+            <Bookmark size={12} /> Saved searches
+          </p>
+          <div className="divide-y divide-gray-50">
+            {saved.map(s => (
+              <div key={s.id}
+                onClick={() => runSaved(s)}
+                className="flex items-center gap-2.5 py-2 -mx-1 px-1 rounded-lg cursor-pointer hover:bg-emerald-50/60 transition-colors">
+                <span className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0"><Search size={13} /></span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-gray-800 truncate">{s.label}</p>
+                  <p className="text-[11px] text-gray-500 truncate">
+                    {s.category ? (SEARCH_SPECS[s.category]?.label || s.category) : 'Search'}
+                    {specSummary(s.category, s.specs) ? ` · ${specSummary(s.category, s.specs)}` : ''}
+                  </p>
+                </div>
+                <button onClick={e => { e.stopPropagation(); delSaved.mutate(s.id) }}
+                  className="w-7 h-7 rounded-full text-rose-500 hover:bg-rose-50 flex items-center justify-center shrink-0" title="Delete">
+                  <Trash2 size={13} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ── Results experience (Google-Shopping style) ── */}
       {hasSearch ? (
@@ -396,11 +397,13 @@ function SpecDropdowns({ spec, specs, setSpecs }) {
 
 // Google-Shopping-style product card.
 function ResultCard({ r, best }) {
-  // The grounded search often can't supply a direct product URL. Rather than
-  // disable the CTA, fall back to a Google Shopping search for the exact
-  // product + store so "View deal" always lands somewhere useful.
-  const hasUrl = !!r.url
-  const dealUrl = r.url || `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(`${r.title || r.matched_name || ''} ${r.store || ''}`.trim())}`
+  // The grounded search's direct URLs are unreliable (often hallucinated or
+  // for a different config). So "View deal" always runs a Google Shopping
+  // search for the EXACT product — title + specs + store — which reliably
+  // surfaces the same item across merchants.
+  // Prefer a real direct product URL when the shopping API supplies one;
+  // otherwise open the retailer's own on-site search for the product.
+  const dealUrl = r.url || storeDealUrl(r.store, [r.title || r.matched_name, r.specs].filter(Boolean).join(' '))
   return (
     <div className="group rounded-xl border border-gray-100 bg-white p-2.5 hover:shadow-md hover:border-emerald-200 transition-all flex flex-col">
       <div className="relative aspect-square bg-gray-50 rounded-lg overflow-hidden mb-2 flex items-center justify-center">

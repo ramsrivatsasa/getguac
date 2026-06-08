@@ -396,6 +396,11 @@ function SpecDropdowns({ spec, specs, setSpecs }) {
 
 // Google-Shopping-style product card.
 function ResultCard({ r, best }) {
+  // The grounded search often can't supply a direct product URL. Rather than
+  // disable the CTA, fall back to a Google Shopping search for the exact
+  // product + store so "View deal" always lands somewhere useful.
+  const hasUrl = !!r.url
+  const dealUrl = r.url || `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(`${r.title || r.matched_name || ''} ${r.store || ''}`.trim())}`
   return (
     <div className="group rounded-xl border border-gray-100 bg-white p-2.5 hover:shadow-md hover:border-emerald-200 transition-all flex flex-col">
       <div className="relative aspect-square bg-gray-50 rounded-lg overflow-hidden mb-2 flex items-center justify-center">
@@ -430,9 +435,9 @@ function ResultCard({ r, best }) {
       )}
       {r.specs && <p className="text-[10px] text-gray-400 mt-0.5 line-clamp-2">{r.specs}</p>}
       {!r.available && <p className="text-[10px] text-rose-500 mt-0.5">Out of stock</p>}
-      <a href={r.url || '#'} target="_blank" rel="noreferrer"
-        className={`mt-2 inline-flex justify-center items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-bold transition-colors ${r.url ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'bg-gray-100 text-gray-400 pointer-events-none'}`}>
-        View deal <ExternalLink size={12} />
+      <a href={dealUrl} target="_blank" rel="noreferrer"
+        className="mt-2 inline-flex justify-center items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors">
+        {hasUrl ? 'View deal' : 'Search deal'} <ExternalLink size={12} />
       </a>
     </div>
   )

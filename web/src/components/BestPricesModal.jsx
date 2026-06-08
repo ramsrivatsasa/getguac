@@ -3,10 +3,12 @@ import { useEffect } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import {
-  X, Search, ExternalLink, ShoppingCart, Globe, Crown, Wand2
+  X, Search, ExternalLink, ShoppingCart, Globe, Crown, Wand2, Bookmark
 } from 'lucide-react'
 import GuacMascot from './GuacMascot'
 import { getStashItems } from '../lib/db'
+import { useAddSavedSearch } from '../hooks/useSavedSearches'
+import { detectCategory } from '../lib/searchSpecs'
 async function fetchBestPrices({ item_name, sku, category, stashItems }) {
   const res = await fetch('/api/best-prices', {
     method: 'POST',
@@ -37,6 +39,15 @@ export default function BestPricesModal({ open, onClose, item }) {
     onError: err => toast.error(err.message),
   })
 
+  const addSteal = useAddSavedSearch()
+  function handleAddToSteals() {
+    if (!item?.item_name) return
+    addSteal.mutate(
+      { label: item.item_name, query: item.item_name, category: detectCategory(item.item_name) || null, specs: {} },
+      { onSuccess: () => toast.success('Added to Steals'), onError: e => toast.error(e.message) },
+    )
+  }
+
   // Fire (and re-fire) whenever the modal opens for a different item.
   // Reset is critical — without it the stale .data sticks around between items.
   const itemKey = item ? `${item.item_name || ''}|${item.sku || ''}` : ''
@@ -63,7 +74,12 @@ export default function BestPricesModal({ open, onClose, item }) {
             <h3 className="font-bold text-lg text-emerald-900">Finding your Steals</h3>
             <p className="text-xs text-emerald-700/80 truncate">{item?.item_name}{item?.sku ? ` · SKU ${item.sku}` : ''}</p>
           </div>
-          <button onClick={onClose} className="p-1.5 text-gray-500 hover:bg-white/60 rounded-full">
+          <button onClick={handleAddToSteals} disabled={addSteal.isPending}
+            title="Save this product to your Steals saved searches"
+            className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white/70 border border-emerald-200 text-emerald-700 text-xs font-bold hover:bg-white transition-colors disabled:opacity-50">
+            <Bookmark size={13} /> Add to Steals
+          </button>
+          <button onClick={onClose} className="p-1.5 text-gray-500 hover:bg-white/60 rounded-full shrink-0">
             <X size={18} />
           </button>
         </div>
@@ -156,13 +172,13 @@ export default function BestPricesModal({ open, onClose, item }) {
                       {!r.available && <p className="text-[11px] text-rose-500 mt-0.5">Out of stock</p>}
                     </div>
                     <p className={`text-lg font-bold tabular-nums ${isBest ? 'text-emerald-700' : 'text-gray-700'}`}>${r.price.toFixed(2)}</p>
-                    {r.url && (
-                      <a href={r.url} target="_blank" rel="noreferrer"
-                        title="Open product page"
-                        className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 hover:bg-emerald-200 hover:scale-110 active:scale-95 transition-all flex items-center justify-center shadow-sm">
-                        <ExternalLink size={13} />
-                      </a>
-                    )}
+                    <a
+                      href={r.url || `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(`${r.matched_name || item?.item_name || ''} ${r.store || ''}`.trim())}`}
+                      target="_blank" rel="noreferrer"
+                      title={r.url ? 'Open product page' : 'Search this deal on Google Shopping'}
+                      className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 hover:bg-emerald-200 hover:scale-110 active:scale-95 transition-all flex items-center justify-center shadow-sm shrink-0">
+                      <ExternalLink size={13} />
+                    </a>
                   </div>
                 )
               })}

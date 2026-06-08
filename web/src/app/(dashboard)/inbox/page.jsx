@@ -51,6 +51,27 @@ export default function InboxPage() {
   const [selectedId, setSelectedId] = useState(null)
   const [composeOpen, setComposeOpen] = useState(false)
   const [composePrefill, setComposePrefill] = useState(null)
+  const [reconnecting, setReconnecting] = useState(false)
+  const [newMailboxPw, setNewMailboxPw] = useState(null)
+
+  // Re-sync the mailbox password when latest emails aren't reaching the app
+  // (the poll can't IMAP-login). Surfaces the new password once for webmail.
+  async function handleReconnect() {
+    if (reconnecting) return
+    setReconnecting(true)
+    const t = toast.loading('Reconnecting your mailbox…')
+    try {
+      const res = await fetch('/api/email/reconnect', { method: 'POST' })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || `Reconnect failed (${res.status})`)
+      setNewMailboxPw(data.password || '')
+      toast.success('Mailbox reconnected — click Backfill to pull now', { id: t, duration: 5000 })
+    } catch (e) {
+      toast.error(e.message || 'Reconnect failed', { id: t })
+    } finally {
+      setReconnecting(false)
+    }
+  }
   // Collapsed folder rail (icons-only). Persisted in localStorage.
   const [railCollapsed, setRailCollapsed] = useState(false)
   // Accordion: each section (Folders / Filters) can collapse to save vertical
@@ -165,6 +186,30 @@ export default function InboxPage() {
 
   return (
     <div className="space-y-4 font-sans">
+      {newMailboxPw !== null && (
+        <div className="mb-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3 flex items-start gap-3">
+          <Mail size={18} className="text-emerald-700 mt-0.5 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-emerald-900">Mailbox reconnected ✅</p>
+            <p className="text-xs text-emerald-800 mt-0.5">
+              Your latest emails will sync on the next poll — or click <strong>Backfill</strong> to pull them in now.
+              {newMailboxPw ? ' If you sign in to webmail directly, your new mailbox password is:' : ''}
+            </p>
+            {newMailboxPw && (
+              <>
+                <div className="mt-1.5 flex items-center gap-2">
+                  <code className="text-xs font-mono bg-white border border-emerald-200 rounded px-2 py-1 select-all break-all">{newMailboxPw}</code>
+                  <button onClick={() => { navigator.clipboard?.writeText(newMailboxPw); toast.success('Copied') }}
+                    className="text-xs font-bold text-emerald-700 hover:underline shrink-0">Copy</button>
+                </div>
+                <p className="text-[11px] text-emerald-700/70 mt-1">Save it now — it won&apos;t be shown again.</p>
+              </>
+            )}
+          </div>
+          <button onClick={() => setNewMailboxPw(null)} className="text-emerald-700 hover:text-emerald-900 shrink-0" aria-label="Dismiss"><X size={16} /></button>
+        </div>
+      )}
+
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3">
           <GuacMascot expression="eating" size={64} />
@@ -219,6 +264,15 @@ export default function InboxPage() {
           >
             <DownloadCloud size={14} className={backfill.isPending ? 'animate-pulse' : ''} />
             {backfill.isPending ? 'Pulling…' : 'Backfill'}
+          </button>
+          <button
+            onClick={handleReconnect}
+            disabled={reconnecting}
+            className="btn-secondary flex items-center gap-2"
+            title="Latest emails not showing up? Re-sync your mailbox password so the poll can sign in."
+          >
+            <Link2 size={14} className={reconnecting ? 'animate-pulse' : ''} />
+            {reconnecting ? 'Reconnecting…' : 'Reconnect'}
           </button>
           <button
             onClick={() => { setComposePrefill(null); setComposeOpen(true) }}

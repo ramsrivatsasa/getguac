@@ -25,6 +25,23 @@ import { FadeUpStagger, ShimmerBox } from '../../../components/animated'
 import LottieAnimation from '../../../components/LottieAnimation'
 import emptyListLottie from '../../../lottie/empty-list.json'
 
+const TIMEFRAMES = [
+  { key: 'all',   label: 'All time' },
+  { key: 'week',  label: 'This week' },
+  { key: 'month', label: 'This month' },
+  { key: 'year',  label: 'This year' },
+]
+
+// Cutoff date (YYYY-MM-DD) for a timeframe; '' = no limit (all time).
+function timeframeCutoff(tf) {
+  const d = new Date()
+  if (tf === 'week') d.setDate(d.getDate() - 7)
+  else if (tf === 'month') d.setMonth(d.getMonth() - 1)
+  else if (tf === 'year') d.setFullYear(d.getFullYear() - 1)
+  else return ''
+  return d.toISOString().slice(0, 10)
+}
+
 const SORTS = [
   { key: 'recent',     label: 'Most recent' },
   { key: 'most_bought', label: 'Most bought' },
@@ -52,6 +69,7 @@ export default function StashPage() {
   const [search, setSearch] = useState('')
   const [activeCat, setActiveCat] = useState('all')
   const [sort, setSort] = useState('recent')
+  const [timeframe, setTimeframe] = useState('all')
   const [view, setView] = useState('grid')  // 'grid' | 'list' | 'accordion'
   const [expanded, setExpanded] = useState(null)
   const [stealsItem, setStealsItem] = useState(null)
@@ -265,6 +283,11 @@ export default function StashPage() {
       (it.model || '').toLowerCase().includes(s) ||
       [...it.stores.values()].some(st => (st.name || '').toLowerCase().includes(s))
     )
+    // Timeframe filter — keep products with a purchase in the window.
+    if (timeframe !== 'all') {
+      const cutoff = timeframeCutoff(timeframe)
+      if (cutoff) list = list.filter(it => (it.last_date || '') >= cutoff)
+    }
     list = [...list].sort((a, b) => {
       switch (sort) {
         case 'most_bought':  return b.times - a.times
@@ -275,7 +298,7 @@ export default function StashPage() {
       }
     })
     return list
-  }, [items, search, activeCat, sort])
+  }, [items, search, activeCat, sort, timeframe])
 
   // Accordion mode only applies when "All" is active + no search.
   // In any other case, fall back to the flat grid/list rendering.
@@ -447,6 +470,12 @@ export default function StashPage() {
         <div className="relative flex-1 min-w-[220px] max-w-md">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input className="input pl-9" placeholder="Search item, SKU, model, or store…" value={search} onChange={e => setSearch(e.target.value)} />
+        </div>
+        <div className="inline-flex items-center gap-2 bg-white rounded-full pl-4 pr-2 py-1 border border-emerald-100 shadow-sm">
+          <span className="text-xs font-semibold text-gray-500">When</span>
+          <select value={timeframe} onChange={e => setTimeframe(e.target.value)} className="bg-transparent text-sm font-bold text-emerald-800 focus:outline-none cursor-pointer font-sans">
+            {TIMEFRAMES.map(o => <option key={o.key} value={o.key}>{o.label}</option>)}
+          </select>
         </div>
         <div className="inline-flex items-center gap-2 bg-white rounded-full pl-4 pr-2 py-1 border border-emerald-100 shadow-sm">
           <span className="text-xs font-semibold text-gray-500">Sort</span>

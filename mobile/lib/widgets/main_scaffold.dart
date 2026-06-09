@@ -233,6 +233,47 @@ class _MainScaffoldState extends State<MainScaffold> with WidgetsBindingObserver
     }
   }
 
+  // Horizontal quick-launch strip docked just above the main tabs — the
+  // dashboard's secondary destinations, now reachable from every screen.
+  Widget _quickStrip(BuildContext context) {
+    final items = <({String route, IconData icon, String label, Color color})>[
+      (route: '/steals',    icon: Icons.local_offer,                   label: 'Steals',  color: const Color(0xFFdb2777)),
+      (route: '/rewards',   icon: Icons.card_giftcard_rounded,         label: 'Rewards', color: const Color(0xFFe11d48)),
+      (route: '/stash',     icon: Icons.inventory_2,                   label: 'Stash',   color: const Color(0xFFca8a04)),
+      (route: '/inbox',     icon: Icons.mark_email_unread_rounded,     label: 'Inbox',   color: const Color(0xFFd97706)),
+      (route: '/car-miles', icon: Icons.directions_car_filled_rounded, label: 'Miles',   color: const Color(0xFF0891b2)),
+    ];
+    return SizedBox(
+      height: 56,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        itemCount: items.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 22),
+        itemBuilder: (_, i) {
+          final it = items[i];
+          return InkWell(
+            onTap: () => context.push(it.route),
+            borderRadius: BorderRadius.circular(12),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Container(
+                width: 30, height: 30,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: it.color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(it.icon, size: 17, color: it.color),
+              ),
+              const SizedBox(height: 3),
+              Text(it.label, style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700, color: it.color)),
+            ]),
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final idx = _selectedIndex(context);
@@ -276,26 +317,33 @@ class _MainScaffoldState extends State<MainScaffold> with WidgetsBindingObserver
         ),
         child: SafeArea(
           top: false,
-          child: Padding(
-            // Extra top room so the raised (elevated) active icon has space
-            // to lift into without being clipped by the bar's top edge.
-            padding: const EdgeInsets.only(left: 8, right: 8, top: 18, bottom: 8),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: List.generate(_items.length, (i) {
-                final item = _items[i];
-                final active = idx == i;
-                final isProfile = item.route == '/profile';
-                return _NavButton(
-                  item: item,
-                  active: active,
-                  onTap: () => context.go(item.route),
-                  onLongPress: isProfile ? () => _showProfileMenu(context) : null,
-                  showLongPressHint: isProfile,
-                );
-              }),
-            ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _quickStrip(context),
+              const Divider(height: 1, thickness: 1, color: Color(0xFFf1f5f9)),
+              Padding(
+                // Extra top room so the raised (elevated) active icon has space
+                // to lift into without being clipped by the bar's top edge.
+                padding: const EdgeInsets.only(left: 8, right: 8, top: 14, bottom: 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: List.generate(_items.length, (i) {
+                    final item = _items[i];
+                    final active = idx == i;
+                    final isProfile = item.route == '/profile';
+                    return _NavButton(
+                      item: item,
+                      active: active,
+                      onTap: () => context.go(item.route),
+                      onLongPress: isProfile ? () => _showProfileMenu(context) : null,
+                      showLongPressHint: isProfile,
+                    );
+                  }),
+                ),
+              ),
+            ],
           ),
         ),
       ),

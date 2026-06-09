@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.47",
-  "name": "v0.3.47 — Steals in-app (web) with scroll + search fixed",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.47/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Steals is back in-app with the full latest experience — the spec search, the date-sorted “Fresh Steals” feed, and “new steals found” alerts — now that scrolling and the search button work properly.\n• All in-app web screens (Reports, Steals, Stores, Rewards, Guacanomics, GuacWizard) respond to touch correctly.\n• Dashboard icon menu + raised active tab included."
+  "version": "v0.3.48",
+  "name": "v0.3.48 — Quick-launch strip in the bottom bar + restored feature pills",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.48/app-arm64-v8a-release.apk",
+  "releaseNotes": "• New quick-launch strip in the bottom bar — Steals, Rewards, Stash, Inbox and Miles are now one tap away from any screen, with horizontal scroll.\n• Dashboard: the original horizontal feature-pill scroll is back (Worth It?, Guacanomics, GuacWizard, Steals, Rewards, Stash, Inbox, Car Miles).\n• Sign-out confirm button is now slim.\n• Steals stays in-app with the full web experience."
 }

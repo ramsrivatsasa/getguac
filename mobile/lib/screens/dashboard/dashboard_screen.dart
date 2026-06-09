@@ -314,10 +314,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             // under the greeting so the nine destinations are the
             // first interactive thing the user sees.
             _featurePillScroll(),
-            const SizedBox(height: 12),
-            // Secondary destinations as a compact icon menu (bottom-nav
-            // style) — keeps the headline pills above uncluttered.
-            _featureIconMenu(),
             const SizedBox(height: 14),
 
             // Heads-up alerts right after the feature pills — both
@@ -448,47 +444,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
             icon: Icons.auto_fix_high, title: 'GuacWizard', subtitle: 'Bank Bite + leaks',
             onTap: () => context.push('/guacwizard'),
           )),
+          const SizedBox(width: 10),
+          SizedBox(width: 180, child: FeaturePill(
+            gradient: const [Color(0xFFf9a8d4), Color(0xFFdb2777)],
+            icon: Icons.local_offer, title: 'Steals', subtitle: 'AI price hunt',
+            onTap: () => context.push('/steals'),
+          )),
+          const SizedBox(width: 10),
+          SizedBox(width: 180, child: FeaturePill(
+            gradient: const [Color(0xFFf472b6), Color(0xFFdb2777)],
+            icon: Icons.card_giftcard_rounded, title: 'Rewards', subtitle: 'Loyalty + expiring',
+            onTap: () => context.push('/rewards'),
+          )),
+          const SizedBox(width: 10),
+          SizedBox(width: 180, child: FeaturePill(
+            gradient: const [Color(0xFFfde047), Color(0xFFca8a04)],
+            icon: Icons.inventory_2, title: 'Stash', subtitle: 'Everything you own',
+            onTap: () => context.push('/stash'),
+          )),
+          const SizedBox(width: 10),
+          SizedBox(width: 180, child: FeaturePill(
+            gradient: const [Color(0xFFfcd34d), Color(0xFFca8a04)],
+            icon: Icons.mark_email_unread_rounded, title: 'Inbox', subtitle: 'Mail + auto-receipts',
+            onTap: () => context.push('/inbox'),
+          )),
+          const SizedBox(width: 10),
+          SizedBox(width: 180, child: FeaturePill(
+            gradient: const [Color(0xFF67e8f9), Color(0xFF0891b2)],
+            icon: Icons.directions_car_filled_rounded, title: 'Car Miles', subtitle: 'Trip log',
+            onTap: () => context.push('/car-miles'),
+          )),
         ],
       ),
-    );
-  }
-
-  /// Compact icon + label menu (bottom-nav style) for the secondary
-  /// destinations. The three headline features (Worth It?, Guacanomics,
-  /// GuacWizard) stay as gradient pills above; everything else lives here
-  /// as a tidy icon row so the top of the dashboard reads clean.
-  Widget _featureIconMenu() {
-    final items = <({String route, IconData icon, String label, Color color})>[
-      (route: '/steals',    icon: Icons.local_offer,                   label: 'Steals',  color: const Color(0xFFdb2777)),
-      (route: '/rewards',   icon: Icons.card_giftcard_rounded,         label: 'Rewards', color: const Color(0xFFe11d48)),
-      (route: '/stash',     icon: Icons.inventory_2,                   label: 'Stash',   color: const Color(0xFFca8a04)),
-      (route: '/inbox',     icon: Icons.mark_email_unread_rounded,     label: 'Inbox',   color: const Color(0xFFd97706)),
-      (route: '/car-miles', icon: Icons.directions_car_filled_rounded, label: 'Miles',   color: const Color(0xFF0891b2)),
-    ];
-    return Row(
-      children: [
-        for (final it in items)
-          Expanded(child: InkWell(
-            onTap: () => context.push(it.route),
-            borderRadius: BorderRadius.circular(14),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Column(mainAxisSize: MainAxisSize.min, children: [
-                Container(
-                  width: 46, height: 46,
-                  decoration: BoxDecoration(
-                    color: it.color.withValues(alpha: 0.10),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: it.color.withValues(alpha: 0.18)),
-                  ),
-                  child: Icon(it.icon, color: it.color, size: 22),
-                ),
-                const SizedBox(height: 5),
-                Text(it.label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: it.color)),
-              ]),
-            ),
-          )),
-      ],
     );
   }
 

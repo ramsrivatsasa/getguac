@@ -72,7 +72,14 @@ Future<void> _confirmAndSignOut(BuildContext context) async {
       actions: [
         TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
         FilledButton(
-          style: FilledButton.styleFrom(backgroundColor: const Color(0xFFb91c1c)),
+          style: FilledButton.styleFrom(
+            backgroundColor: const Color(0xFFb91c1c),
+            visualDensity: VisualDensity.compact,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            minimumSize: const Size(0, 32),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+          ),
           onPressed: () => Navigator.pop(ctx, true),
           child: const Text('Sign out'),
         ),

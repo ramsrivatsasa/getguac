@@ -21,6 +21,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { sendPushToUser } from '../../../../lib/fcm'
+import { getCachedSearch } from '../../../../lib/shoppingCache'
 
 // ── Auth helper ─────────────────────────────────────────────────────
 function unauthorized() {
@@ -285,6 +286,58 @@ async function dispatchSmashlistDay() {
   return { attempted, sent }
 }
 
+// ── Trigger 6: new Steals found on saved searches ───────────────────
+// Reads each user's saved-search results from the shared shopping_cache
+// (warmed daily by /api/cron/shopping-cache — so this adds ZERO SerpApi
+// calls) and counts on-sale items ("steals"). One digest push per user
+// per day with the count.
+async function dispatchStealsFound() {
+  const todayStr = new Date().toISOString().slice(0, 10)
+
+  const { data: saves } = await sb()
+    .from('saved_searches')
+    .select('user_id, query')
+    .not('query', 'is', null)
+
+  const byUser = new Map()  // userId → [query, …]
+  for (const s of saves || []) {
+    if (!s.user_id || !s.query) continue
+    if (!byUser.has(s.user_id)) byUser.set(s.user_id, [])
+    byUser.get(s.user_id).push(s.query)
+  }
+
+  let attempted = 0, sent = 0
+  for (const [userId, queries] of byUser) {
+    let steals = 0
+    const seen = new Set()
+    for (const q of queries) {
+      const payload = await getCachedSearch(q)   // cache only — no API call
+      for (const r of payload?.results || []) {
+        const price = Number(r.price) || 0
+        const orig = Number(r.original_price) || 0
+        if (orig > price && price > 0) {         // on sale = a steal
+          const key = `${(r.title || r.matched_name || '').toLowerCase()}|${r.store}`
+          if (!seen.has(key)) { seen.add(key); steals++ }
+        }
+      }
+    }
+    if (steals <= 0) continue
+    const title = `🥑 ${steals} new Steal${steals === 1 ? '' : 's'} found`
+    const body  = steals === 1
+      ? '1 deal on your saved searches — tap to grab it.'
+      : `${steals} deals on your saved searches — tap to see them.`
+    attempted++
+    const res = await sendPushToUser(userId, {
+      title, body, route: '/steals',
+    }, {
+      category: 'steals_found',
+      eventKey: `steals:${userId}:${todayStr}`,   // one per user per day
+    })
+    if (res.sent > 0) sent++
+  }
+  return { attempted, sent }
+}
+
 // ── Entry point ─────────────────────────────────────────────────────
 export async function GET(req) {
   if (!verifyCron(req)) return unauthorized()
@@ -297,6 +350,7 @@ export async function GET(req) {
   try { results.bank_bite_digest  = await dispatchBankBiteDigest()  } catch (e) { results.bank_bite_digest  = { error: e.message } }
   try { results.anomaly_alert     = await dispatchAnomalyAlert()    } catch (e) { results.anomaly_alert     = { error: e.message } }
   try { results.smashlist_day     = await dispatchSmashlistDay()    } catch (e) { results.smashlist_day     = { error: e.message } }
+  try { results.steals_found      = await dispatchStealsFound()     } catch (e) { results.steals_found      = { error: e.message } }
 
   return NextResponse.json({ ok: true, results })
 }

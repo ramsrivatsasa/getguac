@@ -257,27 +257,26 @@ class _MainScaffoldState extends State<MainScaffold> with WidgetsBindingObserver
         onTap: () => context.go('/receipts?add=1'),
         behavior: HitTestBehavior.opaque,
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Transform.translate(
-            offset: const Offset(0, -6),
-            child: Container(
-              width: 48, height: 48,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft, end: Alignment.bottomRight,
-                  colors: [Color(0xFFfbbf24), Color(0xFFf59e0b)],
+          SizedBox(
+            height: 44,
+            child: Center(
+              child: Container(
+                width: 44, height: 44,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft, end: Alignment.bottomRight,
+                    colors: [Color(0xFFfbbf24), Color(0xFFf59e0b)],
+                  ),
+                  boxShadow: [BoxShadow(color: const Color(0xFFf59e0b).withValues(alpha: 0.4), blurRadius: 8, offset: const Offset(0, 3))],
                 ),
-                border: Border.all(color: Colors.white, width: 3),
-                boxShadow: [BoxShadow(color: const Color(0xFFf59e0b).withValues(alpha: 0.45), blurRadius: 12, offset: const Offset(0, 4))],
+                child: const Icon(Icons.photo_camera_rounded, color: Colors.white, size: 24),
               ),
-              child: const Icon(Icons.photo_camera_rounded, color: Colors.white, size: 24),
             ),
           ),
-          Transform.translate(
-            offset: const Offset(0, -3),
-            child: const Text('Add', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFFd97706))),
-          ),
+          const SizedBox(height: 2),
+          const Text('Add', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFFd97706))),
         ]),
       ),
     );
@@ -327,8 +326,7 @@ class _MainScaffoldState extends State<MainScaffold> with WidgetsBindingObserver
         child: SafeArea(
           top: false,
           child: Padding(
-            // Just enough top room for the centre camera's small lift.
-            padding: const EdgeInsets.only(left: 8, right: 8, top: 10, bottom: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -370,20 +368,25 @@ class _NavButton extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Flat tab — only the centre camera is raised/highlighted, so
-              // the bar stays compact (no empty band above the icons).
-              Stack(clipBehavior: Clip.none, alignment: Alignment.center, children: [
-                Icon(item.icon, size: 24, color: active ? item.color : Colors.black45),
-                if (showLongPressHint)
-                  Positioned(
-                    top: -2, right: -6,
-                    child: Container(
-                      width: 6, height: 6,
-                      decoration: BoxDecoration(color: active ? item.color : Colors.black45, shape: BoxShape.circle),
-                    ),
-                  ),
-              ]),
-              const SizedBox(height: 3),
+              // Flat tab in a fixed-height icon row so every label lands on the
+              // same baseline as the camera's, with no empty band above.
+              SizedBox(
+                height: 44,
+                child: Center(
+                  child: Stack(clipBehavior: Clip.none, alignment: Alignment.center, children: [
+                    Icon(item.icon, size: 24, color: active ? item.color : Colors.black45),
+                    if (showLongPressHint)
+                      Positioned(
+                        top: -2, right: -6,
+                        child: Container(
+                          width: 6, height: 6,
+                          decoration: BoxDecoration(color: active ? item.color : Colors.black45, shape: BoxShape.circle),
+                        ),
+                      ),
+                  ]),
+                ),
+              ),
+              const SizedBox(height: 2),
               Text(
                 item.label,
                 style: TextStyle(

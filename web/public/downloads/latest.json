@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.52",
-  "name": "v0.3.52 — Compact bottom bar, camera capture, fixes",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.52/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Bottom bar is leaner — only the centre camera is raised/highlighted now (the tabs sit flat), so no more empty space.\n• The Add Receipt button moved into that centre camera — tap it to capture a receipt from anywhere.\n• In-app web screens (Reports, Stores, Rewards, Guacanomics, GuacWizard) now show a clear status if sign-in hasn't carried over, and their title is readable again.\n• Reverted the top-bar logo back to the avocado."
+  "version": "v0.3.53",
+  "name": "v0.3.53 — New app icon, tidy bottom bar, fun loader",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.53/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Fresh app icon — the avocado with a sprout on the GetGuac green.\n• Bottom bar tidied up — all labels sit on one line, no empty space, and the centre camera is the highlight.\n• In-app web screens now show a flipping avocado while they load instead of a plain spinner."
 }

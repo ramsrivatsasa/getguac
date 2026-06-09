@@ -1,9 +1,11 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'guac_mascot.dart';
 
 const _kWebBase = 'https://getguac.app';
 
@@ -28,15 +30,23 @@ class WebAppScreen extends StatefulWidget {
   State<WebAppScreen> createState() => _WebAppScreenState();
 }
 
-class _WebAppScreenState extends State<WebAppScreen> {
+class _WebAppScreenState extends State<WebAppScreen> with SingleTickerProviderStateMixin {
   WebViewController? _controller;
   bool _loading = true;
   String? _error;
+  late final AnimationController _flip;
 
   @override
   void initState() {
     super.initState();
+    _flip = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400))..repeat();
     _init();
+  }
+
+  @override
+  void dispose() {
+    _flip.dispose();
+    super.dispose();
   }
 
   void _init() {
@@ -134,7 +144,25 @@ class _WebAppScreenState extends State<WebAppScreen> {
             ),
           ),
         if (_loading && _error == null)
-          const Center(child: CircularProgressIndicator()),
+          Center(
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              // Flipping mascot while the page signs in + loads.
+              AnimatedBuilder(
+                animation: _flip,
+                builder: (_, child) => Transform(
+                  alignment: Alignment.center,
+                  transform: Matrix4.identity()
+                    ..setEntry(3, 2, 0.001)
+                    ..rotateY(_flip.value * 2 * math.pi),
+                  child: child,
+                ),
+                child: const GuacMascot(size: 96),
+              ),
+              const SizedBox(height: 16),
+              const Text('Loading your guac…',
+                style: TextStyle(color: Colors.black54, fontWeight: FontWeight.w700)),
+            ]),
+          ),
       ]),
     );
   }

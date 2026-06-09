@@ -42,14 +42,31 @@ export function storeDealUrl(store, query) {
   return `https://www.google.com/search?q=${encodeURIComponent(`${store || ''} ${query || ''}`.trim())}`
 }
 
+// Strip promo / price / badge noise so the vendor search gets a clean PRODUCT
+// query. Without this, a title or spec like "22% OFF" gets baked into the
+// search URL (e.g. dell.com/.../dell pro 16 plus laptop 22% off) and the
+// retailer's search returns "something went wrong" / no results.
+export function cleanDealQuery(s) {
+  return (s || '')
+    .replace(/\b\d+(\.\d+)?\s*%\s*off\b/gi, '')                 // "22% off"
+    .replace(/\bsave\s+\$?\d[\d,.]*\s*%?/gi, '')                // "save $100", "save 20%"
+    .replace(/\$\s?\d[\d,.]*/g, '')                             // "$1,989.00"
+    .replace(/\b(on\s+sale|sale|deals?|today only|limited time|free shipping|clearance|open[\s-]?box|refurbished|was\s+\$?\d[\d,.]*)\b/gi, '')
+    .replace(/[·•|]+/g, ' ')                                     // spec separators
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+}
+
 // Best click target for a shopping result, preferring the VENDOR over Google:
 //   1. a direct merchant product link (when SerpApi supplies one)
 //   2. the vendor's OWN site (its product search) for recognised retailers
 //   3. Google's exact product page — only when the store isn't a known retailer
 //      (so there's no vendor site to send to), else a plain web search.
+// The query is the product TITLE only, cleaned of promo/price noise — specs are
+// left out because they're usually badge/shipping text that breaks the search.
 export function bestDealUrl(r) {
   if (r?.url) return r.url
-  const q = [r?.title || r?.matched_name, r?.specs].filter(Boolean).join(' ').trim()
+  const q = cleanDealQuery(r?.title || r?.matched_name || '')
   const vendor = storeDealUrl(r?.store, q)
   const vendorIsKnown = !/\bgoogle\.[a-z.]+\//i.test(vendor)
   if (vendorIsKnown) return vendor

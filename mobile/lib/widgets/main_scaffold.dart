@@ -20,11 +20,13 @@ class _NavItem {
   const _NavItem(this.route, this.icon, this.label, this.color, this.activeGradient);
 }
 
+// Four tabs flanking a raised centre camera (Add Receipt). Miles lives in the
+// quick-launch strip now, so it's dropped from the tab row to make room.
+// Visual order is Home · Receipts · [📷] · Smashlist · Menu.
 const _items = <_NavItem>[
   _NavItem('/dashboard', Icons.dashboard_rounded,         'Home',     Color(0xFF15803d), [Color(0xFFa3e635), Color(0xFF15803d)]),
   _NavItem('/receipts',  Icons.receipt_long_rounded,      'Receipts', Color(0xFF1d4ed8), [Color(0xFF60a5fa), Color(0xFF1d4ed8)]),
   _NavItem('/shopping',  Icons.shopping_cart_rounded,     'Smashlist',Color(0xFFca8a04), [Color(0xFFfcd34d), Color(0xFFca8a04)]),
-  _NavItem('/car-miles', Icons.directions_car_filled_rounded,'Miles', Color(0xFF0891b2), [Color(0xFF67e8f9), Color(0xFF0891b2)]),
   _NavItem('/profile',   Icons.menu_rounded,              'Menu',     Color(0xFF7c3aed), [Color(0xFFa78bfa), Color(0xFF7c3aed)]),
 ];
 
@@ -187,8 +189,9 @@ class _MainScaffoldState extends State<MainScaffold> with WidgetsBindingObserver
         loc.startsWith('/guacwizard') || loc.startsWith('/stash')      ||
         loc.startsWith('/steals')     || loc.startsWith('/rewards')    ||
         loc.startsWith('/connections')|| loc.startsWith('/reports')    ||
-        loc.startsWith('/returns')    || loc.startsWith('/stores')) {
-      return 4;  // Profile (these are reached via the Profile long-press menu)
+        loc.startsWith('/returns')    || loc.startsWith('/stores')     ||
+        loc.startsWith('/car-miles')) {
+      return _items.length - 1;  // Menu (reached via the strip / Profile menu)
     }
     return 0;
   }
@@ -231,6 +234,53 @@ class _MainScaffoldState extends State<MainScaffold> with WidgetsBindingObserver
       // Left swipe → previous tab
       if (idx > 0) context.go(_items[idx - 1].route);
     }
+  }
+
+  Widget _navBtn(BuildContext context, int i, int idx) {
+    final item = _items[i];
+    final isProfile = item.route == '/profile';
+    return _NavButton(
+      item: item,
+      active: idx == i,
+      onTap: () => context.go(item.route),
+      onLongPress: isProfile ? () => _showProfileMenu(context) : null,
+      showLongPressHint: isProfile,
+    );
+  }
+
+  // Raised centre camera — the primary "Add Receipt" action, Fetch-style.
+  // Always elevated; opens the photo/gallery/voice capture menu.
+  Widget _cameraButton(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: GestureDetector(
+        onTap: () => context.go('/receipts?add=1'),
+        behavior: HitTestBehavior.opaque,
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Transform.translate(
+            offset: const Offset(0, -10),
+            child: Container(
+              width: 56, height: 56,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft, end: Alignment.bottomRight,
+                  colors: [Color(0xFFfbbf24), Color(0xFFf59e0b)],
+                ),
+                border: Border.all(color: Colors.white, width: 3),
+                boxShadow: [BoxShadow(color: const Color(0xFFf59e0b).withValues(alpha: 0.45), blurRadius: 14, offset: const Offset(0, 6))],
+              ),
+              child: const Icon(Icons.photo_camera_rounded, color: Colors.white, size: 26),
+            ),
+          ),
+          Transform.translate(
+            offset: const Offset(0, -6),
+            child: const Text('Add', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFFd97706))),
+          ),
+        ]),
+      ),
+    );
   }
 
   // Horizontal quick-launch strip docked just above the main tabs — the
@@ -323,24 +373,19 @@ class _MainScaffoldState extends State<MainScaffold> with WidgetsBindingObserver
               _quickStrip(context),
               const Divider(height: 1, thickness: 1, color: Color(0xFFf1f5f9)),
               Padding(
-                // Extra top room so the raised (elevated) active icon has space
-                // to lift into without being clipped by the bar's top edge.
-                padding: const EdgeInsets.only(left: 8, right: 8, top: 14, bottom: 8),
+                // Extra top room so the raised (elevated) active icon + the
+                // centre camera have space to lift without being clipped.
+                padding: const EdgeInsets.only(left: 8, right: 8, top: 18, bottom: 8),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: List.generate(_items.length, (i) {
-                    final item = _items[i];
-                    final active = idx == i;
-                    final isProfile = item.route == '/profile';
-                    return _NavButton(
-                      item: item,
-                      active: active,
-                      onTap: () => context.go(item.route),
-                      onLongPress: isProfile ? () => _showProfileMenu(context) : null,
-                      showLongPressHint: isProfile,
-                    );
-                  }),
+                  children: [
+                    _navBtn(context, 0, idx),   // Home
+                    _navBtn(context, 1, idx),   // Receipts
+                    _cameraButton(context),     // raised centre camera = Add Receipt
+                    _navBtn(context, 2, idx),   // Smashlist
+                    _navBtn(context, 3, idx),   // Menu
+                  ],
                 ),
               ),
             ],

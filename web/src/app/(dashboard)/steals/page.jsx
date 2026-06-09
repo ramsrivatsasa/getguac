@@ -446,7 +446,7 @@ function ResultCard({ r, best }) {
       {!r.available && <p className="text-[10px] text-rose-500 mt-0.5">Out of stock</p>}
       <a href={dealUrl} target="_blank" rel="noreferrer"
         className="mt-2 inline-flex justify-center items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors">
-        {hasUrl ? 'View deal' : 'Search deal'} <ExternalLink size={12} />
+        {r.url ? 'View deal' : 'Search deal'} <ExternalLink size={12} />
       </a>
     </div>
   )

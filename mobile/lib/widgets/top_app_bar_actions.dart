@@ -39,12 +39,26 @@ List<Widget> topAppBarActions(BuildContext context, {bool whiteIcons = true}) {
       tooltip: 'Chat',
       onPressed: () => context.go('/chat'),
     ),
-    IconButton(
-      icon: Icon(Icons.logout_rounded, color: iconColor),
-      tooltip: 'Sign Out',
-      onPressed: () => _confirmAndSignOut(context),
+    // Slim labelled pill — same compact, low-chrome feel as the
+    // "Install" button in the update banner.
+    Padding(
+      padding: const EdgeInsets.only(right: 6, left: 2),
+      child: TextButton.icon(
+        onPressed: () => _confirmAndSignOut(context),
+        icon: Icon(Icons.logout_rounded, size: 15, color: iconColor),
+        label: Text('Sign out',
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: iconColor)),
+        style: TextButton.styleFrom(
+          foregroundColor: iconColor,
+          backgroundColor: whiteIcons ? Colors.white.withValues(alpha: 0.14) : null,
+          visualDensity: VisualDensity.compact,
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          minimumSize: Size.zero,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        ),
+      ),
     ),
-    const SizedBox(width: 4),
   ];
 }
 

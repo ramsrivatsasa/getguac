@@ -314,16 +314,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ])),
             ]),
             const SizedBox(height: 14),
-            // Feature pills — same horizontal-scroll shape the
-            // Profile screen uses. Replaces the older 'Smart
-            // shopping' + 'Quick actions' rectangular-card rows
-            // that lived further down the dashboard. Sits right
-            // under the greeting so the nine destinations are the
-            // first interactive thing the user sees.
-            _featurePillScroll(),
-            const SizedBox(height: 14),
+            // Feature pills removed per design — features are reached from the
+            // bottom Menu (long-press) + tabs. _featurePillScroll() kept below
+            // (unused) so it's trivial to bring back.
 
-            // Heads-up alerts right after the feature pills — both
+            // Heads-up alerts right after the greeting — both
             // auto-hide when nothing's worth flagging, so the
             // dashboard stays clean on a calm month. Pink anomaly
             // banner sits first (matches web style), purple
@@ -387,22 +382,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
       systemOverlayStyle: SystemUiOverlayStyle.light,
       iconTheme: const IconThemeData(color: Colors.white),
       title: Row(children: [
-        // App-bar logo — branded rounded-square with the 🥑 emoji so the
-        // top bar reads identical to the launcher icon. Replaced the
-        // detailed GuacMascot SVG here per design direction.
+        // App-bar logo — our GuacMascot on a white circle so it pops on the
+        // emerald bar (swapped back from the 🥑 emoji per design direction).
         Container(
-          width: 36, height: 36,
+          width: 38, height: 38,
           margin: const EdgeInsets.only(right: 8),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft, end: Alignment.bottomRight,
-              colors: [Color(0xFFa3e635), Color(0xFF15803d)],
-            ),
+            color: Colors.white,
+            shape: BoxShape.circle,
             boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.18), blurRadius: 4, offset: const Offset(0, 1))],
           ),
           alignment: Alignment.center,
-          child: const Text('🥑', style: TextStyle(fontSize: 22)),
+          child: const GuacMascot(size: 30),
         ),
         const Text('GetGuac', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 18)),
         const SizedBox(width: 12),
@@ -427,6 +418,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   /// greeting now. Each pill drills into its detail surface via
   /// context.push() so the back-stack builds (edge-swipe + ←
   /// AppBar both work).
+  // ignore: unused_element
   Widget _featurePillScroll() {
     return SizedBox(
       height: 64,

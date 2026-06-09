@@ -54,6 +54,7 @@ const _quickActions = <_QuickAction>[
   _QuickAction('/reports',    Icons.bar_chart_rounded,         'Reports',      'Monthly totals',        Color(0xFF15803d), Color(0xFFd1fae5)),
   _QuickAction('/returns',    Icons.undo_rounded,              'Returns',      'Open refund windows',   Color(0xFFb91c1c), Color(0xFFfee2e2)),
   _QuickAction('/stores',     Icons.storefront_rounded,        'Stores',       'Spend by store',        Color(0xFF1d4ed8), Color(0xFFdbeafe)),
+  _QuickAction('/car-miles',  Icons.directions_car_filled_rounded, 'Car Miles', 'Trip log',            Color(0xFF0891b2), Color(0xFFcffafe)),
   _QuickAction('/profile',    Icons.person,                    'Profile',      'Account + settings',    Color(0xFF7c3aed), Color(0xFFede9fe)),
 ];
 
@@ -242,7 +243,9 @@ class _MainScaffoldState extends State<MainScaffold> with WidgetsBindingObserver
     return _NavButton(
       item: item,
       active: idx == i,
-      onTap: () => context.go(item.route),
+      // Tapping Menu opens the full grid of feature shortcuts (Steals,
+      // Rewards, Stash, Inbox, GuacScore, …). Long-press still works too.
+      onTap: isProfile ? () => _showProfileMenu(context) : () => context.go(item.route),
       onLongPress: isProfile ? () => _showProfileMenu(context) : null,
       showLongPressHint: isProfile,
     );

@@ -17,11 +17,11 @@ import GuacMascot from '../../../components/GuacMascot'
 import { StoreLogo } from '../../../components/StoreLogo'
 import { displayStoreName } from '../../../lib/store-name-normalize'
 
-async function fetchBestPrices({ item_name, stashItems }) {
+async function fetchBestPrices({ item_name, stashItems, force }) {
   const res = await fetch('/api/best-prices', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ item_name, stashItems }),
+    body: JSON.stringify({ item_name, stashItems, force }),
   })
   const data = await res.json()
   if (!res.ok) throw new Error(data.error || 'Search failed')
@@ -80,10 +80,10 @@ export default function StealsPage() {
 
   const hasSearch = search.isPending || search.isError || !!search.data
 
-  function runSearch(refined) {
+  function runSearch(refined, force = false) {
     if (!refined) return
     setActiveQuery(refined)
-    search.mutate({ item_name: refined, stashItems })
+    search.mutate({ item_name: refined, stashItems, force })
   }
   function handleSearch(e) {
     e?.preventDefault?.()
@@ -251,9 +251,15 @@ export default function StealsPage() {
                   : `${view.length} result${view.length === 1 ? '' : 's'} for `}
                 {!search.isPending && <span className="font-bold text-gray-800">{activeQuery}</span>}
               </p>
-              <button onClick={handleSave} className="btn-secondary text-xs py-1.5">
-                <Bookmark size={13} /> Save search
-              </button>
+              <div className="flex items-center gap-2">
+                <button onClick={() => activeQuery && runSearch(activeQuery, true)} disabled={search.isPending}
+                  className="btn-secondary text-xs py-1.5" title="Re-pull fresh prices (bypass cache)">
+                  <RefreshCw size={13} className={search.isPending ? 'animate-spin' : ''} /> Refresh
+                </button>
+                <button onClick={handleSave} className="btn-secondary text-xs py-1.5">
+                  <Bookmark size={13} /> Save search
+                </button>
+              </div>
             </div>
 
             {search.isPending && (

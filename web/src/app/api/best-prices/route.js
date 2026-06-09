@@ -10,6 +10,7 @@
 import { enhanceSearchQuery } from '../../../lib/guacSearch'
 import { profileToPromptContext } from '../../../lib/userProfile'
 import { rateLimit, rateKey, validate, v } from '../../../lib/apiGuard'
+import { getCachedSearch, setCachedSearch } from '../../../lib/shoppingCache'
 export const runtime = 'nodejs'
 export const maxDuration = 45
 
@@ -139,16 +140,23 @@ export async function POST(request) {
       } : null,
     }
 
-    // ── PRIMARY: SerpApi Google Shopping (real photos / ratings / prices) ──
+    // ── PRIMARY: SerpApi Google Shopping (cached; real photos/ratings/prices) ──
     if (process.env.SERPAPI_KEY) {
+      const force = body?.force === true   // client can request a fresh pull
+      if (!force) {
+        const cached = await getCachedSearch(query)
+        if (cached) return Response.json({ ...cached, _cache: 'hit' })
+      }
       try {
         const serp = await serpApiShopping(query)
         if (serp.length > 0) {
-          return Response.json({
+          const payload = {
             query, broadened_query: null, mode: 'serpapi',
             results: serp, sources: [], enhancement: enhancementOut,
             _model: 'serpapi:google_shopping',
-          })
+          }
+          setCachedSearch(query, payload)   // fire-and-forget; refreshes on TTL
+          return Response.json({ ...payload, _cache: 'miss' })
         }
       } catch (e) {
         console.error('[best-prices] SerpApi failed, falling back to Gemini:', e.message)

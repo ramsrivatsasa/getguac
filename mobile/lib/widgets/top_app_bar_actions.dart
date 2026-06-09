@@ -20,6 +20,9 @@ List<Widget> topAppBarActions(BuildContext context, {bool whiteIcons = true}) {
     IconButton(
       icon: Icon(Icons.notifications_none_rounded, color: iconColor),
       tooltip: 'Notifications',
+      visualDensity: VisualDensity.compact,
+      padding: const EdgeInsets.symmetric(horizontal: 5),
+      constraints: const BoxConstraints(),
       onPressed: () {
         // Placeholder until the notifications inbox is built. Surface
         // it as a snack so testers know the button is wired but the
@@ -35,11 +38,14 @@ List<Widget> topAppBarActions(BuildContext context, {bool whiteIcons = true}) {
     IconButton(
       icon: Icon(Icons.chat_bubble_outline, color: iconColor),
       tooltip: 'Chat',
+      visualDensity: VisualDensity.compact,
+      padding: const EdgeInsets.symmetric(horizontal: 5),
+      constraints: const BoxConstraints(),
       onPressed: () => context.go('/chat'),
     ),
     // Slim Sign out pill — compact, low-chrome like the update button.
     Padding(
-      padding: const EdgeInsets.only(right: 6, left: 2),
+      padding: const EdgeInsets.only(right: 6, left: 4),
       child: TextButton.icon(
         onPressed: () => _confirmAndSignOut(context),
         icon: Icon(Icons.logout_rounded, size: 15, color: iconColor),
@@ -97,11 +103,14 @@ class _StealsActionState extends State<_StealsAction> {
       IconButton(
         icon: Icon(Icons.local_offer_rounded, color: widget.iconColor),
         tooltip: 'Steals',
+        visualDensity: VisualDensity.compact,
+        padding: const EdgeInsets.symmetric(horizontal: 5),
+        constraints: const BoxConstraints(),
         onPressed: () => context.go('/steals'),
       ),
       if (_unread > 0)
         Positioned(
-          right: 5, top: 7,
+          right: -2, top: -3,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
             constraints: const BoxConstraints(minWidth: 16, minHeight: 16),

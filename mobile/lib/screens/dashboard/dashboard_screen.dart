@@ -305,9 +305,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ])),
             ]),
             const SizedBox(height: 14),
-            // Feature pills removed per design — features are reached from the
-            // bottom Menu (long-press) + tabs. _featurePillScroll() kept below
-            // (unused) so it's trivial to bring back.
+            // Quick-access feature icons — horizontal scroll under the snapshot.
+            _featureIconStrip(),
+            const SizedBox(height: 14),
 
             // Heads-up alerts right after the greeting — both
             // auto-hide when nothing's worth flagging, so the
@@ -492,6 +492,54 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // Gross spend over the selected window (returns excluded).
   double _periodSpend(List<Receipt> rs) =>
       rs.fold<double>(0.0, (s, r) => s + (r.isReturn ? 0 : r.totalAmount));
+
+  // Quick-access feature icons shown under the dashboard snapshot.
+  Widget _featureIconStrip() {
+    final items = <({String route, IconData icon, String label, Color color})>[
+      (route: _receiptsDeepLink(), icon: Icons.fact_check_rounded,            label: 'Worth It?',   color: const Color(0xFFf59e0b)),
+      (route: '/guacanomics',      icon: Icons.auto_awesome,                  label: 'Guacanomics', color: const Color(0xFF16a34a)),
+      (route: '/guacwizard',       icon: Icons.auto_fix_high,                 label: 'GuacWizard',  color: const Color(0xFF7c3aed)),
+      (route: '/steals',           icon: Icons.local_offer,                   label: 'Steals',      color: const Color(0xFFdb2777)),
+      (route: '/rewards',          icon: Icons.card_giftcard_rounded,         label: 'Rewards',     color: const Color(0xFFe11d48)),
+      (route: '/stash',            icon: Icons.inventory_2,                   label: 'Stash',       color: const Color(0xFFca8a04)),
+      (route: '/inbox',            icon: Icons.mark_email_unread_rounded,     label: 'Inbox',       color: const Color(0xFFd97706)),
+      (route: '/car-miles',        icon: Icons.directions_car_filled_rounded, label: 'Miles',       color: const Color(0xFF0891b2)),
+    ];
+    return SizedBox(
+      height: 80,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: EdgeInsets.zero,
+        itemCount: items.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        itemBuilder: (_, i) {
+          final it = items[i];
+          return InkWell(
+            onTap: () => context.push(it.route),
+            borderRadius: BorderRadius.circular(16),
+            child: SizedBox(
+              width: 66,
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                Container(
+                  width: 54, height: 54,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: it.color.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: it.color.withValues(alpha: 0.20)),
+                  ),
+                  child: Icon(it.icon, color: it.color, size: 25),
+                ),
+                const SizedBox(height: 4),
+                Text(it.label, maxLines: 1, overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700, color: it.color)),
+              ]),
+            ),
+          );
+        },
+      ),
+    );
+  }
 
   Widget _featureSections() {
     // listPadding/headerPadding zero here because the outer ListView

@@ -261,10 +261,10 @@ class _MainScaffoldState extends State<MainScaffold> with WidgetsBindingObserver
         behavior: HitTestBehavior.opaque,
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           SizedBox(
-            height: 44,
+            height: 34,
             child: Center(
               child: Container(
-                width: 44, height: 44,
+                width: 36, height: 36,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
@@ -272,9 +272,9 @@ class _MainScaffoldState extends State<MainScaffold> with WidgetsBindingObserver
                     begin: Alignment.topLeft, end: Alignment.bottomRight,
                     colors: [Color(0xFFfbbf24), Color(0xFFf59e0b)],
                   ),
-                  boxShadow: [BoxShadow(color: const Color(0xFFf59e0b).withValues(alpha: 0.4), blurRadius: 8, offset: const Offset(0, 3))],
+                  boxShadow: [BoxShadow(color: const Color(0xFFf59e0b).withValues(alpha: 0.4), blurRadius: 6, offset: const Offset(0, 2))],
                 ),
-                child: const Icon(Icons.photo_camera_rounded, color: Colors.white, size: 24),
+                child: const Icon(Icons.photo_camera_rounded, color: Colors.white, size: 20),
               ),
             ),
           ),
@@ -329,7 +329,7 @@ class _MainScaffoldState extends State<MainScaffold> with WidgetsBindingObserver
         child: SafeArea(
           top: false,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            padding: const EdgeInsets.only(left: 8, right: 8, top: 3, bottom: 6),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -374,10 +374,10 @@ class _NavButton extends StatelessWidget {
               // Flat tab in a fixed-height icon row so every label lands on the
               // same baseline as the camera's, with no empty band above.
               SizedBox(
-                height: 44,
+                height: 34,
                 child: Center(
                   child: Stack(clipBehavior: Clip.none, alignment: Alignment.center, children: [
-                    Icon(item.icon, size: 24, color: active ? item.color : Colors.black45),
+                    Icon(item.icon, size: 23, color: active ? item.color : Colors.black45),
                     if (showLongPressHint)
                       Positioned(
                         top: -2, right: -6,

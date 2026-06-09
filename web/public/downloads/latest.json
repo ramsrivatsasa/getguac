@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.58",
-  "name": "v0.3.58 — All features one tap from Menu",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.58/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Tap Menu in the bottom bar to open a grid of every feature — Steals, Rewards, Stash, Inbox, GuacScore, GuacWizard, Reports, Returns, Stores, Connections, Chat, Car Miles and Profile. (Long-press still works too.)\n• Added Car Miles to that grid."
+  "version": "v0.3.59",
+  "name": "v0.3.59 — Feature icons on the dashboard + tighter top bar",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.59/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Quick-access feature icons are back on the dashboard — a scrollable row (Worth It?, Guacanomics, GuacWizard, Steals, Rewards, Stash, Inbox, Miles) right under your snapshot.\n• Tightened the spacing between the top-bar icons.\n• Trimmed the empty gap above the bottom-bar icons."
 }

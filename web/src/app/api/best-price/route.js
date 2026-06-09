@@ -32,6 +32,8 @@
 
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { rateLimit, rateKey } from '../../../lib/apiGuard'
+import { serpApiShopping } from '../../../lib/serpShopping'
+import { storeDealUrl } from '../../../lib/storeSearch'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
@@ -115,7 +117,6 @@ export async function POST(request) {
     if (!rl.ok) return Response.json({ error: 'rate limited' }, { status: 429 })
 
     const apiKey = process.env.GEMINI_API_KEY
-    if (!apiKey) return Response.json({ error: 'GEMINI_API_KEY required' }, { status: 500 })
 
     let body
     try { body = await request.json() } catch { body = {} }
@@ -154,12 +155,42 @@ export async function POST(request) {
       }
     }
 
-    // Cache miss → ask Gemini.
-    const { parsed, raw } = await fetchFromGemini(itemName, lat, lng, apiKey)
-    const result = {
-      store_name: parsed?.store_name ?? null,
-      price: parsed?.price != null ? Number(parsed.price) : null,
-      url: parsed?.url ?? null,
+    // Cache miss. PRIMARY: SerpApi Google Shopping (real product data, cheapest
+    // first). Fall back to Gemini's location-grounded search when SerpApi is
+    // unset or returns nothing.
+    let result = null
+    let source = null
+    let raw = null
+
+    if (process.env.SERPAPI_KEY) {
+      try {
+        const items = await serpApiShopping(itemName)
+        if (items.length > 0) {
+          const best = items[0]   // serpApiShopping sorts cheapest first
+          result = {
+            store_name: best.store || null,
+            price: best.price || null,
+            url: best.url || storeDealUrl(best.store, best.title || best.matched_name || itemName),
+          }
+          source = 'serpapi'
+        }
+      } catch (e) {
+        console.error('[best-price] SerpApi failed, falling back to Gemini:', e.message)
+      }
+    }
+
+    if (!result) {
+      if (!apiKey) {
+        return Response.json({ error: 'No price source configured — set SERPAPI_KEY or GEMINI_API_KEY.' }, { status: 500 })
+      }
+      const g = await fetchFromGemini(itemName, lat, lng, apiKey)
+      raw = g.raw
+      result = {
+        store_name: g.parsed?.store_name ?? null,
+        price: g.parsed?.price != null ? Number(g.parsed.price) : null,
+        url: g.parsed?.url ?? null,
+      }
+      source = 'gemini'
     }
 
     // Persist (upsert by cache_key + geo_bucket — unique index ensures
@@ -171,11 +202,11 @@ export async function POST(request) {
       price: result.price,
       url: result.url,
       raw_response: raw,
-      source: MODEL,
+      source,
       checked_at: new Date().toISOString(),
     }, { onConflict: 'cache_key,geo_bucket' })
 
-    return Response.json({ ...result, source: 'gemini', checked_at: new Date().toISOString() })
+    return Response.json({ ...result, source, checked_at: new Date().toISOString() })
   } catch (err) {
     console.error('[best-price]', err)
     return Response.json({ error: err.message || 'lookup failed' }, { status: 500 })

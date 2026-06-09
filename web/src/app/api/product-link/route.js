@@ -42,6 +42,17 @@ export async function POST(request) {
     const json = await res.json()
     const sellers = json?.sellers_results?.online_sellers || []
 
+    if (body?.debug) {
+      return Response.json({
+        topKeys: Object.keys(json || {}),
+        error: json?.error || null,
+        sellers_results_keys: json?.sellers_results ? Object.keys(json.sellers_results) : null,
+        online_sellers_count: sellers.length,
+        first_seller: sellers[0] || null,
+        product_results_keys: json?.product_results ? Object.keys(json.product_results) : null,
+      })
+    }
+
     // Prefer the seller matching the result's store; else the first with a link.
     const byStore = store
       ? sellers.find(s => (s.name || '').toLowerCase().includes(store.toLowerCase()) && (s.direct_link || s.link))

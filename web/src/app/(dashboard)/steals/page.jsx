@@ -1,5 +1,5 @@
 'use client'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
@@ -13,6 +13,7 @@ import { SEARCH_SPECS, SEARCH_CATEGORY_KEYS, detectCategory, buildRefinedQuery, 
 import { useSavedSearches, useAddSavedSearch, useDeleteSavedSearch } from '../../../hooks/useSavedSearches'
 import { touchSavedSearch } from '../../../lib/savedSearches'
 import { bestDealUrl } from '../../../lib/storeSearch'
+import { getStealsFeed, markStealsChecked } from '../../../lib/steals'
 import GuacMascot from '../../../components/GuacMascot'
 import { StoreLogo } from '../../../components/StoreLogo'
 import { displayStoreName } from '../../../lib/store-name-normalize'
@@ -48,6 +49,19 @@ export default function StealsPage() {
   const { data: saved = [] } = useSavedSearches()
   const addSaved = useAddSavedSearch()
   const delSaved = useDeleteSavedSearch()
+
+  // Persisted Steals feed — what the overnight cron found on saved searches,
+  // newest-first. Opening the page stamps checked_at (clearing the badge/push
+  // next time); the "N new" pill still shows for THIS visit.
+  const { data: feed } = useQuery({ queryKey: ['steals-feed'], queryFn: getStealsFeed, staleTime: 60_000 })
+  const stealsFeed = feed?.steals || []
+  const unreadSteals = feed?.unread || 0
+  const checkedRef = useRef(false)
+  useEffect(() => {
+    if (!feed || checkedRef.current) return
+    checkedRef.current = true
+    if (feed.unread > 0) markStealsChecked()   // fire-and-forget; badge clears next load
+  }, [feed])
 
   const stashItems = useMemo(() => rows.slice(0, 200).map(r => ({ item_name: r.item_name, sku: r.sku, category: r.category })), [rows])
 
@@ -312,6 +326,26 @@ export default function StealsPage() {
         </div>
       ) : (
         <>
+          {/* Fresh Steals — found overnight on your saved searches, newest-first */}
+          {stealsFeed.length > 0 && (
+            <div className="card border-rose-200/70 bg-gradient-to-br from-rose-50/40 to-amber-50/30">
+              <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+                <p className="text-xs font-bold uppercase tracking-wider text-rose-800 flex items-center gap-1.5">
+                  <BadgeDollarSign size={13} /> Fresh Steals — on your saved searches
+                </p>
+                {unreadSteals > 0 && (
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-white bg-rose-600 px-2 py-1 rounded-full">{unreadSteals} new</span>
+                )}
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
+                {stealsFeed.map(d => {
+                  const r = { ...d, price: Number(d.price) || 0, original_price: Number(d.original_price) || 0, rating: Number(d.rating) || 0, review_count: 0 }
+                  return <ResultCard key={d.deal_key} r={r} fresh={new Date(d.first_seen_at).getTime() > (feed?.checkedAt || 0)} />
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Local Deals — from your own purchase history & rewards */}
           {(replenish.length > 0 || expiring.length > 0) && (
             <div className="card bg-gradient-to-br from-amber-50/50 to-rose-50/40 border-amber-200/60">
@@ -402,7 +436,7 @@ function SpecDropdowns({ spec, specs, setSpecs }) {
 }
 
 // Google-Shopping-style product card.
-function ResultCard({ r, best }) {
+function ResultCard({ r, best, fresh }) {
   // The grounded search's direct URLs are unreliable (often hallucinated or
   // for a different config). So "View deal" always runs a Google Shopping
   // search for the EXACT product — title + specs + store — which reliably
@@ -418,6 +452,9 @@ function ResultCard({ r, best }) {
         )}
         {best && (
           <span className="absolute top-1.5 right-1.5 z-10 text-[10px] font-extrabold bg-emerald-600 text-white px-1.5 py-0.5 rounded">BEST</span>
+        )}
+        {fresh && !best && (
+          <span className="absolute top-1.5 right-1.5 z-10 text-[10px] font-extrabold bg-rose-600 text-white px-1.5 py-0.5 rounded">NEW</span>
         )}
         <ShoppingBag size={36} className="text-gray-200 absolute" />
         {r.image && (

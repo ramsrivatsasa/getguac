@@ -289,10 +289,14 @@ async function dispatchSmashlistDay() {
 // ── Trigger 6: new Steals found on saved searches ───────────────────
 // Reads each user's saved-search results from the shared shopping_cache
 // (warmed daily by /api/cron/shopping-cache — so this adds ZERO SerpApi
-// calls) and counts on-sale items ("steals"). One digest push per user
-// per day with the count.
+// calls), persists the on-sale items ("steals") into `seen_steals` so the
+// /steals page can show a date-sorted feed, and pushes a digest counting
+// how many are UNCHECKED — i.e. found since the user last opened the feed
+// (steals_state.checked_at). Not a strict since-yesterday diff: the count
+// keeps growing until the user looks, then clears. One push per user/day.
 async function dispatchStealsFound() {
-  const todayStr = new Date().toISOString().slice(0, 10)
+  const nowIso = new Date().toISOString()
+  const todayStr = nowIso.slice(0, 10)
 
   const { data: saves } = await sb()
     .from('saved_searches')
@@ -306,32 +310,66 @@ async function dispatchStealsFound() {
     byUser.get(s.user_id).push(s.query)
   }
 
+  const db = sb()
   let attempted = 0, sent = 0
   for (const [userId, queries] of byUser) {
-    let steals = 0
-    const seen = new Set()
+    // Current on-sale deals across the user's saved searches, with enough
+    // detail to render a card on the feed.
+    const current = new Map()  // deal_key → row
     for (const q of queries) {
       const payload = await getCachedSearch(q)   // cache only — no API call
       for (const r of payload?.results || []) {
         const price = Number(r.price) || 0
         const orig = Number(r.original_price) || 0
         if (orig > price && price > 0) {         // on sale = a steal
-          const key = `${(r.title || r.matched_name || '').toLowerCase()}|${r.store}`
-          if (!seen.has(key)) { seen.add(key); steals++ }
+          const title = (r.title || r.matched_name || '').trim()
+          const store = (r.store || '').trim()
+          const key = `${title.toLowerCase()}|${store.toLowerCase()}`
+          if (key === '|' || current.has(key)) continue
+          current.set(key, {
+            user_id: userId, deal_key: key,
+            title, store, price, original_price: orig,
+            url: r.url || r.google_url || null,
+            image: r.image || null,
+            rating: Number(r.rating) || null,
+            query: q,
+            last_seen_at: nowIso,                // first_seen_at left to DB default / preserved on conflict
+          })
         }
       }
     }
-    if (steals <= 0) continue
-    const title = `🥑 ${steals} new Steal${steals === 1 ? '' : 's'} found`
-    const body  = steals === 1
-      ? '1 deal on your saved searches — tap to grab it.'
-      : `${steals} deals on your saved searches — tap to see them.`
+
+    // Sync the persisted feed: drop vanished deals, upsert the current set.
+    // On conflict we don't touch first_seen_at (not in the payload), so a
+    // deal keeps its original discovery date — that's the sort key.
+    const { data: seenRows } = await db.from('seen_steals').select('deal_key').eq('user_id', userId)
+    const seen = new Set((seenRows || []).map(s => s.deal_key))
+    const vanished = [...seen].filter(k => !current.has(k))
+    if (vanished.length) await db.from('seen_steals').delete().eq('user_id', userId).in('deal_key', vanished)
+    if (current.size) {
+      await db.from('seen_steals').upsert([...current.values()], { onConflict: 'user_id,deal_key' })
+    }
+
+    // Unread = deals discovered since the user last opened the feed.
+    const { data: stateRow } = await db.from('steals_state').select('checked_at').eq('user_id', userId).maybeSingle()
+    const checkedAt = stateRow?.checked_at || '1970-01-01'
+    const { count: unread } = await db
+      .from('seen_steals')
+      .select('deal_key', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .gt('first_seen_at', checkedAt)
+
+    if (!unread || unread <= 0) continue        // nothing unchecked → no push
+    const title = `🥑 ${unread} new Steal${unread === 1 ? '' : 's'} found`
+    const body  = unread === 1
+      ? '1 fresh deal on your saved searches — tap to grab it.'
+      : `${unread} fresh deals on your saved searches — tap to see them.`
     attempted++
     const res = await sendPushToUser(userId, {
       title, body, route: '/steals',
     }, {
       category: 'steals_found',
-      eventKey: `steals:${userId}:${todayStr}`,   // one per user per day
+      eventKey: `steals:${userId}:${todayStr}`,   // at most one push per user per day
     })
     if (res.sent > 0) sent++
   }

@@ -1,63 +1,86 @@
-// Shopping-search result cache engine.
+// Shopping-search result cache engine — DATABASE-backed, CROSS-USER.
 //
-// Stores /api/best-prices result payloads keyed by normalized query so repeat
-// and saved searches don't re-hit the metered SerpApi (free tier = 100/mo).
-// Entries auto-refresh once older than the TTL; callers can also force a
-// refresh (bypass the cache) on demand.
+// Stores /api/best-prices result payloads in public.shopping_cache keyed by
+// normalized query ONLY (no user id) — so the cache is shared across all
+// users: user A's "Dell laptop 16GB" search serves user B's identical search
+// with zero SerpApi calls. Entries refresh once older than the TTL. A fast
+// in-process layer fronts the DB to avoid a round-trip on hot queries.
 //
-// Backend: Upstash Redis when configured (cross-instance, native TTL); falls
-// back to an in-process Map so caching still works locally or when Upstash
-// isn't set. Tune the window with SHOPPING_CACHE_TTL_SECONDS (default 12h).
+// Writes go through the service-role client (server-only, bypasses RLS);
+// reads are allowed to any authenticated user via an RLS read policy (see
+// migration_071_shopping_cache.sql). Tune the window with
+// SHOPPING_CACHE_TTL_SECONDS (default 12h).
 
-import { Redis } from '@upstash/redis'
+import { createClient } from '@supabase/supabase-js'
 
 const TTL_SECONDS = Number(process.env.SHOPPING_CACHE_TTL_SECONDS) || 60 * 60 * 12
-const PREFIX = 'shopcache:'
 
-let _redis // undefined = not probed; null = unavailable; Redis = ready
-function redis() {
-  if (_redis !== undefined) return _redis
-  const url = process.env.UPSTASH_REDIS_REST_URL
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN
-  try { _redis = (url && token) ? new Redis({ url, token }) : null }
-  catch { _redis = null }
-  return _redis
+let _admin // undefined = not probed; null = unavailable; client = ready
+function admin() {
+  if (_admin !== undefined) return _admin
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  try {
+    _admin = (url && key)
+      ? createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } })
+      : null
+  } catch { _admin = null }
+  return _admin
 }
 
-// Per-instance fallback so we still cache without Upstash.
+// Per-instance fast front layer.
 const _mem = new Map() // key → { at, value }
 
 export function cacheKeyFor(query) {
-  return PREFIX + String(query || '').toLowerCase().replace(/\s+/g, ' ').trim()
+  return String(query || '').toLowerCase().replace(/\s+/g, ' ').trim()
 }
 
-/** Fresh cached payload, or null. */
+/** Fresh cached payload (in-memory or DB), or null. */
 export async function getCachedSearch(query) {
   const key = cacheKeyFor(query)
-  const r = redis()
-  if (r) {
-    try { const v = await r.get(key); if (v) return v } catch { /* fall through */ }
-  }
+  if (!key) return null
+
   const m = _mem.get(key)
   if (m && (Date.now() - m.at) < TTL_SECONDS * 1000) return m.value
   if (m) _mem.delete(key)
-  return null
+
+  const sb = admin()
+  if (!sb) return null
+  const cutoff = new Date(Date.now() - TTL_SECONDS * 1000).toISOString()
+  const { data, error } = await sb
+    .from('shopping_cache')
+    .select('payload')
+    .eq('cache_key', key)
+    .gte('updated_at', cutoff)   // only fresh rows
+    .maybeSingle()
+  if (error || !data) return null
+  _mem.set(key, { at: Date.now(), value: data.payload })
+  return data.payload
 }
 
-/** Cache a payload with the configured TTL. Safe to not await. */
+/** Upsert a payload into the shared cache (and the in-memory front). */
 export async function setCachedSearch(query, value) {
   const key = cacheKeyFor(query)
+  if (!key) return
   _mem.set(key, { at: Date.now(), value })
-  const r = redis()
-  if (r) { try { await r.set(key, value, { ex: TTL_SECONDS }) } catch { /* ignore */ } }
+  const sb = admin()
+  if (!sb) return
+  try {
+    await sb.from('shopping_cache').upsert(
+      { cache_key: key, payload: value, updated_at: new Date().toISOString() },
+      { onConflict: 'cache_key' },
+    )
+  } catch (e) {
+    console.error('[shoppingCache] write failed:', e.message)
+  }
 }
 
 /** Force-evict a query (e.g. an explicit "refresh"). */
 export async function evictCachedSearch(query) {
   const key = cacheKeyFor(query)
   _mem.delete(key)
-  const r = redis()
-  if (r) { try { await r.del(key) } catch { /* ignore */ } }
+  const sb = admin()
+  if (sb) { try { await sb.from('shopping_cache').delete().eq('cache_key', key) } catch { /* ignore */ } }
 }
 
 export const SHOPPING_CACHE_TTL_SECONDS = TTL_SECONDS

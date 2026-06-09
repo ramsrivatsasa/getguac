@@ -5,6 +5,7 @@ import Sidebar from '../../components/Sidebar'
 import TopBar from '../../components/TopBar'
 import QuickAddReceipt from '../../components/QuickAddReceipt'
 import OutboxFlusher from '../../components/OutboxFlusher'
+import EmbedErrorBoundary from '../../components/EmbedErrorBoundary'
 import { ConfirmProvider } from '../../components/ConfirmDialog'
 import CommandPalette from '../../components/CommandPalette'
 
@@ -19,7 +20,9 @@ export default async function DashboardLayout({ children }) {
   if (embedded) {
     return (
       <ConfirmProvider>
-        <main className="min-h-screen bg-gray-50 p-4">{children}</main>
+        <main className="min-h-screen bg-gray-50 p-4">
+          <EmbedErrorBoundary>{children}</EmbedErrorBoundary>
+        </main>
         <OutboxFlusher />
       </ConfirmProvider>
     )

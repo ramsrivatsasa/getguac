@@ -107,9 +107,26 @@ class _WebAppScreenState extends State<WebAppScreen> with SingleTickerProviderSt
         backgroundColor: const Color(0xFF166534),
         foregroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.white),
-        // Explicit white title — the app's global AppBarTheme.titleTextStyle
-        // is dark and would otherwise win over foregroundColor.
-        title: Text(widget.title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+        titleSpacing: 0,
+        // Branded logo (same 🥑 box as the dashboard) + white title — the
+        // app's global AppBarTheme.titleTextStyle is dark and would otherwise
+        // win over foregroundColor.
+        title: Row(mainAxisSize: MainAxisSize.min, children: [
+          Container(
+            width: 28, height: 28,
+            margin: const EdgeInsets.only(right: 8),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft, end: Alignment.bottomRight,
+                colors: [Color(0xFFa3e635), Color(0xFF15803d)],
+              ),
+            ),
+            alignment: Alignment.center,
+            child: const Text('🥑', style: TextStyle(fontSize: 16)),
+          ),
+          Text(widget.title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+        ]),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),

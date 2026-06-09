@@ -277,8 +277,11 @@ class _MainScaffoldState extends State<MainScaffold> with WidgetsBindingObserver
         child: SafeArea(
           top: false,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            // Extra top room so the raised (elevated) active icon has space
+            // to lift into without being clipped by the bar's top edge.
+            padding: const EdgeInsets.only(left: 8, right: 8, top: 18, bottom: 8),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: List.generate(_items.length, (i) {
                 final item = _items[i];
@@ -317,59 +320,67 @@ class _NavButton extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         onLongPress: onLongPress,
-        borderRadius: BorderRadius.circular(16),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 220),
-          curve: Curves.easeOutCubic,
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-          decoration: BoxDecoration(
-            gradient: active ? LinearGradient(
-              begin: Alignment.topLeft, end: Alignment.bottomRight,
-              colors: item.activeGradient,
-            ) : null,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: active ? [BoxShadow(color: item.color.withValues(alpha: 0.4), blurRadius: 8, offset: const Offset(0, 3))] : null,
-          ),
-          child: Stack(clipBehavior: Clip.none, alignment: Alignment.center, children: [
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Active icon scales up slightly for tactile feedback.
-                // easeOutBack gives a small "bounce" past 1.0 then
-                // settles — iOS-style. Matches the AnimatedContainer's
-                // 180ms duration so icon + pill resolve together.
-                AnimatedScale(
-                  duration: const Duration(milliseconds: 180),
-                  curve: Curves.easeOutBack,
-                  scale: active ? 1.12 : 1.0,
-                  child: Icon(item.icon, size: 22, color: active ? Colors.white : item.color),
+        borderRadius: BorderRadius.circular(18),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 2),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // The selected tab lifts into a raised gradient circle with a
+              // coloured shadow — Fetch-style elevated icon. Inactive tabs
+              // stay flat. Row crossAxis = end keeps every label on the same
+              // baseline while the active circle floats above its siblings.
+              // The translate is paint-only, so the bar's top padding (18px)
+              // gives it room to rise without clipping.
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 240),
+                curve: Curves.easeOutBack,
+                width: active ? 52 : 40,
+                height: active ? 52 : 40,
+                transform: Matrix4.translationValues(0, active ? -12 : 0, 0),
+                transformAlignment: Alignment.center,
+                decoration: BoxDecoration(
+                  gradient: active ? LinearGradient(
+                    begin: Alignment.topLeft, end: Alignment.bottomRight,
+                    colors: item.activeGradient,
+                  ) : null,
+                  shape: BoxShape.circle,
+                  boxShadow: active ? [BoxShadow(color: item.color.withValues(alpha: 0.45), blurRadius: 12, offset: const Offset(0, 6))] : null,
                 ),
-                const SizedBox(height: 2),
-                Text(
+                alignment: Alignment.center,
+                child: Stack(clipBehavior: Clip.none, alignment: Alignment.center, children: [
+                  Icon(item.icon, size: active ? 26 : 22, color: active ? Colors.white : item.color),
+                  // Tiny indicator that this tab supports long-press for more options.
+                  if (showLongPressHint)
+                    Positioned(
+                      top: -3, right: -3,
+                      child: Container(
+                        width: 7, height: 7,
+                        decoration: BoxDecoration(
+                          color: active ? Colors.white : item.color,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: active ? item.color : Colors.transparent, width: 1),
+                        ),
+                      ),
+                    ),
+                ]),
+              ),
+              // Pull the label up to absorb the gap left by the lift so the
+              // active label doesn't drift away from its raised icon.
+              Transform.translate(
+                offset: Offset(0, active ? -8 : 2),
+                child: Text(
                   item.label,
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
-                    color: active ? Colors.white : item.color,
+                    color: active ? item.color : Colors.black45,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
-              ],
-            ),
-            // Tiny indicator that this tab supports long-press for more options.
-            if (showLongPressHint)
-              Positioned(
-                top: -2, right: 4,
-                child: Container(
-                  width: 6, height: 6,
-                  decoration: BoxDecoration(
-                    color: active ? Colors.white : item.color,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: active ? Colors.white : Colors.transparent, width: 1),
-                  ),
-                ),
               ),
-          ]),
+            ],
+          ),
         ),
       ),
     );

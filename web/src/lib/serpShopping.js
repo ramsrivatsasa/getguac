@@ -9,7 +9,13 @@ export async function serpApiShopping(query) {
   const res = await fetch(url)
   if (!res.ok) throw new Error(`SerpApi ${res.status}`)
   const json = await res.json()
-  const items = Array.isArray(json.shopping_results) ? json.shopping_results : []
+  // SerpApi splits results across shopping_results AND inline_shopping_results
+  // — merge both so we don't end up with just 1–2 items.
+  const items = [
+    ...(Array.isArray(json.shopping_results) ? json.shopping_results : []),
+    ...(Array.isArray(json.inline_shopping_results) ? json.inline_shopping_results : []),
+  ]
+  const seen = new Set()
   return items.map(it => {
     const price = Number(it.extracted_price) || 0
     const orig = Number(it.old_price_extracted ?? it.extracted_old_price) || 0
@@ -28,7 +34,16 @@ export async function serpApiShopping(query) {
       notes: String(it.delivery || '').trim(),
       matched_name: String(it.title || ''),
     }
-  }).filter(r => r.store && r.price > 0).slice(0, 30)
+  }).filter(r => r.store && r.price > 0)
+    .sort((a, b) => a.price - b.price)
+    .filter(r => {                     // dedup overlapping titles across the two arrays
+      const k = (r.title || '').toLowerCase().trim()
+      if (!k) return true
+      if (seen.has(k)) return false
+      seen.add(k)
+      return true
+    })
+    .slice(0, 30)
 }
 
 /** Build the /api/best-prices-shaped payload for a query (or null if no hits). */

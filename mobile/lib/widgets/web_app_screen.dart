@@ -96,7 +96,10 @@ class _WebAppScreenState extends State<WebAppScreen> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF166534),
         foregroundColor: Colors.white,
-        title: Text(widget.title),
+        iconTheme: const IconThemeData(color: Colors.white),
+        // Explicit white title — the app's global AppBarTheme.titleTextStyle
+        // is dark and would otherwise win over foregroundColor.
+        title: Text(widget.title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),

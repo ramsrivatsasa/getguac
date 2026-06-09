@@ -274,16 +274,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFf9fafb),
       appBar: _buildAppBar(),
-      // Quick "Add Receipt" — taps through to /receipts and auto-opens the
-      // capture menu (Take photo / Gallery / Voice). Brought back after it was
-      // dropped in the v0.2.69 simplification.
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.go('/receipts?add=1'),
-        backgroundColor: const Color(0xFF15803d),
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.camera_alt),
-        label: const Text('Add Receipt', style: TextStyle(fontWeight: FontWeight.w800)),
-      ),
+      // Add Receipt now lives in the bottom-bar centre camera button.
       body: RefreshIndicator(
         onRefresh: () async {
           final receiptProv = context.read<ReceiptProvider>();
@@ -382,18 +373,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
       systemOverlayStyle: SystemUiOverlayStyle.light,
       iconTheme: const IconThemeData(color: Colors.white),
       title: Row(children: [
-        // App-bar logo — our GuacMascot on a white circle so it pops on the
-        // emerald bar (swapped back from the 🥑 emoji per design direction).
+        // 🔒 DO NOT CHANGE — app-bar logo is the 🥑 emoji in the emerald
+        // rounded-square, locked forever per user (never swap to GuacMascot/
+        // mascot SVG/Lottie). See feedback_mascot_locked memory.
         Container(
-          width: 38, height: 38,
+          width: 36, height: 36,
           margin: const EdgeInsets.only(right: 8),
           decoration: BoxDecoration(
-            color: Colors.white,
-            shape: BoxShape.circle,
+            borderRadius: BorderRadius.circular(10),
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft, end: Alignment.bottomRight,
+              colors: [Color(0xFFa3e635), Color(0xFF15803d)],
+            ),
             boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.18), blurRadius: 4, offset: const Offset(0, 1))],
           ),
           alignment: Alignment.center,
-          child: const GuacMascot(size: 30),
+          child: const Text('🥑', style: TextStyle(fontSize: 22)),
         ),
         const Text('GetGuac', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 18)),
         const SizedBox(width: 12),

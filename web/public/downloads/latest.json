@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.51",
-  "name": "v0.3.51 — Leaner dashboard (feature pills removed)",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.51/app-arm64-v8a-release.apk",
-  "releaseNotes": "• The top-bar logo is now our avocado mascot.\n• Removed the feature-pill row from the dashboard for a cleaner, more focused home screen — your snapshot and stats lead now.\n• All features are still one tap away: bottom tabs, the centre camera (Add Receipt), and the Menu (long-press for Steals, Rewards, Stash, Inbox, GuacScore, GuacWizard, and more)."
+  "version": "v0.3.52",
+  "name": "v0.3.52 — Compact bottom bar, camera capture, fixes",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.52/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Bottom bar is leaner — only the centre camera is raised/highlighted now (the tabs sit flat), so no more empty space.\n• The Add Receipt button moved into that centre camera — tap it to capture a receipt from anywhere.\n• In-app web screens (Reports, Stores, Rewards, Guacanomics, GuacWizard) now show a clear status if sign-in hasn't carried over, and their title is readable again.\n• Reverted the top-bar logo back to the avocado."
 }

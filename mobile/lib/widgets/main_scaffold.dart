@@ -258,9 +258,9 @@ class _MainScaffoldState extends State<MainScaffold> with WidgetsBindingObserver
         behavior: HitTestBehavior.opaque,
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Transform.translate(
-            offset: const Offset(0, -10),
+            offset: const Offset(0, -6),
             child: Container(
-              width: 56, height: 56,
+              width: 48, height: 48,
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
@@ -269,13 +269,13 @@ class _MainScaffoldState extends State<MainScaffold> with WidgetsBindingObserver
                   colors: [Color(0xFFfbbf24), Color(0xFFf59e0b)],
                 ),
                 border: Border.all(color: Colors.white, width: 3),
-                boxShadow: [BoxShadow(color: const Color(0xFFf59e0b).withValues(alpha: 0.45), blurRadius: 14, offset: const Offset(0, 6))],
+                boxShadow: [BoxShadow(color: const Color(0xFFf59e0b).withValues(alpha: 0.45), blurRadius: 12, offset: const Offset(0, 4))],
               ),
-              child: const Icon(Icons.photo_camera_rounded, color: Colors.white, size: 26),
+              child: const Icon(Icons.photo_camera_rounded, color: Colors.white, size: 24),
             ),
           ),
           Transform.translate(
-            offset: const Offset(0, -6),
+            offset: const Offset(0, -3),
             child: const Text('Add', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFFd97706))),
           ),
         ]),
@@ -327,9 +327,8 @@ class _MainScaffoldState extends State<MainScaffold> with WidgetsBindingObserver
         child: SafeArea(
           top: false,
           child: Padding(
-            // Extra top room so the raised (elevated) active icon + the
-            // centre camera have space to lift without being clipped.
-            padding: const EdgeInsets.only(left: 8, right: 8, top: 18, bottom: 8),
+            // Just enough top room for the centre camera's small lift.
+            padding: const EdgeInsets.only(left: 8, right: 8, top: 10, bottom: 6),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -371,58 +370,28 @@ class _NavButton extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // The selected tab lifts into a raised gradient circle with a
-              // coloured shadow — Fetch-style elevated icon. Inactive tabs
-              // stay flat. Row crossAxis = end keeps every label on the same
-              // baseline while the active circle floats above its siblings.
-              // The translate is paint-only, so the bar's top padding (18px)
-              // gives it room to rise without clipping.
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 240),
-                curve: Curves.easeOutBack,
-                width: active ? 52 : 40,
-                height: active ? 52 : 40,
-                transform: Matrix4.translationValues(0, active ? -12 : 0, 0),
-                transformAlignment: Alignment.center,
-                decoration: BoxDecoration(
-                  gradient: active ? LinearGradient(
-                    begin: Alignment.topLeft, end: Alignment.bottomRight,
-                    colors: item.activeGradient,
-                  ) : null,
-                  shape: BoxShape.circle,
-                  boxShadow: active ? [BoxShadow(color: item.color.withValues(alpha: 0.45), blurRadius: 12, offset: const Offset(0, 6))] : null,
-                ),
-                alignment: Alignment.center,
-                child: Stack(clipBehavior: Clip.none, alignment: Alignment.center, children: [
-                  Icon(item.icon, size: active ? 26 : 22, color: active ? Colors.white : item.color),
-                  // Tiny indicator that this tab supports long-press for more options.
-                  if (showLongPressHint)
-                    Positioned(
-                      top: -3, right: -3,
-                      child: Container(
-                        width: 7, height: 7,
-                        decoration: BoxDecoration(
-                          color: active ? Colors.white : item.color,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: active ? item.color : Colors.transparent, width: 1),
-                        ),
-                      ),
+              // Flat tab — only the centre camera is raised/highlighted, so
+              // the bar stays compact (no empty band above the icons).
+              Stack(clipBehavior: Clip.none, alignment: Alignment.center, children: [
+                Icon(item.icon, size: 24, color: active ? item.color : Colors.black45),
+                if (showLongPressHint)
+                  Positioned(
+                    top: -2, right: -6,
+                    child: Container(
+                      width: 6, height: 6,
+                      decoration: BoxDecoration(color: active ? item.color : Colors.black45, shape: BoxShape.circle),
                     ),
-                ]),
-              ),
-              // Pull the label up to absorb the gap left by the lift so the
-              // active label doesn't drift away from its raised icon.
-              Transform.translate(
-                offset: Offset(0, active ? -8 : 2),
-                child: Text(
-                  item.label,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                    color: active ? item.color : Colors.black45,
                   ),
-                  overflow: TextOverflow.ellipsis,
+              ]),
+              const SizedBox(height: 3),
+              Text(
+                item.label,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: active ? FontWeight.w800 : FontWeight.w600,
+                  color: active ? item.color : Colors.black45,
                 ),
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),

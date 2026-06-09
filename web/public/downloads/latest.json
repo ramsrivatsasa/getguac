@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.54",
-  "name": "v0.3.54 — Logo in the in-app web screens",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.54/app-arm64-v8a-release.apk",
-  "releaseNotes": "• In-app web screens (Reports, Stores, Rewards, Guacanomics, GuacWizard) now show the GetGuac logo in the header, so they feel native and on-brand."
+  "version": "v0.3.55",
+  "name": "v0.3.55 — Single Add Receipts button + tidy dashboard",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.55/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Adding a receipt is now one place — the centre camera in the bottom bar (labelled “Add Receipts”). The floating button on the Receipts page was removed to avoid duplication.\n• Hid the GuacMoney tile on the dashboard for now — it'll return once there are savings to show."
 }

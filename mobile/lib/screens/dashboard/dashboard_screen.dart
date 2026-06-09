@@ -652,8 +652,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               const SizedBox(width: 10),
               SizedBox(width: 220, child: _guacWizardTile(wiz, isLoading)),
               const SizedBox(width: 10),
-              SizedBox(width: 220, child: _guacMoneyTile()),
-              const SizedBox(width: 10),
+              // GuacMoney tile hidden for now — no savings data yet.
               SizedBox(width: 220, child: _rewardsTile(rewardCount)),
             ],
           ),
@@ -771,6 +770,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  // ignore: unused_element
   Widget _guacMoneyTile() {
     return FutureBuilder<double>(
       future: fetchGuacMoneyTotal(),

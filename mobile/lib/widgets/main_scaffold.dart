@@ -276,7 +276,7 @@ class _MainScaffoldState extends State<MainScaffold> with WidgetsBindingObserver
             ),
           ),
           const SizedBox(height: 2),
-          const Text('Add', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFFd97706))),
+          const Text('Add Receipts', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: Color(0xFFd97706)), maxLines: 1, overflow: TextOverflow.ellipsis),
         ]),
       ),
     );

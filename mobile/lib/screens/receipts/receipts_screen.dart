@@ -473,17 +473,8 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
             ]
           : const [],
       ),
-      // Floating "+ Add" menu — collapses the capture options (Camera /
-      // Gallery / Voice) behind one button instead of a row of app-bar icons.
-      floatingActionButton: _selectionMode
-        ? null
-        : FloatingActionButton.extended(
-            onPressed: _openAddMenu,
-            backgroundColor: const Color(0xFF15803d),
-            foregroundColor: Colors.white,
-            icon: const Icon(Icons.camera_alt),
-            label: const Text('Add Receipt', style: TextStyle(fontWeight: FontWeight.w800)),
-          ),
+      // Add Receipt now lives in the bottom-bar centre camera button — the
+      // floating button here was removed to avoid duplication.
       body: Column(children: [
         // Period chips — scope the query to save load time on big accounts
         Container(

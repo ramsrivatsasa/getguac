@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -105,7 +107,16 @@ class _WebAppScreenState extends State<WebAppScreen> {
       ),
       body: Stack(children: [
         if (_controller != null && _error == null)
-          WebViewWidget(controller: _controller!),
+          WebViewWidget(
+            controller: _controller!,
+            // Claim ALL touch gestures for the WebView. Without this the
+            // shell's swipe-between-tabs GestureDetector wins the gesture
+            // arena, so the page can't scroll and taps (e.g. the Search
+            // button) never reach it. Eager = the WebView gets every touch.
+            gestureRecognizers: {
+              Factory<EagerGestureRecognizer>(() => EagerGestureRecognizer()),
+            },
+          ),
         if (_error != null)
           Center(
             child: Padding(

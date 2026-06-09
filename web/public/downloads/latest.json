@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.45",
-  "name": "v0.3.45 — Always-fresh in-app screens + cleaner dashboard",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.45/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Reports, Steals, Stores, Rewards, Guacanomics & GuacWizard now show the latest experience right inside the app — so they stay up to date the moment we ship improvements, no app update needed.\n• Steals: now includes the spec search, the date-sorted “Fresh Steals” feed, and “new steals found” notifications.\n• Dashboard: secondary shortcuts (Steals, Rewards, Stash, Inbox, Miles) are now a tidy icon menu under the headline pills.\n• Bottom bar: the selected tab lifts into a raised, highlighted icon."
+  "version": "v0.3.46",
+  "name": "v0.3.46 — Steals back to native + scrollable in-app screens",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.46/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Steals is fast and native again — search, scrolling and results all work smoothly.\n• Fixed scrolling and tapping on the in-app web screens (Reports, Stores, Rewards, Guacanomics, GuacWizard) — they now respond properly to touch.\n• Dashboard icon menu + raised active tab from v0.3.45 included."
 }

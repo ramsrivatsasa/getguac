@@ -15,6 +15,7 @@ import 'screens/car_miles/car_miles_screen.dart';
 import 'screens/profile/profile_screen.dart';
 import 'screens/profile/report_problem_screen.dart';
 import 'screens/stash/stash_screen.dart';
+import 'screens/steals/steals_screen.dart';
 import 'screens/inbox/inbox_screen.dart';
 import 'screens/inbox/inbox_detail_screen.dart';
 import 'screens/how_it_works/how_it_works_screen.dart';
@@ -98,7 +99,7 @@ final appRouter = GoRouter(
         GoRoute(path: '/guacanomics', builder: (_, __) => const WebAppScreen(path: '/guacanomics', title: 'Guacanomics')),
         GoRoute(path: '/guacwizard',  builder: (_, __) => const WebAppScreen(path: '/guacwizard', title: 'GuacWizard')),
         GoRoute(path: '/stash', builder: (_, __) => const StashScreen()),
-        GoRoute(path: '/steals', builder: (_, __) => const WebAppScreen(path: '/steals', title: 'Steals')),
+        GoRoute(path: '/steals', builder: (_, __) => const StealsScreen()),
         GoRoute(path: '/inbox', builder: (_, __) => const InboxScreen()),
         GoRoute(path: '/inbox/:id', builder: (_, state) => InboxDetailScreen(id: state.pathParameters['id']!)),
         GoRoute(path: '/how-it-works', builder: (_, __) => const HowItWorksScreen()),

@@ -20,6 +20,10 @@
     {
       "path": "/api/cron/usage-snapshot",
       "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/shopping-cache",
+      "schedule": "0 7 * * *"
     }
   ]
 }

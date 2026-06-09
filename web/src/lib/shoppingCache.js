@@ -13,7 +13,7 @@
 
 import { createClient } from '@supabase/supabase-js'
 
-const TTL_SECONDS = Number(process.env.SHOPPING_CACHE_TTL_SECONDS) || 60 * 60 * 12
+const TTL_SECONDS = Number(process.env.SHOPPING_CACHE_TTL_SECONDS) || 60 * 60 * 24 * 7
 
 let _admin // undefined = not probed; null = unavailable; client = ready
 function admin() {

@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
 import { createClient } from '../../lib/supabase/server'
 import Sidebar from '../../components/Sidebar'
 import TopBar from '../../components/TopBar'
@@ -11,6 +12,18 @@ export default async function DashboardLayout({ children }) {
   const sb = createClient()
   const { data: { user } } = await sb.auth.getUser()
   if (!user) redirect('/login')
+
+  // Embedded mode (mobile WebView, set by /embed): render the page bare —
+  // no sidebar/topbar/FAB — so it sits cleanly inside the native shell.
+  const embedded = cookies().get('guac_embedded')?.value === '1'
+  if (embedded) {
+    return (
+      <ConfirmProvider>
+        <main className="min-h-screen bg-gray-50 p-4">{children}</main>
+        <OutboxFlusher />
+      </ConfirmProvider>
+    )
+  }
 
   // Check admin status
   const { data: profile } = await sb.from('profiles').select('is_admin').eq('id', user.id).single()

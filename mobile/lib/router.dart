@@ -9,16 +9,12 @@ import 'screens/dashboard/dashboard_screen.dart';
 import 'screens/receipts/receipts_screen.dart';
 import 'screens/receipts/receipt_detail_screen.dart';
 import 'screens/items/item_detail_screen.dart';
-import 'screens/rewards/rewards_screen.dart';
 import 'screens/rewards/reward_detail_screen.dart';
 import 'screens/shopping/shopping_list_screen.dart';
 import 'screens/car_miles/car_miles_screen.dart';
 import 'screens/profile/profile_screen.dart';
 import 'screens/profile/report_problem_screen.dart';
-import 'screens/guacscore/guacscore_screen.dart';
-import 'screens/guacwizard/guacwizard_screen.dart';
 import 'screens/stash/stash_screen.dart';
-import 'screens/steals/steals_screen.dart';
 import 'screens/inbox/inbox_screen.dart';
 import 'screens/inbox/inbox_detail_screen.dart';
 import 'screens/how_it_works/how_it_works_screen.dart';
@@ -27,10 +23,9 @@ import 'screens/chat/chat_thread_screen.dart';
 import 'screens/connections/connections_screen.dart';
 import 'screens/connections/link_retailer_screen.dart';
 import 'screens/invite/invite_screen.dart';
-import 'screens/reports/reports_screen.dart';
 import 'screens/returns/returns_screen.dart';
-import 'screens/stores/stores_screen.dart';
 import 'widgets/main_scaffold.dart';
+import 'widgets/web_app_screen.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/dashboard',
@@ -72,7 +67,7 @@ final appRouter = GoRouter(
         ),
         GoRoute(path: '/receipts/:id', builder: (_, state) => ReceiptDetailScreen(id: state.pathParameters['id']!)),
         GoRoute(path: '/items/:id', builder: (_, state) => ItemDetailScreen(id: state.pathParameters['id']!)),
-        GoRoute(path: '/rewards', builder: (_, __) => const RewardsScreen()),
+        GoRoute(path: '/rewards', builder: (_, __) => const WebAppScreen(path: '/rewards', title: 'Rewards')),
         GoRoute(path: '/rewards/:id', builder: (_, state) => RewardDetailScreen(id: state.pathParameters['id']!)),
         GoRoute(path: '/shopping', builder: (_, __) => const ShoppingListScreen()),
         GoRoute(path: '/car-miles', builder: (_, __) => const CarMilesScreen()),
@@ -81,9 +76,9 @@ final appRouter = GoRouter(
         GoRoute(path: '/invite', builder: (_, __) => const InviteScreen()),
         GoRoute(path: '/connections/link/:id', builder: (_, state) =>
           LinkRetailerScreen(retailerId: state.pathParameters['id']!)),
-        GoRoute(path: '/reports',     builder: (_, __) => const ReportsScreen()),
+        GoRoute(path: '/reports',     builder: (_, __) => const WebAppScreen(path: '/reports', title: 'Reports')),
         GoRoute(path: '/returns',     builder: (_, __) => const ReturnsScreen()),
-        GoRoute(path: '/stores',      builder: (_, __) => const StoresScreen()),
+        GoRoute(path: '/stores',      builder: (_, __) => const WebAppScreen(path: '/stores', title: 'Stores')),
         GoRoute(path: '/report-problem', builder: (_, state) {
           // Batch failure dialog and other callers can push() with
           // extra: {subject, description, context} to pre-fill.
@@ -96,15 +91,14 @@ final appRouter = GoRouter(
             context: extra['context'] as Map<String, dynamic>?,
           );
         }),
-        GoRoute(path: '/guacscore', builder: (_, __) => const GuacScoreScreen()),
-        // /guacanomics — alias for /guacscore so the mobile route
-        // name matches the web's /guacanomics page (where the
-        // GuacScore is the headline content). Both render the same
-        // screen.
-        GoRoute(path: '/guacanomics', builder: (_, __) => const GuacScoreScreen()),
-        GoRoute(path: '/guacwizard', builder: (_, __) => const GuacWizardScreen()),
+        // GuacScore + Guacanomics both render the web /guacanomics page
+        // (its headline content is the GuacScore). Web is the source of
+        // truth so the score logic can't drift from mobile.
+        GoRoute(path: '/guacscore',   builder: (_, __) => const WebAppScreen(path: '/guacanomics', title: 'Guacanomics')),
+        GoRoute(path: '/guacanomics', builder: (_, __) => const WebAppScreen(path: '/guacanomics', title: 'Guacanomics')),
+        GoRoute(path: '/guacwizard',  builder: (_, __) => const WebAppScreen(path: '/guacwizard', title: 'GuacWizard')),
         GoRoute(path: '/stash', builder: (_, __) => const StashScreen()),
-        GoRoute(path: '/steals', builder: (_, __) => const StealsScreen()),
+        GoRoute(path: '/steals', builder: (_, __) => const WebAppScreen(path: '/steals', title: 'Steals')),
         GoRoute(path: '/inbox', builder: (_, __) => const InboxScreen()),
         GoRoute(path: '/inbox/:id', builder: (_, state) => InboxDetailScreen(id: state.pathParameters['id']!)),
         GoRoute(path: '/how-it-works', builder: (_, __) => const HowItWorksScreen()),

@@ -26,13 +26,21 @@ export default function EmbedBootstrap() {
         // Mark this WebView context as embedded for a year.
         document.cookie = `guac_embedded=1; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`
 
-        if (access_token && refresh_token) {
-          const sb = createClient()
-          await sb.auth.setSession({ access_token, refresh_token })
+        if (!access_token || !refresh_token) {
+          setMsg(`Missing sign-in token${refresh_token ? '' : ' (no refresh token)'} — reopen from the app.`)
+          return
         }
+
+        const sb = createClient()
+        const { error: setErr } = await sb.auth.setSession({ access_token, refresh_token })
+        if (setErr) { setMsg(`Sign-in failed: ${setErr.message}`); return }
+
+        // Confirm the session actually persisted (writes the SSR cookies the
+        // server layout reads) BEFORE navigating — avoids a login bounce.
+        const { data: { user }, error: userErr } = await sb.auth.getUser()
+        if (userErr || !user) { setMsg(`Session not established${userErr ? `: ${userErr.message}` : ''}.`); return }
+
         if (cancelled) return
-        // Full navigation (not client-side) so the server layout re-reads the
-        // freshly-written auth + embedded cookies.
         window.location.replace(safeNext)
       } catch (e) {
         if (!cancelled) setMsg(`Couldn't start session: ${e?.message || e}`)

@@ -391,9 +391,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: const Text('🥑', style: TextStyle(fontSize: 22)),
         ),
         const Text('GetGuac', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 18)),
-        const SizedBox(width: 12),
-        const Text("MONEY'S WINGMAN",
-          style: TextStyle(color: Color(0xFFa3e635), fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 1)),
+        // Tagline "MONEY'S WINGMAN" lives only on the login screen now — kept
+        // off the app bar to free space for the action icons.
       ]),
       actions: [
         // Notifications + Chat + Sign Out from the shared

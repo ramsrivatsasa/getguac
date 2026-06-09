@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.56",
-  "name": "v0.3.56 — Mascot app icon, Steals alerts, Sign out",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.56/app-arm64-v8a-release.apk",
-  "releaseNotes": "• New app icon — the GetGuac avocado in shades, cash in hand, on the brand green.\n• Steals now has its own icon in the top bar with a red badge counting fresh steals on your saved searches.\n• Sign out is back in the top bar (slim button)."
+  "version": "v0.3.57",
+  "name": "v0.3.57 — Mascot icon, Steals alerts, cleaner top bar",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.57/app-arm64-v8a-release.apk",
+  "releaseNotes": "• New app icon — the GetGuac avocado in shades with cash, on the brand green.\n• Steals has its own top-bar icon with a red badge counting fresh steals.\n• Sign out is back in the top bar (slim button).\n• Removed the “MONEY'S WINGMAN” tagline from the in-app top bar (it stays on the login screen) for a cleaner header."
 }

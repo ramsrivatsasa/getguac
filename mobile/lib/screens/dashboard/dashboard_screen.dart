@@ -296,14 +296,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
           children: [
-            // Greeting
+            // Greeting + live snapshot — deliver on "financial snapshot" with
+            // real numbers for the selected window instead of dead subtitle.
             Row(children: [
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('Good day, $greeting 👋',
+                Text('$_salutation, $greeting 👋',
                   style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: _kEmerald900, height: 1.1)),
-                const SizedBox(height: 4),
-                const Text("Here's your financial snapshot",
-                  style: TextStyle(fontSize: 13, color: Colors.black54)),
+                const SizedBox(height: 6),
+                Row(children: [
+                  Text(_money(_periodSpend(filtered)),
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: _kEmerald700)),
+                  Text('  spent · ${filtered.length} receipt${filtered.length == 1 ? '' : 's'}',
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black54)),
+                ]),
+                Text(rangeLabel.toLowerCase(),
+                  style: const TextStyle(fontSize: 11, color: Colors.black38)),
               ])),
             ]),
             const SizedBox(height: 14),
@@ -478,6 +485,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
+
+  // Compact thousands-formatted dollars for the header snapshot ($1,240).
+  String _money(double v) {
+    final s = v.abs().toStringAsFixed(0);
+    final b = StringBuffer();
+    for (var i = 0; i < s.length; i++) {
+      if (i > 0 && (s.length - i) % 3 == 0) b.write(',');
+      b.write(s[i]);
+    }
+    return '\$$b';
+  }
+
+  // Time-aware greeting prefix.
+  String get _salutation {
+    final h = DateTime.now().hour;
+    return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  }
+
+  // Gross spend over the selected window (returns excluded).
+  double _periodSpend(List<Receipt> rs) =>
+      rs.fold<double>(0.0, (s, r) => s + (r.isReturn ? 0 : r.totalAmount));
 
   Widget _featureSections() {
     // listPadding/headerPadding zero here because the outer ListView

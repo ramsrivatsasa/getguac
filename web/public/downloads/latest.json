@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.49",
-  "name": "v0.3.49 — Raised camera button in the bottom bar",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.49/app-arm64-v8a-release.apk",
-  "releaseNotes": "• New raised camera button in the centre of the bottom bar — one tap to add a receipt (photo / gallery / voice) from any screen.\n• Bottom bar is now Home · Receipts · 📷 · Smashlist · Menu (Miles moved to the quick-launch strip).\n• Quick-launch strip + restored dashboard feature pills from v0.3.48 included."
+  "version": "v0.3.50",
+  "name": "v0.3.50 — Cleaner dashboard header with a live snapshot",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.50/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Dashboard header now shows a live snapshot — your spend and receipt count for the selected window — right under a time-aware greeting (Good morning/afternoon/evening).\n• One clean feature launcher: the horizontal pill scroll (the duplicate icon row and bottom strip are gone).\n• Sign out moved into Menu → Profile, freeing up the top bar.\n• Centre camera (Add Receipt) and the View-deal fix from earlier are included."
 }

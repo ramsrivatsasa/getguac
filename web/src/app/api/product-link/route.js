@@ -38,20 +38,24 @@ export async function POST(request) {
 
     const url = `https://serpapi.com/search.json?engine=google_product&product_id=${encodeURIComponent(productId)}&offers=1&gl=us&hl=en&api_key=${key}`
     const res = await fetch(url)
-    if (!res.ok) return Response.json({ url: '' })
-    const json = await res.json()
+    const text = await res.text()
+    let json = {}
+    try { json = JSON.parse(text) } catch { /* keep {} */ }
     const sellers = json?.sellers_results?.online_sellers || []
 
     if (body?.debug) {
       return Response.json({
+        status: res.status,
+        ok: res.ok,
         topKeys: Object.keys(json || {}),
         error: json?.error || null,
         sellers_results_keys: json?.sellers_results ? Object.keys(json.sellers_results) : null,
         online_sellers_count: sellers.length,
         first_seller: sellers[0] || null,
-        product_results_keys: json?.product_results ? Object.keys(json.product_results) : null,
+        raw_snippet: text.slice(0, 400),
       })
     }
+    if (!res.ok) return Response.json({ url: '' })
 
     // Prefer the seller matching the result's store; else the first with a link.
     const byStore = store

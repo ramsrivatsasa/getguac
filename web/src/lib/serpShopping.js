@@ -29,6 +29,7 @@ export async function serpApiShopping(query) {
       // Google product page (→ "View on Google") when no merchant link exists.
       url: link && !/\bgoogle\.[a-z.]+\//i.test(link) ? link : '',
       google_url: productLink,
+      product_id: String(it.product_id || ''),   // for the on-click direct-merchant resolver
       image: String(it.thumbnail || ''),
       title: String(it.title || ''),
       rating: Math.min(5, Math.max(0, Number(it.rating) || 0)),

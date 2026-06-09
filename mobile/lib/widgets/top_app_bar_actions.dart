@@ -43,6 +43,14 @@ List<Widget> topAppBarActions(BuildContext context, {bool whiteIcons = true}) {
       constraints: const BoxConstraints(),
       onPressed: () => context.go('/chat'),
     ),
+    IconButton(
+      icon: Icon(Icons.person_add_alt_1, color: iconColor),
+      tooltip: 'Refer a friend',
+      visualDensity: VisualDensity.compact,
+      padding: const EdgeInsets.symmetric(horizontal: 5),
+      constraints: const BoxConstraints(),
+      onPressed: () => context.go('/invite'),
+    ),
     // Slim Sign out pill — compact, low-chrome like the update button.
     Padding(
       padding: const EdgeInsets.only(right: 6, left: 4),

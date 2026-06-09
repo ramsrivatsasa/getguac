@@ -12,6 +12,7 @@ import '../../services/voice_capture_service.dart';
 import '../../categories.dart' as cat;
 import '../../widgets/animated_primitives.dart';
 import '../../widgets/receipt_scan_overlay.dart';
+import '../../widgets/top_app_bar_actions.dart';
 import '../../services/mascot_event_bus.dart';
 
 class ReceiptsScreen extends StatefulWidget {
@@ -471,7 +472,7 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
               ),
               IconButton(icon: const Icon(Icons.delete), onPressed: _deleteSelected, tooltip: 'Delete'),
             ]
-          : const [],
+          : [...topAppBarActions(context)],
       ),
       // Add Receipt now lives in the bottom-bar centre camera button — the
       // floating button here was removed to avoid duplication.

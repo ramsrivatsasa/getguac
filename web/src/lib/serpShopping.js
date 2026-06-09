@@ -20,11 +20,15 @@ export async function serpApiShopping(query) {
     const price = Number(it.extracted_price) || 0
     const orig = Number(it.old_price_extracted ?? it.extracted_old_price) || 0
     const link = String(it.link || '')
+    const productLink = String(it.product_link || '')
     return {
       store: String(it.source || it.seller || '').trim(),
       price,
       original_price: orig > price ? orig : 0,
+      // url = a DIRECT merchant link (→ "View deal"); google_url = the exact
+      // Google product page (→ "View on Google") when no merchant link exists.
       url: link && !/\bgoogle\.[a-z.]+\//i.test(link) ? link : '',
+      google_url: productLink,
       image: String(it.thumbnail || ''),
       title: String(it.title || ''),
       rating: Math.min(5, Math.max(0, Number(it.rating) || 0)),

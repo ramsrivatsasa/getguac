@@ -407,9 +407,11 @@ function ResultCard({ r, best }) {
   // for a different config). So "View deal" always runs a Google Shopping
   // search for the EXACT product — title + specs + store — which reliably
   // surfaces the same item across merchants.
-  // Prefer a real direct product URL when the shopping API supplies one;
-  // otherwise open the retailer's own on-site search for the product.
-  const dealUrl = r.url || storeDealUrl(r.store, [r.title || r.matched_name, r.specs].filter(Boolean).join(' '))
+  // Click target priority: direct merchant product link → the exact Google
+  // product page (item page, NOT a search) → retailer search as last resort.
+  // "View deal" only when it's a true direct merchant link.
+  const dealUrl = r.url || r.google_url || storeDealUrl(r.store, [r.title || r.matched_name, r.specs].filter(Boolean).join(' '))
+  const dealLabel = r.url ? 'View deal' : 'View on Google'
   return (
     <div className="group rounded-xl border border-gray-100 bg-white p-2.5 hover:shadow-md hover:border-emerald-200 transition-all flex flex-col">
       <div className="relative aspect-square bg-gray-50 rounded-lg overflow-hidden mb-2 flex items-center justify-center">
@@ -446,7 +448,7 @@ function ResultCard({ r, best }) {
       {!r.available && <p className="text-[10px] text-rose-500 mt-0.5">Out of stock</p>}
       <a href={dealUrl} target="_blank" rel="noreferrer"
         className="mt-2 inline-flex justify-center items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors">
-        View deal <ExternalLink size={12} />
+        {dealLabel} <ExternalLink size={12} />
       </a>
     </div>
   )

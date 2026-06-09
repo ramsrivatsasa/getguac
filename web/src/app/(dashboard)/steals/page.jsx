@@ -407,35 +407,12 @@ function ResultCard({ r, best }) {
   // for a different config). So "View deal" always runs a Google Shopping
   // search for the EXACT product — title + specs + store — which reliably
   // surfaces the same item across merchants.
-  // Click → the DIRECT retailer product page. If we don't already have a
-  // merchant URL, resolve it on click via SerpApi's product/offers lookup
-  // (one API call per click). Falls back to the Google item page / retailer
-  // search if resolution fails.
-  const [resolving, setResolving] = useState(false)
-  const fallbackUrl = r.google_url || storeDealUrl(r.store, [r.title || r.matched_name, r.specs].filter(Boolean).join(' '))
-  const dealUrl = r.url || fallbackUrl
-
-  async function openDeal(e) {
-    if (r.url) return                       // already a direct merchant link
-    e.preventDefault()
-    if (resolving) return
-    const w = window.open('', '_blank')     // open now (sync) to dodge popup blockers
-    let target = fallbackUrl
-    if (r.product_id) {
-      setResolving(true)
-      try {
-        const res = await fetch('/api/product-link', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ product_id: r.product_id, store: r.store }),
-        })
-        const data = await res.json().catch(() => ({}))
-        if (data?.url) target = data.url
-      } catch { /* keep fallback */ } finally { setResolving(false) }
-    }
-    if (w) { try { w.opener = null } catch {} ; w.location.href = target }
-    else window.open(target, '_blank', 'noopener,noreferrer')
-  }
-
+  // Google deprecated its Product API, so a direct merchant URL can't be
+  // resolved programmatically. "View deal" goes to the exact Google Shopping
+  // product page (the item page — specific product id, with the store's buy
+  // button), or a direct merchant link if SerpApi ever supplies one, else the
+  // retailer's own search.
+  const dealUrl = r.url || r.google_url || storeDealUrl(r.store, [r.title || r.matched_name, r.specs].filter(Boolean).join(' '))
   return (
     <div className="group rounded-xl border border-gray-100 bg-white p-2.5 hover:shadow-md hover:border-emerald-200 transition-all flex flex-col">
       <div className="relative aspect-square bg-gray-50 rounded-lg overflow-hidden mb-2 flex items-center justify-center">
@@ -470,9 +447,9 @@ function ResultCard({ r, best }) {
       )}
       {r.specs && <p className="text-[10px] text-gray-400 mt-0.5 line-clamp-2">{r.specs}</p>}
       {!r.available && <p className="text-[10px] text-rose-500 mt-0.5">Out of stock</p>}
-      <a href={dealUrl} onClick={openDeal} target="_blank" rel="noreferrer"
+      <a href={dealUrl} target="_blank" rel="noreferrer"
         className="mt-2 inline-flex justify-center items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors">
-        {resolving ? 'Opening…' : 'View deal'} <ExternalLink size={12} />
+        View deal <ExternalLink size={12} />
       </a>
     </div>
   )

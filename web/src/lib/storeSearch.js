@@ -41,3 +41,17 @@ export function storeDealUrl(store, query) {
   // lands on the retailer's own product page as the top result.
   return `https://www.google.com/search?q=${encodeURIComponent(`${store || ''} ${query || ''}`.trim())}`
 }
+
+// Best click target for a shopping result, preferring the VENDOR over Google:
+//   1. a direct merchant product link (when SerpApi supplies one)
+//   2. the vendor's OWN site (its product search) for recognised retailers
+//   3. Google's exact product page — only when the store isn't a known retailer
+//      (so there's no vendor site to send to), else a plain web search.
+export function bestDealUrl(r) {
+  if (r?.url) return r.url
+  const q = [r?.title || r?.matched_name, r?.specs].filter(Boolean).join(' ').trim()
+  const vendor = storeDealUrl(r?.store, q)
+  const vendorIsKnown = !/\bgoogle\.[a-z.]+\//i.test(vendor)
+  if (vendorIsKnown) return vendor
+  return r?.google_url || vendor
+}

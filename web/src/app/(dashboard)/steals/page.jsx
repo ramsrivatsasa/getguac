@@ -12,7 +12,7 @@ import { predictReplenishItems, expiringRewards } from '../../../lib/userProfile
 import { SEARCH_SPECS, SEARCH_CATEGORY_KEYS, detectCategory, buildRefinedQuery, specSummary } from '../../../lib/searchSpecs'
 import { useSavedSearches, useAddSavedSearch, useDeleteSavedSearch } from '../../../hooks/useSavedSearches'
 import { touchSavedSearch } from '../../../lib/savedSearches'
-import { storeDealUrl } from '../../../lib/storeSearch'
+import { bestDealUrl } from '../../../lib/storeSearch'
 import GuacMascot from '../../../components/GuacMascot'
 import { StoreLogo } from '../../../components/StoreLogo'
 import { displayStoreName } from '../../../lib/store-name-normalize'
@@ -407,12 +407,9 @@ function ResultCard({ r, best }) {
   // for a different config). So "View deal" always runs a Google Shopping
   // search for the EXACT product — title + specs + store — which reliably
   // surfaces the same item across merchants.
-  // Google deprecated its Product API, so a direct merchant URL can't be
-  // resolved programmatically. "View deal" goes to the exact Google Shopping
-  // product page (the item page — specific product id, with the store's buy
-  // button), or a direct merchant link if SerpApi ever supplies one, else the
-  // retailer's own search.
-  const dealUrl = r.url || r.google_url || storeDealUrl(r.store, [r.title || r.matched_name, r.specs].filter(Boolean).join(' '))
+  // Prefer the vendor over Google: direct merchant link → the vendor's own
+  // site (known retailers) → Google's item page only for unrecognised stores.
+  const dealUrl = bestDealUrl(r)
   return (
     <div className="group rounded-xl border border-gray-100 bg-white p-2.5 hover:shadow-md hover:border-emerald-200 transition-all flex flex-col">
       <div className="relative aspect-square bg-gray-50 rounded-lg overflow-hidden mb-2 flex items-center justify-center">

@@ -9,7 +9,7 @@ import GuacMascot from './GuacMascot'
 import { getStashItems } from '../lib/db'
 import { useAddSavedSearch } from '../hooks/useSavedSearches'
 import { detectCategory } from '../lib/searchSpecs'
-import { storeDealUrl } from '../lib/storeSearch'
+import { bestDealUrl } from '../lib/storeSearch'
 async function fetchBestPrices({ item_name, sku, category, stashItems }) {
   const res = await fetch('/api/best-prices', {
     method: 'POST',
@@ -174,7 +174,7 @@ export default function BestPricesModal({ open, onClose, item }) {
                     </div>
                     <p className={`text-lg font-bold tabular-nums ${isBest ? 'text-emerald-700' : 'text-gray-700'}`}>${r.price.toFixed(2)}</p>
                     <a
-                      href={r.url || r.google_url || storeDealUrl(r.store, `${r.matched_name || item?.item_name || ''} ${r.specs || ''}`)}
+                      href={bestDealUrl({ ...r, title: r.matched_name || item?.item_name })}
                       target="_blank" rel="noreferrer"
                       title={r.url ? 'Open product page' : `Search ${r.store} for this product`}
                       className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 hover:bg-emerald-200 hover:scale-110 active:scale-95 transition-all flex items-center justify-center shadow-sm shrink-0">

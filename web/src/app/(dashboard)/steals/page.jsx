@@ -411,7 +411,7 @@ function ResultCard({ r, best }) {
   // site (known retailers) → Google's item page only for unrecognised stores.
   const dealUrl = bestDealUrl(r)
   return (
-    <div className="group rounded-xl border border-gray-100 bg-white p-2.5 hover:shadow-md hover:border-emerald-200 transition-all flex flex-col">
+    <div className="group h-full rounded-xl border border-gray-100 bg-white p-2.5 hover:shadow-md hover:border-emerald-200 transition-all flex flex-col">
       <div className="relative aspect-square bg-gray-50 rounded-lg overflow-hidden mb-2 flex items-center justify-center">
         {r.original_price > 0 && (
           <span className="absolute top-1.5 left-1.5 z-10 text-[10px] font-extrabold bg-rose-600 text-white px-1.5 py-0.5 rounded">SALE</span>
@@ -445,7 +445,7 @@ function ResultCard({ r, best }) {
       {r.specs && <p className="text-[10px] text-gray-400 mt-0.5 line-clamp-2">{r.specs}</p>}
       {!r.available && <p className="text-[10px] text-rose-500 mt-0.5">Out of stock</p>}
       <a href={dealUrl} target="_blank" rel="noreferrer"
-        className="mt-2 inline-flex justify-center items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors">
+        className="mt-auto pt-2 inline-flex justify-center items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors">
         View deal <ExternalLink size={12} />
       </a>
     </div>

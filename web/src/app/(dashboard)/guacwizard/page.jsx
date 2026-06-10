@@ -66,7 +66,7 @@ export default function GuacWizardPage() {
       <FeatureHeader
         theme="wizard"
         title={<span className="flex items-center gap-2">GuacWizard <Sparkles size={20} className="text-amber-500 shrink-0" /></span>}
-        subtitle="Your money sage. Reads every statement, calls out every leak."
+        subtitle="Your money wizard 🪄 Reads every statement, conjures every hidden fee, charge & leak into the light."
         action={
           <div className="text-right">
             <p className="text-[10px] uppercase tracking-wider font-bold text-emerald-700">Wizard score</p>

@@ -98,8 +98,8 @@ class _GuacMoneyScreenState extends State<GuacMoneyScreen> {
                 ),
                 if (saved > 0) ...[
                   const SizedBox(height: 4),
-                  Text('plus \$${saved.toStringAsFixed(2)} our Guac-AI saved you',
-                    style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
+                  Text('\$${saved.toStringAsFixed(2)} our Guac-AI saved you',
+                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
                 ],
               ]),
             ),

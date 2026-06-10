@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.70",
-  "name": "v0.3.70 — App icon is the 🥑",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.70/app-arm64-v8a-release.apk",
-  "releaseNotes": "\u2022 New app icon \u2014 the \uD83E\uDD51 avocado on the GetGuac green."
+  "version": "v0.3.71",
+  "name": "v0.3.71 — GuacMoney saved-amount wording",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.71/app-arm64-v8a-release.apk",
+  "releaseNotes": "\u2022 GuacMoney now reads \u201C$X our Guac-AI saved you\u201D (dropped the \u201Cplus\u201D)."
 }

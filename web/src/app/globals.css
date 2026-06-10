@@ -38,6 +38,12 @@
   .page-title { @apply text-xl sm:text-2xl font-extrabold text-gray-900 tracking-tight; }
 }
 
+/* In the mobile WebView the native app bar already shows the screen title, so
+   hide the web page's own <h1 class="page-title"> + its subtitle to avoid a
+   doubled heading. (guac-embedded is set on the embedded layout's <main>.) */
+.guac-embedded .page-title { display: none; }
+.guac-embedded .page-title + p { display: none; }
+
 @layer utilities {
   /* ────────────────────────────────────────────────────────────────
      Animation system — shared by web/src/components/animated/*.jsx.

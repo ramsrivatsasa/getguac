@@ -2,10 +2,12 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
+import 'package:provider/provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'guac_mascot.dart';
+import '../providers/receipt_provider.dart';
 
 const _kWebBase = 'https://getguac.app';
 
@@ -100,17 +102,15 @@ class _WebAppScreenState extends State<WebAppScreen> with SingleTickerProviderSt
     await _controller?.reload();
   }
 
-  // Back: step back through the web page's own history first, and only pop
-  // this screen once there's nowhere left to go in the page. Used by the
-  // app-bar arrow AND the Android back gesture (PopScope) — so a back swipe
-  // works on the WebView too.
-  Future<void> _handleBack() async {
-    final c = _controller;
-    if (c != null && await c.canGoBack()) {
-      await c.goBack();
-      return;
-    }
-    if (mounted) Navigator.of(context).maybePop();
+  // Back exits the WebView screen (reliable — the web-history approach got
+  // stuck on the embed redirect). Refresh receipts on the way out so native
+  // screens reflect anything changed in the page (e.g. ratings → GuacMoney).
+  void _handleBack() {
+    if (!mounted) return;
+    try {
+      context.read<ReceiptProvider>().loadReceipts(period: ReceiptPeriod.all, force: true);
+    } catch (_) {}
+    Navigator.of(context).maybePop();
   }
 
   @override
@@ -123,8 +123,8 @@ class _WebAppScreenState extends State<WebAppScreen> with SingleTickerProviderSt
         backgroundColor: const Color(0xFF166534),
         foregroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.white),
-        leading: BackButton(onPressed: _handleBack),
-        titleSpacing: 0,
+        automaticallyImplyLeading: false,
+        titleSpacing: 16,
         // Branded logo (same 🥑 box as the dashboard) + white title — the
         // app's global AppBarTheme.titleTextStyle is dark and would otherwise
         // win over foregroundColor.
@@ -149,6 +149,11 @@ class _WebAppScreenState extends State<WebAppScreen> with SingleTickerProviderSt
             icon: const Icon(Icons.refresh),
             tooltip: 'Reload',
             onPressed: _controller == null ? null : _reload,
+          ),
+          IconButton(
+            icon: const Icon(Icons.close),
+            tooltip: 'Close',
+            onPressed: _handleBack,
           ),
         ],
       ),

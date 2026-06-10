@@ -11,7 +11,7 @@ import GuacoScoreCard from '../../../components/GuacoScoreCard'
 import UpcomingReturnsBanner from '../../../components/UpcomingReturnsBanner'
 import AnomaliesPanel from '../../../components/AnomaliesPanel'
 import { ActivityFeed } from '../../../components/ActivityFeed'
-import { fetchGuacMoneySaved, formatGuacMoney } from '../../../lib/guacMoney'
+import { fetchGuacMoneyPoints, formatGuacMoney } from '../../../lib/guacMoney'
 import { generateInsights } from '../../../lib/financeInsights'
 import { computeWizardScore } from '../../../lib/wizardScore'
 import { createClient as createSbClient } from '../../../lib/supabase/client'
@@ -645,8 +645,8 @@ function GuacWizardTile() {
 
 function GuacMoneyTile() {
   const { data: total = 0, isLoading } = useQuery({
-    queryKey: ['guac-money-saved'],
-    queryFn: fetchGuacMoneySaved,
+    queryKey: ['guac-money-points'],
+    queryFn: fetchGuacMoneyPoints,
     staleTime: 60_000,
   })
   // Emerald palette throughout — the brand colour. Active = strong
@@ -663,10 +663,10 @@ function GuacMoneyTile() {
       <div className="min-w-0 flex-1 relative z-10">
         <p className="text-[10px] uppercase tracking-wider font-bold text-emerald-700">GuacMoney</p>
         <p className="text-xl font-black text-emerald-900 tabular-nums leading-tight">
-          {isLoading ? '—' : <CountUp value={Number(total) || 0} duration={520} format={formatGuacMoney} />}
+          {isLoading ? '—' : <CountUp value={Number(total) || 0} duration={520} format={v => Math.round(v).toLocaleString()} />}
         </p>
         <p className="text-[10px] font-semibold mt-0.5 text-emerald-700">
-          {active ? 'saved by Guac-AI' : 'rate buys to save →'}
+          {active ? `≈ $${(total / 1000).toFixed(2)} · soon` : 'rate buys to earn →'}
         </p>
       </div>
     </div>

@@ -173,6 +173,31 @@ export async function fetchGuacMoneySaved() {
   return saved
 }
 
+// Combined GuacMoney balance (points): saved $ (×1000) + receipts (×100) +
+// referrals (×1000). 1000 GuacMoney = $1. Matches mobile guacMoneyPoints().
+export async function fetchGuacMoneyPoints() {
+  const sb = createClient()
+  const { data: { user } } = await sb.auth.getUser()
+  if (!user) return 0
+  const { data: rows } = await sb
+    .from('receipts')
+    .select('total_amount, rating, is_return')
+    .eq('user_id', user.id)
+  let saved = 0
+  const receipts = (rows || []).length
+  for (const r of rows || []) {
+    const amt = parseFloat(r.total_amount || 0) || 0
+    if (r.is_return) saved += Math.abs(amt)
+    else if (r.rating != null && r.rating <= 2 && amt > 0) saved += amt
+  }
+  let referrals = 0
+  try {
+    const { data: refs } = await sb.from('referrals').select('id').eq('referrer_id', user.id)
+    referrals = (refs || []).length
+  } catch {}
+  return Math.round(saved * 1000) + receipts * 100 + referrals * 1000
+}
+
 export function sourceLabel(source) {
   switch (source) {
     case GUAC_MONEY_SOURCES.AUTO_ADD_CHEAPEST: return 'Cheapest-store routing'

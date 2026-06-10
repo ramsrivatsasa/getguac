@@ -20,7 +20,7 @@ export default async function DashboardLayout({ children }) {
   if (embedded) {
     return (
       <ConfirmProvider>
-        <main className="min-h-screen bg-gray-50 p-4">
+        <main className="guac-embedded min-h-screen bg-gray-50 p-4">
           <EmbedErrorBoundary>{children}</EmbedErrorBoundary>
         </main>
         <OutboxFlusher />

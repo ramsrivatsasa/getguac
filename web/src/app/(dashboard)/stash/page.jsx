@@ -16,6 +16,7 @@ import { fetchLikeStats, toggleLike, formatLikeCount } from '../../../lib/produc
 import { CATEGORIES, CATEGORY_BY_SLUG, categoryClass } from '../../../lib/categories'
 import CategoryPicker, { CategoryCreatePill } from '../../../components/CategoryPicker'
 import GuacMascot from '../../../components/GuacMascot'
+import FeatureHeader from '../../../components/FeatureHeader'
 import { StoreList } from '../../../components/StoreList'
 import BestPricesModal from '../../../components/BestPricesModal'
 import { StoreLogo } from '../../../components/StoreLogo'
@@ -398,17 +399,17 @@ export default function StashPage() {
 
   return (
     <div className="space-y-5 max-w-7xl font-sans">
-      <div className="flex items-center gap-3 flex-wrap">
-        <GuacMascot expression="sitting" size={60} />
-        <div className="flex-1 min-w-[200px]">
-          <h1 className="page-title">Stash</h1>
-          <p className="text-sm text-gray-500">Everything you&apos;ve ever bought — find the best store for each</p>
-        </div>
-        <span className="text-sm text-gray-500">
-          <span className="font-bold text-emerald-700 tabular-nums">{items.length}</span> products ·{' '}
-          <span className="font-bold text-amber-700 tabular-nums">{multiStoreCount}</span> multi-store
-        </span>
-      </div>
+      <FeatureHeader
+        expression="standing"
+        title="Stash"
+        subtitle="Everything you've ever bought — find the best store for each"
+        action={
+          <span className="text-sm text-gray-500">
+            <span className="font-bold text-emerald-700 tabular-nums">{items.length}</span> products ·{' '}
+            <span className="font-bold text-amber-700 tabular-nums">{multiStoreCount}</span> multi-store
+          </span>
+        }
+      />
 
       {/* Category chips — single horizontal scroll row with ← →
           arrow buttons (matches the dashboard's AllPaymentsScroll

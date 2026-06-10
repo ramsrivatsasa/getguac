@@ -8,6 +8,7 @@ import { useConfirm } from '../../../components/ConfirmDialog'
 import { getStores } from '../../../lib/db'
 import AddressInput from '../../../components/AddressInput'
 import GuacMascot from '../../../components/GuacMascot'
+import FeatureHeader from '../../../components/FeatureHeader'
 import LottieAnimation from '../../../components/LottieAnimation'
 import emptyListLottie from '../../../lottie/empty-list.json'
 import thinkingLottie from '../../../lottie/thinking.json'
@@ -211,10 +212,11 @@ export default function CarMilesPage() {
 
   return (
     <div className="space-y-5 max-w-7xl">
-      <div className="flex items-center justify-between">
-        <h1 className="page-title">Car Miles</h1>
-        <button onClick={() => { setEditingId(null); setForm(EMPTY); setShowForm(v => !v) }} className="btn-primary"><GuacMascot expression="happy" size={22} /> Add Trip</button>
-      </div>
+      <FeatureHeader
+        expression="happy"
+        title="Car Miles"
+        action={<button onClick={() => { setEditingId(null); setForm(EMPTY); setShowForm(v => !v) }} className="btn-primary"><GuacMascot expression="happy" size={22} /> Add Trip</button>}
+      />
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {[

@@ -19,7 +19,7 @@ import { useQuery } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { Copy, Share2, UserPlus, CheckCircle2, Hourglass } from 'lucide-react'
 import { createClient } from '../../../lib/supabase/client'
-import GuacMascot from '../../../components/GuacMascot'
+import FeatureHeader from '../../../components/FeatureHeader'
 import LottieAnimation from '../../../components/LottieAnimation'
 import celebrateLottie from '../../../lottie/celebrate.json'
 import { track } from '../../../lib/analytics'
@@ -115,17 +115,17 @@ export default function InvitePage() {
 
   return (
     <div className="max-w-2xl space-y-6 pb-20">
-      <header className="flex items-start gap-4">
-        <GuacMascot expression="celebrating" size={70} />
-        <div className="flex-1 min-w-0">
-          <h1 className="page-title">Invite friends</h1>
-          <p className="text-sm text-gray-500 mt-1">
+      <FeatureHeader
+        expression="celebrating"
+        title="Invite friends"
+        subtitle={
+          <>
             Share your code. When a friend signs up with it, you each get{' '}
             <strong className="text-emerald-700">{REWARD_DAYS} Smash days</strong> on
             your 🔥 chip.
-          </p>
-        </div>
-      </header>
+          </>
+        }
+      />
 
       {/* Big code card */}
       <section className="bg-gradient-to-br from-emerald-500 via-emerald-600 to-green-700 text-white rounded-2xl p-6 shadow-md">

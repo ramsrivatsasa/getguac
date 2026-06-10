@@ -2,8 +2,8 @@
 import { useState, useMemo } from 'react'
 import { useAliases, useUpdateAliasStatus } from '../../../hooks/useAliases'
 import toast from 'react-hot-toast'
-import { CheckCircle, XCircle, RotateCcw, Sparkles, Filter } from 'lucide-react'
-import GuacMascot from '../../../components/GuacMascot'
+import { CheckCircle, XCircle, RotateCcw, Filter } from 'lucide-react'
+import FeatureHeader from '../../../components/FeatureHeader'
 import LottieAnimation from '../../../components/LottieAnimation'
 import thinkingLottie from '../../../lottie/thinking.json'
 import emptyListLottie from '../../../lottie/empty-list.json'
@@ -46,14 +46,11 @@ export default function PredictionsPage() {
 
   return (
     <div className="space-y-5 max-w-6xl font-sans">
-      <div>
-        <h1 className="page-title inline-flex items-center gap-2">
-          <Sparkles size={22} className="text-violet-500" /> Predictions
-        </h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Items the predictor has decided are the same product. Confirm to lock the merge in, reject to keep them separate.
-        </p>
-      </div>
+      <FeatureHeader
+        expression="happy"
+        title="Predictions"
+        subtitle="Items the predictor has decided are the same product. Confirm to lock the merge in, reject to keep them separate."
+      />
 
       <div className="flex flex-wrap gap-2">
         {FILTERS.map(f => (

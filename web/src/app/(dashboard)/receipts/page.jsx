@@ -938,7 +938,10 @@ export default function ReceiptsPage() {
       )}
 
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <h1 className="page-title">Receipts</h1>
+        <div className="flex items-center gap-3">
+          <GuacMascot expression="happy" size={60} className="shrink-0" />
+          <h1 className="page-title">Receipts</h1>
+        </div>
         <div className="flex items-center gap-3 flex-1 min-w-0 justify-end">
           {/* Click-to-upload button styled like a dropzone (the actual drop target is the overlay) */}
           <button

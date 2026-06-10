@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { Undo2, Search, ExternalLink, RotateCcw, Calendar, Store as StoreIcon, Clock, Shield } from 'lucide-react'
 import { getReturns, updateReceiptItem, getEligibleReturns } from '../../../lib/db'
-import GuacMascot from '../../../components/GuacMascot'
+import FeatureHeader from '../../../components/FeatureHeader'
 import LottieAnimation from '../../../components/LottieAnimation'
 import emptyListLottie from '../../../lottie/empty-list.json'
 import thinkingLottie from '../../../lottie/thinking.json'
@@ -75,25 +75,21 @@ export default function ReturnsPage() {
 
   return (
     <div className="space-y-5 max-w-7xl">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-3">
-          <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-rose-100 via-amber-100 to-emerald-100 shadow-sm ring-2 ring-white flex items-center justify-center">
-            <GuacMascot expression="surprised" size={32} />
+      <FeatureHeader
+        expression="surprised"
+        title="Returns"
+        subtitle="Refunds tracked, money clawed back."
+        action={
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1 text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-full px-3 py-1.5">
+              <Clock size={12} /> {eligible.length} still returnable
+            </span>
+            <span className="inline-flex items-center gap-1 text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-100 rounded-full px-3 py-1.5">
+              <Undo2 size={12} /> {returns.length} returned
+            </span>
           </div>
-          <div>
-            <h1 className="page-title leading-none">Returns</h1>
-            <p className="text-xs text-gray-500 mt-1">Refunds tracked, money clawed back.</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1 text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-full px-3 py-1.5">
-            <Clock size={12} /> {eligible.length} still returnable
-          </span>
-          <span className="inline-flex items-center gap-1 text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-100 rounded-full px-3 py-1.5">
-            <Undo2 size={12} /> {returns.length} returned
-          </span>
-        </div>
-      </div>
+        }
+      />
 
       {/* Tabs: still returnable vs already returned */}
       <div className="flex gap-1 border-b border-gray-200">

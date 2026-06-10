@@ -8,7 +8,7 @@ import toast from 'react-hot-toast'
 import {
   Mail, Search, Inbox as InboxIcon, Star, Archive, Trash2, Reply, Send, Loader2, X, Sparkles, Filter, Edit3, RefreshCw, ChevronsLeft, ChevronsRight, ChevronDown, DownloadCloud, Link2,
 } from 'lucide-react'
-import GuacMascot from '../../../components/GuacMascot'
+import FeatureHeader from '../../../components/FeatureHeader'
 import { displayStoreName } from '../../../lib/store-name-normalize'
 import { useConfirm } from '../../../components/ConfirmDialog'
 import { FadeUpStagger, ShimmerBox } from '../../../components/animated'
@@ -210,78 +210,76 @@ export default function InboxPage() {
         </div>
       )}
 
-      <div className="flex items-start justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-3">
-          <GuacMascot expression="eating" size={64} />
-          <div>
-            <h1 className="page-title">Inbox</h1>
-            {(() => {
-              const todayStr = new Date().toISOString().slice(0, 10)
-              const filed = messages.filter(m => m.receipt)
-              const filedToday = filed.filter(m => (m.received_at || '').slice(0, 10) === todayStr)
-              return (
-                <p className="text-xs text-gray-500 mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                  <span><span className="font-semibold text-gray-700">{total}</span> message{total === 1 ? '' : 's'}</span>
-                  {filed.length > 0 && (
-                    <>
-                      <span className="text-gray-300">·</span>
-                      <span className="text-emerald-700">🥑 <span className="font-semibold">{filed.length}</span> filed</span>
-                    </>
-                  )}
-                  {filedToday.length > 0 && (
-                    <>
-                      <span className="text-gray-300">·</span>
-                      <span className="font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
-                        {filedToday.length} today
-                      </span>
-                    </>
-                  )}
-                </p>
-              )
-            })()}
+      <FeatureHeader
+        expression="happy"
+        title="Inbox"
+        subtitle={(() => {
+          const todayStr = new Date().toISOString().slice(0, 10)
+          const filed = messages.filter(m => m.receipt)
+          const filedToday = filed.filter(m => (m.received_at || '').slice(0, 10) === todayStr)
+          return (
+            <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+              <span><span className="font-semibold text-gray-700">{total}</span> message{total === 1 ? '' : 's'}</span>
+              {filed.length > 0 && (
+                <>
+                  <span className="text-gray-300">·</span>
+                  <span className="text-emerald-700">🥑 <span className="font-semibold">{filed.length}</span> filed</span>
+                </>
+              )}
+              {filedToday.length > 0 && (
+                <>
+                  <span className="text-gray-300">·</span>
+                  <span className="font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
+                    {filedToday.length} today
+                  </span>
+                </>
+              )}
+            </span>
+          )
+        })()}
+        action={
+          <div className="flex items-center gap-2">
+            <Link
+              href="/connections"
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-emerald-200 text-emerald-700 text-sm font-bold hover:bg-emerald-50 transition-colors"
+              title="Set up retailers to email receipts here automatically"
+            >
+              <Link2 size={14} /> Connect retailers
+            </Link>
+            <button
+              onClick={() => list.refetch()}
+              className="btn-secondary flex items-center gap-2"
+              title="Refresh"
+            >
+              <RefreshCw size={14} className={list.isFetching ? 'animate-spin' : ''} /> Refresh
+            </button>
+            <button
+              onClick={() => backfill.mutate()}
+              disabled={backfill.isPending}
+              className="btn-secondary flex items-center gap-2"
+              title="Force-pull from IMAP (1/5 min). Use this when a forwarded receipt isn't showing up."
+            >
+              <DownloadCloud size={14} className={backfill.isPending ? 'animate-pulse' : ''} />
+              {backfill.isPending ? 'Pulling…' : 'Backfill'}
+            </button>
+            <button
+              onClick={handleReconnect}
+              disabled={reconnecting}
+              className="btn-secondary flex items-center gap-2"
+              title="Latest emails not showing up? Re-sync your mailbox password so the poll can sign in."
+            >
+              <Link2 size={14} className={reconnecting ? 'animate-pulse' : ''} />
+              {reconnecting ? 'Reconnecting…' : 'Reconnect'}
+            </button>
+            <button
+              onClick={() => { setComposePrefill(null); setComposeOpen(true) }}
+              className="btn-primary flex items-center gap-2"
+            >
+              <Edit3 size={14} /> Compose
+            </button>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Link
-            href="/connections"
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-emerald-200 text-emerald-700 text-sm font-bold hover:bg-emerald-50 transition-colors"
-            title="Set up retailers to email receipts here automatically"
-          >
-            <Link2 size={14} /> Connect retailers
-          </Link>
-          <button
-            onClick={() => list.refetch()}
-            className="btn-secondary flex items-center gap-2"
-            title="Refresh"
-          >
-            <RefreshCw size={14} className={list.isFetching ? 'animate-spin' : ''} /> Refresh
-          </button>
-          <button
-            onClick={() => backfill.mutate()}
-            disabled={backfill.isPending}
-            className="btn-secondary flex items-center gap-2"
-            title="Force-pull from IMAP (1/5 min). Use this when a forwarded receipt isn't showing up."
-          >
-            <DownloadCloud size={14} className={backfill.isPending ? 'animate-pulse' : ''} />
-            {backfill.isPending ? 'Pulling…' : 'Backfill'}
-          </button>
-          <button
-            onClick={handleReconnect}
-            disabled={reconnecting}
-            className="btn-secondary flex items-center gap-2"
-            title="Latest emails not showing up? Re-sync your mailbox password so the poll can sign in."
-          >
-            <Link2 size={14} className={reconnecting ? 'animate-pulse' : ''} />
-            {reconnecting ? 'Reconnecting…' : 'Reconnect'}
-          </button>
-          <button
-            onClick={() => { setComposePrefill(null); setComposeOpen(true) }}
-            className="btn-primary flex items-center gap-2"
-          >
-            <Edit3 size={14} /> Compose
-          </button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Resizable 2-pane layout: message list + preview. The Folders /
           Filters sub-nav now lives in the main left sidebar (under the Inbox

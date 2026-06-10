@@ -11,6 +11,7 @@ import LottieAnimation from '../../../components/LottieAnimation'
 import emptyListLottie from '../../../lottie/empty-list.json'
 import thinkingLottie from '../../../lottie/thinking.json'
 import MascotLoading from '../../../components/MascotLoading'
+import FeatureHeader from '../../../components/FeatureHeader'
 // Placeholder reward_no shape the server mints before a real member #
 // is known ("GG-" + 8 base36 chars). Mirrors PLACEHOLDER_REWARD_RE in
 // lib/save-receipt.js — we only surface REAL numbers on this page.
@@ -183,21 +184,21 @@ export default function StoresPage() {
 
   return (
     <div className="space-y-5 max-w-5xl">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-blue-100 rounded-xl"><Store className="text-blue-800" size={22} /></div>
-          <h1 className="page-title">Stores</h1>
-        </div>
-        <div className="flex items-center gap-3">
-          <Link
-            href="/connections"
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-emerald-200 text-emerald-700 text-sm font-bold hover:bg-emerald-50 transition-colors"
-          >
-            <Link2 size={15} /> Connect retailers
-          </Link>
-          <span className="text-sm text-gray-400">{stores.length} store{stores.length !== 1 ? 's' : ''}</span>
-        </div>
-      </div>
+      <FeatureHeader
+        expression="happy"
+        title="Stores"
+        action={
+          <div className="flex items-center gap-3">
+            <Link
+              href="/connections"
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-emerald-200 text-emerald-700 text-sm font-bold hover:bg-emerald-50 transition-colors"
+            >
+              <Link2 size={15} /> Connect retailers
+            </Link>
+            <span className="text-sm text-gray-400">{stores.length} store{stores.length !== 1 ? 's' : ''}</span>
+          </div>
+        }
+      />
 
       <div className="flex items-center gap-2 flex-wrap">
         <div className="relative max-w-sm">

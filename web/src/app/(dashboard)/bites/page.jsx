@@ -6,7 +6,7 @@ import toast from 'react-hot-toast'
 import { Search, ThumbsUp, ThumbsDown, ExternalLink, Utensils, ShoppingCart } from 'lucide-react'
 import { getBites, setItemValidation, addToShoppingList, SHOPPING_LISTS, SHOPPING_LIST_META } from '../../../lib/db'
 import { useShoppingList } from '../../../hooks/useShopping'
-import GuacMascot from '../../../components/GuacMascot'
+import FeatureHeader from '../../../components/FeatureHeader'
 import LottieAnimation from '../../../components/LottieAnimation'
 import emptyListLottie from '../../../lottie/empty-list.json'
 import thinkingLottie from '../../../lottie/thinking.json'
@@ -88,18 +88,16 @@ export default function BitesPage() {
 
   return (
     <div className="space-y-5 max-w-7xl font-sans">
-      <div className="flex items-center gap-3 flex-wrap">
-        <div className="transform -rotate-12 origin-bottom">
-          <GuacMascot expression="sitting" size={70} />
-        </div>
-        <div className="flex-1 min-w-[200px]">
-          <h1 className="page-title">Bites</h1>
-          <p className="text-sm text-gray-500">Every dish you&apos;ve tried — like it or pass on it</p>
-        </div>
-        <span className="text-sm text-gray-500">
-          <span className="font-bold text-emerald-700">{rows.length}</span> bites
-        </span>
-      </div>
+      <FeatureHeader
+        expression="eating"
+        title="Bites"
+        subtitle="Every dish you've tried — like it or pass on it"
+        action={
+          <span className="text-sm text-gray-500">
+            <span className="font-bold text-emerald-700">{rows.length}</span> bites
+          </span>
+        }
+      />
 
       {/* Stats + filter chips */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

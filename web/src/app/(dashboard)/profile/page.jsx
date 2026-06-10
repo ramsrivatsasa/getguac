@@ -5,7 +5,7 @@ import { createClient } from '../../../lib/supabase/client'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { Save, CreditCard, Plus, Trash2, Link2, Gift } from 'lucide-react'
-import GuacMascot from '../../../components/GuacMascot'
+import FeatureHeader from '../../../components/FeatureHeader'
 import PrivacyPanel from '../../../components/PrivacyPanel'
 import EmailAliasPicker from '../../../components/EmailAliasPicker'
 import HouseholdPanel from '../../../components/HouseholdPanel'
@@ -57,26 +57,26 @@ export default function ProfilePage() {
     // Cheap (one keyframe instead of staggering N children) and
     // keeps the page feeling deliberate after navigating to it.
     <div className="space-y-6 max-w-2xl anim-slideup">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-3">
-          <GuacMascot expression="sitting" size={56} />
-          <h1 className="page-title">My Profile</h1>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <Link
-            href="/invite"
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-emerald-200 text-emerald-700 text-sm font-bold hover:bg-emerald-50 transition-colors"
-          >
-            <Gift size={14} /> Invite friends
-          </Link>
-          <Link
-            href="/connections"
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-emerald-200 text-emerald-700 text-sm font-bold hover:bg-emerald-50 transition-colors"
-          >
-            <Link2 size={14} /> Connections
-          </Link>
-        </div>
-      </div>
+      <FeatureHeader
+        expression="happy"
+        title="My Profile"
+        action={
+          <div className="flex items-center gap-2 flex-wrap">
+            <Link
+              href="/invite"
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-emerald-200 text-emerald-700 text-sm font-bold hover:bg-emerald-50 transition-colors"
+            >
+              <Gift size={14} /> Invite friends
+            </Link>
+            <Link
+              href="/connections"
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-emerald-200 text-emerald-700 text-sm font-bold hover:bg-emerald-50 transition-colors"
+            >
+              <Link2 size={14} /> Connections
+            </Link>
+          </div>
+        }
+      />
 
       {/* Invite friends tile — the "vertical list of tiles" lives in
           mobile Profile (see mobile/lib/screens/profile/profile_screen.dart

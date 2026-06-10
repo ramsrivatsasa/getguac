@@ -8,7 +8,7 @@ import {
   Search, ChevronDown, ChevronRight as ChevRight
 } from 'lucide-react'
 import { PieChart, Pie, Cell, Tooltip as RTooltip, ResponsiveContainer } from 'recharts'
-import GuacMascot from '../../../components/GuacMascot'
+import FeatureHeader from '../../../components/FeatureHeader'
 import LottieAnimation from '../../../components/LottieAnimation'
 import emptyListLottie from '../../../lottie/empty-list.json'
 import thinkingLottie from '../../../lottie/thinking.json'
@@ -153,16 +153,16 @@ export default function ValidatePage() {
 
   return (
     <div className="space-y-5 max-w-7xl">
-      <div className="flex items-center gap-3 flex-wrap">
-        <GuacMascot expression="thumbsup" size={60} />
-        <div className="flex-1 min-w-[200px]">
-          <h1 className="page-title">Worth It?</h1>
-          <p className="text-sm text-gray-500">Rate every purchase — high = must-have, low = adhoc</p>
-        </div>
-        <div className="text-sm text-gray-500">
-          <span className="font-bold text-emerald-700">{ratedCount}</span> of {filtered.length} rated
-        </div>
-      </div>
+      <FeatureHeader
+        expression="thumbsup"
+        title="Worth It?"
+        subtitle="Rate every purchase — high = must-have, low = adhoc"
+        action={
+          <div className="text-sm text-gray-500">
+            <span className="font-bold text-emerald-700">{ratedCount}</span> of {filtered.length} rated
+          </div>
+        }
+      />
 
       {/* Period + count + sort + search */}
       <div className="flex flex-wrap items-center gap-3">

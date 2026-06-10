@@ -85,14 +85,43 @@ const WIZARD_HAT = (
 // hat reads large without shrinking the brand mascot's proportions. `size`
 // is the overall width budget. Ratios are tuned so the brim rests on the
 // head just above the eyes.
+// A green arm + hand gripping a white-tipped wand, with sparkles at the tip.
+// Drawn in the mascot's 0 0 220 290 frame (overflow visible so the wand + stars
+// can reach past the body) so it reads as the avocado holding the wand.
+const HAND_WAND = (
+  <>
+    <path d="M150 168 C 164 182, 174 192, 182 200" stroke="#10b981" strokeWidth="12" fill="none" strokeLinecap="round" />
+    <line x1="180" y1="206" x2="218" y2="146" stroke="#1f2937" strokeWidth="5.5" strokeLinecap="round" />
+    <circle cx="218" cy="146" r="4.5" fill="#fff" stroke="#1f2937" strokeWidth="1" />
+    <circle cx="180" cy="206" r="3.5" fill="#fff" />
+    <ellipse cx="171" cy="207" rx="5" ry="7.5" fill="#fde68a" stroke="#b45309" strokeWidth="1" strokeOpacity="0.4" transform="rotate(-22 171 207)" />
+    <ellipse cx="184" cy="202" rx="13" ry="12" fill="#fde68a" stroke="#b45309" strokeWidth="1" strokeOpacity="0.4" />
+    <g stroke="#b45309" strokeWidth="1.2" strokeOpacity="0.45" strokeLinecap="round">
+      <line x1="177" y1="194" x2="174" y2="189" />
+      <line x1="184" y1="192" x2="184" y2="187" />
+      <line x1="191" y1="194" x2="194" y2="189" />
+    </g>
+    <Star x={225} y={135} s={1.6} fill="#fde047" stroke="#eab308" strokeWidth={0.8} />
+    <Star x={210} y={122} s={1.0} fill="#fde047" stroke="#eab308" strokeWidth={0.8} />
+    <Star x={236} y={152} s={0.9} fill="#fde047" stroke="#eab308" strokeWidth={0.8} />
+  </>
+)
+
 function WizardAvocado({ size, className = '' }) {
   const avoW = size * (150 / 220)
+  const avoH = avoW * (290 / 220)
   const hatW = size * (188 / 220)
   const hatH = hatW * (100 / 132)
   return (
     <div className={`relative ${className}`} style={{ width: size, height: size * (290 / 220) }}>
       <div className="absolute left-1/2 -translate-x-1/2" style={{ bottom: size * (6 / 220) }}>
-        <GuacMascot expression="happy" size={avoW} />
+        <div className="relative" style={{ width: avoW, height: avoH }}>
+          <GuacMascot expression="happy" size={avoW} />
+          <svg viewBox="0 0 220 290" width={avoW} height={avoH} aria-hidden="true"
+            className="absolute inset-0 pointer-events-none overflow-visible">
+            {HAND_WAND}
+          </svg>
+        </div>
       </div>
       <svg viewBox="44 -28 132 100" width={hatW} height={hatH} aria-hidden="true"
         className="absolute left-1/2 -translate-x-1/2 pointer-events-none" style={{ top: size * (10 / 220) }}>
@@ -133,7 +162,7 @@ export default function FeatureHeader({ theme, expression = 'happy', title, subt
   return (
     <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
       {THEMED.has(theme)
-        ? <ThemedAvocado theme={theme} size={60} className="shrink-0" />
+        ? <ThemedAvocado theme={theme} size={theme === 'wizard' ? 92 : 60} className="shrink-0" />
         : <GuacMascot expression={expression} size={60} className="shrink-0" />}
       <div className="min-w-0">
         <h1 className="text-2xl sm:text-3xl font-black text-gray-900 leading-none tracking-tight">{title}</h1>

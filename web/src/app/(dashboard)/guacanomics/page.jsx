@@ -202,11 +202,11 @@ export default function GuacanomicsPage() {
         title="Guacanomics"
         subtitle="Where every dollar earns its smash."
         action={
-          <div className="inline-flex bg-white/20 rounded-xl p-1 gap-1">
+          <div className="inline-flex bg-gray-100 rounded-xl p-1 gap-1">
             {RANGES.map(r => (
               <button key={r.key} onClick={() => setRange(r.key)}
                 className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
-                  range === r.key ? 'bg-white text-emerald-900 shadow-sm' : 'text-white/80 hover:text-white'
+                  range === r.key ? 'bg-white text-emerald-900 shadow-sm' : 'text-gray-500 hover:text-gray-800'
                 }`}>
                 {r.label}
               </button>

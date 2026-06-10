@@ -42,8 +42,8 @@ export default function TimeframePicker({ trailing = null, compact = false }) {
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-3">
-      <div className="inline-flex bg-emerald-50 rounded-full p-1 gap-1 border border-emerald-100">
+    <div className="flex flex-nowrap items-center gap-2 overflow-x-auto">
+      <div className="inline-flex shrink-0 bg-emerald-50 rounded-full p-1 gap-1 border border-emerald-100">
         {PERIODS.map(p => (
           <button
             key={p}
@@ -58,7 +58,7 @@ export default function TimeframePicker({ trailing = null, compact = false }) {
           </button>
         ))}
       </div>
-      <div className="inline-flex items-center gap-2 bg-white rounded-full pl-4 pr-2 py-1 border border-emerald-100 shadow-sm">
+      <div className="inline-flex shrink-0 items-center gap-2 bg-white rounded-full pl-4 pr-2 py-1 border border-emerald-100 shadow-sm">
         <span className="text-xs font-semibold text-gray-500">Last</span>
         <select
           value={periodCount}

@@ -63,22 +63,22 @@ export default function GuacWizardPage() {
     <div className="space-y-6 max-w-7xl">
       {/* Wizard header */}
       <div className="card overflow-hidden bg-gradient-to-br from-emerald-100 via-lime-50 to-amber-50 border-emerald-200">
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-4">
-            <div className="relative w-20 h-20 rounded-3xl bg-white shadow-md ring-2 ring-emerald-200 flex items-center justify-center shrink-0">
-              <ThemedAvocado theme="wizard" size={60} />
+        <div className="flex items-center justify-between flex-nowrap gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-white shadow-md ring-2 ring-emerald-200 flex items-center justify-center shrink-0">
+              <ThemedAvocado theme="wizard" size={54} />
             </div>
-            <div>
-              <h1 className="text-3xl font-black text-emerald-900 leading-none flex items-center gap-2">
+            <div className="min-w-0">
+              <h1 className="text-2xl sm:text-3xl font-black text-emerald-900 leading-none flex items-center gap-2">
                 GuacWizard
-                <Sparkles size={22} className="text-amber-500" />
+                <Sparkles size={20} className="text-amber-500 shrink-0" />
               </h1>
-              <p className="text-sm text-emerald-800 mt-1.5">Your money sage. Reads every statement, calls out every leak.</p>
+              <p className="text-xs sm:text-sm text-emerald-800 mt-1.5">Your money sage. Reads every statement, calls out every leak.</p>
             </div>
           </div>
 
           {/* Score ring */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 shrink-0">
             <div className="text-right">
               <p className="text-[10px] uppercase tracking-wider font-bold text-emerald-700">Wizard score</p>
               <p className="text-4xl font-black text-emerald-900 leading-none">

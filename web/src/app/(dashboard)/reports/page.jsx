@@ -24,7 +24,7 @@ import { periodStartIsoDate, timeframeLabel } from '../../../lib/timeframe'
 import { useStore } from '../../../store'
 import TimeframePicker from '../../../components/TimeframePicker'
 import { BarChart3, PieChart as PieIcon, Repeat, Award, Store as StoreIcon, X, Receipt as ReceiptIcon, Download, HeartHandshake, Briefcase, Percent, RotateCw, TrendingUp } from 'lucide-react'
-import GuacMascot from '../../../components/GuacMascot'
+import FeatureHeader from '../../../components/FeatureHeader'
 import LottieAnimation from '../../../components/LottieAnimation'
 import emptyListLottie from '../../../lottie/empty-list.json'
 import thinkingLottie from '../../../lottie/thinking.json'
@@ -212,18 +212,12 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-6 max-w-6xl">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-3">
-          <GuacMascot expression="celebrating" size={64} />
-          <div>
-            <h1 className="page-title">Reports</h1>
-            <p className="text-xs text-gray-500 mt-0.5">
-              <span className="font-semibold text-gray-700">${totalSpent.toFixed(2)}</span> across <span className="font-semibold text-gray-700">{totalReceipts}</span> receipt{totalReceipts === 1 ? '' : 's'} · {periodLabel}
-            </p>
-          </div>
-        </div>
-        <TimeframePicker compact />
-      </div>
+      <FeatureHeader
+        theme="reports"
+        title="Reports"
+        subtitle={<><span className="font-bold">${totalSpent.toFixed(2)}</span> across <span className="font-bold">{totalReceipts}</span> receipt{totalReceipts === 1 ? '' : 's'} · {periodLabel}</>}
+        action={<TimeframePicker compact />}
+      />
 
       {isLoading ? (
         <div className="text-gray-400 py-10 text-center flex flex-col items-center gap-3">

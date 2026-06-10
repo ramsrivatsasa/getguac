@@ -15,6 +15,7 @@ import { touchSavedSearch } from '../../../lib/savedSearches'
 import { bestDealUrl } from '../../../lib/storeSearch'
 import { getStealsFeed, markStealsChecked } from '../../../lib/steals'
 import GuacMascot from '../../../components/GuacMascot'
+import FeatureHeader from '../../../components/FeatureHeader'
 import { StoreLogo } from '../../../components/StoreLogo'
 import { displayStoreName } from '../../../lib/store-name-normalize'
 
@@ -34,12 +35,8 @@ export default function StealsPage() {
   const [manualCategory, setManualCategory] = useState('')
   const [specs, setSpecs] = useState({})
   const [activeQuery, setActiveQuery] = useState('')
-  // Embedded in the mobile WebView? The native app bar already shows the
-  // screen title, so we hide the page's own header + compact the layout.
-  const [embedded, setEmbedded] = useState(false)
   const [showConfig, setShowConfig] = useState(false)
   const [showRefine, setShowRefine] = useState(false)
-  useEffect(() => { setEmbedded(/(?:^|;\s*)guac_embedded=1/.test(document.cookie)) }, [])
   // Client-side refine filters (instant — applied to the returned results).
   const [priceMin, setPriceMin] = useState('')
   const [priceMax, setPriceMax] = useState('')
@@ -134,18 +131,12 @@ export default function StealsPage() {
 
   return (
     <div className="space-y-4 max-w-6xl font-sans">
-      {/* Page header — hidden in the mobile WebView (the native app bar
-          already shows "Steals"), so we don't double the title. */}
-      {!embedded && (
-        <div className="flex items-center gap-3 flex-wrap">
-          <GuacMascot expression="rich" size={70} />
-          <div className="flex-1 min-w-[200px]">
-            <h1 className="page-title">Steals</h1>
-            <p className="text-sm text-gray-500">Configure what you&apos;re after — we scan the live web for the best deals.</p>
-          </div>
-          <span className="text-[10px] uppercase tracking-wider font-bold text-emerald-700 bg-emerald-100 px-2 py-1 rounded-full">🥑 Guac-AI Powered</span>
-        </div>
-      )}
+      <FeatureHeader
+        theme="steals"
+        title="Steals"
+        subtitle="Configure what you're after — we scan the live web for the best deals."
+        badge="🥑 Guac-AI Powered"
+      />
 
       {/* Search box */}
       <form onSubmit={handleSearch} className="card flex items-center gap-3">

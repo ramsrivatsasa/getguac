@@ -7,6 +7,7 @@ import { useBankData } from '../../../lib/useBankData'
 import { periodStartDate, timeframeLabel } from '../../../lib/timeframe'
 import { useStore } from '../../../store'
 import GuacMascot from '../../../components/GuacMascot'
+import { ThemedAvocado } from '../../../components/FeatureHeader'
 import LottieAnimation from '../../../components/LottieAnimation'
 import emptyListLottie from '../../../lottie/empty-list.json'
 import TimeframePicker from '../../../components/TimeframePicker'
@@ -65,8 +66,7 @@ export default function GuacWizardPage() {
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-4">
             <div className="relative w-20 h-20 rounded-3xl bg-white shadow-md ring-2 ring-emerald-200 flex items-center justify-center shrink-0">
-              <GuacMascot expression={MASCOT_BY_SCORE(score)} size={64} />
-              <span className="absolute -top-1 -right-1 text-2xl">🧙‍♂️</span>
+              <ThemedAvocado theme="wizard" size={60} />
             </div>
             <div>
               <h1 className="text-3xl font-black text-emerald-900 leading-none flex items-center gap-2">

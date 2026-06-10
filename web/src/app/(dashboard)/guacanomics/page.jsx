@@ -12,6 +12,7 @@ import LottieAnimation from '../../../components/LottieAnimation'
 import emptyListLottie from '../../../lottie/empty-list.json'
 import thinkingLottie from '../../../lottie/thinking.json'
 import MascotLoading from '../../../components/MascotLoading'
+import FeatureHeader from '../../../components/FeatureHeader'
 import { CATEGORY_BY_SLUG } from '../../../lib/categories'
 // Lazy-load the chart-heavy section (~all of recharts) so the initial
 // Guacanomics shell doesn't ship the chart bundle to viewers who bounce.
@@ -196,25 +197,23 @@ export default function GuacanomicsPage() {
 
   return (
     <div className="space-y-6 max-w-7xl">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-3">
-          <span className="text-3xl">🥑</span>
-          <div>
-            <h1 className="page-title">Guacanomics</h1>
-            <p className="text-sm text-gray-500">Where every dollar earns its smash.</p>
+      <FeatureHeader
+        theme="econ"
+        title="Guacanomics"
+        subtitle="Where every dollar earns its smash."
+        action={
+          <div className="inline-flex bg-white/20 rounded-xl p-1 gap-1">
+            {RANGES.map(r => (
+              <button key={r.key} onClick={() => setRange(r.key)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+                  range === r.key ? 'bg-white text-emerald-900 shadow-sm' : 'text-white/80 hover:text-white'
+                }`}>
+                {r.label}
+              </button>
+            ))}
           </div>
-        </div>
-        <div className="inline-flex bg-gray-100 rounded-xl p-1 gap-1">
-          {RANGES.map(r => (
-            <button key={r.key} onClick={() => setRange(r.key)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
-                range === r.key ? 'bg-white text-blue-900 shadow-sm' : 'text-gray-500 hover:text-gray-800'
-              }`}>
-              {r.label}
-            </button>
-          ))}
-        </div>
-      </div>
+        }
+      />
 
       {isLoading ? (
         <MascotLoading label="Loading insights…" />

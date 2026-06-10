@@ -828,18 +828,16 @@ export default function BankPage() {
 }
 
 function PageHeader({ title, subtitle, cta }) {
+  // Matches the other feature pages' <FeatureHeader>: same mascot size (60),
+  // no box, same title/subtitle styling.
   return (
-    <div className="flex items-center justify-between flex-wrap gap-3">
-      <div className="flex items-center gap-3">
-        <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-100 via-sky-100 to-emerald-100 shadow-sm ring-2 ring-white flex items-center justify-center">
-          <GuacMascot expression="rich" size={32} />
-        </div>
-        <div>
-          <h1 className="page-title leading-none">{title}</h1>
-          <p className="text-xs text-gray-500 mt-1">{subtitle}</p>
-        </div>
+    <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
+      <GuacMascot expression="rich" size={60} className="shrink-0" />
+      <div className="min-w-0">
+        <h1 className="text-2xl sm:text-3xl font-black text-gray-900 leading-none tracking-tight">{title}</h1>
+        {subtitle && <p className="text-xs sm:text-sm text-gray-500 mt-1.5">{subtitle}</p>}
       </div>
-      {cta}
+      {cta && <div className="ml-auto shrink-0">{cta}</div>}
     </div>
   )
 }

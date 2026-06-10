@@ -8,6 +8,7 @@
 // surfaces individual earn events.
 
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../models/receipt_model.dart';
 
 class GuacMoneyEvent {
   final String id;
@@ -115,17 +116,40 @@ String formatGuacMoney(double amount) {
   return '\$${amount.toStringAsFixed(2)}';
 }
 
-// ── GuacMoney POINTS (status currency) ──────────────────────────────
-// A gamified points balance (not a cash payout yet). 1000 GuacMoney = $1.
-// Earned by the core actions: scanning receipts + referring friends.
-const int kGmPerReceipt  = 100;   // every receipt captured
-const int kGmPerReferral = 1000;  // every friend who joins
-const int kGmPerDollar   = 1000;  // 1000 GuacMoney = $1
-const int kGmRewardStep  = 5000;  // next-reward milestone ($5 gift card, soon)
+// ── GuacMoney = MONEY OUR GUAC-AI SAVED YOU (1000 GM = $1) ───────────
+// GuacMoney is the money our Guac-AI saved you: purchases you rated "not
+// worth it" (so you won't re-buy them) + refunds you recovered, dollar for
+// dollar. A status balance for now — affiliate-funded redemption comes later.
+const int kGmPerDollar  = 1000;  // 1000 GuacMoney = $1
+const int kGmRewardStep = 5000;  // next milestone (= $5)
+const String kGmTagline = 'The money our Guac-AI saved you 🥑';
 
-/// Total GuacMoney points from the user's activity.
-int guacMoneyPoints({required int receipts, int referrals = 0}) =>
-    receipts * kGmPerReceipt + referrals * kGmPerReferral;
+/// Dollars saved = not-worth-it purchases (rating ≤ 2, you won't re-buy) +
+/// refunds you got back ($-for-$).
+double guacMoneySaved(List<Receipt> receipts) {
+  var saved = 0.0;
+  for (final r in receipts) {
+    if (r.isReturn) {
+      saved += r.totalAmount.abs();           // refund recovered — money back
+    } else if (r.rating != null && r.rating! <= 2 && r.totalAmount > 0) {
+      saved += r.totalAmount;                 // flagged not worth re-buying
+    }
+  }
+  return saved;
+}
+
+/// Refunds recovered (the return-receipt portion of saved).
+double guacMoneyRefunds(List<Receipt> receipts) => receipts
+    .where((r) => r.isReturn)
+    .fold(0.0, (s, r) => s + r.totalAmount.abs());
+
+/// Not-worth-it portion of saved (rated ≤ 2).
+double guacMoneyNotWorthIt(List<Receipt> receipts) => receipts
+    .where((r) => !r.isReturn && r.rating != null && r.rating! <= 2 && r.totalAmount > 0)
+    .fold(0.0, (s, r) => s + r.totalAmount);
+
+/// GuacMoney points for a saved-dollar amount (1000 per $1).
+int gmPointsFromSaved(double savedDollars) => (savedDollars * kGmPerDollar).round();
 
 /// Dollar value of a points balance.
 double gmToUsd(int points) => points / kGmPerDollar;
@@ -139,19 +163,6 @@ String formatGm(int points) {
     b.write(s[i]);
   }
   return b.toString();
-}
-
-/// Count of the user's successful referrals (rows in `referrals`).
-Future<int> fetchReferralCount() async {
-  final sb = Supabase.instance.client;
-  final user = sb.auth.currentUser;
-  if (user == null) return 0;
-  try {
-    final rows = await sb.from('referrals').select('id').eq('referrer_id', user.id);
-    return (rows as List).length;
-  } catch (_) {
-    return 0;
-  }
 }
 
 /// Human-readable label for the source.

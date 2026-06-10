@@ -3,9 +3,10 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../services/guac_money_service.dart';
 
-/// GuacMoney — a gamified points balance (1000 GM = $1). Status currency for
-/// now: balance grows from scanning receipts + referrals, with a "redeem for
-/// gift cards — coming soon" goal. No cash payout yet.
+/// GuacMoney — the money our Guac-AI saved you. Saved = purchases you rated
+/// "not worth it" (won't re-buy) + refunds you recovered, dollar for dollar.
+/// 1000 GuacMoney = $1. A status balance for now (redemption comes later,
+/// funded by affiliate revenue).
 class GuacMoneyScreen extends StatefulWidget {
   const GuacMoneyScreen({super.key});
   @override
@@ -13,7 +14,7 @@ class GuacMoneyScreen extends StatefulWidget {
 }
 
 class _GuacMoneyScreenState extends State<GuacMoneyScreen> {
-  late Future<({int receipts, int referrals})> _future;
+  late Future<({double saved, double notWorth, double refunds, int rated})> _future;
 
   @override
   void initState() {
@@ -21,18 +22,29 @@ class _GuacMoneyScreenState extends State<GuacMoneyScreen> {
     _future = _load();
   }
 
-  Future<({int receipts, int referrals})> _load() async {
+  Future<({double saved, double notWorth, double refunds, int rated})> _load() async {
     final sb = Supabase.instance.client;
     final user = sb.auth.currentUser;
-    int receipts = 0;
+    double notWorth = 0, refunds = 0;
+    int rated = 0;
     if (user != null) {
       try {
-        final rows = await sb.from('receipts').select('id').eq('user_id', user.id);
-        receipts = (rows as List).length;
+        final rows = await sb.from('receipts')
+            .select('total_amount, rating, is_return').eq('user_id', user.id);
+        for (final r in (rows as List)) {
+          final amt = double.tryParse(r['total_amount']?.toString() ?? '0') ?? 0;
+          final isReturn = r['is_return'] == true;
+          final rating = r['rating'] is int ? r['rating'] as int : null;
+          if (isReturn) {
+            refunds += amt.abs();
+          } else if (rating != null) {
+            rated++;
+            if (rating <= 2 && amt > 0) notWorth += amt;
+          }
+        }
       } catch (_) {/* offline / RLS — show 0 */}
     }
-    final referrals = await fetchReferralCount();
-    return (receipts: receipts, referrals: referrals);
+    return (saved: notWorth + refunds, notWorth: notWorth, refunds: refunds, rated: rated);
   }
 
   @override
@@ -46,16 +58,17 @@ class _GuacMoneyScreenState extends State<GuacMoneyScreen> {
         iconTheme: const IconThemeData(color: Colors.white),
         title: const Text('GuacMoney', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
       ),
-      body: FutureBuilder<({int receipts, int referrals})>(
+      body: FutureBuilder<({double saved, double notWorth, double refunds, int rated})>(
         future: _future,
         builder: (ctx, snap) {
-          final r = snap.data?.receipts ?? 0;
-          final ref = snap.data?.referrals ?? 0;
-          final points = guacMoneyPoints(receipts: r, referrals: ref);
-          final usd = gmToUsd(points);
+          final saved = snap.data?.saved ?? 0;
+          final notWorth = snap.data?.notWorth ?? 0;
+          final refunds = snap.data?.refunds ?? 0;
+          final rated = snap.data?.rated ?? 0;
+          final points = gmPointsFromSaved(saved);
           final into = points % kGmRewardStep;
           final toNext = kGmRewardStep - into;
-          final progress = into / kGmRewardStep;
+          final progress = kGmRewardStep == 0 ? 0.0 : into / kGmRewardStep;
           return ListView(padding: const EdgeInsets.all(16), children: [
             // Balance hero
             Container(
@@ -69,8 +82,7 @@ class _GuacMoneyScreenState extends State<GuacMoneyScreen> {
                 boxShadow: [BoxShadow(color: const Color(0xFFf59e0b).withValues(alpha: 0.35), blurRadius: 16, offset: const Offset(0, 6))],
               ),
               child: Column(children: [
-                const Text('🥑', style: TextStyle(fontSize: 34)),
-                const SizedBox(height: 2),
+                const Text('🥑', style: TextStyle(fontSize: 32)),
                 TweenAnimationBuilder<int>(
                   tween: IntTween(begin: 0, end: points),
                   duration: const Duration(milliseconds: 1100),
@@ -80,7 +92,9 @@ class _GuacMoneyScreenState extends State<GuacMoneyScreen> {
                 ),
                 const Text('GUACMONEY', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: 2)),
                 const SizedBox(height: 6),
-                Text('≈ \$${usd.toStringAsFixed(2)} value', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                const Text(kGmTagline, textAlign: TextAlign.center, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white)),
+                const SizedBox(height: 4),
+                Text('≈ \$${saved.toStringAsFixed(2)} saved', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 15)),
               ]),
             ),
             const SizedBox(height: 16),
@@ -96,22 +110,27 @@ class _GuacMoneyScreenState extends State<GuacMoneyScreen> {
             ])),
             const SizedBox(height: 16),
             _card(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('How you earn', style: TextStyle(fontWeight: FontWeight.w800)),
+              const Text('Where it came from', style: TextStyle(fontWeight: FontWeight.w800)),
               const SizedBox(height: 6),
-              _earnRow(Icons.photo_camera_rounded, 'Scan a receipt', '+$kGmPerReceipt', const Color(0xFF15803d)),
-              _earnRow(Icons.person_add_alt_1, 'Refer a friend', '+$kGmPerReferral', const Color(0xFFdb2777)),
-              const SizedBox(height: 4),
-              const Text('1,000 GuacMoney = \$1', style: TextStyle(fontSize: 11, color: Colors.black45)),
+              _row(Icons.thumb_down_alt_rounded, 'Rated "not worth it"', notWorth, const Color(0xFFb45309)),
+              _row(Icons.undo_rounded, 'Refunds recovered', refunds, const Color(0xFF15803d)),
+            ])),
+            const SizedBox(height: 16),
+            _card(Column(crossAxisAlignment: CrossAxisAlignment.start, children: const [
+              Text('How it works', style: TextStyle(fontWeight: FontWeight.w800)),
+              SizedBox(height: 6),
+              Text('Rate your purchases in Worth It? — anything you mark "not worth it" is money you\'ll save by skipping it next time. Refunds you recover count too, dollar for dollar. 1,000 GuacMoney = \$1.',
+                style: TextStyle(fontSize: 12.5, color: Colors.black54, height: 1.4)),
             ])),
             const SizedBox(height: 16),
             SizedBox(width: double.infinity, child: FilledButton.icon(
-              onPressed: () => context.push('/invite'),
+              onPressed: () => context.push('/validate'),
               style: FilledButton.styleFrom(backgroundColor: emerald, padding: const EdgeInsets.symmetric(vertical: 14)),
-              icon: const Icon(Icons.person_add_alt_1),
-              label: const Text('Refer a friend — +1,000 each', style: TextStyle(fontWeight: FontWeight.w800)),
+              icon: const Icon(Icons.fact_check_rounded),
+              label: const Text('Rate your purchases →', style: TextStyle(fontWeight: FontWeight.w800)),
             )),
             const SizedBox(height: 10),
-            Text("You've tracked $r receipt${r == 1 ? '' : 's'}.",
+            Text(rated == 0 ? 'Rate a purchase to start banking GuacMoney.' : "You've rated $rated purchase${rated == 1 ? '' : 's'}.",
               textAlign: TextAlign.center, style: const TextStyle(fontSize: 12, color: Colors.black45)),
           ]);
         },
@@ -125,13 +144,13 @@ class _GuacMoneyScreenState extends State<GuacMoneyScreen> {
         child: child,
       );
 
-  Widget _earnRow(IconData icon, String label, String pts, Color color) => Padding(
+  Widget _row(IconData icon, String label, double amount, Color color) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 6),
         child: Row(children: [
           Container(width: 34, height: 34, alignment: Alignment.center, decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)), child: Icon(icon, color: color, size: 18)),
           const SizedBox(width: 10),
           Expanded(child: Text(label, style: const TextStyle(fontWeight: FontWeight.w700))),
-          Text('$pts 🥑', style: TextStyle(fontWeight: FontWeight.w900, color: color)),
+          Text('\$${amount.toStringAsFixed(2)}', style: TextStyle(fontWeight: FontWeight.w900, color: color)),
         ]),
       );
 }

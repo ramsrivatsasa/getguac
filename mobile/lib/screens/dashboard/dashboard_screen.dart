@@ -68,15 +68,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // the apply_referral_code RPC into profiles.smash_days_bonus.
   // Loaded once per mount and passed to every computeSmashDays call.
   int _smashDaysBonus = 0;
-  // Referral count for the GuacMoney balance (receipts×100 + referrals×1000).
-  int _referralCount = 0;
 
   @override
   void initState() {
     super.initState();
     _bankDataFuture = fetchBankData();
     _loadSmashDaysBonus();
-    fetchReferralCount().then((n) { if (mounted) setState(() => _referralCount = n); });
     // Hydrate the persisted time-frame from SharedPreferences so the
     // mobile dashboard remembers the user's last selection across
     // app launches — same UX guarantee the web Zustand store gives
@@ -307,8 +304,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Text(rangeLabel.toLowerCase(),
                   style: const TextStyle(fontSize: 11, color: Colors.black38)),
               ])),
-              // GuacMoney balance — Fetch-style coin pill, counts up.
-              GuacMoneyPill(points: guacMoneyPoints(receipts: receipts.length, referrals: _referralCount)),
+              // GuacMoney = money our Guac-AI saved you — coin pill, counts up.
+              GuacMoneyPill(points: gmPointsFromSaved(guacMoneySaved(receipts))),
             ]),
             const SizedBox(height: 14),
             // Quick-access feature icons — horizontal scroll under the snapshot.

@@ -43,6 +43,12 @@
    doubled heading. (guac-embedded is set on the embedded layout's <main>.) */
 .guac-embedded .page-title { display: none; }
 .guac-embedded .page-title + p { display: none; }
+/* …and the decorative leading emoji (e.g. the 🥑 next to "Guacanomics") that
+   sits right before the title block — the native app bar already shows it, so
+   in the WebView it's a duplicate. Targets a <span> immediately followed by a
+   wrapper holding the .page-title; any header controls (range toggles, etc.)
+   on the same row are untouched. */
+.guac-embedded span:has(+ div > .page-title) { display: none; }
 
 @layer utilities {
   /* ────────────────────────────────────────────────────────────────

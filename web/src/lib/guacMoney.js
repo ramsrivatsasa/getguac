@@ -152,6 +152,27 @@ export function formatGuacMoney(amount) {
   return `$${n.toFixed(2)}`
 }
 
+// GuacMoney = the money our Guac-AI saved you: purchases rated "not worth it"
+// (rating ≤ 2 — you won't re-buy them) + refunds recovered, dollar for dollar.
+// Returns the saved-dollar amount. (Mirrors the mobile guac_money_service.)
+export async function fetchGuacMoneySaved() {
+  const sb = createClient()
+  const { data: { user } } = await sb.auth.getUser()
+  if (!user) return 0
+  const { data, error } = await sb
+    .from('receipts')
+    .select('total_amount, rating, is_return')
+    .eq('user_id', user.id)
+  if (error) return 0
+  let saved = 0
+  for (const r of data || []) {
+    const amt = parseFloat(r.total_amount || 0) || 0
+    if (r.is_return) saved += Math.abs(amt)
+    else if (r.rating != null && r.rating <= 2 && amt > 0) saved += amt
+  }
+  return saved
+}
+
 export function sourceLabel(source) {
   switch (source) {
     case GUAC_MONEY_SOURCES.AUTO_ADD_CHEAPEST: return 'Cheapest-store routing'

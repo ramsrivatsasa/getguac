@@ -11,7 +11,7 @@ import GuacoScoreCard from '../../../components/GuacoScoreCard'
 import UpcomingReturnsBanner from '../../../components/UpcomingReturnsBanner'
 import AnomaliesPanel from '../../../components/AnomaliesPanel'
 import { ActivityFeed } from '../../../components/ActivityFeed'
-import { fetchTotal as fetchGuacMoneyTotal, formatGuacMoney } from '../../../lib/guacMoney'
+import { fetchGuacMoneySaved, formatGuacMoney } from '../../../lib/guacMoney'
 import { generateInsights } from '../../../lib/financeInsights'
 import { computeWizardScore } from '../../../lib/wizardScore'
 import { createClient as createSbClient } from '../../../lib/supabase/client'
@@ -262,7 +262,7 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
             <GuacScoreTileWithBankBite receipts={spendingReceipts} />
           </Link>
           <div className="w-64 shrink-0"><GuacWizardTile /></div>
-          <Link href="/shopping" className="w-64 shrink-0 block"><GuacMoneyTile /></Link>
+          <Link href="/validate" className="w-64 shrink-0 block"><GuacMoneyTile /></Link>
           <div className="w-64 shrink-0"><RewardsTile count={initialRewards.length} /></div>
         </FadeUpStagger>
       </div>
@@ -645,8 +645,8 @@ function GuacWizardTile() {
 
 function GuacMoneyTile() {
   const { data: total = 0, isLoading } = useQuery({
-    queryKey: ['guac-money-total'],
-    queryFn: fetchGuacMoneyTotal,
+    queryKey: ['guac-money-saved'],
+    queryFn: fetchGuacMoneySaved,
     staleTime: 60_000,
   })
   // Emerald palette throughout — the brand colour. Active = strong
@@ -666,7 +666,7 @@ function GuacMoneyTile() {
           {isLoading ? '—' : <CountUp value={Number(total) || 0} duration={520} format={formatGuacMoney} />}
         </p>
         <p className="text-[10px] font-semibold mt-0.5 text-emerald-700">
-          {active ? 'saved' : 'tap Cheapest →'}
+          {active ? 'saved by Guac-AI' : 'rate buys to save →'}
         </p>
       </div>
     </div>

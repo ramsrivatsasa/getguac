@@ -1,5 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
-  <!-- GetGuac favicon — the 🥑 emoji. Next.js auto-serves app/icon.svg as the
-       favicon; browsers render the system emoji glyph. -->
+  <!-- 🔒 DO NOT CHANGE — GetGuac favicon is the 🥑 emoji, locked forever per
+       user (2026-06-10). Next.js auto-serves app/icon.svg as the favicon;
+       browsers render the system emoji glyph. -->
   <text x="50%" y="52%" font-size="54" text-anchor="middle" dominant-baseline="central">🥑</text>
 </svg>

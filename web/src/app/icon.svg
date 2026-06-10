@@ -1,48 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="172 163 680 680">
   <!--
-    GetGuac favicon — avocado mascot in a compact, instantly-readable
-    form. Renders at every size browsers ask for (16x16 in tabs through
-    180x180 for iOS bookmark icons) because the geometry is pure shapes
-    with no fine detail. Next.js auto-generates the <link rel="icon">
-    tags from this file's presence at app/icon.svg.
+    GetGuac favicon — avocado with a sprout (matches the app icon). Pure
+    shapes so it stays crisp from 16x16 tabs up to bookmark sizes. Next.js
+    auto-generates the <link rel="icon"> from app/icon.svg.
   -->
   <defs>
-    <radialGradient id="bodyG" cx="35%" cy="30%" r="80%">
-      <stop offset="0%"   stop-color="#10b981" />
-      <stop offset="100%" stop-color="#064e3b" />
-    </radialGradient>
-    <radialGradient id="fleshG" cx="50%" cy="40%" r="70%">
-      <stop offset="0%"   stop-color="#d9f99d" />
-      <stop offset="100%" stop-color="#84cc16" />
-    </radialGradient>
-    <radialGradient id="pitG" cx="38%" cy="32%" r="75%">
-      <stop offset="0%"   stop-color="#fcd34d" />
-      <stop offset="100%" stop-color="#b45309" />
+    <radialGradient id="pit" cx="0.42" cy="0.4" r="0.75">
+      <stop offset="0" stop-color="#a16207"/>
+      <stop offset="1" stop-color="#713f12"/>
     </radialGradient>
   </defs>
-  <!-- Outer skin -->
-  <path
-    d="M32 4
-       C 18 4, 8 16, 8 32
-       C 8 50, 22 60, 32 60
-       C 42 60, 56 50, 56 32
-       C 56 16, 46 4, 32 4 Z"
-    fill="url(#bodyG)"
-  />
-  <!-- Flesh -->
-  <path
-    d="M32 11
-       C 22 11, 14 20, 14 32
-       C 14 46, 24 54, 32 54
-       C 40 54, 50 46, 50 32
-       C 50 20, 42 11, 32 11 Z"
-    fill="url(#fleshG)"
-  />
-  <!-- Pit -->
-  <circle cx="32" cy="34" r="11" fill="url(#pitG)" />
-  <!-- Eyes -->
-  <circle cx="28" cy="32" r="1.6" fill="#1f2937" />
-  <circle cx="36" cy="32" r="1.6" fill="#1f2937" />
-  <!-- Smile -->
-  <path d="M28 38 Q 32 41 36 38" stroke="#1f2937" stroke-width="1.5" fill="none" stroke-linecap="round" />
+  <!-- sprout -->
+  <path d="M512 312 C512 270 512 250 512 232" stroke="#3f6212" stroke-width="18" stroke-linecap="round" fill="none"/>
+  <path d="M512 252 C470 250 432 224 430 188 C474 188 506 214 512 252 Z" fill="#4d7c0f"/>
+  <path d="M512 244 C552 238 590 208 596 172 C552 176 520 206 512 244 Z" fill="#65a30d"/>
+  <!-- skin -->
+  <path d="M512 300 C612 300 682 424 694 548 C706 676 648 834 512 834 C376 834 318 676 330 548 C342 424 412 300 512 300 Z" fill="#4d7c0f"/>
+  <!-- flesh -->
+  <path d="M512 338 C598 338 656 446 666 556 C676 672 626 798 512 798 C398 798 348 672 358 556 C368 446 426 338 512 338 Z" fill="#ecfccb"/>
+  <!-- pit -->
+  <ellipse cx="512" cy="592" rx="104" ry="120" fill="url(#pit)"/>
+  <ellipse cx="486" cy="560" rx="40" ry="48" fill="#ca8a04" opacity="0.45"/>
 </svg>

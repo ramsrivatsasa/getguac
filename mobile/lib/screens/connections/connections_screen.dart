@@ -10,8 +10,6 @@ import '../../data/retailers.dart';
 import '../../data/retailer_extractors.dart';
 import '../../services/mascot_event_bus.dart';
 import '../../widgets/store_logo.dart';
-import '../../widgets/guac_mascot.dart';
-import '../../widgets/animated_mascot.dart';
 import '../../widgets/animated_primitives.dart';
 import 'link_retailer_screen.dart' show LinkRetailerScreen;
 
@@ -116,6 +114,19 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
     );
   }
 
+  // A floating GuacMoney coin for the hero illustration.
+  Widget _coin(double size) => Container(
+        width: size, height: size,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFFfde047), Color(0xFFf59e0b)]),
+          border: Border.all(color: const Color(0xFFfbbf24)),
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.12), blurRadius: 4, offset: const Offset(0, 2))],
+        ),
+        child: Text('🥑', style: TextStyle(fontSize: size * 0.5)),
+      );
+
   @override
   Widget build(BuildContext context) {
     final activeIds = _statusById.entries
@@ -147,18 +158,48 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
         : ListView(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
             children: [
-              // Intro + alias card
-              Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const AnimatedMascot(mood: MascotMood.relaxing, size: 56),
-                const SizedBox(width: 12),
-                Expanded(child: Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: Text(
-                    "Set up retailers to email receipts straight to GetGuac — no more snapping every one.",
-                    style: TextStyle(fontSize: 13, color: Colors.black.withValues(alpha: 0.7), height: 1.4),
+              // Fancy hero — Fetch-style "connect for easy receipts".
+              ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.fromLTRB(20, 22, 20, 22),
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft, end: Alignment.bottomRight,
+                      colors: [Color(0xFF34d399), Color(0xFF15803d)],
+                    ),
                   ),
-                )),
-              ]),
+                  child: Column(children: [
+                    SizedBox(
+                      height: 80,
+                      child: Stack(alignment: Alignment.center, clipBehavior: Clip.none, children: [
+                        Positioned(left: 18, top: 6, child: _coin(32)),
+                        Positioned(right: 14, top: 16, child: _coin(40)),
+                        Positioned(right: 56, bottom: 0, child: _coin(24)),
+                        Positioned(left: 60, bottom: 2, child: _coin(20)),
+                        Container(
+                          width: 66, height: 66, alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(18),
+                            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.22), blurRadius: 12, offset: const Offset(0, 5))],
+                          ),
+                          child: const Icon(Icons.mark_email_read_rounded, color: Color(0xFF15803d), size: 34),
+                        ),
+                      ]),
+                    ),
+                    const SizedBox(height: 14),
+                    const Text('Connect for easy e-Receipt uploads',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900, color: Colors.white, height: 1.2)),
+                    const SizedBox(height: 6),
+                    Text('Forward receipts straight to GetGuac — auto-imported, and you earn GuacMoney for every one.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 12.5, color: Colors.white.withValues(alpha: 0.92), height: 1.4)),
+                  ]),
+                ),
+              ),
               const SizedBox(height: 16),
               Container(
                 padding: const EdgeInsets.all(14),

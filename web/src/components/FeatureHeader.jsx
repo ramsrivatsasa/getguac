@@ -19,20 +19,32 @@ const THEME_EXPR = {
   steals:  'rich',
 }
 
+// A 5-point star, translated + scaled, for the sorcerer hat.
+const Star = ({ x, y, s = 1, fill = '#fde047' }) => (
+  <path
+    transform={`translate(${x} ${y}) scale(${s})`}
+    d="M0 -5 L1.12 -1.55 4.76 -1.55 1.82 0.59 2.94 4.05 0 1.9 -2.94 4.05 -1.82 0.59 -4.76 -1.55 -1.12 -1.55 Z"
+    fill={fill}
+  />
+)
+
 // Props drawn in the mascot's viewBox (0 0 220 290): head-top ≈ y40–52,
 // eyes ≈ (96,96)/(124,96). null = no overlay (the pose already fits).
 const PROP_OVERLAY = {
+  // Classic blue sorcerer hat dusted with stars (+ a little wand).
   wizard: (
     <>
       <line x1="150" y1="176" x2="206" y2="120" stroke="#3f2d0b" strokeWidth="7" strokeLinecap="round" />
-      <path d="M208 110 l3.5 8.6 9.3 .8 -7 6.2 2 9 -8-4.7 -8 4.7 2-9 -7-6.2 9.3-.8 Z" fill="#fde047" stroke="#eab308" strokeWidth="1.5" />
-      <ellipse cx="110" cy="53" rx="57" ry="13" fill="#4c1d95" />
-      <path d="M55 53 Q 100 2 132 9 Q 146 12 165 53 Z" fill="#6d28d9" />
-      <path d="M55 53 Q 100 2 132 9 Q 146 12 165 53 Z" fill="#7c3aed" opacity="0.5" />
-      <rect x="60" y="45" width="100" height="11" rx="5" fill="#4c1d95" />
-      <path d="M118 24 l2.7 5.8 6.4 .5 -4.8 4.2 1.4 6.2 -5.7-3.3 -5.7 3.3 1.4-6.2 -4.8-4.2 6.4-.5 Z" fill="#fde047" />
-      <circle cx="90" cy="32" r="2.3" fill="#fff" />
-      <circle cx="142" cy="18" r="2.3" fill="#fde047" />
+      <Star x={210} y={114} s={1.5} fill="#fde047" />
+      <ellipse cx="110" cy="54" rx="58" ry="13" fill="#1e3a8a" />
+      <path d="M54 54 Q 96 3 122 9 Q 140 13 166 54 Z" fill="#2563eb" />
+      <path d="M54 54 Q 96 3 122 9 Q 110 8 92 18 Q 70 34 60 48 Z" fill="#3b82f6" opacity="0.5" />
+      <Star x={110} y={31} s={1.7} fill="#fde047" />
+      <Star x={89} y={44} s={1.0} fill="#ffffff" />
+      <Star x={131} y={41} s={1.15} fill="#fef08a" />
+      <Star x={108} y={15} s={0.85} fill="#ffffff" />
+      <circle cx="121" cy="49" r="1.5" fill="#fff" />
+      <circle cx="97" cy="25" r="1.3" fill="#fde047" />
     </>
   ),
   econ: (

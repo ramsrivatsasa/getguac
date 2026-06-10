@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.72",
-  "name": "v0.3.72 — Highlight money saved on GuacMoney",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.72/app-arm64-v8a-release.apk",
-  "releaseNotes": "\u2022 GuacMoney now highlights the money our Guac-AI saved you in its own card \u2014 separate from the redeemable points."
+  "version": "v0.3.73",
+  "name": "v0.3.73 — WebView close/refresh fixes",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.73/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Fixed the ✕ close and ↻ refresh buttons on embedded pages (Guacanomics, Reports, Steals…).\n• Removed the duplicate avocado at the top of embedded pages.\n• Refresh now re-signs you in for a clean reload."
 }

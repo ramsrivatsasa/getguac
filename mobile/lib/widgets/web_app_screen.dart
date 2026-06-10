@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -36,6 +37,7 @@ class _WebAppScreenState extends State<WebAppScreen> with SingleTickerProviderSt
   WebViewController? _controller;
   bool _loading = true;
   String? _error;
+  ReceiptProvider? _receipts;
   late final AnimationController _flip;
 
   @override
@@ -46,7 +48,17 @@ class _WebAppScreenState extends State<WebAppScreen> with SingleTickerProviderSt
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _receipts = context.read<ReceiptProvider>();
+  }
+
+  @override
   void dispose() {
+    // Anything changed in the page (e.g. a rating) should reach the native
+    // screens, so refresh receipts as we leave. Use the captured ref — the
+    // context/provider lookup isn't safe during dispose.
+    _receipts?.loadReceipts(period: ReceiptPeriod.all, force: true);
     _flip.dispose();
     super.dispose();
   }
@@ -97,28 +109,30 @@ class _WebAppScreenState extends State<WebAppScreen> with SingleTickerProviderSt
     }
   }
 
-  Future<void> _reload() async {
-    setState(() { _loading = true; _error = null; });
-    await _controller?.reload();
+  // Refresh = re-run the /embed auth handshake from scratch. A plain
+  // controller.reload() can land on a stale/expired session (→ login bounce)
+  // or quietly no-op; rebuilding with the current token always returns the
+  // page signed in, and the loading mascot makes the action visible.
+  void _reload() {
+    setState(() { _loading = true; _error = null; _controller = null; });
+    _init();
   }
 
-  // Back exits the WebView screen (reliable — the web-history approach got
-  // stuck on the embed redirect). Refresh receipts on the way out so native
-  // screens reflect anything changed in the page (e.g. ratings → GuacMoney).
-  void _handleBack() {
-    if (!mounted) return;
-    try {
-      context.read<ReceiptProvider>().loadReceipts(period: ReceiptPeriod.all, force: true);
-    } catch (_) {}
-    Navigator.of(context).maybePop();
+  // Close the WebView screen. Pops the pushed route via go_router, falling
+  // back to the dashboard if this is somehow the root. (Receipts refresh in
+  // dispose.) NOTE: do NOT gate this behind a canPop:false PopScope — that
+  // intercepts the pop and loops back here forever, so the button does nothing.
+  void _close() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/dashboard');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, _) { if (!didPop) _handleBack(); },
-      child: Scaffold(
+    return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFF166534),
         foregroundColor: Colors.white,
@@ -148,12 +162,12 @@ class _WebAppScreenState extends State<WebAppScreen> with SingleTickerProviderSt
           IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: 'Reload',
-            onPressed: _controller == null ? null : _reload,
+            onPressed: _reload,
           ),
           IconButton(
             icon: const Icon(Icons.close),
             tooltip: 'Close',
-            onPressed: _handleBack,
+            onPressed: _close,
           ),
         ],
       ),
@@ -203,7 +217,6 @@ class _WebAppScreenState extends State<WebAppScreen> with SingleTickerProviderSt
             ]),
           ),
       ]),
-      ),
     );
   }
 }

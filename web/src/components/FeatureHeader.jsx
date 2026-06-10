@@ -132,7 +132,8 @@ function WizardAvocado({ size, className = '' }) {
       </div>
       <svg viewBox="44 -28 132 100" width={hatW} height={hatH} aria-hidden="true"
         className="absolute left-1/2 -translate-x-1/2 pointer-events-none" style={{ top: size * (10 / 220) }}>
-        {WIZARD_HAT}
+        {/* matrix slims the hat horizontally (84%) around its center x=110 */}
+        <g transform="matrix(0.84 0 0 1 17.6 0)">{WIZARD_HAT}</g>
       </svg>
     </div>
   )

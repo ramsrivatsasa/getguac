@@ -31,18 +31,27 @@ const Star = ({ x, y, s = 1, fill = '#fde047' }) => (
 // Props drawn in the mascot's viewBox (0 0 220 290): head-top ≈ y40–52,
 // eyes ≈ (96,96)/(124,96). null = no overlay (the pose already fits).
 const PROP_OVERLAY = {
-  // Floppy-tip purple wizard hat with a red band + gold buckle (+ a wand).
+  // Blue sorcerer: starry hat + crescent moon, popped cape collar, star wand.
+  // (The cape itself is drawn BEHIND the mascot — see BEHIND_OVERLAY.)
   wizard: (
     <>
-      <line x1="150" y1="176" x2="206" y2="120" stroke="#3f2d0b" strokeWidth="7" strokeLinecap="round" />
-      <Star x={210} y={114} s={1.4} fill="#fde047" />
-      <ellipse cx="110" cy="57" rx="60" ry="13" fill="#7e22ce" />
-      <ellipse cx="110" cy="54" rx="60" ry="11" fill="#9333ea" />
-      <path d="M68 56 C 72 30, 90 16, 116 14 C 140 12, 156 14, 168 22 C 178 29, 174 38, 163 39 C 155 40, 149 35, 147 29 C 146 41, 146 50, 150 56 Z" fill="#a21caf" />
-      <path d="M70 55 C 74 31, 90 18, 114 15 C 100 22, 88 34, 82 47 C 79 51, 75 54, 72 55 Z" fill="#c026d3" opacity="0.55" />
-      <path d="M72 45 Q 110 53 148 45 L148 53 Q 110 61 72 53 Z" fill="#dc2626" />
-      <rect x="103" y="44" width="15" height="12" rx="2.5" fill="#facc15" stroke="#a16207" strokeWidth="1.5" />
-      <rect x="107" y="47" width="7" height="6" rx="1" fill="#dc2626" stroke="#a16207" strokeWidth="1" />
+      {/* cape collar */}
+      <path d="M86 90 C 74 96, 68 112, 72 126 L98 118 C 92 104, 90 96, 88 90 Z" fill="#1d4ed8" stroke="#93c5fd" strokeWidth="2" />
+      <path d="M134 90 C 146 96, 152 112, 148 126 L122 118 C 128 104, 130 96, 132 90 Z" fill="#1d4ed8" stroke="#93c5fd" strokeWidth="2" />
+      {/* hat */}
+      <ellipse cx="110" cy="56" rx="54" ry="11" fill="#1e3a8a" />
+      <ellipse cx="110" cy="53" rx="54" ry="9" fill="#1e40af" />
+      <path d="M74 55 C 80 26, 94 6, 114 3 C 132 0, 150 5, 158 16 C 167 27, 160 35, 151 34 C 144 33, 141 27, 141 22 C 140 38, 142 49, 147 55 Z" fill="#1d4ed8" />
+      <path d="M76 54 C 82 27, 95 9, 113 5 C 100 14, 90 30, 84 46 C 81 50, 78 53, 76 54 Z" fill="#3b82f6" opacity="0.5" />
+      <path d="M128 14 a8 8 0 1 0 1 15 a6 6 0 1 1 -1 -15 Z" fill="#fde68a" />
+      <Star x={99} y={40} s={1.1} fill="#ffffff" />
+      <Star x={116} y={24} s={0.9} fill="#ffffff" />
+      <Star x={108} y={46} s={0.7} fill="#ffffff" />
+      {/* wand */}
+      <line x1="150" y1="176" x2="206" y2="120" stroke="#6b4226" strokeWidth="7" strokeLinecap="round" />
+      <Star x={210} y={114} s={1.5} fill="#fde047" />
+      <line x1="198" y1="104" x2="194" y2="98" stroke="#fde047" strokeWidth="2" strokeLinecap="round" />
+      <line x1="222" y1="112" x2="228" y2="110" stroke="#fde047" strokeWidth="2" strokeLinecap="round" />
     </>
   ),
   econ: (
@@ -68,14 +77,29 @@ const PROP_OVERLAY = {
   steals: null,
 }
 
+// Layers drawn BEHIND the mascot (e.g. a cape draping out past the body).
+const BEHIND_OVERLAY = {
+  wizard: (
+    <>
+      <path d="M110 92 C 82 92, 64 98, 50 112 C 28 134, 18 192, 26 236 C 28 246, 40 248, 50 242 C 62 250, 78 252, 92 246 C 100 243, 105 240, 110 240 C 115 240, 120 243, 128 246 C 142 252, 158 250, 170 242 C 180 248, 192 246, 194 236 C 202 192, 192 134, 170 112 C 156 98, 138 92, 110 92 Z" fill="#1d4ed8" />
+      <path d="M110 92 C 82 92, 64 98, 50 112 C 36 126, 28 156, 26 192 C 40 188, 52 150, 64 126 C 76 104, 96 96, 110 94 Z" fill="#3b82f6" opacity="0.45" />
+    </>
+  ),
+}
+
 export function ThemedAvocado({ theme = 'reports', size = 64, className = '' }) {
   const expr = THEME_EXPR[theme] || 'happy'
   const h = size * (290 / 220)
   return (
     <div className={`relative ${className}`} style={{ width: size, height: h }}>
-      <GuacMascot expression={expr} size={size} />
+      {BEHIND_OVERLAY[theme] && (
+        <svg viewBox="0 0 220 290" width={size} height={h} className="absolute inset-0 z-0 pointer-events-none" aria-hidden="true">
+          {BEHIND_OVERLAY[theme]}
+        </svg>
+      )}
+      <GuacMascot expression={expr} size={size} className="relative z-10" />
       {PROP_OVERLAY[theme] && (
-        <svg viewBox="0 0 220 290" width={size} height={h} className="absolute inset-0 pointer-events-none" aria-hidden="true">
+        <svg viewBox="0 0 220 290" width={size} height={h} className="absolute inset-0 z-20 pointer-events-none" aria-hidden="true">
           {PROP_OVERLAY[theme]}
         </svg>
       )}

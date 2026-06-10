@@ -88,18 +88,36 @@ export function detectCategory(query) {
  */
 export function buildRefinedQuery(baseQuery, categoryKey, specs = {}) {
   const spec = SEARCH_SPECS[categoryKey]
-  if (!spec) return (baseQuery || '').trim()
-  const parts = []
-  if (specs.brand) parts.push(specs.brand)
-  parts.push(spec.label.toLowerCase())
+  const base = (baseQuery || '').trim()
+  if (!spec) return base
+  const lower = base.toLowerCase()
+
+  // The freeform text is authoritative: if the user typed something, start
+  // from it. Otherwise build the query from the dropdowns alone.
+  const parts = base ? [base] : []
+  if (!base) {
+    if (specs.brand) parts.push(specs.brand)
+    parts.push(spec.label.toLowerCase())
+  } else if (specs.brand && !lower.includes(String(specs.brand).toLowerCase())) {
+    parts.push(specs.brand)
+  }
+
   for (const f of spec.fields) {
     if (f.key === 'brand') continue
     const v = specs[f.key]
     if (!v) continue
-    parts.push(f.key === 'memory' ? `${v} RAM` : v)
+    // Don't override a value the user already typed. If the freeform text
+    // already mentions a value for this field (e.g. "Intel Core i7"), skip
+    // the (possibly stale) dropdown for that field — so typing i7 isn't
+    // overridden by a left-over i9 selection.
+    const fieldAlreadyTyped = base && (f.options || []).some(o => lower.includes(String(o).toLowerCase()))
+    if (fieldAlreadyTyped) continue
+    const val = f.key === 'memory' ? `${v} RAM` : v
+    if (!lower.includes(String(val).toLowerCase())) parts.push(val)
   }
+
   const refined = parts.filter(Boolean).join(' ').trim()
-  return refined || (baseQuery || '').trim()
+  return refined || base
 }
 
 /** Short human label for a saved search chip, e.g. "Dell laptop · 16 GB · 512 GB SSD". */

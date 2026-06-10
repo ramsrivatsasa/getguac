@@ -17,22 +17,35 @@ import '../providers/auth_provider.dart';
 List<Widget> topAppBarActions(BuildContext context, {bool whiteIcons = true}) {
   final iconColor = whiteIcons ? Colors.white : null;
   return [
-    IconButton(
-      icon: Icon(Icons.notifications_none_rounded, color: iconColor),
-      tooltip: 'Notifications',
-      visualDensity: VisualDensity.compact,
-      padding: const EdgeInsets.symmetric(horizontal: 3),
-      constraints: const BoxConstraints(),
-      onPressed: () {
-        // Placeholder until the notifications inbox is built. Surface
-        // it as a snack so testers know the button is wired but the
-        // backend isn't done yet.
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Notifications — coming soon'),
-          duration: Duration(seconds: 2),
-        ));
-      },
-    ),
+    Stack(clipBehavior: Clip.none, children: [
+      IconButton(
+        icon: Icon(Icons.notifications_none_rounded, color: iconColor),
+        tooltip: 'Notifications',
+        visualDensity: VisualDensity.compact,
+        padding: const EdgeInsets.symmetric(horizontal: 3),
+        constraints: const BoxConstraints(),
+        onPressed: () {
+          // Placeholder until the notifications inbox is built. Surface
+          // it as a snack so testers know the button is wired but the
+          // backend isn't done yet.
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Notifications — coming soon'),
+            duration: Duration(seconds: 2),
+          ));
+        },
+      ),
+      Positioned(
+        right: 2, top: 4,
+        child: Container(
+          width: 8, height: 8,
+          decoration: BoxDecoration(
+            color: const Color(0xFFef4444),
+            shape: BoxShape.circle,
+            border: Border.all(color: whiteIcons ? const Color(0xFF166534) : Colors.white, width: 1.5),
+          ),
+        ),
+      ),
+    ]),
     // Steals — with a red badge counting unread "fresh steals".
     _StealsAction(iconColor: iconColor),
     IconButton(

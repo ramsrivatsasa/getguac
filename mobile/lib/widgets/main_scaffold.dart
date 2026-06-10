@@ -40,21 +40,24 @@ class _QuickAction {
   const _QuickAction(this.route, this.icon, this.label, this.sub, this.color, this.bg);
 }
 
-// Items shown in the long-press popover. Order matches the user's mental
-// model: communication first, then their finance brain, then the rest.
+// Items shown in the quick-access grid (tap Menu). Ordered by importance to
+// the business + the user: rewards/growth first, then deals + finance brain,
+// then the rest.
 const _quickActions = <_QuickAction>[
-  _QuickAction('/chat',        Icons.chat_bubble_outline,        'Chat',         'Family + friends',         Color(0xFF15803d), Color(0xFFd1fae5)),
-  _QuickAction('/inbox',       Icons.mark_email_unread_rounded,  'Inbox',        'Mail + auto-receipts',     Color(0xFFca8a04), Color(0xFFfef3c7)),
-  _QuickAction('/connections', Icons.link_rounded,               'Connections',  '37 retailers · auto-pull', Color(0xFF15803d), Color(0xFFd1fae5)),
+  _QuickAction('/guacmoney',   Icons.savings_rounded,            'GuacMoney',    'Points → rewards',         Color(0xFFca8a04), Color(0xFFfef9c3)),
+  _QuickAction('/invite',      Icons.person_add_alt_1,           'Refer a friend','Invite, both earn',       Color(0xFF15803d), Color(0xFFd1fae5)),
+  _QuickAction('/steals',     Icons.local_offer,               'Steals',       'AI price hunt',         Color(0xFFdb2777), Color(0xFFfce7f3)),
+  _QuickAction('/rewards',    Icons.card_giftcard_rounded,     'Rewards',      'Loyalty + expiring',    Color(0xFFdb2777), Color(0xFFfce7f3)),
   _QuickAction('/guacscore',  Icons.auto_awesome,              'GuacScore',    '0–100 spending grade',  Color(0xFF15803d), Color(0xFFd1fae5)),
   _QuickAction('/guacwizard', Icons.auto_fix_high,             'GuacWizard',   'Bank Bite + insights',  Color(0xFF7c3aed), Color(0xFFede9fe)),
-  _QuickAction('/rewards',    Icons.card_giftcard_rounded,     'Rewards',      'Loyalty + expiring',    Color(0xFFdb2777), Color(0xFFfce7f3)),
   _QuickAction('/stash',      Icons.inventory_2,               'Stash',        'Everything you own',    Color(0xFFca8a04), Color(0xFFfef3c7)),
-  _QuickAction('/steals',     Icons.local_offer,               'Steals',       'AI price hunt',         Color(0xFFdb2777), Color(0xFFfce7f3)),
+  _QuickAction('/inbox',       Icons.mark_email_unread_rounded,  'Inbox',        'Mail + auto-receipts',     Color(0xFFca8a04), Color(0xFFfef3c7)),
+  _QuickAction('/connections', Icons.link_rounded,               'Connections',  '37 retailers · auto-pull', Color(0xFF15803d), Color(0xFFd1fae5)),
   _QuickAction('/reports',    Icons.bar_chart_rounded,         'Reports',      'Monthly totals',        Color(0xFF15803d), Color(0xFFd1fae5)),
-  _QuickAction('/returns',    Icons.undo_rounded,              'Returns',      'Open refund windows',   Color(0xFFb91c1c), Color(0xFFfee2e2)),
   _QuickAction('/stores',     Icons.storefront_rounded,        'Stores',       'Spend by store',        Color(0xFF1d4ed8), Color(0xFFdbeafe)),
+  _QuickAction('/returns',    Icons.undo_rounded,              'Returns',      'Open refund windows',   Color(0xFFb91c1c), Color(0xFFfee2e2)),
   _QuickAction('/car-miles',  Icons.directions_car_filled_rounded, 'Car Miles', 'Trip log',            Color(0xFF0891b2), Color(0xFFcffafe)),
+  _QuickAction('/chat',        Icons.chat_bubble_outline,        'Chat',         'Family + friends',         Color(0xFF15803d), Color(0xFFd1fae5)),
   _QuickAction('/profile',    Icons.person,                    'Profile',      'Account + settings',    Color(0xFF7c3aed), Color(0xFFede9fe)),
 ];
 

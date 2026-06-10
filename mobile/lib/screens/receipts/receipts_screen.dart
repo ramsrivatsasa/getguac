@@ -13,6 +13,8 @@ import '../../categories.dart' as cat;
 import '../../widgets/animated_primitives.dart';
 import '../../widgets/receipt_scan_overlay.dart';
 import '../../widgets/top_app_bar_actions.dart';
+import '../../widgets/guac_money_earned.dart';
+import '../../services/guac_money_service.dart';
 import '../../services/mascot_event_bus.dart';
 
 class ReceiptsScreen extends StatefulWidget {
@@ -727,6 +729,9 @@ class _AddReceiptDialogState extends State<_AddReceiptDialog> {
 
   Future<void> _save() async {
     if (_store.text.isEmpty || _amount.text.isEmpty) return;
+    final isNew = widget.existing == null;
+    final navigator = Navigator.of(context);
+    final rootOverlayCtx = Navigator.of(context, rootNavigator: true).context;
     setState(() => _saving = true);
     final provider = context.read<ReceiptProvider>();
     if (widget.existing != null) {
@@ -772,7 +777,9 @@ class _AddReceiptDialogState extends State<_AddReceiptDialog> {
       );
       await provider.addReceipt(receipt, imageFile: widget.imageFile);
     }
-    if (mounted) Navigator.of(context).pop();
+    // Celebrate the GuacMoney earned — only for NEW receipts, not edits.
+    if (mounted) navigator.pop();
+    if (isNew) showGuacMoneyEarned(rootOverlayCtx, points: kGmPerReceipt);
   }
 
   @override

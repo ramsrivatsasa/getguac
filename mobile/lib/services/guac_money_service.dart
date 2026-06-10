@@ -115,6 +115,45 @@ String formatGuacMoney(double amount) {
   return '\$${amount.toStringAsFixed(2)}';
 }
 
+// ── GuacMoney POINTS (status currency) ──────────────────────────────
+// A gamified points balance (not a cash payout yet). 1000 GuacMoney = $1.
+// Earned by the core actions: scanning receipts + referring friends.
+const int kGmPerReceipt  = 100;   // every receipt captured
+const int kGmPerReferral = 1000;  // every friend who joins
+const int kGmPerDollar   = 1000;  // 1000 GuacMoney = $1
+const int kGmRewardStep  = 5000;  // next-reward milestone ($5 gift card, soon)
+
+/// Total GuacMoney points from the user's activity.
+int guacMoneyPoints({required int receipts, int referrals = 0}) =>
+    receipts * kGmPerReceipt + referrals * kGmPerReferral;
+
+/// Dollar value of a points balance.
+double gmToUsd(int points) => points / kGmPerDollar;
+
+/// Thousands-formatted points (e.g. 5,200).
+String formatGm(int points) {
+  final s = points.abs().toString();
+  final b = StringBuffer();
+  for (var i = 0; i < s.length; i++) {
+    if (i > 0 && (s.length - i) % 3 == 0) b.write(',');
+    b.write(s[i]);
+  }
+  return b.toString();
+}
+
+/// Count of the user's successful referrals (rows in `referrals`).
+Future<int> fetchReferralCount() async {
+  final sb = Supabase.instance.client;
+  final user = sb.auth.currentUser;
+  if (user == null) return 0;
+  try {
+    final rows = await sb.from('referrals').select('id').eq('referrer_id', user.id);
+    return (rows as List).length;
+  } catch (_) {
+    return 0;
+  }
+}
+
 /// Human-readable label for the source.
 String guacMoneySourceLabel(String source) {
   switch (source) {

@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.61",
-  "name": "v0.3.61 — Gradient feature buttons, fixes",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.61/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Dashboard feature buttons now have colourful gradient tiles.\n• “Worth It?” now opens the rate-every-purchase screen (it used to land on Receipts).\n• Tighter top-bar icon spacing; Sign out is now an icon (no text)."
+  "version": "v0.3.62",
+  "name": "v0.3.62 — Introducing GuacMoney 🥑",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.62/app-arm64-v8a-release.apk",
+  "releaseNotes": "• GuacMoney is here — earn points for using GetGuac (1,000 GuacMoney = $1). +100 every receipt you scan, +1,000 for every friend you refer.\n• Your GuacMoney balance shows on the dashboard as a coin pill that counts up.\n• Scan a receipt and watch a “+100 GuacMoney” celebration flash, Fetch-style.\n• New GuacMoney screen: balance, progress to your next reward, and how to earn (redeem for gift cards — coming soon).\n• Refer a friend + GuacMoney added to the Menu; notification bell now shows a badge."
 }

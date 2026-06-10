@@ -7,7 +7,7 @@ import { useBankData } from '../../../lib/useBankData'
 import { periodStartDate, timeframeLabel } from '../../../lib/timeframe'
 import { useStore } from '../../../store'
 import GuacMascot from '../../../components/GuacMascot'
-import { ThemedAvocado } from '../../../components/FeatureHeader'
+import FeatureHeader from '../../../components/FeatureHeader'
 import LottieAnimation from '../../../components/LottieAnimation'
 import emptyListLottie from '../../../lottie/empty-list.json'
 import TimeframePicker from '../../../components/TimeframePicker'
@@ -61,43 +61,26 @@ export default function GuacWizardPage() {
 
   return (
     <div className="space-y-6 max-w-7xl">
-      {/* Wizard header */}
-      <div className="card overflow-hidden bg-gradient-to-br from-emerald-100 via-lime-50 to-amber-50 border-emerald-200">
-        <div className="flex items-center justify-between flex-nowrap gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <ThemedAvocado theme="wizard" size={104} className="shrink-0 -my-1" />
-            <div className="min-w-0">
-              <h1 className="text-2xl sm:text-3xl font-black text-emerald-900 leading-none flex items-center gap-2">
-                GuacWizard
-                <Sparkles size={20} className="text-amber-500 shrink-0" />
-              </h1>
-              <p className="text-xs sm:text-sm text-emerald-800 mt-1.5">Your money sage. Reads every statement, calls out every leak.</p>
-            </div>
+      {/* Wizard header — standard FeatureHeader layout (matches Guacanomics):
+          no card background, mascot + title + subtitle, score on the right. */}
+      <FeatureHeader
+        theme="wizard"
+        title={<span className="flex items-center gap-2">GuacWizard <Sparkles size={20} className="text-amber-500 shrink-0" /></span>}
+        subtitle="Your money sage. Reads every statement, calls out every leak."
+        action={
+          <div className="text-right">
+            <p className="text-[10px] uppercase tracking-wider font-bold text-emerald-700">Wizard score</p>
+            <p className="text-4xl font-black text-emerald-900 leading-none">
+              <CountUp value={Number(score) || 0} duration={680} from={0} />
+              <span className="text-base font-bold opacity-60"> / 100</span>
+            </p>
+            <p className="text-[10px] text-gray-500 mt-0.5">{tfLabel}</p>
           </div>
+        }
+      />
 
-          {/* Score ring */}
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="text-right">
-              <p className="text-[10px] uppercase tracking-wider font-bold text-emerald-700">Wizard score</p>
-              <p className="text-4xl font-black text-emerald-900 leading-none">
-                {/* CountUp from zero — sells the assemble-the-score
-                    feel on the dedicated GuacWizard page. */}
-                <CountUp value={Number(score) || 0} duration={680} from={0} />
-                <span className="text-base font-bold opacity-60"> / 100</span>
-              </p>
-              <p className="text-[10px] text-emerald-800 mt-0.5">{tfLabel}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Standard time-frame picker — shared with the dashboard
-            and every other internal page. Changes here sync to the
-            dashboard via the Zustand store (persisted to
-            localStorage). */}
-        <div className="mt-4">
-          <TimeframePicker />
-        </div>
-      </div>
+      {/* Standard time-frame picker — syncs across pages via the store. */}
+      <TimeframePicker />
 
       {/* Money-moved strip */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">

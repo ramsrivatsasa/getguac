@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.68",
-  "name": "v0.3.68 — GuacMoney shows value (no redeem claim)",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.68/app-arm64-v8a-release.apk",
-  "releaseNotes": "\u2022 GuacMoney now shows what it\u2019s worth (\u201CWorth \u2248 $X\u201D) instead of a redeem promise \u2014 because the saved part is your own money, not a payout. Real rewards would come later via brand partners."
+  "version": "v0.3.69",
+  "name": "v0.3.69 — GuacMoney: redeem the earned part only",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.69/app-arm64-v8a-release.apk",
+  "releaseNotes": "\u2022 GuacMoney now splits clearly: scanning, referrals and (soon) shopping commission are REDEEMABLE for gift cards \u2014 coming soon. The money our Guac-AI saved you (not-worth-it ratings + refunds) is yours to keep, shown as value."
 }

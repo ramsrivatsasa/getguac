@@ -65,7 +65,7 @@ class _GuacMoneyScreenState extends State<GuacMoneyScreen> {
           final d = snap.data ?? const _Gm(notWorth: 0, refunds: 0, rated: 0, receipts: 0, referrals: 0);
           final saved = d.notWorth + d.refunds;
           final points = guacMoneyPoints(receipts: d.receipts, referrals: d.referrals, savedDollars: saved);
-          final redeemable = gmToUsd(points);
+          final redeemableUsd = gmToUsd(guacMoneyRedeemable(receipts: d.receipts, referrals: d.referrals));
           final into = points % kGmRewardStep;
           final toNext = kGmRewardStep - into;
           final progress = kGmRewardStep == 0 ? 0.0 : into / kGmRewardStep;
@@ -93,9 +93,14 @@ class _GuacMoneyScreenState extends State<GuacMoneyScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.22), borderRadius: BorderRadius.circular(20)),
-                  child: Text('Worth ≈ \$${redeemable.toStringAsFixed(2)} 🥑',
+                  child: Text('🎁 Redeem ≈ \$${redeemableUsd.toStringAsFixed(2)} · coming soon',
                     style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13)),
                 ),
+                if (saved > 0) ...[
+                  const SizedBox(height: 4),
+                  Text('plus \$${saved.toStringAsFixed(2)} our Guac-AI saved you',
+                    style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
+                ],
               ]),
             ),
             const SizedBox(height: 16),
@@ -122,7 +127,7 @@ class _GuacMoneyScreenState extends State<GuacMoneyScreen> {
             _card(Column(crossAxisAlignment: CrossAxisAlignment.start, children: const [
               Text('How you earn', style: TextStyle(fontWeight: FontWeight.w800)),
               SizedBox(height: 6),
-              Text('• Rate purchases in Worth It? — anything "not worth it" is money you\'ll save by skipping it (\$-for-\$).\n• Refunds you recover count too, dollar for dollar.\n• Scan a receipt: +100. Refer a friend: +1,000.\n• 1,000 GuacMoney = \$1 in value. Rewards may follow once we partner with brands.',
+              Text('• Scan a receipt (+100), refer a friend (+1,000), and shop via our links (commission — soon) are REDEEMABLE for gift cards, coming soon.\n• Rate purchases "not worth it" + refunds you recover are money our Guac-AI saved you — yours to keep, shown as value.\n• 1,000 GuacMoney = \$1.',
                 style: TextStyle(fontSize: 12.5, color: Colors.black54, height: 1.5)),
             ])),
             const SizedBox(height: 16),

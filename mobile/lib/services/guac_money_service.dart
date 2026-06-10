@@ -131,6 +131,12 @@ const String kGmTagline = 'Saved by our Guac-AI + earned by you 🥑';
 int guacMoneyPoints({required int receipts, required int referrals, required double savedDollars}) =>
     receipts * kGmPerReceipt + referrals * kGmPerReferral + gmPointsFromSaved(savedDollars);
 
+/// REDEEMABLE slice (gift cards — coming soon): only what we award you —
+/// scanning, referrals, and affiliate commission. The "saved $" portion is
+/// YOUR own money, so it's shown as value, not redeemable.
+int guacMoneyRedeemable({required int receipts, required int referrals, int affiliatePoints = 0}) =>
+    receipts * kGmPerReceipt + referrals * kGmPerReferral + affiliatePoints;
+
 /// Count of the user's successful referrals (rows in `referrals`).
 Future<int> fetchReferralCount() async {
   final sb = Supabase.instance.client;

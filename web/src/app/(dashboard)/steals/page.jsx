@@ -5,7 +5,7 @@ import Link from 'next/link'
 import toast from 'react-hot-toast'
 import {
   Search, BadgeDollarSign, ShoppingCart, Clock, Gift, RefreshCw,
-  Sliders, Bookmark, Trash2, Star, ExternalLink, ShoppingBag, Globe, X,
+  Sliders, Bookmark, Trash2, Star, ExternalLink, ShoppingBag, Globe, X, ChevronDown,
 } from 'lucide-react'
 import { getStashItems, getReceipts, getRewards } from '../../../lib/db'
 import { predictReplenishItems, expiringRewards } from '../../../lib/userProfile'
@@ -34,6 +34,11 @@ export default function StealsPage() {
   const [manualCategory, setManualCategory] = useState('')
   const [specs, setSpecs] = useState({})
   const [activeQuery, setActiveQuery] = useState('')
+  // Embedded in the mobile WebView? The native app bar already shows the
+  // screen title, so we hide the page's own header + compact the layout.
+  const [embedded, setEmbedded] = useState(false)
+  const [showConfig, setShowConfig] = useState(false)
+  useEffect(() => { setEmbedded(/(?:^|;\s*)guac_embedded=1/.test(document.cookie)) }, [])
   // Client-side refine filters (instant — applied to the returned results).
   const [priceMin, setPriceMin] = useState('')
   const [priceMax, setPriceMax] = useState('')
@@ -127,15 +132,19 @@ export default function StealsPage() {
   }
 
   return (
-    <div className="space-y-5 max-w-6xl font-sans">
-      <div className="flex items-center gap-3 flex-wrap">
-        <GuacMascot expression="rich" size={70} />
-        <div className="flex-1 min-w-[200px]">
-          <h1 className="page-title">Steals</h1>
-          <p className="text-sm text-gray-500">Configure what you&apos;re after — we scan the live web for the best deals.</p>
+    <div className="space-y-4 max-w-6xl font-sans">
+      {/* Page header — hidden in the mobile WebView (the native app bar
+          already shows "Steals"), so we don't double the title. */}
+      {!embedded && (
+        <div className="flex items-center gap-3 flex-wrap">
+          <GuacMascot expression="rich" size={70} />
+          <div className="flex-1 min-w-[200px]">
+            <h1 className="page-title">Steals</h1>
+            <p className="text-sm text-gray-500">Configure what you&apos;re after — we scan the live web for the best deals.</p>
+          </div>
+          <span className="text-[10px] uppercase tracking-wider font-bold text-emerald-700 bg-emerald-100 px-2 py-1 rounded-full">🥑 Guac-AI Powered</span>
         </div>
-        <span className="text-[10px] uppercase tracking-wider font-bold text-emerald-700 bg-emerald-100 px-2 py-1 rounded-full">🥑 Guac-AI Powered</span>
-      </div>
+      )}
 
       {/* Search box */}
       <form onSubmit={handleSearch} className="card flex items-center gap-3">
@@ -154,29 +163,38 @@ export default function StealsPage() {
       {/* Configure what to search — pick a category and its spec dropdowns
           appear. Works alongside the freeform search bar above. */}
       <div className="card border-emerald-200/70">
-        <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+        <button type="button" onClick={() => setShowConfig(v => !v)}
+          className="w-full flex items-center justify-between gap-2">
           <span className="text-xs font-bold uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
             <Sliders size={13} /> Configure your search
+            {category && <span className="text-emerald-600 normal-case tracking-normal">· {SEARCH_SPECS[category]?.label}</span>}
           </span>
-          {spec && (
-            <button onClick={handleSave} className="text-xs font-bold text-emerald-700 hover:underline flex items-center gap-1">
-              <Bookmark size={12} /> Save search
-            </button>
-          )}
-        </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          <div>
-            <label className="label">Category</label>
-            <select className="input" value={manualCategory} onChange={e => onCategoryChange(e.target.value)}>
-              <option value="">{detectCategory(query) ? `Auto · ${SEARCH_SPECS[detectCategory(query)].label}` : 'Any / auto-detect'}</option>
-              {SEARCH_CATEGORY_KEYS.map(k => <option key={k} value={k}>{SEARCH_SPECS[k].label}</option>)}
-            </select>
-          </div>
-          <SpecDropdowns spec={spec} specs={specs} setSpecs={setSpecs} />
-        </div>
-        <button onClick={handleSearch} disabled={!query.trim() && !spec} className="btn-primary mt-3">
-          <BadgeDollarSign size={15} /> Find Steals
+          <ChevronDown size={16} className={`text-emerald-700 transition-transform ${showConfig ? 'rotate-180' : ''}`} />
         </button>
+        {showConfig && (
+          <div className="mt-3">
+            {spec && (
+              <div className="flex justify-end mb-2">
+                <button onClick={handleSave} className="text-xs font-bold text-emerald-700 hover:underline flex items-center gap-1">
+                  <Bookmark size={12} /> Save search
+                </button>
+              </div>
+            )}
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div>
+                <label className="label">Category</label>
+                <select className="input" value={manualCategory} onChange={e => onCategoryChange(e.target.value)}>
+                  <option value="">{detectCategory(query) ? `Auto · ${SEARCH_SPECS[detectCategory(query)].label}` : 'Any / auto-detect'}</option>
+                  {SEARCH_CATEGORY_KEYS.map(k => <option key={k} value={k}>{SEARCH_SPECS[k].label}</option>)}
+                </select>
+              </div>
+              <SpecDropdowns spec={spec} specs={specs} setSpecs={setSpecs} />
+            </div>
+            <button onClick={handleSearch} disabled={!query.trim() && !spec} className="btn-primary mt-3">
+              <BadgeDollarSign size={15} /> Find Steals
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Saved searches — click a row to re-run it against the live web. */}

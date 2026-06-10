@@ -7,6 +7,7 @@
 
 import { useEffect, useState } from 'react'
 import { Bell, Gift, Package, TrendingUp, AlertTriangle, ShoppingCart, MoonStar, Clock } from 'lucide-react'
+import GuacMascot from '../../../components/GuacMascot'
 import LottieAnimation from '../../../components/LottieAnimation'
 import thinkingLottie from '../../../lottie/thinking.json'
 
@@ -54,14 +55,17 @@ export default function NotificationsPage() {
 
   return (
     <div className="max-w-2xl space-y-4">
-      <div>
-        <h1 className="page-title flex items-center gap-2">
-          <Bell size={22} className="text-emerald-600" />
-          Notifications
-        </h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Pick which alerts you want. Changes save automatically.
-        </p>
+      <div className="flex items-center gap-3">
+        <GuacMascot expression="happy" size={50} className="shrink-0" />
+        <div>
+          <h1 className="page-title flex items-center gap-2">
+            <Bell size={22} className="text-emerald-600" />
+            Notifications
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Pick which alerts you want. Changes save automatically.
+          </p>
+        </div>
       </div>
 
       <div className="card divide-y divide-gray-100 p-0 overflow-hidden">

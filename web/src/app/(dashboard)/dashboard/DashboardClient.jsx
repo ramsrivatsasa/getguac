@@ -8,6 +8,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Gift, ArrowRight, Sparkles, PiggyBank, Wand2, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import GuacoScoreCard from '../../../components/GuacoScoreCard'
+import GuacMascot from '../../../components/GuacMascot'
 import UpcomingReturnsBanner from '../../../components/UpcomingReturnsBanner'
 import AnomaliesPanel from '../../../components/AnomaliesPanel'
 import { ActivityFeed } from '../../../components/ActivityFeed'
@@ -185,9 +186,12 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
           Renders nothing — pure side-effect island. */}
       <PostSignupReferralApply />
       <div className="flex items-start justify-between gap-3 flex-wrap">
-        <div>
-          <h1 className="page-title">Good day, {firstName} 👋</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Here's your financial snapshot</p>
+        <div className="flex items-center gap-3">
+          <GuacMascot expression="standing" size={56} className="shrink-0" />
+          <div>
+            <h1 className="page-title">Good day, {firstName} 👋</h1>
+            <p className="text-sm text-gray-500 mt-0.5">Here's your financial snapshot</p>
+          </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <Link href="/validate"

@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.71",
-  "name": "v0.3.71 — GuacMoney saved-amount wording",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.71/app-arm64-v8a-release.apk",
-  "releaseNotes": "\u2022 GuacMoney now reads \u201C$X our Guac-AI saved you\u201D (dropped the \u201Cplus\u201D)."
+  "version": "v0.3.72",
+  "name": "v0.3.72 — Highlight money saved on GuacMoney",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.72/app-arm64-v8a-release.apk",
+  "releaseNotes": "\u2022 GuacMoney now highlights the money our Guac-AI saved you in its own card \u2014 separate from the redeemable points."
 }

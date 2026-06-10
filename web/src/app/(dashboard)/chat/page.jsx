@@ -4,7 +4,7 @@ import { useSearchParams } from 'next/navigation'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { MessageSquare, Send, Plus, Mail } from 'lucide-react'
-import GuacMascot from '../../../components/GuacMascot'
+import FeatureHeader from '../../../components/FeatureHeader'
 import { createClient } from '../../../lib/supabase/client'
 import {
   listMyThreads, openThreadByEmail, listMessages, postMessage,
@@ -117,11 +117,7 @@ export default function ChatPage() {
 
   return (
     <div className="space-y-3 max-w-5xl">
-      <div className="flex items-center gap-2">
-        <GuacMascot expression="happy" size={42} className="shrink-0" />
-        <MessageSquare size={18} className="text-emerald-700" />
-        <h1 className="page-title">Chat</h1>
-      </div>
+      <FeatureHeader expression="happy" title="Chat" subtitle="Ask GuacAI anything about your money." />
 
       <div className="grid lg:grid-cols-[260px_1fr] gap-3">
         {/* Thread list */}

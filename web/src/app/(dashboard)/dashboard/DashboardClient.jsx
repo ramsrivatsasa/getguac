@@ -8,7 +8,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Gift, ArrowRight, Sparkles, PiggyBank, Wand2, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import GuacoScoreCard from '../../../components/GuacoScoreCard'
-import GuacMascot from '../../../components/GuacMascot'
+import FeatureHeader from '../../../components/FeatureHeader'
 import UpcomingReturnsBanner from '../../../components/UpcomingReturnsBanner'
 import AnomaliesPanel from '../../../components/AnomaliesPanel'
 import { ActivityFeed } from '../../../components/ActivityFeed'
@@ -185,15 +185,12 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
           first dashboard load to credit 3 Smash days to both sides.
           Renders nothing — pure side-effect island. */}
       <PostSignupReferralApply />
-      <div className="flex items-start justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-3">
-          <GuacMascot expression="standing" size={56} className="shrink-0" />
-          <div>
-            <h1 className="page-title">Good day, {firstName} 👋</h1>
-            <p className="text-sm text-gray-500 mt-0.5">Here's your financial snapshot</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
+      <FeatureHeader
+        expression="standing"
+        title={<>Good day, {firstName} 👋</>}
+        subtitle="Here's your financial snapshot"
+        action={
+          <div className="flex items-center gap-2 flex-wrap">
           <Link href="/validate"
             className="flex items-center gap-3 px-4 py-2.5 rounded-full bg-gradient-to-br from-amber-400 via-amber-500 to-rose-500 text-white shadow-md hover:shadow-lg hover:scale-[1.02] transition-all group">
             <span className="text-xl leading-none">🥑</span>
@@ -212,8 +209,9 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
             </div>
             <ArrowRight size={16} className="text-green-100 group-hover:translate-x-0.5 transition-transform" />
           </Link>
-        </div>
-      </div>
+          </div>
+        }
+      />
 
       {/* Standard time-frame picker — shared with /guacwizard and
           every other internal page. */}

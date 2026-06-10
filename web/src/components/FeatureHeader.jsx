@@ -66,13 +66,13 @@ const WIZARD_HAT = (
   <>
     <ellipse cx="110" cy="57" rx="60" ry="12" fill="#581c87" />
     <ellipse cx="110" cy="54" rx="60" ry="10" fill="#7e22ce" />
-    <path d="M74 55 C 80 26, 94 6, 114 3 C 132 0, 150 5, 158 16 C 167 27, 160 35, 151 34 C 144 33, 141 27, 141 22 C 140 38, 142 49, 147 55 Z" fill="#7c3aed" />
-    <path d="M76 54 C 82 27, 95 9, 113 5 C 100 14, 90 30, 84 46 C 81 50, 78 53, 76 54 Z" fill="#a855f7" opacity="0.45" />
-    <Star x={95} y={37} s={1.4} fill="#f59e0b" stroke="#b45309" strokeWidth={0.8} />
-    <Star x={118} y={20} s={1.1} fill="#f59e0b" stroke="#b45309" strokeWidth={0.8} />
-    <Star x={135} y={30} s={0.95} fill="#f59e0b" stroke="#b45309" strokeWidth={0.8} />
-    <Star x={108} y={11} s={0.85} fill="#f59e0b" stroke="#b45309" strokeWidth={0.8} />
-    <Star x={123} y={44} s={0.75} fill="#f59e0b" stroke="#b45309" strokeWidth={0.8} />
+    <path d="M74 55 C 76 22, 86 -6, 106 -16 C 120 -24, 138 -20, 146 -6 C 156 8, 154 22, 144 24 C 137 25, 133 19, 134 12 C 132 30, 136 46, 144 55 Z" fill="#7c3aed" />
+    <path d="M76 54 C 78 24, 88 -2, 106 -12 C 94 -2, 86 18, 82 44 C 80 49, 77 53, 76 54 Z" fill="#a855f7" opacity="0.45" />
+    <Star x={97} y={28} s={1.4} fill="#f59e0b" stroke="#b45309" strokeWidth={0.8} />
+    <Star x={116} y={4} s={1.1} fill="#f59e0b" stroke="#b45309" strokeWidth={0.8} />
+    <Star x={132} y={18} s={0.95} fill="#f59e0b" stroke="#b45309" strokeWidth={0.8} />
+    <Star x={106} y={-10} s={0.85} fill="#f59e0b" stroke="#b45309" strokeWidth={0.8} />
+    <Star x={122} y={40} s={0.75} fill="#f59e0b" stroke="#b45309" strokeWidth={0.8} />
     <path d="M74 46 Q 110 53 146 46 L146 54 Q 110 61 74 54 Z" fill="#92400e" />
     <path d="M74 46 Q 110 53 146 46" stroke="#b45309" strokeWidth="1.4" fill="none" />
     <ellipse cx="110" cy="50" rx="11" ry="9" fill="#fbbf24" stroke="#b45309" strokeWidth="1.5" />
@@ -88,14 +88,14 @@ const WIZARD_HAT = (
 function WizardAvocado({ size, className = '' }) {
   const avoW = size * (150 / 220)
   const hatW = size * (188 / 220)
-  const hatH = hatW * (74 / 132)
+  const hatH = hatW * (100 / 132)
   return (
-    <div className={`relative ${className}`} style={{ width: size, height: size * (262 / 220) }}>
+    <div className={`relative ${className}`} style={{ width: size, height: size * (300 / 220) }}>
       <div className="absolute left-1/2 -translate-x-1/2" style={{ bottom: size * (6 / 220) }}>
         <GuacMascot expression="happy" size={avoW} />
       </div>
-      <svg viewBox="44 -2 132 74" width={hatW} height={hatH} aria-hidden="true"
-        className="absolute left-1/2 -translate-x-1/2 pointer-events-none" style={{ top: size * (12 / 220) }}>
+      <svg viewBox="44 -28 132 100" width={hatW} height={hatH} aria-hidden="true"
+        className="absolute left-1/2 -translate-x-1/2 pointer-events-none" style={{ top: size * (10 / 220) }}>
         {WIZARD_HAT}
       </svg>
     </div>
@@ -123,12 +123,18 @@ export function ThemedAvocado({ theme = 'reports', size = 64, className = '' }) 
   )
 }
 
-// Plain header (no background): themed mascot + dark title + subtitle, with
-// optional controls pushed to the right. Sits on the page's own background.
-export default function FeatureHeader({ theme = 'reports', title, subtitle, badge, action }) {
+const THEMED = new Set(['wizard', 'econ', 'reports', 'steals'])
+
+// The standard page header (no background): a mascot + dark title + subtitle,
+// with optional controls pushed to the right. Pass `theme` for a page-themed
+// avocado (econ/reports/steals), or `expression` for a plain brand mascot
+// (any GuacMascot pose) on every other page.
+export default function FeatureHeader({ theme, expression = 'happy', title, subtitle, badge, action }) {
   return (
     <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
-      <ThemedAvocado theme={theme} size={60} className="shrink-0" />
+      {THEMED.has(theme)
+        ? <ThemedAvocado theme={theme} size={60} className="shrink-0" />
+        : <GuacMascot expression={expression} size={60} className="shrink-0" />}
       <div className="min-w-0">
         <h1 className="text-2xl sm:text-3xl font-black text-gray-900 leading-none tracking-tight">{title}</h1>
         {subtitle && <p className="text-xs sm:text-sm text-gray-500 mt-1.5">{subtitle}</p>}

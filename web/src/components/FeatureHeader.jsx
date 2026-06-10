@@ -60,12 +60,17 @@ const PROP_OVERLAY = {
 // Layers drawn BEHIND the mascot (e.g. a cape draping out past the body).
 const BEHIND_OVERLAY = {}
 
-// The wizard hat alone (in the mascot's 0 0 220 290 coords), drawn into a
-// cropped svg so it can be sized big over a small mascot.
-const WIZARD_HAT = (
+// The wizard hat (in the mascot's 0 0 220 290 coords). Split into brim + cone
+// so they can be slimmed independently: the cone is narrowed more than the
+// (wide) brim for a classic witch-hat silhouette.
+const WIZARD_HAT_BRIM = (
   <>
     <ellipse cx="110" cy="57" rx="49" ry="11" fill="#581c87" />
     <ellipse cx="110" cy="54" rx="49" ry="9" fill="#7e22ce" />
+  </>
+)
+const WIZARD_HAT_CONE = (
+  <>
     <path d="M74 55 C 76 22, 86 -6, 106 -16 C 120 -24, 138 -20, 146 -6 C 156 8, 154 22, 144 24 C 137 25, 133 19, 134 12 C 132 30, 136 46, 144 55 Z" fill="#7c3aed" />
     <path d="M76 54 C 78 24, 88 -2, 106 -12 C 94 -2, 86 18, 82 44 C 80 49, 77 53, 76 54 Z" fill="#a855f7" opacity="0.45" />
     <Star x={97} y={28} s={1.4} fill="#f59e0b" stroke="#b45309" strokeWidth={0.8} />
@@ -128,8 +133,9 @@ function WizardAvocado({ size, className = '' }) {
       </div>
       <svg viewBox="44 -28 132 100" width={hatW} height={hatH} aria-hidden="true"
         className="absolute left-1/2 -translate-x-1/2 pointer-events-none" style={{ top: size * (10 / 220) }}>
-        {/* matrix slims the hat horizontally (84%) around its center x=110 */}
-        <g transform="matrix(0.84 0 0 1 17.6 0)">{WIZARD_HAT}</g>
+        {/* brim stays wide; the cone is slimmed more → witch-hat silhouette */}
+        <g transform="matrix(0.9 0 0 1 11 0)">{WIZARD_HAT_BRIM}</g>
+        <g transform="matrix(0.66 0 0 1 37.4 0)">{WIZARD_HAT_CONE}</g>
       </svg>
     </div>
   )

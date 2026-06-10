@@ -68,12 +68,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // the apply_referral_code RPC into profiles.smash_days_bonus.
   // Loaded once per mount and passed to every computeSmashDays call.
   int _smashDaysBonus = 0;
+  int _referralCount = 0;  // for the GuacMoney balance (referral bonus)
+  int _freshSteals = 0;    // new Steals found overnight (unread on saved searches)
 
   @override
   void initState() {
     super.initState();
     _bankDataFuture = fetchBankData();
     _loadSmashDaysBonus();
+    fetchReferralCount().then((n) { if (mounted) setState(() => _referralCount = n); });
+    _loadFreshSteals();
     // Hydrate the persisted time-frame from SharedPreferences so the
     // mobile dashboard remembers the user's last selection across
     // app launches — same UX guarantee the web Zustand store gives
@@ -97,6 +101,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
     // default (1-month, 10-cap) is too narrow.
     context.read<ReceiptProvider>().loadReceipts(period: ReceiptPeriod.all);
     context.read<RewardProvider>().loadRewards();
+  }
+
+  // New Steals found overnight = seen_steals rows newer than the last time the
+  // user opened the Steals feed (steals_state.checked_at).
+  Future<void> _loadFreshSteals() async {
+    try {
+      final sb = Supabase.instance.client;
+      final user = sb.auth.currentUser;
+      if (user == null) return;
+      final state = await sb.from('steals_state').select('checked_at').eq('user_id', user.id).maybeSingle();
+      final checkedAt = (state?['checked_at'] as String?) ?? '1970-01-01';
+      final rows = await sb.from('seen_steals').select('deal_key').eq('user_id', user.id).gt('first_seen_at', checkedAt);
+      if (mounted) setState(() => _freshSteals = (rows as List).length);
+    } catch (_) {/* tables may not exist / offline */}
   }
 
   Future<void> _loadSmashDaysBonus() async {
@@ -304,9 +322,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Text(rangeLabel.toLowerCase(),
                   style: const TextStyle(fontSize: 11, color: Colors.black38)),
               ])),
-              // GuacMoney = money our Guac-AI saved you — coin pill, counts up.
-              GuacMoneyPill(points: gmPointsFromSaved(guacMoneySaved(receipts))),
+              // GuacMoney (saved $ + scan/refer points) — coin pill, counts up.
+              GuacMoneyPill(points: guacMoneyPoints(
+                receipts: receipts.length,
+                referrals: _referralCount,
+                savedDollars: guacMoneySaved(receipts))),
             ]),
+            if (_freshSteals > 0) ...[
+              const SizedBox(height: 12),
+              _freshStealsBanner(),
+            ],
             const SizedBox(height: 14),
             // Quick-access feature icons — horizontal scroll under the snapshot.
             _featureIconStrip(),
@@ -495,6 +520,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // Gross spend over the selected window (returns excluded).
   double _periodSpend(List<Receipt> rs) =>
       rs.fold<double>(0.0, (s, r) => s + (r.isReturn ? 0 : r.totalAmount));
+
+  // Banner for new Steals found by the overnight cron — taps into /steals.
+  Widget _freshStealsBanner() {
+    return InkWell(
+      onTap: () => context.push('/steals'),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFFfb7185), Color(0xFFdb2777)]),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [BoxShadow(color: const Color(0xFFdb2777).withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 4))],
+        ),
+        child: Row(children: [
+          const Text('🥑', style: TextStyle(fontSize: 22)),
+          const SizedBox(width: 10),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+            Text('$_freshSteals new Steal${_freshSteals == 1 ? '' : 's'} found',
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 15)),
+            const Text('on your saved searches — tap to see them',
+              style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
+          ])),
+          const Icon(Icons.chevron_right_rounded, color: Colors.white),
+        ]),
+      ),
+    );
+  }
 
   // Quick-access feature icons shown under the dashboard snapshot.
   Widget _featureIconStrip() {

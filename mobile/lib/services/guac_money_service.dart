@@ -116,13 +116,33 @@ String formatGuacMoney(double amount) {
   return '\$${amount.toStringAsFixed(2)}';
 }
 
-// ── GuacMoney = MONEY OUR GUAC-AI SAVED YOU (1000 GM = $1) ───────────
-// GuacMoney is the money our Guac-AI saved you: purchases you rated "not
-// worth it" (so you won't re-buy them) + refunds you recovered, dollar for
-// dollar. A status balance for now — affiliate-funded redemption comes later.
-const int kGmPerDollar  = 1000;  // 1000 GuacMoney = $1
-const int kGmRewardStep = 5000;  // next milestone (= $5)
-const String kGmTagline = 'The money our Guac-AI saved you 🥑';
+// ── GuacMoney (1000 GM = $1; redeemable — coming soon) ──────────────
+// One umbrella balance combining:
+//   • Money our Guac-AI saved you ($-for-$): purchases rated "not worth it"
+//     (rating ≤ 2, you won't re-buy) + refunds recovered.  → ×1000 GM per $1
+//   • Engagement: scan a receipt (+100), refer a friend (+1,000).
+const int kGmPerDollar   = 1000;  // 1000 GuacMoney = $1 (redeemable later)
+const int kGmPerReceipt  = 100;   // every receipt scanned
+const int kGmPerReferral = 1000;  // every friend who joins
+const int kGmRewardStep  = 5000;  // next milestone (= $5)
+const String kGmTagline = 'Saved by our Guac-AI + earned by you 🥑';
+
+/// Total GuacMoney = saved $ (×1000) + receipts (×100) + referrals (×1000).
+int guacMoneyPoints({required int receipts, required int referrals, required double savedDollars}) =>
+    receipts * kGmPerReceipt + referrals * kGmPerReferral + gmPointsFromSaved(savedDollars);
+
+/// Count of the user's successful referrals (rows in `referrals`).
+Future<int> fetchReferralCount() async {
+  final sb = Supabase.instance.client;
+  final user = sb.auth.currentUser;
+  if (user == null) return 0;
+  try {
+    final rows = await sb.from('referrals').select('id').eq('referrer_id', user.id);
+    return (rows as List).length;
+  } catch (_) {
+    return 0;
+  }
+}
 
 /// Dollars saved = not-worth-it purchases (rating ≤ 2, you won't re-buy) +
 /// refunds you got back ($-for-$).

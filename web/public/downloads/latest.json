@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.66",
-  "name": "v0.3.66 — GuacMoney = the money Guac-AI saved you",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.66/app-arm64-v8a-release.apk",
-  "releaseNotes": "• GuacMoney now means real savings — the money our Guac-AI saved you: purchases you rated “not worth it” (so you won't re-buy them) + refunds you recovered, dollar for dollar.\n• GuacMoney screen shows where it came from (not-worth-it vs refunds) and how to grow it (rate your purchases in Worth It?).\n• 1,000 GuacMoney = $1."
+  "version": "v0.3.67",
+  "name": "v0.3.67 — Combined GuacMoney + WebView close button",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.67/app-arm64-v8a-release.apk",
+  "releaseNotes": "• GuacMoney is one balance now: money saved (not-worth-it ratings + refunds, $-for-$) + points for scanning (+100) and referring (+1,000). Redeem for gift cards — coming soon.\n• Dashboard banner shows how many new Steals were found overnight on your saved searches.\n• In-app web screens: tap the X (next to refresh) to close; the duplicate heading is gone; closing refreshes your data so ratings update GuacMoney."
 }

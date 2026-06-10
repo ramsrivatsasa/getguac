@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.69",
-  "name": "v0.3.69 — GuacMoney: redeem the earned part only",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.69/app-arm64-v8a-release.apk",
-  "releaseNotes": "\u2022 GuacMoney now splits clearly: scanning, referrals and (soon) shopping commission are REDEEMABLE for gift cards \u2014 coming soon. The money our Guac-AI saved you (not-worth-it ratings + refunds) is yours to keep, shown as value."
+  "version": "v0.3.70",
+  "name": "v0.3.70 — App icon is the 🥑",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.70/app-arm64-v8a-release.apk",
+  "releaseNotes": "\u2022 New app icon \u2014 the \uD83E\uDD51 avocado on the GetGuac green."
 }

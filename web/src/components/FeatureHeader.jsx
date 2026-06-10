@@ -90,7 +90,7 @@ function WizardAvocado({ size, className = '' }) {
   const hatW = size * (188 / 220)
   const hatH = hatW * (100 / 132)
   return (
-    <div className={`relative ${className}`} style={{ width: size, height: size * (300 / 220) }}>
+    <div className={`relative ${className}`} style={{ width: size, height: size * (290 / 220) }}>
       <div className="absolute left-1/2 -translate-x-1/2" style={{ bottom: size * (6 / 220) }}>
         <GuacMascot expression="happy" size={avoW} />
       </div>

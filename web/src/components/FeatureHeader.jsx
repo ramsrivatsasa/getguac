@@ -90,30 +90,22 @@ const WIZARD_HAT = (
 // can reach past the body) so it reads as the avocado holding the wand.
 const HAND_WAND = (
   <>
-    {/* short green arm from the body to the wrist */}
-    <path d="M150 172 C 161 184, 170 192, 178 199" stroke="#10b981" strokeWidth="11" fill="none" strokeLinecap="round" />
-    {/* palm / heel (behind the wand) */}
-    <g transform="translate(185 206) rotate(-57)">
-      <path d="M-4 6 Q -13 18 0 23 Q 14 26 18 12 Q 20 2 11 -2 Q 1 -4 -4 6 Z" fill="#f6b81a" stroke="#d9941a" strokeWidth="1.4" />
-    </g>
-    {/* wand: black shaft + white tip */}
-    <line x1="176" y1="209" x2="212" y2="153" stroke="#1f2937" strokeWidth="6.5" strokeLinecap="round" />
-    <line x1="209" y1="158" x2="229" y2="126" stroke="#9aa4b2" strokeWidth="8.5" strokeLinecap="round" />
-    <line x1="210" y1="157" x2="228" y2="127" stroke="#fff" strokeWidth="6.2" strokeLinecap="round" />
-    {/* open/relaxed fingers curling over the wand + thumb */}
-    <g transform="translate(185 206) rotate(-57)" stroke="#d9941a" strokeWidth="1.3" strokeLinejoin="round">
-      <g fill="#fcc419">
-        <rect x="-15" y="-16" width="28" height="8" rx="4" transform="rotate(-8 -1 -12)" />
-        <rect x="-16" y="-7" width="30" height="8" rx="4" transform="rotate(-2 -1 -3)" />
-        <rect x="-15" y="2" width="28" height="8" rx="4" transform="rotate(4 -1 6)" />
-        <rect x="-13" y="11" width="24" height="7.5" rx="3.75" transform="rotate(9 -1 15)" />
-      </g>
-      <path d="M-9 17 Q -18 7 -12 -4 Q -7 -9 -2 -5 Q 0 5 -4 14 Z" fill="#f6b81a" />
+    {/* the mascot's own raised arm (green) — matches the brand mascot */}
+    <path d="M150 158 C 167 150, 181 139, 191 125" stroke="#10b981" strokeWidth="13" fill="none" strokeLinecap="round" />
+    {/* wand in the raised hand, pointing up-right */}
+    <line x1="197" y1="116" x2="227" y2="92" stroke="#1f2937" strokeWidth="6" strokeLinecap="round" />
+    <line x1="215" y1="103" x2="229" y2="90" stroke="#9aa4b2" strokeWidth="8" strokeLinecap="round" />
+    <line x1="216" y1="102" x2="228" y2="91" stroke="#fff" strokeWidth="6" strokeLinecap="round" />
+    {/* light hand gripping — the mascot's hand color */}
+    <circle cx="193" cy="121" r="11.5" fill="#fde68a" stroke="#cf9b3c" strokeWidth="1.3" />
+    <g stroke="#cf9b3c" strokeWidth="1.1" fill="none" strokeLinecap="round" strokeOpacity="0.65">
+      <path d="M187 117 q 5 -4 11 -1" />
+      <path d="M186 122 q 6 -3 12 -1" />
     </g>
     {/* sparkles at the tip */}
-    <Star x={234} y={116} s={1.8} fill="#fde047" stroke="#eab308" strokeWidth={0.8} />
-    <Star x={216} y={104} s={1.05} fill="#fde047" stroke="#eab308" strokeWidth={0.8} />
-    <Star x={241} y={138} s={0.95} fill="#fde047" stroke="#eab308" strokeWidth={0.8} />
+    <Star x={234} y={82} s={1.6} fill="#fde047" stroke="#eab308" strokeWidth={0.8} />
+    <Star x={219} y={74} s={1.0} fill="#fde047" stroke="#eab308" strokeWidth={0.8} />
+    <Star x={239} y={100} s={0.9} fill="#fde047" stroke="#eab308" strokeWidth={0.8} />
   </>
 )
 

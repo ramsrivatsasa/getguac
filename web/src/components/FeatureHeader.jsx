@@ -31,20 +31,18 @@ const Star = ({ x, y, s = 1, fill = '#fde047' }) => (
 // Props drawn in the mascot's viewBox (0 0 220 290): head-top ≈ y40–52,
 // eyes ≈ (96,96)/(124,96). null = no overlay (the pose already fits).
 const PROP_OVERLAY = {
-  // Classic blue sorcerer hat dusted with stars (+ a little wand).
+  // Floppy-tip purple wizard hat with a red band + gold buckle (+ a wand).
   wizard: (
     <>
       <line x1="150" y1="176" x2="206" y2="120" stroke="#3f2d0b" strokeWidth="7" strokeLinecap="round" />
-      <Star x={210} y={114} s={1.5} fill="#fde047" />
-      <ellipse cx="110" cy="54" rx="58" ry="13" fill="#1e3a8a" />
-      <path d="M54 54 Q 96 3 122 9 Q 140 13 166 54 Z" fill="#2563eb" />
-      <path d="M54 54 Q 96 3 122 9 Q 110 8 92 18 Q 70 34 60 48 Z" fill="#3b82f6" opacity="0.5" />
-      <Star x={110} y={31} s={1.7} fill="#fde047" />
-      <Star x={89} y={44} s={1.0} fill="#ffffff" />
-      <Star x={131} y={41} s={1.15} fill="#fef08a" />
-      <Star x={108} y={15} s={0.85} fill="#ffffff" />
-      <circle cx="121" cy="49" r="1.5" fill="#fff" />
-      <circle cx="97" cy="25" r="1.3" fill="#fde047" />
+      <Star x={210} y={114} s={1.4} fill="#fde047" />
+      <ellipse cx="110" cy="57" rx="60" ry="13" fill="#7e22ce" />
+      <ellipse cx="110" cy="54" rx="60" ry="11" fill="#9333ea" />
+      <path d="M68 56 C 72 30, 90 16, 116 14 C 140 12, 156 14, 168 22 C 178 29, 174 38, 163 39 C 155 40, 149 35, 147 29 C 146 41, 146 50, 150 56 Z" fill="#a21caf" />
+      <path d="M70 55 C 74 31, 90 18, 114 15 C 100 22, 88 34, 82 47 C 79 51, 75 54, 72 55 Z" fill="#c026d3" opacity="0.55" />
+      <path d="M72 45 Q 110 53 148 45 L148 53 Q 110 61 72 53 Z" fill="#dc2626" />
+      <rect x="103" y="44" width="15" height="12" rx="2.5" fill="#facc15" stroke="#a16207" strokeWidth="1.5" />
+      <rect x="107" y="47" width="7" height="6" rx="1" fill="#dc2626" stroke="#a16207" strokeWidth="1" />
     </>
   ),
   econ: (

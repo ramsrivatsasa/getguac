@@ -75,6 +75,14 @@ export default function ReportsPage() {
   const { spendingPeriod, spendingPeriodCount } = useStore()
   const dateFrom = periodStartIsoDate(spendingPeriod, spendingPeriodCount)
   const periodLabel = timeframeLabel(spendingPeriod, spendingPeriodCount)
+  // `period` carries the window's label + day-span. Used for the trend badge
+  // (shown only for windows ≤ 90d) and CSV/section labels. (Restored — a
+  // refactor had left period.days / period.label references dangling, which
+  // crashed the page with "period is not defined".)
+  const period = {
+    label: periodLabel,
+    days: dateFrom ? Math.round((Date.now() - new Date(dateFrom).getTime()) / 86400000) : null,
+  }
 
   const { data: receipts = [], isLoading } = useQuery({
     queryKey: ['reports', spendingPeriod, spendingPeriodCount],

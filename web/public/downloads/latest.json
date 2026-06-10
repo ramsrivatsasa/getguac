@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.64",
-  "name": "v0.3.64 — Swipe back everywhere + tighter icons",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.64/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Swipe to go back on any screen — including the in-app web screens (Reports, Steals, etc.), which now also step back through their own history first.\n• Back arrow on every screen.\n• Even tighter spacing between the top-bar icons.\n• (Live) Fixed the Reports screen crash."
+  "version": "v0.3.65",
+  "name": "v0.3.65 — GuacMoney polish",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.65/app-arm64-v8a-release.apk",
+  "releaseNotes": "• GuacMoney screen tidied — readable title, progress shown as milestones (no redemption claims yet).\n• Removed the always-on notification dot from the top bar."
 }

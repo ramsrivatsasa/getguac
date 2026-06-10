@@ -40,7 +40,12 @@ class _GuacMoneyScreenState extends State<GuacMoneyScreen> {
     const emerald = Color(0xFF166534);
     return Scaffold(
       backgroundColor: const Color(0xFFf9fafb),
-      appBar: AppBar(backgroundColor: emerald, foregroundColor: Colors.white, title: const Text('GuacMoney')),
+      appBar: AppBar(
+        backgroundColor: emerald,
+        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text('GuacMoney', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+      ),
       body: FutureBuilder<({int receipts, int referrals})>(
         future: _future,
         builder: (ctx, snap) {
@@ -80,21 +85,14 @@ class _GuacMoneyScreenState extends State<GuacMoneyScreen> {
             ),
             const SizedBox(height: 16),
             _card(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                const Text('Next reward', style: TextStyle(fontWeight: FontWeight.w800)),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(color: const Color(0xFFe2e8f0), borderRadius: BorderRadius.circular(10)),
-                  child: const Text('Redeem soon', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF475569))),
-                ),
-              ]),
+              const Text('Your progress', style: TextStyle(fontWeight: FontWeight.w800)),
               const SizedBox(height: 10),
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: LinearProgressIndicator(value: progress, minHeight: 10, backgroundColor: const Color(0xFFf1f5f9), color: const Color(0xFFf59e0b)),
               ),
               const SizedBox(height: 8),
-              Text('${formatGm(toNext)} more GuacMoney → a \$5 gift card', style: const TextStyle(fontSize: 12, color: Colors.black54)),
+              Text('${formatGm(toNext)} more GuacMoney to your next milestone 🥑', style: const TextStyle(fontSize: 12, color: Colors.black54)),
             ])),
             const SizedBox(height: 16),
             _card(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

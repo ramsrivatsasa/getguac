@@ -90,20 +90,27 @@ const WIZARD_HAT = (
 // can reach past the body) so it reads as the avocado holding the wand.
 const HAND_WAND = (
   <>
-    <path d="M150 168 C 164 182, 174 192, 182 200" stroke="#10b981" strokeWidth="12" fill="none" strokeLinecap="round" />
-    <line x1="180" y1="206" x2="218" y2="146" stroke="#1f2937" strokeWidth="5.5" strokeLinecap="round" />
-    <circle cx="218" cy="146" r="4.5" fill="#fff" stroke="#1f2937" strokeWidth="1" />
-    <circle cx="180" cy="206" r="3.5" fill="#fff" />
-    <ellipse cx="171" cy="207" rx="5" ry="7.5" fill="#fde68a" stroke="#b45309" strokeWidth="1" strokeOpacity="0.4" transform="rotate(-22 171 207)" />
-    <ellipse cx="184" cy="202" rx="13" ry="12" fill="#fde68a" stroke="#b45309" strokeWidth="1" strokeOpacity="0.4" />
-    <g stroke="#b45309" strokeWidth="1.2" strokeOpacity="0.45" strokeLinecap="round">
-      <line x1="177" y1="194" x2="174" y2="189" />
-      <line x1="184" y1="192" x2="184" y2="187" />
-      <line x1="191" y1="194" x2="194" y2="189" />
+    {/* short green arm from the body to the wrist */}
+    <path d="M150 172 C 161 184, 170 192, 178 199" stroke="#10b981" strokeWidth="11" fill="none" strokeLinecap="round" />
+    {/* wand: black shaft + white tip */}
+    <line x1="176" y1="209" x2="212" y2="153" stroke="#1f2937" strokeWidth="6.5" strokeLinecap="round" />
+    <line x1="209" y1="158" x2="229" y2="126" stroke="#9aa4b2" strokeWidth="8.5" strokeLinecap="round" />
+    <line x1="210" y1="157" x2="228" y2="127" stroke="#fff" strokeWidth="6.2" strokeLinecap="round" />
+    {/* emoji-style fist gripping the wand */}
+    <g transform="translate(184 205) rotate(-57)" stroke="#d9941a" strokeWidth="1.5" strokeLinejoin="round">
+      <path d="M-15 -3 Q -18 13 -7 20 Q 5 26 15 19 Q 21 13 18 1 Q 15 -11 1 -13 Q -11 -13 -15 -3 Z" fill="#fbbf24" />
+      <g fill="#fbbf24">
+        <rect x="-17" y="-10" width="21" height="9" rx="4.5" />
+        <rect x="-18" y="-1" width="23" height="9" rx="4.5" />
+        <rect x="-17" y="8" width="22" height="9" rx="4.5" />
+        <rect x="-15" y="17" width="18" height="8.5" rx="4.2" />
+      </g>
+      <path d="M9 -10 Q 20 -8 20 3 Q 20 11 12 12 Q 7 9 8 1 Q 8 -6 9 -10 Z" fill="#fcd34d" />
     </g>
-    <Star x={225} y={135} s={1.6} fill="#fde047" stroke="#eab308" strokeWidth={0.8} />
-    <Star x={210} y={122} s={1.0} fill="#fde047" stroke="#eab308" strokeWidth={0.8} />
-    <Star x={236} y={152} s={0.9} fill="#fde047" stroke="#eab308" strokeWidth={0.8} />
+    {/* sparkles at the tip */}
+    <Star x={234} y={116} s={1.8} fill="#fde047" stroke="#eab308" strokeWidth={0.8} />
+    <Star x={216} y={104} s={1.05} fill="#fde047" stroke="#eab308" strokeWidth={0.8} />
+    <Star x={241} y={138} s={0.95} fill="#fde047" stroke="#eab308" strokeWidth={0.8} />
   </>
 )
 

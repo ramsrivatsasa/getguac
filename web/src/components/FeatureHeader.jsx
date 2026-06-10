@@ -92,20 +92,21 @@ const HAND_WAND = (
   <>
     {/* the mascot's own raised arm (green) — matches the brand mascot */}
     <path d="M150 158 C 167 150, 180 140, 188 129" stroke="#10b981" strokeWidth="13" fill="none" strokeLinecap="round" />
-    {/* wand in the raised hand, pointing up-right */}
-    <line x1="197" y1="116" x2="227" y2="92" stroke="#1f2937" strokeWidth="6" strokeLinecap="round" />
-    <line x1="215" y1="103" x2="229" y2="90" stroke="#9aa4b2" strokeWidth="8" strokeLinecap="round" />
-    <line x1="216" y1="102" x2="228" y2="91" stroke="#fff" strokeWidth="6" strokeLinecap="round" />
-    {/* open hand — the mascot's hand color */}
-    <circle cx="193" cy="121" r="11.5" fill="#fde68a" stroke="#cf9b3c" strokeWidth="1.3" />
-    <g stroke="#cf9b3c" strokeWidth="1.1" fill="none" strokeLinecap="round" strokeOpacity="0.65">
-      <path d="M187 117 q 5 -4 11 -1" />
-      <path d="M186 122 q 6 -3 12 -1" />
+    {/* wand emerging from the top of the fist */}
+    <line x1="195" y1="118" x2="226" y2="90" stroke="#1f2937" strokeWidth="6" strokeLinecap="round" />
+    <line x1="214" y1="101" x2="228" y2="89" stroke="#9aa4b2" strokeWidth="8" strokeLinecap="round" />
+    <line x1="215" y1="100" x2="227" y2="90" stroke="#fff" strokeWidth="6" strokeLinecap="round" />
+    {/* fist (closed hand) gripping the wand — mascot hand colour */}
+    <path d="M178 119 Q 174 131 184 137 Q 196 142 205 134 Q 211 128 208 117 Q 204 108 192 109 Q 182 110 178 119 Z" fill="#fde68a" stroke="#cf9b3c" strokeWidth="1.5" />
+    <path d="M199 111 Q 209 110 210 119 Q 210 127 202 128 Q 197 125 197 118 Q 198 113 199 111 Z" fill="#fce7a8" stroke="#cf9b3c" strokeWidth="1.2" />
+    <g stroke="#cf9b3c" strokeWidth="1.3" fill="none" strokeLinecap="round" strokeOpacity="0.7">
+      <path d="M182 125 q 9 -4 17 -1" />
+      <path d="M183 131 q 9 -4 15 -1" />
     </g>
     {/* sparkles at the tip */}
-    <Star x={234} y={82} s={1.6} fill="#fde047" stroke="#eab308" strokeWidth={0.8} />
-    <Star x={219} y={74} s={1.0} fill="#fde047" stroke="#eab308" strokeWidth={0.8} />
-    <Star x={239} y={100} s={0.9} fill="#fde047" stroke="#eab308" strokeWidth={0.8} />
+    <Star x={233} y={80} s={1.6} fill="#fde047" stroke="#eab308" strokeWidth={0.8} />
+    <Star x={218} y={72} s={1.0} fill="#fde047" stroke="#eab308" strokeWidth={0.8} />
+    <Star x={238} y={98} s={0.9} fill="#fde047" stroke="#eab308" strokeWidth={0.8} />
   </>
 )
 

@@ -93,7 +93,7 @@ class _GuacMoneyScreenState extends State<GuacMoneyScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.22), borderRadius: BorderRadius.circular(20)),
-                  child: Text('Redeem ≈ \$${redeemable.toStringAsFixed(2)} · coming soon',
+                  child: Text('Worth ≈ \$${redeemable.toStringAsFixed(2)} 🥑',
                     style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13)),
                 ),
               ]),
@@ -122,7 +122,7 @@ class _GuacMoneyScreenState extends State<GuacMoneyScreen> {
             _card(Column(crossAxisAlignment: CrossAxisAlignment.start, children: const [
               Text('How you earn', style: TextStyle(fontWeight: FontWeight.w800)),
               SizedBox(height: 6),
-              Text('• Rate purchases in Worth It? — anything "not worth it" is money you\'ll save by skipping it (\$-for-\$).\n• Refunds you recover count too, dollar for dollar.\n• Scan a receipt: +100. Refer a friend: +1,000.\n• 1,000 GuacMoney = \$1 — redeemable for gift cards, coming soon.',
+              Text('• Rate purchases in Worth It? — anything "not worth it" is money you\'ll save by skipping it (\$-for-\$).\n• Refunds you recover count too, dollar for dollar.\n• Scan a receipt: +100. Refer a friend: +1,000.\n• 1,000 GuacMoney = \$1 in value. Rewards may follow once we partner with brands.',
                 style: TextStyle(fontSize: 12.5, color: Colors.black54, height: 1.5)),
             ])),
             const SizedBox(height: 16),

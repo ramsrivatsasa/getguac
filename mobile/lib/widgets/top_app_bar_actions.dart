@@ -21,7 +21,7 @@ List<Widget> topAppBarActions(BuildContext context, {bool whiteIcons = true}) {
       icon: Icon(Icons.notifications_none_rounded, color: iconColor),
       tooltip: 'Notifications',
       visualDensity: VisualDensity.compact,
-      padding: const EdgeInsets.symmetric(horizontal: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 3),
       constraints: const BoxConstraints(),
       onPressed: () {
         // Placeholder until the notifications inbox is built. Surface
@@ -39,7 +39,7 @@ List<Widget> topAppBarActions(BuildContext context, {bool whiteIcons = true}) {
       icon: Icon(Icons.chat_bubble_outline, color: iconColor),
       tooltip: 'Chat',
       visualDensity: VisualDensity.compact,
-      padding: const EdgeInsets.symmetric(horizontal: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 3),
       constraints: const BoxConstraints(),
       onPressed: () => context.go('/chat'),
     ),
@@ -47,29 +47,20 @@ List<Widget> topAppBarActions(BuildContext context, {bool whiteIcons = true}) {
       icon: Icon(Icons.person_add_alt_1, color: iconColor),
       tooltip: 'Refer a friend',
       visualDensity: VisualDensity.compact,
-      padding: const EdgeInsets.symmetric(horizontal: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 3),
       constraints: const BoxConstraints(),
       onPressed: () => context.go('/invite'),
     ),
-    // Slim Sign out pill — compact, low-chrome like the update button.
-    Padding(
-      padding: const EdgeInsets.only(right: 6, left: 4),
-      child: TextButton.icon(
-        onPressed: () => _confirmAndSignOut(context),
-        icon: Icon(Icons.logout_rounded, size: 15, color: iconColor),
-        label: Text('Sign out',
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: iconColor)),
-        style: TextButton.styleFrom(
-          foregroundColor: iconColor,
-          backgroundColor: whiteIcons ? Colors.white.withValues(alpha: 0.14) : null,
-          visualDensity: VisualDensity.compact,
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          minimumSize: Size.zero,
-          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        ),
-      ),
+    // Sign out — icon only.
+    IconButton(
+      icon: Icon(Icons.logout_rounded, color: iconColor),
+      tooltip: 'Sign out',
+      visualDensity: VisualDensity.compact,
+      padding: const EdgeInsets.symmetric(horizontal: 3),
+      constraints: const BoxConstraints(),
+      onPressed: () => _confirmAndSignOut(context),
     ),
+    const SizedBox(width: 4),
   ];
 }
 
@@ -112,7 +103,7 @@ class _StealsActionState extends State<_StealsAction> {
         icon: Icon(Icons.local_offer_rounded, color: widget.iconColor),
         tooltip: 'Steals',
         visualDensity: VisualDensity.compact,
-        padding: const EdgeInsets.symmetric(horizontal: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 3),
         constraints: const BoxConstraints(),
         onPressed: () => context.go('/steals'),
       ),

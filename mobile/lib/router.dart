@@ -77,6 +77,7 @@ final appRouter = GoRouter(
         GoRoute(path: '/connections/link/:id', builder: (_, state) =>
           LinkRetailerScreen(retailerId: state.pathParameters['id']!)),
         GoRoute(path: '/reports',     builder: (_, __) => const WebAppScreen(path: '/reports', title: 'Reports')),
+        GoRoute(path: '/validate',    builder: (_, __) => const WebAppScreen(path: '/validate', title: 'Worth It?')),
         GoRoute(path: '/returns',     builder: (_, __) => const ReturnsScreen()),
         GoRoute(path: '/stores',      builder: (_, __) => const WebAppScreen(path: '/stores', title: 'Stores')),
         GoRoute(path: '/report-problem', builder: (_, state) {

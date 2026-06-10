@@ -495,15 +495,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   // Quick-access feature icons shown under the dashboard snapshot.
   Widget _featureIconStrip() {
-    final items = <({String route, IconData icon, String label, Color color})>[
-      (route: _receiptsDeepLink(), icon: Icons.fact_check_rounded,            label: 'Worth It?',   color: const Color(0xFFf59e0b)),
-      (route: '/guacanomics',      icon: Icons.auto_awesome,                  label: 'Guacanomics', color: const Color(0xFF16a34a)),
-      (route: '/guacwizard',       icon: Icons.auto_fix_high,                 label: 'GuacWizard',  color: const Color(0xFF7c3aed)),
-      (route: '/steals',           icon: Icons.local_offer,                   label: 'Steals',      color: const Color(0xFFdb2777)),
-      (route: '/rewards',          icon: Icons.card_giftcard_rounded,         label: 'Rewards',     color: const Color(0xFFe11d48)),
-      (route: '/stash',            icon: Icons.inventory_2,                   label: 'Stash',       color: const Color(0xFFca8a04)),
-      (route: '/inbox',            icon: Icons.mark_email_unread_rounded,     label: 'Inbox',       color: const Color(0xFFd97706)),
-      (route: '/car-miles',        icon: Icons.directions_car_filled_rounded, label: 'Miles',       color: const Color(0xFF0891b2)),
+    final items = <({String route, IconData icon, String label, List<Color> gradient, Color color})>[
+      (route: '/validate',    icon: Icons.fact_check_rounded,            label: 'Worth It?',   gradient: const [Color(0xFFfbbf24), Color(0xFFf43f5e)], color: const Color(0xFFf59e0b)),
+      (route: '/guacanomics', icon: Icons.auto_awesome,                  label: 'Guacanomics', gradient: const [Color(0xFF34d399), Color(0xFF15803d)], color: const Color(0xFF16a34a)),
+      (route: '/guacwizard',  icon: Icons.auto_fix_high,                 label: 'GuacWizard',  gradient: const [Color(0xFFa78bfa), Color(0xFF7c3aed)], color: const Color(0xFF7c3aed)),
+      (route: '/steals',      icon: Icons.local_offer,                   label: 'Steals',      gradient: const [Color(0xFFf9a8d4), Color(0xFFdb2777)], color: const Color(0xFFdb2777)),
+      (route: '/rewards',     icon: Icons.card_giftcard_rounded,         label: 'Rewards',     gradient: const [Color(0xFFfb7185), Color(0xFFe11d48)], color: const Color(0xFFe11d48)),
+      (route: '/stash',       icon: Icons.inventory_2,                   label: 'Stash',       gradient: const [Color(0xFFfde047), Color(0xFFca8a04)], color: const Color(0xFFca8a04)),
+      (route: '/inbox',       icon: Icons.mark_email_unread_rounded,     label: 'Inbox',       gradient: const [Color(0xFFfcd34d), Color(0xFFd97706)], color: const Color(0xFFd97706)),
+      (route: '/car-miles',   icon: Icons.directions_car_filled_rounded, label: 'Miles',       gradient: const [Color(0xFF67e8f9), Color(0xFF0891b2)], color: const Color(0xFF0891b2)),
     ];
     return SizedBox(
       height: 80,
@@ -524,11 +524,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   width: 54, height: 54,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: it.color.withValues(alpha: 0.12),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft, end: Alignment.bottomRight,
+                      colors: it.gradient,
+                    ),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: it.color.withValues(alpha: 0.20)),
+                    boxShadow: [BoxShadow(color: it.color.withValues(alpha: 0.30), blurRadius: 6, offset: const Offset(0, 2))],
                   ),
-                  child: Icon(it.icon, color: it.color, size: 25),
+                  child: Icon(it.icon, color: Colors.white, size: 25),
                 ),
                 const SizedBox(height: 4),
                 Text(it.label, maxLines: 1, overflow: TextOverflow.ellipsis,

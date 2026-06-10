@@ -33,28 +33,7 @@ const Star = ({ x, y, s = 1, fill = '#fde047', stroke, strokeWidth }) => (
 // Props drawn in the mascot's viewBox (0 0 220 290): head-top ≈ y40–52,
 // eyes ≈ (96,96)/(124,96). null = no overlay (the pose already fits).
 const PROP_OVERLAY = {
-  // Big purple sorcerer hat: orange stars, brown band + blue-gem buckle,
-  // long curled floppy tip — plus a star wand.
-  wizard: (
-    <>
-      <line x1="150" y1="176" x2="206" y2="120" stroke="#6b4226" strokeWidth="7" strokeLinecap="round" />
-      <Star x={210} y={114} s={1.5} fill="#fde047" />
-      <ellipse cx="110" cy="57" rx="70" ry="13" fill="#581c87" />
-      <ellipse cx="110" cy="54" rx="70" ry="11" fill="#7e22ce" />
-      <path d="M74 55 C 80 26, 94 6, 114 3 C 132 0, 150 5, 158 16 C 167 27, 160 35, 151 34 C 144 33, 141 27, 141 22 C 140 38, 142 49, 147 55 Z" fill="#7c3aed" />
-      <path d="M76 54 C 82 27, 95 9, 113 5 C 100 14, 90 30, 84 46 C 81 50, 78 53, 76 54 Z" fill="#a855f7" opacity="0.45" />
-      <Star x={95} y={37} s={1.4} fill="#f59e0b" stroke="#b45309" strokeWidth={0.8} />
-      <Star x={118} y={20} s={1.1} fill="#f59e0b" stroke="#b45309" strokeWidth={0.8} />
-      <Star x={135} y={30} s={0.95} fill="#f59e0b" stroke="#b45309" strokeWidth={0.8} />
-      <Star x={108} y={11} s={0.85} fill="#f59e0b" stroke="#b45309" strokeWidth={0.8} />
-      <Star x={123} y={44} s={0.75} fill="#f59e0b" stroke="#b45309" strokeWidth={0.8} />
-      <path d="M74 46 Q 110 53 146 46 L146 54 Q 110 61 74 54 Z" fill="#92400e" />
-      <path d="M74 46 Q 110 53 146 46" stroke="#b45309" strokeWidth="1.4" fill="none" />
-      <ellipse cx="110" cy="50" rx="11" ry="9" fill="#fbbf24" stroke="#b45309" strokeWidth="1.5" />
-      <ellipse cx="110" cy="50" rx="6.5" ry="7" fill="#2563eb" stroke="#1e40af" strokeWidth="1" />
-      <ellipse cx="107.5" cy="47" rx="2" ry="2.5" fill="#bfdbfe" opacity="0.85" />
-    </>
-  ),
+  wizard: null, // wizard has its own composition (small mascot + big hat) — see WizardAvocado
   econ: (
     <>
       <polygon points="110,12 186,40 110,68 34,40" fill="#0f172a" />
@@ -81,7 +60,50 @@ const PROP_OVERLAY = {
 // Layers drawn BEHIND the mascot (e.g. a cape draping out past the body).
 const BEHIND_OVERLAY = {}
 
+// The wizard hat alone (in the mascot's 0 0 220 290 coords), drawn into a
+// cropped svg so it can be sized big over a small mascot.
+const WIZARD_HAT = (
+  <>
+    <ellipse cx="110" cy="57" rx="60" ry="12" fill="#581c87" />
+    <ellipse cx="110" cy="54" rx="60" ry="10" fill="#7e22ce" />
+    <path d="M74 55 C 80 26, 94 6, 114 3 C 132 0, 150 5, 158 16 C 167 27, 160 35, 151 34 C 144 33, 141 27, 141 22 C 140 38, 142 49, 147 55 Z" fill="#7c3aed" />
+    <path d="M76 54 C 82 27, 95 9, 113 5 C 100 14, 90 30, 84 46 C 81 50, 78 53, 76 54 Z" fill="#a855f7" opacity="0.45" />
+    <Star x={95} y={37} s={1.4} fill="#f59e0b" stroke="#b45309" strokeWidth={0.8} />
+    <Star x={118} y={20} s={1.1} fill="#f59e0b" stroke="#b45309" strokeWidth={0.8} />
+    <Star x={135} y={30} s={0.95} fill="#f59e0b" stroke="#b45309" strokeWidth={0.8} />
+    <Star x={108} y={11} s={0.85} fill="#f59e0b" stroke="#b45309" strokeWidth={0.8} />
+    <Star x={123} y={44} s={0.75} fill="#f59e0b" stroke="#b45309" strokeWidth={0.8} />
+    <path d="M74 46 Q 110 53 146 46 L146 54 Q 110 61 74 54 Z" fill="#92400e" />
+    <path d="M74 46 Q 110 53 146 46" stroke="#b45309" strokeWidth="1.4" fill="none" />
+    <ellipse cx="110" cy="50" rx="11" ry="9" fill="#fbbf24" stroke="#b45309" strokeWidth="1.5" />
+    <ellipse cx="110" cy="50" rx="6.5" ry="7" fill="#2563eb" stroke="#1e40af" strokeWidth="1" />
+    <ellipse cx="107.5" cy="47" rx="2" ry="2.5" fill="#bfdbfe" opacity="0.85" />
+  </>
+)
+
+// Wizard = small mascot at the bottom with a BIG hat overlaid on top, so the
+// hat reads large without shrinking the brand mascot's proportions. `size`
+// is the overall width budget. Ratios are tuned so the brim rests on the
+// head just above the eyes.
+function WizardAvocado({ size, className = '' }) {
+  const avoW = size * (150 / 220)
+  const hatW = size * (188 / 220)
+  const hatH = hatW * (74 / 132)
+  return (
+    <div className={`relative ${className}`} style={{ width: size, height: size * (262 / 220) }}>
+      <div className="absolute left-1/2 -translate-x-1/2" style={{ bottom: size * (6 / 220) }}>
+        <GuacMascot expression="happy" size={avoW} />
+      </div>
+      <svg viewBox="44 -2 132 74" width={hatW} height={hatH} aria-hidden="true"
+        className="absolute left-1/2 -translate-x-1/2 pointer-events-none" style={{ top: size * (12 / 220) }}>
+        {WIZARD_HAT}
+      </svg>
+    </div>
+  )
+}
+
 export function ThemedAvocado({ theme = 'reports', size = 64, className = '' }) {
+  if (theme === 'wizard') return <WizardAvocado size={size} className={className} />
   const expr = THEME_EXPR[theme] || 'happy'
   const h = size * (290 / 220)
   return (

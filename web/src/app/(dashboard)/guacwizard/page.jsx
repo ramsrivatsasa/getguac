@@ -65,7 +65,7 @@ export default function GuacWizardPage() {
       <div className="card overflow-hidden bg-gradient-to-br from-emerald-100 via-lime-50 to-amber-50 border-emerald-200">
         <div className="flex items-center justify-between flex-nowrap gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            <ThemedAvocado theme="wizard" size={80} className="shrink-0 -my-1" />
+            <ThemedAvocado theme="wizard" size={118} className="shrink-0 -my-1" />
             <div className="min-w-0">
               <h1 className="text-2xl sm:text-3xl font-black text-emerald-900 leading-none flex items-center gap-2">
                 GuacWizard

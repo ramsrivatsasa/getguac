@@ -19,10 +19,10 @@ List<Widget> topAppBarActions(BuildContext context, {bool whiteIcons = true}) {
   return [
     Stack(clipBehavior: Clip.none, children: [
       IconButton(
-        icon: Icon(Icons.notifications_none_rounded, color: iconColor),
+        icon: Icon(Icons.notifications_none_rounded, color: iconColor, size: 21),
         tooltip: 'Notifications',
         visualDensity: VisualDensity.compact,
-        padding: const EdgeInsets.symmetric(horizontal: 1),
+        padding: EdgeInsets.zero,
         constraints: const BoxConstraints(),
         onPressed: () {
           // Placeholder until the notifications inbox is built. Surface
@@ -49,27 +49,27 @@ List<Widget> topAppBarActions(BuildContext context, {bool whiteIcons = true}) {
     // Steals — with a red badge counting unread "fresh steals".
     _StealsAction(iconColor: iconColor),
     IconButton(
-      icon: Icon(Icons.chat_bubble_outline, color: iconColor),
+      icon: Icon(Icons.chat_bubble_outline, color: iconColor, size: 21),
       tooltip: 'Chat',
       visualDensity: VisualDensity.compact,
-      padding: const EdgeInsets.symmetric(horizontal: 1),
+      padding: EdgeInsets.zero,
       constraints: const BoxConstraints(),
       onPressed: () => context.go('/chat'),
     ),
     IconButton(
-      icon: Icon(Icons.person_add_alt_1, color: iconColor),
+      icon: Icon(Icons.person_add_alt_1, color: iconColor, size: 21),
       tooltip: 'Refer a friend',
       visualDensity: VisualDensity.compact,
-      padding: const EdgeInsets.symmetric(horizontal: 1),
+      padding: EdgeInsets.zero,
       constraints: const BoxConstraints(),
       onPressed: () => context.go('/invite'),
     ),
     // Sign out — icon only.
     IconButton(
-      icon: Icon(Icons.logout_rounded, color: iconColor),
+      icon: Icon(Icons.logout_rounded, color: iconColor, size: 21),
       tooltip: 'Sign out',
       visualDensity: VisualDensity.compact,
-      padding: const EdgeInsets.symmetric(horizontal: 1),
+      padding: EdgeInsets.zero,
       constraints: const BoxConstraints(),
       onPressed: () => _confirmAndSignOut(context),
     ),
@@ -113,10 +113,10 @@ class _StealsActionState extends State<_StealsAction> {
   Widget build(BuildContext context) {
     return Stack(clipBehavior: Clip.none, children: [
       IconButton(
-        icon: Icon(Icons.local_offer_rounded, color: widget.iconColor),
+        icon: Icon(Icons.local_offer_rounded, color: widget.iconColor, size: 21),
         tooltip: 'Steals',
         visualDensity: VisualDensity.compact,
-        padding: const EdgeInsets.symmetric(horizontal: 1),
+        padding: EdgeInsets.zero,
         constraints: const BoxConstraints(),
         onPressed: () => context.go('/steals'),
       ),

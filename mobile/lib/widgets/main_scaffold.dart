@@ -228,9 +228,15 @@ class _MainScaffoldState extends State<MainScaffold> with WidgetsBindingObserver
   void _handleHorizontalSwipe(BuildContext context, int idx, DragEndDetails details) {
     final loc = GoRouterState.of(context).matchedLocation;
     final onTopLevel = _items.any((it) => loc == it.route);
-    if (!onTopLevel) return;
     final v = details.primaryVelocity ?? 0;
     if (v.abs() < 300) return;
+    if (!onTopLevel) {
+      // On a pushed screen (detail, feature, GuacMoney, …) a horizontal
+      // swipe goes BACK — consistent back gesture everywhere.
+      final nav = Navigator.of(context);
+      if (nav.canPop()) nav.pop();
+      return;
+    }
     if (v > 0) {
       // Right swipe → next tab
       if (idx < _items.length - 1) context.go(_items[idx + 1].route);

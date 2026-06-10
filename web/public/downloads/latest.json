@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.63",
-  "name": "v0.3.63 — Fancy Connections screen + tighter top bar",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.63/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Redesigned the Connections screen with a bright hero — connect your accounts for easy e-receipt uploads and earn GuacMoney for each one.\n• Reduced the gap between the top-bar icons."
+  "version": "v0.3.64",
+  "name": "v0.3.64 — Swipe back everywhere + tighter icons",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.64/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Swipe to go back on any screen — including the in-app web screens (Reports, Steals, etc.), which now also step back through their own history first.\n• Back arrow on every screen.\n• Even tighter spacing between the top-bar icons.\n• (Live) Fixed the Reports screen crash."
 }

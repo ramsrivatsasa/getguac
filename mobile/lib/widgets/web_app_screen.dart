@@ -100,13 +100,30 @@ class _WebAppScreenState extends State<WebAppScreen> with SingleTickerProviderSt
     await _controller?.reload();
   }
 
+  // Back: step back through the web page's own history first, and only pop
+  // this screen once there's nowhere left to go in the page. Used by the
+  // app-bar arrow AND the Android back gesture (PopScope) — so a back swipe
+  // works on the WebView too.
+  Future<void> _handleBack() async {
+    final c = _controller;
+    if (c != null && await c.canGoBack()) {
+      await c.goBack();
+      return;
+    }
+    if (mounted) Navigator.of(context).maybePop();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) { if (!didPop) _handleBack(); },
+      child: Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFF166534),
         foregroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.white),
+        leading: BackButton(onPressed: _handleBack),
         titleSpacing: 0,
         // Branded logo (same 🥑 box as the dashboard) + white title — the
         // app's global AppBarTheme.titleTextStyle is dark and would otherwise
@@ -181,6 +198,7 @@ class _WebAppScreenState extends State<WebAppScreen> with SingleTickerProviderSt
             ]),
           ),
       ]),
+      ),
     );
   }
 }

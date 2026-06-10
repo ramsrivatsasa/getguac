@@ -38,6 +38,7 @@ export default function StealsPage() {
   // screen title, so we hide the page's own header + compact the layout.
   const [embedded, setEmbedded] = useState(false)
   const [showConfig, setShowConfig] = useState(false)
+  const [showRefine, setShowRefine] = useState(false)
   useEffect(() => { setEmbedded(/(?:^|;\s*)guac_embedded=1/.test(document.cookie)) }, [])
   // Client-side refine filters (instant — applied to the returned results).
   const [priceMin, setPriceMin] = useState('')
@@ -229,9 +230,18 @@ export default function StealsPage() {
       {/* ── Results experience (Google-Shopping style) ── */}
       {hasSearch ? (
         <div className="grid lg:grid-cols-[210px_1fr] gap-4">
-          {/* Refine sidebar */}
-          <aside className="card h-fit space-y-4 lg:sticky lg:top-4">
-            <p className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
+          {/* Refine sidebar — collapsed on mobile (behind a toggle) so the
+              results lead; always shown as a sidebar on desktop. */}
+          <aside className="card h-fit lg:sticky lg:top-4 order-first">
+            <button type="button" onClick={() => setShowRefine(v => !v)}
+              className="lg:hidden w-full flex items-center justify-between gap-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
+                <Sliders size={12} /> Refine &amp; sort
+              </span>
+              <ChevronDown size={16} className={`text-gray-500 transition-transform ${showRefine ? 'rotate-180' : ''}`} />
+            </button>
+            <div className={`${showRefine ? 'block' : 'hidden'} lg:block space-y-4`}>
+            <p className="hidden lg:flex text-xs font-bold uppercase tracking-wider text-gray-500 items-center gap-1.5">
               <Sliders size={12} /> Refine
             </p>
             {spec && (
@@ -273,6 +283,7 @@ export default function StealsPage() {
                 <X size={12} /> Clear filters
               </button>
             )}
+            </div>
           </aside>
 
           {/* Results grid */}

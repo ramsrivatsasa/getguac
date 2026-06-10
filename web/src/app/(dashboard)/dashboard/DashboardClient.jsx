@@ -666,7 +666,7 @@ function GuacMoneyTile() {
           {isLoading ? '—' : <CountUp value={Number(total) || 0} duration={520} format={v => Math.round(v).toLocaleString()} />}
         </p>
         <p className="text-[10px] font-semibold mt-0.5 text-emerald-700">
-          {active ? `≈ $${(total / 1000).toFixed(2)} · soon` : 'rate buys to earn →'}
+          {active ? `≈ $${(total / 1000).toFixed(2)} value` : 'rate buys to earn →'}
         </p>
       </div>
     </div>

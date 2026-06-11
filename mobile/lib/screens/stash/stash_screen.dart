@@ -23,6 +23,7 @@ import '../../services/product_likes_service.dart';
 import '../../services/product_image_service.dart';
 import '../../categories.dart';
 import '../../widgets/animated_primitives.dart';
+import '../../widgets/top_app_bar_actions.dart';
 
 const _kBrand = Color(0xFFca8a04);
 
@@ -217,7 +218,7 @@ class _StashScreenState extends State<StashScreen> {
     final categoryCounts = _categoryCounts();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Stash')),
+      appBar: AppBar(title: const Text('Stash'), actions: [signOutAction(context)]),
       body: _loading
         ? const Center(child: CircularProgressIndicator())
         : RefreshIndicator(

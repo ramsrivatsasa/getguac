@@ -13,6 +13,7 @@ import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../services/mascot_event_bus.dart';
+import '../../widgets/top_app_bar_actions.dart';
 
 class InviteScreen extends StatefulWidget {
   const InviteScreen({super.key});
@@ -97,7 +98,7 @@ class _InviteScreenState extends State<InviteScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Invite friends')),
+      appBar: AppBar(title: const Text('Invite friends'), actions: [signOutAction(context)]),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : ListView(

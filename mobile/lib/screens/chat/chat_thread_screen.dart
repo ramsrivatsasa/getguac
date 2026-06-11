@@ -10,6 +10,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../services/dms_service.dart';
 import '../../services/display_names_service.dart';
 import '../../widgets/animated_primitives.dart';
+import '../../widgets/top_app_bar_actions.dart';
 
 const _kBrand = Color(0xFF15803d);
 
@@ -157,6 +158,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
         title: Text(_peerName, style: const TextStyle(fontWeight: FontWeight.w900, color: _kBrand)),
         backgroundColor: Colors.white,
         elevation: 0.5,
+        actions: [signOutAction(context, whiteIcons: false)],
       ),
       backgroundColor: const Color(0xFFf8fafc),
       body: Column(children: [

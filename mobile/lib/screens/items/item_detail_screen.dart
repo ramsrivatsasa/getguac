@@ -26,6 +26,7 @@ import '../../widgets/store_logo.dart';
 import '../../utils/date_format.dart';
 import '../../services/product_image_service.dart';
 import '../../widgets/animated_primitives.dart';
+import '../../widgets/top_app_bar_actions.dart';
 
 class ItemDetailScreen extends StatefulWidget {
   final String id;
@@ -234,13 +235,13 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
   Widget build(BuildContext context) {
     if (_loading) {
       return Scaffold(
-        appBar: AppBar(leading: BackButton(onPressed: _goBack)),
+        appBar: AppBar(leading: BackButton(onPressed: _goBack), actions: [signOutAction(context)]),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
     if (_item == null) {
       return Scaffold(
-        appBar: AppBar(leading: BackButton(onPressed: _goBack)),
+        appBar: AppBar(leading: BackButton(onPressed: _goBack), actions: [signOutAction(context)]),
         body: const Center(child: Text('Item not found')),
       );
     }

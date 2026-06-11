@@ -12,6 +12,23 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../providers/auth_provider.dart';
 
+/// Single Sign-Out icon button for the top-right of any screen that doesn't
+/// want the full action row — confirms, then signs out. Used so EVERY screen
+/// (native + WebView) carries Sign Out in the same top-right spot.
+///
+/// The iconColour is left null so it INHERITS the host AppBar's foreground —
+/// white on the green WebView/brand bars, dark on white native bars — and is
+/// therefore always visible without per-screen tuning. `whiteIcons` is kept
+/// only for call-site compatibility; pass `color` to force a specific colour.
+Widget signOutAction(BuildContext context, {bool whiteIcons = true, Color? color}) {
+  return IconButton(
+    icon: Icon(Icons.logout_rounded, color: color, size: 21),
+    tooltip: 'Sign out',
+    visualDensity: VisualDensity.compact,
+    onPressed: () => _confirmAndSignOut(context),
+  );
+}
+
 /// Returns the standard top-right action buttons every authenticated
 /// screen should carry. Order (left → right): Notifications, Chat, Sign Out.
 List<Widget> topAppBarActions(BuildContext context, {bool whiteIcons = true}) {

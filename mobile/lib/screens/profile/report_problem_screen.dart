@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../services/error_report_service.dart';
+import '../../widgets/top_app_bar_actions.dart';
 
 class ReportProblemScreen extends StatefulWidget {
   /// Optional pre-fill from a caller (e.g., the batch-capture failure
@@ -101,6 +102,7 @@ class _ReportProblemScreenState extends State<ReportProblemScreen> {
           icon: const Icon(Icons.close),
           onPressed: () => context.canPop() ? context.pop() : context.go('/profile'),
         ),
+        actions: [signOutAction(context)],
       ),
       body: SafeArea(
         child: SingleChildScrollView(

@@ -7,6 +7,7 @@ import '../../services/share_intent_service.dart';
 import '../../services/location_distance_service.dart';
 import '../../utils/date_format.dart';
 import '../../widgets/animated_primitives.dart';
+import '../../widgets/top_app_bar_actions.dart';
 
 const _kBrand = Color(0xFF15803d);
 const _kTripCols = 'id, start_date, end_date, total_miles, description, category, from_address, to_address';
@@ -275,7 +276,7 @@ class _CarMilesScreenState extends State<CarMilesScreen> {
         .fold<double>(0, (s, t) => s + t.totalMiles);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Car Miles')),
+      appBar: AppBar(title: const Text('Car Miles'), actions: [signOutAction(context)]),
       floatingActionButton: FloatingActionButton(
         backgroundColor: _kBrand,
         onPressed: _add,

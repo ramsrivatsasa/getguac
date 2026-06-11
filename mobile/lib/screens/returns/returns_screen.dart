@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../widgets/animated_primitives.dart';
+import '../../widgets/top_app_bar_actions.dart';
 
 class ReturnsScreen extends StatefulWidget {
   const ReturnsScreen({super.key});
@@ -74,7 +75,7 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Returns')),
+      appBar: AppBar(title: const Text('Returns'), actions: [signOutAction(context)]),
       body: _loading
         ? ListView.builder(
             padding: const EdgeInsets.all(16),

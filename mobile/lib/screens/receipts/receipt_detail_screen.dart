@@ -11,6 +11,7 @@ import '../../utils/date_format.dart';
 import '../../services/receipt_reparse_service.dart';
 import '../../services/mascot_event_bus.dart';
 import '../../widgets/animated_primitives.dart';
+import '../../widgets/top_app_bar_actions.dart';
 
 class ReceiptDetailScreen extends StatefulWidget {
   final String id;
@@ -146,13 +147,13 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
   Widget build(BuildContext context) {
     if (_loading) {
       return Scaffold(
-        appBar: AppBar(leading: BackButton(onPressed: _goBack)),
+        appBar: AppBar(leading: BackButton(onPressed: _goBack), actions: [signOutAction(context)]),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
     if (_receipt == null) {
       return Scaffold(
-        appBar: AppBar(leading: BackButton(onPressed: _goBack)),
+        appBar: AppBar(leading: BackButton(onPressed: _goBack), actions: [signOutAction(context)]),
         body: const Center(child: Text('Receipt not found')),
       );
     }

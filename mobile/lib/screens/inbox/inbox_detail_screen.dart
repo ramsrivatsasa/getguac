@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import '../../widgets/top_app_bar_actions.dart';
 import 'inbox_screen.dart' show openInboxComposer;
 
 const _kBrand = Color(0xFF15803d);
@@ -156,6 +157,7 @@ class _InboxDetailScreenState extends State<InboxDetailScreen> {
           ),
           IconButton(icon: const Icon(Icons.reply), tooltip: 'Reply', onPressed: _reply),
           IconButton(icon: const Icon(Icons.delete_outline), tooltip: 'Trash', onPressed: _trash),
+          signOutAction(context),
         ],
       ),
       body: PopScope(

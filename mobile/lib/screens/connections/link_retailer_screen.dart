@@ -24,6 +24,7 @@ import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../../data/retailers.dart';
 import '../../data/retailer_extractors.dart';
+import '../../widgets/top_app_bar_actions.dart';
 
 class LinkRetailerScreen extends StatefulWidget {
   final String retailerId;
@@ -149,6 +150,7 @@ class _LinkRetailerScreenState extends State<LinkRetailerScreen> {
               onPressed: _runExtractor,
               child: const Text('Pull receipts'),
             ),
+          signOutAction(context),
         ],
       ),
       body: Column(children: [

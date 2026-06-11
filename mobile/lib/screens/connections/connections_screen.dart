@@ -11,6 +11,7 @@ import '../../data/retailer_extractors.dart';
 import '../../services/mascot_event_bus.dart';
 import '../../widgets/store_logo.dart';
 import '../../widgets/animated_primitives.dart';
+import '../../widgets/top_app_bar_actions.dart';
 import 'link_retailer_screen.dart' show LinkRetailerScreen;
 
 /// Thin wrapper to keep the import name semantic-stable when this
@@ -136,7 +137,7 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
     final available = kRetailers.where((r) => !activeIds.contains(r.id)).toList();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Connections')),
+      appBar: AppBar(title: const Text('Connections'), actions: [signOutAction(context)]),
       body: _loading
         ? ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),

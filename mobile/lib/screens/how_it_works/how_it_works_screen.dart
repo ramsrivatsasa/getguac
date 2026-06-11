@@ -16,6 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../widgets/guac_mascot.dart';
 import '../../widgets/animated_primitives.dart';
+import '../../widgets/top_app_bar_actions.dart';
 
 const _kEmerald700 = Color(0xFF15803d);
 const _kEmerald800 = Color(0xFF166534);
@@ -33,6 +34,7 @@ class HowItWorksScreen extends StatelessWidget {
         title: const Text('How GetGuac Works'),
         backgroundColor: Colors.white,
         foregroundColor: _kEmerald900,
+        actions: [signOutAction(context)],
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),

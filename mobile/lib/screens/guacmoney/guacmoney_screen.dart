@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../services/guac_money_service.dart';
+import '../../widgets/top_app_bar_actions.dart';
 
 /// GuacMoney — one balance combining the money our Guac-AI saved you
 /// (not-worth-it ratings + refunds, $-for-$) plus engagement (scan +100,
@@ -58,6 +59,7 @@ class _GuacMoneyScreenState extends State<GuacMoneyScreen> {
         foregroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.white),
         title: const Text('GuacMoney', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+        actions: [signOutAction(context)],
       ),
       body: FutureBuilder<_Gm>(
         future: _future,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/reward_provider.dart';
 import '../../utils/date_format.dart';
+import '../../widgets/top_app_bar_actions.dart';
 
 class RewardDetailScreen extends StatelessWidget {
   final String id;
@@ -12,10 +13,10 @@ class RewardDetailScreen extends StatelessWidget {
     final rewards = context.watch<RewardProvider>().rewards;
     final reward = rewards.where((r) => r.id == id).firstOrNull;
 
-    if (reward == null) return Scaffold(appBar: AppBar(), body: const Center(child: Text('Reward not found')));
+    if (reward == null) return Scaffold(appBar: AppBar(actions: [signOutAction(context)]), body: const Center(child: Text('Reward not found')));
 
     return Scaffold(
-      appBar: AppBar(title: Text(reward.rewardTitle)),
+      appBar: AppBar(title: Text(reward.rewardTitle), actions: [signOutAction(context)]),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Card(

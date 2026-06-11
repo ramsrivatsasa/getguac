@@ -10,6 +10,7 @@ import '../../services/update_service.dart';
 import '../../widgets/guac_mascot.dart';
 import '../../widgets/animated_mascot.dart';
 import '../../widgets/animated_primitives.dart';
+import '../../widgets/top_app_bar_actions.dart';
 
 const _kBrand = Color(0xFF15803d);
 const _kBrandLight = Color(0xFFd1fae5);
@@ -214,6 +215,7 @@ class _InboxScreenState extends State<InboxScreen> {
               )),
             ],
           ),
+          signOutAction(context),
         ],
       ),
       body: Column(children: [

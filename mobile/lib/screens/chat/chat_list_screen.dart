@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import '../../services/dms_service.dart';
 import '../../services/display_names_service.dart';
 import '../../widgets/animated_primitives.dart';
+import '../../widgets/top_app_bar_actions.dart';
 
 const _kBrand = Color(0xFF15803d);
 
@@ -93,6 +94,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
         ]),
         backgroundColor: Colors.white,
         elevation: 0.5,
+        actions: [signOutAction(context, whiteIcons: false)],
       ),
       body: RefreshIndicator(
         onRefresh: _load,

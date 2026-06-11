@@ -8,6 +8,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'guac_mascot.dart';
+import 'top_app_bar_actions.dart';
 import '../providers/receipt_provider.dart';
 
 const _kWebBase = 'https://getguac.app';
@@ -159,6 +160,7 @@ class _WebAppScreenState extends State<WebAppScreen> with SingleTickerProviderSt
           Text(widget.title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
         ]),
         actions: [
+          signOutAction(context),
           IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: 'Reload',

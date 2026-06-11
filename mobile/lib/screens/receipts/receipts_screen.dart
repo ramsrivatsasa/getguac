@@ -40,7 +40,12 @@ class ReceiptsScreen extends StatefulWidget {
   /// button), the capture menu opens automatically on first frame.
   final bool openAdd;
 
-  const ReceiptsScreen({super.key, this.initialStoreFilter, this.initialPeriod, this.initialDateFrom, this.openAdd = false});
+  /// Changes each time the camera button is tapped, so re-navigating to
+  /// /receipts while already on it still reopens the capture menu (a plain
+  /// bool can't change, so didUpdateWidget couldn't detect the re-tap).
+  final String? addNonce;
+
+  const ReceiptsScreen({super.key, this.initialStoreFilter, this.initialPeriod, this.initialDateFrom, this.openAdd = false, this.addNonce});
   @override
   State<ReceiptsScreen> createState() => _ReceiptsScreenState();
 }
@@ -123,6 +128,14 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
     }
     if (oldWidget.initialDateFrom != widget.initialDateFrom) {
       setState(() => _deepLinkCutoff = widget.initialDateFrom);
+    }
+    // Camera/Add tapped while already on /receipts: the route doesn't remount,
+    // so initState won't re-run — reopen the capture menu when the add nonce
+    // changes (the camera button sends a fresh nonce every tap).
+    if (widget.addNonce != null && widget.addNonce != oldWidget.addNonce) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _openAddMenu();
+      });
     }
     if (oldWidget.initialStoreFilter != widget.initialStoreFilter
         && widget.initialStoreFilter != null

@@ -273,7 +273,7 @@ class _MainScaffoldState extends State<MainScaffold> with WidgetsBindingObserver
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: GestureDetector(
-        onTap: () => context.go('/receipts?add=1'),
+        onTap: () => context.go('/receipts?add=${DateTime.now().millisecondsSinceEpoch}'),
         behavior: HitTestBehavior.opaque,
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           SizedBox(

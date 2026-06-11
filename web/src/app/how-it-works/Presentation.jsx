@@ -56,7 +56,7 @@ const SLIDES = [
       ['Real two-way mail', 'It is a full mailbox: open, read, reply, send. Not just a parsing trick.'],
       ['Shopping shield', 'Hand it out to merchants instead of your real email. Promos, spam, breaches stay outside your personal inbox.'],
     ],
-    art: 'capture',
+    art: 'inbox',
     narration: "Let's talk about that email inbox a little more — because it's a real superpower, not a footnote. When you sign up for GetGuac, you pick any handle you want — your name, a nickname, whatever — and you get a permanent, free at-getguac-dot-app address. Now here's the trick. Use plus-tagging. Sign up at Amazon as 'you-plus-amazon at getguac dot app'. Sign up at Target as 'you-plus-target'. For receipts in general, use 'you-plus-g'. The mail server automatically files each tagged email into its own folder, and GetGuac polls those folders every ten minutes looking for receipts to parse. The inbox is a real mailbox — you can open it, read messages, reply, send new email, even attach files. It is not a parsing-only trick. And the best part? Stop handing your personal email to every random store and newsletter. If someone gets breached, if a merchant goes spam-crazy, if a loyalty program won't stop emailing you — it never touches your real inbox. Your shopping life lives in GetGuac. Your personal life stays clean.",
     aiPeople: ['email'],
     durationMs: 36000,
@@ -154,7 +154,7 @@ const SLIDES = [
       ['Returns report', "A dedicated /returns page lists everything you've sent back, with running totals so you know how much money has come back this year."],
       ['Curated store defaults', "Even when the receipt doesn't print the policy, GetGuac knows Amazon is 30 days, Costco is essentially lifetime, Lowe's is 90, Apple is 14, and so on — 25+ major merchants pre-loaded."],
     ],
-    art: 'dedup',
+    art: 'returns',
     narration: "Here is something most people lose money on every year. Refund windows. You buy that thing, you mean to return it, you forget, and a month later you discover the window closed. That money is now gone forever. GetGuac fixes this. Every time we parse a receipt, we also extract the store's refund policy — if it's printed. Thirty days. Ninety days. Lifetime. Even category-specific rules, like Best Buy's fifteen days for electronics versus ninety for everything else. Open any receipt and you see, per line item, a countdown timer of exactly how many days you have left to return it. As the deadline approaches, the timer turns yellow, then red. Decide to actually send something back? Tap the checkbox. GetGuac handles partial returns — like returned two of three items — and updates the receipt's effective total so your dashboard stays accurate. And there's a dedicated Returns page that lists every refund you've claimed, with running totals showing exactly how much money has come back into your pocket this year. For receipts that don't print a policy at all — Amazon emails, for example — we ship curated defaults for over twenty-five major merchants. Amazon is thirty days. Costco is essentially lifetime. Lowe's is ninety. Apple is fourteen. So even when the receipt is silent, GetGuac isn't.",
     aiPeople: ['refund'],
     durationMs: 42000,
@@ -172,7 +172,7 @@ const SLIDES = [
       ['Insights, not lectures', "'You paid $187 in interest this month — paying the balance in full would save it every month.' Calm, specific, actionable. No shame, no buzzwords."],
       ['Periodic patterns', "Spots subscriptions you forgot, restaurant overspends, gas-station impulse buys — and points them out kindly, on your time."],
     ],
-    art: 'worthIt',
+    art: 'wizard',
     narration: "Step seven. Meet the GuacWizard — your money wizard, who magically protects your money. Calm, wise, and never preachy. Not the kind that shames you into a budget app you delete in two weeks. The Wizard's specialty is the Bank Bite. It scans your credit-card statements and surfaces every dollar you paid in interest, fees, and penalties — broken down by which card charged what. But here's the key. The Wizard knows the difference between an APR charge you couldn't really escape, and a thirty-five dollar overdraft fee you absolutely could have. It only nudges you about the avoidable stuff. No nagging about things you can't change. Then there's the Top Regrets list — your receipts rated one or two stars, sorted by dollars spent. Reading that list once a quarter is the single highest-leverage habit-builder we've shipped. People look at it, they spot the pattern — the late-night Amazon impulses, the takeout when they're tired, the subscription they forgot about — and they fix it. Quietly. On their own time. The Wizard speaks in plain English. 'You paid one hundred eighty-seven dollars in interest this month. Paying the balance in full would save that every month going forward.' That's it. Calm. Specific. Actionable. No shame, no preachy tone, no buzzwords. Just honest information, delivered like a friend who happens to be really good with money would.",
     aiPeople: ['wizard'],
     durationMs: 42000,
@@ -190,7 +190,7 @@ const SLIDES = [
       ['Open in Maps', "Every saved trip has a one-tap button to open Google Maps for directions if you do it again."],
       ['No background tracking', "We never wake up in the background, never ping your location while you're not driving. Location is read once, when you share."],
     ],
-    art: 'capture',
+    art: 'miles',
     narration: "One more thing worth knowing about — Car Miles. If you ever drive for work, for clients, for medical appointments, or for charity, you can deduct those miles from your taxes — but only if you have a log. Most people don't, because writing down every trip is exhausting. GetGuac makes it a one-tap habit. When you're heading somewhere, share the destination from Google Maps directly to GetGuac. We reverse-geocode your current location as the From address, pull the destination and distance straight from the maps link, and save the trip with a single tap. Tag it Business, Medical, Charity, or Personal. At year-end, export the full mileage log — audit-ready for the IRS, formatted the way they want it. And privacy-wise — we don't track you in the background. We don't ping your location while you sleep. Location is read once, when you share. That's it.",
     aiPeople: ['car'],
     durationMs: 32000,
@@ -208,7 +208,7 @@ const SLIDES = [
       ['No third-party trackers', "No Google Analytics, no Facebook pixel, no ad SDKs. We don't sell, share, or analyze your data for anyone else's benefit."],
       ['Diagnostic logs are yours too', "Even the debug events the mobile app uploads sit behind RLS — only you and you alone can read your own /api/me/logs."],
     ],
-    art: 'parse',
+    art: 'security',
     narration: "Step seven. Security is not a checkbox at GetGuac — it's how the whole thing is built. Let me get specific. Every single row in our database — every receipt, every item, every store, every reward, every parsed email — is gated by row-level security. That means even if someone managed to bypass our app code entirely and hit the database directly, they would only ever see rows where the auth-uid matches their token. The enforcement lives in Postgres itself. Your receipt photos? Encrypted at rest in Supabase storage. Every request? TLS 1.2 or better. The passwords for your mail server? Encrypted with AES-GCM using a key that the application code cannot read. On mobile, your sign-in is gated by fingerprint or Face ID on every cold start — and the credentials sit inside the Android Keystore or iOS Keychain, not plain-text files on disk. No Google Analytics, no Facebook pixel, no ad SDKs anywhere in the app. And even the diagnostic debug logs the mobile app uploads to help us help you? Same RLS rule. Only you can read your own logs. Nobody else. Ever.",
     aiPeople: ['shield'],
     durationMs: 40000,
@@ -226,7 +226,7 @@ const SLIDES = [
       ['Full data export', 'Download every row we have about you as a JSON archive. Take it with you wherever.'],
       ['Delete the whole account', "Account → Delete account. One click, full purge: receipts, emails, photos, debug logs, mailbox creds. Gone in seconds. We don't keep backups of deleted accounts."],
     ],
-    art: 'dedup',
+    art: 'data',
     narration: "Step eight — and this one matters as much as security. Your data is yours, and you can delete it whenever you want. Want to remove one receipt? Hit the trash icon on its row. Gone — along with its line items, refund policies, and the photo in storage. Want to delete one specific email from your inbox? Open it, hit delete. Body, attachments, the link to any parsed receipt, all of it. Need to do bulk cleanup? Open Profile, tap Privacy, and you can wipe entire categories of data — all emails, all receipts, all items, all statements, all diagnostic logs — in a single tap. Want a copy of everything before you leave? Download a full JSON archive of every row we have about you. Take it wherever. And if you ever decide GetGuac isn't for you anymore? Account, Delete account. One click. We purge everything in seconds — receipts, photos, emails, items, logs, mailbox credentials — and we don't keep backups of deleted accounts. No 'request your data deletion via email and wait thirty days' nonsense. It's a button. You press it. It's gone.",
     aiPeople: ['shield'],
     durationMs: 38000,
@@ -413,7 +413,7 @@ export default function HowItWorksPage({ embedded = false }) {
       )}
 
       {/* Slides */}
-      <main className="max-w-6xl mx-auto px-4 sm:px-6">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6">
         {SLIDES.map((slide, idx) => (
           <section
             key={idx}
@@ -601,13 +601,13 @@ function StepSlide({ slide, idx }) {
           </ul>
           {slide.aiPeople && <AiPeopleStrip people={slide.aiPeople} />}
         </div>
-        <div className="flex-shrink-0 mx-auto sm:mx-0 flex flex-col items-center gap-3">
+        <div className="flex-shrink-0 mx-auto sm:mx-0 flex flex-col sm:flex-row items-center justify-center gap-5">
           <Art name={slide.art} />
           {SHOTS[slide.title] && (
-            <div className="rounded-xl overflow-hidden ring-1 ring-gray-200 shadow-lg bg-white" style={{ width: 140 }}>
-              {/* Small real app screenshot paired with the illustration. */}
+            <div className="bg-gray-900 p-1.5 rounded-[1.8rem] shadow-xl flex-shrink-0" style={{ width: 168 }}>
+              {/* Small real app screenshot, in a phone frame, beside the illustration. */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={SHOTS[slide.title]} alt={slide.title} className="block w-full" loading="lazy" />
+              <img src={SHOTS[slide.title]} alt={slide.title} className="block w-full rounded-[1.4rem]" loading="lazy" />
             </div>
           )}
         </div>
@@ -621,6 +621,7 @@ function StepSlide({ slide, idx }) {
 const SHOTS = {
   'Get a receipt': '/showcase/receipts.png',
   'Guac-AI reads it': '/showcase/items.png',
+  'Duplicates get caught': '/showcase/receipts.png',
   'Auto-categorize': '/showcase/reports.png',
   'See where it all went': '/showcase/dashboard.png',
   'Worth it?': '/showcase/bites.png',
@@ -694,8 +695,163 @@ function Art({ name }) {
     case 'categorize': return <ArtCategorize />
     case 'dashboard':  return <ArtDashboard />
     case 'worthIt':    return <ArtWorthIt />
+    case 'inbox':      return <ArtInbox />
+    case 'returns':    return <ArtReturns />
+    case 'wizard':     return <ArtWizard />
+    case 'miles':      return <ArtMiles />
+    case 'security':   return <ArtSecurity />
+    case 'data':       return <ArtData />
     default: return null
   }
+}
+
+// ── Slide-specific illustrations (added so no slide reuses another's art) ──
+function ArtInbox() {
+  return (
+    <svg viewBox="0 0 200 180" width="220" height="200" aria-hidden="true">
+      <defs><linearGradient id="inbox-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#ecfccb" /><stop offset="1" stopColor="#bef264" /></linearGradient></defs>
+      <rect width="200" height="180" rx="20" fill="url(#inbox-bg)" />
+      <g transform="translate(40 46)">
+        <rect x="0" y="0" width="120" height="80" rx="10" fill="#fff" stroke="#65a30d" strokeWidth="2" />
+        <path d="M6 10 L60 48 L114 10" fill="none" stroke="#65a30d" strokeWidth="3" strokeLinecap="round" />
+        <circle cx="104" cy="10" r="16" fill="#15803d" />
+        <text x="104" y="16" fontSize="18" fontWeight="800" fill="#ecfdf5" textAnchor="middle">@</text>
+      </g>
+      <g transform="translate(34 138)">
+        <rect x="0" y="0" width="42" height="13" rx="3" fill="#bbf7d0" />
+        <rect x="50" y="0" width="42" height="13" rx="3" fill="#86efac" />
+        <rect x="100" y="0" width="42" height="13" rx="3" fill="#4ade80" />
+      </g>
+      <text x="100" y="172" fontSize="10" fontWeight="700" fill="#3f6212" textAnchor="middle">you@getguac.app</text>
+    </svg>
+  )
+}
+
+function ArtReturns() {
+  return (
+    <svg viewBox="0 0 200 180" width="220" height="200" aria-hidden="true">
+      <defs><linearGradient id="ret-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#fef3c7" /><stop offset="1" stopColor="#fcd34d" /></linearGradient></defs>
+      <rect width="200" height="180" rx="20" fill="url(#ret-bg)" />
+      <g transform="translate(30 60)">
+        <rect x="0" y="14" width="74" height="58" rx="6" fill="#fff" stroke="#b45309" strokeWidth="2" />
+        <path d="M0 32 L74 32" stroke="#fcd34d" strokeWidth="3" />
+        <path d="M37 14 L37 72" stroke="#fcd34d" strokeWidth="3" />
+        <rect x="29" y="6" width="16" height="14" rx="2" fill="#fbbf24" />
+      </g>
+      <g fill="none" stroke="#b45309" strokeWidth="5" strokeLinecap="round">
+        <path d="M118 122 A 32 32 0 1 0 124 70" />
+      </g>
+      <polygon points="110,64 130,68 118,84" fill="#b45309" />
+      <g transform="translate(126 92)">
+        <circle cx="22" cy="22" r="22" fill="#fff" stroke="#b45309" strokeWidth="2" />
+        <path d="M22 9 L22 22 L33 28" fill="none" stroke="#b45309" strokeWidth="3" strokeLinecap="round" />
+      </g>
+      <text x="100" y="170" fontSize="11" fontWeight="800" fill="#92400e" textAnchor="middle">money back, on time</text>
+    </svg>
+  )
+}
+
+function ArtWizard() {
+  return (
+    <svg viewBox="0 0 200 180" width="220" height="200" aria-hidden="true">
+      <defs><linearGradient id="wiz-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#ede9fe" /><stop offset="1" stopColor="#c4b5fd" /></linearGradient></defs>
+      <rect width="200" height="180" rx="20" fill="url(#wiz-bg)" />
+      {/* magic wand */}
+      <g transform="rotate(-32 70 110)">
+        <rect x="58" y="44" width="11" height="84" rx="5" fill="#4c1d95" />
+        <rect x="58" y="44" width="11" height="22" rx="5" fill="#a78bfa" />
+      </g>
+      {/* wand star */}
+      <path d="M118 44 l5 12 13 1 -10 9 3 13 -11 -7 -11 7 3 -13 -10 -9 13 -1 z" fill="#7c3aed" />
+      {/* sparkles */}
+      <g fill="#8b5cf6">
+        <path d="M60 56 l2 6 6 2 -6 2 -2 6 -2 -6 -6 -2 6 -2 z" />
+        <path d="M150 96 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2 z" />
+      </g>
+      {/* avoidable fee tag, crossed out */}
+      <g transform="translate(54 120)">
+        <rect x="0" y="0" width="92" height="34" rx="8" fill="#fff" stroke="#7c3aed" strokeWidth="2" />
+        <text x="46" y="22" fontSize="13" fontWeight="800" fill="#6d28d9" textAnchor="middle">−$35 fee</text>
+        <path d="M8 26 L84 8" stroke="#dc2626" strokeWidth="3" strokeLinecap="round" />
+      </g>
+    </svg>
+  )
+}
+
+function ArtMiles() {
+  return (
+    <svg viewBox="0 0 200 180" width="220" height="200" aria-hidden="true">
+      <defs><linearGradient id="miles-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#e0f2fe" /><stop offset="1" stopColor="#7dd3fc" /></linearGradient></defs>
+      <rect width="200" height="180" rx="20" fill="url(#miles-bg)" />
+      {/* road */}
+      <path d="M10 150 Q100 120 190 150" fill="none" stroke="#0c4a6e" strokeWidth="3" opacity="0.4" />
+      <path d="M14 142 Q100 114 186 142" fill="none" stroke="#fff" strokeWidth="3" strokeDasharray="8 10" strokeLinecap="round" />
+      {/* car */}
+      <g transform="translate(58 64)">
+        <rect x="0" y="22" width="84" height="30" rx="10" fill="#0369a1" />
+        <path d="M16 22 Q22 4 42 4 L60 4 Q74 4 80 22 Z" fill="#0ea5e9" />
+        <rect x="22" y="9" width="20" height="13" rx="3" fill="#e0f2fe" />
+        <rect x="46" y="9" width="18" height="13" rx="3" fill="#e0f2fe" />
+        <circle cx="22" cy="54" r="11" fill="#1e293b" /><circle cx="22" cy="54" r="4" fill="#94a3b8" />
+        <circle cx="64" cy="54" r="11" fill="#1e293b" /><circle cx="64" cy="54" r="4" fill="#94a3b8" />
+      </g>
+      {/* odometer tag */}
+      <g transform="translate(120 30)">
+        <rect x="0" y="0" width="60" height="26" rx="8" fill="#fff" stroke="#0369a1" strokeWidth="2" />
+        <text x="30" y="18" fontSize="12" fontWeight="800" fill="#075985" textAnchor="middle">124 mi</text>
+      </g>
+    </svg>
+  )
+}
+
+function ArtSecurity() {
+  return (
+    <svg viewBox="0 0 200 180" width="220" height="200" aria-hidden="true">
+      <defs><linearGradient id="sec-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#d1fae5" /><stop offset="1" stopColor="#6ee7b7" /></linearGradient></defs>
+      <rect width="200" height="180" rx="20" fill="url(#sec-bg)" />
+      {/* shield */}
+      <path d="M100 28 L150 46 V94 C150 124 128 144 100 154 C72 144 50 124 50 94 V46 Z" fill="#15803d" />
+      <path d="M100 38 L140 52 V92 C140 116 122 132 100 141 C78 132 60 116 60 92 V52 Z" fill="#ecfdf5" />
+      {/* lock */}
+      <g transform="translate(82 74)">
+        <rect x="0" y="14" width="36" height="30" rx="6" fill="#15803d" />
+        <path d="M6 14 V8 a12 12 0 0 1 24 0 V14" fill="none" stroke="#15803d" strokeWidth="5" />
+        <circle cx="18" cy="27" r="4" fill="#ecfdf5" />
+        <rect x="16" y="29" width="4" height="8" rx="2" fill="#ecfdf5" />
+      </g>
+      <text x="100" y="172" fontSize="10" fontWeight="700" fill="#065f46" textAnchor="middle">row-level security</text>
+    </svg>
+  )
+}
+
+function ArtData() {
+  return (
+    <svg viewBox="0 0 200 180" width="220" height="200" aria-hidden="true">
+      <defs><linearGradient id="data-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#ffe4e6" /><stop offset="1" stopColor="#fda4af" /></linearGradient></defs>
+      <rect width="200" height="180" rx="20" fill="url(#data-bg)" />
+      {/* database cylinder */}
+      <g transform="translate(40 40)">
+        <ellipse cx="40" cy="14" rx="40" ry="14" fill="#fff" stroke="#be123c" strokeWidth="2" />
+        <path d="M0 14 V74 a40 14 0 0 0 80 0 V14" fill="#fff" stroke="#be123c" strokeWidth="2" />
+        <path d="M0 44 a40 14 0 0 0 80 0" fill="none" stroke="#fecdd3" strokeWidth="2" />
+        <ellipse cx="40" cy="14" rx="40" ry="14" fill="#fff5f5" />
+        <ellipse cx="40" cy="14" rx="40" ry="14" fill="none" stroke="#be123c" strokeWidth="2" />
+      </g>
+      {/* export arrow badge */}
+      <g transform="translate(20 116)">
+        <circle cx="22" cy="22" r="22" fill="#fff" stroke="#be123c" strokeWidth="2" />
+        <path d="M22 32 V12 M14 20 L22 12 L30 20" fill="none" stroke="#be123c" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+      </g>
+      {/* trash badge */}
+      <g transform="translate(138 116)">
+        <circle cx="22" cy="22" r="22" fill="#fff" stroke="#be123c" strokeWidth="2" />
+        <g transform="translate(10 10)" stroke="#be123c" strokeWidth="2.5" fill="none" strokeLinecap="round">
+          <path d="M2 6 H22" /><path d="M6 6 V20 a2 2 0 0 0 2 2 H16 a2 2 0 0 0 2 -2 V6" /><path d="M9 3 H15" />
+        </g>
+      </g>
+      <text x="100" y="172" fontSize="10" fontWeight="700" fill="#9f1239" textAnchor="middle">export or delete, any time</text>
+    </svg>
+  )
 }
 
 /* ─────────────────────────────────────────────────────────────────────── */

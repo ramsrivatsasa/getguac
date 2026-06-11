@@ -10,6 +10,14 @@ import { Check, X, Loader2, AlertCircle, AtSign, Eye, EyeOff } from 'lucide-reac
 import { createClient as createBrowserClient } from '../../../lib/supabase/client'
 import ReferralCapture from '../../../components/ReferralCapture'
 const VALID_USERNAME_RE = /^[a-z0-9]([a-z0-9._-]{1,30}[a-z0-9])?$/
+// Benefit bullets for the desktop brand panel (left split). Clean, non-preachy.
+const SIGNUP_BENEFITS = [
+  { icon: '🧾', text: 'Track every receipt & bank statement' },
+  { icon: '🔍', text: 'See exactly where your money goes' },
+  { icon: '✂️', text: 'Catch hidden fees & forgotten subscriptions' },
+  { icon: '↩️', text: 'Never miss a return or refund deadline' },
+  { icon: '🏷️', text: 'Find a better price with Steals' },
+]
 // Cloudflare Turnstile site key — public, safe to ship in the client
 // bundle. When unset (local dev / before keys are provisioned in
 // Vercel), the widget renders nothing and the server-side verify is
@@ -166,19 +174,57 @@ export default function RegisterPage() {
   const usernameNorm = form.username.toLowerCase().trim()
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-900 via-green-800 to-lime-700 p-4 py-8 font-sans">
+    <div className="min-h-screen lg:grid lg:grid-cols-[1.05fr_1fr] bg-gradient-to-br from-emerald-900 via-green-800 to-lime-700 font-sans">
       {/* Capture ?ref=<CODE> on register too — direct deep-links to
           /register?ref=ABC123 should also seed localStorage so the
           post-signup hook on the dashboard credits both sides. */}
       <ReferralCapture />
+
+      {/* LEFT — brand & benefits panel. DESKTOP ONLY: the mobile layout drops
+          this entirely and shows a compact header above the form instead. */}
+      <aside className="hidden lg:flex flex-col justify-center gap-9 px-12 xl:px-20 py-12 text-white relative overflow-hidden">
+        <div className="absolute -top-28 -right-28 w-96 h-96 rounded-full bg-white/5 pointer-events-none" />
+        <div className="absolute -bottom-32 -left-20 w-80 h-80 rounded-full bg-lime-300/5 pointer-events-none" />
+        <div className="relative">
+          <div className="flex items-center gap-3">
+            <GuacMascot expression="celebrating" size={76} />
+            <div>
+              <div className="text-2xl font-black leading-none">GetGuac</div>
+              <div className="text-emerald-200 text-sm font-semibold mt-1">your money&apos;s wingman</div>
+            </div>
+          </div>
+          <h2 className="text-4xl xl:text-5xl font-black mt-9 leading-[1.05]">Take control<br />of your money.</h2>
+          <p className="text-emerald-100/90 mt-4 max-w-md text-lg">
+            Create your free account and start seeing exactly where your money goes — in about a minute.
+          </p>
+        </div>
+        <ul className="relative space-y-3.5 max-w-md">
+          {SIGNUP_BENEFITS.map((b) => (
+            <li key={b.text} className="flex items-center gap-3 text-emerald-50">
+              <span className="w-9 h-9 rounded-xl bg-white/10 ring-1 ring-white/15 flex items-center justify-center text-lg flex-shrink-0">{b.icon}</span>
+              <span className="font-semibold">{b.text}</span>
+            </li>
+          ))}
+        </ul>
+        <div className="relative flex flex-wrap gap-x-5 gap-y-2 text-sm text-emerald-100/90 font-semibold">
+          <span className="inline-flex items-center gap-1.5"><Check size={15} /> Free forever</span>
+          <span className="inline-flex items-center gap-1.5"><Check size={15} /> No card required</span>
+          <span className="inline-flex items-center gap-1.5"><Check size={15} /> We never sell your data</span>
+        </div>
+      </aside>
+
+      {/* RIGHT — the form. Light panel on desktop; the green page background
+          shows through on mobile for a single-column stacked layout. */}
+      <main className="flex items-start lg:items-center justify-center p-4 py-8 lg:py-10 lg:bg-gray-50 min-h-screen overflow-y-auto">
       <div className="w-full max-w-lg space-y-6">
-        <div className="text-center anim-logo-in">
+        {/* MOBILE ONLY brand header (desktop uses the left panel). */}
+        <div className="lg:hidden text-center anim-logo-in">
           {/* anim-logo-in entrance — first impression on signup. */}
           <div className="inline-flex justify-center">
-            <GuacMascot expression="celebrating" size={110} />
+            <GuacMascot expression="celebrating" size={96} />
           </div>
-          <h1 className="text-3xl font-black text-white mt-2">GetGuac</h1>
-          <p className="text-emerald-100 text-sm mt-1">Create your account — money's wingman</p>
+          <h1 className="text-2xl font-black text-white mt-2">GetGuac</h1>
+          <p className="text-emerald-100 text-sm mt-1">Create your account — money&apos;s wingman</p>
         </div>
 
         {confirmation && (
@@ -226,7 +272,26 @@ export default function RegisterPage() {
         )}
 
         <div className={`card shadow-2xl ${confirmation ? 'opacity-60 pointer-events-none' : ''}`}>
-          <h2 className="text-xl font-bold mb-4">Create Account</h2>
+          <h2 className="text-xl font-bold">Create your account</h2>
+          <p className="text-sm text-gray-500 mt-1 mb-4">Free forever · no card required.</p>
+
+          {/* Google fast-path — skip the whole form for anyone who'd rather
+              just connect Google. Profile trigger fills first/last name. */}
+          <button
+            type="button"
+            onClick={signInWithGoogle}
+            disabled={googleLoading || loading}
+            className="w-full inline-flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl border-2 border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 disabled:opacity-60 font-semibold text-gray-700 shadow-sm transition"
+          >
+            <RegisterGoogleLogo />
+            {googleLoading ? 'Opening Google…' : 'Sign up with Google'}
+          </button>
+          <div className="my-4 flex items-center gap-3">
+            <div className="h-px flex-1 bg-gray-200" />
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">or sign up with email</span>
+            <div className="h-px flex-1 bg-gray-200" />
+          </div>
+
           <PrivacyNote className="mb-5" showDelete={false} />
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Username = sign-in handle AND @getguac.app email alias */}
@@ -418,27 +483,7 @@ export default function RegisterPage() {
               disabled={loading || usernameStatus !== 'available' || !acceptTerms || (TURNSTILE_SITE_KEY && !turnstileToken)}
               className="btn-primary w-full justify-center py-2.5 mt-1"
             >
-              {loading ? 'Creating account…' : 'Create Account'}
-            </button>
-
-            {/* Google OAuth shortcut — bypass the entire long form for
-                anyone who'd rather just connect Google. The profile
-                trigger handles first/last name; username is generated
-                by the Supabase signup trigger and editable from
-                /profile after they land. */}
-            <div className="mt-3 flex items-center gap-3">
-              <div className="h-px flex-1 bg-gray-200" />
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">or</span>
-              <div className="h-px flex-1 bg-gray-200" />
-            </div>
-            <button
-              type="button"
-              onClick={signInWithGoogle}
-              disabled={googleLoading || loading}
-              className="mt-3 w-full inline-flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl border-2 border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 disabled:opacity-60 font-semibold text-gray-700 shadow-sm transition"
-            >
-              <RegisterGoogleLogo />
-              {googleLoading ? 'Opening Google…' : 'Sign up with Google'}
+              {loading ? 'Creating account…' : 'Create my free account'}
             </button>
           </form>
           <p className="text-center text-sm text-gray-500 mt-4">
@@ -456,6 +501,7 @@ export default function RegisterPage() {
           </div>
         </div>
       </div>
+      </main>
     </div>
   )
 }

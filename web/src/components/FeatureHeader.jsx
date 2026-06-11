@@ -144,10 +144,12 @@ const THEMED = new Set(['wizard', 'econ', 'reports', 'steals'])
 // with optional controls pushed to the right. Pass `theme` for a page-themed
 // avocado (econ/reports/steals), or `expression` for a plain brand mascot
 // (any GuacMascot pose) on every other page.
-export default function FeatureHeader({ theme, expression = 'happy', title, subtitle, badge, action }) {
+export default function FeatureHeader({ theme, expression = 'happy', mascot, title, subtitle, badge, action }) {
   return (
     <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
-      {THEMED.has(theme)
+      {mascot
+        ? <div className="shrink-0 grid place-items-center" style={{ width: 60, height: 60 }}>{mascot}</div>
+        : THEMED.has(theme)
         ? <ThemedAvocado theme={theme} size={theme === 'wizard' ? 108 : 60} className="shrink-0" />
         : <GuacMascot expression={expression} size={60} className="shrink-0" />}
       <div className="min-w-0">

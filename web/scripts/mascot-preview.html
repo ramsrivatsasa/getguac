@@ -1,0 +1,130 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { width:980px; background:#f1f5f9; font-family:'Segoe UI',system-ui,sans-serif; padding:28px; }
+  h2 { color:#0f172a; font-size:20px; margin-bottom:4px; }
+  p.sub { color:#64748b; font-size:13px; margin-bottom:22px; }
+  .grid { display:grid; grid-template-columns:repeat(2,1fr); gap:20px; }
+  .tile { border-radius:24px; padding:22px 24px; display:flex; align-items:center; gap:18px; color:#fff;
+          box-shadow:0 10px 24px rgba(2,6,23,.12); }
+  .tile svg { width:120px; height:150px; flex:0 0 auto; filter:drop-shadow(0 4px 6px rgba(0,0,0,.18)); }
+  .tile .meta h3 { font-size:24px; font-weight:900; letter-spacing:-.3px; }
+  .tile .meta p  { font-size:13.5px; font-weight:600; opacity:.92; margin-top:3px; line-height:1.35; }
+  .wiz   { background:linear-gradient(135deg,#a78bfa,#6d28d9); }
+  .econ  { background:linear-gradient(135deg,#34d399,#15803d); }
+  .rep   { background:linear-gradient(135deg,#60a5fa,#1d4ed8); }
+  .steal { background:linear-gradient(135deg,#f472b6,#db2777); }
+</style>
+</head>
+<body>
+  <h2>GetGuac — page-themed avocado headers (fresh art, not the locked mascot/emoji)</h2>
+  <p class="sub">Preview only · one character per feature page · v1</p>
+
+  <!-- shared avocado body+face -->
+  <svg width="0" height="0" style="position:absolute">
+    <defs>
+      <symbol id="avo" viewBox="0 0 100 120">
+        <!-- skin -->
+        <path d="M50 8 C 71 8, 82 32, 82 62 C 82 96, 68 113, 50 113 C 32 113, 18 96, 18 62 C 18 32, 29 8, 50 8 Z" fill="#4d7c0f"/>
+        <!-- flesh -->
+        <path d="M50 18 C 66 18, 74 38, 74 62 C 74 91, 63 104, 50 104 C 37 104, 26 91, 26 62 C 26 38, 34 18, 50 18 Z" fill="#dcfce7"/>
+        <path d="M50 18 C 66 18, 74 38, 74 62 C 74 91, 63 104, 50 104 C 37 104, 26 91, 26 62 C 26 38, 34 18, 50 18 Z" fill="#bbf7d0" opacity=".55"/>
+        <!-- pit -->
+        <circle cx="50" cy="82" r="13" fill="#b45309"/>
+        <ellipse cx="46" cy="78" rx="5" ry="6" fill="#f59e0b" opacity=".5"/>
+        <!-- face -->
+        <circle cx="40" cy="52" r="6.5" fill="#fff"/><circle cx="60" cy="52" r="6.5" fill="#fff"/>
+        <circle cx="41.5" cy="53" r="3.2" fill="#1f2937"/><circle cx="61.5" cy="53" r="3.2" fill="#1f2937"/>
+        <path d="M41 64 Q 50 71 59 64" stroke="#3f3f46" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+        <circle cx="33" cy="62" r="3.5" fill="#fb7185" opacity=".55"/><circle cx="67" cy="62" r="3.5" fill="#fb7185" opacity=".55"/>
+      </symbol>
+    </defs>
+  </svg>
+
+  <div class="grid">
+    <!-- GUACWIZARD -->
+    <div class="tile wiz">
+      <svg viewBox="-28 -52 156 184">
+        <use href="#avo" x="0" y="0" width="100" height="120"/>
+        <!-- wand -->
+        <line x1="74" y1="74" x2="100" y2="44" stroke="#3f2d0b" stroke-width="4.5" stroke-linecap="round"/>
+        <path d="M102 40 l2.6 5.6 6.1 .6 -4.6 4.1 1.3 6 -5.4-3.1 -5.4 3.1 1.3-6 -4.6-4.1 6.1-.6 Z" fill="#fde047" stroke="#eab308" stroke-width="1"/>
+        <!-- hat -->
+        <ellipse cx="50" cy="8" rx="33" ry="8" fill="#4c1d95"/>
+        <path d="M24 8 Q 46 -44 60 -42 Q 70 -41 76 8 Z" fill="#6d28d9"/>
+        <path d="M24 8 Q 46 -44 60 -42 Q 70 -41 76 8 Z" fill="#7c3aed" opacity=".5"/>
+        <rect x="26" y="2" width="48" height="7" rx="3" fill="#4c1d95"/>
+        <path d="M52 -18 l1.8 4 4.4.4 -3.3 3 .9 4.3 -3.8-2.2 -3.8 2.2 .9-4.3 -3.3-3 4.4-.4 Z" fill="#fde047"/>
+        <circle cx="40" cy="-8" r="1.6" fill="#fff"/><circle cx="66" cy="-20" r="1.6" fill="#fff"/><circle cx="34" cy="-26" r="1.3" fill="#fde047"/>
+      </svg>
+      <div class="meta"><h3>GuacWizard</h3><p>Bank Bite &amp; money insights — conjured.</p></div>
+    </div>
+
+    <!-- GUACANOMICS -->
+    <div class="tile econ">
+      <svg viewBox="-28 -52 156 184">
+        <use href="#avo" x="0" y="0" width="100" height="120"/>
+        <!-- mini up-chart badge -->
+        <g transform="translate(70,60)">
+          <rect x="0" y="0" width="30" height="26" rx="5" fill="#fff"/>
+          <polyline points="4,20 11,13 16,17 26,5" fill="none" stroke="#15803d" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M26 5 l-5 .3 .3 4.6 Z" fill="#15803d"/>
+        </g>
+        <!-- graduation cap -->
+        <polygon points="50,-22 84,-4 50,14 16,-4" fill="#111827"/>
+        <polygon points="50,-22 84,-4 50,8 16,-4" fill="#1f2937"/>
+        <path d="M30 4 Q 50 14 70 4 L70 16 Q 50 24 30 16 Z" fill="#0f172a"/>
+        <circle cx="50" cy="-4" r="3" fill="#facc15"/>
+        <line x1="50" y1="-4" x2="80" y2="-4" stroke="#facc15" stroke-width="2"/>
+        <line x1="80" y1="-4" x2="80" y2="14" stroke="#facc15" stroke-width="2"/>
+        <circle cx="80" cy="17" r="3.4" fill="#f59e0b"/>
+      </svg>
+      <div class="meta"><h3>Guacanomics</h3><p>Where every dollar earns its smash.</p></div>
+    </div>
+
+    <!-- REPORTS -->
+    <div class="tile rep">
+      <svg viewBox="-28 -52 156 184">
+        <use href="#avo" x="0" y="0" width="100" height="120"/>
+        <!-- round analyst glasses over the eyes -->
+        <circle cx="40" cy="52" r="11" fill="rgba(255,255,255,.18)" stroke="#1f2937" stroke-width="3"/>
+        <circle cx="60" cy="52" r="11" fill="rgba(255,255,255,.18)" stroke="#1f2937" stroke-width="3"/>
+        <line x1="51" y1="52" x2="49" y2="52" stroke="#1f2937" stroke-width="3"/>
+        <line x1="29" y1="50" x2="22" y2="46" stroke="#1f2937" stroke-width="3" stroke-linecap="round"/>
+        <line x1="71" y1="50" x2="78" y2="46" stroke="#1f2937" stroke-width="3" stroke-linecap="round"/>
+        <!-- clipboard report -->
+        <g transform="translate(66,30) rotate(8)">
+          <rect x="0" y="0" width="30" height="40" rx="4" fill="#fff"/>
+          <rect x="10" y="-4" width="10" height="7" rx="2" fill="#cbd5e1"/>
+          <line x1="6" y1="12" x2="24" y2="12" stroke="#1d4ed8" stroke-width="2.4" stroke-linecap="round"/>
+          <line x1="6" y1="19" x2="24" y2="19" stroke="#93c5fd" stroke-width="2.4" stroke-linecap="round"/>
+          <line x1="6" y1="26" x2="18" y2="26" stroke="#93c5fd" stroke-width="2.4" stroke-linecap="round"/>
+        </g>
+      </svg>
+      <div class="meta"><h3>Reports</h3><p>Your spending, filed and explained.</p></div>
+    </div>
+
+    <!-- STEALS -->
+    <div class="tile steal">
+      <svg viewBox="-28 -52 156 184">
+        <use href="#avo" x="0" y="0" width="100" height="120"/>
+        <!-- bandit/deal-hunter mask over the eyes (holes via evenodd) -->
+        <path fill-rule="evenodd" d="M22 44 Q 50 38 78 44 L78 54 Q 64 62 50 62 Q 36 62 22 54 Z
+                 M40 52 m-7 0 a7 7 0 1 0 14 0 a7 7 0 1 0 -14 0
+                 M60 52 m-7 0 a7 7 0 1 0 14 0 a7 7 0 1 0 -14 0" fill="#111827"/>
+        <!-- price tag with % -->
+        <g transform="translate(60,-30) rotate(-12)">
+          <path d="M0 6 L22 0 L40 16 L18 36 L0 30 Z" fill="#fde047" stroke="#ca8a04" stroke-width="1.5"/>
+          <circle cx="9" cy="13" r="3.4" fill="#fff" stroke="#ca8a04" stroke-width="1.4"/>
+          <text x="24" y="22" font-size="13" font-weight="900" fill="#be123c" text-anchor="middle">%</text>
+          <line x1="6" y1="9" x2="-16" y2="30" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+        </g>
+      </svg>
+      <div class="meta"><h3>Steals</h3><p>Today's best prices, swiped for you.</p></div>
+    </div>
+  </div>
+</body>
+</html>

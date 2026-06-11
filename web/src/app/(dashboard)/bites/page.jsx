@@ -10,6 +10,7 @@ import FeatureHeader from '../../../components/FeatureHeader'
 import LottieAnimation from '../../../components/LottieAnimation'
 import emptyListLottie from '../../../lottie/empty-list.json'
 import thinkingLottie from '../../../lottie/thinking.json'
+import croissantBite from '../../../lottie/croissant-bite.json'
 import { displayStoreName } from '../../../lib/store-name-normalize'
 
 export default function BitesPage() {
@@ -89,7 +90,7 @@ export default function BitesPage() {
   return (
     <div className="space-y-5 max-w-7xl font-sans">
       <FeatureHeader
-        expression="eating"
+        mascot={<LottieAnimation data={croissantBite} size={60} loop label="Bites" fallback="🍽️" />}
         title="Bites"
         subtitle="Every dish you've tried — like it or pass on it"
         action={

@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.77",
-  "name": "v0.3.77 — Sign Out, easy to find",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.77/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Sign Out is now a clear, always-visible icon on every screen — including Receipts and Smashlist, where a crowded toolbar used to hide it.\n• Added Sign Out to the Menu panel too."
+  "version": "v0.3.78",
+  "name": "v0.3.78 — Camera fix + green app bars",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.78/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Fixed the camera/Add button doing nothing when you were already on the Receipts screen.\n• Every screen now has a matching green top bar (consistent with the web pages).\n• Sign Out is a clear, always-visible icon on Receipts and Smashlist."
 }

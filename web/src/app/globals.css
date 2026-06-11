@@ -52,9 +52,9 @@
 
 /* Avocado-genie (GenieAvocado.jsx): the genie body+tail gently floats out of
    the laptop; sparkles twinkle. Respects reduced-motion. */
-@keyframes genie-float { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-7px) } }
+@keyframes genie-float { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-22px) } }
 @keyframes genie-twinkle { 0%, 100% { opacity: 0.4 } 50% { opacity: 1 } }
-.genie-float { animation: genie-float 3.2s ease-in-out infinite; }
+.genie-float { animation: genie-float 2.6s ease-in-out infinite; }
 .genie-twinkle { animation: genie-twinkle 1.8s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .genie-float, .genie-twinkle { animation: none } }
 

@@ -6,6 +6,8 @@ import {
 } from 'lucide-react'
 import GuacMascot from '../components/GuacMascot'
 import GenieAvocado from '../components/GenieAvocado'
+import LottieAnimation from '../components/LottieAnimation'
+import moneyMagic from '../lottie/money-magic.json'
 import ReferralCapture from '../components/ReferralCapture'
 
 export default async function Home() {
@@ -80,6 +82,10 @@ export default async function Home() {
             <div className="absolute inset-0 bg-gradient-to-br from-lime-200/50 to-emerald-200/50 rounded-full blur-3xl" />
             <div className="relative">
               <GenieAvocado size={320} />
+              {/* Magic hat conjuring cash, beside the genie — the money wizard. */}
+              <div className="absolute bottom-3 -left-2 sm:-left-8 w-36 sm:w-44 pointer-events-none">
+                <LottieAnimation data={moneyMagic} size={176} loop fallback="🎩" label="Money magic" />
+              </div>
             </div>
           </div>
         </div>

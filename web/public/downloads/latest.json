@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.75",
-  "name": "v0.3.75 — Reliable receipt scanning",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.75/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Fixed large gallery photos failing to scan — receipts now upload reliably (downscaled on capture).\n• The GuacWizard genie now reads your receipt while it scans.\n• Multi-receipt capture: multi-select from your gallery or snap photos back-to-back."
+  "version": "v0.3.76",
+  "name": "v0.3.76 — Sign Out everywhere",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.76/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Sign Out is now in the top-right of every screen.\n• Reliable receipt scanning for large gallery photos, with the GuacWizard genie on the scan screen."
 }

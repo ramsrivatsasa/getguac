@@ -155,10 +155,9 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/chat'),
         ),
-        title: Text(_peerName, style: const TextStyle(fontWeight: FontWeight.w900, color: _kBrand)),
-        backgroundColor: Colors.white,
+        title: Text(_peerName, style: const TextStyle(fontWeight: FontWeight.w900, color: Colors.white)),
         elevation: 0.5,
-        actions: [signOutAction(context, whiteIcons: false)],
+        actions: [signOutAction(context)],
       ),
       backgroundColor: const Color(0xFFf8fafc),
       body: Column(children: [

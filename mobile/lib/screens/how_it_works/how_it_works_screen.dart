@@ -32,8 +32,6 @@ class HowItWorksScreen extends StatelessWidget {
       backgroundColor: _kEmerald50,
       appBar: AppBar(
         title: const Text('How GetGuac Works'),
-        backgroundColor: Colors.white,
-        foregroundColor: _kEmerald900,
         actions: [signOutAction(context)],
       ),
       body: ListView(

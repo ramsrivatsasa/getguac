@@ -88,13 +88,12 @@ class _ChatListScreenState extends State<ChatListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Row(children: [
-          Icon(Icons.chat_bubble_outline, color: _kBrand, size: 20),
+          Icon(Icons.chat_bubble_outline, color: Colors.white, size: 20),
           SizedBox(width: 8),
-          Text('Chat', style: TextStyle(fontWeight: FontWeight.w900, color: _kBrand)),
+          Text('Chat', style: TextStyle(fontWeight: FontWeight.w900, color: Colors.white)),
         ]),
-        backgroundColor: Colors.white,
         elevation: 0.5,
-        actions: [signOutAction(context, whiteIcons: false)],
+        actions: [signOutAction(context)],
       ),
       body: RefreshIndicator(
         onRefresh: _load,

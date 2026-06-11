@@ -174,14 +174,19 @@ class GetGuacApp extends StatelessWidget {
           // being odd, plays well with the emerald/lime palette, and
           // reads cleanly at large AppBar sizes. Body text stays on
           // the system default (legibility for receipts data).
+          // Green top bar on every native screen to match the WebView header
+          // (web_app_screen.dart uses 0xFF166534 + white). Keeps the app bar
+          // consistent across native + embedded pages.
           appBarTheme: AppBarTheme(
-            backgroundColor: Colors.white,
-            foregroundColor: kBrandPrimaryDk,
+            backgroundColor: const Color(0xFF166534),
+            foregroundColor: Colors.white,
+            iconTheme: const IconThemeData(color: Colors.white),
+            actionsIconTheme: const IconThemeData(color: Colors.white),
             elevation: 0,
             scrolledUnderElevation: 1,
             centerTitle: false,
             titleTextStyle: GoogleFonts.plusJakartaSans(
-              color: kBrandPrimaryDk,
+              color: Colors.white,
               fontSize: 22,
               fontWeight: FontWeight.w800,
               letterSpacing: -0.5,

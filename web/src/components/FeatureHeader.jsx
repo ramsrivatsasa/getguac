@@ -97,28 +97,21 @@ const WIZARD_HAT_CONE = (
 // with sparkles at the tip — drawn in the mascot's 0 0 220 290 frame.
 const HAND_WAND = (
   <>
-    {/* wand: black shaft + white tip, pointing up-left */}
-    <line x1="42" y1="120" x2="14" y2="84" stroke="#1f2937" strokeWidth="6" strokeLinecap="round" />
-    <line x1="25" y1="98" x2="12" y2="82" stroke="#9aa4b2" strokeWidth="8" strokeLinecap="round" />
-    <line x1="26" y1="99" x2="13" y2="83" stroke="#fff" strokeWidth="6" strokeLinecap="round" />
-    {/* white cartoon glove fist */}
-    <g stroke="#6b7280" strokeWidth="1.7" strokeLinejoin="round">
-      <path d="M27 116 Q 20 125 25 134 Q 32 142 45 140 Q 56 138 57 127 Q 57 117 48 113 Q 37 110 27 116 Z" fill="#f8fafc" />
-      <g fill="#f8fafc">
-        <ellipse cx="24" cy="131" rx="7" ry="5.5" />
-        <ellipse cx="29" cy="138" rx="7" ry="5.5" />
-        <ellipse cx="38" cy="142" rx="6.5" ry="5" />
-      </g>
-      <path d="M50 114 Q 59 113 60 121 Q 60 130 51 131 Q 46 127 47 120 Z" fill="#f8fafc" />
-    </g>
-    <g stroke="#9ca3af" strokeWidth="1.2" fill="none" strokeLinecap="round" strokeOpacity="0.9">
-      <path d="M32 120 q 6 5 5 12" />
-      <path d="M40 119 q 5 5 4 12" />
+    {/* wand emerging from the top of the fist, up-left */}
+    <line x1="38" y1="122" x2="11" y2="83" stroke="#1f2937" strokeWidth="6" strokeLinecap="round" />
+    <line x1="22" y1="100" x2="9" y2="81" stroke="#9aa4b2" strokeWidth="8" strokeLinecap="round" />
+    <line x1="23" y1="99" x2="10" y2="82" stroke="#fff" strokeWidth="6" strokeLinecap="round" />
+    {/* clean white glove fist */}
+    <path d="M30 116 Q 22 124 26 134 Q 32 143 45 142 Q 56 140 57 129 Q 57 119 49 114 Q 39 110 30 116 Z" fill="#f8fafc" stroke="#6b7280" strokeWidth="1.7" strokeLinejoin="round" />
+    <path d="M48 113 Q 58 112 59 121 Q 59 130 50 130 Q 45 126 46 119 Q 47 115 48 113 Z" fill="#fff" stroke="#6b7280" strokeWidth="1.5" />
+    <g stroke="#9ca3af" strokeWidth="1.3" fill="none" strokeLinecap="round" strokeOpacity="0.9">
+      <path d="M33 122 q 8 -3 16 0" />
+      <path d="M32 129 q 8 -3 15 0" />
     </g>
     {/* sparkles at the tip */}
-    <Star x={7} y={74} s={1.6} fill="#fde047" stroke="#eab308" strokeWidth={0.8} />
-    <Star x={22} y={66} s={1.0} fill="#fde047" stroke="#eab308" strokeWidth={0.8} />
-    <Star x={3} y={92} s={0.9} fill="#fde047" stroke="#eab308" strokeWidth={0.8} />
+    <Star x={4} y={73} s={1.6} fill="#fde047" stroke="#eab308" strokeWidth={0.8} />
+    <Star x={19} y={65} s={1.0} fill="#fde047" stroke="#eab308" strokeWidth={0.8} />
+    <Star x={0} y={91} s={0.9} fill="#fde047" stroke="#eab308" strokeWidth={0.8} />
   </>
 )
 

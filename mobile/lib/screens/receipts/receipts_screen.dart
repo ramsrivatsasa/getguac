@@ -185,19 +185,51 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
   /// (mascot + scan-line + rotating ticker) while Guac-AI reads it, then open
   /// the review dialog — prefilled on success, blank-with-photo on failure.
   /// Shared by the camera/gallery items in the floating "+ Add" menu.
-  Future<void> _captureFromSource(ImageSource source) async {
+  /// Capture several receipts in a row from the camera. `pickImage` returns
+  /// null when the user backs out of the camera, so the loop ends naturally;
+  /// after each shot we ask whether to scan another so the camera doesn't
+  /// reopen unexpectedly. Each photo is parsed + reviewed before the next.
+  Future<void> _captureFromCamera() async {
     if (!mounted) return;
-    final picker = ImagePicker();
-    final img = await picker.pickImage(source: source);
-    if (img == null || !mounted) return;
-
     final uid = context.read<AppAuthProvider>().currentUser?.id;
     if (uid == null) return;
+    final picker = ImagePicker();
+    var n = 0;
+    while (mounted) {
+      final img = await picker.pickImage(source: ImageSource.camera);
+      if (img == null || !mounted) break; // backed out of camera → done
+      n++;
+      await _processOne(File(img.path), uid);
+      if (!mounted) break;
+      final again = await _askScanAnother(n);
+      if (again != true) break;
+    }
+  }
 
-    final file = File(img.path);
+  /// Pick MANY receipts from the gallery at once, then parse + review each in
+  /// turn. `pickMultiImage` lets the user multi-select; the scan overlay shows
+  /// the batch size while each is read.
+  Future<void> _captureFromGallery() async {
+    if (!mounted) return;
+    final uid = context.read<AppAuthProvider>().currentUser?.id;
+    if (uid == null) return;
+    final picker = ImagePicker();
+    final imgs = await picker.pickMultiImage();
+    if (imgs.isEmpty || !mounted) return;
+    for (final img in imgs) {
+      if (!mounted) break;
+      await _processOne(File(img.path), uid, batchCount: imgs.length);
+    }
+  }
+
+  /// Parse one image and open the review dialog (awaited so a batch shows the
+  /// dialogs one after another). [batchCount] drives the "N receipts" pill in
+  /// the scan overlay when capturing a batch.
+  Future<void> _processOne(File file, String uid, {int batchCount = 1}) async {
+    if (!mounted) return;
     // Full-screen scan overlay while we send the photo to /api/parse-receipt —
     // mirrors the web parsing animation (mascot + speech bubble + scan line).
-    ReceiptScanOverlay.show(context);
+    ReceiptScanOverlay.show(context, count: batchCount);
     // One automatic retry on transient errors so a single AI hiccup doesn't
     // drop the user into an empty edit form.
     ParseResult result = await ReceiptParseService.parseImage(file);
@@ -208,26 +240,55 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
     if (!result.ok) {
       // Surface the real reason, let the user edit manually instead of
       // dropping a blank placeholder in the table.
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text("Couldn't auto-read: ${result.error}"),
         duration: const Duration(seconds: 4),
       ));
       // Open the Add dialog with the photo attached but no prefill so the
-      // user can type the fields by hand.
-      showDialog(
+      // user can type the fields by hand. Awaited so batch capture queues
+      // the review dialogs instead of stacking them.
+      await showDialog(
         context: context,
         builder: (ctx) => _AddReceiptDialog(uid: uid, imageFile: file),
       );
       return;
     }
-    final parsed = result.data!;
     // Duplicate dialog removed (user-requested) — the substring matcher
     // caused too many false positives. Real dupes are cleaned up via the
     // web Find duplicates button which uses the strict server-side matcher.
     if (!mounted) return;
-    showDialog(
+    await showDialog(
       context: context,
-      builder: (ctx) => _AddReceiptDialog(uid: uid, imageFile: file, prefill: parsed),
+      builder: (ctx) => _AddReceiptDialog(uid: uid, imageFile: file, prefill: result.data!),
+    );
+  }
+
+  /// After a camera shot, ask whether to capture another. Returns true to loop.
+  Future<bool?> _askScanAnother(int doneCount) {
+    return showModalBottomSheet<bool>(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => SafeArea(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          const SizedBox(height: 14),
+          Text('$doneCount receipt${doneCount == 1 ? '' : 's'} captured',
+              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+          const SizedBox(height: 4),
+          const Text('Snap another, or finish up.', style: TextStyle(color: Colors.black54)),
+          const SizedBox(height: 12),
+          ListTile(
+            leading: const Icon(Icons.add_a_photo, color: Color(0xFF064e3b)),
+            title: const Text('Scan another receipt', style: TextStyle(fontWeight: FontWeight.w700)),
+            onTap: () => Navigator.of(ctx).pop(true),
+          ),
+          ListTile(
+            leading: const Icon(Icons.check_circle_outline, color: Color(0xFF059669)),
+            title: const Text('Done', style: TextStyle(fontWeight: FontWeight.w700)),
+            onTap: () => Navigator.of(ctx).pop(false),
+          ),
+          const SizedBox(height: 8),
+        ]),
+      ),
     );
   }
 
@@ -302,15 +363,15 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
           const SizedBox(height: 8),
           ListTile(
             leading: const Icon(Icons.camera_alt, color: Color(0xFF064e3b)),
-            title: const Text('Take a photo', style: TextStyle(fontWeight: FontWeight.w700)),
-            subtitle: const Text('Snap a paper receipt'),
-            onTap: () { Navigator.of(ctx).pop(); _captureFromSource(ImageSource.camera); },
+            title: const Text('Take photos', style: TextStyle(fontWeight: FontWeight.w700)),
+            subtitle: const Text('Snap several paper receipts in a row'),
+            onTap: () { Navigator.of(ctx).pop(); _captureFromCamera(); },
           ),
           ListTile(
             leading: const Icon(Icons.photo_library_outlined, color: Color(0xFF064e3b)),
             title: const Text('Pick from gallery', style: TextStyle(fontWeight: FontWeight.w700)),
-            subtitle: const Text('Amazon, Doordash, Uber Eats… any screenshot'),
-            onTap: () { Navigator.of(ctx).pop(); _captureFromSource(ImageSource.gallery); },
+            subtitle: const Text('Select one or many — Amazon, Doordash, screenshots'),
+            onTap: () { Navigator.of(ctx).pop(); _captureFromGallery(); },
           ),
           ListTile(
             leading: const Icon(Icons.mic_none, color: Color(0xFF064e3b)),

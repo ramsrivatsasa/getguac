@@ -147,7 +147,7 @@ export default function StealsPage() {
           value={query}
           onChange={e => onQueryChange(e.target.value)}
         />
-        <button type="submit" disabled={!query.trim()} className="btn-primary">
+        <button type="submit" disabled={!query.trim()} className="btn-primary shrink-0 whitespace-nowrap">
           <BadgeDollarSign size={15} /> Find Steals
         </button>
       </form>

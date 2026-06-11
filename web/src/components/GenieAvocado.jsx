@@ -40,9 +40,10 @@ export default function GenieAvocado({ size = 300, className = '' }) {
         <path d="M220 150 C 185 150, 174 172, 171 204 C 168 232, 154 252, 140 284 C 122 324, 124 372, 170 402 C 194 422, 246 422, 270 402 C 316 372, 318 324, 300 284 C 286 252, 272 232, 269 204 C 266 172, 255 150, 220 150 Z" fill="url(#gnBody)" />
         <path d="M220 164 C 190 164, 181 184, 179 212 C 177 236, 163 254, 152 284 C 135 320, 138 366, 178 393 C 200 411, 240 411, 262 393 C 302 366, 305 320, 288 284 C 277 254, 263 236, 261 212 C 259 184, 250 164, 220 164 Z" fill="url(#gnFlesh)" />
         <ellipse cx="220" cy="330" rx="50" ry="52" fill="url(#gnPit)" />
-        {/* genie hair: slicked-back black cap + high bound ponytail */}
+        {/* genie hair: slicked-back black cap + curled topknot (classic genie) */}
         <path d="M180 176 Q 186 148 220 144 Q 254 148 260 176 Q 238 161 220 160 Q 202 161 180 176 Z" fill="#1f2937" />
-        <path d="M212 148 Q 214 120 226 100 Q 234 86 230 72 Q 244 84 240 104 Q 234 128 228 150 Z" fill="#1f2937" />
+        <path d="M219 150 C 210 118 252 116 249 88 C 247 68 222 66 219 84 C 217 95 230 99 235 90"
+          stroke="#1f2937" strokeWidth="13" fill="none" strokeLinecap="round" strokeLinejoin="round" />
         <rect x="210" y="145" width="17" height="8" rx="4" fill="#0b1220" />
         {/* face */}
         <circle cx="200" cy="232" r="11" fill="#fff" stroke="#1f2937" strokeWidth="2" /><circle cx="240" cy="232" r="11" fill="#fff" stroke="#1f2937" strokeWidth="2" />
@@ -52,12 +53,12 @@ export default function GenieAvocado({ size = 300, className = '' }) {
         <path d="M203 258 L237 258 L233 266 Q 220 272 207 266 Z" fill="#fff" />
         {/* pointed genie goatee */}
         <path d="M211 270 Q 220 275 229 270 Q 225 286 220 294 Q 215 286 211 270 Z" fill="#1f2937" />
-        {/* round genie glasses */}
-        <circle cx="200" cy="232" r="17" fill="#e0f2fe" fillOpacity="0.32" stroke="#1f2937" strokeWidth="3.5" />
-        <circle cx="240" cy="232" r="17" fill="#e0f2fe" fillOpacity="0.32" stroke="#1f2937" strokeWidth="3.5" />
-        <line x1="217" y1="230" x2="223" y2="230" stroke="#1f2937" strokeWidth="3.5" strokeLinecap="round" />
-        <path d="M183 228 Q 174 224 168 227" stroke="#1f2937" strokeWidth="3" fill="none" strokeLinecap="round" />
-        <path d="M257 228 Q 266 224 272 227" stroke="#1f2937" strokeWidth="3" fill="none" strokeLinecap="round" />
+        {/* square golden genie glasses */}
+        <rect x="184" y="217" width="32" height="30" rx="5" fill="#fde68a" fillOpacity="0.26" stroke="#eab308" strokeWidth="4" />
+        <rect x="224" y="217" width="32" height="30" rx="5" fill="#fde68a" fillOpacity="0.26" stroke="#eab308" strokeWidth="4" />
+        <line x1="216" y1="230" x2="224" y2="230" stroke="#eab308" strokeWidth="4" strokeLinecap="round" />
+        <path d="M184 226 Q 174 222 168 225" stroke="#eab308" strokeWidth="3.2" fill="none" strokeLinecap="round" />
+        <path d="M256 226 Q 266 222 272 225" stroke="#eab308" strokeWidth="3.2" fill="none" strokeLinecap="round" />
         {/* sparkles */}
         <g fill="#fde047" stroke="#eab308" strokeWidth="1.2">
           <path className="genie-twinkle" transform="translate(96 130) scale(2)" d={STAR} />

@@ -94,7 +94,15 @@ function guessDomain(name) {
 // (free, 200s for any real domain, served from Google's CDN). The
 // image is smaller than a Clearbit wordmark — typically 32-64px
 // square — but it renders consistently and there's no rate limit.
+// Brand-logo fetching is OFF by design: the favicon lookup produced
+// wrong/low-quality logos for ambiguous or item-like names (and they
+// flashed in while loading inside the mobile WebView). Every StoreLogo
+// now renders its clean emoji tile. Flip this to re-enable the favicon
+// path — the curated map + guess logic below are kept intact.
+const USE_BRAND_LOGOS = false
+
 export function logoUrlForStore(storeName) {
+  if (!USE_BRAND_LOGOS) return null
   if (!storeName) return null
   const key = normalizeKey(storeName)
   if (!key) return null

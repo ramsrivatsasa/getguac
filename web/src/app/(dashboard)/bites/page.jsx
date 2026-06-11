@@ -90,7 +90,7 @@ export default function BitesPage() {
   return (
     <div className="space-y-5 max-w-7xl font-sans">
       <FeatureHeader
-        mascot={<LottieAnimation data={croissantBite} size={60} loop label="Bites" fallback="🍽️" />}
+        mascot={<LottieAnimation data={croissantBite} size={72} loop label="Bites" fallback="🍽️" />}
         title="Bites"
         subtitle="Every dish you've tried — like it or pass on it"
         action={

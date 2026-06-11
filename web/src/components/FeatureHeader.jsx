@@ -148,12 +148,15 @@ export default function FeatureHeader({ theme, expression = 'happy', mascot, tit
   return (
     <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
       {mascot
-        ? <div className="shrink-0 grid place-items-center" style={{ width: 60, height: 60 }}>{mascot}</div>
+        ? <div className="shrink-0 grid place-items-center" style={{ width: 72, height: 72 }}>{mascot}</div>
         : THEMED.has(theme)
-        ? <ThemedAvocado theme={theme} size={theme === 'wizard' ? 108 : 60} className="shrink-0" />
-        : <GuacMascot expression={expression} size={60} className="shrink-0" />}
-      <div className="min-w-0">
-        <h1 className="text-2xl sm:text-3xl font-black text-gray-900 leading-none tracking-tight">{title}</h1>
+        ? <ThemedAvocado theme={theme} size={theme === 'wizard' ? 96 : 72} className="shrink-0" />
+        : <GuacMascot expression={expression} size={72} className="shrink-0" />}
+      {/* flex-1 + a min width keeps the title on the mascot's row instead of
+          wrapping the mascot onto its own line on narrow mobile WebViews; a
+          wide `action` (score, buttons) wraps below it cleanly via flex-wrap. */}
+      <div className="flex-1 min-w-[11rem]">
+        <h1 className="text-2xl sm:text-3xl font-black text-gray-900 leading-tight tracking-tight">{title}</h1>
         {subtitle && <p className="text-xs sm:text-sm text-gray-500 mt-1.5">{subtitle}</p>}
       </div>
       {badge && (

@@ -93,25 +93,31 @@ const WIZARD_HAT_CONE = (
 // A green arm + hand gripping a white-tipped wand, with sparkles at the tip.
 // Drawn in the mascot's 0 0 220 290 frame (overflow visible so the wand + stars
 // can reach past the body) so it reads as the avocado holding the wand.
-// A white cartoon glove (no arm) on the LEFT holding the white-tipped wand,
-// with sparkles at the tip — drawn in the mascot's 0 0 220 290 frame.
+// A yellow emoji fist (DETACHED from the body — floats to the right with a
+// gap) holding a long white-tipped wand with sparkles. Drawn in the mascot's
+// 0 0 220 290 frame; the overlay svg is overflow-visible so it can sit to the
+// right of the avocado.
 const HAND_WAND = (
   <>
-    {/* wand emerging from the top of the fist, up-left */}
-    <line x1="38" y1="122" x2="11" y2="83" stroke="#1f2937" strokeWidth="6" strokeLinecap="round" />
-    <line x1="22" y1="100" x2="9" y2="81" stroke="#9aa4b2" strokeWidth="8" strokeLinecap="round" />
-    <line x1="23" y1="99" x2="10" y2="82" stroke="#fff" strokeWidth="6" strokeLinecap="round" />
-    {/* clean white glove fist */}
-    <path d="M30 116 Q 22 124 26 134 Q 32 143 45 142 Q 56 140 57 129 Q 57 119 49 114 Q 39 110 30 116 Z" fill="#f8fafc" stroke="#6b7280" strokeWidth="1.7" strokeLinejoin="round" />
-    <path d="M48 113 Q 58 112 59 121 Q 59 130 50 130 Q 45 126 46 119 Q 47 115 48 113 Z" fill="#fff" stroke="#6b7280" strokeWidth="1.5" />
-    <g stroke="#9ca3af" strokeWidth="1.3" fill="none" strokeLinecap="round" strokeOpacity="0.9">
-      <path d="M33 122 q 8 -3 16 0" />
-      <path d="M32 129 q 8 -3 15 0" />
+    {/* long wand: black shaft + white tip */}
+    <line x1="200" y1="150" x2="250" y2="48" stroke="#1f2937" strokeWidth="6" strokeLinecap="round" />
+    <line x1="231" y1="86" x2="252" y2="45" stroke="#9aa4b2" strokeWidth="8.5" strokeLinecap="round" />
+    <line x1="232" y1="85" x2="251" y2="46" stroke="#fff" strokeWidth="6.3" strokeLinecap="round" />
+    {/* yellow emoji fist */}
+    <g stroke="#d98e15" strokeWidth="1.6" strokeLinejoin="round">
+      <path d="M184 152 Q 180 166 190 172 Q 203 178 215 171 Q 223 165 221 152 Q 220 144 212 142 L190 142 Q 185 145 184 152 Z" fill="#fbc02d" />
+      <g fill="#fbc02d">
+        <rect x="186" y="140" width="8.5" height="13" rx="4" />
+        <rect x="194" y="139" width="8.5" height="14" rx="4" />
+        <rect x="202" y="140" width="8.5" height="13" rx="4" />
+        <rect x="210" y="142" width="8" height="12" rx="4" />
+      </g>
+      <path d="M185 160 Q 198 166 211 160 Q 214 156 210 154 Q 199 159 189 154 Q 186 156 185 160 Z" fill="#f9a825" />
     </g>
     {/* sparkles at the tip */}
-    <Star x={4} y={73} s={1.6} fill="#fde047" stroke="#eab308" strokeWidth={0.8} />
-    <Star x={19} y={65} s={1.0} fill="#fde047" stroke="#eab308" strokeWidth={0.8} />
-    <Star x={0} y={91} s={0.9} fill="#fde047" stroke="#eab308" strokeWidth={0.8} />
+    <Star x={256} y={40} s={1.7} fill="#fde047" stroke="#eab308" strokeWidth={0.8} />
+    <Star x={240} y={30} s={1.05} fill="#fde047" stroke="#eab308" strokeWidth={0.8} />
+    <Star x={262} y={60} s={0.9} fill="#fde047" stroke="#eab308" strokeWidth={0.8} />
   </>
 )
 

@@ -24,7 +24,6 @@ import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
 
 /// Static API for popping the scan overlay above the whole app.
 ///
@@ -167,19 +166,11 @@ class _ReceiptScanOverlayBodyState extends State<_ReceiptScanOverlayBody> {
                   children: [
                     _SpeechBubble(text: _ticker[_tick], count: _count),
                     const SizedBox(height: 14),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Lottie.asset(
-                          'assets/lottie/search-scan.json',
-                          width: 168, height: 168, fit: BoxFit.contain, repeat: true,
-                        ),
-                        Lottie.asset(
-                          'assets/lottie/our-mascot-maracas.json',
-                          width: 150, height: 150, fit: BoxFit.contain, repeat: true,
-                        ),
-                      ],
+                    // The GuacWizard genie casts a spell to read your receipt —
+                    // matches the web receipts scan animation.
+                    Image.asset(
+                      'assets/mascot/genie.png',
+                      width: 196, height: 250, fit: BoxFit.contain,
                     ),
                   ],
                 ),

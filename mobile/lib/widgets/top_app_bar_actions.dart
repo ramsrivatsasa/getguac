@@ -25,7 +25,7 @@ Widget signOutAction(BuildContext context, {bool whiteIcons = true, Color? color
     icon: Icon(Icons.logout_rounded, color: color, size: 21),
     tooltip: 'Sign out',
     visualDensity: VisualDensity.compact,
-    onPressed: () => _confirmAndSignOut(context),
+    onPressed: () => confirmAndSignOut(context),
   );
 }
 
@@ -34,48 +34,44 @@ Widget signOutAction(BuildContext context, {bool whiteIcons = true, Color? color
 List<Widget> topAppBarActions(BuildContext context, {bool whiteIcons = true}) {
   final iconColor = whiteIcons ? Colors.white : null;
   return [
-    IconButton(
-      icon: Icon(Icons.notifications_none_rounded, color: iconColor, size: 21),
-      tooltip: 'Notifications',
-      visualDensity: VisualDensity.compact,
-      padding: EdgeInsets.zero,
-      constraints: const BoxConstraints(),
-      onPressed: () {
-        // Placeholder until the notifications inbox is built. (No badge dot
-        // until there's a real unread count to drive it.)
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Notifications — coming soon'),
-          duration: Duration(seconds: 2),
-        ));
-      },
-    ),
     // Steals — with a red badge counting unread "fresh steals".
     _StealsAction(iconColor: iconColor),
-    IconButton(
-      icon: Icon(Icons.chat_bubble_outline, color: iconColor, size: 21),
-      tooltip: 'Chat',
-      visualDensity: VisualDensity.compact,
-      padding: EdgeInsets.zero,
-      constraints: const BoxConstraints(),
-      onPressed: () => context.go('/chat'),
+    // Secondary actions tucked behind one overflow button so the row never
+    // overflows on narrow phones — which used to clip the LAST icon (Sign Out),
+    // making it invisible on Receipts / Smashlist.
+    PopupMenuButton<String>(
+      icon: Icon(Icons.more_vert, color: iconColor, size: 21),
+      tooltip: 'More',
+      onSelected: (v) {
+        switch (v) {
+          case 'chat':
+            context.go('/chat');
+            break;
+          case 'invite':
+            context.go('/invite');
+            break;
+          case 'notifications':
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text('Notifications — coming soon'),
+              duration: Duration(seconds: 2),
+            ));
+            break;
+        }
+      },
+      itemBuilder: (_) => const [
+        PopupMenuItem(value: 'chat', child: ListTile(
+          leading: Icon(Icons.chat_bubble_outline), title: Text('Chat'),
+          contentPadding: EdgeInsets.zero, dense: true)),
+        PopupMenuItem(value: 'invite', child: ListTile(
+          leading: Icon(Icons.person_add_alt_1), title: Text('Refer a friend'),
+          contentPadding: EdgeInsets.zero, dense: true)),
+        PopupMenuItem(value: 'notifications', child: ListTile(
+          leading: Icon(Icons.notifications_none_rounded), title: Text('Notifications'),
+          contentPadding: EdgeInsets.zero, dense: true)),
+      ],
     ),
-    IconButton(
-      icon: Icon(Icons.person_add_alt_1, color: iconColor, size: 21),
-      tooltip: 'Refer a friend',
-      visualDensity: VisualDensity.compact,
-      padding: EdgeInsets.zero,
-      constraints: const BoxConstraints(),
-      onPressed: () => context.go('/invite'),
-    ),
-    // Sign out — icon only.
-    IconButton(
-      icon: Icon(Icons.logout_rounded, color: iconColor, size: 21),
-      tooltip: 'Sign out',
-      visualDensity: VisualDensity.compact,
-      padding: EdgeInsets.zero,
-      constraints: const BoxConstraints(),
-      onPressed: () => _confirmAndSignOut(context),
-    ),
+    // Sign out — dedicated, always-visible icon (never collapsed into overflow).
+    signOutAction(context, color: iconColor),
     const SizedBox(width: 4),
   ];
 }
@@ -143,7 +139,9 @@ class _StealsActionState extends State<_StealsAction> {
   }
 }
 
-Future<void> _confirmAndSignOut(BuildContext context) async {
+/// Confirm dialog → sign out → go to /login. Public so non-AppBar surfaces
+/// (e.g. the Menu quick panel) can trigger the same flow.
+Future<void> confirmAndSignOut(BuildContext context) async {
   final ok = await showDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(

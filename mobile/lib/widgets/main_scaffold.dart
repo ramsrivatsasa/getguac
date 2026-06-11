@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'guac_mascot.dart';
+import 'top_app_bar_actions.dart';
 import '../services/update_service.dart';
 
 // Colorful bottom nav matching the web's brand palette.
@@ -207,10 +208,16 @@ class _MainScaffoldState extends State<MainScaffold> with WidgetsBindingObserver
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withValues(alpha: 0.4),
       builder: (sheetCtx) {
-        return _ProfileQuickMenu(onPick: (route) {
-          Navigator.of(sheetCtx).pop();
-          context.go(route);
-        });
+        return _ProfileQuickMenu(
+          onPick: (route) {
+            Navigator.of(sheetCtx).pop();
+            context.go(route);
+          },
+          onSignOut: () {
+            Navigator.of(sheetCtx).pop();
+            confirmAndSignOut(context);
+          },
+        );
       },
     );
   }
@@ -418,7 +425,8 @@ class _NavButton extends StatelessWidget {
 
 class _ProfileQuickMenu extends StatelessWidget {
   final void Function(String route) onPick;
-  const _ProfileQuickMenu({required this.onPick});
+  final VoidCallback onSignOut;
+  const _ProfileQuickMenu({required this.onPick, required this.onSignOut});
 
   @override
   Widget build(BuildContext context) {
@@ -487,6 +495,22 @@ class _ProfileQuickMenu extends StatelessWidget {
                   ),
                 );
               },
+            ),
+            const SizedBox(height: 10),
+            // Sign Out — always here in the Menu, the natural place to find it.
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: onSignOut,
+                icon: const Icon(Icons.logout_rounded, size: 18, color: Color(0xFFb91c1c)),
+                label: const Text('Sign out',
+                  style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFFb91c1c))),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Color(0xFFfecaca)),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+              ),
             ),
             const SizedBox(height: 8),
             Text(

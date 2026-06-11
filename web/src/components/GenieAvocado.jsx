@@ -14,7 +14,7 @@ export default function GenieAvocado({ size = 300, className = '' }) {
         <radialGradient id="gnBody" cx="35%" cy="28%" r="80%"><stop offset="0%" stopColor="#10b981" /><stop offset="100%" stopColor="#064e3b" /></radialGradient>
         <radialGradient id="gnFlesh" cx="50%" cy="42%" r="68%"><stop offset="0%" stopColor="#f6ed8a" /><stop offset="40%" stopColor="#e7ec8e" /><stop offset="74%" stopColor="#b4d35f" /><stop offset="100%" stopColor="#84cc16" /></radialGradient>
         <radialGradient id="gnPit" cx="38%" cy="34%" r="78%"><stop offset="0%" stopColor="#dca838" /><stop offset="48%" stopColor="#a8590a" /><stop offset="100%" stopColor="#54260c" /></radialGradient>
-        <linearGradient id="gnSwirl" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#34d399" /><stop offset="100%" stopColor="#10b981" stopOpacity="0.25" /></linearGradient>
+        <linearGradient id="gnSwirl" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#34d399" /><stop offset="100%" stopColor="#059669" /></linearGradient>
         <linearGradient id="gnScreen" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#cfe8ff" /><stop offset="100%" stopColor="#8ec5ff" /></linearGradient>
       </defs>
 
@@ -40,6 +40,11 @@ export default function GenieAvocado({ size = 300, className = '' }) {
         <path d="M220 150 C 185 150, 174 172, 171 204 C 168 232, 154 252, 140 284 C 122 324, 124 372, 170 402 C 194 422, 246 422, 270 402 C 316 372, 318 324, 300 284 C 286 252, 272 232, 269 204 C 266 172, 255 150, 220 150 Z" fill="url(#gnBody)" />
         <path d="M220 164 C 190 164, 181 184, 179 212 C 177 236, 163 254, 152 284 C 135 320, 138 366, 178 393 C 200 411, 240 411, 262 393 C 302 366, 305 320, 288 284 C 277 254, 263 236, 261 212 C 259 184, 250 164, 220 164 Z" fill="url(#gnFlesh)" />
         <ellipse cx="220" cy="330" rx="50" ry="52" fill="url(#gnPit)" />
+        {/* genie hair: topknot + ponytail */}
+        <path d="M256 150 Q 286 132 296 158 Q 300 176 286 182 Q 296 162 278 152 Q 264 146 252 152 Z" fill="#1f2937" />
+        <path d="M186 170 Q 198 146 220 143 Q 242 146 254 170 Q 220 156 186 170 Z" fill="#1f2937" />
+        <ellipse cx="221" cy="140" rx="12" ry="9" fill="#111827" />
+        <path d="M211 146 Q 221 151 231 146" stroke="#4b5563" strokeWidth="3.5" fill="none" strokeLinecap="round" />
         {/* face */}
         <circle cx="200" cy="232" r="11" fill="#fff" stroke="#1f2937" strokeWidth="2" /><circle cx="240" cy="232" r="11" fill="#fff" stroke="#1f2937" strokeWidth="2" />
         <circle cx="201" cy="233" r="5.5" fill="#1f2937" /><circle cx="241" cy="233" r="5.5" fill="#1f2937" />
@@ -52,6 +57,11 @@ export default function GenieAvocado({ size = 300, className = '' }) {
           <path className="genie-twinkle" style={{ animationDelay: '0.6s' }} transform="translate(348 132) scale(1.6)" d={STAR} />
           <path className="genie-twinkle" style={{ animationDelay: '1.1s' }} transform="translate(330 96) scale(1.2)" d={STAR} />
         </g>
+        {/* magic wand in the raised right hand */}
+        <line x1="310" y1="184" x2="320" y2="170" stroke="#ef4444" strokeWidth="8" strokeLinecap="round" />
+        <line x1="314" y1="178" x2="356" y2="118" stroke="#3b82f6" strokeWidth="8" strokeLinecap="round" />
+        <line x1="324" y1="160" x2="342" y2="135" stroke="#bfdbfe" strokeWidth="3" strokeLinecap="round" />
+        <path transform="translate(366 106) scale(3.8)" d={STAR} fill="#fbbf24" stroke="#f59e0b" strokeWidth="0.7" />
       </g>
     </svg>
   )

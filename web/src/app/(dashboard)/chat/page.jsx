@@ -10,8 +10,6 @@ import {
   listMyThreads, openThreadByEmail, listMessages, postMessage,
 } from '../../../lib/dms'
 import { getDisplayNames, formatName, initialFor } from '../../../lib/displayNames'
-import LottieAnimation from '../../../components/LottieAnimation'
-import emptyListLottie from '../../../lottie/empty-list.json'
 
 // /chat — direct-message UI between any two GetGuac users. Mirrors the
 // shape of HouseholdPanel.jsx's chat section (oldest-first scroll,
@@ -145,7 +143,6 @@ export default function ChatPage() {
             <h3 className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Conversations</h3>
             {threads.length === 0 ? (
               <div className="text-xs text-gray-400 py-3 text-center flex flex-col items-center gap-2">
-                <LottieAnimation data={emptyListLottie} size={120} fallback="💬" />
                 <p>No chats yet. Use a handle or email above to start one.</p>
               </div>
             ) : (
@@ -263,7 +260,6 @@ function Thread({ threadId, peerName, onBack }) {
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 space-y-2 bg-gray-50">
         {messages.length === 0 ? (
           <div className="text-center text-gray-400 text-xs py-4 flex flex-col items-center gap-2">
-            <LottieAnimation data={emptyListLottie} size={120} fallback="👋" />
             <p>No messages yet — say hi.</p>
           </div>
         ) : (

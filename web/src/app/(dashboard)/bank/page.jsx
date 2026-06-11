@@ -13,9 +13,6 @@ import {
   Banknote, FileText, AlertTriangle, Percent, CreditCard, Trash2, ExternalLink, ChevronDown, ChevronRight, Sparkles, ArrowLeft, Upload, Calendar, Clock, Wand2, Loader2, RefreshCw
 } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
-import LottieAnimation from '../../../components/LottieAnimation'
-import emptyListLottie from '../../../lottie/empty-list.json'
-import thinkingLottie from '../../../lottie/thinking.json'
 import { bankAccountTotals, PERIODS } from '../../../lib/financeInsights'
 import { CountUp } from '../../../components/animated'
 const FEE_KIND_TONE = {
@@ -747,12 +744,10 @@ export default function BankPage() {
 
       {loadingS ? (
         <div className="card py-12 text-center text-gray-400 text-sm flex flex-col items-center gap-3">
-          <LottieAnimation data={thinkingLottie} size={140} fallback="🏦" />
           <p>Loading…</p>
         </div>
       ) : banks.length === 0 ? (
         <div className="card py-14 text-center space-y-3 flex flex-col items-center">
-          <LottieAnimation data={emptyListLottie} size={160} fallback="🏦" />
           <p className="text-gray-700 font-semibold">No statements yet</p>
           <p className="text-sm text-gray-500">Drop a credit-card or bank statement and we&apos;ll do the rest.</p>
           <HeaderCTA />

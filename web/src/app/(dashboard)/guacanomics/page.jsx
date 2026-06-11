@@ -8,9 +8,6 @@ import { createClient } from '../../../lib/supabase/client'
 import { isPaymentReceipt } from '../../../lib/payment-rows'
 import { DollarSign, TrendingUp, Undo2, Receipt as ReceiptIcon, Banknote } from 'lucide-react'
 import GuacoScoreCard from '../../../components/GuacoScoreCard'
-import LottieAnimation from '../../../components/LottieAnimation'
-import emptyListLottie from '../../../lottie/empty-list.json'
-import thinkingLottie from '../../../lottie/thinking.json'
 import MascotLoading from '../../../components/MascotLoading'
 import FeatureHeader from '../../../components/FeatureHeader'
 import { CATEGORY_BY_SLUG } from '../../../lib/categories'
@@ -219,7 +216,6 @@ export default function GuacanomicsPage() {
         <MascotLoading label="Loading insights…" />
       ) : receipts.length === 0 ? (
         <div className="card py-12 text-center text-gray-400 flex flex-col items-center gap-3">
-          <LottieAnimation data={emptyListLottie} size={160} fallback="📈" />
           <p>No receipts yet. <Link href="/receipts" className="text-blue-600 hover:underline">Add some</Link> to unlock your spending picture.</p>
         </div>
       ) : (

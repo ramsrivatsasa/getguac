@@ -9,9 +9,6 @@ import { getStores } from '../../../lib/db'
 import AddressInput from '../../../components/AddressInput'
 import GuacMascot from '../../../components/GuacMascot'
 import FeatureHeader from '../../../components/FeatureHeader'
-import LottieAnimation from '../../../components/LottieAnimation'
-import emptyListLottie from '../../../lottie/empty-list.json'
-import thinkingLottie from '../../../lottie/thinking.json'
 import { displayStoreName } from '../../../lib/store-name-normalize'
 
 const EMPTY = { start_date: '', end_date: '', total_miles: '', description: '', category: 'Personal', from_address: '', to_address: '', tags: [] }
@@ -396,12 +393,10 @@ export default function CarMilesPage() {
       <div className="card p-0 overflow-hidden">
         {isLoading ? (
           <div className="py-12 text-center text-gray-400 flex flex-col items-center gap-3">
-            <LottieAnimation data={thinkingLottie} size={140} fallback="🚗" />
             <p>Loading…</p>
           </div>
         ) : trips.length === 0 ? (
           <div className="py-12 text-center text-gray-400 flex flex-col items-center gap-3">
-            <LottieAnimation data={emptyListLottie} size={160} fallback="🚗" />
             <p>No trips yet.</p>
           </div>
         ) : (

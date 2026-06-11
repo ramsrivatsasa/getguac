@@ -14,7 +14,6 @@ import { useSavedSearches, useAddSavedSearch, useDeleteSavedSearch } from '../..
 import { touchSavedSearch } from '../../../lib/savedSearches'
 import { bestDealUrl } from '../../../lib/storeSearch'
 import { getStealsFeed, markStealsChecked } from '../../../lib/steals'
-import GuacMascot from '../../../components/GuacMascot'
 import FeatureHeader from '../../../components/FeatureHeader'
 import { StoreLogo } from '../../../components/StoreLogo'
 import { displayStoreName } from '../../../lib/store-name-normalize'
@@ -298,7 +297,7 @@ export default function StealsPage() {
 
             {search.isPending && (
               <div className="flex flex-col items-center gap-3 py-16">
-                <GuacMascot expression="rich" size={96} className="animate-bounce" />
+                <div className="w-7 h-7 rounded-full border-2 border-emerald-200 border-t-emerald-600 animate-spin" />
                 <p className="text-sm font-bold text-gray-700">Scanning Walmart, Amazon, Best Buy, Target…</p>
               </div>
             )}
@@ -312,7 +311,6 @@ export default function StealsPage() {
 
             {!search.isPending && search.data && view.length === 0 && (
               <div className="card text-center py-10 flex flex-col items-center gap-2">
-                <GuacMascot expression="surprised" size={90} />
                 <p className="font-semibold text-gray-700">No matches</p>
                 <p className="text-xs text-gray-500">Try widening the filters or removing a spec.</p>
               </div>

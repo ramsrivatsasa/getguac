@@ -8,8 +8,6 @@ import { getBites, setItemValidation, addToShoppingList, SHOPPING_LISTS, SHOPPIN
 import { useShoppingList } from '../../../hooks/useShopping'
 import FeatureHeader from '../../../components/FeatureHeader'
 import LottieAnimation from '../../../components/LottieAnimation'
-import emptyListLottie from '../../../lottie/empty-list.json'
-import thinkingLottie from '../../../lottie/thinking.json'
 import croissantBite from '../../../lottie/croissant-bite.json'
 import { displayStoreName } from '../../../lib/store-name-normalize'
 
@@ -143,12 +141,10 @@ export default function BitesPage() {
       {/* Restaurants → dishes */}
       {isLoading ? (
         <div className="card py-12 text-center text-gray-400 flex flex-col items-center gap-3">
-          <LottieAnimation data={thinkingLottie} size={140} fallback="🍽️" />
           <p>Loading bites…</p>
         </div>
       ) : filtered.length === 0 ? (
         <div className="card py-10 text-center flex flex-col items-center gap-3">
-          <LottieAnimation data={emptyListLottie} size={160} fallback="🍽️" />
           <p className="text-gray-500 max-w-md">
             {rows.length === 0 ? (
               <>No restaurant receipts yet. Drop one at <Link href="/receipts" className="text-emerald-700 font-semibold hover:underline">/receipts</Link> — Guac-AI tags it as <span className="font-semibold">🍽️ Eats</span> and items land here.</>

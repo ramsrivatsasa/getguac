@@ -6,10 +6,6 @@ import toast from 'react-hot-toast'
 import { Undo2, Search, ExternalLink, RotateCcw, Calendar, Store as StoreIcon, Clock, Shield } from 'lucide-react'
 import { getReturns, updateReceiptItem, getEligibleReturns } from '../../../lib/db'
 import FeatureHeader from '../../../components/FeatureHeader'
-import LottieAnimation from '../../../components/LottieAnimation'
-import emptyListLottie from '../../../lottie/empty-list.json'
-import thinkingLottie from '../../../lottie/thinking.json'
-import errorBlobLottie from '../../../lottie/error-blob.json'
 import { displayStoreName } from '../../../lib/store-name-normalize'
 
 export default function ReturnsPage() {
@@ -158,12 +154,10 @@ export default function ReturnsPage() {
         <div className="card p-0 overflow-hidden">
           {eligLoading ? (
             <div className="py-12 text-center text-gray-400 flex flex-col items-center gap-3">
-              <LottieAnimation data={thinkingLottie} size={140} fallback="⏳" />
               <p>Loading returnables…</p>
             </div>
           ) : filteredEligible.length === 0 ? (
             <div className="py-10 text-center flex flex-col items-center gap-3">
-              <LottieAnimation data={emptyListLottie} size={160} fallback="↩️" />
               <p className="text-gray-500 max-w-md">
                 {eligible.length === 0
                   ? "Nothing in a return window right now. Items appear here when a receipt's policy gives you days remaining."
@@ -262,12 +256,10 @@ export default function ReturnsPage() {
       <div className="card p-0 overflow-hidden">
         {isLoading ? (
           <div className="py-12 text-center text-gray-400 flex flex-col items-center gap-3">
-            <LottieAnimation data={thinkingLottie} size={140} fallback="⏳" />
             <p>Loading returns…</p>
           </div>
         ) : error ? (
           <div className="py-8 text-center text-rose-600 text-sm flex flex-col items-center gap-3">
-            <LottieAnimation data={errorBlobLottie} size={140} fallback="⚠️" />
             <p>Failed to load: {error.message}</p>
             <div className="text-xs text-gray-400 mt-2">
               If this says &quot;Could not find relationship…&quot;, run this in Supabase SQL Editor:<br />
@@ -276,7 +268,6 @@ export default function ReturnsPage() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="py-10 text-center flex flex-col items-center gap-3">
-            <LottieAnimation data={emptyListLottie} size={160} fallback="📦" />
             <p className="text-gray-500 max-w-md">
               {returns.length === 0
                 ? 'No returns yet. Mark items as returned from the receipt detail page or the receipts list.'

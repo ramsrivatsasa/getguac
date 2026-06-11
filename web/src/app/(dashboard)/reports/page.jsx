@@ -25,9 +25,6 @@ import { useStore } from '../../../store'
 import TimeframePicker from '../../../components/TimeframePicker'
 import { BarChart3, PieChart as PieIcon, Repeat, Award, Store as StoreIcon, X, Receipt as ReceiptIcon, Download, HeartHandshake, Briefcase, Percent, RotateCw, TrendingUp } from 'lucide-react'
 import FeatureHeader from '../../../components/FeatureHeader'
-import LottieAnimation from '../../../components/LottieAnimation'
-import emptyListLottie from '../../../lottie/empty-list.json'
-import thinkingLottie from '../../../lottie/thinking.json'
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
 
 // Time-frame is owned by the dashboard via the Zustand store.
@@ -221,12 +218,10 @@ export default function ReportsPage() {
 
       {isLoading ? (
         <div className="text-gray-400 py-10 text-center flex flex-col items-center gap-3">
-          <LottieAnimation data={thinkingLottie} size={140} fallback="📊" />
           <p>Loading reports…</p>
         </div>
       ) : receipts.length === 0 ? (
         <div className="card py-16 text-center flex flex-col items-center gap-3">
-          <LottieAnimation data={emptyListLottie} size={160} fallback="📊" />
           <p className="text-gray-500">No receipts in this window. Try a wider period.</p>
         </div>
       ) : (

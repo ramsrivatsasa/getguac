@@ -12,8 +12,6 @@ import FeatureHeader from '../../../components/FeatureHeader'
 import { displayStoreName } from '../../../lib/store-name-normalize'
 import { useConfirm } from '../../../components/ConfirmDialog'
 import { FadeUpStagger, ShimmerBox } from '../../../components/animated'
-import LottieAnimation from '../../../components/LottieAnimation'
-import emptyListLottie from '../../../lottie/empty-list.json'
 
 const FILTERS = [
   { value: '',         label: 'All' },
@@ -365,7 +363,6 @@ export default function InboxPage() {
                 />
               ) : (
                 <div className="flex-1 flex items-center justify-center text-sm flex-col gap-4 px-6 text-center bg-gradient-to-br from-emerald-50/40 to-lime-50/30">
-                  <LottieAnimation data={emptyListLottie} size={160} fallback="👋" />
                   <div className="space-y-1.5">
                     <p className="font-bold text-emerald-900 text-base">Pick a message to read</p>
                     <p className="text-gray-500 text-xs max-w-xs">
@@ -761,7 +758,6 @@ function ComposeModal({ prefill, onClose, onSent }) {
 function EmptyState({ folder, filter }) {
   return (
     <div className="p-10 text-center text-gray-400 text-sm flex flex-col items-center gap-3">
-      <LottieAnimation data={emptyListLottie} size={140} fallback="📭" />
       <p>
         {filter === 'unread'   ? 'All caught up. Nothing unread.' :
          filter === 'receipts' ? 'No receipts forwarded yet. Try forwarding an order confirmation to your +g address.' :

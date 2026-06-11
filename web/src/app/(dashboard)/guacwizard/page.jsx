@@ -8,8 +8,6 @@ import { periodStartDate, timeframeLabel } from '../../../lib/timeframe'
 import { useStore } from '../../../store'
 import GuacMascot from '../../../components/GuacMascot'
 import FeatureHeader from '../../../components/FeatureHeader'
-import LottieAnimation from '../../../components/LottieAnimation'
-import emptyListLottie from '../../../lottie/empty-list.json'
 import TimeframePicker from '../../../components/TimeframePicker'
 import { CountUp, FadeUpStagger } from '../../../components/animated'
 import { TrendingUp, TrendingDown, AlertTriangle, Percent, CreditCard, Banknote, Sparkles } from 'lucide-react'
@@ -98,7 +96,6 @@ export default function GuacWizardPage() {
         </h2>
         {insights.length === 0 ? (
           <div className="card py-10 text-center text-gray-500 flex flex-col items-center gap-3">
-            <LottieAnimation data={emptyListLottie} size={140} fallback="😴" />
             <p className="mt-2">Nothing to report for this period. Try a longer window.</p>
           </div>
         ) : (

@@ -84,3 +84,6 @@ supabase/.temp/
 
 # ── Test bundle (large binaries don't belong in git) ───────────────
 test/*.apk
+
+# ── Generated marketing assets (screenshots/video; regen via scripts) ─
+web/marketing-assets/

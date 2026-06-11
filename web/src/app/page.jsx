@@ -5,6 +5,7 @@ import {
   Sparkles, Wand2, Star, Gift, ShoppingCart, Tag, Shield, ArrowRight, Package, BadgeDollarSign, Banknote, Brain, Trophy, Smile, PieChart
 } from 'lucide-react'
 import GuacMascot from '../components/GuacMascot'
+import GenieAvocado from '../components/GenieAvocado'
 import ReferralCapture from '../components/ReferralCapture'
 
 export default async function Home() {
@@ -78,7 +79,7 @@ export default async function Home() {
           <div className="lg:col-span-2 relative flex justify-center">
             <div className="absolute inset-0 bg-gradient-to-br from-lime-200/50 to-emerald-200/50 rounded-full blur-3xl" />
             <div className="relative">
-              <GuacMascot expression="rich" size={260} />
+              <GenieAvocado size={320} />
             </div>
           </div>
         </div>

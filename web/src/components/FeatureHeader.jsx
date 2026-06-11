@@ -12,6 +12,7 @@
 import GuacMascot from './GuacMascot'
 import LottieAnimation from './LottieAnimation'
 import halloweenHat from '../lottie/halloween-hat.json'
+import GenieAvocado from './GenieAvocado'
 
 // Base mascot pose per page (props are layered on top in PROP_OVERLAY).
 const THEME_EXPR = {
@@ -116,7 +117,8 @@ function WizardAvocado({ size, className = '' }) {
 }
 
 export function ThemedAvocado({ theme = 'reports', size = 64, className = '' }) {
-  if (theme === 'wizard') return <WizardAvocado size={size} className={className} />
+  if (theme === 'wizard') return <GenieAvocado size={size} className={className} />
+  if (theme === 'wizard-hat') return <WizardAvocado size={size} className={className} />
   const expr = THEME_EXPR[theme] || 'happy'
   const h = size * (290 / 220)
   return (
@@ -146,7 +148,7 @@ export default function FeatureHeader({ theme, expression = 'happy', title, subt
   return (
     <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
       {THEMED.has(theme)
-        ? <ThemedAvocado theme={theme} size={theme === 'wizard' ? 88 : 60} className="shrink-0" />
+        ? <ThemedAvocado theme={theme} size={theme === 'wizard' ? 108 : 60} className="shrink-0" />
         : <GuacMascot expression={expression} size={60} className="shrink-0" />}
       <div className="min-w-0">
         <h1 className="text-2xl sm:text-3xl font-black text-gray-900 leading-none tracking-tight">{title}</h1>

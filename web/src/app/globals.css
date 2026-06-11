@@ -50,6 +50,14 @@
    on the same row are untouched. */
 .guac-embedded span:has(+ div > .page-title) { display: none; }
 
+/* Avocado-genie (GenieAvocado.jsx): the genie body+tail gently floats out of
+   the laptop; sparkles twinkle. Respects reduced-motion. */
+@keyframes genie-float { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-7px) } }
+@keyframes genie-twinkle { 0%, 100% { opacity: 0.4 } 50% { opacity: 1 } }
+.genie-float { animation: genie-float 3.2s ease-in-out infinite; }
+.genie-twinkle { animation: genie-twinkle 1.8s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .genie-float, .genie-twinkle { animation: none } }
+
 @layer utilities {
   /* ────────────────────────────────────────────────────────────────
      Animation system — shared by web/src/components/animated/*.jsx.

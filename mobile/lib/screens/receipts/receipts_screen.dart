@@ -196,7 +196,11 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
     final picker = ImagePicker();
     var n = 0;
     while (mounted) {
-      final img = await picker.pickImage(source: ImageSource.camera);
+      // Downscale on capture so the upload stays well under the server's size
+      // cap — full-res phone photos were >5 MB and got rejected (413) before
+      // they could parse. 2000px keeps receipt text crisp.
+      final img = await picker.pickImage(
+        source: ImageSource.camera, maxWidth: 2000, imageQuality: 85);
       if (img == null || !mounted) break; // backed out of camera → done
       n++;
       await _processOne(File(img.path), uid);
@@ -214,7 +218,9 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
     final uid = context.read<AppAuthProvider>().currentUser?.id;
     if (uid == null) return;
     final picker = ImagePicker();
-    final imgs = await picker.pickMultiImage();
+    // Downscale each pick (2000px / q85) so even large gallery photos upload
+    // under the server size cap and parse reliably.
+    final imgs = await picker.pickMultiImage(maxWidth: 2000, imageQuality: 85);
     if (imgs.isEmpty || !mounted) return;
     for (final img in imgs) {
       if (!mounted) break;

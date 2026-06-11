@@ -12,8 +12,12 @@ import { buildUserContextPrompt } from '../../../lib/user-context'
 export const runtime = 'nodejs'
 export const maxDuration = 60
 
-// Max 5 MB per receipt — reject larger uploads at the door
-const MAX_UPLOAD_BYTES = 5 * 1024 * 1024
+// Max 12 MB per receipt — reject larger uploads at the door. Bumped from 5 MB:
+// full-resolution phone photos (esp. from the gallery) routinely exceed 5 MB
+// and were silently 413'd ("File too large") so the receipt never parsed. The
+// mobile app also downscales on capture, but this keeps headroom for the web
+// drop zone and older app versions.
+const MAX_UPLOAD_BYTES = 12 * 1024 * 1024
 
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash'
 const GROQ_TEXT_MODEL   = process.env.GROQ_TEXT_MODEL   || 'llama-3.3-70b-versatile'

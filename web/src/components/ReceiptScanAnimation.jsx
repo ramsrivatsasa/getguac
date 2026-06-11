@@ -17,6 +17,8 @@
 
 import { useEffect, useState } from 'react'
 import GenieAvocado from './GenieAvocado'
+import LottieAnimation from './LottieAnimation'
+import moneyMagic from '../lottie/money-magic.json'
 
 const TICKER = [
   'Looking for the store name…',
@@ -87,8 +89,14 @@ export default function ReceiptScanAnimation({ count = 0 }) {
           </div>
         </div>
 
-        {/* The GuacWizard genie casts a spell to read your receipt. */}
-        <GenieAvocado size={210} />
+        {/* The GuacWizard genie casts a spell to read your receipt — with the
+            money-magic hat conjuring cash beside it. */}
+        <div className="relative">
+          <GenieAvocado size={210} />
+          <div className="absolute bottom-1 -left-20 w-32 pointer-events-none">
+            <LottieAnimation data={moneyMagic} size={128} loop fallback="🎩" label="Money magic" />
+          </div>
+        </div>
       </div>
     </div>
   )

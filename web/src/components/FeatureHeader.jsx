@@ -10,6 +10,8 @@
 // WebView, so embedded pages no longer show an orphaned, oversized mascot
 // with the title hidden underneath.
 import GuacMascot from './GuacMascot'
+import LottieAnimation from './LottieAnimation'
+import halloweenHat from '../lottie/halloween-hat.json'
 
 // Base mascot pose per page (props are layered on top in PROP_OVERLAY).
 const THEME_EXPR = {
@@ -60,32 +62,6 @@ const PROP_OVERLAY = {
 // Layers drawn BEHIND the mascot (e.g. a cape draping out past the body).
 const BEHIND_OVERLAY = {}
 
-// The wizard hat (in the mascot's 0 0 220 290 coords). Split into brim + cone
-// so they can be slimmed independently: the cone is narrowed more than the
-// (wide) brim for a classic witch-hat silhouette.
-const WIZARD_HAT_BRIM = (
-  <>
-    <ellipse cx="110" cy="57" rx="49" ry="11" fill="#581c87" />
-    <ellipse cx="110" cy="54" rx="49" ry="9" fill="#7e22ce" />
-  </>
-)
-const WIZARD_HAT_CONE = (
-  <>
-    <path d="M74 55 C 76 22, 86 -6, 106 -16 C 120 -24, 138 -20, 146 -6 C 156 8, 154 22, 144 24 C 137 25, 133 19, 134 12 C 132 30, 136 46, 144 55 Z" fill="#7c3aed" />
-    <path d="M76 54 C 78 24, 88 -2, 106 -12 C 94 -2, 86 18, 82 44 C 80 49, 77 53, 76 54 Z" fill="#a855f7" opacity="0.45" />
-    <Star x={97} y={28} s={1.4} fill="#f59e0b" stroke="#b45309" strokeWidth={0.8} />
-    <Star x={116} y={4} s={1.1} fill="#f59e0b" stroke="#b45309" strokeWidth={0.8} />
-    <Star x={132} y={18} s={0.95} fill="#f59e0b" stroke="#b45309" strokeWidth={0.8} />
-    <Star x={106} y={-10} s={0.85} fill="#f59e0b" stroke="#b45309" strokeWidth={0.8} />
-    <Star x={122} y={40} s={0.75} fill="#f59e0b" stroke="#b45309" strokeWidth={0.8} />
-    <path d="M74 46 Q 110 53 146 46 L146 54 Q 110 61 74 54 Z" fill="#92400e" />
-    <path d="M74 46 Q 110 53 146 46" stroke="#b45309" strokeWidth="1.4" fill="none" />
-    <ellipse cx="110" cy="50" rx="11" ry="9" fill="#fbbf24" stroke="#b45309" strokeWidth="1.5" />
-    <ellipse cx="110" cy="50" rx="6.5" ry="7" fill="#2563eb" stroke="#1e40af" strokeWidth="1" />
-    <ellipse cx="107.5" cy="47" rx="2" ry="2.5" fill="#bfdbfe" opacity="0.85" />
-  </>
-)
-
 // Wizard = small mascot at the bottom with a BIG hat overlaid on top, so the
 // hat reads large without shrinking the brand mascot's proportions. `size`
 // is the overall width budget. Ratios are tuned so the brim rests on the
@@ -97,50 +73,41 @@ const WIZARD_HAT_CONE = (
 // gap) holding a long white-tipped wand with sparkles. Drawn in the mascot's
 // 0 0 220 290 frame; the overlay svg is overflow-visible so it can sit to the
 // right of the avocado.
-const HAND_WAND = (
+// A bigger magic wand (no hand) floating to the right of the avocado: black
+// shaft + a big gold star topper + sparkles. Drawn in the mascot's 0 0 220 290
+// frame, overflow-visible, so it reaches past the body and clears the hat.
+const WAND = (
   <>
-    {/* black wand shaft + gold STAR topper (a magic wand, not a stick) */}
-    <line x1="200" y1="150" x2="242" y2="72" stroke="#1f2937" strokeWidth="5.5" strokeLinecap="round" />
-    <Star x={247} y={63} s={2.8} fill="#fde047" stroke="#eab308" strokeWidth={0.9} />
-    <Star x={265} y={52} s={0.9} fill="#fde047" stroke="#eab308" strokeWidth={0.7} />
-    <Star x={231} y={50} s={0.8} fill="#fde047" stroke="#eab308" strokeWidth={0.7} />
-    <Star x={260} y={78} s={0.7} fill="#fde047" stroke="#eab308" strokeWidth={0.7} />
-    {/* yellow emoji fist (detached), tilted to align with the wand */}
-    <g transform="rotate(22 201 150)" stroke="#d98e15" strokeWidth="1.6" strokeLinejoin="round">
-      <path d="M184 152 Q 180 166 190 172 Q 203 178 215 171 Q 223 165 221 152 Q 220 144 212 142 L190 142 Q 185 145 184 152 Z" fill="#fbc02d" />
-      <g fill="#fbc02d">
-        <rect x="186" y="140" width="8.5" height="13" rx="4" />
-        <rect x="194" y="139" width="8.5" height="14" rx="4" />
-        <rect x="202" y="140" width="8.5" height="13" rx="4" />
-        <rect x="210" y="142" width="8" height="12" rx="4" />
-      </g>
-      <path d="M185 160 Q 198 166 211 160 Q 214 156 210 154 Q 199 159 189 154 Q 186 156 185 160 Z" fill="#f9a825" />
-    </g>
+    <line x1="180" y1="195" x2="262" y2="118" stroke="#1f2937" strokeWidth="7" strokeLinecap="round" />
+    <Star x={269} y={110} s={3.4} fill="#fde047" stroke="#eab308" strokeWidth={1} />
+    <Star x={289} y={103} s={1.1} fill="#fde047" stroke="#eab308" strokeWidth={0.7} />
+    <Star x={253} y={95} s={0.95} fill="#fde047" stroke="#eab308" strokeWidth={0.7} />
+    <Star x={285} y={128} s={0.8} fill="#fde047" stroke="#eab308" strokeWidth={0.7} />
   </>
 )
 
+// Wizard = a small brand mascot at the bottom with the ANIMATED Lottie witch
+// hat seated on its head, plus a big floating wand. `size` ≈ the overall width
+// budget; ratios tuned in web/src/lottie/_compose.html against the real hat.
 function WizardAvocado({ size, className = '' }) {
   const avoW = size * (150 / 220)
   const avoH = avoW * (290 / 220)
-  const hatW = size * (188 / 220)
-  const hatH = hatW * (100 / 132)
+  const L = avoW * 2.04        // animated hat box (square)
+  const H = avoW * 2.68        // container: hat tip → avocado bottom
   return (
-    <div className={`relative ${className}`} style={{ width: size, height: size * (290 / 220) }}>
-      <div className="absolute left-1/2 -translate-x-1/2" style={{ bottom: size * (6 / 220) }}>
+    <div className={`relative ${className}`} style={{ width: L, height: H }}>
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2">
         <div className="relative" style={{ width: avoW, height: avoH }}>
           <GuacMascot expression="happy" size={avoW} />
           <svg viewBox="0 0 220 290" width={avoW} height={avoH} aria-hidden="true"
             className="absolute inset-0 pointer-events-none overflow-visible">
-            {HAND_WAND}
+            {WAND}
           </svg>
         </div>
       </div>
-      <svg viewBox="44 -28 132 100" width={hatW} height={hatH} aria-hidden="true"
-        className="absolute left-1/2 -translate-x-1/2 pointer-events-none" style={{ top: size * (10 / 220) }}>
-        {/* brim stays wide; the cone is slimmed more → witch-hat silhouette */}
-        <g transform="matrix(0.9 0 0 1 11 0)">{WIZARD_HAT_BRIM}</g>
-        <g transform="matrix(0.66 0 0 1 37.4 0)">{WIZARD_HAT_CONE}</g>
-      </svg>
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 pointer-events-none" style={{ width: L, height: L }}>
+        <LottieAnimation data={halloweenHat} size={L} loop label="wizard hat" />
+      </div>
     </div>
   )
 }
@@ -176,7 +143,7 @@ export default function FeatureHeader({ theme, expression = 'happy', title, subt
   return (
     <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
       {THEMED.has(theme)
-        ? <ThemedAvocado theme={theme} size={theme === 'wizard' ? 92 : 60} className="shrink-0" />
+        ? <ThemedAvocado theme={theme} size={theme === 'wizard' ? 72 : 60} className="shrink-0" />
         : <GuacMascot expression={expression} size={60} className="shrink-0" />}
       <div className="min-w-0">
         <h1 className="text-2xl sm:text-3xl font-black text-gray-900 leading-none tracking-tight">{title}</h1>

@@ -272,6 +272,73 @@ async function seed(uid) {
     reward_type: type, reward_title: title,
   }))
   { const { error } = await sb.from('rewards').insert(rewards); if (error) throw error }
+
+  // 13. EATS receipts → Bites. Parent receipt category 'eats' + item-level
+  //     ratings (5 = liked, 1 = pass, null = untried) so the rate/reorder UI
+  //     shows a real mix.
+  const EATS = [
+    ['Chipotle', [['Chicken Burrito Bowl', 9.25, 5], ['Chips & Guacamole', 4.60, 5]]],
+    ['Chick-fil-A', [['Spicy Deluxe Sandwich', 6.49, 4], ['Waffle Fries', 2.99, 4], ['Lemonade', 2.35, 3]]],
+    ['Starbucks', [['Caramel Macchiato', 5.45, 5], ['Butter Croissant', 3.95, 4]]],
+    ["McDonald's", [['Big Mac', 5.99, 2], ['Medium Fries', 2.79, 1]]],
+    ['Sweetgreen', [['Harvest Bowl', 13.95, 5]]],
+    ['Shake Shack', [['ShackBurger', 7.19, 4], ['Cheese Fries', 4.49, 3]]],
+    ['Panera Bread', [['Broccoli Cheddar Soup', 6.99, 4], ['French Baguette', 3.49, null]]],
+    ['Cava', [['Greens & Grains Bowl', 12.45, 5], ['Pita Chips', 2.95, 4]]],
+  ]
+  for (let i = 0; i < EATS.length; i++) {
+    const [store, items] = EATS[i]
+    const d = daysAgo(i * 7 + 4)
+    const total = items.reduce((s, it) => s + it[1], 0)
+    const rated = items.map(it => it[2]).filter(r => r != null)
+    const rid = await addReceipt({
+      user_id: uid, store_name: store, date: d,
+      total_amount: +total.toFixed(2), tax_paid: +(total * 0.07).toFixed(2),
+      category: 'eats',
+      rating: rated.length ? Math.round(rated.reduce((a, b) => a + b, 0) / rated.length) : null,
+      validation_comment: TAG, processed: true,
+    })
+    await addItems(items.map(([name, price, rating]) => ({
+      receipt_id: rid, item_name: name, qty: 1, price, category: 'eats',
+      rating, purchase_date: d,
+    })))
+  }
+
+  // 14. RETURNS → items still inside a return window (eligible refund policy
+  //     with a future expiry). getEligibleReturns surfaces these.
+  const RETURNS = [
+    ['Best Buy', 'tech', 'Sony WH-CH520 Headphones', 129.99, 5, 15],
+    ['Target', 'apparel', 'Cotton Crew T-Shirt', 24.00, 12, 90],
+    ['Amazon', 'tech', 'USB-C 7-in-1 Hub', 45.50, 3, 30],
+    ['REI', 'apparel', 'Trail 25 Daypack', 89.00, 20, 365],
+    ['Home Depot', 'household', 'Cordless Drill', 79.00, 8, 90],
+  ]
+  for (const [store, cat, item, price, boughtAgo, windowDays] of RETURNS) {
+    const d = daysAgo(boughtAgo)
+    const rid = await addReceipt({
+      user_id: uid, store_name: store, date: d, total_amount: price,
+      tax_paid: +(price * 0.07).toFixed(2), category: cat, is_return: false,
+      business_purchase: false, validation_comment: TAG, processed: true,
+    })
+    await addItems([{ receipt_id: rid, item_name: item, qty: 1, price, category: cat, purchase_date: d, returned: false }])
+    const { error } = await sb.from('receipt_refund_policies').insert({
+      receipt_id: rid, policy_id: 'seed-default', days: windowDays,
+      expiry_date: daysAhead(windowDays - boughtAgo), eligible: true,
+      details: `${windowDays}-day return policy`, source: 'seed', source_url: null,
+    })
+    if (error) throw error
+  }
+}
+
+// Dashboard greeting + profile read profiles.first_name. Give the demo a
+// friendly name. Upsert so it works whether or not a profile row exists yet.
+async function setProfileName(uid) {
+  // profiles has first_name + last_name (no full_name column).
+  let { error } = await sb.from('profiles').upsert({ id: uid, first_name: 'John', last_name: 'Doe' })
+  if (error) {
+    ;({ error } = await sb.from('profiles').upsert({ id: uid, first_name: 'John' }))
+    if (error) console.warn('   ! profile name update failed:', error.message)
+  }
 }
 
 // ─── main ──────────────────────────────────────────────────────────────────
@@ -284,6 +351,7 @@ if (WIPE_ONLY) {
   process.exit(0)
 }
 await seed(uid)
+await setProfileName(uid)
 console.log('\n✅ Seed complete.')
 console.log(`   Login:    ${DEMO_EMAIL} / ${DEMO_PASSWORD}`)
 console.log(`   User id:  ${uid}`)

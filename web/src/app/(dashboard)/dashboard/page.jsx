@@ -2,6 +2,12 @@ import { headers } from 'next/headers'
 import { createClient } from '../../../lib/supabase/server'
 import DashboardClient from './DashboardClient'
 
+// Always render fresh: Supabase queries run through fetch(), which Next's Data
+// Cache would otherwise cache server-side — making the greeting name, totals,
+// and anomalies show stale data after the user's rows change.
+export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
+
 export default async function DashboardPage() {
   const sb = createClient()
   const { data: { user } } = await sb.auth.getUser()

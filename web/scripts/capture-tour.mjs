@@ -38,21 +38,21 @@ const doVideo = !onlyShots
 
 // Public landing (no auth) first, then authed feature routes. `public:true`
 // means capture before signing in. Captions ≤ ~6 words for the video banner.
+// Framed around "how GetGuac saves you money." video:false scenes are captured
+// as stills but skipped in the video until their demo data is seeded.
 const SCENES = [
   { key: 'landing', route: '/', caption: 'Stop leaving money on the table', public: true },
-  { key: 'dashboard', route: '/dashboard', caption: 'Your money, scored' },
   { key: 'receipts', route: '/receipts', caption: 'Snap any receipt' },
-  { key: 'items', route: '/items', caption: 'AI reads every line' },
-  { key: 'steals', route: '/steals', caption: 'Find the better price' },
-  { key: 'shopping', route: '/shopping', caption: 'Your Smashlist — automatic' },
-  // returns/bites/predictions need extra seed data (return-window items,
-  // restaurant dishes, a predictor run) — excluded from the video until then.
-  { key: 'returns', route: '/returns', caption: 'Claw back refunds', video: false },
-  { key: 'bites', route: '/bites', caption: 'Rate what you buy', video: false },
-  { key: 'reports', route: '/reports', caption: 'Taxes, sorted' },
-  { key: 'stores', route: '/stores', caption: 'Every store, ranked' },
-  { key: 'predictions', route: '/predictions', caption: 'Buy-again, predicted', video: false },
-  { key: 'guacwizard', route: '/guacwizard', caption: 'Meet the GuacWizard' },
+  { key: 'items', route: '/items', caption: 'AI reads every line — no typing' },
+  { key: 'dashboard', route: '/dashboard', caption: 'Your GuacScore + spending anomalies' },
+  { key: 'steals', route: '/steals', caption: 'Find a cheaper price before you buy' },
+  { key: 'returns', route: '/returns', caption: 'Claw back refunds you are owed' },
+  { key: 'guacwizard', route: '/guacwizard', caption: 'GuacWizard hunts hidden fees & leaks' },
+  { key: 'bank', route: '/bank', caption: 'Catch every bank fee & interest charge' },
+  { key: 'bites', route: '/bites', caption: 'Rate every dish — skip the regrets' },
+  { key: 'stash', route: '/stash', caption: 'Your whole Stash, in one place' },
+  { key: 'shopping', route: '/shopping', caption: 'Your Smashlist builds itself' },
+  { key: 'reports', route: '/reports', caption: 'Business & charity, tax-ready' },
   { key: 'guacanomics', route: '/guacanomics', caption: 'Every dollar earns its smash' },
 ]
 
@@ -79,7 +79,7 @@ async function login(page) {
 async function gotoScene(page, scene) {
   await page.goto(`${BASE}${scene.route}`, { waitUntil: 'domcontentloaded' })
   await page.waitForLoadState('networkidle').catch(() => {})
-  await sleep(1600) // let charts / Lottie / data hydrate
+  await sleep(2800) // let client-side data (React Query) fetch + charts render
   // nudge a tiny scroll so lazy content mounts, then back to top
   await page.evaluate(() => { window.scrollTo(0, 1); window.scrollTo(0, 0) })
 }

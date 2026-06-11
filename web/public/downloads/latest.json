@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.76",
-  "name": "v0.3.76 — Sign Out everywhere",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.76/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Sign Out is now in the top-right of every screen.\n• Reliable receipt scanning for large gallery photos, with the GuacWizard genie on the scan screen."
+  "version": "v0.3.77",
+  "name": "v0.3.77 — Sign Out, easy to find",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.77/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Sign Out is now a clear, always-visible icon on every screen — including Receipts and Smashlist, where a crowded toolbar used to hide it.\n• Added Sign Out to the Menu panel too."
 }

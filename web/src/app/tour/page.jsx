@@ -1,6 +1,6 @@
-// /tour — the narrated product video on top of the existing illustrated
-// slideshow (reused from /how-it-works). No real screenshots; same hand-drawn
-// art. /how-it-works stays as-is.
+// /tour — the narrated product video (plays inline only) on top of the
+// existing illustrated slideshow (reused from /how-it-works). Each slide now
+// pairs its hand-drawn art with a small real app screenshot.
 import Presentation from '../how-it-works/Presentation'
 
 export const metadata = {
@@ -25,6 +25,8 @@ export default function TourPage() {
               playsInline
               preload="metadata"
               poster="/showcase/dashboard.png"
+              controlsList="nodownload nofullscreen noremoteplayback"
+              disablePictureInPicture
               className="rounded-2xl shadow-2xl max-h-[78vh] w-auto max-w-full bg-black ring-4 ring-white/15"
             />
           </div>
@@ -32,8 +34,9 @@ export default function TourPage() {
         </div>
       </section>
 
-      {/* The existing illustrated, auto-narrated slideshow */}
-      <Presentation />
+      {/* The existing illustrated, auto-narrated slideshow — small real
+          screenshots now sit beside each illustration. Embedded = no nav. */}
+      <Presentation embedded />
     </div>
   )
 }

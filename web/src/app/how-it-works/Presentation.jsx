@@ -241,7 +241,7 @@ const SLIDES = [
   },
 ]
 
-export default function HowItWorksPage() {
+export default function HowItWorksPage({ embedded = false }) {
   const [playing, setPlaying] = useState(false)
   const [muted, setMuted] = useState(false)
   const [current, setCurrent] = useState(0)
@@ -390,7 +390,8 @@ export default function HowItWorksPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-lime-50 text-gray-800 font-sans">
-      {/* Top nav */}
+      {/* Top nav — hidden when embedded in another page (e.g. /tour) */}
+      {!embedded && (
       <header className="sticky top-0 z-30 backdrop-blur bg-white/70 border-b border-emerald-100 print:hidden">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
@@ -409,6 +410,7 @@ export default function HowItWorksPage() {
           </nav>
         </div>
       </header>
+      )}
 
       {/* Slides */}
       <main className="max-w-6xl mx-auto px-4 sm:px-6">
@@ -599,12 +601,31 @@ function StepSlide({ slide, idx }) {
           </ul>
           {slide.aiPeople && <AiPeopleStrip people={slide.aiPeople} />}
         </div>
-        <div className="flex-shrink-0 mx-auto sm:mx-0">
+        <div className="flex-shrink-0 mx-auto sm:mx-0 flex flex-col items-center gap-3">
           <Art name={slide.art} />
+          {SHOTS[slide.title] && (
+            <div className="rounded-xl overflow-hidden ring-1 ring-gray-200 shadow-lg bg-white" style={{ width: 140 }}>
+              {/* Small real app screenshot paired with the illustration. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={SHOTS[slide.title]} alt={slide.title} className="block w-full" loading="lazy" />
+            </div>
+          )}
         </div>
       </div>
     </article>
   )
+}
+
+// Real app screenshots paired (small) with the illustration on slides where
+// one fits. Keyed by slide title.
+const SHOTS = {
+  'Get a receipt': '/showcase/receipts.png',
+  'Guac-AI reads it': '/showcase/items.png',
+  'Auto-categorize': '/showcase/reports.png',
+  'See where it all went': '/showcase/dashboard.png',
+  'Worth it?': '/showcase/bites.png',
+  'Returns & refunds, finally tracked': '/showcase/returns.png',
+  'GuacWizard — magically protects your money': '/showcase/guacwizard.png',
 }
 
 const ACCENTS = {

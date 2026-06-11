@@ -3,15 +3,94 @@ import { Providers } from './providers'
 import UpdatePrompt from '../components/UpdatePrompt'
 import PosthogProvider from '../components/PosthogProvider'
 
+const SITE_URL = 'https://getguac.app'
+
 export const metadata = {
-  title: 'GetGuac',
-  description: 'Smart receipt management, rewards tracking & spending insights',
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: 'GetGuac: Free Receipt Scanner & Spending Tracker',
+    template: '%s · GetGuac',
+  },
+  description:
+    'Scan receipts, see where your money goes, catch hidden fees, and never miss a refund. GetGuac is a free AI receipt scanner and spending tracker — no cashback gimmicks.',
+  applicationName: 'GetGuac',
+  keywords: [
+    'receipt scanner app', 'free receipt scanner', 'spending tracker', 'expense tracker',
+    'receipt tracker', 'AI receipt scanner', 'find hidden subscriptions', 'cancel subscriptions app',
+    'return tracker', 'refund tracker', 'price drop refund', 'see where my money goes',
+    'Mint alternative', 'Rocket Money alternative', 'track spending without bank login',
+  ],
+  authors: [{ name: 'GetGuac' }],
+  creator: 'GetGuac',
+  publisher: 'GetGuac',
+  alternates: { canonical: '/' },
+  openGraph: {
+    type: 'website',
+    siteName: 'GetGuac',
+    url: SITE_URL,
+    title: 'GetGuac: Free Receipt Scanner & Spending Tracker',
+    description:
+      'Scan receipts, see where your money goes, catch hidden fees, and never miss a refund. Free — no cashback gimmicks.',
+    images: [{ url: '/og.png', width: 1200, height: 630, alt: 'GetGuac — take control of your money' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'GetGuac: Free Receipt Scanner & Spending Tracker',
+    description: 'Scan receipts, see where your money goes, catch hidden fees, and never miss a refund. Free.',
+    images: ['/og.png'],
+  },
+  manifest: '/site.webmanifest',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, 'max-image-preview': 'large' },
+  },
+}
+
+export const viewport = {
+  themeColor: '#166534',
+}
+
+// Site-wide structured data: who we are, what the app is, and the search box.
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': `${SITE_URL}/#org`,
+      name: 'GetGuac',
+      url: SITE_URL,
+      logo: `${SITE_URL}/icon.svg`,
+      description: 'A free AI receipt scanner and spending tracker that helps you see and save your own money.',
+    },
+    {
+      '@type': 'WebSite',
+      '@id': `${SITE_URL}/#website`,
+      url: SITE_URL,
+      name: 'GetGuac',
+      publisher: { '@id': `${SITE_URL}/#org` },
+    },
+    {
+      '@type': 'SoftwareApplication',
+      name: 'GetGuac',
+      operatingSystem: 'Web, Android, iOS',
+      applicationCategory: 'FinanceApplication',
+      description:
+        'Scan receipts and bank statements, see where your money goes, catch hidden fees, track returns and refunds, and find better prices. Free.',
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+    },
+  ],
 }
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
+        {/* Site-wide JSON-LD structured data for rich results. */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         {/* PostHog wraps the tree so its useEffect-based pageview tracker
             can read pathname/search on every route change. No-ops cleanly
             if NEXT_PUBLIC_POSTHOG_KEY is unset. */}

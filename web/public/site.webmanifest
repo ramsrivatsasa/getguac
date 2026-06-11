@@ -1,0 +1,12 @@
+{
+  "name": "GetGuac — Receipt Scanner & Spending Tracker",
+  "short_name": "GetGuac",
+  "description": "Scan receipts, see where your money goes, catch hidden fees, and never miss a refund. Free.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#166534",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

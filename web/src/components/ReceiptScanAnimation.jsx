@@ -16,9 +16,7 @@
 // Self-hides instantly when `count` drops to 0.
 
 import { useEffect, useState } from 'react'
-import LottieAnimation from './LottieAnimation'
-import searchScanLottie from '../lottie/search-scan.json'
-import GuacMascotAnimated from './GuacMascotAnimated'
+import GenieAvocado from './GenieAvocado'
 
 const TICKER = [
   'Looking for the store name…',
@@ -67,42 +65,30 @@ export default function ReceiptScanAnimation({ count = 0 }) {
         }
       `}} />
 
-      <div className="relative flex items-center justify-center gap-8 pointer-events-auto">
-        {/* Search/scan Lottie — magnifier sweeping the report */}
-        <LottieAnimation data={searchScanLottie} size={190} loop label="Scanning your receipt" fallback="🔍" />
-
-        {/* Mascot anchor. Fixed footprint (= mascot size) so nothing here
-            shifts when the status line grows — the bubble is absolutely
-            positioned out of flow. */}
-        <div className="relative shrink-0">
-          {/* Maracas avocado. overflow-visible so the maracas swing past the
-              SVG edge without being clipped. */}
-          <span className="inline-block overflow-visible px-3">
-            <GuacMascotAnimated animation="maracas" size={160} className="overflow-visible" />
-          </span>
-
-          {/* Animated rounded speech bubble, floating above the mascot. Anchored
-              near the mascot's top centre and grows rightward — out of flow, so
-              a longer line never moves the mascot. */}
-          <div className="gg-bubble absolute bottom-full left-1/2 -translate-x-1/3 mb-3 pointer-events-none">
-            <div className="gg-bubble-bob whitespace-nowrap rounded-full bg-white shadow-xl ring-1 ring-emerald-50 px-5 py-2.5 flex items-center gap-2.5">
-              {/* Typing dots — talk.json's sequential dot pop, looped */}
-              <span className="flex items-center gap-1" aria-hidden="true">
-                <span className="gg-dot w-1.5 h-1.5 rounded-full bg-emerald-400" style={{ animationDelay: '0ms' }} />
-                <span className="gg-dot w-1.5 h-1.5 rounded-full bg-emerald-400" style={{ animationDelay: '150ms' }} />
-                <span className="gg-dot w-1.5 h-1.5 rounded-full bg-emerald-400" style={{ animationDelay: '300ms' }} />
+      <div className="relative flex flex-col items-center justify-center pointer-events-auto">
+        {/* Animated rounded speech bubble above the genie — the wizard "talks"
+            as it reads. Out of the genie's flow so a longer line never nudges it. */}
+        <div className="gg-bubble mb-4 pointer-events-none">
+          <div className="gg-bubble-bob whitespace-nowrap rounded-full bg-white shadow-xl ring-1 ring-emerald-50 px-5 py-2.5 flex items-center gap-2.5">
+            {/* Typing dots — sequential dot pop, looped */}
+            <span className="flex items-center gap-1" aria-hidden="true">
+              <span className="gg-dot w-1.5 h-1.5 rounded-full bg-emerald-400" style={{ animationDelay: '0ms' }} />
+              <span className="gg-dot w-1.5 h-1.5 rounded-full bg-emerald-400" style={{ animationDelay: '150ms' }} />
+              <span className="gg-dot w-1.5 h-1.5 rounded-full bg-emerald-400" style={{ animationDelay: '300ms' }} />
+            </span>
+            <span key={tick} className="gg-bubble-text text-base font-extrabold text-emerald-900">
+              {TICKER[tick]}
+            </span>
+            {count > 1 && (
+              <span className="text-[10px] font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full">
+                {count} receipts
               </span>
-              <span key={tick} className="gg-bubble-text text-base font-extrabold text-emerald-900">
-                {TICKER[tick]}
-              </span>
-              {count > 1 && (
-                <span className="text-[10px] font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full">
-                  {count} receipts
-                </span>
-              )}
-            </div>
+            )}
           </div>
         </div>
+
+        {/* The GuacWizard genie casts a spell to read your receipt. */}
+        <GenieAvocado size={210} />
       </div>
     </div>
   )

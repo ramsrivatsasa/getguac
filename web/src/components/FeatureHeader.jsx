@@ -105,7 +105,7 @@ function WizardAvocado({ size, className = '' }) {
           </svg>
         </div>
       </div>
-      <div className="absolute left-1/2 -translate-x-1/2 pointer-events-none" style={{ top: avoW * 0.06, width: L, height: L }}>
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 pointer-events-none" style={{ width: L, height: L }}>
         <LottieAnimation data={halloweenHat} size={L} loop label="wizard hat" />
       </div>
     </div>
@@ -143,7 +143,7 @@ export default function FeatureHeader({ theme, expression = 'happy', title, subt
   return (
     <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
       {THEMED.has(theme)
-        ? <ThemedAvocado theme={theme} size={theme === 'wizard' ? 86 : 60} className="shrink-0" />
+        ? <ThemedAvocado theme={theme} size={theme === 'wizard' ? 72 : 60} className="shrink-0" />
         : <GuacMascot expression={expression} size={60} className="shrink-0" />}
       <div className="min-w-0">
         <h1 className="text-2xl sm:text-3xl font-black text-gray-900 leading-none tracking-tight">{title}</h1>

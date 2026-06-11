@@ -8,6 +8,7 @@ import GuacMascot from '../components/GuacMascot'
 import GenieAvocado from '../components/GenieAvocado'
 import LottieAnimation from '../components/LottieAnimation'
 import moneyMagic from '../lottie/money-magic.json'
+import WatchVideoCard from '../components/WatchVideoCard'
 import ReferralCapture from '../components/ReferralCapture'
 
 export default async function Home() {
@@ -106,42 +107,9 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* HOW IT WORKS — full presentation CTA */}
+      {/* HOW IT WORKS — plays the product-tour video in an on-page modal */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-16">
-        <Link
-          href="/how-it-works"
-          className="group block rounded-3xl bg-gradient-to-br from-emerald-700 via-emerald-600 to-lime-600 p-1 shadow-xl hover:shadow-2xl hover:scale-[1.005] transition-all"
-        >
-          <div className="rounded-[1.4rem] bg-white/5 backdrop-blur-sm p-6 sm:p-10 flex items-center gap-6 flex-wrap">
-            {/* Play badge */}
-            <div className="flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-lime-400 text-emerald-900 flex items-center justify-center shadow-lg group-hover:scale-105 transition">
-              <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor" className="ml-1.5">
-                <path d="M8 5v14l11-7z" />
-              </svg>
-            </div>
-            <div className="flex-1 min-w-[260px]">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 text-white text-[10px] font-bold uppercase tracking-wider">
-                <Sparkles size={11} /> Auto-narrated · 13 slides · ~7 min
-              </span>
-              <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-white mt-3 leading-tight">
-                Watch how GetGuac works
-              </h2>
-              <p className="text-emerald-50/90 mt-2 max-w-2xl text-sm sm:text-base">
-                Capture → parse → dedup → categorize → score → coach. Auto-scrolling presentation with infographics and narration — the whole flow in under eight minutes.
-              </p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {['Email inbox', 'Returns', 'GuacWizard', 'Car Miles', 'Security', 'Privacy'].map(t => (
-                  <span key={t} className="px-2.5 py-1 rounded-full bg-white/15 text-white text-[11px] font-semibold">
-                    {t}
-                  </span>
-                ))}
-              </div>
-            </div>
-            <div className="hidden sm:flex items-center text-white/80 group-hover:text-white group-hover:translate-x-1 transition text-sm font-bold">
-              Play <ArrowRight size={18} className="ml-2" />
-            </div>
-          </div>
-        </Link>
+        <WatchVideoCard />
       </section>
 
       {/* THE BRAIN — what Guac-AI actually does */}

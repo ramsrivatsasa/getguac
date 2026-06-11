@@ -99,12 +99,14 @@ const WIZARD_HAT_CONE = (
 // right of the avocado.
 const HAND_WAND = (
   <>
-    {/* long wand: black shaft + white tip */}
-    <line x1="200" y1="150" x2="250" y2="48" stroke="#1f2937" strokeWidth="6" strokeLinecap="round" />
-    <line x1="231" y1="86" x2="252" y2="45" stroke="#9aa4b2" strokeWidth="8.5" strokeLinecap="round" />
-    <line x1="232" y1="85" x2="251" y2="46" stroke="#fff" strokeWidth="6.3" strokeLinecap="round" />
-    {/* yellow emoji fist */}
-    <g stroke="#d98e15" strokeWidth="1.6" strokeLinejoin="round">
+    {/* black wand shaft + gold STAR topper (a magic wand, not a stick) */}
+    <line x1="200" y1="150" x2="242" y2="72" stroke="#1f2937" strokeWidth="5.5" strokeLinecap="round" />
+    <Star x={247} y={63} s={2.8} fill="#fde047" stroke="#eab308" strokeWidth={0.9} />
+    <Star x={265} y={52} s={0.9} fill="#fde047" stroke="#eab308" strokeWidth={0.7} />
+    <Star x={231} y={50} s={0.8} fill="#fde047" stroke="#eab308" strokeWidth={0.7} />
+    <Star x={260} y={78} s={0.7} fill="#fde047" stroke="#eab308" strokeWidth={0.7} />
+    {/* yellow emoji fist (detached), tilted to align with the wand */}
+    <g transform="rotate(22 201 150)" stroke="#d98e15" strokeWidth="1.6" strokeLinejoin="round">
       <path d="M184 152 Q 180 166 190 172 Q 203 178 215 171 Q 223 165 221 152 Q 220 144 212 142 L190 142 Q 185 145 184 152 Z" fill="#fbc02d" />
       <g fill="#fbc02d">
         <rect x="186" y="140" width="8.5" height="13" rx="4" />
@@ -114,10 +116,6 @@ const HAND_WAND = (
       </g>
       <path d="M185 160 Q 198 166 211 160 Q 214 156 210 154 Q 199 159 189 154 Q 186 156 185 160 Z" fill="#f9a825" />
     </g>
-    {/* sparkles at the tip */}
-    <Star x={256} y={40} s={1.7} fill="#fde047" stroke="#eab308" strokeWidth={0.8} />
-    <Star x={240} y={30} s={1.05} fill="#fde047" stroke="#eab308" strokeWidth={0.8} />
-    <Star x={262} y={60} s={0.9} fill="#fde047" stroke="#eab308" strokeWidth={0.8} />
   </>
 )
 

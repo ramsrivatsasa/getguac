@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.73",
-  "name": "v0.3.73 — WebView close/refresh fixes",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.73/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Fixed the ✕ close and ↻ refresh buttons on embedded pages (Guacanomics, Reports, Steals…).\n• Removed the duplicate avocado at the top of embedded pages.\n• Refresh now re-signs you in for a clean reload."
+  "version": "v0.3.74",
+  "name": "v0.3.74 — Multi-receipt capture",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.74/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Capture several receipts at once — multi-select a batch from your gallery, or snap photos back-to-back with the camera.\n• Each one is read and reviewed in turn, with a batch count shown while scanning."
 }

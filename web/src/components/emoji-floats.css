@@ -65,16 +65,10 @@ a:hover .emoji-floats {
    emoji ride a slow, low-amplitude drift so the tile's decorative
    layer never sits perfectly still. Different cycles + phases so
    the two watermarks don't move in lockstep. */
-.tile-watermark-avocado {
-  animation: tile-watermark-drift-a 9s ease-in-out infinite;
-  transform-origin: center;
-  will-change: transform;
-}
+/* Decorative emoji watermarks removed for a calmer, plain tile look. */
+.tile-watermark-avocado,
 .tile-watermark-theme {
-  animation: tile-watermark-drift-b 7s ease-in-out infinite;
-  animation-delay: -2s;
-  transform-origin: center;
-  will-change: transform;
+  display: none !important;
 }
 @keyframes tile-watermark-drift-a {
   0%,  100% { transform: translate(0,    0)   rotate(var(--wm-rot, 0deg)); }

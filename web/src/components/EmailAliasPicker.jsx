@@ -6,7 +6,7 @@ import toast from 'react-hot-toast'
 import { Mail, Check, X, Loader2, Copy, Sparkles, AlertCircle } from 'lucide-react'
 import { createClient } from '../lib/supabase/client'
 const EMAIL_DOMAIN = process.env.NEXT_PUBLIC_EMAIL_DOMAIN || 'getguac.app'
-const VALID_RE = /^[a-z0-9]([a-z0-9._-]{1,30}[a-z0-9])?$/
+const VALID_RE = /^[a-z0-9][a-z0-9._-]{1,30}[a-z0-9]$/
 
 export default function EmailAliasPicker({ userId }) {
   const sb = createClient()

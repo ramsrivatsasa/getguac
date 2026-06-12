@@ -11,7 +11,7 @@ import { createClient } from '../../../../lib/supabase/server'
 import { rateLimit, rateKey } from '../../../../lib/apiGuard'
 export const runtime = 'nodejs'
 
-const VALID_RE = /^[a-z0-9]([a-z0-9._-]{1,30}[a-z0-9])?$/
+const VALID_RE = /^[a-z0-9][a-z0-9._-]{1,30}[a-z0-9]$/
 
 function sanitize(raw) {
   return String(raw || '').toLowerCase().trim().replace(/[^a-z0-9._-]/g, '')

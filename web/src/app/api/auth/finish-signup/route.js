@@ -13,7 +13,7 @@ import { createMailbox, mailboxExists } from '../../../../lib/migadu'
 import { encryptSecret, generateMailboxPassword } from '../../../../lib/crypto'
 export const runtime = 'nodejs'
 
-const VALID_USERNAME_RE = /^[a-z0-9]([a-z0-9._-]{1,30}[a-z0-9])?$/
+const VALID_USERNAME_RE = /^[a-z0-9][a-z0-9._-]{1,30}[a-z0-9]$/
 
 function admin() {
   return createAdminClient(

@@ -9,7 +9,7 @@ import PrivacyNote from '../../../components/PrivacyNote'
 import { Check, X, Loader2, AlertCircle, AtSign, Eye, EyeOff } from 'lucide-react'
 import { createClient as createBrowserClient } from '../../../lib/supabase/client'
 import ReferralCapture from '../../../components/ReferralCapture'
-const VALID_USERNAME_RE = /^[a-z0-9]([a-z0-9._-]{1,30}[a-z0-9])?$/
+const VALID_USERNAME_RE = /^[a-z0-9][a-z0-9._-]{1,30}[a-z0-9]$/
 // Benefit bullets for the desktop brand panel (left split). Clean, non-preachy.
 const SIGNUP_BENEFITS = [
   { icon: '🧾', text: 'Track every receipt & bank statement' },

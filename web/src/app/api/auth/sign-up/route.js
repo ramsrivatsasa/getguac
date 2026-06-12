@@ -42,7 +42,7 @@ async function provisionMailboxAtSignup(sbAdmin, userId, username, displayName) 
   }
 }
 
-const VALID_USERNAME_RE = /^[a-z0-9]([a-z0-9._-]{1,30}[a-z0-9])?$/
+const VALID_USERNAME_RE = /^[a-z0-9][a-z0-9._-]{1,30}[a-z0-9]$/
 
 function admin() {
   return createAdminClient(

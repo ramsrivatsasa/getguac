@@ -10,7 +10,7 @@ import '../../services/mascot_event_bus.dart';
 
 const _kBrand = Color(0xFF15803d);
 const _kBrandDk = Color(0xFF064e3b);
-final _usernameRe = RegExp(r'^[a-z0-9]([a-z0-9._-]{1,30}[a-z0-9])?$');
+final _usernameRe = RegExp(r'^[a-z0-9][a-z0-9._-]{1,30}[a-z0-9]$');
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});

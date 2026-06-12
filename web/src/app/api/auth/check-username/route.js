@@ -8,7 +8,7 @@ import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { rateLimit, rateKey } from '../../../../lib/apiGuard'
 export const runtime = 'nodejs'
 
-const VALID_RE = /^[a-z0-9]([a-z0-9._-]{1,30}[a-z0-9])?$/
+const VALID_RE = /^[a-z0-9][a-z0-9._-]{1,30}[a-z0-9]$/
 
 // Service-role admin client — bypasses RLS so we can check both the profiles
 // table and the reserved_email_aliases table from an unauthenticated request.

@@ -10,6 +10,8 @@ import { Check, X, Loader2, AlertCircle, AtSign, Eye, EyeOff } from 'lucide-reac
 import { createClient as createBrowserClient } from '../../../lib/supabase/client'
 import ReferralCapture from '../../../components/ReferralCapture'
 const VALID_USERNAME_RE = /^[a-z0-9][a-z0-9._-]{1,30}[a-z0-9]$/
+const REFERRAL_RE = /^[A-Z0-9]{6}$/
+const REF_STORAGE_KEY = 'pending_referral_code'
 // Benefit bullets for the desktop brand panel (left split). Clean, non-preachy.
 const SIGNUP_BENEFITS = [
   { icon: '🧾', text: 'Track every receipt & bank statement' },
@@ -61,6 +63,12 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const [acceptTerms, setAcceptTerms] = useState(false)
+  // Referral code (optional). Synced with the pending_referral_code stash so a
+  // manually typed code applies exactly like one captured from a ?ref= link.
+  const [referralCode, setReferralCode] = useState('')
+  useEffect(() => {
+    try { const c = window.localStorage.getItem(REF_STORAGE_KEY); if (c && REFERRAL_RE.test(c)) setReferralCode(c) } catch {}
+  }, [])
   // Honeypot field — real users never see / touch this. Bots that
   // auto-fill every input on the page will populate it and get
   // bounced by the server-side check.
@@ -171,6 +179,7 @@ export default function RegisterPage() {
     }
   }
 
+  const passwordMismatch = form.confirmPassword.length > 0 && form.password !== form.confirmPassword
   const usernameNorm = form.username.toLowerCase().trim()
 
   return (
@@ -372,7 +381,8 @@ export default function RegisterPage() {
                   <input
                     type={showConfirm ? 'text' : 'password'}
                     required autoComplete="new-password"
-                    className="input pr-10"
+                    aria-invalid={passwordMismatch}
+                    className={`input pr-10 ${passwordMismatch ? 'border-rose-400 ring-2 ring-rose-200 focus:border-rose-400' : ''}`}
                     value={form.confirmPassword}
                     onChange={s('confirmPassword')}
                   />
@@ -385,6 +395,11 @@ export default function RegisterPage() {
                     {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
+                {passwordMismatch && (
+                  <p className="text-[11px] text-rose-600 font-semibold mt-1 flex items-center gap-1">
+                    <X size={12} /> Passwords do not match
+                  </p>
+                )}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -411,6 +426,34 @@ export default function RegisterPage() {
               </div>
             </div>
             <div><label className="label">Mobile No <span className="text-gray-400 normal-case font-normal">(Optional)</span></label><input type="tel" className="input" value={form.mobileNo} onChange={s('mobileNo')} /></div>
+
+            {/* Referral code (optional). A friend's 6-char code — applies the
+                same as clicking their ?ref= link. */}
+            <div>
+              <label className="label">Referral code <span className="text-gray-400 normal-case font-normal">(optional)</span></label>
+              <input
+                type="text"
+                autoCapitalize="characters"
+                spellCheck={false}
+                maxLength={6}
+                className="input font-mono uppercase tracking-[0.3em]"
+                placeholder="ABC123"
+                value={referralCode}
+                onChange={(e) => {
+                  const v = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6)
+                  setReferralCode(v)
+                  try {
+                    if (REFERRAL_RE.test(v)) window.localStorage.setItem(REF_STORAGE_KEY, v)
+                    else if (!v) window.localStorage.removeItem(REF_STORAGE_KEY)
+                  } catch {}
+                }}
+              />
+              {referralCode.length > 0 && (
+                REFERRAL_RE.test(referralCode)
+                  ? <p className="text-[11px] text-emerald-700 font-semibold mt-1 flex items-center gap-1"><Check size={12} /> Code accepted — you’ll both get Smash days after sign-up</p>
+                  : <p className="text-[11px] text-gray-400 mt-1">A referral code is 6 letters or numbers</p>
+              )}
+            </div>
 
             <label className="flex items-start gap-2 pt-1 cursor-pointer select-none">
               <input

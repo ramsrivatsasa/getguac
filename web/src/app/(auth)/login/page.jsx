@@ -45,6 +45,9 @@ function LoginPageInner() {
   // Same pattern as the SuccessPop trigger — a counter prop so the
   // animation fires every error, not just the first.
   const [errorShake, setErrorShake] = useState(0)
+  // Sign-in error message — shown inline and used to highlight both fields red.
+  // Cleared the moment the user edits either field.
+  const [signinError, setSigninError] = useState('')
 
   // Surface OAuth-callback errors as a toast. /auth/callback bounces
   // failed Google logins back to /login?oauth_error=... so we read it
@@ -129,6 +132,7 @@ function LoginPageInner() {
           // Bump even on email-not-confirmed so users always get
           // motion feedback for "no, something's wrong".
           setErrorShake(x => x + 1)
+          setSigninError(data.error || 'Invalid username or password')
         }
         setLoading(false)
         return
@@ -227,10 +231,10 @@ function LoginPageInner() {
                 autoComplete="username"
                 autoCapitalize="off"
                 spellCheck={false}
-                className="input"
+                className={`input ${signinError ? 'border-rose-400 ring-2 ring-rose-200' : ''}`}
                 placeholder="alex   or   alex@gmail.com"
                 value={form.identifier}
-                onChange={e => setForm(p => ({ ...p, identifier: e.target.value }))}
+                onChange={e => { setForm(p => ({ ...p, identifier: e.target.value })); if (signinError) setSigninError('') }}
               />
             </div>
             <div>
@@ -246,10 +250,11 @@ function LoginPageInner() {
                 <input
                   type={showPassword ? 'text' : 'password'}
                   required autoComplete="current-password"
-                  className="input pr-10"
+                  aria-invalid={!!signinError}
+                  className={`input pr-10 ${signinError ? 'border-rose-400 ring-2 ring-rose-200' : ''}`}
                   placeholder="••••••••"
                   value={form.password}
-                  onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
+                  onChange={e => { setForm(p => ({ ...p, password: e.target.value })); if (signinError) setSigninError('') }}
                 />
                 <button
                   type="button"
@@ -260,6 +265,11 @@ function LoginPageInner() {
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
+              {signinError && (
+                <p className="text-[11px] text-rose-600 font-semibold mt-1 flex items-center gap-1">
+                  <span aria-hidden>✕</span> {signinError}
+                </p>
+              )}
             </div>
             <button type="submit" disabled={loading} className="btn-primary w-full justify-center py-2.5 mt-1">
               {loading ? 'Signing in…' : 'Sign In'}

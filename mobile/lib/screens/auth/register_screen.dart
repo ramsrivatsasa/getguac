@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import '../../widgets/guac_mascot.dart';
 import '../../services/mascot_event_bus.dart';
+import '../../services/referral_apply_service.dart';
 
 const _kBrand = Color(0xFF15803d);
 const _kBrandDk = Color(0xFF064e3b);
@@ -21,7 +22,7 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _ctrls = {
-    for (var k in ['username', 'firstName', 'lastName', 'email', 'password', 'confirmPassword', 'birthDate', 'age', 'mobile']) k: TextEditingController()
+    for (var k in ['username', 'firstName', 'lastName', 'email', 'password', 'confirmPassword', 'birthDate', 'age', 'mobile', 'referral']) k: TextEditingController()
   };
   bool _loading = false;
   bool _showPassword = false;
@@ -133,6 +134,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
         const SnackBar(content: Text('Please accept the Terms & Privacy Policy.')),
       );
       return;
+    }
+    // Stash an optional referral code so ReferralApplyService applies it once
+    // the user signs in (mirrors the web register's referral field).
+    final ref = _ctrls['referral']!.text.toUpperCase().trim();
+    if (RegExp(r'^[A-Z0-9]{6}$').hasMatch(ref)) {
+      await ReferralApplyService.stash(ref);
     }
     setState(() => _loading = true);
     try {
@@ -582,6 +589,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           _birthDateField(),
                           _ageField(),
                           _field('mobile', 'Mobile (optional)', type: TextInputType.phone, icon: Icons.phone_outlined),
+                          _field('referral', 'Referral code (optional)', hint: 'A friend\'s 6-char code', icon: Icons.card_giftcard_outlined),
                           _termsCheckbox(),
                           const SizedBox(height: 4),
                           FilledButton(

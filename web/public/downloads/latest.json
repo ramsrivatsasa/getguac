@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.78",
-  "name": "v0.3.78 — Camera fix + green app bars",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.78/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Fixed the camera/Add button doing nothing when you were already on the Receipts screen.\n• Every screen now has a matching green top bar (consistent with the web pages).\n• Sign Out is a clear, always-visible icon on Receipts and Smashlist."
+  "version": "v0.3.79",
+  "name": "v0.3.79 — Referral code on sign-up + username fix",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.79/app-arm64-v8a-release.apk",
+  "releaseNotes": "• New: enter a friend's referral code right on the sign-up screen — you both get Smash days.\n• Fixed: usernames now correctly require 3 or more characters.\n• Sign-up shows clear inline errors (e.g. when passwords don't match)."
 }

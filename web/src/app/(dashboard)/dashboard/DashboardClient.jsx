@@ -11,6 +11,7 @@ import GuacoScoreCard from '../../../components/GuacoScoreCard'
 import FeatureHeader from '../../../components/FeatureHeader'
 import UpcomingReturnsBanner from '../../../components/UpcomingReturnsBanner'
 import AnomaliesPanel from '../../../components/AnomaliesPanel'
+import DashboardSteals from '../../../components/DashboardSteals'
 import { ActivityFeed } from '../../../components/ActivityFeed'
 import { fetchGuacMoneyPoints, formatGuacMoney } from '../../../lib/guacMoney'
 import { generateInsights } from '../../../lib/financeInsights'
@@ -272,6 +273,11 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
           numbers. Self-hides when nothing is off; session-
           dismissable; collapsed-by-default. */}
       <AnomaliesPanel receipts={spendingReceipts} />
+
+      {/* "Steals for you" — deals the Steals job found, grouped by the search
+          the user configured (top 5 each, best discount first) + an "X new"
+          count. Self-hides when no steals have been found yet. */}
+      <DashboardSteals />
 
       {/* Financial-tile horizontal scroll — eight tiles driven by
           the centralized analysisEngine (web/src/lib/analysisEngine).

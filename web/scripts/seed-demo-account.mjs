@@ -121,6 +121,8 @@ async function wipe(uid) {
   await sb.from('receipts').delete().eq('user_id', uid).eq('validation_comment', TAG) // receipt_items cascade
   await sb.from('bank_fees').delete().eq('user_id', uid).like('raw_description', `${TAG}%`)
   await sb.from('rewards').delete().eq('user_id', uid).like('reward_no', 'SEED-%')
+  await sb.from('seen_steals').delete().eq('user_id', uid).like('deal_key', 'seed-steal-%')
+  await sb.from('steals_state').delete().eq('user_id', uid)
 }
 
 async function seed(uid) {
@@ -335,6 +337,43 @@ async function seed(uid) {
     })
     if (error) throw error
   }
+
+  // 15. STEALS — deals found for a couple of configured searches. Powers the
+  //     dashboard "Steals for you" strip + the "X new" count (steals_state is
+  //     wiped above, so all seeded deals read as new).
+  const STEAL_GROUPS = [
+    ['AirPods Pro (2nd gen)', [
+      ['Apple AirPods Pro 2 (USB-C)', 'Amazon', 189.99, 249.0, 4.8],
+      ['AirPods Pro 2nd Generation', 'Best Buy', 199.99, 249.0, 4.7],
+      ['Apple AirPods Pro (2nd Gen)', 'Walmart', 197.0, 249.0, 4.6],
+      ['AirPods Pro 2 w/ MagSafe', 'Target', 209.99, 249.0, 4.5],
+      ['Apple AirPods Pro 2', 'Costco', 184.99, 249.0, 4.8],
+      ['AirPods Pro (2nd generation)', 'B&H Photo', 219.0, 249.0, 4.4],
+    ]],
+    ['Ninja blender', [
+      ['Ninja Professional Plus Blender', 'Amazon', 79.99, 119.99, 4.7],
+      ['Ninja Foodi Power Blender', 'Target', 99.99, 159.99, 4.6],
+      ['Ninja Professional 1000W', 'Walmart', 69.99, 99.99, 4.8],
+      ['Ninja Detect Power Blender', 'Best Buy', 129.99, 199.99, 4.5],
+      ['Ninja Fit Personal Blender', "Kohl's", 39.99, 59.99, 4.6],
+    ]],
+  ]
+  const stealRows = []
+  let sg = 0
+  for (const [query, deals] of STEAL_GROUPS) {
+    let di = 0
+    for (const [title, store, price, original_price, rating] of deals) {
+      stealRows.push({
+        user_id: uid, deal_key: `seed-steal-${sg}-${di}`, title, store,
+        price, original_price, rating, query, image: null,
+        url: `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(title)}`,
+        first_seen_at: new Date(Date.now() - (sg * 6 + di) * 3600000).toISOString(),
+      })
+      di++
+    }
+    sg++
+  }
+  { const { error } = await sb.from('seen_steals').insert(stealRows); if (error) console.warn('   (skipped seen_steals — apply migration_072 to enable):', error.message) }
 }
 
 // Dashboard greeting + profile read profiles.first_name. Give the demo a

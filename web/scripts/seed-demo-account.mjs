@@ -141,14 +141,21 @@ async function seed(uid) {
       business_purchase: false, validation_comment: TAG, processed: true,
     })
     const m = i % 3
-    await addItems([
+    // Staples on (almost) every trip; the rest vary so each item has its own
+    // purchase count + last-bought date — that organic cadence is what feeds
+    // the Steals "likely due for a restock" list (uniform counts look fake).
+    const gItems = [
       { receipt_id: rid, item_name: 'MILK', qty: 1, price: [3.99, 4.79, 5.49][m], category: 'grub', purchase_date: d },
       { receipt_id: rid, item_name: 'EGGS', qty: 1, price: [3.99, 4.29, 4.99][m], category: 'grub', purchase_date: d },
       { receipt_id: rid, item_name: 'BANANAS', qty: 1, price: [1.19, 0.59, 0.79][m], category: 'grub', purchase_date: d },
-      { receipt_id: rid, item_name: 'BREAD', qty: 1, price: [3.49, 2.99, 3.79][m], category: 'grub', purchase_date: d },
-      { receipt_id: rid, item_name: 'COFFEE', qty: 1, price: [9.99, 11.99, 13.49][m], category: 'drinks', purchase_date: d },
-      { receipt_id: rid, item_name: 'CHIPS', qty: 1, price: [4.49, 2.99, 3.49][m], category: 'snacks', purchase_date: d },
-    ])
+    ]
+    if (i % 4 !== 0) gItems.push({ receipt_id: rid, item_name: 'BREAD', qty: 1, price: [3.49, 2.99, 3.79][m], category: 'grub', purchase_date: d })
+    if (i % 2 === 0) gItems.push({ receipt_id: rid, item_name: 'COFFEE', qty: 1, price: [9.99, 11.99, 13.49][m], category: 'drinks', purchase_date: d })
+    if (i % 3 === 1) gItems.push({ receipt_id: rid, item_name: 'TORTILLA CHIPS', qty: 1, price: [4.49, 2.99, 3.49][m], category: 'snacks', purchase_date: d })
+    if (i % 3 === 2) gItems.push({ receipt_id: rid, item_name: 'GREEK YOGURT', qty: 1, price: [5.49, 4.99, 5.99][m], category: 'grub', purchase_date: d })
+    if (i % 5 === 3) gItems.push({ receipt_id: rid, item_name: 'CHICKEN BREAST', qty: 1, price: [8.99, 7.49, 9.49][m], category: 'grub', purchase_date: d })
+    if (i % 6 === 4) gItems.push({ receipt_id: rid, item_name: 'OLIVE OIL', qty: 1, price: [12.99, 10.99, 13.99][m], category: 'grub', purchase_date: d })
+    await addItems(gItems)
   }
 
   // 2. BI-WEEKLY HOUSEHOLD (12 buys)
@@ -178,7 +185,7 @@ async function seed(uid) {
     await addItems([
       { receipt_id: rid, item_name: 'TIDE HE LIQUID 170 LOADS', qty: 1, price: 24.99, category: 'household', purchase_date: d },
       { receipt_id: rid, item_name: 'KS DAILY MULTI 365CT', qty: 1, price: 11.99, category: 'health', purchase_date: d },
-      { receipt_id: rid, item_name: 'KS ADULT CHICKEN&RICE 40LB', qty: 1, price: 39.99, category: 'pets', purchase_date: d },
+      { receipt_id: rid, item_name: 'KS ADULT CHICKEN&RICE 40LB', qty: 1, price: 39.99, category: 'misc', purchase_date: d },
       { receipt_id: rid, item_name: 'PAPER TOWELS 12 ROLL', qty: 1, price: 22.99, category: 'household', purchase_date: d },
       { receipt_id: rid, item_name: 'POPCORN MULTIPACK', qty: 1, price: 8.99, category: 'snacks', purchase_date: d },
     ])
@@ -187,7 +194,7 @@ async function seed(uid) {
   // 4. MONTHLY SUBSCRIPTIONS
   const sub = (store, amount, offset, i, n) => addReceipt({
     user_id: uid, store_name: store, date: daysAgo(i * 30 + offset),
-    total_amount: amount, tax_paid: 0, category: 'subscriptions',
+    total_amount: amount, tax_paid: 0, category: 'subs',
     validation_comment: TAG, processed: true,
   })
   for (let i = 0; i <= 5; i++) await sub('NETFLIX.COM', i === 0 ? 17.99 : 15.49, 2, i)
@@ -207,7 +214,7 @@ async function seed(uid) {
   for (let i = 0; i <= 3; i++) {
     await addReceipt({
       user_id: uid, store_name: 'Office Depot', date: daysAgo(i * 22 + 6),
-      total_amount: 65.4, tax_paid: +(65.4 * 0.082).toFixed(2), category: 'office',
+      total_amount: 65.4, tax_paid: +(65.4 * 0.082).toFixed(2), category: 'supplies',
       business_purchase: true, rating: 5, validation_comment: TAG, processed: true,
     })
   }
@@ -224,7 +231,7 @@ async function seed(uid) {
   // 9. ONE-OFF + QUARTERLY (negative controls)
   await addReceipt({ user_id: uid, store_name: 'Home Depot', date: daysAgo(20), total_amount: 14.99, tax_paid: 1.2, category: 'household', validation_comment: TAG, processed: true })
   await addReceipt({ user_id: uid, store_name: 'Best Buy', date: daysAgo(88), total_amount: 129.99, tax_paid: 10.6, category: 'tech', validation_comment: TAG, processed: true })
-  await addReceipt({ user_id: uid, store_name: 'Patagonia', date: daysAgo(55), total_amount: 89.0, tax_paid: 7.3, category: 'apparel', validation_comment: TAG, processed: true })
+  await addReceipt({ user_id: uid, store_name: 'Patagonia', date: daysAgo(55), total_amount: 89.0, tax_paid: 7.3, category: 'fits', validation_comment: TAG, processed: true })
 
   // 10. BANK FEES + INTEREST (GuacScore bite penalty)
   const fees = []
@@ -308,9 +315,9 @@ async function seed(uid) {
   //     with a future expiry). getEligibleReturns surfaces these.
   const RETURNS = [
     ['Best Buy', 'tech', 'Sony WH-CH520 Headphones', 129.99, 5, 15],
-    ['Target', 'apparel', 'Cotton Crew T-Shirt', 24.00, 12, 90],
+    ['Target', 'fits', 'Cotton Crew T-Shirt', 24.00, 12, 90],
     ['Amazon', 'tech', 'USB-C 7-in-1 Hub', 45.50, 3, 30],
-    ['REI', 'apparel', 'Trail 25 Daypack', 89.00, 20, 365],
+    ['REI', 'fits', 'Trail 25 Daypack', 89.00, 20, 365],
     ['Home Depot', 'household', 'Cordless Drill', 79.00, 8, 90],
   ]
   for (const [store, cat, item, price, boughtAgo, windowDays] of RETURNS) {

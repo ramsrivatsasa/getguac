@@ -17,8 +17,23 @@ jobs:
     steps:
       - name: Trigger /api/email/poll
         run: |
-          curl --fail --silent --show-error \
-            --max-time 60 \
+          if [ -z "${{ secrets.APP_URL }}" ]; then
+            echo "::error::APP_URL repo secret is not set."
+            exit 1
+          fi
+          code=$(curl --silent --show-error --max-time 60 \
+            -o /tmp/poll-resp.txt -w "%{http_code}" \
             -X POST \
             -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
-            "${{ secrets.APP_URL }}/api/email/poll"
+            "${{ secrets.APP_URL }}/api/email/poll" || true)
+          echo "HTTP status: ${code:-<none>}"
+          echo "Response body: $(cat /tmp/poll-resp.txt 2>/dev/null)"
+          if [ "$code" = "401" ]; then
+            echo "::error::Email poll auth failed (HTTP 401) — the CRON_SECRET in GitHub Actions does not match the server's CRON_SECRET (Vercel env). Re-sync them in GitHub repo Secrets AND Vercel → Environment Variables (Production), then redeploy."
+            exit 1
+          fi
+          if [ -z "$code" ] || [ "$code" = "000" ] || [ "$code" -ge 400 ]; then
+            echo "::error::Email poll failed (HTTP ${code:-<none>}). 000 = could not connect (check APP_URL = https://getguac.app); 5xx = endpoint error."
+            exit 1
+          fi
+          echo "Email poll OK (HTTP $code)."

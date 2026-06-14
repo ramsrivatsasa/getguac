@@ -37,7 +37,12 @@ function leafLooksLikeGuacked(path) {
 
 export async function POST(request) {
   if (request.headers.get('x-cron-secret') !== process.env.CRON_SECRET) {
-    return Response.json({ error: 'unauthorized' }, { status: 401 })
+    // Diagnostic (no secret values leaked): tells you *which* side is wrong —
+    // a missing header = GitHub Actions secret unset; UNSET server env =
+    // Vercel CRON_SECRET missing/stale (often a failed/partial deploy).
+    const hasHeader = !!request.headers.get('x-cron-secret')
+    console.warn(`[email-poll] cron secret mismatch — incoming header ${hasHeader ? 'present but != server' : 'MISSING'}; server CRON_SECRET ${process.env.CRON_SECRET ? 'set' : 'UNSET'}`)
+    return Response.json({ error: 'unauthorized: cron secret mismatch (GitHub vs Vercel CRON_SECRET)' }, { status: 401 })
   }
   if (!process.env.MIGADU_API_KEY || !process.env.EMAIL_ENCRYPTION_KEY) {
     return Response.json({ skipped: 'email not configured' })

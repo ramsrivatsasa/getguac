@@ -1,7 +1,8 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useReceipt, useUpdateReceipt, useAddReceiptItem, useUpdateReceiptItem } from '../../../../hooks/useReceipts'
+import { createClient } from '../../../../lib/supabase/client'
 import toast from 'react-hot-toast'
 import { ArrowLeft, Save, Plus, Shield, MapPin, Phone, Hash, Sparkles, MessageCircle, ImageIcon, ShoppingCart, Tag, RefreshCw, X } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -42,6 +43,10 @@ export default function ReceiptDetailPage() {
   // the child re-renders and reads the new trigger value.
   const [ratingPop, setRatingPop] = useState(0)
   const [newItem, setNewItem] = useState({ sku: '', model: '', item_name: '', purchase_date: '', qty: 1, price: '', warranty_info: '', item_manual: '', return_date: '', returned: false })
+  // Email-sourced receipts have no photo — load the source email so we can
+  // offer "View email" where camera receipts show "View image".
+  const [emailMsg, setEmailMsg] = useState(null)
+  const [showEmail, setShowEmail] = useState(false)
 
   const current = localReceipt ?? receipt
 
@@ -66,6 +71,25 @@ export default function ReceiptDetailPage() {
     },
     onError: err => toast.error(err.message),
   })
+
+  // Fetch the source email for this receipt (if it was parsed from email).
+  // RLS lets users read their own email_messages; linked via receipt_id.
+  useEffect(() => {
+    if (!id) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const sb = createClient()
+        const { data } = await sb
+          .from('email_messages')
+          .select('subject, from_addr, body_html, body_text')
+          .eq('receipt_id', id)
+          .maybeSingle()
+        if (!cancelled) setEmailMsg(data || null)
+      } catch { /* best-effort — no email source is fine */ }
+    })()
+    return () => { cancelled = true }
+  }, [id])
 
   // Re-parse this single receipt against its source email body. Only available
   // for email-sourced receipts; the endpoint returns 400 with an explainer if
@@ -378,10 +402,41 @@ export default function ReceiptDetailPage() {
             </div>
           )
         })()}
+        {!current.receipt_link && !current.from_statement && emailMsg && (
+          <button
+            type="button"
+            onClick={() => setShowEmail(true)}
+            title="View the source email this receipt was parsed from"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 active:scale-95 transition-all shadow-sm font-bold text-sm">
+            <MessageCircle size={16} /> View email
+          </button>
+        )}
         <button onClick={handleSave} disabled={updateReceipt.isPending} className="btn-primary">
           <Save size={15} /> {updateReceipt.isPending ? 'Saving…' : 'Save Changes'}
         </button>
       </div>
+
+      {/* Source-email viewer — email receipts have no photo, so show the
+          original email (sandboxed iframe = no script execution). */}
+      {showEmail && emailMsg && (
+        <div className="fixed inset-0 z-[120] bg-black/60 flex items-center justify-center p-4" onClick={() => setShowEmail(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start justify-between gap-3 p-4 border-b border-gray-100">
+              <div className="min-w-0">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 flex items-center gap-1"><MessageCircle size={12} /> Source email</div>
+                <div className="font-bold text-gray-900 truncate mt-0.5">{emailMsg.subject || '(no subject)'}</div>
+                <div className="text-xs text-gray-500 truncate">From {emailMsg.from_addr || 'unknown sender'}</div>
+              </div>
+              <button onClick={() => setShowEmail(false)} aria-label="Close" className="text-gray-400 hover:text-gray-700 shrink-0"><X size={20} /></button>
+            </div>
+            <div className="flex-1 overflow-auto bg-gray-50 min-h-[300px]">
+              {emailMsg.body_html
+                ? <iframe title="Source email" sandbox="" className="w-full h-[60vh] bg-white border-0" srcDoc={emailMsg.body_html} />
+                : <pre className="p-4 text-sm text-gray-700 whitespace-pre-wrap font-sans">{emailMsg.body_text || 'No email body was stored for this receipt.'}</pre>}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Refund Policy */}
       {refundPolicies.length > 0 && (

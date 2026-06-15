@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.79",
-  "name": "v0.3.79 — Referral code on sign-up + username fix",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.79/app-arm64-v8a-release.apk",
-  "releaseNotes": "• New: enter a friend's referral code right on the sign-up screen — you both get Smash days.\n• Fixed: usernames now correctly require 3 or more characters.\n• Sign-up shows clear inline errors (e.g. when passwords don't match)."
+  "version": "v0.3.80",
+  "name": "v0.3.80 — Emails open in full + email receipts get an image",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.80/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Fixed: emails in your Inbox now open at their full height automatically — no more tapping to expand to see the whole message.\n• New: receipts created from email now save a viewable image + PDF of the original email, so you always have proof on hand."
 }

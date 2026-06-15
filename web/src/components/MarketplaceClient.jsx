@@ -11,7 +11,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { Search, ExternalLink, Star, Tag, Store, Boxes, X, Sparkles, Bookmark, ArrowRight, Heart } from 'lucide-react'
+import { Search, ExternalLink, Star, Tag, Store, Boxes, X, Sparkles, Bookmark, ArrowRight, Heart, Globe, Loader2, Ticket } from 'lucide-react'
 import { bestDealUrl } from '../lib/storeSearch'
 import { getSavedSearches, saveSearch, removeSearch, getSavedStores, toggleSavedStore } from '../lib/marketplaceSearches'
 import { STORE_CATALOG, STORE_CATEGORIES } from '../lib/storeCatalog'
@@ -90,7 +90,24 @@ export default function MarketplaceClient({ initialQuery = '', initialTab = 'dea
   const [saved, setSaved] = useState([])
   const [savedStores, setSavedStores] = useState([])
   const [storeCat, setStoreCat] = useState('All')
+  const [coupon, setCoupon] = useState(null) // { store, status:'loading'|'done'|'error', data, error }
   const ranFor = useRef('')
+
+  async function openCoupons(store) {
+    setCoupon({ store, status: 'loading', data: null, error: '' })
+    try {
+      const res = await fetch('/api/coupons', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ store: store.name }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data?.error || `Coupon search failed (${res.status})`)
+      setCoupon({ store, status: 'done', data, error: '' })
+    } catch (e) {
+      setCoupon({ store, status: 'error', data: null, error: e.message })
+    }
+  }
 
   useEffect(() => { setSaved(getSavedSearches()); setSavedStores(getSavedStores()) }, [])
 
@@ -214,6 +231,7 @@ export default function MarketplaceClient({ initialQuery = '', initialTab = 'dea
             saved={savedStores}
             onToggle={(slug) => setSavedStores(toggleSavedStore(slug))}
             onFindDeals={(s) => runSearch(s.popular)}
+            onCoupons={openCoupons}
           />
         )}
         {tab === 'sell' && (
@@ -224,6 +242,8 @@ export default function MarketplaceClient({ initialQuery = '', initialTab = 'dea
           />
         )}
       </div>
+
+      {coupon && <CouponsModal state={coupon} onClose={() => setCoupon(null)} />}
     </div>
   )
 }
@@ -285,7 +305,7 @@ function DealsTab({ status, error, results, meta, query, onRetry }) {
   )
 }
 
-function StoresTab({ query, category, setCategory, saved, onToggle, onFindDeals }) {
+function StoresTab({ query, category, setCategory, saved, onToggle, onFindDeals, onCoupons }) {
   const q = (query || '').trim().toLowerCase()
   const list = STORE_CATALOG.filter((s) => {
     const catOk = category === 'All' || s.category === category
@@ -314,7 +334,7 @@ function StoresTab({ query, category, setCategory, saved, onToggle, onFindDeals 
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {list.map((s) => (
-            <StoreCard key={s.slug} s={s} saved={saved.includes(s.slug)} onToggle={() => onToggle(s.slug)} onFindDeals={() => onFindDeals(s)} />
+            <StoreCard key={s.slug} s={s} saved={saved.includes(s.slug)} onToggle={() => onToggle(s.slug)} onFindDeals={() => onFindDeals(s)} onCoupons={() => onCoupons(s)} />
           ))}
         </div>
       )}
@@ -323,7 +343,7 @@ function StoresTab({ query, category, setCategory, saved, onToggle, onFindDeals 
   )
 }
 
-function StoreCard({ s, saved, onToggle, onFindDeals }) {
+function StoreCard({ s, saved, onToggle, onFindDeals, onCoupons }) {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-lg hover:border-emerald-200 transition-all flex flex-col">
       <div className="relative flex items-center justify-center" style={{ aspectRatio: '1.7 / 1', backgroundColor: s.color }}>
@@ -349,14 +369,89 @@ function StoreCard({ s, saved, onToggle, onFindDeals }) {
           >
             <Tag size={12} /> Find deals
           </button>
-          <a
-            href={s.dealsUrl}
-            target="_blank"
-            rel="noreferrer"
-            title={`${s.name} official coupons & deals`}
+          <button
+            onClick={onCoupons}
+            title={`Find ${s.name} coupons`}
             className="inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-white border border-emerald-200 text-emerald-700 text-xs font-bold hover:bg-emerald-50 active:scale-95 transition-all"
           >
-            Coupons <ExternalLink size={11} />
+            <Ticket size={12} /> Coupons
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function CouponsModal({ state, onClose }) {
+  const { store, status, data, error } = state
+  const coupons = data?.coupons || []
+  const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(store.name + ' coupons promo codes')}`
+  return (
+    <div className="fixed inset-0 z-[120] bg-black/60 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[88vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        {/* Header */}
+        <div className="flex items-center gap-3 p-4 border-b border-gray-100">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0" style={{ backgroundColor: store.color }}>
+            <span className="drop-shadow-sm">{store.emoji}</span>
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 flex items-center gap-1"><Ticket size={12} /> Coupons</div>
+            <div className="font-bold text-gray-900 truncate">{store.name}</div>
+          </div>
+          <button onClick={onClose} aria-label="Close" className="text-gray-400 hover:text-gray-700 shrink-0"><X size={20} /></button>
+        </div>
+
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto p-4">
+          {status === 'loading' && (
+            <div className="flex flex-col items-center gap-2 py-12 text-gray-500">
+              <Loader2 size={28} className="animate-spin text-emerald-500" />
+              <p className="text-sm font-semibold">Searching Google for {store.name} coupons…</p>
+            </div>
+          )}
+          {status === 'error' && (
+            <div className="text-center py-10">
+              <p className="text-rose-600 font-semibold">{error}</p>
+              <a href={googleUrl} target="_blank" rel="noreferrer" className="btn-secondary inline-flex items-center gap-1 mt-3 text-sm">
+                Search on Google <ExternalLink size={13} />
+              </a>
+            </div>
+          )}
+          {status === 'done' && coupons.length === 0 && (
+            <div className="text-center py-10 text-gray-500">
+              <p className="font-semibold text-gray-700">No coupon pages found.</p>
+              <a href={store.dealsUrl} target="_blank" rel="noreferrer" className="btn-secondary inline-flex items-center gap-1 mt-3 text-sm">
+                {store.name} official deals <ExternalLink size={13} />
+              </a>
+            </div>
+          )}
+          {status === 'done' && coupons.length > 0 && (
+            <div className="space-y-2">
+              {coupons.map((c, i) => (
+                <a key={i} href={c.url} target="_blank" rel="noreferrer"
+                  className="block rounded-xl border border-gray-100 hover:border-emerald-200 hover:bg-emerald-50/40 p-3 transition-colors">
+                  <div className="flex items-start gap-2">
+                    <Ticket size={15} className="text-emerald-600 mt-0.5 shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-gray-900 text-sm leading-snug line-clamp-2">{c.title}</p>
+                      {c.snippet && <p className="text-[12px] text-gray-500 mt-0.5 line-clamp-2">{c.snippet}</p>}
+                      <p className="text-[10px] text-emerald-700 font-semibold mt-1 inline-flex items-center gap-1">
+                        <Globe size={10} /> {c.source}{c.date ? ` · ${c.date}` : ''}
+                      </p>
+                    </div>
+                    <ExternalLink size={13} className="text-gray-300 shrink-0 mt-0.5" />
+                  </div>
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between gap-2">
+          <p className="text-[10px] text-gray-400 leading-tight">Sourced from the web — verify the code at checkout.</p>
+          <a href={store.dealsUrl} target="_blank" rel="noreferrer" className="shrink-0 inline-flex items-center gap-1 text-xs font-bold text-emerald-700 hover:underline">
+            Official deals <ExternalLink size={12} />
           </a>
         </div>
       </div>

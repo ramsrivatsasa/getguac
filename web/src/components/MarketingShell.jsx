@@ -1,6 +1,7 @@
 // Shared chrome (sticky nav + footer) for the public marketing pages so they
 // stay consistent and cross-linked. Server-safe (no 'use client').
 import Link from 'next/link'
+import HeaderSearch from './HeaderSearch'
 
 const NAV = [
   { href: '/marketplace', label: 'Marketplace' },
@@ -38,17 +39,18 @@ export default function MarketingShell({ subtitle, children }) {
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-lime-50 text-gray-800 font-sans">
       {/* Nav */}
       <header className="sticky top-0 z-30 backdrop-blur bg-white/70 border-b border-emerald-100">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-3 sm:gap-5">
+          <Link href="/" className="flex items-center gap-2.5 shrink-0">
             <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-lime-300 via-emerald-400 to-emerald-700 shadow-md ring-2 ring-white flex items-center justify-center text-lg">🥑</div>
-            <div className="leading-none">
+            <div className="leading-none hidden sm:block">
               <div className="text-base font-black tracking-tight text-emerald-900">GetGuac</div>
               {subtitle && <div className="text-[9px] text-emerald-600 font-semibold uppercase tracking-wider mt-0.5">{subtitle}</div>}
             </div>
           </Link>
-          <nav className="flex items-center gap-4 text-sm">
+          <HeaderSearch className="flex-1 min-w-0 max-w-xl" />
+          <nav className="flex items-center gap-3 sm:gap-4 text-sm shrink-0">
             {NAV.map((n) => (
-              <Link key={n.href} href={n.href} className="hidden md:inline font-semibold text-gray-600 hover:text-emerald-800">{n.label}</Link>
+              <Link key={n.href} href={n.href} className="hidden xl:inline font-semibold text-gray-600 hover:text-emerald-800">{n.label}</Link>
             ))}
             <Link href="/login" className="hidden sm:inline btn-secondary">Sign in</Link>
             <Link href="/register" className="btn-primary">Get started</Link>

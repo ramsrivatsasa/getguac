@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '../lib/supabase/server'
 import {
-  Sparkles, Wand2, Star, Gift, ShoppingCart, Tag, Shield, ArrowRight, Package, BadgeDollarSign, Banknote, Brain, Trophy, Smile, PieChart, Search
+  Sparkles, Wand2, Star, Gift, ShoppingCart, Tag, Shield, ArrowRight, Package, BadgeDollarSign, Banknote, Brain, Trophy, Smile, PieChart
 } from 'lucide-react'
 import GuacMascot from '../components/GuacMascot'
 import GenieAvocado from '../components/GenieAvocado'
@@ -10,6 +10,7 @@ import LottieAnimation from '../components/LottieAnimation'
 import moneyMagic from '../lottie/money-magic.json'
 import WatchVideoCard from '../components/WatchVideoCard'
 import ReferralCapture from '../components/ReferralCapture'
+import HeaderSearch from '../components/HeaderSearch'
 
 export default async function Home() {
   // Logged-in users skip the landing page
@@ -24,24 +25,23 @@ export default async function Home() {
       <ReferralCapture />
       {/* NAV */}
       <header className="sticky top-0 z-30 backdrop-blur bg-white/70 border-b border-emerald-100">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-3 sm:gap-5">
+          <Link href="/" className="flex items-center gap-2.5 shrink-0">
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-lime-300 via-emerald-400 to-emerald-700 shadow-md ring-2 ring-white flex items-center justify-center text-xl">🥑</div>
-            <div className="leading-none">
+            <div className="leading-none hidden sm:block">
               <div className="text-lg font-black tracking-tight text-emerald-900">GetGuac</div>
               <div className="text-[9px] text-emerald-600 font-semibold uppercase tracking-wider mt-0.5">your money's wingman</div>
             </div>
           </Link>
-          <nav className="flex items-center gap-2">
-            <Link href="/marketplace" className="hidden md:inline-flex items-center gap-1 text-sm font-bold text-emerald-700 hover:text-emerald-900 px-3 py-1.5 rounded-full">🛒 Marketplace</Link>
-            <a href="#brain"    className="hidden md:inline text-sm font-semibold text-gray-600 hover:text-emerald-800 px-3 py-1.5 rounded-full">The brain</a>
-            <Link href="/how-it-works" className="hidden md:inline text-sm font-semibold text-gray-600 hover:text-emerald-800 px-3 py-1.5 rounded-full">How it works</Link>
-            <Link href="/how-email-works" className="hidden md:inline text-sm font-semibold text-gray-600 hover:text-emerald-800 px-3 py-1.5 rounded-full">Email</Link>
-            <Link href="/security" className="hidden md:inline text-sm font-semibold text-gray-600 hover:text-emerald-800 px-3 py-1.5 rounded-full">Security</Link>
-            <Link href="/download" className="hidden md:inline-flex items-center gap-1 text-sm font-semibold text-emerald-700 hover:text-emerald-900 px-3 py-1.5 rounded-full">
+          <HeaderSearch className="flex-1 min-w-0 max-w-xl" />
+          <nav className="flex items-center gap-2 shrink-0">
+            <Link href="/marketplace" className="hidden xl:inline-flex items-center gap-1 text-sm font-bold text-emerald-700 hover:text-emerald-900 px-3 py-1.5 rounded-full">🛒 Marketplace</Link>
+            <a href="#brain"    className="hidden xl:inline text-sm font-semibold text-gray-600 hover:text-emerald-800 px-3 py-1.5 rounded-full">The brain</a>
+            <Link href="/how-it-works" className="hidden xl:inline text-sm font-semibold text-gray-600 hover:text-emerald-800 px-3 py-1.5 rounded-full">How it works</Link>
+            <Link href="/download" className="hidden xl:inline-flex items-center gap-1 text-sm font-semibold text-emerald-700 hover:text-emerald-900 px-3 py-1.5 rounded-full">
               📱 Download
             </Link>
-            <Link href="/login" className="btn-secondary">Sign in</Link>
+            <Link href="/login" className="hidden sm:inline-flex btn-secondary">Sign in</Link>
             <Link href="/register" className="btn-primary">Get started</Link>
           </nav>
         </div>
@@ -62,26 +62,6 @@ export default async function Home() {
               GetGuac is your <span className="font-bold text-emerald-700">Guac-AI</span> finance brain — it reads your receipts and bank statements,
               scores every purchase, sniffs out hidden fees, and tells you exactly where your money
               gets eaten. <span className="font-semibold">Money's wingman. Keep your guac.</span>
-            </p>
-
-            {/* Marketplace search — public, no login. Native GET form hands
-                off to /marketplace?q=… which runs the live best-price search. */}
-            <form action="/marketplace" method="GET" className="relative max-w-xl">
-              <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                name="q"
-                placeholder="Search any product or store for the best price…"
-                aria-label="Search the GetGuac Marketplace"
-                autoComplete="off"
-                className="w-full pl-12 pr-28 py-4 rounded-full border border-emerald-200 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 text-base"
-              />
-              <button type="submit" className="absolute right-1.5 top-1/2 -translate-y-1/2 btn-primary rounded-full px-5 py-2.5">
-                Search
-              </button>
-            </form>
-            <p className="text-xs text-gray-500 -mt-2">
-              🔎 Free price search across Walmart, Amazon, Target &amp; more — open the{' '}
-              <Link href="/marketplace" className="font-semibold text-emerald-700 hover:underline">Marketplace</Link>. No account needed.
             </p>
 
             <div className="flex flex-wrap items-center gap-3">

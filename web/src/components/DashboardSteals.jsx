@@ -8,7 +8,9 @@ import { useQuery } from '@tanstack/react-query'
 import { Tag, Star, ArrowRight } from 'lucide-react'
 import { getStealsFeed } from '../lib/steals'
 
-const PER_STEAL = 5
+// Show a generous run per search so the row actually fills and scrolls
+// horizontally (5 left a half-empty row on wide screens).
+const PER_STEAL = 15
 
 // Relevance = discount weight (savings the user cares about) + a small rating
 // tiebreak. Steals with a real original_price and a big markdown rank first.

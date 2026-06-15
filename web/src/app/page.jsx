@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '../lib/supabase/server'
 import {
-  Sparkles, Wand2, Star, Gift, ShoppingCart, Tag, Shield, ArrowRight, Package, BadgeDollarSign, Banknote, Brain, Trophy, Smile, PieChart
+  Sparkles, Wand2, Star, Gift, ShoppingCart, Tag, Shield, ArrowRight, Package, BadgeDollarSign, Banknote, Brain, Trophy, Smile, PieChart, Search
 } from 'lucide-react'
 import GuacMascot from '../components/GuacMascot'
 import GenieAvocado from '../components/GenieAvocado'
@@ -33,6 +33,7 @@ export default async function Home() {
             </div>
           </Link>
           <nav className="flex items-center gap-2">
+            <Link href="/marketplace" className="hidden md:inline-flex items-center gap-1 text-sm font-bold text-emerald-700 hover:text-emerald-900 px-3 py-1.5 rounded-full">🛒 Marketplace</Link>
             <a href="#brain"    className="hidden md:inline text-sm font-semibold text-gray-600 hover:text-emerald-800 px-3 py-1.5 rounded-full">The brain</a>
             <Link href="/how-it-works" className="hidden md:inline text-sm font-semibold text-gray-600 hover:text-emerald-800 px-3 py-1.5 rounded-full">How it works</Link>
             <Link href="/how-email-works" className="hidden md:inline text-sm font-semibold text-gray-600 hover:text-emerald-800 px-3 py-1.5 rounded-full">Email</Link>
@@ -62,6 +63,27 @@ export default async function Home() {
               scores every purchase, sniffs out hidden fees, and tells you exactly where your money
               gets eaten. <span className="font-semibold">Money's wingman. Keep your guac.</span>
             </p>
+
+            {/* Marketplace search — public, no login. Native GET form hands
+                off to /marketplace?q=… which runs the live best-price search. */}
+            <form action="/marketplace" method="GET" className="relative max-w-xl">
+              <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                name="q"
+                placeholder="Search any product or store for the best price…"
+                aria-label="Search the GetGuac Marketplace"
+                autoComplete="off"
+                className="w-full pl-12 pr-28 py-4 rounded-full border border-emerald-200 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 text-base"
+              />
+              <button type="submit" className="absolute right-1.5 top-1/2 -translate-y-1/2 btn-primary rounded-full px-5 py-2.5">
+                Search
+              </button>
+            </form>
+            <p className="text-xs text-gray-500 -mt-2">
+              🔎 Free price search across Walmart, Amazon, Target &amp; more — open the{' '}
+              <Link href="/marketplace" className="font-semibold text-emerald-700 hover:underline">Marketplace</Link>. No account needed.
+            </p>
+
             <div className="flex flex-wrap items-center gap-3">
               <Link href="/register" className="btn-primary text-base px-6 py-3">
                 <span className="text-lg">🥑</span> Meet your sidekick <ArrowRight size={16} />

@@ -1,0 +1,303 @@
+'use client'
+// Public GetGuac Marketplace — browse deals with NO account.
+//
+// Phase 1 (live): "Deals" tab — search any product or store and see best
+// prices across major US retailers, powered by /api/best-prices (anonymous,
+// IP-rate-limited, shared 7-day cache). Searches are saved to a first-party
+// cookie so a logged-out visitor keeps their criteria across visits.
+//
+// Phase 2/3 (previewed as tabs): "Stores" (store + coupons directory) and
+// "Sell" (list items from your receipts, FB-Marketplace style).
+
+import { useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
+import { Search, ExternalLink, Star, Tag, Store, Boxes, X, Sparkles, Bookmark, ArrowRight } from 'lucide-react'
+import { bestDealUrl } from '../lib/storeSearch'
+import { getSavedSearches, saveSearch, removeSearch } from '../lib/marketplaceSearches'
+
+const TABS = [
+  { key: 'deals',  label: 'Deals',  icon: Tag,   live: true  },
+  { key: 'stores', label: 'Stores', icon: Store, live: false },
+  { key: 'sell',   label: 'Sell',   icon: Boxes, live: false },
+]
+
+function discountPct(price, original) {
+  if (!original || !price || original <= price) return 0
+  return Math.round(((original - price) / original) * 100)
+}
+
+function DealCard({ r }) {
+  const title = r.matched_name || r.title || r.store
+  const off = discountPct(r.price, r.original_price)
+  const href = bestDealUrl({ ...r, title })
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      className="group text-left bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-lg hover:border-emerald-200 hover:-translate-y-0.5 transition-all flex flex-col"
+    >
+      <div className="relative flex items-center justify-center bg-gray-50" style={{ aspectRatio: '1.1 / 1' }}>
+        {off > 0 && (
+          <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-rose-100 text-rose-700 border border-rose-200 shadow-sm">
+            {off}% off
+          </span>
+        )}
+        {r.image ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={r.image} alt={title} className="object-contain max-h-32 max-w-[82%]"
+            onError={(e) => { e.currentTarget.style.display = 'none' }} />
+        ) : (
+          <span className="text-5xl opacity-60">🛒</span>
+        )}
+        <span className="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow opacity-0 group-hover:opacity-100 transition-opacity">
+          <ExternalLink size={14} />
+        </span>
+      </div>
+      <div className="p-3 flex flex-col gap-1.5 flex-1">
+        <p className="font-bold text-gray-900 text-sm leading-tight line-clamp-2">{title}</p>
+        <div className="mt-auto flex items-end justify-between gap-2">
+          <div>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-lg font-extrabold text-emerald-700 tabular-nums">
+                {r.price > 0 ? `$${Number(r.price).toFixed(2)}` : '—'}
+              </span>
+              {r.original_price > r.price && (
+                <span className="text-xs text-gray-400 line-through tabular-nums">${Number(r.original_price).toFixed(2)}</span>
+              )}
+            </div>
+            <p className="text-[11px] text-gray-500 truncate max-w-[140px]">{r.store}</p>
+          </div>
+          {r.rating > 0 && (
+            <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-amber-600 shrink-0">
+              <Star size={11} fill="currentColor" /> {Number(r.rating).toFixed(1)}
+            </span>
+          )}
+        </div>
+      </div>
+    </a>
+  )
+}
+
+export default function MarketplaceClient({ initialQuery = '', initialTab = 'deals' }) {
+  const [tab, setTab] = useState(TABS.some((t) => t.key === initialTab) ? initialTab : 'deals')
+  const [query, setQuery] = useState(initialQuery)
+  const [results, setResults] = useState([])
+  const [status, setStatus] = useState('idle') // idle | loading | done | error
+  const [error, setError] = useState('')
+  const [meta, setMeta] = useState(null)        // { enhancement, mode, cache }
+  const [saved, setSaved] = useState([])
+  const ranFor = useRef('')
+
+  useEffect(() => { setSaved(getSavedSearches()) }, [])
+
+  async function runSearch(q) {
+    const term = (q ?? query).trim()
+    if (!term) return
+    setQuery(term)
+    setTab('deals')
+    setStatus('loading')
+    setError('')
+    setResults([])
+    try {
+      const res = await fetch('/api/best-prices', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ item_name: term }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data?.error || `Search failed (${res.status})`)
+      setResults(Array.isArray(data.results) ? data.results : [])
+      setMeta({ enhancement: data.enhancement, mode: data.mode, cache: data._cache })
+      setStatus('done')
+      setSaved(saveSearch(term))
+    } catch (e) {
+      setError(e.message)
+      setStatus('error')
+    }
+  }
+
+  // Auto-run when arriving with ?q=… (home-page search hands off here).
+  useEffect(() => {
+    const q = (initialQuery || '').trim()
+    if (q && ranFor.current !== q) {
+      ranFor.current = q
+      runSearch(q)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialQuery])
+
+  function onRemove(q) {
+    setSaved(removeSearch(q))
+  }
+
+  const ActiveIcon = TABS.find((t) => t.key === tab)?.icon || Tag
+
+  return (
+    <div className="max-w-6xl mx-auto px-4 sm:px-6">
+      {/* Search bar */}
+      <form
+        onSubmit={(e) => { e.preventDefault(); runSearch() }}
+        className="relative max-w-2xl mx-auto"
+      >
+        <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search any product or store — e.g. “AirPods Pro” or “Target”"
+          className="w-full pl-12 pr-28 py-4 rounded-full border border-emerald-200 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 text-base"
+          autoComplete="off"
+        />
+        <button
+          type="submit"
+          className="absolute right-1.5 top-1/2 -translate-y-1/2 btn-primary rounded-full px-5 py-2.5"
+        >
+          Search
+        </button>
+      </form>
+
+      {/* Saved searches (cookie — no account) */}
+      {saved.length > 0 && (
+        <div className="max-w-2xl mx-auto mt-3 flex items-center gap-2 flex-wrap">
+          <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700">
+            <Bookmark size={12} /> Saved:
+          </span>
+          {saved.map((s) => (
+            <span key={s.q} className="group inline-flex items-center gap-1 pl-3 pr-1.5 py-1 rounded-full bg-white border border-emerald-100 text-xs font-semibold text-gray-700 shadow-sm">
+              <button onClick={() => runSearch(s.q)} className="hover:text-emerald-700">{s.q}</button>
+              <button onClick={() => onRemove(s.q)} aria-label={`Remove ${s.q}`} className="w-4 h-4 rounded-full flex items-center justify-center text-gray-300 hover:text-rose-500 hover:bg-rose-50">
+                <X size={11} />
+              </button>
+            </span>
+          ))}
+          <span className="text-[10px] text-gray-400">saved on this device · no account needed</span>
+        </div>
+      )}
+
+      {/* Tabs */}
+      <div className="flex items-center justify-center gap-2 mt-7">
+        {TABS.map((t) => {
+          const Icon = t.icon
+          const active = tab === t.key
+          return (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold transition-all ${
+                active ? 'bg-emerald-600 text-white shadow' : 'bg-white text-gray-600 border border-gray-200 hover:border-emerald-200 hover:text-emerald-700'
+              }`}
+            >
+              <Icon size={15} /> {t.label}
+              {!t.live && <span className="text-[9px] uppercase tracking-wider font-extrabold opacity-70">soon</span>}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Tab body */}
+      <div className="mt-8 pb-16">
+        {tab === 'deals' && (
+          <DealsTab status={status} error={error} results={results} meta={meta} query={query} onRetry={() => runSearch()} />
+        )}
+        {tab === 'stores' && (
+          <ComingSoon
+            icon={Store}
+            title="Store directory + coupons"
+            blurb="Browse your favorite stores, see live coupons and cashback, and jump straight to the best deals. We're wiring this up next."
+          />
+        )}
+        {tab === 'sell' && (
+          <ComingSoon
+            icon={Boxes}
+            title="Sell your stuff — with proof of purchase"
+            blurb="List items straight from your receipts: GetGuac already knows what you bought, when, and the warranty — so buyers get instant proof. Coming soon."
+          />
+        )}
+      </div>
+    </div>
+  )
+}
+
+function DealsTab({ status, error, results, meta, query, onRetry }) {
+  if (status === 'idle') {
+    return (
+      <div className="text-center py-12 text-gray-500">
+        <div className="text-5xl mb-3">🥑</div>
+        <p className="font-semibold text-gray-700">Search a product or store to see the best prices.</p>
+        <p className="text-sm mt-1">Try “AirPods Pro”, “Dyson V8”, or “Nintendo Switch”.</p>
+      </div>
+    )
+  }
+  if (status === 'loading') {
+    return (
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} className="bg-white rounded-2xl border border-gray-100 overflow-hidden animate-pulse">
+            <div className="bg-gray-100" style={{ aspectRatio: '1.1 / 1' }} />
+            <div className="p-3 space-y-2">
+              <div className="h-3 bg-gray-100 rounded w-3/4" />
+              <div className="h-4 bg-gray-100 rounded w-1/2" />
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+  if (status === 'error') {
+    return (
+      <div className="text-center py-12">
+        <p className="text-rose-600 font-semibold">{error}</p>
+        <button onClick={onRetry} className="btn-secondary mt-3">Try again</button>
+      </div>
+    )
+  }
+  if (!results.length) {
+    return (
+      <div className="text-center py-12 text-gray-500">
+        <div className="text-5xl mb-3">🔍</div>
+        <p className="font-semibold text-gray-700">No deals found for “{query}”.</p>
+        <p className="text-sm mt-1">Try a different name or add a brand/model.</p>
+      </div>
+    )
+  }
+  return (
+    <>
+      {meta?.enhancement && meta.enhancement.enhanced && meta.enhancement.enhanced !== meta.enhancement.original && (
+        <p className="text-center text-xs text-emerald-700 mb-4">
+          <Sparkles size={12} className="inline -mt-0.5" /> Refined to <span className="font-semibold">{meta.enhancement.enhanced}</span>
+        </p>
+      )}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        {results.map((r, i) => <DealCard key={`${r.store}-${i}`} r={r} />)}
+      </div>
+      <RegisterCta />
+    </>
+  )
+}
+
+function ComingSoon({ icon: Icon, title, blurb }) {
+  return (
+    <div className="max-w-xl mx-auto text-center py-12">
+      <div className="w-16 h-16 mx-auto rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center mb-4">
+        <Icon size={28} />
+      </div>
+      <h3 className="text-xl font-black text-gray-900">{title}</h3>
+      <p className="text-gray-600 mt-2 leading-relaxed">{blurb}</p>
+      <RegisterCta />
+    </div>
+  )
+}
+
+function RegisterCta() {
+  return (
+    <div className="mt-10 rounded-3xl bg-gradient-to-br from-emerald-600 to-lime-500 text-white p-6 sm:p-8 text-center shadow-lg">
+      <h3 className="text-xl sm:text-2xl font-black">Get price-drop alerts on what you save</h3>
+      <p className="text-emerald-50 mt-1.5 max-w-lg mx-auto">
+        Create a free account and GetGuac watches these searches for you — pinging you the moment a price drops.
+      </p>
+      <Link href="/register" className="inline-flex items-center gap-1.5 mt-4 bg-white text-emerald-700 font-bold px-6 py-3 rounded-full hover:scale-105 active:scale-95 transition-transform">
+        🥑 Get started free <ArrowRight size={16} />
+      </Link>
+    </div>
+  )
+}

@@ -15,11 +15,12 @@ import { Search, ExternalLink, Star, Tag, Store, Boxes, X, Sparkles, Bookmark, A
 import { bestDealUrl } from '../lib/storeSearch'
 import { getSavedSearches, saveSearch, removeSearch, getSavedStores, toggleSavedStore } from '../lib/marketplaceSearches'
 import { STORE_CATALOG, STORE_CATEGORIES } from '../lib/storeCatalog'
+import SellTab from './SellTab'
 
 const TABS = [
   { key: 'deals',  label: 'Deals',  icon: Tag,   live: true  },
   { key: 'stores', label: 'Stores', icon: Store, live: true  },
-  { key: 'sell',   label: 'Sell',   icon: Boxes, live: false },
+  { key: 'sell',   label: 'Sell',   icon: Boxes, live: true  },
 ]
 
 function discountPct(price, original) {
@@ -157,20 +158,22 @@ export default function MarketplaceClient({ initialQuery = '', initialTab = 'dea
     <div className="max-w-6xl mx-auto px-4 sm:px-6">
       {/* Search bar */}
       <form
-        onSubmit={(e) => { e.preventDefault(); if (tab !== 'stores') runSearch() }}
+        onSubmit={(e) => { e.preventDefault(); if (tab === 'deals') runSearch() }}
         className="relative max-w-2xl mx-auto"
       >
         <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder={tab === 'stores'
-            ? 'Filter stores — e.g. “Target” or “grocery”'
-            : 'Search any product or store — e.g. “AirPods Pro”'}
-          className={`w-full pl-12 ${tab === 'stores' ? 'pr-5' : 'pr-28'} py-4 rounded-full border border-emerald-200 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 text-base`}
+          placeholder={
+            tab === 'stores' ? 'Filter stores — e.g. “Target” or “grocery”'
+            : tab === 'sell' ? 'Search items for sale…'
+            : 'Search any product or store — e.g. “AirPods Pro”'
+          }
+          className={`w-full pl-12 ${tab === 'deals' ? 'pr-28' : 'pr-5'} py-4 rounded-full border border-emerald-200 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 text-base`}
           autoComplete="off"
         />
-        {tab !== 'stores' && (
+        {tab === 'deals' && (
           <button
             type="submit"
             className="absolute right-1.5 top-1/2 -translate-y-1/2 btn-primary rounded-full px-5 py-2.5"
@@ -234,13 +237,7 @@ export default function MarketplaceClient({ initialQuery = '', initialTab = 'dea
             onCoupons={openCoupons}
           />
         )}
-        {tab === 'sell' && (
-          <ComingSoon
-            icon={Boxes}
-            title="Sell your stuff — with proof of purchase"
-            blurb="List items straight from your receipts: GetGuac already knows what you bought, when, and the warranty — so buyers get instant proof. Coming soon."
-          />
-        )}
+        {tab === 'sell' && <SellTab query={query} />}
       </div>
 
       {coupon && <CouponsModal state={coupon} onClose={() => setCoupon(null)} />}
@@ -455,19 +452,6 @@ function CouponsModal({ state, onClose }) {
           </a>
         </div>
       </div>
-    </div>
-  )
-}
-
-function ComingSoon({ icon: Icon, title, blurb }) {
-  return (
-    <div className="max-w-xl mx-auto text-center py-12">
-      <div className="w-16 h-16 mx-auto rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center mb-4">
-        <Icon size={28} />
-      </div>
-      <h3 className="text-xl font-black text-gray-900">{title}</h3>
-      <p className="text-gray-600 mt-2 leading-relaxed">{blurb}</p>
-      <RegisterCta />
     </div>
   )
 }

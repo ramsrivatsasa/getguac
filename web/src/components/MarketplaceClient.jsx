@@ -11,13 +11,14 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { Search, ExternalLink, Star, Tag, Store, Boxes, X, Sparkles, Bookmark, ArrowRight } from 'lucide-react'
+import { Search, ExternalLink, Star, Tag, Store, Boxes, X, Sparkles, Bookmark, ArrowRight, Heart } from 'lucide-react'
 import { bestDealUrl } from '../lib/storeSearch'
-import { getSavedSearches, saveSearch, removeSearch } from '../lib/marketplaceSearches'
+import { getSavedSearches, saveSearch, removeSearch, getSavedStores, toggleSavedStore } from '../lib/marketplaceSearches'
+import { STORE_CATALOG, STORE_CATEGORIES } from '../lib/storeCatalog'
 
 const TABS = [
   { key: 'deals',  label: 'Deals',  icon: Tag,   live: true  },
-  { key: 'stores', label: 'Stores', icon: Store, live: false },
+  { key: 'stores', label: 'Stores', icon: Store, live: true  },
   { key: 'sell',   label: 'Sell',   icon: Boxes, live: false },
 ]
 
@@ -87,9 +88,11 @@ export default function MarketplaceClient({ initialQuery = '', initialTab = 'dea
   const [error, setError] = useState('')
   const [meta, setMeta] = useState(null)        // { enhancement, mode, cache }
   const [saved, setSaved] = useState([])
+  const [savedStores, setSavedStores] = useState([])
+  const [storeCat, setStoreCat] = useState('All')
   const ranFor = useRef('')
 
-  useEffect(() => { setSaved(getSavedSearches()) }, [])
+  useEffect(() => { setSaved(getSavedSearches()); setSavedStores(getSavedStores()) }, [])
 
   async function runSearch(q) {
     const term = (q ?? query).trim()
@@ -137,27 +140,31 @@ export default function MarketplaceClient({ initialQuery = '', initialTab = 'dea
     <div className="max-w-6xl mx-auto px-4 sm:px-6">
       {/* Search bar */}
       <form
-        onSubmit={(e) => { e.preventDefault(); runSearch() }}
+        onSubmit={(e) => { e.preventDefault(); if (tab !== 'stores') runSearch() }}
         className="relative max-w-2xl mx-auto"
       >
         <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search any product or store — e.g. “AirPods Pro” or “Target”"
-          className="w-full pl-12 pr-28 py-4 rounded-full border border-emerald-200 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 text-base"
+          placeholder={tab === 'stores'
+            ? 'Filter stores — e.g. “Target” or “grocery”'
+            : 'Search any product or store — e.g. “AirPods Pro”'}
+          className={`w-full pl-12 ${tab === 'stores' ? 'pr-5' : 'pr-28'} py-4 rounded-full border border-emerald-200 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 text-base`}
           autoComplete="off"
         />
-        <button
-          type="submit"
-          className="absolute right-1.5 top-1/2 -translate-y-1/2 btn-primary rounded-full px-5 py-2.5"
-        >
-          Search
-        </button>
+        {tab !== 'stores' && (
+          <button
+            type="submit"
+            className="absolute right-1.5 top-1/2 -translate-y-1/2 btn-primary rounded-full px-5 py-2.5"
+          >
+            Search
+          </button>
+        )}
       </form>
 
       {/* Saved searches (cookie — no account) */}
-      {saved.length > 0 && (
+      {tab === 'deals' && saved.length > 0 && (
         <div className="max-w-2xl mx-auto mt-3 flex items-center gap-2 flex-wrap">
           <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700">
             <Bookmark size={12} /> Saved:
@@ -200,10 +207,13 @@ export default function MarketplaceClient({ initialQuery = '', initialTab = 'dea
           <DealsTab status={status} error={error} results={results} meta={meta} query={query} onRetry={() => runSearch()} />
         )}
         {tab === 'stores' && (
-          <ComingSoon
-            icon={Store}
-            title="Store directory + coupons"
-            blurb="Browse your favorite stores, see live coupons and cashback, and jump straight to the best deals. We're wiring this up next."
+          <StoresTab
+            query={query}
+            category={storeCat}
+            setCategory={setStoreCat}
+            saved={savedStores}
+            onToggle={(slug) => setSavedStores(toggleSavedStore(slug))}
+            onFindDeals={(s) => runSearch(s.popular)}
           />
         )}
         {tab === 'sell' && (
@@ -272,6 +282,85 @@ function DealsTab({ status, error, results, meta, query, onRetry }) {
       </div>
       <RegisterCta />
     </>
+  )
+}
+
+function StoresTab({ query, category, setCategory, saved, onToggle, onFindDeals }) {
+  const q = (query || '').trim().toLowerCase()
+  const list = STORE_CATALOG.filter((s) => {
+    const catOk = category === 'All' || s.category === category
+    const qOk = !q || s.name.toLowerCase().includes(q) || s.category.toLowerCase().includes(q)
+    return catOk && qOk
+  })
+  return (
+    <>
+      {/* Category filter */}
+      <div className="flex items-center gap-2 flex-wrap justify-center mb-6">
+        {STORE_CATEGORIES.map((c) => (
+          <button
+            key={c}
+            onClick={() => setCategory(c)}
+            className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
+              category === c ? 'bg-emerald-600 text-white shadow' : 'bg-white text-gray-600 border border-gray-200 hover:border-emerald-200 hover:text-emerald-700'
+            }`}
+          >
+            {c}
+          </button>
+        ))}
+      </div>
+
+      {list.length === 0 ? (
+        <p className="text-center text-gray-500 py-10">No stores match “{query}”.</p>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          {list.map((s) => (
+            <StoreCard key={s.slug} s={s} saved={saved.includes(s.slug)} onToggle={() => onToggle(s.slug)} onFindDeals={() => onFindDeals(s)} />
+          ))}
+        </div>
+      )}
+      <RegisterCta />
+    </>
+  )
+}
+
+function StoreCard({ s, saved, onToggle, onFindDeals }) {
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-lg hover:border-emerald-200 transition-all flex flex-col">
+      <div className="relative flex items-center justify-center" style={{ aspectRatio: '1.7 / 1', backgroundColor: s.color }}>
+        <span className="text-3xl drop-shadow-sm">{s.emoji}</span>
+        <span className="absolute bottom-1.5 left-2.5 text-white font-black text-sm drop-shadow">{s.name}</span>
+        <button
+          onClick={onToggle}
+          aria-label={saved ? `Unsave ${s.name}` : `Save ${s.name}`}
+          className={`absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center transition-colors ${
+            saved ? 'bg-white text-rose-500' : 'bg-black/20 text-white hover:bg-white hover:text-rose-500'
+          }`}
+        >
+          <Heart size={14} fill={saved ? 'currentColor' : 'none'} />
+        </button>
+      </div>
+      <div className="p-3 flex flex-col gap-1.5 flex-1">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">{s.category}</span>
+        <p className="text-[11px] text-gray-500">Log receipts here to earn 🥑 GuacMoney.</p>
+        <div className="mt-auto flex items-center gap-2 pt-1">
+          <button
+            onClick={onFindDeals}
+            className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 active:scale-95 transition-all"
+          >
+            <Tag size={12} /> Find deals
+          </button>
+          <a
+            href={s.dealsUrl}
+            target="_blank"
+            rel="noreferrer"
+            title={`${s.name} official coupons & deals`}
+            className="inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-white border border-emerald-200 text-emerald-700 text-xs font-bold hover:bg-emerald-50 active:scale-95 transition-all"
+          >
+            Coupons <ExternalLink size={11} />
+          </a>
+        </div>
+      </div>
+    </div>
   )
 }
 

@@ -52,3 +52,33 @@ export function clearSavedSearches() {
   write([])
   return []
 }
+
+// ── Saved stores (Stores tab) — same cookie approach, separate cookie ──
+const STORE_COOKIE = 'gg_market_stores'
+
+export function getSavedStores() {
+  if (typeof document === 'undefined') return []
+  const m = document.cookie.match(new RegExp('(?:^|;\\s*)' + STORE_COOKIE + '=([^;]+)'))
+  if (!m) return []
+  try {
+    const arr = JSON.parse(decodeURIComponent(m[1]))
+    return Array.isArray(arr) ? arr.filter((s) => typeof s === 'string') : []
+  } catch {
+    return []
+  }
+}
+
+function writeStores(arr) {
+  if (typeof document === 'undefined') return
+  const val = encodeURIComponent(JSON.stringify(arr.slice(0, 40)))
+  document.cookie = `${STORE_COOKIE}=${val}; path=/; max-age=${ONE_YEAR}; samesite=lax`
+}
+
+// Toggle a store slug on/off. Returns the new saved-slug array.
+export function toggleSavedStore(slug) {
+  if (!slug) return getSavedStores()
+  const cur = getSavedStores()
+  const next = cur.includes(slug) ? cur.filter((s) => s !== slug) : [slug, ...cur]
+  writeStores(next)
+  return next
+}

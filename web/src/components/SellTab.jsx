@@ -16,14 +16,14 @@ import {
 const money = (n) => `$${(Number(n) || 0).toFixed(Number(n) % 1 === 0 ? 0 : 2)}`
 
 export default function SellTab({ query = '' }) {
-  const [me, setMe] = useState(null)
+  const [me, setMe] = useState(undefined) // undefined = loading auth, null = guest, string = userId
   const [category, setCategory] = useState('All')
   const [listings, setListings] = useState([])
   const [status, setStatus] = useState('loading') // loading | done | error | needs-setup
   const [formOpen, setFormOpen] = useState(false)
   const [detail, setDetail] = useState(null)
 
-  useEffect(() => { getCurrentUserId().then(setMe).catch(() => setMe(null)) }, [])
+  useEffect(() => { getCurrentUserId().then((id) => setMe(id)).catch(() => setMe(null)) }, [])
 
   async function load() {
     setStatus('loading')
@@ -45,22 +45,17 @@ export default function SellTab({ query = '' }) {
         (l.category || '').toLowerCase().includes(q))
     : listings
 
-  function onSellClick() {
-    if (!me) { toast.error('Sign in to list an item.'); return }
-    setFormOpen(true)
-  }
-
   return (
     <div>
       {/* Toolbar */}
       <div className="flex items-center justify-between gap-3 mb-5">
         <div>
           <h2 className="text-xl font-black text-gray-900">Marketplace</h2>
-          <p className="text-sm text-gray-500">Buy & sell with the GetGuac community.</p>
+          <p className="text-sm text-gray-500">
+            Buy & sell with the GetGuac community{me === null ? ' — members only to sell' : ''}.
+          </p>
         </div>
-        <button onClick={onSellClick} className="btn-primary inline-flex items-center gap-1.5 shrink-0">
-          <Plus size={16} /> Sell an item
-        </button>
+        <SellCta me={me} onClick={() => setFormOpen(true)} className="shrink-0" />
       </div>
 
       {/* Category rail */}
@@ -105,7 +100,7 @@ export default function SellTab({ query = '' }) {
         <div className="text-center py-12 text-gray-500">
           <div className="text-5xl mb-3">🛍️</div>
           <p className="font-semibold text-gray-700">{q ? `No items match “${query}”.` : 'No listings yet — be the first to sell.'}</p>
-          <button onClick={onSellClick} className="btn-primary mt-4 inline-flex items-center gap-1.5"><Plus size={16} /> List an item</button>
+          <SellCta me={me} onClick={() => setFormOpen(true)} className="mt-4" label="List an item" />
         </div>
       )}
 
@@ -118,6 +113,23 @@ export default function SellTab({ query = '' }) {
       {formOpen && <ListingForm onClose={() => setFormOpen(false)} onCreated={() => { setFormOpen(false); load() }} />}
       {detail && <ListingDetail l={detail} me={me} onClose={() => setDetail(null)} onChanged={() => { setDetail(null); load() }} />}
     </div>
+  )
+}
+
+// Members-only sell CTA: signed-in users get the "list" button; guests get a
+// sign-in link (selling is restricted to GetGuac members — also enforced by RLS).
+function SellCta({ me, onClick, className = '', label = 'Sell an item' }) {
+  if (me === null) {
+    return (
+      <Link href="/login" className={`btn-primary inline-flex items-center gap-1.5 ${className}`}>
+        <Plus size={16} /> Sign in to sell
+      </Link>
+    )
+  }
+  return (
+    <button onClick={onClick} disabled={me === undefined} className={`btn-primary inline-flex items-center gap-1.5 disabled:opacity-60 ${className}`}>
+      <Plus size={16} /> {label}
+    </button>
   )
 }
 

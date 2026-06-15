@@ -1,7 +1,12 @@
 import './globals.css'
+import Script from 'next/script'
 import { Providers } from './providers'
 import UpdatePrompt from '../components/UpdatePrompt'
 import PosthogProvider from '../components/PosthogProvider'
+
+// Google AdSense publisher id (e.g. "ca-pub-…"). When unset, AdSlot renders
+// placeholders and this script is skipped — so nothing loads until you opt in.
+const ADSENSE_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || ''
 
 const SITE_URL = 'https://getguac.app'
 
@@ -102,6 +107,17 @@ export default function RootLayout({ children }) {
             keep running on yesterday's bundle. Renders at the
             root layout so every route gets it. */}
         <UpdatePrompt />
+        {/* Google AdSense loader — only emitted when a publisher id is set.
+            Powers <AdSlot/>. afterInteractive so it never blocks first paint. */}
+        {ADSENSE_CLIENT && (
+          <Script
+            id="adsbygoogle-init"
+            async
+            strategy="afterInteractive"
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
+            crossOrigin="anonymous"
+          />
+        )}
       </body>
     </html>
   )

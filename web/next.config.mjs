@@ -21,7 +21,9 @@ const securityHeaders = [
     key: 'Content-Security-Policy',
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",   // 'unsafe-eval' needed by some Next.js dev features; safe in prod
+      // Google AdSense domains are allowed so <AdSlot/> works once
+      // NEXT_PUBLIC_ADSENSE_CLIENT is set. Inert until the ad script loads.
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.googleadservices.com https://adservice.google.com https://*.google.com",   // 'unsafe-eval' needed by some Next.js dev features; safe in prod
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
@@ -29,7 +31,9 @@ const securityHeaders = [
       // (households realtime in HouseholdPanel.jsx). CSP treats wss: as
       // a distinct scheme from https:, so the wildcard https entry above
       // does not cover it — must be listed explicitly.
-      "connect-src 'self' https://*.supabase.co https://*.supabase.in wss://*.supabase.co wss://*.supabase.in https://api.migadu.com https://dns.google",
+      "connect-src 'self' https://*.supabase.co https://*.supabase.in wss://*.supabase.co wss://*.supabase.in https://api.migadu.com https://dns.google https://pagead2.googlesyndication.com https://*.googlesyndication.com https://googleads.g.doubleclick.net https://*.google.com",
+      // Ad creatives render inside Google ad iframes.
+      "frame-src 'self' https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://*.googlesyndication.com https://www.google.com",
       "frame-ancestors 'self'",
       "base-uri 'self'",
       "form-action 'self'",

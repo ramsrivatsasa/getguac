@@ -16,6 +16,7 @@ import { bestDealUrl } from '../lib/storeSearch'
 import { getSavedSearches, saveSearch, removeSearch, getSavedStores, toggleSavedStore } from '../lib/marketplaceSearches'
 import { STORE_CATALOG, STORE_CATEGORIES } from '../lib/storeCatalog'
 import SellTab from './SellTab'
+import AdSlot from './AdSlot'
 
 const TABS = [
   { key: 'deals',  label: 'Deals',  icon: Tag,   live: true  },
@@ -221,8 +222,11 @@ export default function MarketplaceClient({ initialQuery = '', initialTab = 'dea
         })}
       </div>
 
+      {/* Top banner ad (placeholder until AdSense is configured). */}
+      <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_TOP || ''} className="mt-7 max-w-3xl mx-auto" minHeight={90} />
+
       {/* Tab body */}
-      <div className="mt-8 pb-16">
+      <div className="mt-6 pb-10">
         {tab === 'deals' && (
           <DealsTab status={status} error={error} results={results} meta={meta} query={query} onRetry={() => runSearch()} />
         )}
@@ -239,6 +243,9 @@ export default function MarketplaceClient({ initialQuery = '', initialTab = 'dea
         )}
         {tab === 'sell' && <SellTab query={query} />}
       </div>
+
+      {/* Bottom banner ad (placeholder until AdSense is configured). */}
+      <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_BOTTOM || ''} className="mb-12 max-w-3xl mx-auto" minHeight={90} />
 
       {coupon && <CouponsModal state={coupon} onClose={() => setCoupon(null)} />}
     </div>

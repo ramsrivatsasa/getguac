@@ -1,10 +1,10 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useReceipt, useUpdateReceipt, useAddReceiptItem, useUpdateReceiptItem } from '../../../../hooks/useReceipts'
 import { createClient } from '../../../../lib/supabase/client'
 import toast from 'react-hot-toast'
-import { ArrowLeft, Save, Plus, Shield, MapPin, Phone, Hash, Sparkles, MessageCircle, ImageIcon, ShoppingCart, Tag, RefreshCw, X } from 'lucide-react'
+import { ArrowLeft, Save, Plus, Shield, MapPin, Phone, Hash, Sparkles, MessageCircle, ImageIcon, ShoppingCart, Tag, RefreshCw, X, FileText } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { addToShoppingList, setStashProductCategory } from '../../../../lib/db'
 import { CATEGORIES } from '../../../../lib/categories'
@@ -112,6 +112,39 @@ export default function ReceiptDetailPage() {
     },
     onError: (e) => toast.error(e.message),
   })
+
+  // Email receipts have no photo. Render the source email to a stored PNG + PDF
+  // the first time the receipt is opened, so it gets a real image (and a
+  // downloadable PDF) that survives the source email being deleted. The server
+  // is idempotent — once receipt_link is set it returns instantly.
+  const snapshot = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`/api/receipts/${id}/email-snapshot`, { method: 'POST' })
+      const body = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(body?.error || `Snapshot failed (${res.status})`)
+      return body
+    },
+    onSuccess: (data) => {
+      if (data?.already) return
+      setLocalReceipt(null)
+      qc.invalidateQueries({ queryKey: ['receipts'] })
+      qc.invalidateQueries({ queryKey: ['receipts', id] })
+    },
+    // Silent on error: the "View email" fallback still works, no need to nag.
+    onError: () => {},
+  })
+
+  // One-shot per receipt: fire once we've confirmed it's email-sourced
+  // (emailMsg loaded) and has no image yet.
+  const snappedRef = useRef('')
+  useEffect(() => {
+    if (!emailMsg || !current) return
+    if (current.receipt_link || current.from_statement) return
+    if (snappedRef.current === id) return
+    snappedRef.current = id
+    snapshot.mutate()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [emailMsg, current?.receipt_link, current?.from_statement, id])
 
   function handleFieldChange(key, value) {
     setLocalReceipt(p => {
@@ -373,7 +406,10 @@ export default function ReceiptDetailPage() {
           </div>
         )}
         {current.receipt_link && !current.from_statement && (() => {
-          const extras = Array.isArray(current.extra_page_urls) ? current.extra_page_urls : []
+          // Image pages only — a snapshot PDF lives in extra_page_urls too, but
+          // gets its own "PDF" button below rather than an image-page slot.
+          const extras = (Array.isArray(current.extra_page_urls) ? current.extra_page_urls : [])
+            .filter((u) => !String(u).endsWith('.pdf'))
           const pages = [current.receipt_link, ...extras]
           if (pages.length === 1) {
             return (
@@ -402,12 +438,33 @@ export default function ReceiptDetailPage() {
             </div>
           )
         })()}
-        {!current.receipt_link && !current.from_statement && emailMsg && (
+        {/* PDF of the source email — durable, printable, attachable to a return
+            or warranty claim. Present once the snapshot has run. */}
+        {(() => {
+          const pdf = (Array.isArray(current.extra_page_urls) ? current.extra_page_urls : [])
+            .find((u) => String(u).endsWith('.pdf'))
+          return pdf ? (
+            <a href={pdf} target="_blank" rel="noreferrer"
+              title="Download this receipt as a PDF"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50 active:scale-95 transition-all shadow-sm font-bold text-sm">
+              <FileText size={16} /> PDF
+            </a>
+          ) : null
+        })()}
+        {/* Auto-snapshot in progress (email receipt with no image yet). */}
+        {snapshot.isPending && !current.receipt_link && (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-50 text-emerald-700 text-sm font-semibold">
+            <RefreshCw size={14} className="animate-spin" /> Saving email image…
+          </span>
+        )}
+        {/* View the raw source email — stays available even after the snapshot,
+            so the user can always see exactly what arrived. */}
+        {!current.from_statement && emailMsg && (
           <button
             type="button"
             onClick={() => setShowEmail(true)}
             title="View the source email this receipt was parsed from"
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 active:scale-95 transition-all shadow-sm font-bold text-sm">
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50 active:scale-95 transition-all shadow-sm font-bold text-sm">
             <MessageCircle size={16} /> View email
           </button>
         )}

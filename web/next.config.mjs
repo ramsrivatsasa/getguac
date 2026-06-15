@@ -40,7 +40,11 @@ const securityHeaders = [
 ]
 
 const nextConfig = {
-  serverExternalPackages: ['tesseract.js', 'pdf-parse', 'imapflow', 'mailparser'],
+  // @sparticuz/chromium + puppeteer-core must stay external so webpack doesn't
+  // mangle the brotli-packed Chromium binary; Next's file tracer then bundles
+  // the binary into the serverless function. Required for the email-snapshot
+  // route to render on Vercel.
+  serverExternalPackages: ['tesseract.js', 'pdf-parse', 'imapflow', 'mailparser', '@sparticuz/chromium', 'puppeteer-core'],
   // Build-time SHA baked into the client bundle. The UpdatePrompt
   // component compares this to the SHA returned by /api/build-info
   // and shows a "reload to update" banner when they diverge — so

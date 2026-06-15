@@ -18,7 +18,7 @@ export default function MarketplacePage({ searchParams }) {
   const tab = typeof searchParams?.tab === 'string' ? searchParams.tab : 'deals'
 
   return (
-    <MarketingShell subtitle="marketplace">
+    <MarketingShell subtitle="marketplace" hideSearch>
       {/* Hero */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-12 sm:pt-16 pb-6 text-center">
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider">

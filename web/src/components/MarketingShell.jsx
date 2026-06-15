@@ -5,6 +5,7 @@ import HeaderSearch from './HeaderSearch'
 
 const NAV = [
   { href: '/marketplace', label: 'Marketplace' },
+  { href: '/coupons', label: 'Coupons' },
   { href: '/how-it-works', label: 'How it works' },
   { href: '/features', label: 'Features' },
   { href: '/pricing', label: 'Pricing' },
@@ -15,6 +16,7 @@ const NAV = [
 const FOOTER = [
   { heading: 'Product', links: [
     { href: '/marketplace', label: 'Marketplace' },
+    { href: '/coupons', label: 'Coupons' },
     { href: '/features', label: 'Features' },
     { href: '/how-it-works', label: 'How it works' },
     { href: '/tour', label: 'Watch the tour' },

@@ -36,6 +36,7 @@ export default async function Home() {
           <HeaderSearch className="flex-1 min-w-0 max-w-xl" />
           <nav className="flex items-center gap-2 shrink-0">
             <Link href="/marketplace" className="hidden xl:inline-flex items-center gap-1 text-sm font-bold text-emerald-700 hover:text-emerald-900 px-3 py-1.5 rounded-full">🛒 Marketplace</Link>
+            <Link href="/coupons" className="hidden xl:inline text-sm font-semibold text-gray-600 hover:text-emerald-800 px-3 py-1.5 rounded-full">Coupons</Link>
             <a href="#brain"    className="hidden xl:inline text-sm font-semibold text-gray-600 hover:text-emerald-800 px-3 py-1.5 rounded-full">The brain</a>
             <Link href="/how-it-works" className="hidden xl:inline text-sm font-semibold text-gray-600 hover:text-emerald-800 px-3 py-1.5 rounded-full">How it works</Link>
             <Link href="/download" className="hidden xl:inline-flex items-center gap-1 text-sm font-semibold text-emerald-700 hover:text-emerald-900 px-3 py-1.5 rounded-full">

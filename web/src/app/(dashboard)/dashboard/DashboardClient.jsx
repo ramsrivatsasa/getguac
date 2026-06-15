@@ -11,6 +11,7 @@ import GuacoScoreCard from '../../../components/GuacoScoreCard'
 import FeatureHeader from '../../../components/FeatureHeader'
 import UpcomingReturnsBanner from '../../../components/UpcomingReturnsBanner'
 import AnomaliesPanel from '../../../components/AnomaliesPanel'
+import DashboardSavedSearches from '../../../components/DashboardSavedSearches'
 import DashboardSteals from '../../../components/DashboardSteals'
 import { ActivityFeed } from '../../../components/ActivityFeed'
 import { fetchGuacMoneyPoints, formatGuacMoney } from '../../../lib/guacMoney'
@@ -273,6 +274,10 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
           numbers. Self-hides when nothing is off; session-
           dismissable; collapsed-by-default. */}
       <AnomaliesPanel receipts={spendingReceipts} />
+
+      {/* Marketplace searches the user saved (claims any anonymous cookie
+          saves into the account on load). Self-hides when none. */}
+      <DashboardSavedSearches />
 
       {/* "Steals for you" — deals the Steals job found, grouped by the search
           the user configured (top 5 each, best discount first) + an "X new"

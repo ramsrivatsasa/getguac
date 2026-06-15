@@ -2,6 +2,7 @@
 // stay consistent and cross-linked. Server-safe (no 'use client').
 import Link from 'next/link'
 import HeaderSearch from './HeaderSearch'
+import MarketingAuthButtons from './MarketingAuthButtons'
 
 const NAV = [
   { href: '/marketplace', label: 'Marketplace' },
@@ -56,8 +57,7 @@ export default function MarketingShell({ subtitle, hideSearch = false, children 
             {NAV.map((n) => (
               <Link key={n.href} href={n.href} className="hidden xl:inline font-semibold text-gray-600 hover:text-emerald-800">{n.label}</Link>
             ))}
-            <Link href="/login" className="hidden sm:inline btn-secondary">Sign in</Link>
-            <Link href="/register" className="btn-primary">Get started</Link>
+            <MarketingAuthButtons />
           </nav>
         </div>
       </header>

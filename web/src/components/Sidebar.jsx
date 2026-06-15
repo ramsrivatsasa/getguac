@@ -6,7 +6,7 @@ import { createClient } from '../lib/supabase/client'
 import { useStore } from '../store'
 import {
   LayoutDashboard, Receipt, Gift, ShoppingCart, Car, User, X, Store, Undo2, Sparkles, ChevronsLeft, ChevronsRight, Package, Utensils, BadgeDollarSign, Banknote, Wand2, Mail, BarChart3,
-  Inbox as InboxIcon, Send, Trash2, Filter, ChevronDown, Home, MessageSquare, Link2,
+  Inbox as InboxIcon, Send, Trash2, Filter, ChevronDown, Home, MessageSquare, Link2, ShoppingBag, Ticket,
 } from 'lucide-react'
 import clsx from 'clsx'
 import GuacMascot from './GuacMascot'
@@ -54,10 +54,12 @@ const sections = [
   {
     title: 'Shop',
     items: [
-      { href: '/stash',    icon: Package,        label: 'Stash',     emoji: '📦', hoverMascot: 'sitting' },
-      { href: '/bites',    icon: Utensils,       label: 'Bites',     emoji: '🍽️', hoverMascot: 'eating' },
-      { href: '/shopping', icon: ShoppingCart,   label: 'Smashlist', emoji: '🛒', hoverMascot: 'thumbsup' },
-      { href: '/steals',   icon: BadgeDollarSign, label: 'Steals',    emoji: '💎', hoverMascot: 'rich' },
+      { href: '/stash',       icon: Package,        label: 'Stash',       emoji: '📦', hoverMascot: 'sitting' },
+      { href: '/bites',       icon: Utensils,       label: 'Bites',       emoji: '🍽️', hoverMascot: 'eating' },
+      { href: '/shopping',    icon: ShoppingCart,   label: 'Smashlist',   emoji: '🛒', hoverMascot: 'thumbsup' },
+      { href: '/steals',      icon: BadgeDollarSign, label: 'Steals',     emoji: '💎', hoverMascot: 'rich' },
+      { href: '/marketplace', icon: ShoppingBag,    label: 'Marketplace', emoji: '🛍️', hoverMascot: 'rich' },
+      { href: '/coupons',     icon: Ticket,         label: 'Coupons',     emoji: '🎟️', hoverMascot: 'happy' },
     ],
   },
   {

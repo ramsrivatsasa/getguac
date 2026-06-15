@@ -4,6 +4,7 @@
 // group, ordered by relevance (best discount first). The header carries the
 // "X new" count so the user sees how many fresh steals were found.
 import Link from 'next/link'
+import { useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Tag, Star, ArrowRight } from 'lucide-react'
 import { getStealsFeed } from '../lib/steals'
@@ -57,13 +58,64 @@ export default function DashboardSteals() {
         {ordered.map(([q, items]) => (
           <div key={q}>
             <div className="text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1.5 truncate">{q}</div>
-            <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1 snap-x">
+            <AutoScrollRow>
               {items.map((d) => <DealCard key={d.deal_key} d={d} />)}
-            </div>
+            </AutoScrollRow>
           </div>
         ))}
       </div>
     </section>
+  )
+}
+
+// A horizontal row that auto-scrolls itself. It creeps right until it hits the
+// end of the box, then reverses (ping-pong) — so the deals keep cycling without
+// the user dragging. Pauses while hovered/touched so they can read + click, and
+// honors prefers-reduced-motion. Manual scroll still works (overflow-x-auto).
+function AutoScrollRow({ children }) {
+  const ref = useRef(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+
+    let dir = 1
+    let paused = false
+    let raf = 0
+    const SPEED = 0.7 // px per frame (~42px/s at 60fps)
+    const pause = () => { paused = true }
+    const resume = () => { paused = false }
+
+    const step = () => {
+      if (!paused) {
+        const max = el.scrollWidth - el.clientWidth
+        if (max > 1) {
+          if (el.scrollLeft >= max - 0.5) dir = -1
+          else if (el.scrollLeft <= 0.5) dir = 1
+          el.scrollLeft += dir * SPEED
+        }
+      }
+      raf = requestAnimationFrame(step)
+    }
+    raf = requestAnimationFrame(step)
+
+    el.addEventListener('mouseenter', pause)
+    el.addEventListener('mouseleave', resume)
+    el.addEventListener('touchstart', pause, { passive: true })
+    el.addEventListener('touchend', resume, { passive: true })
+    return () => {
+      cancelAnimationFrame(raf)
+      el.removeEventListener('mouseenter', pause)
+      el.removeEventListener('mouseleave', resume)
+      el.removeEventListener('touchstart', pause)
+      el.removeEventListener('touchend', resume)
+    }
+  }, [])
+
+  return (
+    <div ref={ref} className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {children}
+    </div>
   )
 }
 

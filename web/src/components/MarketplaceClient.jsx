@@ -156,7 +156,9 @@ export default function MarketplaceClient({ initialQuery = '', initialTab = 'dea
   const ActiveIcon = TABS.find((t) => t.key === tab)?.icon || Tag
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6">
+      <div className="flex gap-6 items-start">
+        <div className="flex-1 min-w-0">
       {/* Search bar */}
       <form
         onSubmit={(e) => { e.preventDefault(); if (tab === 'deals') runSearch() }}
@@ -222,11 +224,8 @@ export default function MarketplaceClient({ initialQuery = '', initialTab = 'dea
         })}
       </div>
 
-      {/* Top banner ad (placeholder until AdSense is configured). */}
-      <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_TOP || ''} className="mt-7 max-w-3xl mx-auto" minHeight={90} />
-
       {/* Tab body */}
-      <div className="mt-6 pb-10">
+      <div className="mt-8 pb-10">
         {tab === 'deals' && (
           <DealsTab status={status} error={error} results={results} meta={meta} query={query} onRetry={() => runSearch()} />
         )}
@@ -246,6 +245,13 @@ export default function MarketplaceClient({ initialQuery = '', initialTab = 'dea
 
       {/* Bottom banner ad (placeholder until AdSense is configured). */}
       <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_BOTTOM || ''} className="mb-12 max-w-3xl mx-auto" minHeight={90} />
+        </div>{/* /main column */}
+
+        {/* Right ad rail — sticky skyscraper, wide screens only. */}
+        <aside className="hidden lg:block w-40 shrink-0 sticky top-20">
+          <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_RIGHT || ''} format="vertical" minHeight={600} />
+        </aside>
+      </div>{/* /flex */}
 
       {coupon && <CouponsModal state={coupon} onClose={() => setCoupon(null)} />}
     </div>
@@ -302,7 +308,14 @@ function DealsTab({ status, error, results, meta, query, onRetry }) {
         </p>
       )}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-        {results.map((r, i) => <DealCard key={`${r.store}-${i}`} r={r} />)}
+        {results.flatMap((r, i) => {
+          const card = <DealCard key={`${r.store}-${i}`} r={r} />
+          // Drop a native ad card in between results every 8 items.
+          const showAd = (i + 1) % 8 === 0 && i < results.length - 1
+          return showAd
+            ? [card, <AdSlot key={`ad-${i}`} slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_INGRID || ''} minHeight={235} className="h-full" />]
+            : [card]
+        })}
       </div>
       <RegisterCta />
     </>

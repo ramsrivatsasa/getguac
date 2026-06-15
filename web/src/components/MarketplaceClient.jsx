@@ -350,9 +350,13 @@ function StoresTab({ query, category, setCategory, saved, onToggle, onFindDeals,
         <p className="text-center text-gray-500 py-10">No stores match “{query}”.</p>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          {list.map((s) => (
-            <StoreCard key={s.slug} s={s} saved={saved.includes(s.slug)} onToggle={() => onToggle(s.slug)} onFindDeals={() => onFindDeals(s)} onCoupons={() => onCoupons(s)} />
-          ))}
+          {list.flatMap((s, i) => {
+            const card = <StoreCard key={s.slug} s={s} saved={saved.includes(s.slug)} onToggle={() => onToggle(s.slug)} onFindDeals={() => onFindDeals(s)} onCoupons={() => onCoupons(s)} />
+            const showAd = (i + 1) % 8 === 0 && i < list.length - 1
+            return showAd
+              ? [card, <AdSlot key={`ad-${i}`} slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_INGRID || ''} minHeight={150} className="h-full" />]
+              : [card]
+          })}
         </div>
       )}
       <RegisterCta />

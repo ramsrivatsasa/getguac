@@ -12,6 +12,7 @@ import {
   LISTING_CATEGORIES, LISTING_CONDITIONS,
   getCurrentUserId, listListings, createListing, deleteListing, markListingSold,
 } from '../lib/marketplaceListings'
+import AdSlot from './AdSlot'
 
 const money = (n) => `$${(Number(n) || 0).toFixed(Number(n) % 1 === 0 ? 0 : 2)}`
 
@@ -106,7 +107,13 @@ export default function SellTab({ query = '' }) {
 
       {status === 'done' && shown.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          {shown.map((l) => <ListingCard key={l.id} l={l} onClick={() => setDetail(l)} />)}
+          {shown.flatMap((l, i) => {
+            const card = <ListingCard key={l.id} l={l} onClick={() => setDetail(l)} />
+            const showAd = (i + 1) % 8 === 0 && i < shown.length - 1
+            return showAd
+              ? [card, <AdSlot key={`ad-${i}`} slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_INGRID || ''} minHeight={235} className="h-full" />]
+              : [card]
+          })}
         </div>
       )}
 

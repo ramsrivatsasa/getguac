@@ -44,8 +44,19 @@ function yearsToReach(present, monthly, annualRatePct, target) {
   while (y < 100 && fv(present, monthly, annualRatePct, y) < target) y += 1 / 12
   return y
 }
+// Rough 2024 federal income tax for a single filer (after the standard deduction).
+function federalTaxSingle(taxable) {
+  const b = [[0, 0.10], [11600, 0.12], [47150, 0.22], [100525, 0.24], [191950, 0.32], [243725, 0.35], [609350, 0.37]]
+  let tax = 0
+  for (let i = 0; i < b.length; i++) {
+    const floor = b[i][0], rate = b[i][1], ceil = b[i + 1] ? b[i + 1][0] : Infinity
+    if (taxable > floor) tax += (Math.min(taxable, ceil) - floor) * rate
+    else break
+  }
+  return tax
+}
 
-const CATEGORIES = ['Retirement', 'Family', 'Save & invest', 'Debt & loans', 'Home']
+const CATEGORIES = ['Retirement', 'Family', 'Save & invest', 'Debt & loans', 'Home', 'Income & worth']
 
 const CALCS = [
   // ── Retirement ──
@@ -311,6 +322,77 @@ const CALCS = [
       const price = loan + v.down
       return { tone: 'ok', headline: <p>You can likely afford a home around <b className="text-emerald-800">{money(price)}</b> (~{money(maxHousing)}/mo all-in).</p>,
         insights: [`🏠 Lenders use the 28/36 rule — housing ≤28% of income, all debt ≤36%.`, `💡 A bigger down payment or a lower rate stretches your budget further.`] }
+    },
+  },
+  {
+    id: 'rent-buy', cat: 'Home', icon: Home, title: 'Rent vs. buy', subtitle: 'Which is cheaper monthly',
+    aiGoal: 'deciding whether to rent or buy a home',
+    fields: [
+      { key: 'price', label: 'Home price', prefix: '$', step: 5000, placeholder: '350,000' },
+      { key: 'down', label: 'Down payment', prefix: '$', step: 5000, placeholder: '40,000' },
+      { key: 'rate', label: 'Mortgage rate', suffix: '%', step: 0.125, placeholder: '6.5' },
+      { key: 'rent', label: 'Monthly rent', prefix: '$', step: 50, placeholder: '2,200' },
+    ],
+    validate: (v) => v.price > v.down || 'Down payment should be below the price.',
+    compute: (v) => {
+      const own = loanPayment(v.price - v.down, v.rate, 30) + v.price * (0.011 + 0.005 + 0.01) / 12
+      const cheaper = own <= v.rent
+      return { tone: 'ok', headline: <p>Owning ≈ <b className="text-emerald-800">{money(own)}/mo</b> all-in vs renting <b>{money(v.rent)}/mo</b>. {cheaper ? 'Owning costs less here — and builds equity.' : 'Renting’s cheaper monthly, but owning builds equity.'}</p>,
+        insights: [`🏠 Owning adds taxes, insurance & upkeep (~1%/yr) on top of the mortgage.`, `📈 Buying usually wins the longer you stay (5+ years); renting wins if you might move soon.`] }
+    },
+  },
+  {
+    id: 'cd-savings', cat: 'Save & invest', icon: Landmark, title: 'CD / savings growth', subtitle: 'Compound at a fixed APY',
+    aiGoal: 'growing savings in a CD or high-yield savings account',
+    fields: [
+      { key: 'amount', label: 'Deposit', prefix: '$', step: 1000, placeholder: '10,000' },
+      { key: 'apy', label: 'APY', suffix: '%', step: 0.25, placeholder: '4.5' },
+      { key: 'years', label: 'For how many years', placeholder: '5' },
+    ],
+    validate: (v) => v.years > 0 || 'Add a timeframe.',
+    compute: (v) => {
+      const end = v.amount * Math.pow(1 + v.apy / 100, v.years)
+      return { tone: 'ok', headline: <p>~<b className="text-emerald-800">{money(end)}</b> after {v.years} years — <b>{money(end - v.amount)}</b> in interest.</p>,
+        insights: [`🏦 Lock a CD when rates are high; keep emergency cash in a liquid HYSA.`, `📅 Longer terms usually pay more — but your money is tied up.`] }
+    },
+  },
+  {
+    id: 'take-home', cat: 'Income & worth', icon: Wallet, title: 'Take-home pay', subtitle: 'Paycheck after taxes (single)',
+    aiGoal: 'estimating take-home pay after taxes',
+    fields: [
+      { key: 'gross', label: 'Gross salary / yr', prefix: '$', step: 1000, placeholder: '80,000' },
+      { key: 'retirePct', label: '401(k) %', suffix: '%', step: 1, placeholder: '6' },
+      { key: 'statePct', label: 'State tax', suffix: '%', step: 0.5, placeholder: '5' },
+    ],
+    validate: (v) => v.gross > 0 || 'Add your salary.',
+    compute: (v) => {
+      const pretax = v.gross * (v.retirePct / 100)
+      const taxable = Math.max(0, v.gross - pretax - 14600)
+      const fed = federalTaxSingle(taxable)
+      const net = Math.max(0, v.gross - pretax - fed - v.gross * 0.0765 - v.gross * (v.statePct / 100))
+      const rate = v.gross > 0 ? ((v.gross - net - pretax) / v.gross) * 100 : 0
+      return { tone: 'ok', headline: <p>Take-home ≈ <b className="text-emerald-800">{money(net)}/yr</b> (~{money(net / 12)}/mo). Effective tax ~{pct(rate)}; plus {money(pretax)} saved pre-tax.</p>,
+        insights: [`💼 Pre-tax 401(k) lowers today’s taxable income — it costs less than it looks.`, `🧾 Rough single-filer estimate; an HSA/FSA trims taxable income further.`] }
+    },
+  },
+  {
+    id: 'net-worth', cat: 'Income & worth', icon: Scale, title: 'Net worth', subtitle: 'Own minus owe',
+    aiGoal: 'calculating and growing net worth',
+    fields: [
+      { key: 'cash', label: 'Cash & savings', prefix: '$', step: 1000, placeholder: '15,000' },
+      { key: 'investments', label: 'Investments', prefix: '$', step: 1000, placeholder: '60,000' },
+      { key: 'home', label: 'Home / property', prefix: '$', step: 5000, placeholder: '350,000' },
+      { key: 'mortgage', label: 'Mortgage', prefix: '$', step: 5000, placeholder: '280,000' },
+      { key: 'loans', label: 'Loans (auto/student)', prefix: '$', step: 1000, placeholder: '18,000' },
+      { key: 'cards', label: 'Credit-card debt', prefix: '$', step: 500, placeholder: '3,000' },
+    ],
+    validate: () => true,
+    compute: (v) => {
+      const assets = (v.cash || 0) + (v.investments || 0) + (v.home || 0)
+      const debts = (v.mortgage || 0) + (v.loans || 0) + (v.cards || 0)
+      const nw = assets - debts
+      return { tone: nw >= 0 ? 'ok' : 'warn', headline: <p>Net worth: <b className={nw >= 0 ? 'text-emerald-800' : 'text-amber-700'}>{money(nw)}</b> — {money(assets)} assets minus {money(debts)} debt.</p>,
+        insights: [`📊 Track it quarterly — the trend matters more than the number.`, `🔥 Killing high-interest debt raises net worth faster than almost any investment.`] }
     },
   },
 ]

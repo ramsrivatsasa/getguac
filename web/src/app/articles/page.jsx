@@ -14,7 +14,7 @@ export const metadata = {
 export default function ArticlesPage() {
   return (
     <MarketingShell subtitle="articles" hideSearch>
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 pt-12 sm:pt-16 pb-4 text-center">
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 pt-7 sm:pt-9 pb-4 text-center">
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider">📰 Articles</span>
         <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-gray-900 mt-4 leading-[1.08]">
           Money, made{' '}

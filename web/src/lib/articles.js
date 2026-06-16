@@ -100,6 +100,54 @@ export const ARTICLES = [
       'Because tuition has historically risen ~5% a year, aim at a future number, not today’s sticker price, and start early so compounding does more of the work. You don’t have to fund 100% — many families target a third from savings, a third from income, and a third from aid.',
     ],
   },
+  {
+    slug: 'rent-vs-buy',
+    title: 'Rent vs. buy: which actually wins?',
+    category: 'Home',
+    excerpt: 'It’s not just the mortgage — and time is the deciding factor.',
+    calc: 'rent-buy',
+    body: [
+      'The sticker comparison — rent vs. a mortgage payment — is misleading. Owning also means property taxes, insurance, and maintenance (budget ~1% of the home’s value a year), so the real monthly cost of owning is usually well above the loan payment.',
+      'But owning builds equity: part of each payment pays down the loan, and the home may appreciate. Renting buys flexibility and zero maintenance, but you build no equity.',
+      'The deciding factor is usually how long you’ll stay. Buying tends to win after about five years, once appreciation and equity outweigh the big upfront costs. If you might move sooner, renting often comes out ahead.',
+    ],
+  },
+  {
+    slug: 'credit-score',
+    title: 'What actually moves your credit score',
+    category: 'Debt',
+    excerpt: 'Five factors — and the two that matter most.',
+    calc: 'dti',
+    body: [
+      'Your credit score is built from five things: payment history (~35%), amounts owed (~30%), length of history (~15%), new credit (~10%), and credit mix (~10%). The first two do most of the work.',
+      'Payment history is simple: pay on time, every time. A single 30-day-late mark can drop a good score sharply and lingers for years. Set autopay for at least the minimum on everything.',
+      'Amounts owed is really your credit utilization — how much of your limit you’re using. Keep it under ~30% (ideally under 10%). Paying a card down before the statement closes, or requesting a higher limit, lowers utilization fast.',
+    ],
+  },
+  {
+    slug: 'index-funds',
+    title: 'Index funds 101: boring beats clever',
+    category: 'Investing',
+    excerpt: 'Why owning everything usually beats picking winners.',
+    calc: 'invest-growth',
+    body: [
+      'An index fund buys a tiny slice of an entire market — say, all 500 companies in the S&P 500 — instead of betting on individual stocks. You get instant diversification for a rock-bottom fee.',
+      'The case is overwhelming: over long stretches, most actively managed funds underperform a simple low-cost index, and they charge more to do it. Lower fees + broad diversification + time is hard to beat.',
+      'Keep it simple: a broad U.S. index, maybe a total-international fund, held inside a tax-advantaged account (401k/IRA), with automatic monthly contributions. Then ignore the headlines and let compounding work.',
+    ],
+  },
+  {
+    slug: 'sinking-funds',
+    title: 'Sinking funds: budget for the “surprises” that aren’t',
+    category: 'Saving',
+    excerpt: 'Holidays, car repairs, insurance — predictable, so plan for them.',
+    calc: 'savings-goal',
+    body: [
+      'A sinking fund is money you set aside a little at a time for a known, irregular expense — holidays, annual insurance premiums, car maintenance, a vacation. These aren’t emergencies; they’re predictable, so they shouldn’t blow up your month.',
+      'The math is easy: take the total cost, divide by the months until you need it, and save that each month. $1,200 of holiday spending in December? Save $100 a month starting in January.',
+      'Keep sinking funds separate from your emergency fund so you’re not raiding your safety net for gifts. Many high-yield savings accounts let you create labeled “buckets” for exactly this.',
+    ],
+  },
 ]
 
 export function getArticle(slug) {

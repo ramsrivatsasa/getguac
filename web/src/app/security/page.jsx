@@ -34,7 +34,7 @@ export default function SecurityPage() {
       </header>
 
       {/* Hero */}
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 pt-12 sm:pt-16 pb-8">
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 pt-7 sm:pt-9 pb-8">
         <div className="flex items-start gap-5 flex-wrap">
           <GuacMascot expression="angel" size={120} />
           <div className="flex-1 min-w-[260px]">

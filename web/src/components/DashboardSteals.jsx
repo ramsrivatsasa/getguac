@@ -6,8 +6,9 @@
 import Link from 'next/link'
 import { useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Tag, Star, ArrowRight } from 'lucide-react'
+import { Tag, Star, ArrowRight, Search } from 'lucide-react'
 import { getStealsFeed } from '../lib/steals'
+import { useSavedSearches } from '../hooks/useSavedSearches'
 
 // Show a generous run per search so the row actually fills and scrolls
 // horizontally (5 left a half-empty row on wide screens).
@@ -24,9 +25,10 @@ function relevance(d) {
 
 export default function DashboardSteals() {
   const { data } = useQuery({ queryKey: ['steals-feed'], queryFn: getStealsFeed, staleTime: 60_000 })
+  const { data: savedSearches = [] } = useSavedSearches()
   const steals = data?.steals || []
   const unread = data?.unread || 0
-  if (!steals.length) return null
+  if (!steals.length && !savedSearches.length) return null
 
   // Group by the configured steal (the saved search the deal came from).
   const groups = {}
@@ -38,6 +40,13 @@ export default function DashboardSteals() {
   const ordered = Object.entries(groups)
     .map(([q, items]) => [q, items.slice().sort((a, b) => relevance(b) - relevance(a)).slice(0, PER_STEAL)])
     .sort((a, b) => relevance(b[1][0]) - relevance(a[1][0]))
+
+  // Configured searches that haven't found a deal yet → "hunting" rows, so the
+  // user sees every search they set up (not just the ones with results).
+  const haveDeals = new Set(ordered.map(([q]) => q.toLowerCase()))
+  const hunting = [...new Set(
+    savedSearches.map((s) => (s.query || s.label || '').trim()).filter(Boolean),
+  )].filter((q) => !haveDeals.has(q.toLowerCase()))
 
   return (
     <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5">
@@ -61,6 +70,14 @@ export default function DashboardSteals() {
             <AutoScrollRow>
               {items.map((d) => <DealCard key={d.deal_key} d={d} />)}
             </AutoScrollRow>
+          </div>
+        ))}
+        {hunting.map((q) => (
+          <div key={`hunt-${q}`}>
+            <div className="text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1.5 truncate">{q}</div>
+            <Link href="/steals" className="flex items-center gap-2 text-xs text-gray-400 rounded-xl border border-dashed border-gray-200 bg-gray-50/60 px-3 py-3 hover:border-emerald-200 hover:text-emerald-700 transition-colors">
+              <Search size={13} className="animate-pulse" /> Hunting for deals on this — they’ll land here the moment we find one.
+            </Link>
           </div>
         ))}
       </div>

@@ -13,7 +13,9 @@ import { getCachedSearch, setCachedSearch } from '../../../lib/shoppingCache'
 export const runtime = 'nodejs'
 export const maxDuration = 30
 
-const MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash'
+// Try models in order — if the key can't use one (404/permission), fall to the
+// next. Covers prod keys that only have older Gemini models enabled.
+const MODELS = [process.env.GEMINI_MODEL, 'gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'].filter(Boolean)
 
 const GOALS = {
   retirement: 'saving for retirement',
@@ -66,18 +68,26 @@ Return STRICT JSON only (no markdown), exactly this shape:
 }`
 
   try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.4, maxOutputTokens: 900 },
-      }),
-    })
-    if (!res.ok) throw new Error(`Gemini ${res.status}`)
-    const json = await res.json()
-    const text = json?.candidates?.[0]?.content?.parts?.[0]?.text || ''
+    let text = '', lastErr = ''
+    for (const model of MODELS) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.4, maxOutputTokens: 900 },
+          }),
+        })
+        if (!res.ok) { lastErr = `${model}:${res.status}`; continue }
+        const json = await res.json()
+        const t = json?.candidates?.[0]?.content?.parts?.[0]?.text || ''
+        if (t) { text = t; break }
+        lastErr = `${model}:empty`
+      } catch (e) { lastErr = `${model}:${e?.message}` }
+    }
+    if (!text) throw new Error(lastErr || 'no model responded')
     const parsed = extractJson(text)
     if (!parsed) throw new Error('unparseable')
 
@@ -94,6 +104,6 @@ Return STRICT JSON only (no markdown), exactly this shape:
     return Response.json({ ...payload, _cache: 'miss' })
   } catch (e) {
     console.error('[plan-strategy] failed:', e?.message)
-    return Response.json({ error: 'Guac-AI is busy — showing built-in guidance.' }, { status: 502 })
+    return Response.json({ error: 'Guac-AI is busy — showing built-in guidance.', detail: String(e?.message || '').slice(0, 160) }, { status: 502 })
   }
 }

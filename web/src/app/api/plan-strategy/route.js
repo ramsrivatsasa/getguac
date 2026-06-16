@@ -35,9 +35,11 @@ export async function POST(request) {
   if (!rl.ok) return Response.json({ error: `Too many requests. Try again in ${rl.retryAfter}s.` }, { status: 429 })
 
   const body = await request.json().catch(() => ({}))
-  const calc = String(body?.calc || '')
+  const calc = String(body?.calc || '').slice(0, 40)
   const inputs = body?.inputs && typeof body.inputs === 'object' ? body.inputs : {}
-  if (!GOALS[calc]) return Response.json({ error: 'unknown calculator' }, { status: 400 })
+  // `goal` lets any calculator (not just the original four) describe its topic.
+  const goal = String(body?.goal || GOALS[calc] || 'reaching a financial goal').slice(0, 140)
+  if (!calc) return Response.json({ error: 'unknown calculator' }, { status: 400 })
 
   // Round inputs so near-identical plans share a cache entry.
   const rounded = {}
@@ -49,7 +51,7 @@ export async function POST(request) {
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) return Response.json({ error: 'Guac-AI is not configured.' }, { status: 503 })
 
-  const prompt = `You are Guac-AI, GetGuac's friendly, sharp money strategist. A US user is ${GOALS[calc]}.
+  const prompt = `You are Guac-AI, GetGuac's friendly, sharp money strategist. A US user is working on: ${goal}.
 Their numbers: ${JSON.stringify(rounded)}.
 
 Give concrete, encouraging, actionable guidance. Use the LATEST US tax rules and current-year contribution limits you know for the accounts that fit this goal (401(k) incl. employer match + catch-up, Traditional/Roth IRA, HSA, 529). Be specific with dollar limits and percentages. Motivate them to start or keep saving — warm but not preachy. One short sentence per item.
@@ -70,7 +72,7 @@ Return STRICT JSON only (no markdown), exactly this shape:
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.4, responseMimeType: 'application/json', maxOutputTokens: 900 },
+        generationConfig: { temperature: 0.4, maxOutputTokens: 900 },
       }),
     })
     if (!res.ok) throw new Error(`Gemini ${res.status}`)

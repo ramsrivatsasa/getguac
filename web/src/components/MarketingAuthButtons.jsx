@@ -15,8 +15,18 @@ export default function MarketingAuthButtons() {
     sb.auth.getUser().then(({ data }) => setAuthed(!!data?.user)).catch(() => setAuthed(false))
   }, [])
 
+  async function signOut() {
+    try { await createClient().auth.signOut() } catch { /* ignore */ }
+    window.location.href = '/'
+  }
+
   if (authed) {
-    return <Link href="/dashboard" className="btn-primary">Dashboard</Link>
+    return (
+      <>
+        <button onClick={signOut} className="hidden sm:inline btn-secondary">Sign out</button>
+        <Link href="/dashboard" className="btn-primary">Dashboard</Link>
+      </>
+    )
   }
   // Checking or logged-out → marketing CTAs.
   return (

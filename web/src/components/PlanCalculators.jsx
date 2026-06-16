@@ -1,14 +1,15 @@
 'use client'
 // Plan & forecast — financial-goal calculators (PocketSmith/Origin-style).
-// Retirement, healthcare-in-retirement, college fund, and emergency fund.
-// Pure client math; no data dependency, so it works for everyone immediately.
+// Flow: fields start EMPTY → user enters their own numbers → clicks "Plan it"
+// → sees the projection → is asked if they want to save it (persisted to this
+// device via localStorage, so it's pre-filled next time). Pure client math.
 
 import { useState } from 'react'
-import { PiggyBank, HeartPulse, GraduationCap, Umbrella, TrendingUp } from 'lucide-react'
+import { PiggyBank, HeartPulse, GraduationCap, Umbrella, TrendingUp, Save, Check } from 'lucide-react'
 
 const money = (n) => `$${Math.round(Number(n) || 0).toLocaleString('en-US')}`
+const isSet = (v) => v !== '' && v !== null && v !== undefined && Number.isFinite(Number(v))
 
-// Future value of a present sum plus monthly contributions.
 function fv(present, monthly, annualRatePct, years) {
   const i = (annualRatePct / 100) / 12
   const n = years * 12
@@ -16,17 +17,103 @@ function fv(present, monthly, annualRatePct, years) {
   if (i === 0) return present + monthly * n
   return present * Math.pow(1 + i, n) + monthly * ((Math.pow(1 + i, n) - 1) / i)
 }
-
-// Monthly contribution needed to reach `target` from `present` over `years`.
 function pmtNeeded(target, present, annualRatePct, years) {
   const i = (annualRatePct / 100) / 12
   const n = years * 12
   if (n <= 0) return Math.max(0, target - present)
-  const grownPresent = present * Math.pow(1 + i, n)
-  const remaining = Math.max(0, target - grownPresent)
+  const grown = present * Math.pow(1 + i, n)
+  const remaining = Math.max(0, target - grown)
   if (i === 0) return remaining / n
   return remaining * i / (Math.pow(1 + i, n) - 1)
 }
+
+// Each calculator: its inputs + a validate (sanity) + compute (the result).
+const CALCS = [
+  {
+    id: 'retirement', icon: PiggyBank, title: 'Retirement', subtitle: 'Will your nest egg cover it?',
+    fields: [
+      { key: 'age', label: 'Current age', placeholder: '35' },
+      { key: 'retire', label: 'Retire at', placeholder: '65' },
+      { key: 'savings', label: 'Saved so far', prefix: '$', step: 1000, placeholder: '40,000' },
+      { key: 'monthly', label: 'Save / month', prefix: '$', step: 50, placeholder: '600' },
+      { key: 'income', label: 'Income you want / yr', prefix: '$', step: 1000, placeholder: '60,000' },
+      { key: 'ret', label: 'Return / yr', suffix: '%', step: 0.5, placeholder: '6' },
+    ],
+    validate: (v) => v.retire > v.age || 'Retirement age should be above your current age.',
+    compute: (v) => {
+      const years = Math.max(0, v.retire - v.age)
+      const projected = fv(v.savings, v.monthly, v.ret, years)
+      const target = v.income * 25
+      const onTrack = projected >= target
+      const extra = onTrack ? 0 : pmtNeeded(target, v.savings, v.ret, years) - v.monthly
+      return {
+        tone: onTrack ? 'ok' : 'warn',
+        node: (
+          <>
+            <p>At {v.retire} you’ll have ~<b className="text-emerald-800">{money(projected)}</b>. To draw {money(v.income)}/yr you’d want ~<b>{money(target)}</b>.</p>
+            {onTrack
+              ? <p className="mt-1 font-bold text-emerald-700">✅ On track — you’re covered.</p>
+              : <p className="mt-1 font-bold text-amber-700">Add ~{money(extra)}/mo to close the gap.</p>}
+          </>
+        ),
+      }
+    },
+  },
+  {
+    id: 'college', icon: GraduationCap, title: 'College fund', subtitle: 'Save up for tuition',
+    fields: [
+      { key: 'childAge', label: 'Child’s age', placeholder: '5' },
+      { key: 'startAge', label: 'Starts college at', placeholder: '18' },
+      { key: 'cost', label: 'Target cost (total)', prefix: '$', step: 5000, placeholder: '120,000' },
+      { key: 'savings', label: 'Saved so far', prefix: '$', step: 1000, placeholder: '8,000' },
+      { key: 'ret', label: 'Return / yr', suffix: '%', step: 0.5, placeholder: '5' },
+    ],
+    validate: (v) => v.startAge > v.childAge || 'College-start age should be above the child’s age.',
+    compute: (v) => {
+      const years = Math.max(0, v.startAge - v.childAge)
+      const need = pmtNeeded(v.cost, v.savings, v.ret, years)
+      return { tone: 'ok', node: <p>Save ~<b className="text-emerald-800">{money(need)}/mo</b> for {years} years to reach <b>{money(v.cost)}</b>.</p> }
+    },
+  },
+  {
+    id: 'healthcare', icon: HeartPulse, title: 'Healthcare in retirement', subtitle: 'The cost most people miss',
+    fields: [
+      { key: 'age', label: 'Current age', placeholder: '40' },
+      { key: 'retire', label: 'Retire at', placeholder: '65' },
+      { key: 'life', label: 'Live to', placeholder: '88' },
+      { key: 'annual', label: 'Healthcare / yr', prefix: '$', step: 500, placeholder: '7,000' },
+      { key: 'ret', label: 'Return / yr', suffix: '%', step: 0.5, placeholder: '5' },
+    ],
+    validate: (v) => (v.life > v.retire && v.retire >= v.age) || 'Check the ages — retire after now, live past retirement.',
+    compute: (v) => {
+      const yearsInRetirement = Math.max(0, v.life - v.retire)
+      const totalNeed = v.annual * yearsInRetirement
+      const monthly = pmtNeeded(totalNeed, 0, v.ret, Math.max(0, v.retire - v.age))
+      return { tone: 'ok', node: <p>~<b className="text-emerald-800">{money(totalNeed)}</b> across {yearsInRetirement} retirement years. Set aside ~<b>{money(monthly)}/mo</b> until {v.retire}.</p> }
+    },
+  },
+  {
+    id: 'emergency', icon: Umbrella, title: 'Emergency fund', subtitle: 'Your safety net',
+    fields: [
+      { key: 'expenses', label: 'Monthly expenses', prefix: '$', step: 100, placeholder: '3,500' },
+      { key: 'months', label: 'Months of cushion', placeholder: '6' },
+      { key: 'savings', label: 'Saved so far', prefix: '$', step: 500, placeholder: '4,000' },
+      { key: 'fillMonths', label: 'Fill it in (months)', placeholder: '12' },
+    ],
+    validate: () => true,
+    compute: (v) => {
+      const target = v.expenses * v.months
+      const gap = Math.max(0, target - v.savings)
+      const monthly = v.fillMonths > 0 ? gap / v.fillMonths : gap
+      const done = gap <= 0
+      return {
+        tone: done ? 'ok' : 'warn',
+        node: <p>Goal: <b>{money(target)}</b> ({v.months} months).{' '}
+          {done ? <b className="text-emerald-700">✅ Fully funded!</b> : <>You’re <b>{money(gap)}</b> short — save ~<b className="text-emerald-800">{money(monthly)}/mo</b>.</>}</p>,
+      }
+    },
+  },
+]
 
 export default function PlanCalculators() {
   return (
@@ -35,13 +122,10 @@ export default function PlanCalculators() {
         <h1 className="text-2xl font-black text-gray-900 inline-flex items-center gap-2">
           <TrendingUp className="text-emerald-600" /> Plan &amp; forecast
         </h1>
-        <p className="text-sm text-gray-500 mt-0.5">Project the big stuff — retirement, healthcare, college, a safety net.</p>
+        <p className="text-sm text-gray-500 mt-0.5">Enter your numbers, hit <b>Plan it</b>, and we’ll forecast the big stuff.</p>
       </div>
       <div className="grid lg:grid-cols-2 gap-4">
-        <Retirement />
-        <College />
-        <Healthcare />
-        <Emergency />
+        {CALCS.map((c) => <Calculator key={c.id} {...c} />)}
       </div>
       <p className="text-[11px] text-gray-400 text-center pt-1">
         Estimates for planning only — not financial advice. Assumes steady returns; real markets vary.
@@ -50,7 +134,28 @@ export default function PlanCalculators() {
   )
 }
 
-function Card({ icon: Icon, title, subtitle, children }) {
+function Calculator({ id, icon: Icon, title, subtitle, fields, validate, compute }) {
+  const KEY = `gg_plan_${id}`
+  const initial = (() => {
+    if (typeof window === 'undefined') return {}
+    try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s && typeof s === 'object') return s } catch {}
+    return {}
+  })()
+  const [vals, setVals] = useState(initial)
+  const allInitial = fields.every((f) => isSet(initial[f.key]))
+  const [planned, setPlanned] = useState(allInitial) // returning users see their saved plan
+  const [saved, setSaved] = useState(false)
+
+  const set = (k) => (val) => { setVals((p) => ({ ...p, [k]: val })); setPlanned(false); setSaved(false) }
+  const allSet = fields.every((f) => isSet(vals[f.key]))
+  const check = allSet ? (validate ? validate(vals) : true) : false
+  const valid = check === true
+  const result = planned && valid ? compute(vals) : null
+
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(vals)); setSaved(true) } catch { /* private mode */ }
+  }
+
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
       <div className="flex items-center gap-2 mb-3">
@@ -60,136 +165,52 @@ function Card({ icon: Icon, title, subtitle, children }) {
           {subtitle && <p className="text-[11px] text-gray-400">{subtitle}</p>}
         </div>
       </div>
-      {children}
+
+      <div className="grid grid-cols-2 gap-2">
+        {fields.map((f) => (
+          <label key={f.key} className="block">
+            <span className="text-[11px] font-semibold text-gray-500">{f.label}</span>
+            <div className="mt-0.5 flex items-center rounded-lg border border-gray-200 bg-white focus-within:ring-2 focus-within:ring-emerald-300 overflow-hidden">
+              {f.prefix && <span className="pl-2.5 text-gray-400 text-sm">{f.prefix}</span>}
+              <input
+                type="number" inputMode="decimal" step={f.step || 1} min={0}
+                value={vals[f.key] ?? ''} placeholder={f.placeholder}
+                onChange={(e) => set(f.key)(e.target.value === '' ? '' : Number(e.target.value))}
+                className="w-full px-2.5 py-1.5 text-sm outline-none bg-transparent placeholder:text-gray-300"
+              />
+              {f.suffix && <span className="pr-2.5 text-gray-400 text-sm">{f.suffix}</span>}
+            </div>
+          </label>
+        ))}
+      </div>
+
+      <button
+        onClick={() => setPlanned(true)}
+        disabled={!allSet}
+        className="mt-3 w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {result ? 'Update plan' : 'Plan it'}
+      </button>
+
+      {planned && allSet && !valid && typeof check === 'string' && (
+        <p className="text-xs text-amber-600 mt-1.5">{check}</p>
+      )}
+
+      {result && (
+        <>
+          <div className={`mt-3 rounded-xl bg-gradient-to-br ${result.tone === 'warn' ? 'from-amber-50 to-orange-50 border-amber-200' : 'from-emerald-50 to-lime-50 border-emerald-200'} border p-3 text-sm`}>
+            {result.node}
+          </div>
+          <div className="mt-2 flex items-center justify-between">
+            <span className="text-[11px] text-gray-400">
+              {saved ? <span className="text-emerald-700 font-semibold inline-flex items-center gap-1"><Check size={12} /> Saved on this device</span> : 'Save these numbers for next time?'}
+            </span>
+            <button onClick={save} className="text-xs font-bold text-emerald-700 hover:underline inline-flex items-center gap-1">
+              <Save size={12} /> {saved ? 'Update' : 'Save'}
+            </button>
+          </div>
+        </>
+      )}
     </div>
-  )
-}
-
-function Field({ label, value, onChange, prefix, suffix, step = 1, min = 0 }) {
-  return (
-    <label className="block">
-      <span className="text-[11px] font-semibold text-gray-500">{label}</span>
-      <div className="mt-0.5 flex items-center rounded-lg border border-gray-200 bg-white focus-within:ring-2 focus-within:ring-emerald-300 overflow-hidden">
-        {prefix && <span className="pl-2.5 text-gray-400 text-sm">{prefix}</span>}
-        <input
-          type="number" inputMode="decimal" step={step} min={min} value={value}
-          onChange={(e) => onChange(e.target.value === '' ? '' : Number(e.target.value))}
-          className="w-full px-2.5 py-1.5 text-sm outline-none bg-transparent"
-        />
-        {suffix && <span className="pr-2.5 text-gray-400 text-sm">{suffix}</span>}
-      </div>
-    </label>
-  )
-}
-
-function Result({ children, tone = 'ok' }) {
-  const c = tone === 'warn' ? 'from-amber-50 to-orange-50 border-amber-200' : 'from-emerald-50 to-lime-50 border-emerald-200'
-  return <div className={`mt-3 rounded-xl bg-gradient-to-br ${c} border p-3 text-sm`}>{children}</div>
-}
-
-function Retirement() {
-  const [age, setAge] = useState(35)
-  const [retire, setRetire] = useState(65)
-  const [savings, setSavings] = useState(40000)
-  const [monthly, setMonthly] = useState(600)
-  const [income, setIncome] = useState(60000)
-  const [ret, setRet] = useState(6)
-  const years = Math.max(0, retire - age)
-  const projected = fv(savings, monthly, ret, years)
-  const target = income * 25 // 4% rule
-  const onTrack = projected >= target
-  const extra = onTrack ? 0 : pmtNeeded(target, savings, ret, years) - monthly
-  return (
-    <Card icon={PiggyBank} title="Retirement" subtitle="Will your nest egg cover it?">
-      <div className="grid grid-cols-2 gap-2">
-        <Field label="Current age" value={age} onChange={setAge} />
-        <Field label="Retire at" value={retire} onChange={setRetire} />
-        <Field label="Saved so far" value={savings} onChange={setSavings} prefix="$" step={1000} />
-        <Field label="Save / month" value={monthly} onChange={setMonthly} prefix="$" step={50} />
-        <Field label="Income you want / yr" value={income} onChange={setIncome} prefix="$" step={1000} />
-        <Field label="Return / yr" value={ret} onChange={setRet} suffix="%" step={0.5} />
-      </div>
-      <Result tone={onTrack ? 'ok' : 'warn'}>
-        <p>At {retire} you’ll have ~<b className="text-emerald-800">{money(projected)}</b>. To draw {money(income)}/yr you’d want ~<b>{money(target)}</b>.</p>
-        {onTrack
-          ? <p className="mt-1 font-bold text-emerald-700">✅ On track — you’re covered.</p>
-          : <p className="mt-1 font-bold text-amber-700">Add ~{money(extra)}/mo to close the gap.</p>}
-      </Result>
-    </Card>
-  )
-}
-
-function College() {
-  const [childAge, setChildAge] = useState(5)
-  const [startAge, setStartAge] = useState(18)
-  const [cost, setCost] = useState(120000)
-  const [savings, setSavings] = useState(8000)
-  const [ret, setRet] = useState(5)
-  const years = Math.max(0, startAge - childAge)
-  const need = pmtNeeded(cost, savings, ret, years)
-  return (
-    <Card icon={GraduationCap} title="College fund" subtitle="Save up for tuition">
-      <div className="grid grid-cols-2 gap-2">
-        <Field label="Child’s age" value={childAge} onChange={setChildAge} />
-        <Field label="Starts college at" value={startAge} onChange={setStartAge} />
-        <Field label="Target cost (total)" value={cost} onChange={setCost} prefix="$" step={5000} />
-        <Field label="Saved so far" value={savings} onChange={setSavings} prefix="$" step={1000} />
-        <Field label="Return / yr" value={ret} onChange={setRet} suffix="%" step={0.5} />
-      </div>
-      <Result>
-        <p>Save ~<b className="text-emerald-800">{money(need)}/mo</b> for {years} years to reach <b>{money(cost)}</b>.</p>
-      </Result>
-    </Card>
-  )
-}
-
-function Healthcare() {
-  const [retire, setRetire] = useState(65)
-  const [life, setLife] = useState(88)
-  const [annual, setAnnual] = useState(7000)
-  const [age, setAge] = useState(40)
-  const [ret, setRet] = useState(5)
-  const yearsInRetirement = Math.max(0, life - retire)
-  const totalNeed = annual * yearsInRetirement
-  const yearsToSave = Math.max(0, retire - age)
-  const monthly = pmtNeeded(totalNeed, 0, ret, yearsToSave)
-  return (
-    <Card icon={HeartPulse} title="Healthcare in retirement" subtitle="The cost most people miss">
-      <div className="grid grid-cols-2 gap-2">
-        <Field label="Current age" value={age} onChange={setAge} />
-        <Field label="Retire at" value={retire} onChange={setRetire} />
-        <Field label="Live to" value={life} onChange={setLife} />
-        <Field label="Healthcare / yr" value={annual} onChange={setAnnual} prefix="$" step={500} />
-        <Field label="Return / yr" value={ret} onChange={setRet} suffix="%" step={0.5} />
-      </div>
-      <Result>
-        <p>~<b className="text-emerald-800">{money(totalNeed)}</b> across {yearsInRetirement} retirement years. Set aside ~<b>{money(monthly)}/mo</b> until {retire}.</p>
-      </Result>
-    </Card>
-  )
-}
-
-function Emergency() {
-  const [expenses, setExpenses] = useState(3500)
-  const [months, setMonths] = useState(6)
-  const [savings, setSavings] = useState(4000)
-  const [fillMonths, setFillMonths] = useState(12)
-  const target = expenses * months
-  const gap = Math.max(0, target - savings)
-  const monthly = fillMonths > 0 ? gap / fillMonths : gap
-  const done = gap <= 0
-  return (
-    <Card icon={Umbrella} title="Emergency fund" subtitle="Your safety net">
-      <div className="grid grid-cols-2 gap-2">
-        <Field label="Monthly expenses" value={expenses} onChange={setExpenses} prefix="$" step={100} />
-        <Field label="Months of cushion" value={months} onChange={setMonths} />
-        <Field label="Saved so far" value={savings} onChange={setSavings} prefix="$" step={500} />
-        <Field label="Fill it in (months)" value={fillMonths} onChange={setFillMonths} />
-      </div>
-      <Result tone={done ? 'ok' : 'warn'}>
-        <p>Goal: <b>{money(target)}</b> ({months} months).{' '}
-          {done ? <b className="text-emerald-700">✅ Fully funded!</b> : <>You’re <b>{money(gap)}</b> short — save ~<b className="text-emerald-800">{money(monthly)}/mo</b>.</>}</p>
-      </Result>
-    </Card>
   )
 }

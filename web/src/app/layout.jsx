@@ -4,9 +4,9 @@ import { Providers } from './providers'
 import UpdatePrompt from '../components/UpdatePrompt'
 import PosthogProvider from '../components/PosthogProvider'
 
-// Google AdSense publisher id (e.g. "ca-pub-…"). When unset, AdSlot renders
-// placeholders and this script is skipped — so nothing loads until you opt in.
-const ADSENSE_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || ''
+// Google AdSense publisher id. Public (it ships in page source), so it's fine
+// to default in code; override per-env with NEXT_PUBLIC_ADSENSE_CLIENT.
+const ADSENSE_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || 'ca-pub-5959691671441705'
 
 const SITE_URL = 'https://getguac.app'
 

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { ExternalLink, CalendarDays, TrendingUp, ShoppingBag, Ticket, Receipt, Shield } from 'lucide-react'
 import MarketingShell from '../../components/MarketingShell'
+import AdSlot from '../../components/AdSlot'
 
 export const metadata = {
   title: 'Resources — money guides & tools',
@@ -57,6 +58,8 @@ export default function ResourcesPage() {
             })}
           </div>
         </section>
+
+        <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_BOTTOM || ''} minHeight={90} />
 
         <section>
           <h2 className="text-lg font-black text-gray-900 mb-1">Money guides</h2>

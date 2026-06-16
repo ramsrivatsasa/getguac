@@ -14,7 +14,7 @@
 
 import { useEffect, useRef } from 'react'
 
-const CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || ''
+const CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || 'ca-pub-5959691671441705'
 
 export default function AdSlot({ slot = '', format = 'auto', className = '', minHeight = 100, label = 'Advertisement' }) {
   const pushed = useRef(false)

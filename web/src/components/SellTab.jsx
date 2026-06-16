@@ -111,7 +111,7 @@ export default function SellTab({ query = '' }) {
             const card = <ListingCard key={l.id} l={l} onClick={() => setDetail(l)} />
             const showAd = (i + 1) % 8 === 0 && i < shown.length - 1
             return showAd
-              ? [card, <AdSlot key={`ad-${i}`} slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_INGRID || ''} minHeight={235} className="h-full" />]
+              ? [card, <AdSlot key={`ad-${i}`} slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_INGRID || '1890940391'} minHeight={235} className="h-full" />]
               : [card]
           })}
         </div>

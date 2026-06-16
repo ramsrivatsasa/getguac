@@ -313,7 +313,7 @@ function DealsTab({ status, error, results, meta, query, onRetry }) {
           // Drop a native ad card in between results every 8 items.
           const showAd = (i + 1) % 8 === 0 && i < results.length - 1
           return showAd
-            ? [card, <AdSlot key={`ad-${i}`} slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_INGRID || ''} minHeight={235} className="h-full" />]
+            ? [card, <AdSlot key={`ad-${i}`} slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_INGRID || '1890940391'} minHeight={235} className="h-full" />]
             : [card]
         })}
       </div>
@@ -354,7 +354,7 @@ function StoresTab({ query, category, setCategory, saved, onToggle, onFindDeals,
             const card = <StoreCard key={s.slug} s={s} saved={saved.includes(s.slug)} onToggle={() => onToggle(s.slug)} onFindDeals={() => onFindDeals(s)} onCoupons={() => onCoupons(s)} />
             const showAd = (i + 1) % 8 === 0 && i < list.length - 1
             return showAd
-              ? [card, <AdSlot key={`ad-${i}`} slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_INGRID || ''} minHeight={150} className="h-full" />]
+              ? [card, <AdSlot key={`ad-${i}`} slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_INGRID || '1890940391'} minHeight={150} className="h-full" />]
               : [card]
           })}
         </div>

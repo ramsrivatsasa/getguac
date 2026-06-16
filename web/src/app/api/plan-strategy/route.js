@@ -26,9 +26,10 @@ const GOALS = {
 
 function extractJson(text) {
   if (!text) return null
-  try { return JSON.parse(text) } catch { /* fall through */ }
-  const a = text.indexOf('{'); const b = text.lastIndexOf('}')
-  if (a >= 0 && b > a) { try { return JSON.parse(text.slice(a, b + 1)) } catch { /* */ } }
+  let s = String(text).trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim()
+  try { return JSON.parse(s) } catch { /* fall through */ }
+  const a = s.indexOf('{'); const b = s.lastIndexOf('}')
+  if (a >= 0 && b > a) { try { return JSON.parse(s.slice(a, b + 1)) } catch { /* */ } }
   return null
 }
 
@@ -77,7 +78,7 @@ Return STRICT JSON only (no markdown), exactly this shape:
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.4, maxOutputTokens: 900 },
+            generationConfig: { temperature: 0.4, maxOutputTokens: 1500 },
           }),
         })
         if (!res.ok) { lastErr = `${model}:${res.status}`; continue }
@@ -89,7 +90,7 @@ Return STRICT JSON only (no markdown), exactly this shape:
     }
     if (!text) throw new Error(lastErr || 'no model responded')
     const parsed = extractJson(text)
-    if (!parsed) throw new Error('unparseable')
+    if (!parsed) throw new Error('unparseable: ' + text.slice(0, 140).replace(/\s+/g, ' '))
 
     const arr = (x, n) => (Array.isArray(x) ? x.filter((s) => typeof s === 'string' && s.trim()).slice(0, n) : [])
     const payload = {

@@ -68,7 +68,7 @@ export default function ResourcesBrowser() {
           </section>
         )}
 
-        <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_BOTTOM || ''} minHeight={90} />
+        <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_BOTTOM || '9142744455'} minHeight={90} />
 
         {articles.length > 0 && (
           <section>

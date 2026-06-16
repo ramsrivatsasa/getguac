@@ -244,12 +244,12 @@ export default function MarketplaceClient({ initialQuery = '', initialTab = 'dea
       </div>
 
       {/* Bottom banner ad (placeholder until AdSense is configured). */}
-      <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_BOTTOM || ''} className="mb-12 max-w-3xl mx-auto" minHeight={90} />
+      <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_BOTTOM || '9142744455'} className="mb-12 max-w-3xl mx-auto" minHeight={90} />
         </div>{/* /main column */}
 
         {/* Right ad rail — sticky skyscraper, wide screens only. */}
         <aside className="hidden lg:block w-40 shrink-0 sticky top-20">
-          <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_RIGHT || ''} format="vertical" minHeight={600} />
+          <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_RIGHT || '9083371411'} format="vertical" minHeight={600} />
         </aside>
       </div>{/* /flex */}
 

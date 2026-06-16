@@ -38,7 +38,7 @@ export default function ArticlePage({ params }) {
           </Link>
         )}
 
-        <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_BOTTOM || ''} minHeight={90} className="mt-7" />
+        <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_BOTTOM || '9142744455'} minHeight={90} className="mt-7" />
 
         <div className="mt-8">
           <div className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Keep reading</div>

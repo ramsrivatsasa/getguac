@@ -34,7 +34,7 @@ export default function ArticlesPage() {
             </Link>
           ))}
         </div>
-        <div className="mt-6"><AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_BOTTOM || ''} minHeight={90} className="max-w-3xl mx-auto" /></div>
+        <div className="mt-6"><AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_BOTTOM || '9142744455'} minHeight={90} className="max-w-3xl mx-auto" /></div>
       </div>
     </MarketingShell>
   )

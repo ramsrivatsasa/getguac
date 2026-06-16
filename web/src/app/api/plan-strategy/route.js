@@ -71,28 +71,27 @@ Return STRICT JSON only (no markdown), exactly this shape:
 }`
 
   try {
-    let parsed = null, lastErr = ''
+    let parsed = null; const errs = []
     for (const model of MODELS) {
       try {
+        const gen = { temperature: 0.4, maxOutputTokens: 2048 }
+        // 2.5 spends output tokens on hidden "thinking" and truncates the JSON.
+        if (model.includes('2.5')) gen.thinkingConfig = { thinkingBudget: 0 }
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`
         const res = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.4, maxOutputTokens: 2048 },
-          }),
+          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: gen }),
         })
-        if (!res.ok) { lastErr = `${model}:${res.status}`; continue }
+        if (!res.ok) { errs.push(`${model}:${res.status}`); continue }
         const json = await res.json()
         const t = json?.candidates?.[0]?.content?.parts?.[0]?.text || ''
         const p = extractJson(t)
-        // Only accept a clean result — otherwise fall through to the next model.
         if (p && Array.isArray(p.strategies) && p.strategies.length) { parsed = p; break }
-        lastErr = `${model}:${t ? 'badjson' : 'empty'}`
-      } catch (e) { lastErr = `${model}:${e?.message}` }
+        errs.push(`${model}:${t ? 'badjson' : 'empty'}`)
+      } catch (e) { errs.push(`${model}:${e?.message}`) }
     }
-    if (!parsed) throw new Error(lastErr || 'no model produced valid JSON')
+    if (!parsed) throw new Error(errs.join(' | ') || 'no model produced valid JSON')
 
     const arr = (x, n) => (Array.isArray(x) ? x.filter((s) => typeof s === 'string' && s.trim()).slice(0, n) : [])
     const payload = {

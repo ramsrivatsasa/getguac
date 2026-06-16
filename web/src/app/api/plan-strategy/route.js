@@ -15,7 +15,9 @@ export const maxDuration = 30
 
 // Try models in order — if the key can't use one (404/permission), fall to the
 // next. Covers prod keys that only have older Gemini models enabled.
-const MODELS = [process.env.GEMINI_MODEL, 'gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'].filter(Boolean)
+// 2.0-flash first: no "thinking" tokens, so the JSON isn't truncated. Others
+// are fallbacks if a key can't use it.
+const MODELS = [process.env.GEMINI_MODEL, 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.5-flash'].filter(Boolean)
 
 const GOALS = {
   retirement: 'saving for retirement',
@@ -69,7 +71,7 @@ Return STRICT JSON only (no markdown), exactly this shape:
 }`
 
   try {
-    let text = '', lastErr = ''
+    let parsed = null, lastErr = ''
     for (const model of MODELS) {
       try {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`
@@ -84,13 +86,13 @@ Return STRICT JSON only (no markdown), exactly this shape:
         if (!res.ok) { lastErr = `${model}:${res.status}`; continue }
         const json = await res.json()
         const t = json?.candidates?.[0]?.content?.parts?.[0]?.text || ''
-        if (t) { text = t; break }
-        lastErr = `${model}:empty`
+        const p = extractJson(t)
+        // Only accept a clean result — otherwise fall through to the next model.
+        if (p && Array.isArray(p.strategies) && p.strategies.length) { parsed = p; break }
+        lastErr = `${model}:${t ? 'badjson' : 'empty'}`
       } catch (e) { lastErr = `${model}:${e?.message}` }
     }
-    if (!text) throw new Error(lastErr || 'no model responded')
-    const parsed = extractJson(text)
-    if (!parsed) throw new Error('unparseable: ' + text.slice(0, 140).replace(/\s+/g, ' '))
+    if (!parsed) throw new Error(lastErr || 'no model produced valid JSON')
 
     const arr = (x, n) => (Array.isArray(x) ? x.filter((s) => typeof s === 'string' && s.trim()).slice(0, n) : [])
     const payload = {

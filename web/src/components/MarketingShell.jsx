@@ -62,7 +62,7 @@ export default function MarketingShell({ subtitle, hideSearch = false, headerTit
                 : <div className="flex-1" />)
             : <HeaderSearch className="flex-1 min-w-0 max-w-xl" />}
           <nav className="flex items-center gap-3 sm:gap-4 text-sm shrink-0">
-            {NAV.map((n) => (
+            {!headerTitle && NAV.map((n) => (
               <Link key={n.href} href={n.href} className="hidden xl:inline font-semibold text-gray-600 hover:text-emerald-800">{n.label}</Link>
             ))}
             <MarketingAuthButtons />

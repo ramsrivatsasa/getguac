@@ -8,6 +8,8 @@ const NAV = [
   { href: '/marketplace', label: 'Marketplace' },
   { href: '/coupons', label: 'Coupons' },
   { href: '/resources', label: 'Resources' },
+  { href: '/articles', label: 'Articles' },
+  { href: '/plan', label: 'Calculators' },
   { href: '/how-it-works', label: 'How it works' },
   { href: '/features', label: 'Features' },
   { href: '/pricing', label: 'Pricing' },
@@ -27,6 +29,8 @@ const FOOTER = [
   ]},
   { heading: 'Learn', links: [
     { href: '/resources', label: 'Resources' },
+    { href: '/articles', label: 'Articles' },
+    { href: '/plan', label: 'Calculators' },
     { href: '/faq', label: 'FAQ' },
     { href: '/how-email-works', label: 'How email works' },
     { href: '/security', label: 'Security & privacy' },

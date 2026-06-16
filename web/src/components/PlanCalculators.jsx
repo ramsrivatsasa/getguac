@@ -333,6 +333,12 @@ export default function PlanCalculators() {
     }).catch(() => setAuthed(false))
   }, [])
 
+  // Deep-link from an article: /plan#mortgage preselects that calculator.
+  useEffect(() => {
+    const h = typeof window !== 'undefined' ? window.location.hash.replace('#', '') : ''
+    if (h && CALCS.some((c) => c.id === h)) setSelId(h)
+  }, [])
+
   async function onSave(id, vals) {
     const sb = createClient()
     const { error } = await sb.auth.updateUser({ data: { [`gg_plan_${id}`]: vals } })

@@ -6,7 +6,7 @@ import { createClient } from '../lib/supabase/client'
 import { useStore } from '../store'
 import {
   LayoutDashboard, Receipt, Gift, ShoppingCart, Car, User, X, Store, Undo2, Sparkles, ChevronsLeft, ChevronsRight, Package, Utensils, BadgeDollarSign, Banknote, Wand2, Mail, BarChart3,
-  Inbox as InboxIcon, Send, Trash2, Filter, ChevronDown, Home, MessageSquare, Link2, ShoppingBag, Ticket,
+  Inbox as InboxIcon, Send, Trash2, Filter, ChevronDown, Home, MessageSquare, Link2, ShoppingBag, Ticket, CalendarDays, TrendingUp, BookOpen,
 } from 'lucide-react'
 import clsx from 'clsx'
 import GuacMascot from './GuacMascot'
@@ -30,6 +30,8 @@ const sections = [
     items: [
       { href: '/receipts', icon: Receipt,        label: 'Receipts', emoji: '🧾', hoverMascot: 'happy' },
       { href: '/reports',  icon: BarChart3,      label: 'Reports',  emoji: '📊', hoverMascot: 'celebrating' },
+      { href: '/bills',    icon: CalendarDays,   label: 'Bills',    emoji: '🗓️', hoverMascot: 'sitting' },
+      { href: '/plan',     icon: TrendingUp,     label: 'Plan',     emoji: '🎯', hoverMascot: 'rich' },
       { href: '/bank',     icon: Banknote,       label: 'Bank',     emoji: '🏦', hoverMascot: 'rich' },
       { href: '/returns',  icon: Undo2,          label: 'Returns',  emoji: '↩️', hoverMascot: 'surprised' },
       { href: '/rewards',  icon: Gift,           label: 'Rewards',  emoji: '🎁', hoverMascot: 'celebrating' },
@@ -65,6 +67,7 @@ const sections = [
   {
     title: 'More',
     items: [
+      { href: '/resources', icon: BookOpen, label: 'Resources', emoji: '📚', hoverMascot: 'thumbsup' },
       { href: '/car-miles', icon: Car,   label: 'Car Miles', emoji: '🚗', hoverMascot: 'relaxing' },
       { href: '/profile',   icon: User,  label: 'Profile',   emoji: '👤', hoverMascot: 'sitting' },
       { href: '/profile#household', icon: Home, label: 'House', emoji: '🏡', hoverMascot: 'happy' },
@@ -142,9 +145,9 @@ export default function Sidebar({ isAdmin }) {
         {/* Nav */}
         <nav className="flex-1 py-1.5 overflow-y-auto">
           {sections.map(section => (
-            <div key={section.title} className={clsx('mb-1', collapsed && 'lg:mb-0.5')}>
+            <div key={section.title} className={clsx('mb-0.5', collapsed && 'lg:mb-0.5')}>
               {!collapsed && (
-                <div className="px-5 pb-0.5 pt-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700/70">
+                <div className="px-5 pb-px pt-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700/70">
                   {section.title}
                 </div>
               )}
@@ -168,8 +171,8 @@ export default function Sidebar({ isAdmin }) {
                         }}
                         title={collapsed ? label : undefined}
                         className={clsx(
-                          'group flex items-center rounded-2xl text-sm transition-all',
-                          collapsed ? 'lg:justify-center lg:px-2 lg:py-1.5 px-3 py-1.5 gap-2.5' : 'gap-2.5 px-3 py-1.5',
+                          'group flex items-center rounded-xl text-sm transition-all',
+                          collapsed ? 'lg:justify-center lg:px-2 lg:py-1 px-3 py-1 gap-2.5' : 'gap-2.5 px-3 py-1',
                           // Active row is simply highlighted (gradient +
                           // ring) — no pop/scale animation, so clicking a
                           // menu item never looks like it vibrates.
@@ -179,9 +182,9 @@ export default function Sidebar({ isAdmin }) {
                         )}
                       >
                         <span className={clsx(
-                          'flex items-center justify-center text-base shrink-0 transition-all',
-                          collapsed ? 'w-8 h-8 lg:w-8 lg:h-8' : 'w-7 h-7',
-                          'rounded-xl',
+                          'flex items-center justify-center text-sm shrink-0 transition-all',
+                          collapsed ? 'w-8 h-8 lg:w-8 lg:h-8' : 'w-6 h-6',
+                          'rounded-lg',
                           active ? 'bg-white shadow-sm ring-1 ring-emerald-200/60' : 'group-hover:bg-white/70'
                         )}>{emoji}</span>
                         {!collapsed && (

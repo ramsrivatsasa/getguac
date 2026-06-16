@@ -7,6 +7,7 @@ import MarketingAuthButtons from './MarketingAuthButtons'
 const NAV = [
   { href: '/marketplace', label: 'Marketplace' },
   { href: '/coupons', label: 'Coupons' },
+  { href: '/resources', label: 'Resources' },
   { href: '/how-it-works', label: 'How it works' },
   { href: '/features', label: 'Features' },
   { href: '/pricing', label: 'Pricing' },
@@ -25,6 +26,7 @@ const FOOTER = [
     { href: '/download', label: 'Download apps' },
   ]},
   { heading: 'Learn', links: [
+    { href: '/resources', label: 'Resources' },
     { href: '/faq', label: 'FAQ' },
     { href: '/how-email-works', label: 'How email works' },
     { href: '/security', label: 'Security & privacy' },

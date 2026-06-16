@@ -8,7 +8,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '../lib/supabase/client'
-import { PiggyBank, HeartPulse, GraduationCap, Umbrella, Save, Check, Loader2, Lightbulb, BookOpen } from 'lucide-react'
+import { PiggyBank, HeartPulse, GraduationCap, Umbrella, Save, Check, Loader2, BookOpen, Sparkles } from 'lucide-react'
 
 const money = (n) => `$${Math.round(Number(n) || 0).toLocaleString('en-US')}`
 const isSet = (v) => v !== '' && v !== null && v !== undefined && Number.isFinite(Number(v))
@@ -228,6 +228,7 @@ function Calculator({ id, icon: Icon, title, subtitle, fields, validate, compute
   const [planned, setPlanned] = useState(false)
   const [saving, setSaving] = useState(false)
   const [savedOk, setSavedOk] = useState(false)
+  const [ai, setAi] = useState({ status: 'idle', data: null }) // Guac-AI strategy
   const touched = useRef(false)
 
   useEffect(() => {
@@ -249,6 +250,28 @@ function Calculator({ id, icon: Icon, title, subtitle, fields, validate, compute
     if (!authed) return
     setSaving(true)
     try { await onSave(id, vals); setSavedOk(true) } catch { /* ignore */ } finally { setSaving(false) }
+  }
+
+  async function fetchAI(v) {
+    setAi({ status: 'loading', data: null })
+    try {
+      const res = await fetch('/api/plan-strategy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ calc: id, inputs: v }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data?.error || 'failed')
+      setAi({ status: 'done', data })
+    } catch {
+      setAi({ status: 'error', data: null }) // calculator falls back to built-in guidance
+    }
+  }
+
+  function planIt() {
+    setPlanned(true)
+    const okValid = fields.every((f) => isSet(vals[f.key])) && (validate ? validate(vals) === true : true)
+    if (okValid) fetchAI(vals)
   }
 
   return (
@@ -279,7 +302,7 @@ function Calculator({ id, icon: Icon, title, subtitle, fields, validate, compute
         ))}
       </div>
 
-      <button onClick={() => setPlanned(true)} disabled={!allSet}
+      <button onClick={planIt} disabled={!allSet}
         className="mt-3 w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed">
         {result ? 'Update plan' : 'Plan it'}
       </button>
@@ -295,10 +318,31 @@ function Calculator({ id, icon: Icon, title, subtitle, fields, validate, compute
           </div>
 
           <div className="mt-2.5">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-700/80 inline-flex items-center gap-1 mb-1"><Lightbulb size={11} /> Strategies</div>
-            <ul className="space-y-1.5">
-              {result.insights.map((t, i) => <li key={i} className="text-[12px] text-gray-600 leading-snug">{t}</li>)}
-            </ul>
+            <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-700/80 inline-flex items-center gap-1 mb-1">
+              <Sparkles size={11} /> Guac-AI strategy
+            </div>
+            {ai.status === 'loading' ? (
+              <p className="text-[12px] text-gray-400 inline-flex items-center gap-1.5"><Loader2 size={12} className="animate-spin text-emerald-500" /> Guac-AI is building your strategy…</p>
+            ) : (
+              <>
+                <ul className="space-y-1.5">
+                  {(ai.status === 'done' && ai.data?.strategies?.length ? ai.data.strategies : result.insights).map((t, i) => (
+                    <li key={i} className="text-[12px] text-gray-600 leading-snug">{t}</li>
+                  ))}
+                </ul>
+                {ai.status === 'done' && ai.data?.taxBenefits?.length > 0 && (
+                  <div className="mt-2 rounded-lg bg-emerald-50/70 border border-emerald-100 p-2">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 mb-0.5">Tax benefits</div>
+                    <ul className="space-y-1">
+                      {ai.data.taxBenefits.map((t, i) => <li key={i} className="text-[11.5px] text-emerald-900/80 leading-snug">🏛️ {t}</li>)}
+                    </ul>
+                  </div>
+                )}
+                {ai.status === 'done' && ai.data?.encouragement && (
+                  <p className="text-[12px] text-emerald-700 font-semibold mt-2">💪 {ai.data.encouragement}</p>
+                )}
+              </>
+            )}
           </div>
 
           <div className="mt-3 flex items-center justify-between min-h-[18px]">
@@ -331,11 +375,11 @@ function Calculator({ id, icon: Icon, title, subtitle, fields, validate, compute
             <div className="grid grid-cols-2 gap-3 pt-1">
               <div>
                 <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 mb-1">Pros</div>
-                <ul className="space-y-1">{(pros || []).map((x, i) => <li key={i} className="flex gap-1.5"><span className="text-emerald-500 font-bold">＋</span><span>{x}</span></li>)}</ul>
+                <ul className="space-y-1">{((ai.data?.pros?.length ? ai.data.pros : pros) || []).map((x, i) => <li key={i} className="flex gap-1.5"><span className="text-emerald-500 font-bold">＋</span><span>{x}</span></li>)}</ul>
               </div>
               <div>
                 <div className="text-[10px] font-bold uppercase tracking-wider text-amber-700 mb-1">Watch-outs</div>
-                <ul className="space-y-1">{(cons || []).map((x, i) => <li key={i} className="flex gap-1.5"><span className="text-amber-500 font-bold">－</span><span>{x}</span></li>)}</ul>
+                <ul className="space-y-1">{((ai.data?.cons?.length ? ai.data.cons : cons) || []).map((x, i) => <li key={i} className="flex gap-1.5"><span className="text-amber-500 font-bold">－</span><span>{x}</span></li>)}</ul>
               </div>
             </div>
           </div>

@@ -43,7 +43,7 @@ const FOOTER = [
   ]},
 ]
 
-export default function MarketingShell({ subtitle, hideSearch = false, children }) {
+export default function MarketingShell({ subtitle, hideSearch = false, headerTitle, children }) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-lime-50 text-gray-800 font-sans">
       {/* Nav */}
@@ -57,7 +57,9 @@ export default function MarketingShell({ subtitle, hideSearch = false, children 
             </div>
           </Link>
           {hideSearch
-            ? <div className="flex-1" />
+            ? (headerTitle
+                ? <div className="flex-1 text-center font-black text-emerald-900 truncate px-2 text-sm sm:text-lg">{headerTitle}</div>
+                : <div className="flex-1" />)
             : <HeaderSearch className="flex-1 min-w-0 max-w-xl" />}
           <nav className="flex items-center gap-3 sm:gap-4 text-sm shrink-0">
             {NAV.map((n) => (

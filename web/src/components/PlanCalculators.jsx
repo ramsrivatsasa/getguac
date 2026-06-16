@@ -349,10 +349,9 @@ export default function PlanCalculators() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6">
-      {/* Motivation */}
-      <div className="rounded-2xl bg-gradient-to-br from-emerald-600 to-lime-500 text-white p-4 sm:p-5 text-center shadow-sm mb-4">
-        <p className="font-black text-lg">Every dollar you save today is future-you saying thank you. 🌱</p>
-        <p className="text-emerald-50 text-sm mt-0.5">Pick a calculator, run a number, take one step.</p>
+      {/* Motivation — slim strip */}
+      <div className="rounded-xl bg-gradient-to-r from-emerald-600 to-lime-500 text-white px-4 py-2 text-center shadow-sm mb-3">
+        <p className="font-bold text-sm">🌱 Every dollar you save today is future-you saying thank you — pick a calculator and take one step.</p>
       </div>
 
       <div className="lg:grid lg:grid-cols-[210px_1fr_180px] lg:gap-5">

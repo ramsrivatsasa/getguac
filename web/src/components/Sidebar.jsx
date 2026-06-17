@@ -150,7 +150,7 @@ export default function Sidebar({ isAdmin }) {
                   {section.title}
                 </div>
               )}
-              <div className={clsx('space-y-px', collapsed ? 'lg:px-2 px-3' : 'px-3')}>
+              <div className={clsx('space-y-px', collapsed ? 'lg:px-1 px-3' : 'px-3')}>
                 {section.items.map(({ href, icon: Icon, label, emoji, hoverMascot }) => {
                   const active = isActive(href)
                   return (
@@ -171,7 +171,7 @@ export default function Sidebar({ isAdmin }) {
                         title={collapsed ? label : undefined}
                         className={clsx(
                           'group flex items-center rounded-xl text-sm transition-all',
-                          collapsed ? 'lg:justify-center lg:px-2 lg:py-1 px-3 py-1 gap-2.5' : 'gap-2.5 px-3 py-1',
+                          collapsed ? 'lg:flex-col lg:justify-center lg:gap-0.5 lg:px-1 lg:py-1.5 px-3 py-1 gap-2.5' : 'gap-2.5 px-3 py-1',
                           // Active row is simply highlighted (gradient +
                           // ring) — no pop/scale animation, so clicking a
                           // menu item never looks like it vibrates.
@@ -186,7 +186,7 @@ export default function Sidebar({ isAdmin }) {
                           'rounded-lg',
                           active ? 'bg-white shadow-sm ring-1 ring-emerald-200/60' : 'group-hover:bg-white/70'
                         )}>{emoji}</span>
-                        {!collapsed && (
+                        {!collapsed ? (
                           <>
                             <span className="flex-1">{label}</span>
                             {/* Show chevron on the Inbox row when active so users
@@ -203,6 +203,11 @@ export default function Sidebar({ isAdmin }) {
                               </span>
                             )}
                           </>
+                        ) : (
+                          // Collapsed rail: tiny label tucked under the icon
+                          // (email-client style). Desktop only — the mobile
+                          // drawer is always full-width with normal rows.
+                          <span className="hidden lg:block w-full text-[9.5px] font-semibold leading-[1.1] text-center tracking-tight">{label}</span>
                         )}
                       </Link>
                       {/* Inbox: render the Folders + Filters accordion inline when
@@ -225,14 +230,16 @@ export default function Sidebar({ isAdmin }) {
                 title={collapsed ? 'Admin' : undefined}
                 className={clsx(
                   'group flex items-center rounded-2xl text-sm transition-all',
-                  collapsed ? 'lg:justify-center lg:px-2 lg:py-1.5 px-3 py-1.5 gap-2.5' : 'gap-2.5 px-3 py-1.5',
+                  collapsed ? 'lg:flex-col lg:justify-center lg:gap-0.5 lg:px-1 lg:py-1.5 px-3 py-1.5 gap-2.5' : 'gap-2.5 px-3 py-1.5',
                   pathname === '/admin'
                     ? 'bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-900 font-semibold shadow-sm ring-1 ring-amber-200'
                     : 'text-gray-600 hover:bg-amber-50 hover:text-amber-900'
                 )}
               >
                 <span className="w-8 h-8 rounded-xl flex items-center justify-center bg-white/70 shadow-sm text-base shrink-0">🛡️</span>
-                {!collapsed && <span>Admin</span>}
+                {!collapsed
+                  ? <span>Admin</span>
+                  : <span className="hidden lg:block w-full text-[9.5px] font-semibold leading-[1.1] text-center tracking-tight">Admin</span>}
               </Link>
             </div>
           )}
@@ -246,10 +253,12 @@ export default function Sidebar({ isAdmin }) {
             className={clsx(
               'flex items-center w-full rounded-2xl text-sm font-medium transition-all',
               'text-gray-600 hover:bg-rose-50 hover:text-rose-700',
-              collapsed ? 'lg:justify-center lg:px-2 lg:py-1.5 px-3 py-1.5 gap-2.5' : 'gap-2.5 px-3 py-1.5'
+              collapsed ? 'lg:flex-col lg:justify-center lg:gap-0.5 lg:px-1 lg:py-1.5 px-3 py-1.5 gap-2.5' : 'gap-2.5 px-3 py-1.5'
             )}>
             <span className="w-8 h-8 rounded-xl flex items-center justify-center bg-white/70 text-base shrink-0">👋</span>
-            {!collapsed && <span>Sign Out</span>}
+            {!collapsed
+              ? <span>Sign Out</span>
+              : <span className="hidden lg:block w-full text-[9.5px] font-semibold leading-[1.1] text-center tracking-tight">Sign Out</span>}
           </button>
 
           {/* Collapse toggle (desktop only) */}
@@ -259,9 +268,11 @@ export default function Sidebar({ isAdmin }) {
             className={clsx(
               'hidden lg:flex items-center w-full rounded-2xl text-xs font-semibold transition-all',
               'text-emerald-700 hover:bg-emerald-100',
-              collapsed ? 'justify-center px-2 py-2 gap-2' : 'gap-2 px-3 py-2'
+              collapsed ? 'flex-col justify-center gap-0.5 px-1 py-1.5' : 'gap-2 px-3 py-2'
             )}>
-            {collapsed ? <ChevronsRight size={16} /> : <><ChevronsLeft size={16} /> <span>Collapse</span></>}
+            {collapsed
+              ? <><ChevronsRight size={16} /><span className="text-[9.5px] leading-[1.1]">Expand</span></>
+              : <><ChevronsLeft size={16} /> <span>Collapse</span></>}
           </button>
         </div>
       </aside>

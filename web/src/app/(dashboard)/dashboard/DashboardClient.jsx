@@ -180,7 +180,7 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
   })()
 
   return (
-    <div className="space-y-6 max-w-7xl">
+    <div className="space-y-3 max-w-7xl">
       {/* If the user signed up via /?ref=<CODE>, this fires once on
           first dashboard load to credit 3 Smash days to both sides.
           Renders nothing — pure side-effect island. */}

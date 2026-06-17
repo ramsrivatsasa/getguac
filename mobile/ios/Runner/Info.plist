@@ -86,6 +86,20 @@
 	<key>NSFaceIDUsageDescription</key>
 	<string>Unlock GetGuac with Face ID so you don't have to retype your password.</string>
 
+	<!-- Location (when-in-use): Car Miles (geolocator) reads your location
+	     once when you log a trip, to fill the "From" address. Never in the
+	     background. Required or the app crashes on first location request. -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>GetGuac reads your location only when you log a trip, to fill in your starting point. It never tracks you in the background.</string>
+
+	<!-- Microphone + Speech recognition: the voice → receipt capture flow
+	     (speech_to_text wraps SFSpeechRecognizer + the mic). BOTH keys are
+	     required on iOS or the app crashes when voice capture starts. -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>GetGuac uses the microphone so you can add a receipt or note by voice.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>GetGuac transcribes your speech so you can add a receipt or note by voice.</string>
+
 	<!-- Receive-sharing-intent: app must declare it accepts inbound shares
 	     of images / PDFs / text (used by Car Miles maps-share + future
 	     receipt-from-share). -->

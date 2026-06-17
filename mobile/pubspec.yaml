@@ -110,7 +110,10 @@ dev_dependencies:
 # App icon configuration — run: flutter pub run flutter_launcher_icons
 flutter_launcher_icons:
   android: "ic_launcher"
-  ios: false
+  ios: true
+  # iOS app icons must be opaque — strip any alpha or App Store upload rejects
+  # the build ("large app icon ... can't be transparent or contain an alpha").
+  remove_alpha_ios: true
   image_path: "assets/icon/icon.png"
   min_sdk_android: 21
   adaptive_icon_background: "assets/icon/icon-bg.png"

@@ -9,15 +9,25 @@
 //     the moment the publisher id is configured (and the script in layout.jsx
 //     loads automatically).
 //
+// Fill handling: AdSense stamps the <ins> with data-ad-status="filled" or
+// "unfilled" once it decides. Until a unit actually fills we keep the slot
+// fully collapsed — no reserved blank box, no orphan "Advertisement" label.
+// This is what happens before the site is approved, when there's no ad
+// inventory, or when an ad blocker swallows the request. The label only
+// appears once a real ad is on screen.
+//
 // Usage: <AdSlot slot="2468013579" format="auto" className="my-6" />
 // Each placement should have its own AdSense slot id (create them in AdSense).
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 const CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || 'ca-pub-5959691671441705'
 
 export default function AdSlot({ slot = '', format = 'auto', className = '', minHeight = 100, label = 'Advertisement' }) {
   const pushed = useRef(false)
+  const insRef = useRef(null)
+  // null = AdSense hasn't decided yet · 'filled' = ad on screen · 'unfilled' = collapse
+  const [status, setStatus] = useState(null)
 
   useEffect(() => {
     if (!CLIENT || !slot || pushed.current) return
@@ -25,10 +35,30 @@ export default function AdSlot({ slot = '', format = 'auto', className = '', min
       // eslint-disable-next-line no-multi-assign
       (window.adsbygoogle = window.adsbygoogle || []).push({})
       pushed.current = true
-    } catch { /* adsbygoogle not ready / blocked — leave the box empty */ }
+    } catch { /* adsbygoogle not ready / blocked */ }
+
+    const ins = insRef.current
+    if (!ins) return
+    const read = () => {
+      const s = ins.getAttribute('data-ad-status')
+      if (s === 'filled') setStatus('filled')
+      else if (s === 'unfilled') setStatus('unfilled')
+    }
+    // AdSense sets data-ad-status asynchronously once it resolves the request.
+    const obs = new MutationObserver(read)
+    obs.observe(ins, { attributes: true, attributeFilter: ['data-ad-status'] })
+    read()
+    // Fallback: if it never resolves (script blocked, not yet approved, no
+    // inventory) and the unit has no height, collapse so we don't leave a
+    // blank reserved box under the label.
+    const t = setTimeout(() => {
+      const s = ins.getAttribute('data-ad-status')
+      if (s === 'unfilled' || (!s && ins.offsetHeight < 10)) setStatus('unfilled')
+    }, 4000)
+    return () => { obs.disconnect(); clearTimeout(t) }
   }, [slot])
 
-  // Placeholder mode — keeps positions visible until AdSense is live.
+  // Placeholder mode — keeps positions visible until a publisher id is set.
   if (!CLIENT || !slot) {
     return (
       <div
@@ -42,12 +72,18 @@ export default function AdSlot({ slot = '', format = 'auto', className = '', min
     )
   }
 
+  // No ad served → render nothing visible (but keep the <ins> mounted so
+  // AdSense can still report a late fill).
+  const filled = status === 'filled'
   return (
-    <div className={className}>
-      <p className="text-[9px] uppercase tracking-[0.2em] text-gray-300 text-center mb-1">{label}</p>
+    <div className={className} style={status === 'unfilled' ? { display: 'none' } : undefined}>
+      {filled && (
+        <p className="text-[9px] uppercase tracking-[0.2em] text-gray-300 text-center mb-1">{label}</p>
+      )}
       <ins
+        ref={insRef}
         className="adsbygoogle"
-        style={{ display: 'block', minHeight }}
+        style={{ display: 'block', minHeight: filled ? minHeight : 0 }}
         data-ad-client={CLIENT}
         data-ad-slot={slot}
         data-ad-format={format}

@@ -320,15 +320,16 @@ export default function HowItWorksPage({ embedded = false, compact = false }) {
 
   // ─── Scroll the active slide into view ──────────────────────────────────
   const scrollTo = useCallback((idx, withNarration = true) => {
-    const el = slideRefs.current[idx]
-    if (!el) return
-    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
     setCurrent(idx)
+    const el = slideRefs.current[idx]
+    // Compact mode is a one-slide-at-a-time carousel — nothing to scroll to,
+    // we just swap which slide is visible. Otherwise scroll it into view.
+    if (el && !compact) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
     if (withNarration && SLIDES[idx]?.narration) {
       // Slight delay so the scroll lands before the voice starts.
       setTimeout(() => speak(SLIDES[idx].narration), 600)
     }
-  }, [speak])
+  }, [speak, compact])
 
   // ─── Auto-advance timer ─────────────────────────────────────────────────
   useEffect(() => {
@@ -419,7 +420,7 @@ export default function HowItWorksPage({ embedded = false, compact = false }) {
             key={idx}
             ref={el => (slideRefs.current[idx] = el)}
             data-idx={idx}
-            className={`${compact ? 'py-7' : 'min-h-[calc(100vh-4rem)] py-10'} flex items-center print:break-after-page print:min-h-0 ${
+            className={`${compact ? 'py-7' : 'min-h-[calc(100vh-4rem)] py-10'} ${compact && current !== idx ? 'hidden' : 'flex items-center'} print:break-after-page print:min-h-0 ${
               current === idx ? 'opacity-100' : 'opacity-95'
             } transition-opacity`}
           >

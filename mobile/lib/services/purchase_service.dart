@@ -30,6 +30,11 @@ class PurchaseService {
   bool available = false;
   List<ProductDetails> products = const [];
 
+  // User-facing flow status (null = nothing to show). The Premium card listens
+  // and surfaces "Activating…" / failure messages so a paid purchase never goes
+  // silent. See _onPurchasesUpdated.
+  final ValueNotifier<String?> status = ValueNotifier<String?>(null);
+
   /// Initialize once at app start (after Supabase is ready).
   Future<void> init() async {
     try {
@@ -88,18 +93,42 @@ class PurchaseService {
 
   Future<void> _onPurchasesUpdated(List<PurchaseDetails> purchases) async {
     for (final p in purchases) {
-      if (p.status == PurchaseStatus.purchased ||
+      if (p.status == PurchaseStatus.pending) {
+        status.value = 'Purchase pending…';
+      } else if (p.status == PurchaseStatus.purchased ||
           p.status == PurchaseStatus.restored) {
-        final granted = await _verifyOnServer(p);
-        if (granted) await PremiumService.instance.refresh();
+        status.value = 'Activating your premium…';
+        final granted = await _verifyWithRetry(p);
+        if (granted) {
+          await PremiumService.instance.refresh();
+          status.value = null;
+        } else {
+          // The store also re-delivers on next launch, so Restore retries this.
+          status.value = "Couldn't activate yet — tap Restore to retry.";
+        }
       } else if (p.status == PurchaseStatus.error) {
         debugPrint('[iap] purchase error: ${p.error}');
+        status.value = "Purchase failed — you weren't charged.";
+      } else if (p.status == PurchaseStatus.canceled) {
+        status.value = null;
       }
       // ALWAYS complete, or the store keeps re-delivering the purchase.
       if (p.pendingCompletePurchase) {
         await _iap.completePurchase(p);
       }
     }
+  }
+
+  // Verify with retry + backoff — a transient network blip shouldn't drop a
+  // paid purchase. Fail-closed: returns false (no premium) if all attempts fail.
+  Future<bool> _verifyWithRetry(PurchaseDetails p, {int attempts = 3}) async {
+    for (var i = 0; i < attempts; i++) {
+      if (await _verifyOnServer(p)) return true;
+      if (i < attempts - 1) {
+        await Future.delayed(Duration(seconds: 2 * (i + 1)));
+      }
+    }
+    return false;
   }
 
   /// Send the receipt to our server for validation. The server grants premium;

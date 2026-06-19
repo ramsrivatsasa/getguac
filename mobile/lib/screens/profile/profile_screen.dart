@@ -815,6 +815,20 @@ class _PremiumCard extends StatelessWidget {
                 child: const Text('Restore'),
               ),
             ]),
+            // Live flow status — "Activating…", pending, or a failure nudge to
+            // tap Restore. Never leaves a paid purchase silent.
+            ValueListenableBuilder<String?>(
+              valueListenable: PurchaseService.instance.status,
+              builder: (_, msg, __) => (msg == null)
+                  ? const SizedBox.shrink()
+                  : Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: Text(
+                        msg,
+                        style: const TextStyle(fontSize: 12, color: Color(0xFF047857), fontWeight: FontWeight.w600),
+                      ),
+                    ),
+            ),
           ],
         ),
       ),

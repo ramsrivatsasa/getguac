@@ -249,7 +249,7 @@ export default function MarketplaceClient({ initialQuery = '', initialTab = 'dea
 
         {/* Right ad rail — sticky skyscraper, wide screens only. */}
         <aside className="hidden lg:block w-40 shrink-0 sticky top-20">
-          <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_RIGHT || '9083371411'} format="vertical" minHeight={600} />
+          <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_RIGHT || '9083371411'} format="vertical" minHeight={600} tier={2} />
         </aside>
       </div>{/* /flex */}
 
@@ -313,7 +313,7 @@ function DealsTab({ status, error, results, meta, query, onRetry }) {
           // Drop a native ad card in between results every 8 items.
           const showAd = (i + 1) % 8 === 0 && i < results.length - 1
           return showAd
-            ? [card, <AdSlot key={`ad-${i}`} slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_INGRID || '1890940391'} minHeight={235} className="h-full" />]
+            ? [card, <AdSlot key={`ad-${i}`} slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_INGRID || '1890940391'} minHeight={235} className="h-full" tier={2} />]
             : [card]
         })}
       </div>
@@ -354,7 +354,7 @@ function StoresTab({ query, category, setCategory, saved, onToggle, onFindDeals,
             const card = <StoreCard key={s.slug} s={s} saved={saved.includes(s.slug)} onToggle={() => onToggle(s.slug)} onFindDeals={() => onFindDeals(s)} onCoupons={() => onCoupons(s)} />
             const showAd = (i + 1) % 8 === 0 && i < list.length - 1
             return showAd
-              ? [card, <AdSlot key={`ad-${i}`} slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_INGRID || '1890940391'} minHeight={150} className="h-full" />]
+              ? [card, <AdSlot key={`ad-${i}`} slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_INGRID || '1890940391'} minHeight={150} className="h-full" tier={2} />]
               : [card]
           })}
         </div>

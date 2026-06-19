@@ -476,7 +476,7 @@ export default function PlanCalculators() {
 
         {/* Right ad rail */}
         <aside className="hidden lg:block">
-          <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_RIGHT || '9083371411'} format="vertical" minHeight={600} className="sticky top-20" />
+          <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_RIGHT || '9083371411'} format="vertical" minHeight={600} className="sticky top-20" tier={2} />
         </aside>
       </div>
     </div>

@@ -1,6 +1,7 @@
-// Bottom AdMob banner shown across the native shell. Tier-2 — never shown to
-// premium subscribers, and renders zero-height until an ad actually loads (and
-// nothing at all in release until a real ad-unit id is set in AdsService).
+// Bottom native ad across the native shell. Tier-2 — never shown to premium
+// subscribers. Uses AdMob's built-in "small" native template (no platform
+// factory code). Renders zero height until an ad loads, and nothing at all in
+// release until a real native unit id is set in AdsService.
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
@@ -16,7 +17,7 @@ class GuacAdBanner extends StatefulWidget {
 }
 
 class _GuacAdBannerState extends State<GuacAdBanner> {
-  BannerAd? _ad;
+  NativeAd? _ad;
   bool _loaded = false;
 
   @override
@@ -26,17 +27,37 @@ class _GuacAdBannerState extends State<GuacAdBanner> {
   }
 
   void _load() {
-    // Tier-2: premium subscribers never load an ad in the first place.
+    // Tier-2: premium subscribers never request an ad.
     if (PremiumService.instance.isPremium) return;
     if (!AdsService.ready) return;
-    final unitId = AdsService.bannerUnitId();
+    final unitId = AdsService.nativeUnitId();
     if (unitId == null) return;
 
-    final ad = BannerAd(
+    final ad = NativeAd(
       adUnitId: unitId,
-      size: AdSize.banner,
       request: const AdRequest(),
-      listener: BannerAdListener(
+      // Built-in "small" template — brand-tinted to match GetGuac.
+      nativeTemplateStyle: NativeTemplateStyle(
+        templateType: TemplateType.small,
+        mainBackgroundColor: Colors.white,
+        cornerRadius: 10.0,
+        callToActionTextStyle: NativeTemplateTextStyle(
+          textColor: Colors.white,
+          backgroundColor: const Color(0xFF15803d),
+          style: NativeTemplateFontStyle.bold,
+          size: 14.0,
+        ),
+        primaryTextStyle: NativeTemplateTextStyle(
+          textColor: const Color(0xFF0f172a),
+          style: NativeTemplateFontStyle.bold,
+          size: 14.0,
+        ),
+        secondaryTextStyle: NativeTemplateTextStyle(
+          textColor: const Color(0xFF64748b),
+          size: 12.0,
+        ),
+      ),
+      listener: NativeAdListener(
         onAdLoaded: (_) {
           if (mounted) setState(() => _loaded = true);
         },
@@ -58,11 +79,11 @@ class _GuacAdBannerState extends State<GuacAdBanner> {
     final isPremium = context.watch<PremiumService>().isPremium;
     final ad = _ad;
     if (isPremium || !_loaded || ad == null) return const SizedBox.shrink();
+    // The small template needs a bounded height inside the Column.
     return Container(
       color: Colors.white,
-      alignment: Alignment.center,
+      height: 110,
       width: double.infinity,
-      height: ad.size.height.toDouble(),
       child: AdWidget(ad: ad),
     );
   }

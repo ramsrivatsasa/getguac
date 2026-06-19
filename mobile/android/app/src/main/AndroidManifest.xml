@@ -73,12 +73,11 @@
             android:name="com.google.mlkit.vision.DEPENDENCIES"
             android:value="docscanner" />
 
-        <!-- AdMob application id. REQUIRED for the Mobile Ads SDK to start.
-             This is Google's TEST app id — replace with your real AdMob app id
-             (AdMob console → App settings) before production. -->
+        <!-- AdMob application id (GetGuac Android app, AdMob console). REQUIRED
+             for the Mobile Ads SDK to start. -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713" />
+            android:value="ca-app-pub-5959691671441705~9900170190" />
 
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->

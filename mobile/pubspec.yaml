@@ -51,6 +51,11 @@ dependencies:
   # server-side (getguac.app/api/iap/verify) before premium is granted.
   in_app_purchase: ^3.2.0
 
+  # AdMob — native in-app ads (Tier-2; hidden for premium). Works on Android +
+  # iOS. Web AdSense is never shown inside the app (policy); this carries the
+  # native-screen ads instead.
+  google_mobile_ads: ^5.2.0
+
   # Push notifications via Firebase Cloud Messaging (FCM). firebase_core
   # initializes the SDK; firebase_messaging handles FCM token + inbound
   # message routing; flutter_local_notifications surfaces the

@@ -19,6 +19,7 @@ import 'services/analytics_service.dart';
 import 'services/referral_apply_service.dart';
 import 'services/premium_service.dart';
 import 'services/purchase_service.dart';
+import 'services/ads_service.dart';
 
 // Env-var-gated DSN/keys. Empty string = service disabled. Passed via
 // --dart-define=SENTRY_DSN=... and --dart-define=POSTHOG_KEY=... at build.
@@ -128,6 +129,11 @@ Future<void> _bootstrap() async {
   // any past purchases. Both no-op cleanly when signed out / store unavailable.
   unawaited(PremiumService.instance.refresh());
   unawaited(PurchaseService.instance.init());
+
+  // AdMob SDK init (native Tier-2 ads). No-ops cleanly if the AdMob app id
+  // isn't configured yet; ads only render for non-premium users once a unit
+  // id is set (test ads in debug builds).
+  unawaited(AdsService.init());
 
   runApp(const GetGuacApp());
 }

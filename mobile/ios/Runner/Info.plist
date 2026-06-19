@@ -117,5 +117,27 @@
 			</array>
 		</dict>
 	</array>
+
+	<!-- AdMob (native Tier-2 ads). REQUIRED for the Mobile Ads SDK to start.
+	     This is Google's TEST app id — replace with your real AdMob iOS app id
+	     before production. -->
+	<key>GADApplicationIdentifier</key>
+	<string>ca-app-pub-3940256099942544~1458002511</string>
+
+	<!-- App Tracking Transparency: iOS 14.5+ shows this when we request the
+	     tracking prompt (for personalized ads). Decline = non-personalized
+	     ads still serve. -->
+	<key>NSUserTrackingUsageDescription</key>
+	<string>GetGuac uses this to show more relevant ads. You can keep ads non-personalized — they'll still work.</string>
+
+	<!-- SKAdNetwork — Google's primary id. Paste the full AdMob list before
+	     production for complete ad-attribution coverage. -->
+	<key>SKAdNetworkItems</key>
+	<array>
+		<dict>
+			<key>SKAdNetworkIdentifier</key>
+			<string>cstr6suwn9.skadnetwork</string>
+		</dict>
+	</array>
 </dict>
 </plist>

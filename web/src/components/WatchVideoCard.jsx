@@ -95,8 +95,8 @@ export default function WatchVideoCard() {
             </div>
           </div>
         ) : (
-          <div>
-            <div className="w-full flex items-center justify-between mb-4">
+          <div className="flex flex-col items-center">
+            <div className="w-full flex items-center justify-between mb-3">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 text-white text-[10px] font-bold uppercase tracking-wider">
                 <Sparkles size={11} /> Now playing · the GetGuac tour
               </span>
@@ -108,44 +108,25 @@ export default function WatchVideoCard() {
                 <X size={18} /> Close
               </button>
             </div>
-            {/* Theater layout: the portrait video is narrow, so on desktop it
-                sits beside a recap of what the tour covers — otherwise the wide
-                green card is mostly empty space around a phone-shaped video.
-                Stacks on mobile. */}
-            <div className="grid lg:grid-cols-[minmax(0,320px)_1fr] gap-6 lg:gap-8 items-center">
-              <div className="flex justify-center">
-                {/* Plays inline, in place. Locked to in-page playback — no
-                    download, no fullscreen pop-out, no picture-in-picture. */}
-                {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-                <video
-                  src="/how-it-works-narrated.mp4"
-                  controls
-                  autoPlay
-                  playsInline
-                  poster="/showcase/dashboard.png"
-                  controlsList="nodownload nofullscreen noremoteplayback"
-                  disablePictureInPicture
-                  className="w-auto max-w-[280px] sm:max-w-[320px] max-h-[70vh] rounded-2xl shadow-2xl bg-black ring-1 ring-white/10"
-                />
-              </div>
-              <div className="text-left">
-                <p className="text-lime-200 font-bold text-xs uppercase tracking-wider">In this tour</p>
-                <div className="mt-3 grid sm:grid-cols-2 gap-2.5">
-                  {BENEFITS.map((b) => (
-                    <div key={b.q} className="flex items-start gap-2.5 rounded-xl bg-white/10 ring-1 ring-white/10 p-2.5">
-                      <span className="text-lg leading-none flex-shrink-0" aria-hidden="true">{b.icon}</span>
-                      <div className="text-white font-semibold text-[13px] leading-snug">{b.q}</div>
-                    </div>
-                  ))}
-                </div>
-                <Link
-                  href="/tour"
-                  className="mt-4 inline-flex text-sm font-bold text-lime-100 hover:text-white"
-                >
-                  Explore every feature with screenshots →
-                </Link>
-              </div>
-            </div>
+            {/* Plays inline, in place. Locked to in-page playback — no download,
+                no fullscreen pop-out, no picture-in-picture. */}
+            {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+            <video
+              src="/how-it-works-narrated.mp4"
+              controls
+              autoPlay
+              playsInline
+              poster="/showcase/dashboard.png"
+              controlsList="nodownload nofullscreen noremoteplayback"
+              disablePictureInPicture
+              className="max-h-[72vh] w-auto max-w-full rounded-2xl shadow-2xl bg-black ring-1 ring-white/10"
+            />
+            <Link
+              href="/tour"
+              className="mt-4 text-sm font-semibold text-emerald-100 hover:text-white"
+            >
+              Explore every feature with screenshots →
+            </Link>
           </div>
         )}
       </div>

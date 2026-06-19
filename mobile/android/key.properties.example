@@ -5,12 +5,12 @@
 # 1) Generate the upload keystore once (keep it forever — losing it means you
 #    can never update the app on Play):
 #      keytool -genkey -v -keystore getguac-upload.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
-# 2) Put getguac-upload.jks somewhere safe (e.g. android/app/) and point
-#    storeFile at it (path is relative to the android/ folder, or absolute).
+# 2) Put getguac-upload.jks in android/app/ (storeFile is resolved from the
+#    app module, so use the bare filename; an absolute path also works).
 # 3) Then: flutter build appbundle --release
 #      -> build/app/outputs/bundle/release/app-release.aab  (upload this to Play)
 
-storeFile=app/getguac-upload.jks
+storeFile=getguac-upload.jks
 storePassword=CHANGE_ME
 keyAlias=upload
 keyPassword=CHANGE_ME

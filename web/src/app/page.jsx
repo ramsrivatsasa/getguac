@@ -50,9 +50,9 @@ export default async function Home() {
       </header>
 
       {/* HERO */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-12 sm:pt-20 pb-16">
-        <div className="grid lg:grid-cols-5 gap-10 items-center">
-          <div className="lg:col-span-3 space-y-6">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-6 sm:pt-10 pb-10">
+        <div className="grid lg:grid-cols-5 gap-8 items-center">
+          <div className="lg:col-span-3 space-y-4">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider">
               <Sparkles size={12} /> Guac-AI · personal finance assistant
             </span>
@@ -72,9 +72,6 @@ export default async function Home() {
               </Link>
               <Link href="/login" className="btn-secondary text-base px-6 py-3">
                 I'm already in
-              </Link>
-              <Link href="/download" className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gray-900 hover:bg-black text-white font-bold text-base shadow transition-colors">
-                📱 Get the Android app
               </Link>
             </div>
             <div className="flex items-center gap-5 text-xs text-gray-500 pt-3">
@@ -96,7 +93,7 @@ export default async function Home() {
         </div>
 
         {/* Trust strip */}
-        <div className="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
             { stat: '0–100',     label: 'GuacScore rating' },
             { stat: 'Guac-AI',  label: 'Reads receipts + statements' },
@@ -112,13 +109,13 @@ export default async function Home() {
       </section>
 
       {/* HOW IT WORKS — plays the product-tour video in an on-page modal */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-16">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-10">
         <WatchVideoCard />
       </section>
 
       {/* THE BRAIN — what Guac-AI actually does */}
-      <section id="brain" className="max-w-6xl mx-auto px-4 sm:px-6 pb-16">
-        <div className="text-center mb-10">
+      <section id="brain" className="max-w-6xl mx-auto px-4 sm:px-6 pb-10">
+        <div className="text-center mb-6">
           <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight flex items-center justify-center gap-2 flex-wrap">
             <Brain size={28} className="text-emerald-600" /> The brain behind the guac
           </h2>
@@ -146,8 +143,8 @@ export default async function Home() {
       </section>
 
       {/* HOW IT WORKS — original simple 3-step + link to email deep dive */}
-      <section id="how" className="max-w-6xl mx-auto px-4 sm:px-6 pb-16">
-        <div className="text-center mb-10">
+      <section id="how" className="max-w-6xl mx-auto px-4 sm:px-6 pb-10">
+        <div className="text-center mb-6">
           <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">How GetGuac works</h2>
           <p className="text-gray-500 mt-2">Three taps from receipt to insight.</p>
         </div>
@@ -175,7 +172,7 @@ export default async function Home() {
       </section>
 
       {/* PRIVACY STRIP */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-16">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-10">
         <div className="rounded-3xl border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 to-lime-50 p-6 sm:p-8">
           <div className="flex items-start gap-5 flex-wrap">
             <div className="w-16 h-16 rounded-2xl bg-emerald-100 ring-2 ring-emerald-200 flex items-center justify-center shrink-0">
@@ -203,8 +200,8 @@ export default async function Home() {
 
       {/* SUPERPOWERS GRID */}
       <section id="powers" className="bg-white border-y border-emerald-100">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16">
-          <div className="text-center mb-10">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+          <div className="text-center mb-6">
             <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">Guac-AI superpowers</h2>
             <p className="text-gray-500 mt-2">Twelve tools, one avocado. Each one a little smarter than your bank.</p>
           </div>
@@ -223,7 +220,7 @@ export default async function Home() {
       </section>
 
       {/* FINAL CTA */}
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 py-20 text-center">
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 py-12 text-center">
         <div className="flex justify-center mb-4">
           <GuacMascot expression="celebrating" size={140} />
         </div>

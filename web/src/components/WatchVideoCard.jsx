@@ -1,10 +1,19 @@
 'use client'
 // Home "Watch how GetGuac works" section. Leads with the everyday-consumer
-// benefits (save money, better deals, on-time refunds, plan your finances).
-// "Play the tour" sends people to the /tour slideshow — the oversized inline
-// video player was removed so the card stays compact on the home page.
-import Link from 'next/link'
-import { Sparkles, Play } from 'lucide-react'
+// benefits, then "Play the tour" embeds the illustrated /tour slideshow INLINE
+// on the home page (lazy-loaded on click so it doesn't weigh down first paint).
+// No oversized inline video, no navigating away.
+import { useState } from 'react'
+import dynamic from 'next/dynamic'
+import { Sparkles, Play, X } from 'lucide-react'
+
+// The full /how-it-works slideshow, loaded only when the user starts the tour.
+const Presentation = dynamic(() => import('../app/how-it-works/Presentation'), {
+  ssr: false,
+  loading: () => (
+    <div className="py-16 text-center text-emerald-700 font-semibold">Loading the tour…</div>
+  ),
+})
 
 // The benefits the everyday consumer actually wants — "take control" framing,
 // in the language of impulse loops, the return-window tax, and zombie bills.
@@ -29,12 +38,35 @@ const GOALS = [
 ]
 
 export default function WatchVideoCard() {
+  const [playing, setPlaying] = useState(false)
+
+  // Tour embedded inline on the home page.
+  if (playing) {
+    return (
+      <div className="rounded-3xl bg-white ring-1 ring-emerald-100 shadow-xl overflow-hidden">
+        <div className="flex items-center justify-between px-4 sm:px-5 py-3 bg-emerald-900 text-white">
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider">
+            <Sparkles size={12} /> The GetGuac tour
+          </span>
+          <button
+            type="button"
+            onClick={() => setPlaying(false)}
+            className="inline-flex items-center gap-1.5 text-white/80 hover:text-white text-sm font-semibold"
+          >
+            <X size={16} /> Close
+          </button>
+        </div>
+        <Presentation embedded />
+      </div>
+    )
+  }
+
   return (
     <div className="rounded-3xl bg-gradient-to-br from-emerald-700 via-emerald-600 to-lime-600 p-1 shadow-xl">
       <div className="rounded-[1.4rem] bg-white/5 backdrop-blur-sm p-6 sm:p-10">
         <div className="text-center">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 text-white text-[10px] font-bold uppercase tracking-wider">
-            <Sparkles size={11} /> Narrated product tour · ~1.5 min
+            <Sparkles size={11} /> Product tour · plays right here · ~1.5 min
           </span>
           <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-white mt-3 leading-tight">
             Take control of your money.
@@ -71,16 +103,17 @@ export default function WatchVideoCard() {
             </div>
           </div>
 
-          {/* Play the tour → the /tour slideshow (no oversized inline video). */}
-          <Link
-            href="/tour"
+          {/* Play the tour → embeds the slideshow inline, right here. */}
+          <button
+            type="button"
+            onClick={() => setPlaying(true)}
             className="mt-6 inline-flex items-center gap-3 rounded-full bg-lime-400 text-emerald-900 font-black text-lg px-7 py-3.5 shadow-lg hover:bg-lime-300 hover:scale-[1.03] transition-all"
           >
             <span className="w-9 h-9 rounded-full bg-emerald-900/90 text-lime-300 flex items-center justify-center">
               <Play size={18} className="ml-0.5" fill="currentColor" />
             </span>
             Play the tour
-          </Link>
+          </button>
 
           <div className="mt-6 flex flex-wrap gap-2 justify-center">
             {TAGS.map((t) => (

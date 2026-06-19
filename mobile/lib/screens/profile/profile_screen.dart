@@ -7,6 +7,8 @@ import '../../providers/auth_provider.dart';
 import '../../services/biometric_service.dart';
 import '../../services/update_service.dart';
 import '../../services/debug_log.dart';
+import '../../services/premium_service.dart';
+import '../../services/purchase_service.dart';
 import '../../widgets/animated_mascot.dart';
 import '../../widgets/animated_primitives.dart';
 
@@ -247,6 +249,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onTap: () => UpdateService.openDownload('https://getguac.app/profile'),
               ),
             ),
+
+          const _PremiumCard(),
 
           const SizedBox(height: 20),
           _SectionHeader(label: 'My Activity'),
@@ -742,6 +746,77 @@ class _Row extends StatelessWidget {
           const Spacer(),
           Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
         ],
+      ),
+    );
+  }
+}
+
+// GetGuac Premium card — buy/restore the ad-free (Tier-2) subscription, or
+// show active status. Tier-1 ads stay free for everyone.
+class _PremiumCard extends StatelessWidget {
+  const _PremiumCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final premium = context.watch<PremiumService>();
+
+    if (premium.isPremium) {
+      final until = premium.premiumUntil;
+      final renew = until == null ? '' : until.toLocal().toString().split(' ').first;
+      return Card(
+        color: const Color(0xFFecfdf5),
+        child: ListTile(
+          leading: const Icon(Icons.workspace_premium, color: Color(0xFF15803d)),
+          title: const Text('GetGuac Premium — active',
+              style: TextStyle(fontWeight: FontWeight.w800)),
+          subtitle: Text(renew.isEmpty ? 'Extra ads removed. Thank you!' : 'Extra ads removed · renews $renew'),
+        ),
+      );
+    }
+
+    final price = PurchaseService.instance.premiumPrice;
+    return Card(
+      color: const Color(0xFFf0fdf4),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              const Icon(Icons.workspace_premium, color: Color(0xFFca8a04)),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text('GetGuac Premium',
+                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+              ),
+            ]),
+            const SizedBox(height: 4),
+            const Text('Subscribe and the extra ads come off automatically — no settings to change. Tier-1 ads stay free for everyone.',
+                style: TextStyle(color: Colors.black54, fontSize: 13)),
+            const SizedBox(height: 12),
+            Row(children: [
+              Expanded(
+                child: FilledButton.icon(
+                  icon: const Icon(Icons.lock_open, size: 18),
+                  label: Text(price == null ? 'Go ad-free' : 'Go ad-free · $price'),
+                  onPressed: () async {
+                    final ok = await PurchaseService.instance.buyPremium();
+                    if (!ok && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Premium isn\'t available right now.')),
+                      );
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+              TextButton(
+                onPressed: () => PurchaseService.instance.restore(),
+                child: const Text('Restore'),
+              ),
+            ]),
+          ],
+        ),
       ),
     );
   }

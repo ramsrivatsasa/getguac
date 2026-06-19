@@ -20,17 +20,22 @@
 // Each placement should have its own AdSense slot id (create them in AdSense).
 
 import { useEffect, useRef, useState } from 'react'
+import { usePremium } from '../lib/usePremium'
 
 const CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || 'ca-pub-5959691671441705'
 
-export default function AdSlot({ slot = '', format = 'auto', className = '', minHeight = 100, label = 'Advertisement' }) {
+// tier 1 = shown to everyone (including premium). tier 2 = removed for premium
+// subscribers (the ad-free perk they pay for via in-app purchase).
+export default function AdSlot({ slot = '', format = 'auto', className = '', minHeight = 100, label = 'Advertisement', tier = 1 }) {
   const pushed = useRef(false)
   const insRef = useRef(null)
   // null = AdSense hasn't decided yet · 'filled' = ad on screen · 'unfilled' = collapse
   const [status, setStatus] = useState(null)
+  const premium = usePremium()
+  const hideForPremium = tier === 2 && premium
 
   useEffect(() => {
-    if (!CLIENT || !slot || pushed.current) return
+    if (!CLIENT || !slot || pushed.current || hideForPremium) return
     try {
       // eslint-disable-next-line no-multi-assign
       (window.adsbygoogle = window.adsbygoogle || []).push({})
@@ -56,7 +61,10 @@ export default function AdSlot({ slot = '', format = 'auto', className = '', min
       if (s === 'unfilled' || (!s && ins.offsetHeight < 10)) setStatus('unfilled')
     }, 4000)
     return () => { obs.disconnect(); clearTimeout(t) }
-  }, [slot])
+  }, [slot, hideForPremium])
+
+  // Tier-2 ad + premium subscriber → render nothing (the ad-free perk).
+  if (hideForPremium) return null
 
   // Placeholder mode — keeps positions visible until a publisher id is set.
   if (!CLIENT || !slot) {

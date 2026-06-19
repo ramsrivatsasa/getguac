@@ -17,6 +17,8 @@ import 'services/receipt_outbox.dart';
 import 'services/push_notifications.dart';
 import 'services/analytics_service.dart';
 import 'services/referral_apply_service.dart';
+import 'services/premium_service.dart';
+import 'services/purchase_service.dart';
 
 // Env-var-gated DSN/keys. Empty string = service disabled. Passed via
 // --dart-define=SENTRY_DSN=... and --dart-define=POSTHOG_KEY=... at build.
@@ -121,6 +123,12 @@ Future<void> _bootstrap() async {
   // celebrate on success. No-op when there's nothing pending.
   unawaited(ReferralApplyService.applyPendingIfAny());
 
+  // Premium entitlement + in-app purchase listener. refresh() reads the
+  // current premium state; PurchaseService.init() wires the store + re-delivers
+  // any past purchases. Both no-op cleanly when signed out / store unavailable.
+  unawaited(PremiumService.instance.refresh());
+  unawaited(PurchaseService.instance.init());
+
   runApp(const GetGuacApp());
 }
 
@@ -136,6 +144,7 @@ class GetGuacApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AppAuthProvider()),
         ChangeNotifierProvider(create: (_) => ReceiptProvider()),
         ChangeNotifierProvider(create: (_) => RewardProvider()),
+        ChangeNotifierProvider.value(value: PremiumService.instance),
       ],
       child: MaterialApp.router(
         title: 'GetGuac',

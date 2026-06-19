@@ -46,6 +46,11 @@ dependencies:
   # the Buy Again per-item Share button on the Smashlist.
   share_plus: ^10.0.0
 
+  # In-app purchases (GetGuac Premium — removes Tier-2 ads). Official Flutter
+  # plugin over Google Play Billing + Apple StoreKit. Purchases are validated
+  # server-side (getguac.app/api/iap/verify) before premium is granted.
+  in_app_purchase: ^3.2.0
+
   # Push notifications via Firebase Cloud Messaging (FCM). firebase_core
   # initializes the SDK; firebase_messaging handles FCM token + inbound
   # message routing; flutter_local_notifications surfaces the

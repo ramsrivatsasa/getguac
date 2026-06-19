@@ -26,11 +26,6 @@ const BENEFITS = [
   { icon: '📊', q: 'See it all & plan ahead', d: 'GuacScore + GuacWizard guide every spending call.' },
 ]
 
-const TAGS = [
-  'Snap receipts', 'Read bank statements', 'GuacScore', 'Spending anomalies',
-  'Bank bites', 'Kill subscriptions', 'Steals', 'Returns', 'GuacWizard',
-]
-
 // What the saved money is actually FOR — the life goals that make every penny matter.
 const GOALS = [
   '🛡️ Recession-proof savings', '🏖️ Retirement', '🎓 Kids’ college & school',
@@ -56,19 +51,16 @@ export default function WatchVideoCard() {
             <X size={16} /> Close
           </button>
         </div>
-        <Presentation embedded />
+        <Presentation embedded compact />
       </div>
     )
   }
 
   return (
     <div className="rounded-3xl bg-gradient-to-br from-emerald-700 via-emerald-600 to-lime-600 p-1 shadow-xl">
-      <div className="rounded-[1.4rem] bg-white/5 backdrop-blur-sm p-6 sm:p-10">
+      <div className="rounded-[1.4rem] bg-white/5 backdrop-blur-sm p-5 sm:p-7">
         <div className="text-center">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 text-white text-[10px] font-bold uppercase tracking-wider">
-            <Sparkles size={11} /> Product tour · plays right here · ~1.5 min
-          </span>
-          <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-white mt-3 leading-tight">
+          <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-white leading-tight">
             Take control of your money.
           </h2>
           <p className="text-emerald-50/95 mt-3 max-w-2xl mx-auto text-sm sm:text-base">
@@ -90,7 +82,7 @@ export default function WatchVideoCard() {
             ))}
           </div>
 
-          <div className="mt-7 max-w-3xl mx-auto">
+          <div className="mt-5 max-w-3xl mx-auto">
             <p className="text-lime-200 font-bold text-sm sm:text-base">
               Every penny counts. Turn the money you save into what matters most:
             </p>
@@ -114,14 +106,6 @@ export default function WatchVideoCard() {
             </span>
             Play the tour
           </button>
-
-          <div className="mt-6 flex flex-wrap gap-2 justify-center">
-            {TAGS.map((t) => (
-              <span key={t} className="px-2.5 py-1 rounded-full bg-white/15 text-white text-[11px] font-semibold">
-                {t}
-              </span>
-            ))}
-          </div>
         </div>
       </div>
     </div>

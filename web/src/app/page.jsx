@@ -40,9 +40,6 @@ export default async function Home() {
             <Link href="/resources" className="hidden xl:inline text-sm font-semibold text-gray-600 hover:text-emerald-800 px-3 py-1.5 rounded-full">Resources</Link>
             <Link href="/plan" className="hidden xl:inline text-sm font-semibold text-gray-600 hover:text-emerald-800 px-3 py-1.5 rounded-full">Plan</Link>
             <Link href="/how-it-works" className="hidden xl:inline text-sm font-semibold text-gray-600 hover:text-emerald-800 px-3 py-1.5 rounded-full">How it works</Link>
-            <Link href="/download" className="hidden xl:inline-flex items-center gap-1 text-sm font-semibold text-emerald-700 hover:text-emerald-900 px-3 py-1.5 rounded-full">
-              📱 Download
-            </Link>
             <Link href="/login" className="hidden sm:inline-flex btn-secondary">Sign in</Link>
             <Link href="/register" className="btn-primary">Get started</Link>
           </nav>
@@ -72,6 +69,9 @@ export default async function Home() {
               </Link>
               <Link href="/login" className="btn-secondary text-base px-6 py-3">
                 I'm already in
+              </Link>
+              <Link href="/download" className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gray-900 hover:bg-black text-white font-bold text-base shadow transition-colors">
+                📱 Get the Android app
               </Link>
             </div>
             <div className="flex items-center gap-5 text-xs text-gray-500 pt-3">

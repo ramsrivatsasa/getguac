@@ -241,7 +241,7 @@ const SLIDES = [
   },
 ]
 
-export default function HowItWorksPage({ embedded = false }) {
+export default function HowItWorksPage({ embedded = false, compact = false }) {
   const [playing, setPlaying] = useState(false)
   const [muted, setMuted] = useState(false)
   const [current, setCurrent] = useState(0)
@@ -389,7 +389,7 @@ export default function HowItWorksPage({ embedded = false }) {
   }, [current])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-lime-50 text-gray-800 font-sans">
+    <div className={`${compact ? '' : 'min-h-screen'} bg-gradient-to-br from-emerald-50 via-white to-lime-50 text-gray-800 font-sans`}>
       {/* Top nav — hidden when embedded in another page (e.g. /tour) */}
       {!embedded && (
       <header className="sticky top-0 z-30 backdrop-blur bg-white/70 border-b border-emerald-100 print:hidden">
@@ -419,7 +419,7 @@ export default function HowItWorksPage({ embedded = false }) {
             key={idx}
             ref={el => (slideRefs.current[idx] = el)}
             data-idx={idx}
-            className={`min-h-[calc(100vh-4rem)] flex items-center py-10 print:break-after-page print:min-h-0 ${
+            className={`${compact ? 'py-7' : 'min-h-[calc(100vh-4rem)] py-10'} flex items-center print:break-after-page print:min-h-0 ${
               current === idx ? 'opacity-100' : 'opacity-95'
             } transition-opacity`}
           >

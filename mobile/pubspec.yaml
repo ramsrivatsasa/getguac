@@ -1,7 +1,7 @@
 name: getguac
 description: GetGuac — Smart receipt & rewards management
 publish_to: 'none'
-version: 0.3.80+172
+version: 0.3.81+173
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -51,10 +51,12 @@ dependencies:
   # server-side (getguac.app/api/iap/verify) before premium is granted.
   in_app_purchase: ^3.2.0
 
-  # AdMob — native in-app ads (Tier-2; hidden for premium). Works on Android +
-  # iOS. Web AdSense is never shown inside the app (policy); this carries the
-  # native-screen ads instead.
-  google_mobile_ads: ^5.2.0
+  # AdMob (google_mobile_ads) is TEMPORARILY REMOVED: its Gradle script uses
+  # `configurations.all`, an API removed in Gradle 9 (our AGP 9 toolchain), so
+  # it won't compile a release build. The native-ad code (AdsService /
+  # GuacAdBanner) is preserved in git (commit 7abf772) — restore the dep + those
+  # two files once the plugin supports Gradle 9 or the toolchain is downgraded.
+  # google_mobile_ads: 6.0.0
 
   # Push notifications via Firebase Cloud Messaging (FCM). firebase_core
   # initializes the SDK; firebase_messaging handles FCM token + inbound

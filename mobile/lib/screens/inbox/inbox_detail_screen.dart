@@ -382,7 +382,10 @@ class _MessageBody extends StatefulWidget {
 }
 
 class _MessageBodyState extends State<_MessageBody> {
-  bool _showRich = true;
+  // Default to the plain-text view: the Android System WebView renders some
+  // HTML emails then goes blank, so text (which can never blank) is the
+  // reliable default. Rich (WebView) is still one tap away via the toggle.
+  bool _showRich = false;
   WebViewController? _controller;
   bool _webViewFailed = false;
   // Starts modest; the email reports its real content height back over the

@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:http/http.dart' as http;
 import '../../providers/receipt_provider.dart';
 import '../../models/receipt_model.dart';
 import '../../widgets/worth_it_rating.dart';
@@ -104,6 +107,56 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
       builder: (_) => _ImageViewer(url: url),
       fullscreenDialog: true,
     ));
+  }
+
+  // Email receipts have no photo. Ask the server to render the source email
+  // to an image (PNG snapshot, stored as receipt_link) and show it full-screen
+  // — far more reliable than rendering raw email HTML in a WebView, which can
+  // go blank on some Android devices.
+  Future<void> _viewEmail() async {
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const AlertDialog(
+        content: Row(children: [
+          SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5)),
+          SizedBox(width: 16),
+          Expanded(child: Text('Loading the email…')),
+        ]),
+      ),
+    );
+    String link = '';
+    String err = '';
+    try {
+      final token = Supabase.instance.client.auth.currentSession?.accessToken;
+      final res = await http.post(
+        Uri.parse('https://getguac.app/api/receipts/${widget.id}/email-snapshot'),
+        headers: {
+          'Authorization': 'Bearer ${token ?? ''}',
+          'Content-Type': 'application/json',
+        },
+      );
+      if (res.statusCode == 200) {
+        link = (jsonDecode(res.body)['receipt_link'] as String?) ?? '';
+      } else {
+        err = res.statusCode == 400
+            ? 'This receipt has no saved email to show.'
+            : 'Couldn\'t load the email (${res.statusCode}).';
+      }
+    } catch (_) {
+      err = 'Couldn\'t load the email — check your connection.';
+    }
+    if (!mounted) return;
+    Navigator.of(context, rootNavigator: true).pop(); // dismiss the loader
+    if (link.isNotEmpty) {
+      // Refresh so the saved snapshot shows as "View image" next time too.
+      context.read<ReceiptProvider>().loadReceipts(period: ReceiptPeriod.all, force: true);
+      _viewImage(link);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(err.isEmpty ? 'No email to show.' : err)),
+      );
+    }
   }
 
   // Re-run the AI parse against this receipt's source (email body OR
@@ -297,6 +350,26 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
                     onPressed: _reparse,
                     icon: const Icon(Icons.auto_fix_high, size: 18, color: Color(0xFF15803d)),
                     label: const Text('Re-parse with Guac-AI',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF15803d))),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Color(0xFF15803d), width: 1.5),
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      minimumSize: const Size.fromHeight(44),
+                    ),
+                  ),
+                ),
+
+              // ── VIEW EMAIL ──────────────────────────────────────────
+              // Email receipts have no photo — render the source email to an
+              // image (server snapshot) and show it, instead of a WebView.
+              if (!r.fromStatement && r.receiptLink.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: OutlinedButton.icon(
+                    onPressed: _viewEmail,
+                    icon: const Icon(Icons.mail_outline, size: 18, color: Color(0xFF15803d)),
+                    label: const Text('View email',
                       style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF15803d))),
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: Color(0xFF15803d), width: 1.5),

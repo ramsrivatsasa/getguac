@@ -10,6 +10,18 @@
 
 import pdfParse from 'pdf-parse'
 
+// A receipt's transaction date can never be in the future. If the AI misreads
+// it (commonly a MM/DD ↔ DD/MM swap or a digit slip), drop it to null so the
+// user corrects it rather than trusting a wrong future date. A 1-day grace
+// absorbs timezone skew (a receipt dated "today" in a zone ahead of UTC).
+function notFutureDate(d) {
+  if (!d) return null
+  const t = new Date()
+  t.setUTCDate(t.getUTCDate() + 1)
+  const cutoff = t.toISOString().slice(0, 10)
+  return d > cutoff ? null : d
+}
+
 const GEMINI_MODEL      = process.env.GEMINI_MODEL      || 'gemini-2.5-flash'
 const GROQ_TEXT_MODEL   = process.env.GROQ_TEXT_MODEL   || 'llama-3.3-70b-versatile'
 const GROQ_VISION_MODEL = process.env.GROQ_VISION_MODEL || 'meta-llama/llama-4-scout-17b-16e-instruct'
@@ -172,7 +184,7 @@ function normalizeResult(parsed, provider, model, usage) {
     store_website: parsed.store?.website || '',
     store_no: parsed.store?.store_no || '',
     location_name: parsed.store?.location_name || '',
-    date: parsed.date || null,
+    date: notFutureDate(parsed.date),
     total_amount: Number(parsed.total_amount ?? 0),
     tax_paid: Number(parsed.tax_paid ?? 0),
     payment_method: parsed.payment_method || '',

@@ -32,13 +32,21 @@ export default function EmbedBootstrap() {
         }
 
         const sb = createClient()
-        const { error: setErr } = await sb.auth.setSession({ access_token, refresh_token })
+        const { data: setData, error: setErr } = await sb.auth.setSession({ access_token, refresh_token })
         if (setErr) { setMsg(`Sign-in failed: ${setErr.message}`); return }
 
-        // Confirm the session actually persisted (writes the SSR cookies the
-        // server layout reads) BEFORE navigating — avoids a login bounce.
-        const { data: { user }, error: userErr } = await sb.auth.getUser()
-        if (userErr || !user) { setMsg(`Session not established${userErr ? `: ${userErr.message}` : ''}.`); return }
+        // Trust the session setSession hands back (in-memory) — it has already
+        // written the SSR auth cookies the server layout reads. We deliberately
+        // do NOT call getUser() here: in the Android WebView its server
+        // round-trip + cookie read-back was throwing "Auth session missing"
+        // even though setSession succeeded. Fall back to a local getSession()
+        // read if setSession returned no session object.
+        let session = setData?.session ?? null
+        if (!session) {
+          const { data: getData } = await sb.auth.getSession()
+          session = getData?.session ?? null
+        }
+        if (!session) { setMsg('Session not established — reopen from the app.'); return }
 
         if (cancelled) return
         window.location.replace(safeNext)

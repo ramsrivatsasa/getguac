@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.87",
-  "name": "v0.3.87 — WebView screens fixed + more in the Menu",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.87/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Fixed: Reports, Steals, Guacanomics and other web-powered pages now open reliably in the app (sign-in handover fix).\n• New in the Menu: Marketplace, Coupons, Forecast, Resources and Articles.\n• Polish: the app mascot now sits in the page header; removed a duplicate ad banner."
+  "version": "v0.3.88",
+  "name": "v0.3.88 — Ad privacy consent",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.88/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Ad privacy: GetGuac now asks your ad-personalization choice where it's required (EU/UK) and respects it. Personalized ads stay on where allowed, so the ads you see are more relevant.\n• Stability tweaks to ad loading."
 }

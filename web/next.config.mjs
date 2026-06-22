@@ -48,7 +48,18 @@ const nextConfig = {
   // mangle the brotli-packed Chromium binary; Next's file tracer then bundles
   // the binary into the serverless function. Required for the email-snapshot
   // route to render on Vercel.
-  serverExternalPackages: ['tesseract.js', 'pdf-parse', 'imapflow', 'mailparser', '@sparticuz/chromium', 'puppeteer-core'],
+  experimental: {
+    // Next 14.2 name (renamed to top-level `serverExternalPackages` in Next 15).
+    // At top level it's silently ignored here, so it MUST live under experimental
+    // — keeps webpack from mangling the brotli-packed Chromium binary.
+    serverComponentsExternalPackages: ['tesseract.js', 'pdf-parse', 'imapflow', 'mailparser', '@sparticuz/chromium', 'puppeteer-core'],
+    // Next's file tracer still drops @sparticuz/chromium's bin/ (the packed
+    // Chromium) from the email-snapshot function — so executablePath() 500s with
+    // "bin does not exist". Force the whole package into that function.
+    outputFileTracingIncludes: {
+      '/api/receipts/[id]/email-snapshot': ['./node_modules/@sparticuz/chromium/**'],
+    },
+  },
   // Build-time SHA baked into the client bundle. The UpdatePrompt
   // component compares this to the SHA returned by /api/build-info
   // and shows a "reload to update" banner when they diverge — so

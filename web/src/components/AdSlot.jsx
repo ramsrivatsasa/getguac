@@ -31,10 +31,21 @@ export default function AdSlot({ slot = '', format = 'auto', className = '', min
   const insRef = useRef(null)
   // null = AdSense hasn't decided yet · 'filled' = ad on screen · 'unfilled' = collapse
   const [status, setStatus] = useState(null)
+  // true when running inside the GetGuac app's WebView (the /embed handover
+  // drops a `guac_embedded` cookie). AdSense is browser-only — serving it in an
+  // app WebView violates AdSense policy (ban risk), so we suppress every slot
+  // there; the native shell shows an AdMob banner in its place.
+  const [embedded, setEmbedded] = useState(false)
   const premium = usePremium()
   const hideForPremium = tier === 2 && premium
 
   useEffect(() => {
+    // Inside the native app's WebView → never request an AdSense ad (policy).
+    if (typeof document !== 'undefined' &&
+        document.cookie.split('; ').some((c) => c === 'guac_embedded=1')) {
+      setEmbedded(true)
+      return
+    }
     if (!CLIENT || !slot || pushed.current || hideForPremium) return
     try {
       // eslint-disable-next-line no-multi-assign
@@ -63,8 +74,8 @@ export default function AdSlot({ slot = '', format = 'auto', className = '', min
     return () => { obs.disconnect(); clearTimeout(t) }
   }, [slot, hideForPremium])
 
-  // Tier-2 ad + premium subscriber → render nothing (the ad-free perk).
-  if (hideForPremium) return null
+  // Tier-2 ad + premium subscriber, or inside the app WebView → render nothing.
+  if (hideForPremium || embedded) return null
 
   // Placeholder mode — keeps positions visible until a publisher id is set.
   if (!CLIENT || !slot) {

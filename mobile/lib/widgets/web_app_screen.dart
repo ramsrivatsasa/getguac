@@ -9,6 +9,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'guac_mascot.dart';
 import 'top_app_bar_actions.dart';
+import 'guac_ad_banner.dart';
 import '../providers/receipt_provider.dart';
 
 const _kWebBase = 'https://getguac.app';
@@ -173,7 +174,9 @@ class _WebAppScreenState extends State<WebAppScreen> with SingleTickerProviderSt
           ),
         ],
       ),
-      body: Stack(children: [
+      // Body is a Column so a native AdMob banner can sit beneath the WebView.
+      body: Column(children: [
+        Expanded(child: Stack(children: [
         if (_controller != null && _error == null)
           WebViewWidget(
             controller: _controller!,
@@ -218,6 +221,11 @@ class _WebAppScreenState extends State<WebAppScreen> with SingleTickerProviderSt
                 style: TextStyle(color: Colors.black54, fontWeight: FontWeight.w700)),
             ]),
           ),
+      ])),
+        // Native AdMob banner below the WebView — REPLACES the page's own
+        // AdSense slots, which are suppressed inside the app WebView (AdSense
+        // is browser-only; serving it in an app violates policy / risks a ban).
+        const GuacAdBanner(),
       ]),
     );
   }

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'guac_mascot.dart';
 import 'top_app_bar_actions.dart';
+import 'guac_ad_banner.dart';
 import '../services/update_service.dart';
 
 // Colorful bottom nav matching the web's brand palette.
@@ -335,6 +336,9 @@ class _MainScaffoldState extends State<MainScaffold> with WidgetsBindingObserver
             ),
           ),
         ),
+        // Native AdMob banner above the bottom nav. Tier-2: renders nothing
+        // for premium subscribers (and zero-height until an ad loads).
+        const GuacAdBanner(),
       ]),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(

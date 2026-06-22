@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import HeaderSearch from './HeaderSearch'
 import MarketingAuthButtons from './MarketingAuthButtons'
+import MarketingMobileMenu from './MarketingMobileMenu'
 
 const NAV = [
   { href: '/marketplace', label: 'Marketplace' },
@@ -66,6 +67,7 @@ export default function MarketingShell({ subtitle, hideSearch = false, headerTit
               <Link key={n.href} href={n.href} className="hidden xl:inline font-semibold text-gray-600 hover:text-emerald-800">{n.label}</Link>
             ))}
             <MarketingAuthButtons />
+            {!headerTitle && <MarketingMobileMenu nav={NAV} />}
           </nav>
         </div>
       </header>

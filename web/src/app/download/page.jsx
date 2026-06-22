@@ -11,13 +11,13 @@ import GuacMascot from '../../components/GuacMascot'
 // alerts; the /download page is for fresh installs + the manual update
 // path while CI release pipeline isn't wired up.
 const ANDROID_RELEASE = {
-  version: 'v0.3.85',
-  releasedAt: '2026-06-21',
-  base: '/downloads/v0.3.85',
+  version: 'v0.3.86',
+  releasedAt: '2026-06-22',
+  base: '/downloads/v0.3.86',
   apks: [
-    { abi: 'arm64-v8a',   sizeMB: 24.1, label: 'Most modern Android phones (Samsung, Pixel, OnePlus, etc.)', file: 'app-arm64-v8a-release.apk',   primary: true  },
-    { abi: 'armeabi-v7a', sizeMB: 22.1, label: 'Older 32-bit Android phones',                                   file: 'app-armeabi-v7a-release.apk', primary: false },
-    { abi: 'x86_64',      sizeMB: 25.6, label: 'Android emulators + Chromebooks',                                file: 'app-x86_64-release.apk',      primary: false },
+    { abi: 'arm64-v8a',   sizeMB: 25.9, label: 'Most modern Android phones (Samsung, Pixel, OnePlus, etc.)', file: 'app-arm64-v8a-release.apk',   primary: true  },
+    { abi: 'armeabi-v7a', sizeMB: 24.0, label: 'Older 32-bit Android phones',                                   file: 'app-armeabi-v7a-release.apk', primary: false },
+    { abi: 'x86_64',      sizeMB: 27.4, label: 'Android emulators + Chromebooks',                                file: 'app-x86_64-release.apk',      primary: false },
   ],
 }
 

@@ -9,7 +9,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'guac_mascot.dart';
 import 'top_app_bar_actions.dart';
-import 'guac_ad_banner.dart';
 import '../providers/receipt_provider.dart';
 
 const _kWebBase = 'https://getguac.app';
@@ -145,18 +144,10 @@ class _WebAppScreenState extends State<WebAppScreen> with SingleTickerProviderSt
         // app's global AppBarTheme.titleTextStyle is dark and would otherwise
         // win over foregroundColor.
         title: Row(mainAxisSize: MainAxisSize.min, children: [
-          Container(
-            width: 28, height: 28,
-            margin: const EdgeInsets.only(right: 8),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft, end: Alignment.bottomRight,
-                colors: [Color(0xFFa3e635), Color(0xFF15803d)],
-              ),
-            ),
-            alignment: Alignment.center,
-            child: const Text('🥑', style: TextStyle(fontSize: 16)),
+          // App mascot (replaces the old green-box 🥑 logo).
+          const Padding(
+            padding: EdgeInsets.only(right: 8),
+            child: GuacMascot(size: 28),
           ),
           Text(widget.title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
         ]),
@@ -174,9 +165,7 @@ class _WebAppScreenState extends State<WebAppScreen> with SingleTickerProviderSt
           ),
         ],
       ),
-      // Body is a Column so a native AdMob banner can sit beneath the WebView.
-      body: Column(children: [
-        Expanded(child: Stack(children: [
+      body: Stack(children: [
         if (_controller != null && _error == null)
           WebViewWidget(
             controller: _controller!,
@@ -221,11 +210,6 @@ class _WebAppScreenState extends State<WebAppScreen> with SingleTickerProviderSt
                 style: TextStyle(color: Colors.black54, fontWeight: FontWeight.w700)),
             ]),
           ),
-      ])),
-        // Native AdMob banner below the WebView — REPLACES the page's own
-        // AdSense slots, which are suppressed inside the app WebView (AdSense
-        // is browser-only; serving it in an app violates policy / risks a ban).
-        const GuacAdBanner(),
       ]),
     );
   }

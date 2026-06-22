@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.86",
-  "name": "v0.3.86 — Ads return to the app (free tier) + mobile menu",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.86/app-arm64-v8a-release.apk",
-  "releaseNotes": "• GetGuac Premium now removes ads everywhere — subscribe in Profile to go fully ad-free.\n• Web pages opened in the app now reach Marketplace, Coupons, Resources and Calculators from a new menu (☰).\n• Reliability tweaks to email rendering and the in-app updater."
+  "version": "v0.3.87",
+  "name": "v0.3.87 — WebView screens fixed + more in the Menu",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.87/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Fixed: Reports, Steals, Guacanomics and other web-powered pages now open reliably in the app (sign-in handover fix).\n• New in the Menu: Marketplace, Coupons, Forecast, Resources and Articles.\n• Polish: the app mascot now sits in the page header; removed a duplicate ad banner."
 }

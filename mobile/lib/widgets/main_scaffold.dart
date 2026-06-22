@@ -59,6 +59,12 @@ const _quickActions = <_QuickAction>[
   _QuickAction('/stores',     Icons.storefront_rounded,        'Stores',       'Spend by store',        Color(0xFF1d4ed8), Color(0xFFdbeafe)),
   _QuickAction('/returns',    Icons.undo_rounded,              'Returns',      'Open refund windows',   Color(0xFFb91c1c), Color(0xFFfee2e2)),
   _QuickAction('/car-miles',  Icons.directions_car_filled_rounded, 'Car Miles', 'Trip log',            Color(0xFF0891b2), Color(0xFFcffafe)),
+  // Explore — public web pages shown in-app via the WebView (build-once).
+  _QuickAction('/marketplace', Icons.local_mall_rounded,       'Marketplace',  'Public deals search',   Color(0xFF0d9488), Color(0xFFccfbf1)),
+  _QuickAction('/coupons',     Icons.local_activity_rounded,   'Coupons',      'Promo codes',           Color(0xFFea580c), Color(0xFFffedd5)),
+  _QuickAction('/plan',        Icons.trending_up_rounded,      'Forecast',     'Plan & calculators',    Color(0xFF15803d), Color(0xFFd1fae5)),
+  _QuickAction('/resources',   Icons.menu_book_rounded,        'Resources',    'Money guides',          Color(0xFF1d4ed8), Color(0xFFdbeafe)),
+  _QuickAction('/articles',    Icons.article_rounded,          'Articles',     'Tips & reads',          Color(0xFF7c3aed), Color(0xFFede9fe)),
   _QuickAction('/chat',        Icons.chat_bubble_outline,        'Chat',         'Family + friends',         Color(0xFF15803d), Color(0xFFd1fae5)),
   _QuickAction('/profile',    Icons.person,                    'Profile',      'Account + settings',    Color(0xFF7c3aed), Color(0xFFede9fe)),
 ];
@@ -206,6 +212,7 @@ class _MainScaffoldState extends State<MainScaffold> with WidgetsBindingObserver
     HapticFeedback.mediumImpact();
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withValues(alpha: 0.4),
       builder: (sheetCtx) {
@@ -435,13 +442,17 @@ class _ProfileQuickMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      // Cap height + scroll the contents so the grid (now 20 tiles) never
+      // overflows on shorter phones.
+      constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: SafeArea(
         top: false,
-        child: Padding(
+        child: SingleChildScrollView(
+          child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             // Drag handle
@@ -524,6 +535,7 @@ class _ProfileQuickMenu extends StatelessWidget {
             ),
             const SizedBox(height: 4),
           ]),
+        ),
         ),
       ),
     );

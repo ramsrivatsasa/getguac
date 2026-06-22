@@ -103,6 +103,14 @@ final appRouter = GoRouter(
         GoRoute(path: '/stash', builder: (_, __) => const StashScreen()),
         GoRoute(path: '/guacmoney', builder: (_, __) => const GuacMoneyScreen()),
         GoRoute(path: '/steals', builder: (_, __) => const WebAppScreen(path: '/steals', title: 'Steals')),
+        // Public marketing pages, shown in-app via the WebView (build-once).
+        // Reachable from the Menu grid; each gets the native AdMob banner from
+        // MainScaffold. Their own web AdSense slots are suppressed in-app.
+        GoRoute(path: '/marketplace', builder: (_, __) => const WebAppScreen(path: '/marketplace', title: 'Marketplace')),
+        GoRoute(path: '/coupons',     builder: (_, __) => const WebAppScreen(path: '/coupons', title: 'Coupons')),
+        GoRoute(path: '/plan',        builder: (_, __) => const WebAppScreen(path: '/plan', title: 'Plan & Forecast')),
+        GoRoute(path: '/resources',   builder: (_, __) => const WebAppScreen(path: '/resources', title: 'Resources')),
+        GoRoute(path: '/articles',    builder: (_, __) => const WebAppScreen(path: '/articles', title: 'Articles')),
         GoRoute(path: '/inbox', builder: (_, __) => const InboxScreen()),
         GoRoute(path: '/inbox/:id', builder: (_, state) => InboxDetailScreen(id: state.pathParameters['id']!)),
         GoRoute(path: '/how-it-works', builder: (_, __) => const HowItWorksScreen()),

@@ -238,7 +238,7 @@ class _InboxDetailScreenState extends State<InboxDetailScreen> {
               // to plain text if WebView fails to init (defensive — keeps the
               // app loading even on devices with broken Android System WebView).
               if (hasHtml)
-                _MessageBody(html: bodyHtml, text: bodyText.isNotEmpty ? bodyText : _htmlToText(bodyHtml))
+                _MessageBody(html: bodyHtml, text: bodyText.isNotEmpty ? bodyText : _htmlToText(bodyHtml), receiptId: receiptId)
               else if (bodyText.isNotEmpty)
                 SelectableText(
                   bodyText,
@@ -370,76 +370,146 @@ String _formatAllHeaders(Map<String, dynamic> m) {
   return lines.join('\n');
 }
 
-/// Toggle between rich (native HTML render) and plain-text versions of an email
-/// body. Rich uses flutter_widget_from_html_core — native Flutter widgets, NOT
-/// a WebView — so it never goes blank, shaky, or shows the vertical-line
-/// artifacts the Android System WebView produced. Rich is the default.
+/// Email body with three views:
+///   • Image — a faithful server-rendered snapshot (real browser render → PNG).
+///     Default for receipt emails: tables/columns look exactly right, zoomable,
+///     never blank/squished.
+///   • Rich  — native HTML (flutter_widget_from_html_core), interactive links.
+///   • Plain — text fallback.
 class _MessageBody extends StatefulWidget {
   final String html;
   final String text;
-  const _MessageBody({required this.html, required this.text});
+  final String? receiptId; // when set, the faithful Image view is available
+  const _MessageBody({required this.html, required this.text, this.receiptId});
   @override
   State<_MessageBody> createState() => _MessageBodyState();
 }
 
 class _MessageBodyState extends State<_MessageBody> {
-  bool _showRich = true; // native render is reliable → rich by default
+  late String _mode = widget.receiptId != null
+      ? 'image'
+      : (widget.html.trim().isNotEmpty ? 'rich' : 'text');
+  String? _imageUrl;
+  bool _imageLoading = false;
+  String? _imageError;
 
   static const _kBrand = Color(0xFF15803d);
 
   @override
+  void initState() {
+    super.initState();
+    if (_mode == 'image') _loadImage();
+  }
+
+  Future<void> _loadImage() async {
+    if (widget.receiptId == null || _imageUrl != null || _imageLoading) return;
+    setState(() { _imageLoading = true; _imageError = null; });
+    try {
+      final token = Supabase.instance.client.auth.currentSession?.accessToken;
+      final res = await http.post(
+        Uri.parse('https://getguac.app/api/receipts/${widget.receiptId}/email-snapshot'),
+        headers: {'Authorization': 'Bearer ${token ?? ''}', 'Content-Type': 'application/json'},
+      );
+      final url = res.statusCode == 200
+          ? (jsonDecode(res.body)['receipt_link'] as String?) ?? ''
+          : '';
+      if (!mounted) return;
+      if (url.isNotEmpty) {
+        setState(() { _imageUrl = url; _imageLoading = false; });
+      } else {
+        // Fall back to a renderable view so the user always sees something.
+        setState(() {
+          _imageLoading = false;
+          _imageError = 'Couldn\'t render the email image.';
+          _mode = widget.html.trim().isNotEmpty ? 'rich' : 'text';
+        });
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _imageLoading = false;
+        _imageError = 'Couldn\'t render the email image.';
+        _mode = widget.html.trim().isNotEmpty ? 'rich' : 'text';
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final canShowRich = widget.html.trim().isNotEmpty;
-    final viewing = (_showRich && canShowRich) ? 'rich' : 'text';
+    final hasHtml = widget.html.trim().isNotEmpty;
+    final canImage = widget.receiptId != null;
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      if (canShowRich)
-        Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Row(children: [
-            const Text('View:', style: TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w700)),
-            const SizedBox(width: 6),
-            _modeChip('Rich', viewing == 'rich', () => setState(() => _showRich = true)),
+      Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Row(children: [
+          const Text('View:', style: TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w700)),
+          const SizedBox(width: 6),
+          if (canImage) ...[
+            _modeChip('Image', _mode == 'image', () { setState(() => _mode = 'image'); _loadImage(); }),
             const SizedBox(width: 4),
-            _modeChip('Plain', viewing == 'text', () => setState(() => _showRich = false)),
-          ]),
-        ),
-      if (viewing == 'rich' && canShowRich)
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: const Color(0xFFe5e7eb)),
-          ),
-          // Native HTML → Flutter widgets (no WebView, never blanks). Emails are
-          // designed for ~600px (tables/columns); on a narrow phone fwfh would
-          // squish wide tables to one char per line, so render at the email's
-          // design width and scroll horizontally — faithful layout.
-          child: LayoutBuilder(builder: (context, c) {
-            final body = SizedBox(
-              width: c.maxWidth >= 600 ? c.maxWidth : 600,
-              child: HtmlWidget(
-                widget.html,
-                textStyle: const TextStyle(fontSize: 14, height: 1.5, color: Color(0xFF111827)),
-                onTapUrl: (url) async {
-                  await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication)
-                      .catchError((_) => false);
-                  return true;
-                },
-              ),
-            );
-            return c.maxWidth >= 600
-                ? body
-                : SingleChildScrollView(scrollDirection: Axis.horizontal, child: body);
-          }),
-        )
+          ],
+          if (hasHtml) ...[
+            _modeChip('Rich', _mode == 'rich', () => setState(() => _mode = 'rich')),
+            const SizedBox(width: 4),
+          ],
+          _modeChip('Plain', _mode == 'text', () => setState(() => _mode = 'text')),
+        ]),
+      ),
+      if (_mode == 'image')
+        _imageView()
+      else if (_mode == 'rich' && hasHtml)
+        _richView()
       else
-        SelectableText(
-          widget.text,
-          style: const TextStyle(fontSize: 13.5, height: 1.5),
-        ),
+        SelectableText(widget.text, style: const TextStyle(fontSize: 13.5, height: 1.5)),
     ]);
+  }
+
+  Widget _imageView() {
+    if (_imageLoading) {
+      return const Padding(padding: EdgeInsets.symmetric(vertical: 40), child: Center(child: CircularProgressIndicator()));
+    }
+    final url = _imageUrl;
+    if (url == null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Text(_imageError ?? 'No image available.', style: const TextStyle(color: Colors.black54)),
+      );
+    }
+    return Container(
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), border: Border.all(color: const Color(0xFFe5e7eb))),
+      clipBehavior: Clip.antiAlias,
+      child: InteractiveViewer(
+        maxScale: 5,
+        child: Image.network(url, width: double.infinity, fit: BoxFit.fitWidth,
+          loadingBuilder: (c, child, p) => p == null
+              ? child
+              : const Padding(padding: EdgeInsets.symmetric(vertical: 40), child: Center(child: CircularProgressIndicator())),
+        ),
+      ),
+    );
+  }
+
+  Widget _richView() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), border: Border.all(color: const Color(0xFFe5e7eb))),
+      child: LayoutBuilder(builder: (context, c) {
+        final body = SizedBox(
+          width: c.maxWidth >= 600 ? c.maxWidth : 600,
+          child: HtmlWidget(
+            widget.html,
+            textStyle: const TextStyle(fontSize: 14, height: 1.5, color: Color(0xFF111827)),
+            onTapUrl: (url) async {
+              await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication).catchError((_) => false);
+              return true;
+            },
+          ),
+        );
+        return c.maxWidth >= 600 ? body : SingleChildScrollView(scrollDirection: Axis.horizontal, child: body);
+      }),
+    );
   }
 
   Widget _modeChip(String label, bool active, VoidCallback onTap) {

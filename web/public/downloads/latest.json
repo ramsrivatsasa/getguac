@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.84",
-  "name": "v0.3.84 — Email layouts fixed (wide tables no longer squished)",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.84/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Fixed: receipt emails with wide tables now render at full width — scroll sideways to see all the columns, instead of text crushed one letter per line."
+  "version": "v0.3.85",
+  "name": "v0.3.85 — Emails render exactly right (faithful image view)",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.85/app-arm64-v8a-release.apk",
+  "releaseNotes": "• New: receipt emails now open as a faithful image of the original — tables and columns look exactly right, pinch to zoom. Switch to Rich or Plain text anytime.\n• 'View email' on a receipt opens that same crisp image."
 }

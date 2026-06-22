@@ -1,4 +1,5 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <!-- REQUIRED for Supabase / HTTP calls. Default Flutter scaffold only
          declares this in debug + profile manifests, so release APKs ship
          with NO network permission and DNS lookups fail. -->
@@ -21,6 +22,17 @@
          in-app updater degrades gracefully (opens the APK so the user installs
          it manually); the Play build disables the updater entirely via the
          IS_PLAY dart-define (see UpdateService). -->
+    <!-- Photo use is one-off (snap/pick a single receipt image), so per Google
+         Play's photo and video permissions policy we must NOT request broad
+         media access and instead use the system photo picker. image_picker
+         falls back to the Android Photo Picker (Android 13+) when these aren't
+         declared; Android 12 and below still use READ_EXTERNAL_STORAGE
+         (maxSdkVersion=32). Strip the media permissions image_picker's library
+         manifest merges in. -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" tools:node="remove" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" tools:node="remove" />
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" tools:node="remove" />
+
     <application
         android:label="GetGuac"
         android:name="${applicationName}"

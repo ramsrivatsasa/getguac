@@ -738,15 +738,23 @@ class _EmailViewer extends StatelessWidget {
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(14),
           child: html.trim().isNotEmpty
-              ? HtmlWidget(
-                  html,
-                  textStyle: const TextStyle(fontSize: 14, height: 1.5, color: Color(0xFF111827)),
-                  onTapUrl: (url) async {
-                    await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication)
-                        .catchError((_) => false);
-                    return true;
-                  },
-                )
+              // Emails are designed for ~600px; render at that width and scroll
+              // horizontally so wide tables aren't squished to one char per line.
+              ? LayoutBuilder(builder: (context, c) {
+                  final widget = HtmlWidget(
+                    html,
+                    textStyle: const TextStyle(fontSize: 14, height: 1.5, color: Color(0xFF111827)),
+                    onTapUrl: (url) async {
+                      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication)
+                          .catchError((_) => false);
+                      return true;
+                    },
+                  );
+                  final body = SizedBox(width: c.maxWidth >= 600 ? c.maxWidth : 600, child: widget);
+                  return c.maxWidth >= 600
+                      ? body
+                      : SingleChildScrollView(scrollDirection: Axis.horizontal, child: body);
+                })
               : SelectableText(text, style: const TextStyle(fontSize: 14, height: 1.5)),
         ),
       ),

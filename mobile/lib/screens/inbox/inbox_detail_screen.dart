@@ -412,17 +412,27 @@ class _MessageBodyState extends State<_MessageBody> {
             borderRadius: BorderRadius.circular(10),
             border: Border.all(color: const Color(0xFFe5e7eb)),
           ),
-          // Native HTML → Flutter widgets. Sizes itself to the content (no fixed
-          // height, no JS height channel, no WebView surface to blank out).
-          child: HtmlWidget(
-            widget.html,
-            textStyle: const TextStyle(fontSize: 14, height: 1.5, color: Color(0xFF111827)),
-            onTapUrl: (url) async {
-              await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication)
-                  .catchError((_) => false);
-              return true;
-            },
-          ),
+          // Native HTML → Flutter widgets (no WebView, never blanks). Emails are
+          // designed for ~600px (tables/columns); on a narrow phone fwfh would
+          // squish wide tables to one char per line, so render at the email's
+          // design width and scroll horizontally — faithful layout.
+          child: LayoutBuilder(builder: (context, c) {
+            final body = SizedBox(
+              width: c.maxWidth >= 600 ? c.maxWidth : 600,
+              child: HtmlWidget(
+                widget.html,
+                textStyle: const TextStyle(fontSize: 14, height: 1.5, color: Color(0xFF111827)),
+                onTapUrl: (url) async {
+                  await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication)
+                      .catchError((_) => false);
+                  return true;
+                },
+              ),
+            );
+            return c.maxWidth >= 600
+                ? body
+                : SingleChildScrollView(scrollDirection: Axis.horizontal, child: body);
+          }),
         )
       else
         SelectableText(

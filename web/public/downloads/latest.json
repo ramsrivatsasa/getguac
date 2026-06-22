@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.83",
-  "name": "v0.3.83 — Emails render natively (no more blank or shaky)",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.83/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Fixed: emails now render natively — no more blank screens, shaking, or vertical-line glitches. Rich view is the default again.\n• Fixed: 'View email' on a receipt opens the original email reliably."
+  "version": "v0.3.84",
+  "name": "v0.3.84 — Email layouts fixed (wide tables no longer squished)",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.84/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Fixed: receipt emails with wide tables now render at full width — scroll sideways to see all the columns, instead of text crushed one letter per line."
 }

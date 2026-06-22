@@ -1,11 +1,9 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:http/http.dart' as http;
+import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 import '../../providers/receipt_provider.dart';
 import '../../models/receipt_model.dart';
 import '../../widgets/worth_it_rating.dart';
@@ -109,10 +107,9 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
     ));
   }
 
-  // Email receipts have no photo. Ask the server to render the source email
-  // to an image (PNG snapshot, stored as receipt_link) and show it full-screen
-  // — far more reliable than rendering raw email HTML in a WebView, which can
-  // go blank on some Android devices.
+  // Email receipts have no photo. Load the source email (linked by receipt_id,
+  // readable under RLS) and render it NATIVELY (no WebView, no server snapshot,
+  // no Chromium) — so it can't go blank or fail to render.
   Future<void> _viewEmail() async {
     showDialog<void>(
       context: context,
@@ -125,38 +122,35 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
         ]),
       ),
     );
-    String link = '';
-    String err = '';
+    Map<String, dynamic>? em;
     try {
-      final token = Supabase.instance.client.auth.currentSession?.accessToken;
-      final res = await http.post(
-        Uri.parse('https://getguac.app/api/receipts/${widget.id}/email-snapshot'),
-        headers: {
-          'Authorization': 'Bearer ${token ?? ''}',
-          'Content-Type': 'application/json',
-        },
-      );
-      if (res.statusCode == 200) {
-        link = (jsonDecode(res.body)['receipt_link'] as String?) ?? '';
-      } else {
-        err = res.statusCode == 400
-            ? 'This receipt has no saved email to show.'
-            : 'Couldn\'t load the email (${res.statusCode}).';
-      }
-    } catch (_) {
-      err = 'Couldn\'t load the email — check your connection.';
-    }
+      em = await Supabase.instance.client
+          .from('email_messages')
+          .select('subject, from_addr, body_html, body_text')
+          .eq('receipt_id', widget.id)
+          .order('received_at', ascending: false)
+          .limit(1)
+          .maybeSingle();
+    } catch (_) {}
     if (!mounted) return;
     Navigator.of(context, rootNavigator: true).pop(); // dismiss the loader
-    if (link.isNotEmpty) {
-      // Refresh so the saved snapshot shows as "View image" next time too.
-      context.read<ReceiptProvider>().loadReceipts(period: ReceiptPeriod.all, force: true);
-      _viewImage(link);
-    } else {
+    final html = (em?['body_html'] as String?) ?? '';
+    final text = (em?['body_text'] as String?) ?? '';
+    if (html.isEmpty && text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(err.isEmpty ? 'No email to show.' : err)),
+        const SnackBar(content: Text('No saved email for this receipt.')),
       );
+      return;
     }
+    final subjectRaw = (em?['subject'] as String?)?.trim() ?? '';
+    Navigator.of(context).push(MaterialPageRoute(
+      fullscreenDialog: true,
+      builder: (_) => _EmailViewer(
+        subject: subjectRaw.isEmpty ? 'Email' : subjectRaw,
+        html: html,
+        text: text,
+      ),
+    ));
   }
 
   // Re-run the AI parse against this receipt's source (email body OR
@@ -725,6 +719,41 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
 /// Full-screen pinch-to-zoom image viewer. Resolves a signed URL via Supabase
 /// storage so it works whether the bucket is public or private. Tap or
 /// back button to close.
+// Full-screen native email viewer. Renders the email HTML with
+// flutter_widget_from_html_core (native widgets — no WebView), so it never
+// goes blank/shaky. Falls back to plain text when there's no HTML body.
+class _EmailViewer extends StatelessWidget {
+  final String subject;
+  final String html;
+  final String text;
+  const _EmailViewer({required this.subject, required this.html, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(subject, maxLines: 1, overflow: TextOverflow.ellipsis),
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(14),
+          child: html.trim().isNotEmpty
+              ? HtmlWidget(
+                  html,
+                  textStyle: const TextStyle(fontSize: 14, height: 1.5, color: Color(0xFF111827)),
+                  onTapUrl: (url) async {
+                    await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication)
+                        .catchError((_) => false);
+                    return true;
+                  },
+                )
+              : SelectableText(text, style: const TextStyle(fontSize: 14, height: 1.5)),
+        ),
+      ),
+    );
+  }
+}
+
 class _ImageViewer extends StatefulWidget {
   final String url;
   const _ImageViewer({required this.url});

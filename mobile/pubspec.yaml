@@ -1,7 +1,7 @@
 name: getguac
 description: GetGuac — Smart receipt & rewards management
 publish_to: 'none'
-version: 0.3.82+174
+version: 0.3.83+175
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -108,6 +108,7 @@ dependencies:
   # VoiceCaptureService falls back to a "not available" state and
   # the UI gracefully shows a TODO instead of crashing.
   speech_to_text: ^7.0.0
+  flutter_widget_from_html_core: ^0.17.2
   # ML Kit Document Scanner + wakelock_plus removed in v0.2.69. The
   # dashboard FAB and the multi-page scanner flow that used them were
   # removed — capture is now a single-photo camera button on the

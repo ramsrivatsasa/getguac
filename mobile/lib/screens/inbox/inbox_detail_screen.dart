@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:webview_flutter/webview_flutter.dart';
+import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 import '../../widgets/top_app_bar_actions.dart';
 import 'inbox_screen.dart' show openInboxComposer;
 
@@ -370,9 +370,10 @@ String _formatAllHeaders(Map<String, dynamic> m) {
   return lines.join('\n');
 }
 
-/// Toggle between rich (WebView) and plain text versions of an email body.
-/// Defaults to Rich when HTML is available. If WebView init throws, falls
-/// back silently to text so the user always sees something.
+/// Toggle between rich (native HTML render) and plain-text versions of an email
+/// body. Rich uses flutter_widget_from_html_core — native Flutter widgets, NOT
+/// a WebView — so it never goes blank, shaky, or shows the vertical-line
+/// artifacts the Android System WebView produced. Rich is the default.
 class _MessageBody extends StatefulWidget {
   final String html;
   final String text;
@@ -382,135 +383,13 @@ class _MessageBody extends StatefulWidget {
 }
 
 class _MessageBodyState extends State<_MessageBody> {
-  // Default to the plain-text view: the Android System WebView renders some
-  // HTML emails then goes blank, so text (which can never blank) is the
-  // reliable default. Rich (WebView) is still one tap away via the toggle.
-  bool _showRich = false;
-  WebViewController? _controller;
-  bool _webViewFailed = false;
-  // Starts modest; the email reports its real content height back over the
-  // GuacHeight JS channel and we grow/shrink to fit (no more tap-to-expand).
-  double _height = 320;
-  // Once the user manually taps "Make taller" we stop auto-fitting so we don't
-  // fight their choice.
-  bool _userResized = false;
+  bool _showRich = true; // native render is reliable → rich by default
 
   static const _kBrand = Color(0xFF15803d);
 
   @override
-  void initState() {
-    super.initState();
-    _initWebView();
-  }
-
-  void _initWebView() {
-    try {
-      final ctrl = WebViewController()
-        ..setJavaScriptMode(JavaScriptMode.unrestricted)
-        ..setBackgroundColor(Colors.white)
-        // The wrapped email posts its scrollHeight here on load, on image
-        // settle, and on resize — so the box always fits the full message.
-        ..addJavaScriptChannel('GuacHeight', onMessageReceived: _onHeightReport)
-        ..setNavigationDelegate(NavigationDelegate(
-          onNavigationRequest: (req) {
-            // Anything other than the initial load opens in the system browser
-            // (links, images, "click here to view"). Email pages don't get to
-            // navigate inside the in-app WebView.
-            if (req.url == 'about:blank' || req.url.startsWith('data:')) {
-              return NavigationDecision.navigate;
-            }
-            launchUrl(Uri.parse(req.url), mode: LaunchMode.externalApplication)
-                .catchError((_) => false);
-            return NavigationDecision.prevent;
-          },
-          // Fallback measure in case the injected script's channel call is
-          // dropped (some WebView builds are picky about timing).
-          onPageFinished: (_) => _measureHeight(),
-          onWebResourceError: (_) {
-            // Don't crash on broken images / blocked resources.
-          },
-        ))
-        ..loadHtmlString(_wrapEmail(widget.html));
-      _controller = ctrl;
-    } catch (e) {
-      _webViewFailed = true;
-    }
-  }
-
-  // Apply a reported content height: clamp to a sane range, add a little
-  // breathing room, and only update when it actually changed (avoids churn).
-  void _applyHeight(double contentHeight) {
-    if (_userResized || !mounted) return;
-    final next = (contentHeight + 16).clamp(140.0, 8000.0);
-    if ((next - _height).abs() > 4) setState(() => _height = next);
-  }
-
-  void _onHeightReport(JavaScriptMessage msg) {
-    final h = double.tryParse(msg.message.trim());
-    if (h != null) _applyHeight(h);
-  }
-
-  // Pull the height directly (fallback path). Result can arrive quoted or as a
-  // num depending on platform, so parse defensively.
-  void _measureHeight() {
-    _controller
-        ?.runJavaScriptReturningResult(
-          'Math.max(document.documentElement.scrollHeight, document.body ? document.body.scrollHeight : 0)',
-        )
-        .then((res) {
-      final h = double.tryParse(res.toString().replaceAll('"', '').trim());
-      if (h != null) _applyHeight(h);
-    }).catchError((_) {});
-  }
-
-  String _wrapEmail(String body) => '''
-<!doctype html>
-<html><head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<base target="_blank">
-<style>
-  html, body { margin: 0; padding: 12px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #111827; font-size: 14px; line-height: 1.5; word-wrap: break-word; }
-  img { max-width: 100%; height: auto; }
-  table { max-width: 100%; border-collapse: collapse; }
-  a { color: #15803d; }
-  pre, code { background: #f3f4f6; padding: 2px 4px; border-radius: 4px; }
-</style>
-</head><body>$body
-<script>
-  // Report the document's real height to Flutter so the WebView box auto-fits
-  // the whole email — no manual "make taller" tapping. Re-fires after images
-  // load and on resize so late-loading content still sizes correctly.
-  (function () {
-    function report() {
-      try {
-        var h = Math.max(
-          document.documentElement.scrollHeight,
-          document.body ? document.body.scrollHeight : 0
-        );
-        if (window.GuacHeight && window.GuacHeight.postMessage) {
-          window.GuacHeight.postMessage(String(h));
-        }
-      } catch (e) {}
-    }
-    window.addEventListener('load', report);
-    window.addEventListener('resize', report);
-    setTimeout(report, 150);
-    setTimeout(report, 600);
-    setTimeout(report, 1500);
-    var imgs = document.images || [];
-    for (var i = 0; i < imgs.length; i++) {
-      imgs[i].addEventListener('load', report);
-      imgs[i].addEventListener('error', report);
-    }
-  })();
-</script>
-</body></html>
-''';
-
-  @override
   Widget build(BuildContext context) {
-    final canShowRich = !_webViewFailed && _controller != null && widget.html.trim().isNotEmpty;
+    final canShowRich = widget.html.trim().isNotEmpty;
     final viewing = (_showRich && canShowRich) ? 'rich' : 'text';
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -523,28 +402,27 @@ class _MessageBodyState extends State<_MessageBody> {
             _modeChip('Rich', viewing == 'rich', () => setState(() => _showRich = true)),
             const SizedBox(width: 4),
             _modeChip('Plain', viewing == 'text', () => setState(() => _showRich = false)),
-            const Spacer(),
-            if (viewing == 'rich')
-              IconButton(
-                visualDensity: VisualDensity.compact,
-                icon: const Icon(Icons.unfold_more, size: 16),
-                tooltip: 'Make taller',
-                onPressed: () => setState(() {
-                  _userResized = true;
-                  _height += 200;
-                }),
-              ),
           ]),
         ),
       if (viewing == 'rich' && canShowRich)
         Container(
-          height: _height,
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
             border: Border.all(color: const Color(0xFFe5e7eb)),
           ),
-          clipBehavior: Clip.antiAlias,
-          child: WebViewWidget(controller: _controller!),
+          // Native HTML → Flutter widgets. Sizes itself to the content (no fixed
+          // height, no JS height channel, no WebView surface to blank out).
+          child: HtmlWidget(
+            widget.html,
+            textStyle: const TextStyle(fontSize: 14, height: 1.5, color: Color(0xFF111827)),
+            onTapUrl: (url) async {
+              await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication)
+                  .catchError((_) => false);
+              return true;
+            },
+          ),
         )
       else
         SelectableText(

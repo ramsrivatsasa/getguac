@@ -48,10 +48,17 @@ class UpdateService {
   // manifest after a redeploy.
   static const _manifestUrl = 'https://getguac.app/downloads/latest.json';
 
-  /// Fetches latest.json. Returns null if there's no newer version
-  /// than what's running, or if the check failed (offline, 404,
-  /// JSON parse error, etc — never throws).
+  // Play Store builds pass --dart-define=IS_PLAY=true. Google Play prohibits
+  // self-updating (installing APKs outside Play), so the in-app updater must be
+  // completely inert on Play builds — Play delivers updates. The /download
+  // sideload build leaves this false and keeps the updater active.
+  static const _isPlayBuild = bool.fromEnvironment('IS_PLAY', defaultValue: false);
+
+  /// Fetches latest.json. Returns null if there's no newer version than what's
+  /// running, if the check failed (offline, 404, JSON parse error — never
+  /// throws), or always on Play builds.
   static Future<AvailableUpdate?> checkForUpdate() async {
+    if (_isPlayBuild) return null;
     try {
       final info = await PackageInfo.fromPlatform();
       final currentTag = 'v${info.version}';  // pubspec is "0.3.5+97" → "v0.3.5+97"

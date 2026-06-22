@@ -28,6 +28,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
   bool _loading = true;
   bool _sending = false;
   String? _meId;
+  String? _peerId;
   String _peerName = 'Chat';
   RealtimeChannel? _channel;
 
@@ -75,6 +76,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
       setState(() {
         _messages = msgs;
         _peerName = name;
+        _peerId = peerId;
         _loading = false;
       });
       _scrollToBottom();
@@ -143,6 +145,113 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
     }
   }
 
+  Future<void> _confirmBlock() async {
+    final peer = _peerId;
+    if (peer == null || peer.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Open a message first.')));
+      return;
+    }
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Block this person?'),
+        content: Text(
+          "$_peerName won't be able to message you, and you'll stop seeing this chat. You can unblock later from this menu."),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: const Color(0xFFb91c1c)),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Block'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    try {
+      await DmsService.blockUser(peer);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Blocked.')));
+      context.go('/chat');
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Block failed: $e')));
+      }
+    }
+  }
+
+  Future<void> _showReport() async {
+    final peer = _peerId;
+    if (peer == null || peer.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Open a message first.')));
+      return;
+    }
+    String reason = 'spam';
+    bool alsoBlock = true;
+    final detailsCtrl = TextEditingController();
+    final submitted = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocal) => AlertDialog(
+          title: const Text('Report user'),
+          content: SingleChildScrollView(
+            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+              for (final r in const [
+                ['spam', 'Spam'],
+                ['harassment', 'Harassment or bullying'],
+                ['inappropriate', 'Inappropriate content'],
+                ['scam', 'Scam or fraud'],
+                ['other', 'Something else'],
+              ])
+                RadioListTile<String>(
+                  value: r[0], groupValue: reason,
+                  onChanged: (v) => setLocal(() => reason = v!),
+                  title: Text(r[1]),
+                  dense: true, contentPadding: EdgeInsets.zero,
+                ),
+              TextField(
+                controller: detailsCtrl,
+                maxLength: 1000, maxLines: 2,
+                decoration: const InputDecoration(hintText: 'Details (optional)', counterText: ''),
+              ),
+              CheckboxListTile(
+                value: alsoBlock,
+                onChanged: (v) => setLocal(() => alsoBlock = v ?? false),
+                title: const Text('Also block this person'),
+                dense: true, contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+              ),
+            ]),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Submit')),
+          ],
+        ),
+      ),
+    );
+    if (submitted != true) return;
+    try {
+      await DmsService.reportUser(
+        reportedUserId: peer,
+        threadId: widget.threadId,
+        reason: reason,
+        details: detailsCtrl.text,
+      );
+      if (alsoBlock) await DmsService.blockUser(peer);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Report sent. Thanks — we'll review it.")));
+      if (alsoBlock) context.go('/chat');
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Report failed: $e')));
+      }
+    }
+  }
+
   String _formatTime(DateTime d) {
     return '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
   }
@@ -157,7 +266,27 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
         ),
         title: Text(_peerName, style: const TextStyle(fontWeight: FontWeight.w900, color: Colors.white)),
         elevation: 0.5,
-        actions: [signOutAction(context)],
+        actions: [
+          // Safety menu — block / report (Google Play UGC requirement).
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert, color: Colors.white),
+            onSelected: (v) {
+              if (v == 'report') _showReport();
+              if (v == 'block') _confirmBlock();
+            },
+            itemBuilder: (_) => const [
+              PopupMenuItem(value: 'report', child: Row(children: [
+                Icon(Icons.flag_outlined, size: 18, color: Colors.black54),
+                SizedBox(width: 10), Text('Report'),
+              ])),
+              PopupMenuItem(value: 'block', child: Row(children: [
+                Icon(Icons.block, size: 18, color: Color(0xFFb91c1c)),
+                SizedBox(width: 10), Text('Block'),
+              ])),
+            ],
+          ),
+          signOutAction(context),
+        ],
       ),
       backgroundColor: const Color(0xFFf8fafc),
       body: Column(children: [

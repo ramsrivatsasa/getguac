@@ -61,6 +61,7 @@ class DmsService {
         .select('id, user_a, user_b, last_message_at, created_at')
         .or('user_a.eq.$me,user_b.eq.$me')
         .order('last_message_at', ascending: false);
+    final blocked = await listBlockedIds();
     return (rows as List).map<DmThread>((r) {
       final ua = r['user_a'] as String;
       final ub = r['user_b'] as String;
@@ -70,7 +71,10 @@ class DmsService {
         lastMessageAt: DateTime.parse(r['last_message_at'] as String),
         createdAt: DateTime.parse(r['created_at'] as String),
       );
-    }).toList();
+    })
+    // Hide threads with anyone I've blocked.
+    .where((t) => !blocked.contains(t.peerId))
+    .toList();
   }
 
   /// Open (or create) the thread between the current user and `peerId`.
@@ -173,5 +177,70 @@ class DmsService {
     } catch (_) { /* swallow */ }
 
     return msg;
+  }
+
+  // ─── Block / report (Play UGC-safety; migration 075) ───────────────────
+
+  /// User-ids the current user has blocked.
+  static Future<Set<String>> listBlockedIds() async {
+    final me = _sb.auth.currentUser?.id;
+    if (me == null) return <String>{};
+    try {
+      final rows = await _sb.from('dm_blocks').select('blocked').eq('blocker', me);
+      return (rows as List).map<String>((r) => r['blocked'] as String).toSet();
+    } catch (_) {
+      return <String>{}; // table missing / offline → don't break the chat list.
+    }
+  }
+
+  static Future<bool> isBlocked(String peerId) async {
+    final me = _sb.auth.currentUser?.id;
+    if (me == null) return false;
+    final row = await _sb
+        .from('dm_blocks')
+        .select('id')
+        .eq('blocker', me)
+        .eq('blocked', peerId)
+        .maybeSingle();
+    return row != null;
+  }
+
+  /// Block a user — hides their thread for me + stops them messaging me
+  /// (enforced by the dm_messages trigger in migration 075).
+  static Future<void> blockUser(String peerId) async {
+    final me = _sb.auth.currentUser?.id;
+    if (me == null) throw Exception('Not signed in');
+    try {
+      await _sb.from('dm_blocks').insert({'blocker': me, 'blocked': peerId});
+    } on PostgrestException catch (e) {
+      if (e.code != '23505') rethrow; // already blocked → fine.
+    }
+  }
+
+  static Future<void> unblockUser(String peerId) async {
+    final me = _sb.auth.currentUser?.id;
+    if (me == null) return;
+    await _sb.from('dm_blocks').delete().eq('blocker', me).eq('blocked', peerId);
+  }
+
+  /// File a report against a user (optionally tied to a thread/message).
+  /// reason ∈ spam | harassment | inappropriate | scam | other.
+  static Future<void> reportUser({
+    required String reportedUserId,
+    String? threadId,
+    String? messageId,
+    required String reason,
+    String? details,
+  }) async {
+    final me = _sb.auth.currentUser?.id;
+    if (me == null) throw Exception('Not signed in');
+    await _sb.from('dm_reports').insert({
+      'reporter': me,
+      'reported_user': reportedUserId,
+      if (threadId != null) 'thread_id': threadId,
+      if (messageId != null) 'message_id': messageId,
+      'reason': reason,
+      if (details != null && details.trim().isNotEmpty) 'details': details.trim(),
+    });
   }
 }

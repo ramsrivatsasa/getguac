@@ -6,8 +6,10 @@
 // screen — no per-screen drift, no missed-screen frustrations from
 // users who expected to find Sign Out from anywhere.
 
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../providers/auth_provider.dart';
@@ -21,12 +23,23 @@ import '../providers/auth_provider.dart';
 /// therefore always visible without per-screen tuning. `whiteIcons` is kept
 /// only for call-site compatibility; pass `color` to force a specific colour.
 Widget signOutAction(BuildContext context, {bool whiteIcons = true, Color? color}) {
-  return IconButton(
-    icon: Icon(Icons.logout_rounded, color: color, size: 21),
-    tooltip: 'Sign out',
-    visualDensity: VisualDensity.compact,
-    onPressed: () => confirmAndSignOut(context),
-  );
+  // Two always-visible top-right actions on EVERY screen: Delete my data
+  // (one tap → confirm) and Sign out. The delete control is required by
+  // Google Play's data-deletion policy and kept prominent per product ask.
+  return Row(mainAxisSize: MainAxisSize.min, children: [
+    IconButton(
+      icon: Icon(Icons.delete_forever_outlined, color: color, size: 21),
+      tooltip: 'Delete my data',
+      visualDensity: VisualDensity.compact,
+      onPressed: () => confirmAndDeleteData(context),
+    ),
+    IconButton(
+      icon: Icon(Icons.logout_rounded, color: color, size: 21),
+      tooltip: 'Sign out',
+      visualDensity: VisualDensity.compact,
+      onPressed: () => confirmAndSignOut(context),
+    ),
+  ]);
 }
 
 /// Returns the standard top-right action buttons every authenticated
@@ -169,4 +182,74 @@ Future<void> confirmAndSignOut(BuildContext context) async {
   if (!context.mounted) return;
   await context.read<AppAuthProvider>().logout();
   if (context.mounted) context.go('/login');
+}
+
+/// Permanently delete the user's account + ALL their data via
+/// POST /api/account/delete (Bearer-authed from the app), then sign out.
+/// Wired to the top-right "Delete my data" action on every screen.
+Future<void> confirmAndDeleteData(BuildContext context) async {
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: const Text('Delete your data?'),
+      content: const Text(
+        'This permanently deletes your GetGuac account and ALL your data — '
+        'receipts, inbox, lists, GuacMoney and settings.\n\nThis cannot be undone.'),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+        FilledButton(
+          style: FilledButton.styleFrom(backgroundColor: const Color(0xFFb91c1c)),
+          onPressed: () => Navigator.pop(ctx, true),
+          child: const Text('Delete everything'),
+        ),
+      ],
+    ),
+  );
+  if (ok != true || !context.mounted) return;
+
+  showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => const AlertDialog(
+      content: Row(mainAxisSize: MainAxisSize.min, children: [
+        SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2)),
+        SizedBox(width: 14),
+        Flexible(child: Text('Deleting your data…')),
+      ]),
+    ),
+  );
+
+  String? error;
+  try {
+    final token = Supabase.instance.client.auth.currentSession?.accessToken;
+    if (token == null) throw Exception('not signed in');
+    final resp = await http.post(
+      Uri.parse('https://getguac.app/api/account/delete'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({'confirm_phrase': 'DELETE MY ACCOUNT'}),
+    );
+    if (resp.statusCode != 200) error = 'server returned ${resp.statusCode}';
+  } catch (e) {
+    error = '$e';
+  }
+
+  if (!context.mounted) return;
+  Navigator.of(context, rootNavigator: true).pop(); // dismiss the spinner
+
+  if (error != null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Couldn't delete your data ($error). Try again.")));
+    return;
+  }
+
+  // Deleted server-side → clear the local session + bounce to login.
+  try { await context.read<AppAuthProvider>().logout(); } catch (_) {}
+  if (!context.mounted) return;
+  context.go('/login');
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text('Your account and all data were deleted.')));
 }

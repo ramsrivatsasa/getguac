@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.88",
-  "name": "v0.3.88 — Ad privacy consent",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.88/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Ad privacy: GetGuac now asks your ad-personalization choice where it's required (EU/UK) and respects it. Personalized ads stay on where allowed, so the ads you see are more relevant.\n• Stability tweaks to ad loading."
+  "version": "v0.3.89",
+  "name": "v0.3.89 — Chat safety + one-tap data deletion",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.89/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Chat: you can now Block and Report anyone from a conversation's ⋮ menu — blocked people can't message you.\n• Privacy: a Delete-my-data button now sits in the top-right of every screen — one tap (and a confirm) permanently erases your account and all data.\n• Reliability tweaks."
 }

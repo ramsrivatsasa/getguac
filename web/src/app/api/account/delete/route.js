@@ -39,8 +39,18 @@ export async function POST(request) {
   const rl = await rateLimit(rateKey(request, 'account-delete'), { limit: 3, windowMs: 60 * 60 * 1000 })
   if (!rl.ok) return Response.json({ error: 'Rate limited — 3 deletions/hour' }, { status: 429 })
 
-  const sb = createClient()
-  const { data: { user } } = await sb.auth.getUser()
+  // Auth: cookie session (web) OR Bearer access token (mobile app). The mobile
+  // shell has no SSR cookies, so it sends Authorization: Bearer <access_token>.
+  let user = null
+  const authz = request.headers.get('authorization') || ''
+  if (authz.toLowerCase().startsWith('bearer ')) {
+    const { data } = await admin().auth.getUser(authz.slice(7))
+    user = data?.user || null
+  } else {
+    const sb = createClient()
+    const { data } = await sb.auth.getUser()
+    user = data?.user || null
+  }
   if (!user) return Response.json({ error: 'Not signed in' }, { status: 401 })
 
   const body = await request.json().catch(() => ({}))

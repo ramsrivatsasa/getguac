@@ -45,6 +45,11 @@ export const metadata = {
     images: ['/og.png'],
   },
   manifest: '/site.webmanifest',
+  // AdSense site-ownership verification (the "Meta tag" method in AdSense →
+  // Sites). Renders <meta name="google-adsense-account" content="ca-pub-..."/>
+  // into <head> on every page so Google can confirm ownership without relying
+  // on the JS-injected adsbygoogle loader.
+  other: { 'google-adsense-account': ADSENSE_CLIENT },
   robots: {
     index: true,
     follow: true,

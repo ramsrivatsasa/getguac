@@ -806,7 +806,15 @@ class _AddReceiptDialogState extends State<_AddReceiptDialog> {
   }
 
   Future<void> _save() async {
-    if (_store.text.isEmpty || _amount.text.isEmpty) return;
+    // Don't fail silently — tell the user exactly what's missing and point them
+    // at the zoomable receipt image so they can read it off the photo.
+    if (_store.text.trim().isEmpty || _amount.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Add the store name and total amount to save. Tip: tap the receipt above to zoom in and read them.'),
+        duration: Duration(seconds: 4),
+      ));
+      return;
+    }
     final navigator = Navigator.of(context);
     setState(() => _saving = true);
     final provider = context.read<ReceiptProvider>();
@@ -856,6 +864,38 @@ class _AddReceiptDialogState extends State<_AddReceiptDialog> {
     if (mounted) navigator.pop();
   }
 
+  // Full-screen, pinch-to-zoom view of the captured receipt — lets the user
+  // read fields the AI missed (e.g. the total) straight off the image and type
+  // them in, instead of cancelling and losing the receipt.
+  void _showReceiptImage(BuildContext context, File file) {
+    showDialog<void>(
+      context: context,
+      barrierColor: Colors.black87,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(8),
+        child: Stack(children: [
+          InteractiveViewer(
+            minScale: 0.8,
+            maxScale: 6,
+            child: Center(child: Image.file(file, fit: BoxFit.contain)),
+          ),
+          Positioned(
+            top: 4, right: 4,
+            child: Material(
+              color: Colors.black54,
+              shape: const CircleBorder(),
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white),
+                onPressed: () => Navigator.of(ctx).pop(),
+              ),
+            ),
+          ),
+        ]),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isVoice = widget.voiceTranscript != null;
@@ -866,7 +906,28 @@ class _AddReceiptDialogState extends State<_AddReceiptDialog> {
       content: SingleChildScrollView(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           if (widget.imageFile != null) ...[
-            Image.file(widget.imageFile!, height: 120, fit: BoxFit.cover),
+            // Tap to open a full-screen, pinch-to-zoom view of the receipt — so
+            // when the AI misses a field (e.g. the total) the user can read it
+            // off the image and type it in.
+            GestureDetector(
+              onTap: () => _showReceiptImage(context, widget.imageFile!),
+              child: Stack(alignment: Alignment.bottomRight, children: [
+                Image.file(widget.imageFile!, height: 120, fit: BoxFit.cover),
+                Container(
+                  margin: const EdgeInsets.all(4),
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.55),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                    Icon(Icons.zoom_in, size: 13, color: Colors.white),
+                    SizedBox(width: 3),
+                    Text('Tap to zoom', style: TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.w700)),
+                  ]),
+                ),
+              ]),
+            ),
             const SizedBox(height: 12),
           ],
           if (isVoice) ...[

@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.91",
-  "name": "v0.3.91 — Private photo picker + Play readiness",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.91/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Picking a receipt photo now uses Android's built-in photo picker — more private (GetGuac no longer needs access to your whole photo library).\n• Google Play Store readiness improvements."
+  "version": "v0.3.92",
+  "name": "v0.3.92 — Tap to zoom a receipt when scanning",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.92/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Add Receipt: tap the receipt photo to zoom in (pinch to enlarge) — so when the scan misses the total, you can read it off the receipt and type it in.\n• Save now tells you exactly what's missing instead of silently doing nothing."
 }

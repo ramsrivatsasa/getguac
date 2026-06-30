@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Download, Smartphone, Apple, Monitor, Share2, Check } from 'lucide-react'
 import GuacMascot from '../../components/GuacMascot'
+import MarketingFooter from '../../components/MarketingFooter'
 
 // Latest Android release — bump these when you cut a new version.
 // APKs are hosted in web/public/downloads/<version>/ so users can download
@@ -184,6 +185,7 @@ export default function DownloadPage() {
           </button>
         </p>
       </div>
+      <MarketingFooter />
     </div>
   )
 }

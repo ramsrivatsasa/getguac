@@ -1,13 +1,19 @@
-// Static sitemap for the public marketing surface. Dashboard/auth/api routes
-// are intentionally excluded (private or non-indexable).
+// Sitemap for the public marketing surface + every money article. Dashboard/
+// auth/api routes are excluded (private), and the thin auto-generated tool pages
+// (/coupons, /marketplace) are deliberately left out — they're noindexed.
+import { ARTICLES } from '../lib/articles'
+
 const SITE_URL = 'https://getguac.app'
 
 export default function sitemap() {
+  const lastModified = '2026-06-30'
   const routes = [
     { path: '/', priority: 1.0, changeFrequency: 'weekly' },
     { path: '/how-it-works', priority: 0.9, changeFrequency: 'monthly' },
     { path: '/tour', priority: 0.9, changeFrequency: 'monthly' },
     { path: '/features', priority: 0.9, changeFrequency: 'monthly' },
+    { path: '/articles', priority: 0.9, changeFrequency: 'weekly' },
+    { path: '/resources', priority: 0.8, changeFrequency: 'monthly' },
     { path: '/faq', priority: 0.8, changeFrequency: 'monthly' },
     { path: '/pricing', priority: 0.8, changeFrequency: 'monthly' },
     { path: '/security', priority: 0.7, changeFrequency: 'monthly' },
@@ -18,11 +24,17 @@ export default function sitemap() {
     { path: '/privacy', priority: 0.4, changeFrequency: 'yearly' },
     { path: '/terms', priority: 0.4, changeFrequency: 'yearly' },
   ]
-  const lastModified = '2026-06-11'
-  return routes.map((r) => ({
+  const pages = routes.map((r) => ({
     url: `${SITE_URL}${r.path}`,
     lastModified,
     changeFrequency: r.changeFrequency,
     priority: r.priority,
   }))
+  const articles = ARTICLES.map((a) => ({
+    url: `${SITE_URL}/articles/${a.slug}`,
+    lastModified: a.updated || lastModified,
+    changeFrequency: 'monthly',
+    priority: 0.7,
+  }))
+  return [...pages, ...articles]
 }

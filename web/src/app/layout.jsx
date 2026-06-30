@@ -1,6 +1,13 @@
 import './globals.css'
 import Script from 'next/script'
+import { Bricolage_Grotesque, Plus_Jakarta_Sans } from 'next/font/google'
 import { Providers } from './providers'
+
+// New marketing design typefaces. Exposed as CSS variables so the redesigned
+// landing page can opt in (var(--font-bricolage) for display headings,
+// var(--font-jakarta) for body) without changing the app-wide default font.
+const bricolage = Bricolage_Grotesque({ subsets: ['latin'], weight: ['600', '700', '800'], variable: '--font-bricolage', display: 'swap' })
+const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700'], variable: '--font-jakarta', display: 'swap' })
 import UpdatePrompt from '../components/UpdatePrompt'
 import PosthogProvider from '../components/PosthogProvider'
 
@@ -94,7 +101,7 @@ const jsonLd = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${bricolage.variable} ${jakarta.variable}`}>
       <body>
         {/* Site-wide JSON-LD structured data for rich results. */}
         <script

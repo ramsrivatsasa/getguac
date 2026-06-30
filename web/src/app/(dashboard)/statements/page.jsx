@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
 import LottieAnimation from '../../../components/LottieAnimation'
+import ReceiptScanAnimation from '../../../components/ReceiptScanAnimation'
 import thinkingLottie from '../../../lottie/thinking.json'
 import { CATEGORIES, CATEGORY_BY_SLUG } from '../../../lib/categories'
 import { useConfirm } from '../../../components/ConfirmDialog'
@@ -244,6 +245,9 @@ export default function StatementsPage() {
 
   return (
     <div className="space-y-6 max-w-6xl">
+      {/* Full-screen scan ceremony while the statement parses — same component
+          as receipt scanning, with statement-appropriate copy + a flat page. */}
+      <ReceiptScanAnimation count={parsing ? 1 : 0} variant="statement" />
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-100 via-lime-100 to-amber-100 shadow-sm ring-2 ring-white flex items-center justify-center">

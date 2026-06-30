@@ -4,9 +4,9 @@
 // group, ordered by relevance (best discount first). The header carries the
 // "X new" count so the user sees how many fresh steals were found.
 import Link from 'next/link'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Tag, Star, ArrowRight, Search } from 'lucide-react'
+import { Tag, Star, ArrowRight, Search, ChevronDown } from 'lucide-react'
 import { getStealsFeed } from '../lib/steals'
 import { useSavedSearches } from '../hooks/useSavedSearches'
 
@@ -28,6 +28,7 @@ export default function DashboardSteals() {
   const { data: savedSearches = [] } = useSavedSearches()
   const steals = data?.steals || []
   const unread = data?.unread || 0
+  const [open, setOpen] = useState(true)
   if (!steals.length && !savedSearches.length) return null
 
   // Group by the configured steal (the saved search the deal came from).
@@ -51,18 +52,25 @@ export default function DashboardSteals() {
   return (
     <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          aria-expanded={open}
+          className="font-semibold text-gray-900 flex items-center gap-2 -m-1 p-1 rounded-lg hover:text-emerald-800"
+        >
           <Tag size={18} className="text-emerald-600" /> Steals for you
           {unread > 0 && (
             <span className="text-[11px] font-extrabold bg-emerald-100 text-emerald-700 rounded-full px-2 py-0.5">
               {unread} new
             </span>
           )}
-        </h3>
+          <ChevronDown size={16} className={`text-gray-400 transition-transform ${open ? '' : '-rotate-90'}`} />
+        </button>
         <Link href="/steals" className="text-xs font-semibold text-emerald-700 hover:text-emerald-900 inline-flex items-center gap-1">
           All steals <ArrowRight size={13} />
         </Link>
       </div>
+      {open && (
       <div className="space-y-4">
         {ordered.map(([q, items]) => (
           <div key={q}>
@@ -81,6 +89,7 @@ export default function DashboardSteals() {
           </div>
         ))}
       </div>
+      )}
     </section>
   )
 }

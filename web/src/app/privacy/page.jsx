@@ -15,6 +15,8 @@ export const metadata = {
 
 const LAST_UPDATED = 'June 3, 2026'
 
+import MarketingFooter from '../../components/MarketingFooter'
+
 export default function PrivacyPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-lime-50 text-gray-800 font-sans">
@@ -133,6 +135,7 @@ export default function PrivacyPage() {
           </p>
         </div>
       </main>
+      <MarketingFooter />
     </div>
   )
 }

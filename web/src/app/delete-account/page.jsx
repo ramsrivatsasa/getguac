@@ -6,6 +6,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '../../lib/supabase/client'
+import MarketingFooter from '../../components/MarketingFooter'
 
 const CONFIRM = 'DELETE MY ACCOUNT'
 
@@ -133,6 +134,7 @@ export default function DeleteAccountPage() {
           </>
         )}
       </div>
+      <MarketingFooter />
     </div>
   )
 }

@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useStore } from '../../../store'
 import Link from 'next/link'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { Gift, ArrowRight, Sparkles, PiggyBank, Wand2, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import GuacoScoreCard from '../../../components/GuacoScoreCard'
@@ -32,6 +32,9 @@ import { computeSmashDays } from '../../../lib/smashDays'
 import mascotBus from '../../../lib/mascotEventBus'
 import { CountUp, FadeUpStagger } from '../../../components/animated'
 const PERIODS = ['daily', 'weekly', 'monthly', 'yearly']
+// Multi-colour palette for the Spending-by-Store bars (brand-leaning,
+// cycles if there are more than 8 stores).
+const STORE_BAR_COLORS = ['#16A34A', '#65A30D', '#0EA5E9', '#F59E0B', '#8B5CF6', '#EC4899', '#14B8A6', '#F97316']
 
 // Dropdown options for "how many <period>s back to include"
 const COUNT_OPTIONS = {
@@ -62,6 +65,15 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
   const period = PERIODS.includes(spendingPeriod) ? spendingPeriod : 'monthly'
   const periodCount = spendingPeriodCount || DEFAULT_COUNT[period] || 1
   const setPeriodCount = setSpendingPeriodCount
+
+  // Time-aware greeting, set after mount so the server-rendered hour
+  // (server timezone) never mismatches the client and triggers a
+  // hydration warning. Starts on a neutral "Good day".
+  const [greeting, setGreeting] = useState('Good day')
+  useEffect(() => {
+    const h = new Date().getHours()
+    setGreeting(h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening')
+  }, [])
 
   function selectPeriod(p) {
     setSpendingPeriod(p)
@@ -181,13 +193,18 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
 
   return (
     <div className="space-y-3 max-w-7xl">
+      {/* Soft brand gradient behind the whole dashboard screen. */}
+      <div aria-hidden className="fixed inset-0 -z-10 bg-gradient-to-b from-[#F4F5F1] via-[#EDF1E8] to-[#E4E8DF]" />
       {/* If the user signed up via /?ref=<CODE>, this fires once on
           first dashboard load to credit 3 Smash days to both sides.
           Renders nothing — pure side-effect island. */}
       <PostSignupReferralApply />
       <FeatureHeader
         expression="standing"
-        title={<>Good day, {firstName} 👋</>}
+        title={<>
+          <span className="block text-sm font-semibold text-gray-400 leading-tight">{greeting} 👋</span>
+          <span className="block leading-tight">{firstName}</span>
+        </>}
         subtitle="Here's your financial snapshot"
         action={
           <div className="flex items-center gap-2 flex-wrap">
@@ -337,11 +354,14 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
                 />
                 <Bar
                   dataKey="amount"
-                  fill="#e11d48"
                   radius={[8, 8, 0, 0]}
                   maxBarSize={56}
                   cursor="pointer"
-                />
+                >
+                  {chartData.map((_, i) => (
+                    <Cell key={i} fill={STORE_BAR_COLORS[i % STORE_BAR_COLORS.length]} />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -465,7 +485,8 @@ function GuacScoreTileWithBankBite({ receipts }) {
     else if (f.kind === 'fee' || f.kind === 'penalty') fees += v
   }
   const bankBite = { interest, fees, total: interest + fees }
-  return <GuacoScoreCard receipts={receipts} bankBite={bankBite} size="sm" />
+  const runDays = computeSmashDays(receipts).smashDays
+  return <GuacoScoreCard receipts={receipts} bankBite={bankBite} size="sm" runDays={runDays} />
 }
 
 // 8-tile financial scroll. Pulls bank data via the same useQuery
@@ -644,6 +665,7 @@ function GuacWizardTile() {
               <span className="text-xs font-bold opacity-60 ml-0.5">/ 100</span>
             </p>
             <p className={`text-[10px] font-semibold mt-0.5 ${tone.sub}`}>health score</p>
+            <p className={`text-[10px] font-bold mt-0.5 ${tone.sub} inline-flex items-center gap-1`}>▲ Beating ~{Math.min(99, Math.round(40 + score * 0.6))}% of savers</p>
           </>
         ) : (
           <p className={`text-sm font-bold ${tone.sub} mt-0.5`}>Set up →</p>
@@ -675,9 +697,13 @@ function GuacMoneyTile() {
         <p className="text-xl font-black text-emerald-900 tabular-nums leading-tight">
           {isLoading ? '—' : <CountUp value={Number(total) || 0} duration={520} format={v => Math.round(v).toLocaleString()} />}
         </p>
-        <p className="text-[10px] font-semibold mt-0.5 text-emerald-700">
-          {active ? `≈ $${(total / 1000).toFixed(2)} value` : 'rate buys to earn →'}
-        </p>
+        {active ? (
+          <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-extrabold text-amber-800 bg-gradient-to-r from-amber-100 to-yellow-100 ring-1 ring-amber-200 rounded-full px-2 py-0.5">
+            🪙 ≈ ${(total / 1000).toFixed(2)} value
+          </span>
+        ) : (
+          <p className="text-[10px] font-semibold mt-0.5 text-emerald-700">rate buys to earn →</p>
+        )}
       </div>
     </div>
   )

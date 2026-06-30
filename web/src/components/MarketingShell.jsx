@@ -1,9 +1,15 @@
 // Shared chrome (sticky nav + footer) for the public marketing pages so they
 // stay consistent and cross-linked. Server-safe (no 'use client').
+//
+// Restyled to the new design language: white background, Bricolage Grotesque
+// display headings + Plus Jakarta Sans body (scoped to .gg-marketing so the
+// app/dashboard default font is untouched), avocado-green accents, pill CTAs.
+// The fonts come from CSS variables defined in app/layout.jsx.
 import Link from 'next/link'
 import HeaderSearch from './HeaderSearch'
 import MarketingAuthButtons from './MarketingAuthButtons'
 import MarketingMobileMenu from './MarketingMobileMenu'
+import MarketingFooter from './MarketingFooter'
 
 const NAV = [
   { href: '/marketplace', label: 'Marketplace' },
@@ -44,28 +50,38 @@ const FOOTER = [
   ]},
 ]
 
+const DISPLAY = { fontFamily: 'var(--font-bricolage), sans-serif' }
+
 export default function MarketingShell({ subtitle, hideSearch = false, headerTitle, children }) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-lime-50 text-gray-800 font-sans">
+    <div className="gg-marketing min-h-screen" style={{ fontFamily: 'var(--font-jakarta), system-ui, sans-serif', color: '#1A2E22', background: '#fff' }}>
+      {/* Scope the new typography + accents to marketing pages only. */}
+      <style>{`
+        .gg-marketing h1, .gg-marketing h2, .gg-marketing h3, .gg-marketing h4 { font-family: var(--font-bricolage), sans-serif; letter-spacing: -0.02em; }
+        .gg-marketing a { transition: color .15s ease; }
+        @media (max-width: 1024px) { .gg-navlinks { display: none !important; } }
+      `}</style>
+
       {/* Nav */}
-      <header className="sticky top-0 z-30 backdrop-blur bg-white/70 border-b border-emerald-100">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-3 sm:gap-5">
-          <Link href="/" className="flex items-center gap-2.5 shrink-0">
-            <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-lime-300 via-emerald-400 to-emerald-700 shadow-md ring-2 ring-white flex items-center justify-center text-lg">🥑</div>
-            <div className="leading-none hidden sm:block">
-              <div className="text-base font-black tracking-tight text-emerald-900">GetGuac</div>
-              {subtitle && <div className="text-[9px] text-emerald-600 font-semibold uppercase tracking-wider mt-0.5">{subtitle}</div>}
-            </div>
+      <header style={{ position: 'sticky', top: 0, zIndex: 30, backdropFilter: 'blur(12px)', background: 'rgba(255,255,255,0.88)', borderBottom: '1px solid rgba(20,83,45,0.08)' }}>
+        <div style={{ maxWidth: 1180, margin: '0 auto', padding: '0 28px', height: 64, display: 'flex', alignItems: 'center', gap: 18 }}>
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 9, flexShrink: 0, textDecoration: 'none' }}>
+            <span style={{ fontSize: 22 }}>🥑</span>
+            <span className="hidden sm:block" style={{ ...DISPLAY, fontWeight: 800, fontSize: 20, color: '#15281C', letterSpacing: '-0.02em' }}>GetGuac</span>
           </Link>
           {hideSearch
             ? (headerTitle
-                ? <div className="flex-1 text-center font-black text-emerald-900 truncate px-2 text-sm sm:text-lg">{headerTitle}</div>
+                ? <div className="flex-1 text-center truncate px-2" style={{ ...DISPLAY, fontWeight: 800, color: '#15281C', fontSize: 17 }}>{headerTitle}</div>
                 : <div className="flex-1" />)
             : <HeaderSearch className="flex-1 min-w-0 max-w-xl" />}
-          <nav className="flex items-center gap-3 sm:gap-4 text-sm shrink-0">
-            {!headerTitle && NAV.map((n) => (
-              <Link key={n.href} href={n.href} className="hidden xl:inline font-semibold text-gray-600 hover:text-emerald-800">{n.label}</Link>
-            ))}
+          <nav style={{ display: 'flex', alignItems: 'center', gap: 18, flexShrink: 0 }}>
+            {!headerTitle && (
+              <div className="gg-navlinks" style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+                {NAV.slice(0, 6).map((n) => (
+                  <Link key={n.href} href={n.href} style={{ color: '#5C6B60', fontWeight: 500, fontSize: 14.5, textDecoration: 'none' }}>{n.label}</Link>
+                ))}
+              </div>
+            )}
             <MarketingAuthButtons />
             {!headerTitle && <MarketingMobileMenu nav={NAV} />}
           </nav>
@@ -74,36 +90,7 @@ export default function MarketingShell({ subtitle, hideSearch = false, headerTit
 
       <main>{children}</main>
 
-      {/* Footer */}
-      <footer className="border-t border-emerald-100 bg-white/60 mt-16">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            <div className="col-span-2 md:col-span-1">
-              <Link href="/" className="flex items-center gap-2">
-                <span className="text-xl">🥑</span>
-                <span className="font-black text-emerald-900">GetGuac</span>
-              </Link>
-              <p className="text-sm text-gray-500 mt-3 max-w-xs">
-                See where your money goes, catch hidden fees, and never miss a refund. Free.
-              </p>
-            </div>
-            {FOOTER.map((col) => (
-              <div key={col.heading}>
-                <div className="text-xs font-bold uppercase tracking-wider text-emerald-700 mb-3">{col.heading}</div>
-                <ul className="space-y-2">
-                  {col.links.map((l) => (
-                    <li key={l.href}><Link href={l.href} className="text-sm text-gray-600 hover:text-emerald-800">{l.label}</Link></li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-          <div className="border-t border-emerald-100 mt-10 pt-6 text-xs text-gray-400 flex flex-wrap items-center justify-between gap-3">
-            <span>© 2026 GetGuac. Your money, made clear.</span>
-            <span>Free · No card required · Your data stays yours.</span>
-          </div>
-        </div>
-      </footer>
+      <MarketingFooter />
     </div>
   )
 }

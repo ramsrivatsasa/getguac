@@ -1,318 +1,294 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '../lib/supabase/server'
-import {
-  Sparkles, Wand2, Star, Gift, ShoppingCart, Tag, Shield, ArrowRight, Package, BadgeDollarSign, Banknote, Brain, Trophy, Smile, PieChart
-} from 'lucide-react'
-import GuacMascot from '../components/GuacMascot'
-import GenieAvocado from '../components/GenieAvocado'
-import LottieAnimation from '../components/LottieAnimation'
-import moneyMagic from '../lottie/money-magic.json'
-import WatchVideoCard from '../components/WatchVideoCard'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 import ReferralCapture from '../components/ReferralCapture'
-import HeaderSearch from '../components/HeaderSearch'
+import MarketingFooter from '../components/MarketingFooter'
+
+// Real, live aggregate numbers for the landing page — pulled from the database
+// with the service-role client (server-only). No fabricated "as seen in" /
+// 250k members / $2.1B figures: every tile here is a true count, and any tile
+// with no data yet is simply not rendered. Never throws — degrades to null so
+// the page still renders if the DB is unreachable.
+async function getStats() {
+  try {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!url || !key) return null
+    const a = createAdminClient(url, key, { auth: { persistSession: false } })
+    const [rc, members, amounts, ratings] = await Promise.all([
+      a.from('receipts').select('id', { count: 'exact', head: true }),
+      a.from('profiles').select('id', { count: 'exact', head: true }),
+      a.from('receipts').select('total_amount, is_return'),
+      a.from('receipts').select('rating').not('rating', 'is', null),
+    ])
+    const receipts = rc.count || 0
+    const memberCount = members.count || 0
+    const spend = (amounts.data || []).reduce((s, r) => s + (r.is_return ? 0 : Number(r.total_amount) || 0), 0)
+    const rated = (ratings.data || []).map((r) => Number(r.rating)).filter((n) => n > 0)
+    const avgRating = rated.length ? rated.reduce((x, y) => x + y, 0) / rated.length : null
+    return { receipts, members: memberCount, spend, avgRating, ratingCount: rated.length }
+  } catch {
+    return null
+  }
+}
+
+function fmtNum(n) {
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(n % 1_000_000 ? 1 : 0) + 'M'
+  if (n >= 10_000) return (n / 1000).toFixed(0) + 'k'
+  return n.toLocaleString('en-US')
+}
+function fmtMoney(n) {
+  if (n >= 1_000_000) return '$' + (n / 1_000_000).toFixed(1) + 'M'
+  if (n >= 10_000) return '$' + (n / 1000).toFixed(0) + 'k'
+  return '$' + Math.round(n).toLocaleString('en-US')
+}
+
+const DISPLAY = { fontFamily: 'var(--font-bricolage), sans-serif' }
 
 export default async function Home() {
-  // Logged-in users skip the landing page
+  // Logged-in users skip the landing page.
   const sb = createClient()
   const { data: { user } } = await sb.auth.getUser()
   if (user) redirect('/dashboard')
 
+  const stats = await getStats()
+  const tiles = []
+  if (stats) {
+    if (stats.spend > 0) tiles.push({ v: fmtMoney(stats.spend), l: 'spending tracked' })
+    if (stats.receipts > 0) tiles.push({ v: fmtNum(stats.receipts), l: 'receipts scanned' })
+    if (stats.members > 0) tiles.push({ v: fmtNum(stats.members), l: 'members' })
+    if (stats.avgRating) tiles.push({ v: stats.avgRating.toFixed(1) + '★', l: 'avg Worth-It rating' })
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-lime-50 text-gray-800 font-sans">
-      {/* Capture ?ref=<CODE> on landing — stashed to localStorage and
-          applied on first dashboard load post-signup. Renders nothing. */}
+    <div style={{ fontFamily: 'var(--font-jakarta), system-ui, sans-serif', color: '#1A2E22', background: '#fff', overflowX: 'hidden' }}>
       <ReferralCapture />
+
       {/* NAV */}
-      <header className="sticky top-0 z-30 backdrop-blur bg-white/70 border-b border-emerald-100">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-3 sm:gap-5">
-          <Link href="/" className="flex items-center gap-2.5 shrink-0">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-lime-300 via-emerald-400 to-emerald-700 shadow-md ring-2 ring-white flex items-center justify-center text-xl">🥑</div>
-            <div className="leading-none hidden sm:block">
-              <div className="text-lg font-black tracking-tight text-emerald-900">GetGuac</div>
-              <div className="text-[9px] text-emerald-600 font-semibold uppercase tracking-wider mt-0.5">your money's wingman</div>
-            </div>
+      <header style={{ position: 'sticky', top: 0, zIndex: 50, backdropFilter: 'blur(12px)', background: 'rgba(255,255,255,0.88)', borderBottom: '1px solid rgba(20,83,45,0.08)' }}>
+        <nav style={{ maxWidth: 1180, margin: '0 auto', padding: '15px 28px', display: 'flex', alignItems: 'center', gap: 26 }}>
+          <Link href="/" style={{ ...DISPLAY, display: 'flex', alignItems: 'center', gap: 9, color: '#1A2E22', fontWeight: 800, fontSize: 20, letterSpacing: '-0.02em', textDecoration: 'none' }}>
+            <span style={{ fontSize: 22 }}>🥑</span> GetGuac
           </Link>
-          <HeaderSearch className="flex-1 min-w-0 max-w-xl" />
-          <nav className="flex items-center gap-2 shrink-0">
-            <Link href="/marketplace" className="hidden xl:inline-flex items-center gap-1 text-sm font-bold text-emerald-700 hover:text-emerald-900 px-3 py-1.5 rounded-full">🛒 Marketplace</Link>
-            <Link href="/coupons" className="hidden xl:inline text-sm font-semibold text-gray-600 hover:text-emerald-800 px-3 py-1.5 rounded-full">Coupons</Link>
-            <Link href="/resources" className="hidden xl:inline text-sm font-semibold text-gray-600 hover:text-emerald-800 px-3 py-1.5 rounded-full">Resources</Link>
-            <Link href="/plan" className="hidden xl:inline text-sm font-semibold text-gray-600 hover:text-emerald-800 px-3 py-1.5 rounded-full">Plan</Link>
-            <Link href="/how-it-works" className="hidden xl:inline text-sm font-semibold text-gray-600 hover:text-emerald-800 px-3 py-1.5 rounded-full">How it works</Link>
-            <Link href="/login" className="hidden sm:inline-flex btn-secondary">Sign in</Link>
-            <Link href="/register" className="btn-primary">Get started</Link>
-          </nav>
-        </div>
+          <div className="gg-navlinks" style={{ display: 'flex', gap: 22, marginLeft: 12 }}>
+            <Link href="/marketplace" style={{ color: '#5C6B60', fontWeight: 500, fontSize: 15, textDecoration: 'none' }}>🛒 Marketplace</Link>
+            <Link href="/coupons" style={{ color: '#5C6B60', fontWeight: 500, fontSize: 15, textDecoration: 'none' }}>Coupons</Link>
+            <Link href="/resources" style={{ color: '#5C6B60', fontWeight: 500, fontSize: 15, textDecoration: 'none' }}>Resources</Link>
+            <Link href="/plan" style={{ color: '#5C6B60', fontWeight: 500, fontSize: 15, textDecoration: 'none' }}>Plan</Link>
+            <Link href="/how-it-works" style={{ color: '#5C6B60', fontWeight: 500, fontSize: 15, textDecoration: 'none' }}>How it works</Link>
+            <Link href="/features" style={{ color: '#5C6B60', fontWeight: 500, fontSize: 15, textDecoration: 'none' }}>Features</Link>
+          </div>
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 14 }}>
+            <Link href="/login" style={{ color: '#1A2E22', fontWeight: 600, fontSize: 15, textDecoration: 'none' }}>Sign in</Link>
+            <Link href="/register" style={{ background: '#65A30D', color: '#fff', fontWeight: 700, fontSize: 15, padding: '11px 20px', borderRadius: 999, textDecoration: 'none' }}>Get started</Link>
+          </div>
+        </nav>
       </header>
 
-      {/* HERO */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-6 sm:pt-10 pb-10">
-        <div className="grid lg:grid-cols-5 gap-8 items-center">
-          <div className="lg:col-span-3 space-y-4">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider">
-              <Sparkles size={12} /> Guac-AI · personal finance assistant
-            </span>
-            <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-gray-900 leading-[1.05]">
-              Meet your money's<br />
-              <span className="bg-gradient-to-br from-emerald-500 via-lime-500 to-amber-500 bg-clip-text text-transparent">smartest sidekick.</span>
+      <main>
+        {/* HERO */}
+        <section className="gg-hero" style={{ maxWidth: 1180, margin: '0 auto', padding: '72px 28px 56px', display: 'grid', gridTemplateColumns: '1.05fr 0.95fr', gap: 56, alignItems: 'center' }}>
+          <div>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#F0F7E8', color: '#4D7C0F', border: '1px solid rgba(101,163,13,0.2)', padding: '7px 14px', borderRadius: 999, fontSize: 13, fontWeight: 600, marginBottom: 24 }}>
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#84CC16', boxShadow: '0 0 0 3px rgba(132,204,22,0.25)' }} /> Guac-AI · personal finance assistant
+            </div>
+            <h1 className="gg-h1" style={{ ...DISPLAY, fontWeight: 800, fontSize: 58, lineHeight: 1.02, letterSpacing: '-0.035em', margin: '0 0 22px', color: '#15281C' }}>
+              Meet your money&apos;s<br />smartest <span style={{ color: '#65A30D' }}>sidekick.</span>
             </h1>
-            <p className="text-lg text-gray-600 max-w-xl leading-relaxed">
-              GetGuac is your <span className="font-bold text-emerald-700">Guac-AI</span> finance brain — it reads your receipts and bank statements,
-              scores every purchase, sniffs out hidden fees, and tells you exactly where your money
-              gets eaten. <span className="font-semibold">Money's wingman. Keep your guac.</span>
+            <p style={{ fontSize: 19, lineHeight: 1.55, color: '#56655B', margin: '0 0 30px', maxWidth: 520 }}>
+              GetGuac reads your receipts and bank statements, scores every purchase, sniffs out hidden fees, and shows you exactly where your money gets eaten. Money&apos;s wingman. Keep your guac.
             </p>
-
-            <div className="flex flex-wrap items-center gap-3">
-              <Link href="/register" className="btn-primary text-base px-6 py-3">
-                <span className="text-lg">🥑</span> Meet your sidekick <ArrowRight size={16} />
-              </Link>
-              <Link href="/login" className="btn-secondary text-base px-6 py-3">
-                I'm already in
-              </Link>
-              <Link href="/download" className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gray-900 hover:bg-black text-white font-bold text-base shadow transition-colors">
-                📱 Get the Android app
-              </Link>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginBottom: 24 }}>
+              <Link href="/register" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#65A30D', color: '#fff', fontWeight: 700, fontSize: 16, padding: '15px 26px', borderRadius: 999, textDecoration: 'none', boxShadow: '0 10px 24px -10px rgba(101,163,13,0.6)' }}>🥑 Meet your sidekick</Link>
+              <Link href="/download" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#fff', color: '#1A2E22', fontWeight: 700, fontSize: 16, padding: '15px 26px', borderRadius: 999, textDecoration: 'none', border: '1.5px solid rgba(20,83,45,0.16)' }}>📱 Get the app</Link>
             </div>
-            <div className="flex items-center gap-5 text-xs text-gray-500 pt-3">
-              <span className="inline-flex items-center gap-1"><Shield size={12} className="text-emerald-500" /> Private. Yours. RLS-locked.</span>
-              <span className="inline-flex items-center gap-1"><Tag size={12} className="text-emerald-500" /> Free. No card. No catch.</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap', fontSize: 14, color: '#56655B', fontWeight: 600 }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>🔒 Private — RLS-locked, yours to wipe</span>
+              <span style={{ width: 1, height: 16, background: 'rgba(20,83,45,0.15)' }} />
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>🥑 Free. No card. No catch.</span>
             </div>
           </div>
-
-          <div className="lg:col-span-2 relative flex justify-center">
-            <div className="absolute inset-0 bg-gradient-to-br from-lime-200/50 to-emerald-200/50 rounded-full blur-3xl" />
-            <div className="relative">
-              <GenieAvocado size={320} />
-              {/* Magic hat conjuring cash, beside the genie — the money wizard. */}
-              <div className="absolute bottom-3 -left-2 sm:-left-8 w-36 sm:w-44 pointer-events-none">
-                <LottieAnimation data={moneyMagic} size={176} loop fallback="🎩" label="Money magic" />
+          <div className="gg-hero-visual" style={{ position: 'relative', display: 'flex', justifyContent: 'center', animation: 'guacRise 0.8s cubic-bezier(0.22,1,0.36,1) both' }}>
+            <div style={{ position: 'absolute', inset: '20px 30px', background: 'radial-gradient(circle at 60% 40%, rgba(132,204,22,0.16), transparent 65%)', borderRadius: '50%' }} />
+            <div style={{ position: 'relative', width: 290, background: '#fff', borderRadius: 34, padding: 18, boxShadow: '0 40px 80px -30px rgba(20,40,28,0.32)', border: '1px solid rgba(20,83,45,0.08)', animation: 'guacFloat 6s ease-in-out infinite' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, padding: '0 4px' }}>
+                <span style={{ ...DISPLAY, fontWeight: 800, color: '#15281C' }}>🥑 GuacScore</span>
+                <span style={{ fontSize: 12, color: '#8A988E' }}>This month</span>
               </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Trust strip */}
-        <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[
-            { stat: '0–100',     label: 'GuacScore rating' },
-            { stat: 'Guac-AI',  label: 'Reads receipts + statements' },
-            { stat: '🦷',        label: 'Tracks every bank bite' },
-            { stat: '🧙‍♂️',     label: 'GuacWizard insights' },
-          ].map(b => (
-            <div key={b.label} className="bg-white border border-emerald-100 rounded-2xl p-3 text-center shadow-sm">
-              <p className="text-xl font-extrabold text-emerald-700">{b.stat}</p>
-              <p className="text-[10px] uppercase tracking-wider text-gray-500 font-bold mt-0.5">{b.label}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* HOW IT WORKS — plays the product-tour video in an on-page modal */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-10">
-        <WatchVideoCard />
-      </section>
-
-      {/* THE BRAIN — what Guac-AI actually does */}
-      <section id="brain" className="max-w-6xl mx-auto px-4 sm:px-6 pb-10">
-        <div className="text-center mb-6">
-          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight flex items-center justify-center gap-2 flex-wrap">
-            <Brain size={28} className="text-emerald-600" /> The brain behind the guac
-          </h2>
-          <p className="text-gray-500 mt-2 max-w-2xl mx-auto">
-            Most apps just track. Guac-AI <span className="italic">thinks</span>. It tags, scores,
-            spots patterns, and nudges you — like a CFO that lives in your pocket and never sends a bill.
-          </p>
-        </div>
-        <div className="grid md:grid-cols-3 gap-5">
-          {BRAIN_CARDS.map(c => (
-            <div key={c.title} className={`rounded-3xl border border-gray-100 p-6 shadow-sm hover:shadow-lg transition-all bg-gradient-to-br ${c.bg}`}>
-              <div className={`w-14 h-14 rounded-2xl ${c.accent} text-white shadow-md flex items-center justify-center mb-4`}>
-                <c.icon size={26} />
-              </div>
-              <h3 className="font-extrabold text-lg text-gray-900">{c.title}</h3>
-              <p className="text-sm text-gray-700 mt-1.5 leading-relaxed">{c.body}</p>
-              {c.tag && (
-                <span className={`inline-block mt-3 text-[10px] font-bold uppercase tracking-wider ${c.tagColor} px-2 py-0.5 rounded-full`}>
-                  {c.tag}
-                </span>
-              )}
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* HOW IT WORKS — original simple 3-step + link to email deep dive */}
-      <section id="how" className="max-w-6xl mx-auto px-4 sm:px-6 pb-10">
-        <div className="text-center mb-6">
-          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">How GetGuac works</h2>
-          <p className="text-gray-500 mt-2">Three taps from receipt to insight.</p>
-        </div>
-        <div className="grid md:grid-cols-3 gap-5">
-          {[
-            { n: '1', emoji: '📷', title: 'Drop or snap',   body: 'Drag a PDF, email forward, or snap a photo. Guac-AI handles the rest.' },
-            { n: '2', emoji: '🧾', title: 'Auto-organized', body: 'Items, categories, store locations, refund policies — all extracted and saved.' },
-            { n: '3', emoji: '💎', title: 'Rate & learn',   body: 'Worth It? rating + Guacanomics charts surface what you actually need.' },
-          ].map(s => (
-            <div key={s.n} className="card relative overflow-hidden">
-              <span className="absolute -right-3 -top-3 text-7xl font-black text-emerald-50 select-none">{s.n}</span>
-              <div className="relative">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-green-600 text-white shadow-md flex items-center justify-center text-2xl">{s.emoji}</div>
-                <h3 className="font-bold text-lg mt-3 text-gray-900">{s.title}</h3>
-                <p className="text-sm text-gray-600 mt-1 leading-relaxed">{s.body}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="text-center mt-6">
-          <Link href="/how-email-works" className="inline-flex items-center gap-1 text-sm font-bold text-emerald-700 hover:text-emerald-900">
-            Plus — every account gets a free @getguac.app email · See how it works <ArrowRight size={14} />
-          </Link>
-        </div>
-      </section>
-
-      {/* PRIVACY STRIP */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-10">
-        <div className="rounded-3xl border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 to-lime-50 p-6 sm:p-8">
-          <div className="flex items-start gap-5 flex-wrap">
-            <div className="w-16 h-16 rounded-2xl bg-emerald-100 ring-2 ring-emerald-200 flex items-center justify-center shrink-0">
-              <Shield size={28} className="text-emerald-700" />
-            </div>
-            <div className="flex-1 min-w-[240px]">
-              <h3 className="text-xl sm:text-2xl font-extrabold text-emerald-900">Your guac. Your rules.</h3>
-              <p className="text-sm sm:text-base text-emerald-950/80 mt-2 leading-relaxed">
-                Inbox sync is an opt-in service — toggle it off in Profile and we stop syncing your mail.
-                Receipt auto-parse is limited to your <span className="font-mono">+g</span> address. Everything else just sits in your in-app Inbox.
-                Row-level security at the database means even our own engineers can&apos;t snoop on other users. One-click account + data wipe any time.
-              </p>
-              <div className="flex flex-wrap gap-3 mt-4">
-                <Link href="/security" className="inline-flex items-center gap-1 text-sm font-bold text-emerald-700 hover:text-emerald-900">
-                  What we can &amp; can&apos;t see <ArrowRight size={14} />
-                </Link>
-                <Link href="/how-email-works" className="inline-flex items-center gap-1 text-sm font-bold text-emerald-700 hover:text-emerald-900">
-                  How the email flow works <ArrowRight size={14} />
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* SUPERPOWERS GRID */}
-      <section id="powers" className="bg-white border-y border-emerald-100">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
-          <div className="text-center mb-6">
-            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">Guac-AI superpowers</h2>
-            <p className="text-gray-500 mt-2">Twelve tools, one avocado. Each one a little smarter than your bank.</p>
-          </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {POWERS.map(f => (
-              <div key={f.title} className={`relative rounded-2xl border border-gray-100 p-4 hover:shadow-md transition-all bg-gradient-to-br ${f.bg}`}>
-                <div className={`w-11 h-11 rounded-2xl ${f.accent} text-white shadow-md flex items-center justify-center mb-3`}>
-                  <f.icon size={20} />
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+                <div className="gg-ring" style={{ position: 'relative', width: 150, height: 150, borderRadius: '50%', background: 'conic-gradient(#65A30D var(--gg-deg, 313deg), rgba(101,163,13,0.12) 0deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'guacRing 1.3s 0.35s cubic-bezier(0.22,1,0.36,1) both' }}>
+                  <div style={{ width: 118, height: 118, borderRadius: '50%', background: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={{ ...DISPLAY, fontWeight: 800, fontSize: 42, lineHeight: 1, color: '#15281C' }}>87</span>
+                    <span style={{ fontSize: 11, color: '#65A30D', fontWeight: 700, letterSpacing: '0.04em' }}>SOLID GUAC</span>
+                  </div>
                 </div>
-                <h3 className="font-bold text-gray-900">{f.title}</h3>
-                <p className="text-sm text-gray-600 mt-1 leading-snug">{f.body}</p>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 11, background: '#F7FAF2', borderRadius: 13, padding: '11px 13px' }}>
+                  <span style={{ fontSize: 18 }}>🛒</span>
+                  <div style={{ flex: 1 }}><div style={{ fontWeight: 700, fontSize: 13.5, color: '#16241C' }}>Whole Foods</div><div style={{ fontSize: 11.5, color: '#8A988E' }}>Grub · 18 items</div></div>
+                  <span style={{ fontWeight: 800, fontSize: 14, color: '#16241C' }}>$94.20</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 11, background: '#FBF3EC', borderRadius: 13, padding: '11px 13px' }}>
+                  <span style={{ fontSize: 18 }}>⚠️</span>
+                  <div style={{ flex: 1 }}><div style={{ fontWeight: 700, fontSize: 13.5, color: '#16241C' }}>Hidden fee found</div><div style={{ fontSize: 11.5, color: '#8A988E' }}>$12 / mo · Cancel?</div></div>
+                  <span style={{ fontWeight: 800, fontSize: 14, color: '#C2410C' }}>−$12</span>
+                </div>
+              </div>
+            </div>
+            {/* Floating callout — illustrative product UI, animated. */}
+            <div style={{ position: 'absolute', top: 24, left: -6, background: '#fff', borderRadius: 16, padding: '12px 15px', boxShadow: '0 18px 40px -16px rgba(20,40,28,0.35)', border: '1px solid rgba(20,83,45,0.08)', display: 'flex', alignItems: 'center', gap: 10, animation: 'guacFloatB 5s ease-in-out infinite' }}>
+              <span style={{ width: 32, height: 32, borderRadius: 10, background: '#F0F7E8', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>💰</span>
+              <div><div style={{ fontSize: 11, color: '#8A988E', fontWeight: 600 }}>Refund caught</div><div style={{ ...DISPLAY, fontWeight: 800, fontSize: 16, color: '#4D7C0F' }}>before the deadline</div></div>
+            </div>
+          </div>
+        </section>
+
+        {/* REAL STATS — only rendered when there's actual data */}
+        {tiles.length > 0 && (
+          <section style={{ maxWidth: 1180, margin: '0 auto', padding: '8px 28px 16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${tiles.length}, 1fr)`, gap: 20, textAlign: 'center' }}>
+              {tiles.map((t) => (
+                <div key={t.l}>
+                  <div style={{ ...DISPLAY, fontWeight: 800, fontSize: 42, letterSpacing: '-0.03em', color: '#15281C' }}>{t.v}</div>
+                  <div style={{ fontSize: 14, color: '#5C6B60', fontWeight: 500 }}>{t.l}</div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* FEATURES */}
+        <section style={{ maxWidth: 1180, margin: '0 auto', padding: '72px 28px' }}>
+          <div style={{ maxWidth: 640, marginBottom: 44 }}>
+            <h2 style={{ ...DISPLAY, fontWeight: 800, fontSize: 40, letterSpacing: '-0.03em', margin: '0 0 14px', color: '#15281C' }}>Take control of your money.</h2>
+            <p style={{ fontSize: 18, lineHeight: 1.55, color: '#56655B', margin: 0 }}>Better prices, the refunds you&apos;re owed, and exactly where your money goes — in about a minute.</p>
+          </div>
+          <div className="gg-grid3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
+            {FEATURES.map((f) => (
+              <div key={f.t} style={{ background: '#fff', border: '1px solid rgba(20,83,45,0.10)', borderRadius: 20, padding: 28 }}>
+                <div style={{ fontSize: 30, marginBottom: 14 }}>{f.e}</div>
+                <h3 style={{ ...DISPLAY, fontWeight: 700, fontSize: 19, margin: '0 0 8px' }}>{f.t}</h3>
+                <p style={{ fontSize: 15, lineHeight: 1.5, color: '#5C6B60', margin: 0 }}>{f.b}</p>
               </div>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* FINAL CTA */}
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 py-12 text-center">
-        <div className="flex justify-center mb-4">
-          <GuacMascot expression="celebrating" size={140} />
-        </div>
-        <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-          Ready to <span className="bg-gradient-to-br from-emerald-500 to-lime-600 bg-clip-text text-transparent">put a brain on your money?</span>
-        </h2>
-        <p className="text-gray-500 mt-3 max-w-md mx-auto">
-          Free, private, and on your side. No fees, no card, no spam — just your guac, sharper every day.
-        </p>
-        <div className="flex flex-wrap justify-center gap-3 mt-6">
-          <Link href="/register" className="btn-primary text-base px-6 py-3">
-            <span className="text-lg">🥑</span> Hire your sidekick <ArrowRight size={16} />
-          </Link>
-          <Link href="/login" className="btn-secondary text-base px-6 py-3">Sign in</Link>
-        </div>
-      </section>
+        {/* BRAIN */}
+        <section style={{ background: '#F7FAF2', borderTop: '1px solid rgba(101,163,13,0.12)', borderBottom: '1px solid rgba(101,163,13,0.12)' }}>
+          <div style={{ maxWidth: 1180, margin: '0 auto', padding: '76px 28px' }}>
+            <div style={{ maxWidth: 620, marginBottom: 44 }}>
+              <span style={{ display: 'inline-block', color: '#4D7C0F', fontWeight: 700, fontSize: 13, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 14 }}>The brain behind the guac</span>
+              <h2 style={{ ...DISPLAY, fontWeight: 800, fontSize: 40, letterSpacing: '-0.03em', margin: '0 0 14px', color: '#15281C' }}>Most apps just track. Guac-AI thinks.</h2>
+              <p style={{ fontSize: 18, lineHeight: 1.55, color: '#56655B', margin: 0 }}>It tags, scores, spots patterns, and nudges you — like a CFO that lives in your pocket and never sends a bill.</p>
+            </div>
+            <div className="gg-grid3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
+              {BRAIN.map((c) => (
+                <div key={c.t} style={{ background: '#fff', border: '1px solid rgba(101,163,13,0.16)', borderRadius: 22, padding: 30 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: '#4D7C0F', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 18 }}>{c.k}</div>
+                  <h3 style={{ ...DISPLAY, fontWeight: 700, fontSize: 23, margin: '0 0 10px', color: '#15281C' }}>{c.t}</h3>
+                  <p style={{ fontSize: 15, lineHeight: 1.55, color: '#56655B', margin: 0 }}>{c.b}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* HOW IT WORKS */}
+        <section style={{ maxWidth: 1180, margin: '0 auto', padding: '76px 28px' }}>
+          <div style={{ textAlign: 'center', maxWidth: 600, margin: '0 auto 44px' }}>
+            <h2 style={{ ...DISPLAY, fontWeight: 800, fontSize: 40, letterSpacing: '-0.03em', margin: '0 0 14px', color: '#15281C' }}>Three taps from receipt to insight.</h2>
+            <Link href="/how-it-works" style={{ color: '#4D7C0F', fontWeight: 700, fontSize: 15, textDecoration: 'none' }}>See how it works in detail →</Link>
+          </div>
+          <div className="gg-grid3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
+            {STEPS.map((s) => (
+              <div key={s.n} style={{ position: 'relative', background: '#fff', border: '1px solid rgba(20,83,45,0.10)', borderRadius: 22, padding: '32px 28px' }}>
+                <div style={{ ...DISPLAY, position: 'absolute', top: 24, right: 26, fontWeight: 800, fontSize: 38, color: 'rgba(101,163,13,0.18)' }}>{s.n}</div>
+                <div style={{ fontSize: 32, marginBottom: 16 }}>{s.e}</div>
+                <h3 style={{ ...DISPLAY, fontWeight: 700, fontSize: 20, margin: '0 0 10px' }}>{s.t}</h3>
+                <p style={{ fontSize: 15, lineHeight: 1.55, color: '#5C6B60', margin: 0 }}>{s.b}</p>
+              </div>
+            ))}
+          </div>
+          <div style={{ textAlign: 'center', marginTop: 32 }}>
+            <Link href="/how-email-works" style={{ color: '#4D7C0F', fontWeight: 700, fontSize: 15, textDecoration: 'none' }}>Plus — every account gets a free @getguac.app email · See how it works →</Link>
+          </div>
+        </section>
+
+        {/* PRIVACY STRIP */}
+        <section style={{ maxWidth: 1180, margin: '0 auto', padding: '0 28px 76px' }}>
+          <div style={{ background: '#F4F8EE', border: '1px solid rgba(101,163,13,0.16)', borderRadius: 24, padding: 40, display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 40 }}>🛡️</span>
+            <div style={{ flex: 1, minWidth: 240 }}>
+              <h3 style={{ ...DISPLAY, fontWeight: 800, fontSize: 24, margin: '0 0 6px', color: '#15281C' }}>Your guac. Your rules.</h3>
+              <p style={{ fontSize: 15, color: '#3D4F44', margin: 0, lineHeight: 1.55 }}>Inbox sync is opt-in, auto-parse is limited to your +g address, and row-level security means even our own engineers can&apos;t see your data. One-click account + data wipe, any time.</p>
+            </div>
+            <Link href="/security" style={{ background: '#65A30D', color: '#fff', fontWeight: 700, fontSize: 15, padding: '13px 22px', borderRadius: 999, textDecoration: 'none' }}>How we protect you →</Link>
+          </div>
+        </section>
+
+        {/* CTA */}
+        <section style={{ maxWidth: 1180, margin: '0 auto', padding: '0 28px 76px' }}>
+          <div style={{ background: '#65A30D', borderRadius: 32, padding: '68px 48px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: -60, right: -40, fontSize: 200, opacity: 0.14, animation: 'guacFloatSlow 8s ease-in-out infinite' }}>🥑</div>
+            <h2 style={{ ...DISPLAY, fontWeight: 800, fontSize: 44, letterSpacing: '-0.03em', margin: '0 0 16px', color: '#fff', position: 'relative' }}>Ready to put a brain on your money?</h2>
+            <p style={{ fontSize: 18, lineHeight: 1.5, color: 'rgba(255,255,255,0.9)', margin: '0 auto 30px', maxWidth: 520, position: 'relative' }}>Free, private, and on your side. No fees, no card, no spam.</p>
+            <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap', position: 'relative' }}>
+              <Link href="/register" style={{ background: '#fff', color: '#15281C', fontWeight: 700, fontSize: 16, padding: '16px 30px', borderRadius: 999, textDecoration: 'none' }}>🥑 Hire your sidekick</Link>
+              <Link href="/login" style={{ background: 'rgba(255,255,255,0.18)', color: '#fff', fontWeight: 700, fontSize: 16, padding: '16px 30px', borderRadius: 999, textDecoration: 'none', border: '1px solid rgba(255,255,255,0.4)' }}>Sign in</Link>
+            </div>
+          </div>
+        </section>
+      </main>
 
       {/* FOOTER */}
-      <footer className="border-t border-emerald-100 bg-white/60">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 flex flex-wrap items-center justify-between gap-3 text-xs text-gray-500">
-          <div className="flex items-center gap-2">
-            <span className="text-base">🥑</span>
-            <span className="font-bold text-emerald-900">GetGuac</span>
-            <span>— your money's wingman</span>
-          </div>
-          <div className="flex items-center gap-4 flex-wrap">
-            <a href="#brain" className="hover:text-emerald-800">The brain</a>
-            <Link href="/how-email-works" className="hover:text-emerald-800">How email works</Link>
-            <Link href="/security" className="hover:text-emerald-800">Security</Link>
-            <Link href="/login" className="hover:text-emerald-800">Sign in</Link>
-          </div>
-        </div>
-      </footer>
+      <MarketingFooter />
+
+      {/* Hero float animations + responsive: stack grids, hide nav on small screens.
+          Rendered via dangerouslySetInnerHTML so React doesn't HTML-escape the
+          `syntax: '<angle>'` chars (< > ') — escaping them as a text child causes a
+          server/client hydration mismatch. */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes guacFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+        @keyframes guacFloatB { 0%,100% { transform: translateY(0); } 50% { transform: translateY(10px); } }
+        @keyframes guacFloatSlow { 0%,100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-16px) rotate(-3deg); } }
+        @property --gg-deg { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+        @keyframes guacRing { from { --gg-deg: 0deg; } to { --gg-deg: 313deg; } }
+        @keyframes guacRise { from { opacity: 0; transform: translateY(24px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @media (prefers-reduced-motion: reduce) {
+          .gg-hero-visual { animation: none !important; opacity: 1 !important; transform: none !important; }
+          .gg-ring { animation: none !important; --gg-deg: 313deg; }
+        }
+        @media (max-width: 880px) {
+          .gg-hero { grid-template-columns: 1fr !important; }
+          .gg-grid3 { grid-template-columns: 1fr !important; }
+          .gg-navlinks { display: none !important; }
+          .gg-h1 { font-size: 40px !important; }
+        }
+      ` }} />
     </div>
   )
 }
 
-// Three big "brain" cards — the headline AI features
-const BRAIN_CARDS = [
-  {
-    icon: Trophy,
-    title: 'GuacScore',
-    body: 'A 0–100 grade for every dollar you spent. Weighted by amount, rated by your own taste, dinged by fees. Beat your high score.',
-    accent: 'bg-gradient-to-br from-emerald-400 to-green-700',
-    bg: 'from-emerald-50 to-lime-50',
-    tag: 'Your spending IQ',
-    tagColor: 'bg-emerald-100 text-emerald-800',
-  },
-  {
-    icon: Wand2,
-    title: 'GuacWizard',
-    body: 'Bank statements in, insights out. Interest, fees, regret-spend, hidden subscriptions — all surfaced with a "do this next" nudge.',
-    accent: 'bg-gradient-to-br from-violet-400 to-purple-700',
-    bg: 'from-violet-50 to-fuchsia-50',
-    tag: 'AI insights',
-    tagColor: 'bg-violet-100 text-violet-800',
-  },
-  {
-    icon: BadgeDollarSign,
-    title: 'Bank Bite Tracker',
-    body: 'Every interest charge, every overdraft, every annual fee — itemized per card, scored against your spend. Watch it go to zero.',
-    accent: 'bg-gradient-to-br from-rose-400 to-red-700',
-    bg: 'from-rose-50 to-orange-50',
-    tag: 'Hidden cost killer',
-    tagColor: 'bg-rose-100 text-rose-800',
-  },
+const FEATURES = [
+  { e: '🧾', t: 'Track receipts & statements', b: 'Every purchase, fee, and charge, organized in one place.' },
+  { e: '🏷️', t: 'Get better deals', b: 'Steals finds a cheaper price on the things you rebuy.' },
+  { e: '↩️', t: 'Never miss a refund', b: 'Money back on price drops and returns, before deadlines pass.' },
+  { e: '✂️', t: 'Cut hidden subscriptions', b: 'Find and cancel the monthly bills you forgot about.' },
+  { e: '📝', t: 'Share a shopping list', b: 'Build one on the fly and send it to family in one tap.' },
+  { e: '📊', t: 'See it all & plan ahead', b: 'GuacScore + GuacWizard guide every spending call.' },
 ]
 
-// 12 "superpowers" — the broader product surface
-const POWERS = [
-  { icon: Sparkles,         title: 'Guacanomics',        body: 'Spend trends, top stores, category mix, regret-spend — beautiful live charts, no spreadsheet wrangling.',
-    accent: 'bg-amber-500',    bg: 'from-amber-50 to-yellow-50' },
-  { icon: Banknote,         title: 'Bank statements',    body: 'Drop a credit-card PDF. Guac-AI extracts transactions, APRs, payments, and surfaces fees in seconds.',
-    accent: 'bg-sky-500',      bg: 'from-sky-50 to-emerald-50' },
-  { icon: Star,             title: 'Worth-It rating',    body: 'Five-star verdict per receipt and per item. Train Guac-AI on what “worth it” means to you.',
-    accent: 'bg-rose-500',     bg: 'from-rose-50 to-pink-50' },
-  { icon: Package,          title: 'Stash catalog',      body: 'Every product you’ve ever bought, grouped + searchable. Predicts when you’ll run out.',
-    accent: 'bg-indigo-500',   bg: 'from-indigo-50 to-violet-50' },
-  { icon: BadgeDollarSign,  title: 'Steals hunter',      body: 'AI-powered price hunt across the web for anything you’ve bought before — or anything you want to.',
-    accent: 'bg-pink-500',     bg: 'from-pink-50 to-rose-50' },
-  { icon: ShoppingCart,     title: 'Smashlists',         body: 'Pantry, Cravings, Snack Stack, Grub & Grab. One tap re-orders from your own past wins.',
-    accent: 'bg-lime-500',     bg: 'from-lime-50 to-emerald-50' },
-  { icon: Gift,             title: 'Rewards radar',      body: 'Points, loyalty numbers, expiry dates — auto-pulled from receipts and surfaced before they lapse.',
-    accent: 'bg-fuchsia-500',  bg: 'from-fuchsia-50 to-pink-50' },
-  { icon: PieChart,         title: 'Category brain',     body: '12 smart presets (Grub, Tech, Fix-It, Wellness…) plus your own custom tags, learned over time.',
-    accent: 'bg-emerald-500',  bg: 'from-emerald-50 to-green-50' },
-  { icon: Smile,            title: 'Returns radar',      body: 'Refund policy parsed per item. Days remaining shown clearly. One click marks it returned.',
-    accent: 'bg-red-500',      bg: 'from-red-50 to-rose-50' },
-  { icon: Tag,              title: 'Car miles + tags',   body: 'Auto-calc distance between any two addresses. Tag trips for taxes (Business / Commute / Client).',
-    accent: 'bg-violet-500',   bg: 'from-violet-50 to-purple-50' },
-  { icon: Shield,           title: 'Private by default', body: 'Row-level security on every table. Your data stays yours — export or wipe with a click.',
-    accent: 'bg-teal-500',     bg: 'from-teal-50 to-cyan-50' },
-  { icon: Sparkles,         title: 'Mobile + web + AI',  body: 'Native Android app, full web app, and a Guac-AI brain that travels with you wherever you sign in.',
-    accent: 'bg-orange-500',   bg: 'from-orange-50 to-amber-50' },
+const BRAIN = [
+  { k: 'Your spending IQ', t: 'GuacScore', b: 'A 0–100 grade for every dollar you spent. Weighted by amount, rated by your taste, dinged by fees.' },
+  { k: 'AI insights', t: 'GuacWizard', b: 'Bank statements in, insights out. Interest, fees, regret-spend, hidden subscriptions — with a "do this next" nudge.' },
+  { k: 'Hidden cost killer', t: 'Bank Bite Tracker', b: 'Every interest charge, overdraft, and annual fee — itemized per card, scored against your spend.' },
+]
+
+const STEPS = [
+  { n: '1', e: '📷', t: 'Drop or snap', b: 'Drag a PDF, forward an email, or snap a photo.' },
+  { n: '2', e: '🧾', t: 'Auto-organized', b: 'Items, categories, locations, refund policies — extracted.' },
+  { n: '3', e: '💎', t: 'Rate & learn', b: 'Worth It? rating + Guacanomics charts surface what you need.' },
 ]

@@ -112,4 +112,11 @@ await sharp(banner(1920, 1080, {
 })).png().toFile(resolve(OUT, 'hero-1920x1080.png'))
 console.log('✓ hero-1920x1080.png')
 
+// 4096x2304 Play Console "Developer page" header. JPEG (opaque, <1MB).
+await sharp(banner(4096, 2304, {
+  titleSize: 358, tagSize: 120, subSize: 73, textX: 280,
+  genieX: 2620, genieY: 150, genieH: 2000,
+})).jpeg({ quality: 86 }).toFile(resolve(OUT, 'developer-header-4096x2304.jpg'))
+console.log('✓ developer-header-4096x2304.jpg')
+
 console.log('\nDone →', OUT)

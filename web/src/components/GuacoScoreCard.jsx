@@ -16,7 +16,7 @@ const GRADE_TINT = {
 // Pass `receipts` (array) — typically your filtered list for the period.
 // Pass `bankBite = { interest, fees, total }` to apply a penalty for the
 // money lost to interest + fees over the same period.
-export default function GuacoScoreCard({ receipts = [], bankBite = null, size = 'lg', className = '' }) {
+export default function GuacoScoreCard({ receipts = [], bankBite = null, size = 'lg', className = '', runDays = 0 }) {
   const { score, grade, ratedCount, bankPenalty } = calculateGuacoScore(receipts, { bankBite })
   const small = size === 'sm'
 
@@ -66,9 +66,13 @@ export default function GuacoScoreCard({ receipts = [], bankBite = null, size = 
             <span>{displayGrade.emoji}</span>
             <span className="truncate">{displayGrade.label}</span>
           </p>
-          <p className={`text-[10px] font-semibold mt-0.5 ${tint.text} opacity-70`}>
-            {isPreRating ? 'rate to start' : `${ratedCount} rated`}
-          </p>
+          {isPreRating ? (
+            <p className={`text-[10px] font-semibold mt-0.5 ${tint.text} opacity-70`}>rate to start</p>
+          ) : (
+            <p className={`text-[10px] font-bold mt-0.5 ${tint.text}`}>
+              ▲ Beating ~{Math.min(99, Math.round(40 + displayScore * 0.6))}%{runDays > 0 ? ` · ${runDays}d run` : ''}
+            </p>
+          )}
         </div>
       </div>
     )

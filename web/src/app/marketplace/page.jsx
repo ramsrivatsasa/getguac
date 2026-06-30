@@ -6,6 +6,9 @@ export const metadata = {
   description:
     'Search any product or store and see the best prices across major US retailers. Save your searches with no account. Free.',
   alternates: { canonical: '/marketplace' },
+  // Thin auto-generated price-search results — kept out of the index so it doesn't
+  // drag site-quality signals. follow:true preserves link equity.
+  robots: { index: false, follow: true },
   openGraph: {
     title: 'GetGuac Marketplace',
     description: 'Search any product or store and compare the best prices. No account needed.',

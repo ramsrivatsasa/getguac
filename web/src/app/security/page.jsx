@@ -12,6 +12,8 @@ export const metadata = {
   description: 'Plain-language explanation of how GetGuac protects your data, what we can see, and what you control.',
 }
 
+import MarketingFooter from '../../components/MarketingFooter'
+
 export default function SecurityPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-lime-50 text-gray-800 font-sans">
@@ -187,21 +189,7 @@ export default function SecurityPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-emerald-100 bg-white/60 mt-10">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 flex flex-wrap items-center justify-between gap-3 text-xs text-gray-500">
-          <div className="flex items-center gap-2">
-            <span className="text-base">🥑</span>
-            <span className="font-bold text-emerald-900">GetGuac</span>
-            <span>— your money&apos;s wingman</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link href="/" className="hover:text-emerald-800">Home</Link>
-            <Link href="/how-email-works" className="hover:text-emerald-800">How email works</Link>
-            <Link href="/login" className="hover:text-emerald-800">Sign in</Link>
-          </div>
-        </div>
-      </footer>
+      <MarketingFooter />
     </div>
   )
 }

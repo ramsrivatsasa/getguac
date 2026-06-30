@@ -6,6 +6,9 @@ export const metadata = {
   description:
     'Live coupons and promo codes for Walmart, Target, Amazon, Best Buy, Home Depot, CVS and more — pulled fresh from the web. Free, no account needed.',
   alternates: { canonical: '/coupons' },
+  // Thin auto-generated listing (live API results) — kept out of the index so it
+  // doesn't drag site-quality signals. follow:true preserves link equity.
+  robots: { index: false, follow: true },
   openGraph: {
     title: 'Coupons & promo codes — GetGuac',
     description: 'Live coupons for the biggest US stores, all in one place.',

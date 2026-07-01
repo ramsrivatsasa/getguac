@@ -2,7 +2,7 @@
 import { formatDateShort } from '../../../lib/dateFormat'
 import Link from 'next/link'
 import {
-  BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
+  LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts'
 import { Sparkles, TrendingDown, Tag, Calendar, ShoppingBag } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
@@ -110,24 +110,34 @@ export default function Charts({ insights }) {
           {insights.topStores.length === 0 ? (
             <div className="h-56 flex items-center justify-center text-gray-400 text-sm">Nothing to show</div>
           ) : (
-            <ResponsiveContainer width="100%" height={Math.max(220, insights.topStores.length * 36 + 40)}>
-              <BarChart data={insights.topStores} layout="vertical" margin={{ top: 10, right: 24, left: 12, bottom: 8 }} barCategoryGap="25%">
-                <CartesianGrid strokeDasharray="2 4" stroke="#f1f5f9" horizontal={false} />
-                <XAxis type="number" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                <YAxis dataKey="store" type="category" tick={{ fontSize: 11, fill: '#5C6B60' }} width={120} axisLine={false} tickLine={false} />
-                <Tooltip
-                  cursor={{ fill: '#f8fafc' }}
-                  contentStyle={{ borderRadius: 14, border: '1px solid #d1fae5', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', fontSize: 12 }}
-                  formatter={(v, name) => name === 'spent' ? `$${money2(v)}` : v}
-                />
-                <Bar dataKey="spent" radius={[5, 5, 5, 5]} maxBarSize={22} isAnimationActive={false}>
-                  {(() => {
-                    const max = Math.max(...insights.topStores.map(s => s.spent || 0)) || 1
-                    return insights.topStores.map((s, i) => <Cell key={i} fill={spendHeatHex((s.spent || 0) / max)} />)
-                  })()}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            // v2 mockup renders Top Stores as a CSS horizontal-bar list (not a
+            // recharts chart): store name · pale track with a heat-colored
+            // rounded bar · $ total, plus a 0…max scale footer.
+            (() => {
+              const max = Math.max(...insights.topStores.map(s => s.spent || 0)) || 1
+              return (
+                <div>
+                  <div className="space-y-2.5">
+                    {insights.topStores.map((s, i) => {
+                      const pct = Math.max(3, Math.round((s.spent || 0) / max * 100))
+                      return (
+                        <div key={i} className="flex items-center gap-3">
+                          <span className="w-28 shrink-0 truncate text-[13px] font-semibold text-guac-ink" title={s.store}>{s.store}</span>
+                          <div className="flex-1 h-[9px] rounded-[5px] bg-[#F0F4EA] overflow-hidden">
+                            <div className="h-full rounded-[5px]" style={{ width: `${pct}%`, background: spendHeatHex((s.spent || 0) / max) }} />
+                          </div>
+                          <span className="gg-num w-20 shrink-0 text-right text-[13px] font-extrabold text-guac-ink">${money0(s.spent)}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  <div className="flex justify-between ml-[124px] mr-[92px] mt-3 gg-num text-[10px] font-semibold text-guac-faint">
+                    <span>$0</span>
+                    <span>${money0(max)}</span>
+                  </div>
+                </div>
+              )
+            })()
           )}
         </div>
 

@@ -170,12 +170,18 @@ export default function PaymentTile({
             value={Number(numericValue)}
             duration={350}
             prefix={prefix}
-            decimals={decimals ?? (prefix === '$' ? 2 : 0)}
+            // Thousands-separated to match the mockups (e.g. $1,234.56). `format`
+            // receives the raw number; prefix ($) is still prepended by CountUp,
+            // so format returns just the grouped number to avoid a double $.
+            format={(n) => Number(n).toLocaleString('en-US', {
+              minimumFractionDigits: decimals ?? (prefix === '$' ? 2 : 0),
+              maximumFractionDigits: decimals ?? (prefix === '$' ? 2 : 0),
+            })}
             as="p"
-            className="text-lg font-black text-gray-900 leading-tight mt-0.5 truncate block"
+            className="gg-num text-lg font-black text-gray-900 leading-tight mt-0.5 truncate block"
           />
         ) : (
-          <p className="text-lg font-black text-gray-900 tabular-nums leading-tight mt-0.5 truncate">{value}</p>
+          <p className="gg-num text-lg font-black text-gray-900 leading-tight mt-0.5 truncate">{value}</p>
         )}
         {deltaLabel && deltaLabel !== '—' && (
           <p className={`text-[11px] font-semibold mt-0.5 ${deltaSubtextClass(deltaArrow, deltaGoodWhen)}`}>

@@ -18,6 +18,12 @@ const Charts = dynamic(() => import('./Charts'), {
   loading: () => <div className="card py-12 text-center text-gray-400">Loading charts…</div>,
 })
 
+// Money formatters — mockup renders every amount with thousands separators in
+// Bricolage (never monospace). money2 → cents ($1,234.56); money0 → whole
+// dollars ($1,235). Mirrors the app-wide pattern in validate/receipts pages.
+const money2 = (n) => Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+const money0 = (n) => Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })
+
 const CATEGORY_COLORS = {
   emerald:  '#10b981', orange: '#f97316', sky: '#0ea5e9', indigo: '#6366f1',
   amber:    '#f59e0b', lime:   '#84cc16', fuchsia: '#d946ef', rose: '#e11d48',
@@ -226,11 +232,11 @@ export default function GuacanomicsPage() {
           />
 
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-            <Stat icon={DollarSign} color="bg-gradient-to-br from-rose-400 via-rose-600 to-rose-800 text-white shadow" label="Net Spent (out)" value={`$${insights.netSpend.toFixed(2)}`} sub={`Gross $${insights.grossSpend.toFixed(2)}`} />
-            <Stat icon={Undo2}      color="bg-gradient-to-br from-emerald-300 via-emerald-500 to-green-700 text-white shadow" label="Refunded (in)" value={`$${insights.refunded.toFixed(2)}`} sub={`${insights.returnCount} returned`} />
-            <Stat icon={Banknote}   color="bg-gradient-to-br from-amber-400 via-orange-500 to-rose-600 text-white shadow" label="🦷 Bank Bite" value={`$${bankBite.total.toFixed(2)}`} sub={`$${bankBite.interest.toFixed(2)} interest · $${bankBite.fees.toFixed(2)} fees`} />
-            <Stat icon={ReceiptIcon} color="bg-amber-100 text-amber-700" label="Receipts" value={insights.purchaseCount} sub={`Avg $${insights.avgTicket.toFixed(2)}`} />
-            <Stat icon={TrendingUp} color="bg-lime-100 text-lime-700"     label="Tax Paid" value={`$${insights.totalTax.toFixed(2)}`} sub={`Biz $${insights.businessSpend.toFixed(2)}`} />
+            <Stat icon={DollarSign} color="bg-[#FDE3EA] text-[#E5194B]" label="Net Spent (out)" value={`$${money2(insights.netSpend)}`} sub={`Gross $${money2(insights.grossSpend)}`} />
+            <Stat icon={Undo2}      color="bg-[#E4F6E8] text-[#16A34A]" label="Refunded (in)" value={`$${money2(insights.refunded)}`} sub={`${insights.returnCount} returned`} />
+            <Stat icon={Banknote}   color="bg-[#FDEBD5] text-[#EA7A0C]" label="🦷 Bank Bite" value={`$${money2(bankBite.total)}`} sub={`$${money2(bankBite.interest)} interest · $${money2(bankBite.fees)} fees`} />
+            <Stat icon={ReceiptIcon} color="bg-[#FCF0CE] text-[#B4791A]" label="Receipts" value={insights.purchaseCount.toLocaleString('en-US')} sub={`Avg $${money2(insights.avgTicket)}`} />
+            <Stat icon={TrendingUp} color="bg-[#E9F5DD] text-[#4D7C0F]" label="Tax Paid" value={`$${money2(insights.totalTax)}`} sub={`Biz $${money2(insights.businessSpend)}`} />
           </div>
 
           <Charts insights={insights} />
@@ -242,12 +248,12 @@ export default function GuacanomicsPage() {
 
 function Stat({ icon: Icon, color, label, value, sub }) {
   return (
-    <div className="stat-card">
-      <div className={`p-3 rounded-xl ${color}`}><Icon size={20} /></div>
+    <div className="stat-card !rounded-[18px] items-start !gap-3">
+      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${color}`}><Icon size={18} /></div>
       <div>
-        <p className="text-xs text-gray-500 font-medium">{label}</p>
-        <p className="text-xl font-bold text-gray-900">{value}</p>
-        {sub && <p className="text-[11px] text-gray-400 mt-0.5">{sub}</p>}
+        <p className="text-[11px] text-guac-faint font-bold">{label}</p>
+        <p className="gg-stat gg-num !text-xl mt-0.5">{value}</p>
+        {sub && <p className="gg-sub gg-num !text-guac-faint mt-0.5">{sub}</p>}
       </div>
     </div>
   )

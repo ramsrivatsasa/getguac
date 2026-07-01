@@ -13,7 +13,7 @@ import { useMemo, useState, Fragment } from 'react'
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '../../../lib/supabase/client'
-import { CATEGORIES, categoryLabel, categoryClass } from '../../../lib/categories'
+import { CATEGORIES, categoryLabel, categoryClass, CATEGORY_BY_SLUG } from '../../../lib/categories'
 import { isPaymentReceipt } from '../../../lib/payment-rows'
 import { displayStoreName, storeGroupKey } from '../../../lib/store-name-normalize'
 import { computeTaxSummary, buildTaxExportCsv } from '../../../lib/tax-summary'
@@ -47,6 +47,17 @@ const CATEGORY_COLORS = {
   'gas-up': '#ef4444', fun: '#8b5cf6',
   gifting: '#ec4899', charity: '#f43f5e', misc: '#94a3b8',
 }
+
+// Presentation-only money formatter — thousands separators + 2 decimals
+// ($1,234.56), matching the mockup. `dp` overrides fraction digits (e.g. 0
+// for the whole-dollar KPI / donut-center figures the mockup shows as $16,399).
+const money = (n, dp = 2) =>
+  `$${Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: dp, maximumFractionDigits: dp })}`
+
+// Presentation-only date formatter — `DD MMM YYYY` with spaces (mockup style).
+// Reuses the shared formatter's parsing and just swaps its dashes for spaces so
+// no other view's date rendering changes.
+const dateSpaced = (input) => formatDateShort(input).replace(/-/g, ' ')
 
 // Pull receipts + items in a single query. Date filter on receipts is server-side;
 // items come along as an embedded array per receipt.
@@ -233,7 +244,7 @@ export default function ReportsPage() {
       <FeatureHeader
         theme="reports"
         title="Reports"
-        subtitle={<><span className="font-bold">${totalSpent.toFixed(2)}</span> across <span className="font-bold">{totalReceipts}</span> receipt{totalReceipts === 1 ? '' : 's'} · {periodLabel}</>}
+        subtitle={<><span className="font-bold">{money(totalSpent, 0)}</span> tracked across <span className="font-bold">{totalReceipts}</span> receipt{totalReceipts === 1 ? '' : 's'} · {periodLabel}</>}
         action={<TimeframePicker compact />}
       />
 
@@ -247,75 +258,95 @@ export default function ReportsPage() {
         </div>
       ) : (
         <>
+          {/* KPI strip — headline numbers for the selected window */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <KpiCard
+              label="Total spent"
+              value={money(totalSpent, 0)}
+              sub={`across ${byCategory.length} categor${byCategory.length === 1 ? 'y' : 'ies'}`}
+            />
+            <KpiCard
+              label="Top category"
+              emoji={byCategory[0] ? CATEGORY_BY_SLUG[byCategory[0].slug]?.emoji : null}
+              value={byCategory[0] ? (CATEGORY_BY_SLUG[byCategory[0].slug]?.label || byCategory[0].slug) : '—'}
+              sub={byCategory[0] && totalSpent > 0 ? `${money(byCategory[0].amount)} · ${((byCategory[0].amount / totalSpent) * 100).toFixed(0)}% of spend` : 'no spend yet'}
+            />
+            <KpiCard
+              label="Tax-deductible"
+              accent="guac"
+              value={money(taxStats.businessSpent)}
+              sub={`${taxStats.businessCount} business receipt${taxStats.businessCount === 1 ? '' : 's'}`}
+            />
+            <KpiCard
+              label="Sales tax paid"
+              value={money(taxStats.salesTax)}
+              sub={`across ${taxStats.salesTaxCount} receipt${taxStats.salesTaxCount === 1 ? '' : 's'}`}
+            />
+          </div>
+
           {/* 1. Spending by category */}
           <div className="card">
-            <div className="flex items-center gap-2 mb-3">
-              <PieIcon size={14} className="text-guac-700" />
-              <h2 className="font-semibold text-gray-800 text-sm">Spending by category</h2>
-            </div>
-            <div className="flex flex-col lg:flex-row gap-6 items-start">
-              <CategoryDonut data={byCategory} total={totalSpent} colors={CATEGORY_COLORS} />
-              {/* Right column: grid for the breakdown. 3 cols on long-
-                  period views (Category/Amount/Share), 4 cols when
-                  per-category trend is available (1M / 3M chips).
-                  The trend badge uses the same +/-% formatter as the
-                  Dashboard's Total Spent badge — items first, rose for
-                  up, emerald for down. */}
-              <div
-                className="flex-1 min-w-0 text-xs grid gap-y-1 w-full"
-                style={{
-                  gridTemplateColumns: trendsShown
-                    ? 'minmax(0,1fr) auto auto auto'
-                    : 'minmax(0,1fr) auto auto',
-                  columnGap: '12px',
-                }}
-              >
-                <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400 pb-1 border-b border-gray-100">Category</span>
-                <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400 pb-1 border-b border-gray-100 text-right">Amount</span>
-                <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400 pb-1 border-b border-gray-100 text-right w-10">Share</span>
-                {trendsShown && (
-                  <span
-                    className="text-[10px] uppercase tracking-wider font-bold text-gray-400 pb-1 border-b border-gray-100 text-right w-12"
-                    title={`vs avg of prior 3 ${period.label.toLowerCase()} windows`}
-                  >Trend</span>
-                )}
+            <SectionTitle emoji="🥧" title="Spending by category" />
+            <div className="flex flex-col lg:flex-row gap-8 items-center">
+              <CategoryDonut data={byCategory} total={totalSpent} colors={CATEGORY_COLORS} caption={period.label} />
+              {/* Right column: each row = coloured dot + emoji + label, a
+                  share bar, then amount · share. 4th col (Trend badge) only
+                  on ≤90d windows. Same +/-% formatter as the Dashboard's
+                  Total Spent badge — rose for up, guac for down. */}
+              <div className="flex-1 min-w-0 w-full">
+                <div
+                  className="grid items-center gap-x-4 px-1.5 pb-2 border-b border-guac-line gg-colhead"
+                  style={{ gridTemplateColumns: trendsShown ? 'minmax(120px,150px) 1fr auto auto' : 'minmax(120px,150px) 1fr auto' }}
+                >
+                  <span>Category</span>
+                  <span />
+                  <span className="text-right">Amount · Share</span>
+                  {trendsShown && <span className="text-right w-12" title={`vs avg of prior 3 ${period.label.toLowerCase()} windows`}>Trend</span>}
+                </div>
                 {byCategory.slice(0, 10).map(c => {
                   const isSelected = selectedCategory === c.slug
+                  const meta = CATEGORY_BY_SLUG[c.slug]
+                  const color = CATEGORY_COLORS[c.slug] || '#94a3b8'
+                  const pct = totalSpent > 0 ? (c.amount / totalSpent) * 100 : 0
                   const trend = trendsShown ? formatTrend(categoryTrends[c.slug]?.deltaPct) : null
                   return (
-                    <Fragment key={c.slug}>
-                      <button
-                        type="button"
-                        onClick={() => toggleCategory(c.slug)}
-                        title={isSelected ? 'Hide records' : 'Show records'}
-                        className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border self-center justify-self-start max-w-fit transition-all hover:scale-105 ${categoryClass(c.slug)} ${isSelected ? 'ring-2 ring-guac-600 shadow-sm' : ''}`}
-                      >
-                        <span className="w-2 h-2 rounded-full shrink-0" style={{ background: CATEGORY_COLORS[c.slug] || '#94a3b8' }} />
-                        <span>{categoryLabel(c.slug)}</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => toggleCategory(c.slug)}
-                        className={`font-semibold self-center text-right tabular-nums hover:text-guac-700 ${isSelected ? 'text-guac-700' : 'text-gray-700'}`}
-                      >${c.amount.toFixed(2)}</button>
-                      <button
-                        type="button"
-                        onClick={() => toggleCategory(c.slug)}
-                        className={`self-center text-right tabular-nums w-10 hover:text-guac-600 ${isSelected ? 'text-guac-600' : 'text-gray-400'}`}
-                      >{((c.amount / totalSpent) * 100).toFixed(0)}%</button>
-                      {trendsShown && trend && (
-                        <span
-                          className={`self-center text-right text-[10px] font-bold px-1.5 py-0.5 rounded-full justify-self-end whitespace-nowrap ${
-                            trend.tone === 'up'
-                              ? 'bg-rose-50 text-rose-700 border border-rose-100'
-                              : trend.tone === 'down'
-                                ? 'bg-guac-50 text-guac-700 border border-guac-line'
-                                : 'bg-gray-50 text-gray-400 border border-gray-100'
-                          }`}
-                          title={`vs avg of prior 3 ${period.label.toLowerCase()} windows`}
-                        >{trend.label}</span>
+                    <button
+                      key={c.slug}
+                      type="button"
+                      onClick={() => toggleCategory(c.slug)}
+                      title={isSelected ? 'Hide records' : 'Show records'}
+                      className={`w-full grid items-center gap-x-4 px-1.5 py-2 rounded-lg text-left transition-colors hover:bg-guac-row ${isSelected ? 'bg-guac-row ring-1 ring-guac-line2' : ''}`}
+                      style={{ gridTemplateColumns: trendsShown ? 'minmax(120px,150px) 1fr auto auto' : 'minmax(120px,150px) 1fr auto' }}
+                    >
+                      <span className="inline-flex items-center gap-2 text-sm font-bold text-guac-ink min-w-0">
+                        <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: color }} />
+                        <span className="text-base leading-none shrink-0">{meta?.emoji}</span>
+                        <span className="truncate">{meta?.label || c.slug}</span>
+                      </span>
+                      <span className="h-2 rounded-full bg-guac-50 overflow-hidden">
+                        <span className="block h-full rounded-full transition-all" style={{ width: `${Math.max(pct, 1.5)}%`, background: color }} />
+                      </span>
+                      <span className="text-right whitespace-nowrap">
+                        <span className="gg-num font-semibold text-[13px] text-guac-ink">{money(c.amount)}</span>
+                        <span className="gg-sub ml-2 inline-block w-8 text-right">{pct.toFixed(0)}%</span>
+                      </span>
+                      {trendsShown && (
+                        <span className="text-right w-12">
+                          {trend && (
+                            <span
+                              className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap ${
+                                trend.tone === 'up'
+                                  ? 'bg-rose-50 text-rose-700 border border-rose-100'
+                                  : trend.tone === 'down'
+                                    ? 'bg-guac-50 text-guac-700 border border-guac-line'
+                                    : 'bg-gray-50 text-gray-400 border border-gray-100'
+                              }`}
+                              title={`vs avg of prior 3 ${period.label.toLowerCase()} windows`}
+                            >{trend.label}</span>
+                          )}
+                        </span>
                       )}
-                    </Fragment>
+                    </button>
                   )
                 })}
               </div>
@@ -331,7 +362,7 @@ export default function ReportsPage() {
                     <span className="w-2 h-2 rounded-full" style={{ background: CATEGORY_COLORS[selectedCategory] || '#94a3b8' }} />
                     <span>{categoryLabel(selectedCategory)}</span>
                   </span>
-                  <h2 className="font-semibold text-gray-800 text-sm">
+                  <h2 className="gg-h3">
                     {categoryReceipts.length} receipt{categoryReceipts.length === 1 ? '' : 's'} in {period.label.toLowerCase()}
                   </h2>
                 </div>
@@ -349,8 +380,8 @@ export default function ReportsPage() {
                 <p className="text-xs text-gray-400 py-4 text-center">No receipts tagged with this category in the selected period.</p>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
+                  <table className="gg-tbl w-full text-sm">
+                    <thead className="border-b border-guac-line gg-colhead">
                       <tr>
                         <th className="px-3 py-1 text-left">Date</th>
                         <th className="px-3 py-1 text-left">Store</th>
@@ -364,7 +395,7 @@ export default function ReportsPage() {
                         const preview = (r.receipt_items || []).filter(i => !i.returned).slice(0, 3).map(i => i.item_name).filter(Boolean).join(', ')
                         return (
                           <tr key={r.id} className="hover:bg-guac-50/30">
-                            <td className="px-3 py-1.5 text-gray-500 whitespace-nowrap">{formatDateShort(r.date)}</td>
+                            <td className="px-3 py-1.5 text-gray-500 whitespace-nowrap gg-num">{dateSpaced(r.date)}</td>
                             <td className="px-3 py-1.5">
                               {r.store_id ? (
                                 <Link href={`/stores/${r.store_id}`} className="text-guac-700 hover:underline">{displayStoreName(r.store_name) || '—'}</Link>
@@ -375,8 +406,8 @@ export default function ReportsPage() {
                                 ? <><span className="text-gray-700 font-medium">{itemCount}</span> {preview && <span className="text-gray-400">· {preview}{itemCount > 3 ? '…' : ''}</span>}</>
                                 : <span className="text-gray-300">—</span>}
                             </td>
-                            <td className="px-3 py-1.5 text-right font-semibold tabular-nums">
-                              <Link href={`/receipts/${r.id}`} className="hover:text-guac-700">${parseFloat(r.total_amount || 0).toFixed(2)}</Link>
+                            <td className="px-3 py-1.5 text-right font-semibold gg-num text-guac-ink">
+                              <Link href={`/receipts/${r.id}`} className="hover:text-guac-700">{money(r.total_amount)}</Link>
                             </td>
                           </tr>
                         )
@@ -395,54 +426,42 @@ export default function ReportsPage() {
               year-end email automation. The export button builds a
               CSV client-side via buildTaxExportCsv(). */}
           <div className="card">
-            <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
-              <div className="flex items-center gap-2">
-                <ReceiptIcon size={14} className="text-guac-700" />
-                <h2 className="font-semibold text-gray-800 text-sm">Tax summary</h2>
-                <span className="text-xs text-gray-400">· {period.label}</span>
-              </div>
-              <button
-                type="button"
-                onClick={downloadTaxCsv}
-                disabled={taxStats.businessCount === 0 && taxStats.charityCount === 0}
-                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-guac-50 border border-guac-line2 text-guac-700 font-semibold text-xs hover:bg-guac-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                title="Download business + charity receipts as CSV for filing"
-              >
-                <Download size={12} />
-                Export CSV
-              </button>
-            </div>
+            <SectionTitle
+              emoji="🧮"
+              title="Tax summary"
+              meta={period.label}
+              action={
+                <button
+                  type="button"
+                  onClick={downloadTaxCsv}
+                  disabled={taxStats.businessCount === 0 && taxStats.charityCount === 0}
+                  className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-guac-50 border border-guac-line2 text-guac-700 font-extrabold text-xs hover:bg-guac-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  title="Download business + charity receipts as CSV for filing"
+                >
+                  <Download size={12} /> Export CSV
+                </button>
+              }
+            />
             <div className="grid sm:grid-cols-3 gap-3">
-              <div className="rounded-lg border border-blue-100 bg-guac-50/50 p-3">
-                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-semibold text-guac-700">
-                  <Briefcase size={11} /> Business
-                </div>
-                <p className="font-bold text-blue-900 mt-1 text-lg">${taxStats.businessSpent.toFixed(2)}</p>
-                <p className="text-[11px] text-guac-700/80 mt-0.5">
-                  {taxStats.businessCount} receipt{taxStats.businessCount === 1 ? '' : 's'}
-                  {taxStats.businessTax > 0 && <> · ${taxStats.businessTax.toFixed(2)} tax</>}
+              <div className="rounded-2xl border border-guac-line2 bg-guac-50/60 p-4">
+                <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.05em] font-extrabold text-guac-700"><span className="text-sm">💼</span> Business</div>
+                <p className="gg-stat !text-guac-700 mt-2">{money(taxStats.businessSpent)}</p>
+                <p className="gg-sub mt-1.5">
+                  {taxStats.businessCount} receipt{taxStats.businessCount === 1 ? '' : 's'}{taxStats.businessTax > 0 && <> · {money(taxStats.businessTax)} tax</>}
                 </p>
               </div>
-              <div className="rounded-lg border border-rose-100 bg-rose-50/50 p-3">
-                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-semibold text-rose-700">
-                  <HeartHandshake size={11} /> Charity
-                </div>
-                <p className="font-bold text-rose-900 mt-1 text-lg">${taxStats.charityDonated.toFixed(2)}</p>
-                <p className="text-[11px] text-rose-700/80 mt-0.5">
-                  {taxStats.charityCount} donation{taxStats.charityCount === 1 ? '' : 's'}
-                </p>
+              <div className="rounded-2xl border border-rose-200/60 bg-rose-50/50 p-4">
+                <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.05em] font-extrabold text-rose-600"><span className="text-sm">❤️</span> Charity</div>
+                <p className="gg-stat !text-rose-600 mt-2">{money(taxStats.charityDonated)}</p>
+                <p className="gg-sub mt-1.5">{taxStats.charityCount} donation{taxStats.charityCount === 1 ? '' : 's'}</p>
               </div>
-              <div className="rounded-lg border border-amber-100 bg-amber-50/50 p-3">
-                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-semibold text-amber-700">
-                  <Percent size={11} /> Sales tax paid
-                </div>
-                <p className="font-bold text-amber-900 mt-1 text-lg">${taxStats.salesTax.toFixed(2)}</p>
-                <p className="text-[11px] text-amber-700/80 mt-0.5">
-                  across {taxStats.salesTaxCount} receipt{taxStats.salesTaxCount === 1 ? '' : 's'}
-                </p>
+              <div className="rounded-2xl border border-amber-200/60 bg-amber-50/50 p-4">
+                <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.05em] font-extrabold text-amber-700"><span className="text-sm">🧾</span> Sales tax paid</div>
+                <p className="gg-stat !text-amber-600 mt-2">{money(taxStats.salesTax)}</p>
+                <p className="gg-sub mt-1.5">across {taxStats.salesTaxCount} receipt{taxStats.salesTaxCount === 1 ? '' : 's'}</p>
               </div>
             </div>
-            <p className="mt-3 text-[11px] text-gray-400">
+            <p className="mt-3 gg-sub">
               Business + charity rows export to a CSV ready for your accountant or tax software. Payment / refund rows are excluded.
             </p>
           </div>
@@ -452,32 +471,32 @@ export default function ReportsPage() {
               so monthly/quarterly patterns surface reliably. */}
           {subscriptions.length > 0 && (
             <div className="card">
-              <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
-                <div className="flex items-center gap-2">
-                  <RotateCw size={14} className="text-violet-700" />
-                  <h2 className="font-semibold text-gray-800 text-sm">Subscriptions</h2>
-                  <span className="text-xs text-gray-400">· detected from last 12 mo</span>
-                </div>
-                <div className="text-xs text-gray-500">
-                  <span className="font-bold text-violet-800">${subsSummary.monthlyTotal.toFixed(2)}</span>/mo
-                  {' · '}
-                  <span className="font-bold text-violet-700">${subsSummary.annualTotal.toFixed(0)}</span>/yr
-                  {' · '}
-                  <span className="text-gray-500">{subsSummary.count} recurring</span>
-                  {subsSummary.priceIncreaseCount > 0 && (
-                    <> · <span className="text-rose-600 font-semibold">{subsSummary.priceIncreaseCount} ↑ priced up</span></>
-                  )}
-                </div>
-              </div>
+              <SectionTitle
+                emoji="🔁"
+                title="Subscriptions"
+                meta="detected from last 12 mo"
+                action={
+                  <div className="gg-sub">
+                    <span className="font-bold text-violet-800 gg-num">{money(subsSummary.monthlyTotal)}</span>/mo
+                    {' · '}
+                    <span className="font-bold text-violet-700 gg-num">{money(subsSummary.annualTotal, 0)}</span>/yr
+                    {' · '}
+                    <span>{subsSummary.count} recurring</span>
+                    {subsSummary.priceIncreaseCount > 0 && (
+                      <> · <span className="text-rose-600 font-semibold">{subsSummary.priceIncreaseCount} ↑ priced up</span></>
+                    )}
+                  </div>
+                }
+              />
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
+                <table className="gg-tbl w-full text-sm">
+                  <thead className="border-b border-guac-line gg-colhead">
                     <tr>
-                      <th className="px-3 py-2 text-left font-medium">Merchant</th>
-                      <th className="px-3 py-2 text-left font-medium">Cadence</th>
-                      <th className="px-3 py-2 text-right font-medium">Avg charge</th>
-                      <th className="px-3 py-2 text-right font-medium">Last charge</th>
-                      <th className="px-3 py-2 text-right font-medium">Per month</th>
+                      <th className="px-3 py-2 text-left">Merchant</th>
+                      <th className="px-3 py-2 text-left">Cadence</th>
+                      <th className="px-3 py-2 text-right">Avg charge</th>
+                      <th className="px-3 py-2 text-right">Last charge</th>
+                      <th className="px-3 py-2 text-right">Per month</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-guac-line">
@@ -493,9 +512,9 @@ export default function ReportsPage() {
                           {s.intervalLabel}
                           <span className="text-[10px] text-gray-400 ml-1">· {s.occurrences}×</span>
                         </td>
-                        <td className="px-3 py-1.5 text-right font-mono text-gray-700">${s.avgAmount.toFixed(2)}</td>
-                        <td className="px-3 py-1.5 text-right text-gray-500">
-                          {s.lastDate}
+                        <td className="px-3 py-1.5 text-right gg-num text-gray-700">{money(s.avgAmount)}</td>
+                        <td className="px-3 py-1.5 text-right text-gray-500 gg-num">
+                          {dateSpaced(s.lastDate)}
                           {s.priceChanged && (s.priceChangePct ?? 0) !== 0 && (
                             <span
                               className={`ml-1.5 inline-flex items-center gap-0.5 text-[10px] font-bold px-1 py-0.5 rounded-full ${
@@ -510,7 +529,7 @@ export default function ReportsPage() {
                             </span>
                           )}
                         </td>
-                        <td className="px-3 py-1.5 text-right font-bold text-violet-800">${s.monthlyCost.toFixed(2)}</td>
+                        <td className="px-3 py-1.5 text-right font-bold text-violet-800 gg-num">{money(s.monthlyCost)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -524,23 +543,21 @@ export default function ReportsPage() {
 
           {/* 4. Top stores by spend */}
           <div className="card">
-            <div className="flex items-center justify-between gap-2 mb-3">
-              <div className="flex items-center gap-2">
-                <StoreIcon size={14} className="text-guac-700" />
-                <h2 className="font-semibold text-gray-800 text-sm">Top stores by spend</h2>
-              </div>
-              {byStore.length > 25 && (
+            <SectionTitle
+              emoji="🏪"
+              title="Top stores by spend"
+              action={byStore.length > 25 ? (
                 <button
                   onClick={() => setShowAllStores(v => !v)}
-                  className="text-[11px] font-semibold text-guac-700 hover:underline"
+                  className="text-xs font-extrabold text-guac-700 hover:underline"
                 >
                   {showAllStores ? 'Show top 25' : `Show all ${byStore.length}`}
                 </button>
-              )}
-            </div>
+              ) : null}
+            />
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
+              <table className="gg-tbl w-full text-sm">
+                <thead className="border-b border-guac-line gg-colhead">
                   <tr>
                     <th className="px-3 py-1 text-left">Rank</th>
                     <SortableTh label="Store" sortKey="name" align="left" sort={storeSort} onSort={toggleStoreSort} />
@@ -551,19 +568,19 @@ export default function ReportsPage() {
                 </thead>
                 <tbody className="divide-y divide-guac-line">
                   {sortedStores.map((s, i) => (
-                    <tr key={s.id || s.name} className="hover:bg-guac-50/40">
-                      <td className="px-3 py-1 text-gray-400">#{i + 1}</td>
-                      <td className="px-3 py-1">
-                        <div className="flex items-center gap-2">
+                    <tr key={s.id || s.name} className="hover:bg-guac-row">
+                      <td className="px-3 py-2"><RankBadge rank={i + 1} /></td>
+                      <td className="px-3 py-2">
+                        <div className="flex items-center gap-2.5">
                           <StoreLogo storeName={s.name} size={22} />
                           {s.id ? (
-                            <Link href={`/stores/${s.id}`} className="text-guac-700 hover:underline">{s.name}</Link>
-                          ) : <span>{s.name}</span>}
+                            <Link href={`/stores/${s.id}`} className="font-semibold text-guac-ink hover:text-guac-700 hover:underline">{s.name}</Link>
+                          ) : <span className="font-semibold text-guac-ink">{s.name}</span>}
                         </div>
                       </td>
-                      <td className="px-3 py-1 text-right text-gray-500">{s.count}</td>
-                      <td className="px-3 py-1 text-right font-semibold">${s.spent.toFixed(2)}</td>
-                      <td className="px-3 py-1 text-right text-gray-500">${(s.spent / s.count).toFixed(2)}</td>
+                      <td className="px-3 py-2 text-right text-guac-muted gg-num">{s.count}</td>
+                      <td className="px-3 py-2 text-right gg-num font-semibold text-guac-ink">{money(s.spent)}</td>
+                      <td className="px-3 py-2 text-right gg-num text-guac-muted">{money(s.spent / s.count)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -573,16 +590,13 @@ export default function ReportsPage() {
 
           {/* 3. Repeat purchases */}
           <div className="card">
-            <div className="flex items-center gap-2 mb-3">
-              <Repeat size={14} className="text-guac-700" />
-              <h2 className="font-semibold text-gray-800 text-sm">Repeat purchases <span className="text-gray-400 font-normal">— bought 2+ times</span></h2>
-            </div>
+            <SectionTitle emoji="🛒" title="Repeat purchases" meta="bought 2+ times" />
             {repeats.length === 0 ? (
               <p className="text-xs text-gray-400 py-4 text-center">No repeat purchases yet in this period.</p>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
+                <table className="gg-tbl w-full text-sm">
+                  <thead className="border-b border-guac-line gg-colhead">
                     <tr>
                       <th className="px-3 py-1 text-left">Item</th>
                       <th className="px-3 py-1 text-right">Buys</th>
@@ -596,14 +610,14 @@ export default function ReportsPage() {
                     {repeats.slice(0, 50).map(it => (
                       <tr key={(it.name || '') + '|' + (it.sku || '')} className="hover:bg-guac-50/40">
                         <td className="px-3 py-1 max-w-xs truncate" title={it.name}>{it.name || '—'}</td>
-                        <td className="px-3 py-1 text-right font-semibold">{it.count}</td>
-                        <td className="px-3 py-1 text-right text-gray-500">{it.qty}</td>
-                        <td className="px-3 py-1 text-right">${it.spent.toFixed(2)}</td>
+                        <td className="px-3 py-1 text-right font-semibold gg-num">{it.count}</td>
+                        <td className="px-3 py-1 text-right text-gray-500 gg-num">{it.qty}</td>
+                        <td className="px-3 py-1 text-right gg-num text-guac-ink">{money(it.spent)}</td>
                         <td className="px-3 py-1 text-gray-500 max-w-xs truncate" title={it.stores.join(', ')}>{it.stores.join(', ') || '—'}</td>
-                        <td className="px-3 py-1 text-gray-500 whitespace-nowrap">
+                        <td className="px-3 py-1 text-gray-500 whitespace-nowrap gg-num">
                           {it.lastReceiptId
-                            ? <Link href={`/receipts/${it.lastReceiptId}`} className="text-guac-700 hover:underline">{formatDateShort(it.lastDate)}</Link>
-                            : formatDateShort(it.lastDate)}
+                            ? <Link href={`/receipts/${it.lastReceiptId}`} className="text-guac-700 hover:underline">{dateSpaced(it.lastDate)}</Link>
+                            : dateSpaced(it.lastDate)}
                         </td>
                       </tr>
                     ))}
@@ -615,16 +629,13 @@ export default function ReportsPage() {
 
           {/* 4. One-time orders */}
           <div className="card">
-            <div className="flex items-center gap-2 mb-3">
-              <Award size={14} className="text-amber-600" />
-              <h2 className="font-semibold text-gray-800 text-sm">One-time orders <span className="text-gray-400 font-normal">— bought exactly once</span></h2>
-            </div>
+            <SectionTitle emoji="🎯" title="One-time orders" meta="bought exactly once" />
             {oneTime.length === 0 ? (
               <p className="text-xs text-gray-400 py-4 text-center">Nothing bought just once in this period.</p>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
+                <table className="gg-tbl w-full text-sm">
+                  <thead className="border-b border-guac-line gg-colhead">
                     <tr>
                       <th className="px-3 py-1 text-left">Item</th>
                       <th className="px-3 py-1 text-right">Spend</th>
@@ -636,12 +647,12 @@ export default function ReportsPage() {
                     {oneTime.slice(0, 100).map(it => (
                       <tr key={(it.name || '') + '|' + (it.sku || '')} className="hover:bg-guac-50/40">
                         <td className="px-3 py-1 max-w-md truncate" title={it.name}>{it.name || '—'}</td>
-                        <td className="px-3 py-1 text-right">${it.spent.toFixed(2)}</td>
+                        <td className="px-3 py-1 text-right gg-num text-guac-ink">{money(it.spent)}</td>
                         <td className="px-3 py-1 text-gray-500 max-w-xs truncate">{it.stores[0] || '—'}</td>
-                        <td className="px-3 py-1 text-gray-500 whitespace-nowrap">
+                        <td className="px-3 py-1 text-gray-500 whitespace-nowrap gg-num">
                           {it.lastReceiptId
-                            ? <Link href={`/receipts/${it.lastReceiptId}`} className="text-guac-700 hover:underline">{formatDateShort(it.lastDate)}</Link>
-                            : formatDateShort(it.lastDate)}
+                            ? <Link href={`/receipts/${it.lastReceiptId}`} className="text-guac-700 hover:underline">{dateSpaced(it.lastDate)}</Link>
+                            : dateSpaced(it.lastDate)}
                         </td>
                       </tr>
                     ))}
@@ -654,6 +665,49 @@ export default function ReportsPage() {
       )}
     </div>
   )
+}
+
+// ONE section heading for the whole page so no card drifts typographically:
+// an emoji chip + a Bricolage (font-display) 18px title, optional muted meta,
+// and a right-aligned action. Every card on /reports uses this so the header
+// size / weight / font is identical top to bottom.
+function SectionTitle({ emoji, title, meta, action }) {
+  return (
+    <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
+      <div className="flex items-center gap-2.5 min-w-0">
+        <span className="gg-chip">{emoji}</span>
+        <h2 className="gg-h2 truncate">
+          {title}
+          {meta && <span className="font-sans font-semibold gg-sub ml-1.5">· {meta}</span>}
+        </h2>
+      </div>
+      {action && <div className="shrink-0">{action}</div>}
+    </div>
+  )
+}
+
+// KPI strip card — same footprint everywhere: tiny uppercase label,
+// Bricolage value, muted sub. `emoji` optional (top-category card).
+function KpiCard({ label, value, sub, emoji, accent }) {
+  return (
+    <div className="card !p-4">
+      <div className="gg-eyebrow">{label}</div>
+      <div className={`gg-stat mt-1 truncate ${accent === 'guac' ? '!text-guac-700' : ''}`}>
+        {emoji && <span className="mr-1">{emoji}</span>}{value}
+      </div>
+      <div className="gg-sub mt-1.5 truncate">{sub}</div>
+    </div>
+  )
+}
+
+// Top-3 get a coloured medal chip; everyone else a plain muted number.
+function RankBadge({ rank }) {
+  const tone = rank === 1 ? 'bg-amber-100 text-amber-700'
+    : rank === 2 ? 'bg-gray-100 text-gray-500'
+    : rank === 3 ? 'bg-orange-100 text-orange-700'
+    : null
+  if (tone) return <span className={`inline-flex items-center justify-center w-6 h-6 rounded-lg text-xs font-extrabold ${tone}`}>{rank}</span>
+  return <span className="inline-block w-6 text-center text-xs font-bold text-guac-label">{rank}</span>
 }
 
 // Clickable table header: shows the active sort direction and toggles it.
@@ -677,7 +731,7 @@ function SortableTh({ label, sortKey, align, sort, onSort }) {
 // Native SVG donut. Reliable across layouts — recharts silently fails to
 // render when its parent has computed-zero width. Each segment is a circle
 // with strokeDasharray sized to its fraction of the total.
-function CategoryDonut({ data, total, colors, size = 240 }) {
+function CategoryDonut({ data, total, colors, size = 240, caption }) {
   if (!data || data.length === 0 || !total) {
     return (
       <div className="shrink-0 flex items-center justify-center text-gray-300 text-xs" style={{ width: size, height: size }}>
@@ -691,7 +745,7 @@ function CategoryDonut({ data, total, colors, size = 240 }) {
   let cursor = 0
   const cx = size / 2
   const cy = size / 2
-  const center = `$${total.toFixed(0)}`
+  const center = money(total, 0)
   return (
     <div className="shrink-0 relative" style={{ width: size, height: size }}>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
@@ -713,7 +767,7 @@ function CategoryDonut({ data, total, colors, size = 240 }) {
               strokeDasharray={`${visible} ${circumference - visible}`}
               strokeDashoffset={-cursor}
             >
-              <title>{`${d.slug}: $${d.amount.toFixed(2)} (${((d.amount / total) * 100).toFixed(0)}%)`}</title>
+              <title>{`${d.slug}: ${money(d.amount)} (${((d.amount / total) * 100).toFixed(0)}%)`}</title>
             </circle>
           )
           cursor += arcLen
@@ -722,8 +776,9 @@ function CategoryDonut({ data, total, colors, size = 240 }) {
       </svg>
       {/* Center label — total spend so the donut isn't just a colour wheel. */}
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-        <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Total</span>
-        <span className="text-lg font-extrabold text-gray-800">{center}</span>
+        <span className="gg-eyebrow">Total</span>
+        <span className="gg-stat mt-0.5">{center}</span>
+        {caption && <span className="gg-sub mt-0.5">{caption.toLowerCase()}</span>}
       </div>
     </div>
   )

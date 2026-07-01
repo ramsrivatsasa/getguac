@@ -8,6 +8,14 @@ import { Sparkles, TrendingDown, Tag, Calendar, ShoppingBag } from 'lucide-react
 import GuacMascot from '../../../components/GuacMascot'
 import { displayStoreName } from '../../../lib/store-name-normalize'
 
+// Money formatters — thousands separators, Bricolage (never mono), matching
+// the KPI cards on the page. money2 → cents; money0 → whole dollars.
+const money2 = (n) => Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+const money0 = (n) => Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })
+// Space-separated date (DD MMM YYYY) to match the mockup, without touching the
+// hyphenated shared formatDateShort helper used elsewhere.
+const formatDateSpaced = (input) => formatDateShort(input).replace(/-/g, ' ')
+
 const PIE_COLORS = ['#e11d48', '#10b981']
 // Green→amber→red heat for the Top-Stores bars: the more a store's spend
 // approaches the top spender's, the redder the bar (green = low, red = high).
@@ -26,8 +34,10 @@ export default function Charts({ insights }) {
     <>
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="card lg:col-span-2">
-          <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Calendar size={16} className="text-gray-500" />
+          <h3 className="gg-h2 mb-4 flex items-center gap-2.5">
+            <span className="inline-flex items-center justify-center w-[26px] h-[26px] rounded-lg bg-guac-50 text-guac-700 shrink-0">
+              <Calendar size={14} />
+            </span>
             Spending Trend
           </h3>
           {insights.timeSeries.length === 0 ? (
@@ -40,8 +50,8 @@ export default function Charts({ insights }) {
                 <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
                 <Tooltip
                   cursor={{ stroke: '#cbd5e1', strokeDasharray: '3 3' }}
-                  contentStyle={{ borderRadius: 12, border: '1px solid #d1fae5', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', fontSize: 12 }}
-                  formatter={v => `$${Number(v).toFixed(2)}`}
+                  contentStyle={{ borderRadius: 14, border: '1px solid #d1fae5', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', fontSize: 12 }}
+                  formatter={v => `$${money2(v)}`}
                 />
                 <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} iconType="circle" />
                 <Line type="monotone" dataKey="spent" name="Spent" stroke="#e11d48" strokeWidth={2} dot={{ r: 2.5, fill: '#e11d48', strokeWidth: 0 }} activeDot={{ r: 5 }} isAnimationActive={false} />
@@ -52,7 +62,7 @@ export default function Charts({ insights }) {
         </div>
 
         <div className="card lg:col-span-1 flex flex-col">
-          <h3 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+          <h3 className="gg-h2 mb-2 flex items-center gap-2">
             <GuacMascot expression="thumbsup" size={26} />
             Worth It?
           </h3>
@@ -72,14 +82,14 @@ export default function Charts({ insights }) {
                     {insights.ratingBuckets.filter(b => b.spend > 0).map((b, i) => <Cell key={i} fill={b.color} />)}
                   </Pie>
                   <Tooltip
-                    contentStyle={{ borderRadius: 12, border: '1px solid #d1fae5', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', fontSize: 12 }}
-                    formatter={v => `$${Number(v).toFixed(2)}`}
+                    contentStyle={{ borderRadius: 14, border: '1px solid #d1fae5', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', fontSize: 12 }}
+                    formatter={v => `$${money2(v)}`}
                   />
                 </PieChart>
               </ResponsiveContainer>
-              <div className="flex items-center justify-around text-xs pt-2 border-t border-gray-100">
-                <span><span className="text-gray-500">Avg</span> <span className="font-bold text-guac-700">{insights.avgRating.toFixed(1)} ★</span></span>
-                <span><span className="text-gray-500">Regret</span> <span className="font-bold text-rose-700">${insights.regretSpend.toFixed(0)}</span></span>
+              <div className="flex items-center justify-around text-xs pt-2 border-t border-guac-line">
+                <span><span className="text-guac-muted">Avg</span> <span className="gg-num font-bold text-guac-700">{insights.avgRating.toFixed(1)} ★</span></span>
+                <span><span className="text-guac-muted">Regret</span> <span className="gg-num font-bold text-rose-700">${money0(insights.regretSpend)}</span></span>
               </div>
               <Link href="/validate" className="text-center text-xs text-guac-700 hover:underline mt-2 font-semibold">
                 Rate {insights.unratedCount} pending →
@@ -91,8 +101,10 @@ export default function Charts({ insights }) {
 
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="card lg:col-span-2">
-          <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <ShoppingBag size={16} className="text-gray-500" />
+          <h3 className="gg-h2 mb-4 flex items-center gap-2.5">
+            <span className="inline-flex items-center justify-center w-[26px] h-[26px] rounded-lg bg-guac-50 text-guac-700 shrink-0">
+              <ShoppingBag size={14} />
+            </span>
             Top Stores
           </h3>
           {insights.topStores.length === 0 ? (
@@ -102,13 +114,13 @@ export default function Charts({ insights }) {
               <BarChart data={insights.topStores} layout="vertical" margin={{ top: 10, right: 24, left: 12, bottom: 8 }} barCategoryGap="25%">
                 <CartesianGrid strokeDasharray="2 4" stroke="#f1f5f9" horizontal={false} />
                 <XAxis type="number" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                <YAxis dataKey="store" type="category" tick={{ fontSize: 11, fill: '#334155' }} width={120} axisLine={false} tickLine={false} />
+                <YAxis dataKey="store" type="category" tick={{ fontSize: 11, fill: '#5C6B60' }} width={120} axisLine={false} tickLine={false} />
                 <Tooltip
                   cursor={{ fill: '#f8fafc' }}
-                  contentStyle={{ borderRadius: 12, border: '1px solid #d1fae5', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', fontSize: 12 }}
-                  formatter={(v, name) => name === 'spent' ? `$${Number(v).toFixed(2)}` : v}
+                  contentStyle={{ borderRadius: 14, border: '1px solid #d1fae5', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', fontSize: 12 }}
+                  formatter={(v, name) => name === 'spent' ? `$${money2(v)}` : v}
                 />
-                <Bar dataKey="spent" radius={[0, 8, 8, 0]} maxBarSize={22} isAnimationActive={false}>
+                <Bar dataKey="spent" radius={[5, 5, 5, 5]} maxBarSize={22} isAnimationActive={false}>
                   {(() => {
                     const max = Math.max(...insights.topStores.map(s => s.spent || 0)) || 1
                     return insights.topStores.map((s, i) => <Cell key={i} fill={spendHeatHex((s.spent || 0) / max)} />)
@@ -120,8 +132,10 @@ export default function Charts({ insights }) {
         </div>
 
         <div className="card">
-          <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <TrendingDown size={16} className="text-gray-500" />
+          <h3 className="gg-h2 mb-4 flex items-center gap-2.5">
+            <span className="inline-flex items-center justify-center w-[26px] h-[26px] rounded-lg bg-guac-50 text-guac-700 shrink-0">
+              <TrendingDown size={14} />
+            </span>
             Purchases vs Refunds
           </h3>
           {insights.grossSpend === 0 ? (
@@ -134,8 +148,8 @@ export default function Charts({ insights }) {
                   {insights.purchaseVsReturn.map((_, i) => <Cell key={i} fill={PIE_COLORS[i]} />)}
                 </Pie>
                 <Tooltip
-                  contentStyle={{ borderRadius: 12, border: '1px solid #d1fae5', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', fontSize: 12 }}
-                  formatter={v => `$${Number(v).toFixed(2)}`}
+                  contentStyle={{ borderRadius: 14, border: '1px solid #d1fae5', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', fontSize: 12 }}
+                  formatter={v => `$${money2(v)}`}
                 />
                 <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} iconType="circle" />
               </PieChart>
@@ -146,8 +160,10 @@ export default function Charts({ insights }) {
 
       {insights.categoryBuckets.length > 0 && (
         <div className="card">
-          <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Tag size={16} className="text-guac-600" />
+          <h3 className="gg-h2 mb-4 flex items-center gap-2.5">
+            <span className="inline-flex items-center justify-center w-[30px] h-[30px] rounded-[9px] bg-guac-50 text-guac-700 shrink-0">
+              <Tag size={15} />
+            </span>
             Spend by Category
           </h3>
           <div className="grid lg:grid-cols-2 gap-6">
@@ -158,13 +174,13 @@ export default function Charts({ insights }) {
                   {insights.categoryBuckets.map((c, i) => <Cell key={i} fill={c.color} />)}
                 </Pie>
                 <Tooltip
-                  contentStyle={{ borderRadius: 12, border: '1px solid #d1fae5', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', fontSize: 12 }}
-                  formatter={v => `$${Number(v).toFixed(2)}`}
+                  contentStyle={{ borderRadius: 14, border: '1px solid #d1fae5', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', fontSize: 12 }}
+                  formatter={v => `$${money2(v)}`}
                 />
               </PieChart>
             </ResponsiveContainer>
-            <table className="w-full text-sm">
-              <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
+            <table className="gg-tbl w-full text-sm">
+              <thead className="border-b border-guac-line gg-colhead">
                 <tr>
                   <th className="py-2 pr-2 text-left font-semibold">Category</th>
                   <th className="py-2 px-2 text-right font-semibold">Receipts</th>
@@ -183,14 +199,14 @@ export default function Charts({ insights }) {
                       <tr key={c.slug} className="hover:bg-guac-row">
                         <td className="py-2 pr-2">
                           <div className="flex items-center gap-2">
-                            <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: c.color }} />
+                            <span className="w-2.5 h-2.5 rounded-[3px] shrink-0" style={{ backgroundColor: c.color }} />
                             <span className="text-base leading-none">{c.emoji}</span>
-                            <span className="font-medium text-gray-700">{c.label}</span>
+                            <span className="font-semibold text-guac-ink">{c.label}</span>
                           </div>
                         </td>
-                        <td className="py-2 px-2 text-right text-gray-500">{c.count || ''}</td>
-                        <td className="py-2 px-2 text-right font-semibold text-gray-800">${c.spend.toFixed(0)}</td>
-                        <td className="py-2 pl-2 text-right text-gray-400">{pct.toFixed(0)}%</td>
+                        <td className="py-2 px-2 text-right text-guac-faint">{c.count || ''}</td>
+                        <td className="py-2 px-2 text-right gg-num font-semibold text-guac-ink">${money0(c.spend)}</td>
+                        <td className="py-2 pl-2 text-right text-guac-faint">{pct.toFixed(0)}%</td>
                       </tr>
                     )
                   })
@@ -203,7 +219,7 @@ export default function Charts({ insights }) {
 
       <div className="card">
         <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-          <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+          <h3 className="gg-h2 flex items-center gap-2">
             <span className="text-lg">🥑</span>
             Worth It? — Purchase Validation
           </h3>
@@ -219,7 +235,7 @@ export default function Charts({ insights }) {
         ) : (
           <div className="grid lg:grid-cols-3 gap-6">
             <div className="lg:col-span-1">
-              <p className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2 text-center">Spend by Rating</p>
+              <p className="text-xs font-bold uppercase tracking-wider text-guac-faint mb-2 text-center">Spend by Rating</p>
               <ResponsiveContainer width="100%" height={200}>
                 <PieChart>
                   <Pie
@@ -231,17 +247,17 @@ export default function Charts({ insights }) {
                   >
                     {insights.ratingBuckets.filter(b => b.spend > 0).map((b, i) => <Cell key={i} fill={b.color} />)}
                   </Pie>
-                  <Tooltip formatter={v => `$${Number(v).toFixed(2)}`} />
+                  <Tooltip formatter={v => `$${money2(v)}`} />
                 </PieChart>
               </ResponsiveContainer>
-              <p className="text-center text-xs text-gray-500 mt-1">
-                Avg <span className="font-bold text-guac-700">{insights.avgRating.toFixed(1)} ★</span>
-                {' '}· Regret <span className="font-bold text-rose-700">${insights.regretSpend.toFixed(2)}</span>
+              <p className="text-center text-xs text-guac-muted mt-1">
+                Avg <span className="gg-num font-bold text-guac-700">{insights.avgRating.toFixed(1)} ★</span>
+                {' '}· Regret <span className="gg-num font-bold text-rose-700">${money2(insights.regretSpend)}</span>
               </p>
             </div>
 
             <div className="lg:col-span-1">
-              <p className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Breakdown</p>
+              <p className="text-xs font-bold uppercase tracking-wider text-guac-faint mb-2">Breakdown</p>
               <div className="space-y-2">
                 {insights.ratingBuckets.map(b => {
                   const pct = insights.grossSpend ? (b.spend / insights.grossSpend) * 100 : 0
@@ -249,13 +265,13 @@ export default function Charts({ insights }) {
                     <div key={b.rating} className="flex items-center gap-2">
                       <div className="flex items-center gap-1 w-28 shrink-0">
                         <span className="text-base">{b.emoji}</span>
-                        <span className="text-[11px] font-bold text-gray-700">{b.label}</span>
-                        <span className="text-[10px] text-gray-400">({b.count})</span>
+                        <span className="text-[11px] font-bold text-guac-body">{b.label}</span>
+                        <span className="text-[10px] text-guac-label">({b.count})</span>
                       </div>
-                      <div className="flex-1 h-2.5 rounded-full bg-gray-100 overflow-hidden">
-                        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: b.color }} />
+                      <div className="flex-1 h-[9px] rounded-[5px] bg-[#F0F4EA] overflow-hidden">
+                        <div className="h-full rounded-[5px] transition-all" style={{ width: `${pct}%`, backgroundColor: b.color }} />
                       </div>
-                      <span className="text-[11px] font-semibold text-gray-600 w-16 text-right">${b.spend.toFixed(0)}</span>
+                      <span className="gg-num text-[11px] font-semibold text-guac-ink w-16 text-right">${money0(b.spend)}</span>
                     </div>
                   )
                 })}
@@ -267,11 +283,11 @@ export default function Charts({ insights }) {
             </div>
 
             <div className="lg:col-span-1">
-              <p className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2 flex items-center gap-1">
+              <p className="text-xs font-bold uppercase tracking-wider text-guac-faint mb-2 flex items-center gap-1">
                 <Sparkles size={12} className="text-guac-600" /> Top Tags
               </p>
               {insights.topTags.length === 0 ? (
-                <p className="text-sm text-gray-400">No tags yet.</p>
+                <p className="text-sm text-guac-faint">No tags yet.</p>
               ) : (
                 <div className="flex flex-wrap gap-1.5">
                   {insights.topTags.map(([tag, count]) => (
@@ -287,17 +303,19 @@ export default function Charts({ insights }) {
       </div>
 
       <div className="card p-0 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100">
-          <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-            <Sparkles size={16} className="text-gray-500" />
+        <div className="px-6 py-4 border-b border-guac-line">
+          <h3 className="gg-h2 flex items-center gap-2.5">
+            <span className="inline-flex items-center justify-center w-[30px] h-[30px] rounded-[9px] bg-guac-50 text-guac-700 shrink-0">
+              <Sparkles size={15} />
+            </span>
             Biggest Spends
           </h3>
         </div>
         {insights.largest.length === 0 ? (
           <div className="py-10 text-center text-gray-400 text-sm">No purchases to spotlight</div>
         ) : (
-          <table className="w-full text-sm">
-            <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
+          <table className="gg-tbl w-full text-sm">
+            <thead className="border-b border-guac-line gg-colhead">
               <tr>{['Store','Date','Amount','Tax','Type'].map(h =>
                 <th key={h} className="px-5 py-3 text-left font-semibold">{h}</th>
               )}</tr>
@@ -308,9 +326,9 @@ export default function Charts({ insights }) {
                   <td className="px-5 py-3 font-medium">
                     <Link href={`/receipts/${r.id}`} className="text-guac-700 hover:underline">{displayStoreName(r.store_name)}</Link>
                   </td>
-                  <td className="px-5 py-3 text-gray-500">{formatDateShort(r.date)}</td>
-                  <td className="px-5 py-3 font-semibold">${parseFloat(r.total_amount || 0).toFixed(2)}</td>
-                  <td className="px-5 py-3 text-gray-500">${parseFloat(r.tax_paid || 0).toFixed(2)}</td>
+                  <td className="px-5 py-3 gg-num text-guac-muted">{formatDateSpaced(r.date)}</td>
+                  <td className="px-5 py-3 gg-num font-semibold text-guac-ink">${money2(r.total_amount)}</td>
+                  <td className="px-5 py-3 gg-num text-guac-faint">${money2(r.tax_paid)}</td>
                   <td className="px-5 py-3">
                     <span className={r.business_purchase ? 'badge-blue' : 'badge-gray'}>
                       {r.business_purchase ? 'Business' : 'Personal'}

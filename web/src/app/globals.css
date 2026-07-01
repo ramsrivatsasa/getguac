@@ -92,6 +92,39 @@
   .gg-table { @apply bg-white rounded-guac border border-guac-line overflow-hidden; }
   .gg-row   { @apply transition-colors; }
   .gg-row:hover { background: var(--gg-row); }
+
+  /* ── Typography scale (opt-in `gg-*`) — the ONE place fonts live ────
+     Every page composes THESE classes instead of re-declaring
+     font-display / text-* / text-guac-* inline, so section headings,
+     stat figures, table headers and numbers render identically across
+     the whole app. Change a size / weight / colour here and it updates
+     everywhere — no per-page font maintenance. */
+  .gg-h1      { @apply font-display font-extrabold text-2xl sm:text-3xl text-guac-ink tracking-tight leading-tight; }   /* page title */
+  .gg-h2      { @apply font-display font-extrabold text-lg text-guac-ink tracking-tight leading-none; }                 /* card / section heading */
+  .gg-h3      { @apply font-display font-bold text-[15px] text-guac-ink tracking-tight; }                               /* sub-heading inside a card */
+  .gg-stat    { @apply font-display font-extrabold text-2xl text-guac-ink leading-none; }                              /* KPI / money figure */
+  .gg-colhead { @apply text-[10.5px] font-extrabold uppercase tracking-[0.05em] text-guac-label; }                     /* the ONE table <thead> style */
+  /* Numeric cells (amounts, KPIs, dates). The mockups render EVERY money
+     figure in Bricolage Grotesque (font-display) — NOT a monospace face — so
+     this maps to font-display, not font-mono. tabular-nums keeps columns
+     aligned. Change here and every figure app-wide re-fonts to match. */
+  .gg-num     { @apply font-display tabular-nums; }                                                                     /* numeric cells — Bricolage, aligned */
+  .gg-sub     { @apply text-xs text-guac-muted; }                                                                       /* caption / helper text */
+  .gg-chip    { @apply w-8 h-8 rounded-[10px] bg-guac-50 grid place-items-center text-[15px] shrink-0; }               /* emoji chip before a section title */
+
+  /* ── Data-table system — add `.gg-tbl` to EVERY <table> (small or big)
+     and it FORCES one uniform look: 10.5px uppercase guac-label headers,
+     14px body, 12px cell padding, hairline row dividers, guac row-hover.
+     Uses !important so a table only needs the class — any leftover
+     per-cell px/py/text-size utilities are harmlessly overridden. Cells
+     keep their own text-align, semantic colour and `.gg-num` for figures. */
+  .gg-tbl                       { @apply w-full; }
+  .gg-tbl thead                 { @apply border-b border-guac-line; }
+  .gg-tbl thead th              { @apply !px-3 !py-2.5 align-middle !font-extrabold !uppercase !text-guac-label; font-size: 10.5px !important; letter-spacing: 0.05em !important; }
+  .gg-tbl tbody td              { @apply !px-3 !py-2.5 align-middle; font-size: 0.875rem !important; line-height: 1.25rem; }
+  .gg-tbl tbody tr              { border-top: 1px solid var(--gg-line); @apply transition-colors; }
+  .gg-tbl tbody tr:first-child  { border-top: 0; }
+  .gg-tbl tbody tr:hover        { background: var(--gg-row) !important; }
 }
 
 /* In the mobile WebView the native app bar already shows the screen title, so

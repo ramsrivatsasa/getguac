@@ -51,6 +51,12 @@ const SORTS = [
   { key: 'a_z',         label: 'A → Z' },
 ]
 
+// Money formatter — thousands separators + 2 decimals, matching the
+// mockup's Bricolage money figures (paired with `.gg-num` for the font).
+// Same convention as DashboardClient's `money` helper.
+const money = (n) => `$${Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+const money0 = (n) => `$${Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}`
+
 const TONE_TINT = {
   emerald:  { from: 'from-emerald-50',  to: 'to-green-100',   ring: 'ring-guac-100',  text: 'text-guac-ink', accent: 'bg-guac-600' },
   orange:   { from: 'from-orange-50',   to: 'to-amber-100',   ring: 'ring-orange-200',   text: 'text-orange-900',  accent: 'bg-orange-500' },
@@ -405,8 +411,8 @@ export default function StashPage() {
         subtitle="Everything you've ever bought — find the best store for each"
         action={
           <span className="text-sm text-gray-500">
-            <span className="font-bold text-guac-700 tabular-nums">{items.length}</span> products ·{' '}
-            <span className="font-bold text-amber-700 tabular-nums">{multiStoreCount}</span> multi-store
+            <span className="font-bold text-guac-700 gg-num">{items.length}</span> products ·{' '}
+            <span className="font-bold text-amber-700 gg-num">{multiStoreCount}</span> multi-store
           </span>
         }
       />
@@ -498,7 +504,7 @@ export default function StashPage() {
             <Layers size={14} />
           </button>
         </div>
-        <span className="text-xs text-gray-400 tabular-nums">{filtered.length} shown</span>
+        <span className="text-xs text-gray-400 gg-num">{filtered.length} shown</span>
       </div>
 
       {isLoading ? (
@@ -579,13 +585,13 @@ export default function StashPage() {
         </FadeUpStagger>
       ) : (
         <div className="card p-0 overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
+          <table className="gg-tbl w-full text-sm">
+            <thead>
               <tr>{['Category','Item','Stores','Best price','Times','Total spend',''].map(h =>
-                <th key={h} className="px-4 py-3 text-left">{h}</th>
+                <th key={h} className="gg-colhead text-left">{h}</th>
               )}</tr>
             </thead>
-            <tbody className="divide-y divide-guac-line">
+            <tbody>
               {filtered.map(it => {
                 const cat = CATEGORY_BY_SLUG[it.category] || CATEGORY_BY_SLUG['misc']
                 return (
@@ -609,12 +615,12 @@ export default function StashPage() {
                           <span className="text-xs text-gray-500">{it.last_store}</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 font-bold text-guac-700 tabular-nums">
-                        ${(it.best?.min_price || it.last_price).toFixed(2)}
+                      <td className="px-4 py-3 font-bold text-guac-700 gg-num">
+                        {money(it.best?.min_price || it.last_price)}
                         {it.best && it.best.name && <span className="text-[10px] text-gray-400 ml-1 font-normal">at {it.best.name}</span>}
                       </td>
-                      <td className="px-4 py-3 tabular-nums">{it.times}×</td>
-                      <td className="px-4 py-3 font-semibold text-rose-700 tabular-nums">${it.total_spend.toFixed(2)}</td>
+                      <td className="px-4 py-3 gg-num">{it.times}×</td>
+                      <td className="px-4 py-3 font-semibold text-rose-700 gg-num">{money(it.total_spend)}</td>
                       <td className="px-4 py-3 text-right">
                         <button onClick={(e) => { e.stopPropagation(); handleAddToSmashlist(it) }}
                           className="relative w-9 h-9 rounded-full bg-gradient-to-br from-amber-300 via-rose-500 to-fuchsia-600 text-white shadow-md hover:shadow-xl hover:scale-110 active:scale-95 transition-all inline-flex items-center justify-center ring-2 ring-white">
@@ -723,7 +729,7 @@ const StashCard = memo(function StashCard({ item, expanded, onToggle, onAddToSma
   // Subtitle reads like a sentence — mirrors the mobile FetchCard's
   // single-line metadata format. "Bought ×N · last DATE · $X total".
   const lastDate = item.last_date ? friendlyDate(item.last_date) : ''
-  const subtitle = `Bought ×${item.times} · last ${lastDate} · $${item.total_spend.toFixed(2)} total`
+  const subtitle = `Bought ×${item.times} · last ${lastDate} · ${money(item.total_spend)} total`
 
   // On-hand pill — only render when the user has actually counted.
   // The previous "Tap to count" placeholder was confusing visual
@@ -781,7 +787,7 @@ const StashCard = memo(function StashCard({ item, expanded, onToggle, onAddToSma
                   category_emoji: cat.emoji,
                   rating: personalRating > 0 ? personalRating : null,
                   best_price_callout: item.store_count > 1 && item.best
-                    ? `Cheapest at ${item.best.name} — $${Number(item.best.min_price).toFixed(2)}`
+                    ? `Cheapest at ${item.best.name} — ${money(item.best.min_price)}`
                     : null,
                   tiles: (item.stores_list || []).map(s => ({
                     store: s.name || 'Store',
@@ -960,7 +966,7 @@ const ProductCard = memo(function ProductCard({ item, expanded, onToggle, onAddT
               </span>
             )}
             {item.avg_rating > 0 && (
-              <span className="inline-flex items-center gap-0.5 text-[10px] text-amber-700 font-bold tabular-nums">
+              <span className="inline-flex items-center gap-0.5 text-[10px] text-amber-700 font-bold gg-num">
                 <Star size={10} fill="currentColor" /> {item.avg_rating.toFixed(1)}
               </span>
             )}
@@ -988,7 +994,7 @@ const ProductCard = memo(function ProductCard({ item, expanded, onToggle, onAddT
             )}
             {item.is_top_spender && (
               <span
-                title={`Top 10% by total spend ($${item.total_spend.toFixed(0)})`}
+                title={`Top 10% by total spend (${money0(item.total_spend)})`}
                 className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200"
               >
                 💸 Top spender
@@ -1043,15 +1049,15 @@ const ProductCard = memo(function ProductCard({ item, expanded, onToggle, onAddT
         <div className="grid grid-cols-3 gap-2 mt-3 text-xs">
           <div className="rounded-xl bg-white/80 px-2 py-1 text-center ring-1 ring-white">
             <p className="text-[9px] uppercase text-gray-500 font-bold">{isMulti ? 'Best' : 'Last'} $</p>
-            <p className="font-bold text-guac-700 tabular-nums">${(item.best?.min_price || item.last_price).toFixed(2)}</p>
+            <p className="font-bold text-guac-700 gg-num">{money(item.best?.min_price || item.last_price)}</p>
           </div>
           <div className="rounded-xl bg-white/80 px-2 py-1 text-center ring-1 ring-white">
             <p className="text-[9px] uppercase text-gray-500 font-bold">Bought</p>
-            <p className="font-bold text-amber-700 tabular-nums">{item.times}×</p>
+            <p className="font-bold text-amber-700 gg-num">{item.times}×</p>
           </div>
           <div className="rounded-xl bg-white/80 px-2 py-1 text-center ring-1 ring-white">
             <p className="text-[9px] uppercase text-gray-500 font-bold">Total $</p>
-            <p className="font-bold text-rose-700 tabular-nums">${item.total_spend.toFixed(0)}</p>
+            <p className="font-bold text-rose-700 gg-num">{money0(item.total_spend)}</p>
           </div>
         </div>
 
@@ -1060,9 +1066,9 @@ const ProductCard = memo(function ProductCard({ item, expanded, onToggle, onAddT
             <BadgeDollarSign size={14} className="text-amber-600 shrink-0" />
             <span>
               Cheapest at <span className="font-bold">{item.best.name}</span>:
-              {' '}<span className="font-bold tabular-nums">${item.best.min_price.toFixed(2)}</span>
+              {' '}<span className="font-bold gg-num">{money(item.best.min_price)}</span>
               {item.worst && item.worst.min_price > item.best.min_price && (
-                <span className="text-amber-700/70"> · save up to ${(item.worst.min_price - item.best.min_price).toFixed(2)}</span>
+                <span className="text-amber-700/70"> · save up to {money(item.worst.min_price - item.best.min_price)}</span>
               )}
             </span>
           </div>
@@ -1125,7 +1131,7 @@ const ProductCard = memo(function ProductCard({ item, expanded, onToggle, onAddT
                 category_emoji: cat?.emoji || '🛒',
                 rating: item.avg_rating > 0 ? Math.round(item.avg_rating) : null,
                 best_price_callout: item.store_count > 1 && item.best
-                  ? `Cheapest at ${item.best.name} — $${Number(item.best.min_price).toFixed(2)}`
+                  ? `Cheapest at ${item.best.name} — ${money(item.best.min_price)}`
                   : null,
                 tiles: (item.stores_list || []).map(s => ({
                   store: s.name || 'Store',
@@ -1243,7 +1249,7 @@ function OnHandStepper({ value, onChange, disabled, subtitle }) {
           className="w-7 h-7 rounded-full bg-guac-100 hover:bg-guac-100 text-guac-700 text-base font-bold leading-none disabled:opacity-40 transition-all active:scale-95"
           aria-label="Decrease on-hand count"
         >−</button>
-        <span className={`text-sm font-black tabular-nums w-7 text-center ${
+        <span className={`text-sm font-black gg-num w-7 text-center ${
           safe === 0 ? 'text-rose-700' : safe <= 1 ? 'text-amber-700' : 'text-guac-700'
         }`}>
           {safe}
@@ -1276,7 +1282,7 @@ function CatChip({ active, onClick, emoji, label, count, tone }) {
         active ? 'bg-white/30 shadow-inner' : `bg-gradient-to-br ${grad} text-white shadow-sm`
       }`}>{emoji}</span>
       <span>{label}</span>
-      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full tabular-nums ${active ? 'bg-white/30 text-white' : 'bg-gray-100 text-gray-500'}`}>{count}</span>
+      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full gg-num ${active ? 'bg-white/30 text-white' : 'bg-gray-100 text-gray-500'}`}>{count}</span>
     </button>
   )
 }

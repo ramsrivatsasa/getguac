@@ -78,6 +78,13 @@ function formatDayMonth(dateStr) {
   return `${String(d.getDate()).padStart(2, '0')} ${_MONTHS[d.getMonth()]}`
 }
 
+// Display-only USD formatter: thousands separators + exactly two decimals
+// ($1,218.99), matching the mockup. Presentation only — the raw numeric
+// values are untouched. Replaces bare .toFixed(2) on rendered amounts.
+function money(n) {
+  return Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
 // 36px store avatar — prefers a real brand logo (logoUrlForStore resolves a
 // curated domain or a best-effort favicon) and falls back to the avocado
 // initial tile when there's no logo or the image 404s. The error swap is what
@@ -429,7 +436,7 @@ export default function ReceiptsPage() {
         const data = await quickProcess(f)
         ok++
         lastSavedId = data._savedId || lastSavedId
-        toast.success(`${data.store_name} • $${Number(data.total_amount || 0).toFixed(2)} saved (${data.items?.length || 0} items)`)
+        toast.success(`${data.store_name} • $${money(data.total_amount)} saved (${data.items?.length || 0} items)`)
       } catch (err) {
         fail++
         toast.error(`${f.name}: ${err.message}`)
@@ -616,7 +623,7 @@ export default function ReceiptsPage() {
         ok++
         lastId = data.receipt_id || lastId
         const store = data.parsed?.store_name || 'Receipt'
-        const total = Number(data.parsed?.total_amount || 0).toFixed(2)
+        const total = money(data.parsed?.total_amount)
         toast.success(`${store} • $${total} saved from PDF`)
       } catch (err) {
         toast.error(`${f.name}: ${err.message}`)
@@ -1110,7 +1117,7 @@ export default function ReceiptsPage() {
 
       {showForm && (
         <div className="card space-y-4">
-          <h3 className="font-semibold text-gray-800">New Receipt</h3>
+          <h3 className="gg-h2">New Receipt</h3>
 
           {/* Upload zone — first so scanning fills the form below */}
           <div>
@@ -1175,8 +1182,8 @@ export default function ReceiptsPage() {
                   <label className="label mb-0">Line Items <span className="text-guac-600 font-semibold">({parsedItems.length} scanned)</span></label>
                 </div>
                 <div className="border rounded-xl overflow-hidden">
-                  <table className="w-full text-sm">
-                    <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
+                  <table className="gg-tbl w-full text-sm">
+                    <thead className="border-b border-guac-line gg-colhead">
                       <tr>
                         <th className="px-3 py-2 text-left">Item</th>
                         <th className="px-3 py-2 text-left w-16">Qty</th>
@@ -1225,8 +1232,8 @@ export default function ReceiptsPage() {
                   <span className="text-guac-600 font-semibold">({refundPolicies.length} scanned)</span>
                 </label>
                 <div className="border rounded-xl overflow-hidden">
-                  <table className="w-full text-sm">
-                    <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
+                  <table className="gg-tbl w-full text-sm">
+                    <thead className="border-b border-guac-line gg-colhead">
                       <tr>
                         <th className="px-3 py-2 text-left w-16">Policy</th>
                         <th className="px-3 py-2 text-left w-16">Days</th>
@@ -1271,7 +1278,7 @@ export default function ReceiptsPage() {
               <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 space-y-2">
                 <p className="text-sm font-semibold text-amber-800">Receipt already exists</p>
                 <p className="text-sm text-amber-700">
-                  A receipt from <strong>{duplicate.store_name}</strong> on <strong>{formatDateShort(duplicate.date)}</strong> (${parseFloat(duplicate.total_amount).toFixed(2)}) was found.
+                  A receipt from <strong>{duplicate.store_name}</strong> on <strong>{formatDateShort(duplicate.date)}</strong> (<span className="gg-num">${money(duplicate.total_amount)}</span>) was found.
                   Do you want to update it?
                 </p>
                 <div className="flex gap-2 pt-1">
@@ -1383,14 +1390,14 @@ export default function ReceiptsPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-[13px]" style={{ tableLayout: 'fixed' }}>
+            <table className="gg-tbl w-full text-[13px]" style={{ tableLayout: 'fixed' }}>
               <colgroup>
                 <col style={{ width: 40 }} />
                 {RECEIPT_COLUMNS.map(c => (
                   <col key={c.id} style={{ width: colWidths[c.id] }} />
                 ))}
               </colgroup>
-              <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
+              <thead className="border-b border-guac-line gg-colhead">
                 <tr>
                   <th className="pl-4 pr-2 py-3">
                     <input type="checkbox" className="w-4 h-4 rounded cursor-pointer" checked={allSelected}
@@ -1495,9 +1502,9 @@ export default function ReceiptsPage() {
                             onChange={slug => handleRowCategoryChange(r.id, slug)}
                           />
                         </td>
-                        <td className="px-4 py-2 text-[#6B7A6E] whitespace-nowrap">{formatDayMonth(r.date)}</td>
-                        <td className="px-4 py-2 text-right text-sm font-medium text-[#14241A]">${parseFloat(r.total_amount || 0).toFixed(2)}</td>
-                        <td className="px-4 py-2 text-right text-[#9AA89E]">${parseFloat(r.tax_paid || 0).toFixed(2)}</td>
+                        <td className="px-4 py-2 gg-num text-[#6B7A6E] whitespace-nowrap">{formatDayMonth(r.date)}</td>
+                        <td className="px-4 py-2 text-right gg-num font-extrabold text-[14.5px] text-[#14241A]">${money(r.total_amount)}</td>
+                        <td className="px-4 py-2 text-right gg-num text-[13px] text-[#9AA89E]">${money(r.tax_paid)}</td>
                         <td className="px-4 py-2 text-center">
                           {r.business_purchase
                             ? <span className="inline-flex items-center text-[11px] font-extrabold text-[#1F8A3D] bg-[#E9F5DD] px-2 py-0.5 rounded-full">Biz</span>
@@ -1550,7 +1557,7 @@ export default function ReceiptsPage() {
             <div className="flex items-center justify-between p-4 border-b">
               <div className="flex items-center gap-2">
                 <Copy size={18} className="text-amber-600" />
-                <h3 className="font-semibold text-gray-800">
+                <h3 className="gg-h2">
                   {dedupPreview.groups.length} duplicate group{dedupPreview.groups.length === 1 ? '' : 's'} found
                 </h3>
               </div>
@@ -1570,15 +1577,15 @@ export default function ReceiptsPage() {
                     <div key={g.key} className="border rounded-lg bg-gray-50 overflow-hidden">
                       <div className="flex items-center justify-between gap-2 px-3 py-2 border-b bg-white">
                         <span className="font-semibold text-gray-800">{displayStoreName(g.store_name)}</span>
-                        <span className="text-gray-500">{g.date} · ${Math.abs(g.total_amount).toFixed(2)}{g.sign === '-' ? ' refund' : ''}</span>
+                        <span className="text-gray-500 gg-num">{g.date} · ${money(Math.abs(g.total_amount))}{g.sign === '-' ? ' refund' : ''}</span>
                       </div>
                       {g.variants && g.variants.length > 1 && (
                         <div className="px-3 pt-2 text-[10px] text-gray-400">
                           Matched name variants: {g.variants.join(' · ')}
                         </div>
                       )}
-                      <table className="w-full">
-                        <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
+                      <table className="gg-tbl w-full">
+                        <thead className="border-b border-guac-line gg-colhead">
                           <tr>
                             <th className="px-2 py-1.5 text-center w-12">Keep</th>
                             <th className="px-2 py-1.5 text-center w-14">Delete</th>
@@ -1619,7 +1626,7 @@ export default function ReceiptsPage() {
                                     {r.is_return && <span className="inline-flex items-center text-[9px] px-1 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-100">Refund</span>}
                                     {r.receipt_link && <a href={r.receipt_link} target="_blank" rel="noreferrer" className="text-guac-600 hover:text-guac-700" title="Open receipt link"><Download size={11} /></a>}
                                   </div>
-                                  <div className="text-[10px] text-gray-400 mt-0.5">tax ${Number(r.tax_paid || 0).toFixed(2)} · created {(r.created_at || '').slice(0,10)}</div>
+                                  <div className="text-[10px] text-gray-400 mt-0.5"><span className="gg-num">tax ${money(r.tax_paid)}</span> · created {(r.created_at || '').slice(0,10)}</div>
                                 </td>
                                 <td className="px-2 py-1.5 text-right text-gray-500">{r.reason}</td>
                               </tr>
@@ -1810,8 +1817,8 @@ function ReceiptLineItems({ receiptId }) {
           {nonReturnableLabel} — return option hidden
         </div>
       )}
-      <table className="w-full text-sm">
-        <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
+      <table className="gg-tbl w-full text-sm">
+        <thead className="border-b border-guac-line gg-colhead">
           <tr>
             <th className="px-3 py-0.5 text-left">SKU</th>
             <th className="px-3 py-0.5 text-left">Model</th>
@@ -1866,9 +1873,9 @@ function ReceiptLineItems({ receiptId }) {
                   {it.item_name}
                 </Link>
               </td>
-              <td className="px-3 py-0.5">{it.qty}</td>
-              <td className="px-3 py-0.5">
-                {it.price == null ? <span className="text-gray-300">—</span> : `$${parseFloat(it.price).toFixed(2)}`}
+              <td className="px-3 py-0.5 gg-num">{it.qty}</td>
+              <td className="px-3 py-0.5 gg-num">
+                {it.price == null ? <span className="text-gray-300">—</span> : `$${money(it.price)}`}
               </td>
               <td className="px-3 py-0.5">
                 {perishable ? (

@@ -11,6 +11,11 @@ import FeatureHeader from '../../../components/FeatureHeader'
 import TimeframePicker from '../../../components/TimeframePicker'
 import { CountUp, FadeUpStagger } from '../../../components/animated'
 import { TrendingUp, TrendingDown, AlertTriangle, Percent, CreditCard, Banknote, Sparkles } from 'lucide-react'
+
+// Money figures render with thousands separators + 2 dp and a leading $ —
+// matching the mockup (Bricolage display font via .gg-num, neutral ink).
+const fmtMoney = (n) => `$${Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+
 const SEVERITY_STYLE = {
   good:    { card: 'bg-guac-50 border-guac-line2', label: 'text-guac-700' },
   neutral: { card: 'bg-gray-50 border-gray-200',       label: 'text-gray-700' },
@@ -64,15 +69,15 @@ export default function GuacWizardPage() {
       <FeatureHeader
         theme="wizard"
         title={<span className="flex items-center gap-2">GuacWizard <Sparkles size={20} className="text-amber-500 shrink-0" /></span>}
-        subtitle="Our money wizard 🪄 One wave, no sneaky fee, charge, or leak survives the spell."
+        subtitle="Our money wizard 🪄 — one wave, no sneaky fee, charge, or leak survives the spell."
         action={
           <div className="text-right">
-            <p className="text-[10px] uppercase tracking-wider font-bold text-guac-700">Wizard score</p>
-            <p className="text-4xl font-black text-guac-ink leading-none">
+            <p className="text-[10px] uppercase tracking-wider font-extrabold text-guac-700">Wizard score</p>
+            <p className="gg-stat text-4xl leading-none">
               <CountUp value={Number(score) || 0} duration={680} from={0} />
-              <span className="text-base font-bold opacity-60"> / 100</span>
+              <span className="text-base font-bold text-guac-mist"> / 100</span>
             </p>
-            <p className="text-[10px] text-gray-500 mt-0.5">{tfLabel}</p>
+            <p className="text-[11px] text-guac-mist mt-0.5">{tfLabel}</p>
           </div>
         }
       />
@@ -134,8 +139,8 @@ export default function GuacWizardPage() {
             <Banknote size={14} className="text-guac-600" /> Cost per card — {summary.periodLabel}
           </h2>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
+            <table className="gg-tbl w-full text-sm">
+              <thead className="border-b border-guac-line gg-colhead">
                 <tr>
                   <th className="px-3 py-2 text-left">Card</th>
                   <th className="px-3 py-2 text-right">Interest paid</th>
@@ -148,24 +153,24 @@ export default function GuacWizardPage() {
               <tbody className="divide-y divide-guac-line">
                 {accounts.map(a => (
                   <tr key={a.key} className="hover:bg-guac-row">
-                    <td className="px-3 py-2 font-medium text-gray-900">
+                    <td className="px-3 py-2 font-semibold text-guac-ink">
                       {a.issuer}
-                      {a.account_last4 && <span className="ml-2 font-mono text-xs text-indigo-700">••{a.account_last4}</span>}
-                      <span className="ml-2 text-[10px] text-gray-400">{a.statementCount} stmt{a.statementCount === 1 ? '' : 's'}</span>
+                      {a.account_last4 && <span className="ml-2 text-xs font-medium text-guac-mist">••{a.account_last4}</span>}
+                      <span className="ml-2 text-[10px] text-guac-mist">· {a.statementCount} stmt{a.statementCount === 1 ? '' : 's'}</span>
                     </td>
-                    <td className="px-3 py-2 text-right font-mono text-orange-700 font-semibold">${a.totalInterest.toFixed(2)}</td>
-                    <td className="px-3 py-2 text-right font-mono text-amber-700 font-semibold">${a.totalFees.toFixed(2)}</td>
-                    <td className="px-3 py-2 text-right font-mono text-sky-700">${a.totalPayments.toFixed(2)}</td>
-                    <td className="px-3 py-2 text-right font-mono text-rose-700">${a.totalPurchases.toFixed(2)}</td>
-                    <td className="px-3 py-2 text-right text-xs text-gray-600">{a.latestApr != null ? `${Number(a.latestApr).toFixed(2)}%` : '—'}</td>
+                    <td className="px-3 py-2 text-right gg-num font-bold text-guac-ink">{fmtMoney(a.totalInterest)}</td>
+                    <td className="px-3 py-2 text-right gg-num text-guac-mist">{fmtMoney(a.totalFees)}</td>
+                    <td className="px-3 py-2 text-right gg-num font-bold text-guac-ink">{fmtMoney(a.totalPayments)}</td>
+                    <td className="px-3 py-2 text-right gg-num font-bold text-guac-ink">{fmtMoney(a.totalPurchases)}</td>
+                    <td className="px-3 py-2 text-right gg-num text-xs text-guac-body">{a.latestApr != null ? `${Number(a.latestApr).toFixed(2)}%` : '—'}</td>
                   </tr>
                 ))}
                 <tr className="bg-guac-50/40 font-bold border-t-2 border-guac-line2">
                   <td className="px-3 py-2 text-guac-ink">Total</td>
-                  <td className="px-3 py-2 text-right font-mono text-orange-800">${summary.totalInterest.toFixed(2)}</td>
-                  <td className="px-3 py-2 text-right font-mono text-amber-800">${summary.totalFees.toFixed(2)}</td>
-                  <td className="px-3 py-2 text-right font-mono text-sky-800">${summary.totalPayments.toFixed(2)}</td>
-                  <td className="px-3 py-2 text-right font-mono text-rose-800">${summary.totalPurch.toFixed(2)}</td>
+                  <td className="px-3 py-2 text-right gg-num gg-stat text-sm text-guac-ink">{fmtMoney(summary.totalInterest)}</td>
+                  <td className="px-3 py-2 text-right gg-num gg-stat text-sm text-guac-ink">{fmtMoney(summary.totalFees)}</td>
+                  <td className="px-3 py-2 text-right gg-num gg-stat text-sm text-guac-ink">{fmtMoney(summary.totalPayments)}</td>
+                  <td className="px-3 py-2 text-right gg-num gg-stat text-sm text-guac-ink">{fmtMoney(summary.totalPurch)}</td>
                   <td className="px-3 py-2"></td>
                 </tr>
               </tbody>
@@ -177,13 +182,13 @@ export default function GuacWizardPage() {
       {/* Score breakdown */}
       {reasons.length > 0 && (
         <div className="card">
-          <h3 className="text-sm font-semibold text-gray-800 mb-2">How the score is calculated</h3>
+          <h3 className="gg-h3 mb-2">How the score is calculated</h3>
           <p className="text-xs text-gray-500 mb-3">Starts at 100. Penalties for interest / fees / debt growth. Bonuses for paying it down.</p>
           <ul className="space-y-1.5">
             {reasons.map((r, i) => (
-              <li key={i} className="flex items-center justify-between text-xs bg-gray-50 rounded-lg px-3 py-1.5">
-                <span className="text-gray-700">{r.why}</span>
-                <span className={`font-mono font-bold ${r.label.startsWith('+') ? 'text-guac-700' : r.label.startsWith('-') ? 'text-rose-700' : 'text-gray-600'}`}>{r.label}</span>
+              <li key={i} className={`flex items-center justify-between text-[13.5px] rounded-xl px-4 py-3 ${r.label.startsWith('-') ? 'bg-rose-50' : r.label.startsWith('+') ? 'bg-guac-50' : 'bg-gray-50'}`}>
+                <span className="font-semibold text-guac-ink">{r.why}</span>
+                <span className={`gg-num gg-stat text-sm ${r.label.startsWith('+') ? 'text-guac-700' : r.label.startsWith('-') ? 'text-rose-600' : 'text-gray-600'}`}>{r.label}</span>
               </li>
             ))}
           </ul>
@@ -214,8 +219,8 @@ function Tile({ icon: Icon, tone, label, value, bold }) {
     <div className={`stat-card border ${t.border} ${t.bg}`}>
       <div className={`p-3 rounded-xl bg-white shadow-sm`}><Icon size={20} className={t.icon} /></div>
       <div className="min-w-0">
-        <p className={`text-[10px] uppercase tracking-wider font-bold ${t.text} opacity-80`}>{label}</p>
-        <p className={`${bold ? 'text-2xl font-extrabold' : 'text-xl font-bold'} ${t.text}`}>${Number(value || 0).toFixed(2)}</p>
+        <p className="text-[10.5px] uppercase tracking-[0.06em] font-extrabold text-guac-label">{label}</p>
+        <p className="gg-stat gg-num text-[22px] text-guac-ink">{fmtMoney(value)}</p>
       </div>
     </div>
   )

@@ -16,6 +16,13 @@ import GuacMascot from '../../../components/GuacMascot'
 import { StoreLogo } from '../../../components/StoreLogo'
 import { bankAccountTotals, PERIODS } from '../../../lib/financeInsights'
 import { CountUp } from '../../../components/animated'
+// Money with thousands separators + exactly two decimals ($1,234.56), matching
+// the design mockup (all figures Bricolage via .gg-num — never monospace).
+const fmtMoney = (n) =>
+  Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+const fmtInt = (n) =>
+  Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })
+
 const FEE_KIND_TONE = {
   interest: 'bg-orange-100 text-orange-800 border-orange-200',
   fee:      'bg-amber-100 text-amber-800 border-amber-200',
@@ -508,18 +515,18 @@ export default function BankPage() {
               <Banknote size={28} className="text-indigo-700" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 leading-none flex items-center gap-2">
+              <h2 className="gg-h2 leading-none flex items-center gap-2">
                 {pickedBank.issuer}
                 {pickedBank.account_last4 && (
-                  <span className="font-mono text-sm text-indigo-700 bg-indigo-50 border border-indigo-100 rounded-full px-2 py-0.5">
+                  <span className="gg-num text-sm text-indigo-700 bg-indigo-50 border border-indigo-100 rounded-full px-2 py-0.5">
                     ••{pickedBank.account_last4}
                   </span>
                 )}
               </h2>
               <p className="text-xs text-gray-500 mt-1">
                 {pickedBank.statements.length} statement{pickedBank.statements.length === 1 ? '' : 's'} · {combinedTx.length} transactions combined
-                {pickedBank.totalFees > 0 && ` · $${pickedBank.totalFees.toFixed(2)} in fees`}
-                {pickedBank.totalInterest > 0 && ` · $${pickedBank.totalInterest.toFixed(2)} interest`}
+                {pickedBank.totalFees > 0 && ` · $${fmtMoney(pickedBank.totalFees)} in fees`}
+                {pickedBank.totalInterest > 0 && ` · $${fmtMoney(pickedBank.totalInterest)} interest`}
               </p>
               {pickedBank.issuerAliases.length > 1 && (
                 <p className="text-[11px] text-amber-700 mt-1" title={pickedBank.issuerAliases.join(' · ')}>
@@ -537,7 +544,7 @@ export default function BankPage() {
             <summary className="cursor-pointer flex items-center justify-between gap-2 list-none">
               <div className="flex items-center gap-2">
                 <CreditCard size={16} className="text-guac-600" />
-                <h3 className="font-semibold text-gray-900 text-sm">All transactions across this account</h3>
+                <h3 className="gg-h2">All transactions across this account</h3>
                 <span className="text-[11px] text-gray-400">· {combinedTx.length} rows from {pickedBank.statements.length} statement{pickedBank.statements.length === 1 ? '' : 's'}</span>
               </div>
               <ChevronDown size={14} className="text-gray-400 group-open:rotate-180 transition-transform" />
@@ -550,10 +557,10 @@ export default function BankPage() {
 
         <div className="card p-0 overflow-hidden">
           <div className="px-5 py-3 border-b border-gray-100">
-            <h3 className="font-semibold text-gray-900 text-sm">Statements for {pickedBank.issuer}</h3>
+            <h3 className="gg-h2">Statements for {pickedBank.issuer}</h3>
           </div>
-          <table className="w-full text-sm">
-            <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
+          <table className="gg-tbl w-full text-sm">
+            <thead className="border-b border-guac-line gg-colhead">
               <tr>
                 <th className="px-3 py-2 text-left">Period</th>
                 <th className="px-3 py-2 text-left">Account</th>
@@ -569,7 +576,7 @@ export default function BankPage() {
                 <tr key={s.id} className="hover:bg-guac-row cursor-pointer"
                   onClick={() => { setPickedStatementId(s.id); setView('transactions') }}>
                   <td className="px-3 py-3 font-medium text-gray-900 whitespace-nowrap">
-                    {s.period_start && s.period_end ? `${s.period_start} → ${s.period_end}` : '—'}
+                    {s.period_start && s.period_end ? `${formatDateShort(s.period_start)} → ${formatDateShort(s.period_end)}` : '—'}
                     {s.statement_kind && <span className="ml-2 text-[10px] text-gray-400">{s.statement_kind}</span>}
                     {s.minimum_payment_due != null && s.payment_due_date && (() => {
                       const d = daysUntil(s.payment_due_date)
@@ -577,25 +584,25 @@ export default function BankPage() {
                       const cls = { rose: 'bg-rose-100 text-rose-700', amber: 'bg-amber-100 text-amber-800', emerald: 'bg-guac-100 text-guac-700', gray: 'bg-gray-100 text-gray-600' }[tone]
                       return (
                         <div className={`inline-block mt-1 ml-0 px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${cls}`}>
-                          ${Number(s.minimum_payment_due).toFixed(2)} due {s.payment_due_date}
+                          <span className="gg-num">${fmtMoney(s.minimum_payment_due)}</span> due {formatDateShort(s.payment_due_date)}
                           {d != null && d < 0 ? ` · ${-d}d late` : d != null && d <= 7 ? ` · ${d}d` : ''}
                         </div>
                       )
                     })()}
                   </td>
-                  <td className="px-3 py-3 text-xs font-mono text-gray-600">{s.account_last4 ? `••${s.account_last4}` : '—'}</td>
-                  <td className="px-3 py-3 text-right text-xs">{s.imported_count}/{s.transaction_count || s.row_count}</td>
+                  <td className="px-3 py-3 text-xs gg-num text-gray-600">{s.account_last4 ? `••${s.account_last4}` : '—'}</td>
+                  <td className="px-3 py-3 text-right text-xs gg-num">{s.imported_count}/{s.transaction_count || s.row_count}</td>
                   <td className="px-3 py-3 text-right text-xs">
                     {s.fee_count > 0
-                      ? <span className="font-semibold text-amber-700">{s.fee_count}</span>
-                      : <span className="text-gray-300">0</span>}
+                      ? <span className="gg-num font-semibold text-amber-700">{s.fee_count}</span>
+                      : <span className="gg-num text-gray-300">0</span>}
                   </td>
                   <td className="px-3 py-3 text-right text-xs">
                     {s.reconciled_count > 0
-                      ? <span className="font-semibold text-guac-700">{s.reconciled_count}</span>
-                      : <span className="text-gray-300">0</span>}
+                      ? <span className="gg-num font-semibold text-guac-700">{s.reconciled_count}</span>
+                      : <span className="gg-num text-gray-300">0</span>}
                   </td>
-                  <td className="px-3 py-3 text-right text-xs text-gray-500">{new Date(s.uploaded_at).toLocaleDateString()}</td>
+                  <td className="px-3 py-3 text-right text-xs gg-num text-gray-500">{formatDateShort(s.uploaded_at)}</td>
                   <td className="px-3 py-3 text-right" onClick={e => e.stopPropagation()}>
                     <button
                       onClick={async () => {
@@ -771,7 +778,7 @@ export default function BankPage() {
                     <p className="font-bold text-gray-900 truncate flex items-center gap-2">
                       <span className="truncate">{b.issuer}</span>
                       {b.account_last4 && (
-                        <span className="font-mono text-xs text-indigo-700 bg-indigo-50 border border-indigo-100 rounded-full px-1.5 py-0.5 shrink-0">
+                        <span className="gg-num text-xs text-indigo-700 bg-indigo-50 border border-indigo-100 rounded-full px-1.5 py-0.5 shrink-0">
                           ••{b.account_last4}
                         </span>
                       )}
@@ -794,25 +801,25 @@ export default function BankPage() {
               <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
                 <div className="rounded-lg bg-rose-50 border border-rose-100 px-2 py-1.5">
                   <p className="text-[9px] uppercase tracking-wider text-rose-600 font-semibold">Purchases</p>
-                  <p className="font-bold text-rose-700">${b.totalPurchases.toFixed(2)}</p>
+                  <p className="gg-num font-bold text-rose-700">${fmtMoney(b.totalPurchases)}</p>
                 </div>
                 <div className="rounded-lg bg-sky-50 border border-sky-100 px-2 py-1.5">
                   <p className="text-[9px] uppercase tracking-wider text-sky-700 font-semibold">
                     Payments made{b.paymentCount > 0 ? ` (${b.paymentCount})` : ''}
                   </p>
-                  <p className="font-bold text-sky-800">${b.totalPayments.toFixed(2)}</p>
+                  <p className="gg-num font-bold text-sky-800">${fmtMoney(b.totalPayments)}</p>
                 </div>
                 <div className="rounded-lg bg-amber-50 border border-amber-100 px-2 py-1.5">
                   <p className="text-[9px] uppercase tracking-wider text-amber-700 font-semibold">Fees paid</p>
-                  <p className="font-bold text-amber-800">${b.totalFees.toFixed(2)}</p>
+                  <p className="gg-num font-bold text-amber-800">${fmtMoney(b.totalFees)}</p>
                 </div>
                 <div className="rounded-lg bg-orange-50 border border-orange-100 px-2 py-1.5">
                   <p className="text-[9px] uppercase tracking-wider text-orange-700 font-semibold">Interest paid</p>
-                  <p className="font-bold text-orange-800">${b.totalInterest.toFixed(2)}</p>
+                  <p className="gg-num font-bold text-orange-800">${fmtMoney(b.totalInterest)}</p>
                 </div>
                 <div className="rounded-lg bg-guac-50 border border-guac-line px-2 py-1.5 col-span-2">
                   <p className="text-[9px] uppercase tracking-wider text-guac-600 font-semibold">Refunds</p>
-                  <p className="font-bold text-guac-700">${b.totalRefunds.toFixed(2)}</p>
+                  <p className="gg-num font-bold text-guac-700">${fmtMoney(b.totalRefunds)}</p>
                 </div>
               </div>
             </button>
@@ -900,33 +907,33 @@ function FinanceSummary({ statement: s }) {
     <div className="card">
       <div className="flex items-center gap-2 mb-3">
         <CreditCard size={16} className="text-indigo-600" />
-        <h3 className="font-semibold text-gray-900 text-sm">Payment summary</h3>
+        <h3 className="gg-h2">Payment summary</h3>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {s.minimum_payment_due != null && (
-          <FinanceCell label="Minimum due" value={`$${Number(s.minimum_payment_due).toFixed(2)}`} accent="rose" emoji="💸" />
+          <FinanceCell label="Minimum due" value={`$${fmtMoney(s.minimum_payment_due)}`} accent="rose" emoji="💸" />
         )}
         {s.payment_due_date && (
           <div className={`rounded-xl border px-3 py-2.5 ${DUE_TONE[dueTone]}`}>
             <p className="text-[10px] uppercase tracking-wider font-bold opacity-70 flex items-center gap-1"><Calendar size={11} /> Due date</p>
-            <p className="text-sm font-bold mt-0.5">{s.payment_due_date}</p>
+            <p className="gg-num text-sm font-bold mt-0.5">{formatDateShort(s.payment_due_date)}</p>
             <p className="text-[10px] mt-0.5">
               {dDays == null ? '' : dDays < 0 ? `${-dDays} day${-dDays === 1 ? '' : 's'} overdue` : dDays === 0 ? 'Due today' : `in ${dDays} day${dDays === 1 ? '' : 's'}`}
             </p>
           </div>
         )}
         {s.new_balance != null && (
-          <FinanceCell label="Statement balance" value={`$${Number(s.new_balance).toFixed(2)}`} accent="indigo" />
+          <FinanceCell label="Statement balance" value={`$${fmtMoney(s.new_balance)}`} accent="indigo" />
         )}
         {s.previous_balance != null && (
-          <FinanceCell label="Previous balance" value={`$${Number(s.previous_balance).toFixed(2)}`} accent="gray" />
+          <FinanceCell label="Previous balance" value={`$${fmtMoney(s.previous_balance)}`} accent="gray" />
         )}
         {s.credit_limit != null && (
-          <FinanceCell label="Credit limit" value={`$${Number(s.credit_limit).toFixed(0)}`} accent="gray" />
+          <FinanceCell label="Credit limit" value={`$${fmtInt(s.credit_limit)}`} accent="gray" />
         )}
         {s.available_credit != null && (
-          <FinanceCell label="Available credit" value={`$${Number(s.available_credit).toFixed(0)}`} accent="emerald" />
+          <FinanceCell label="Available credit" value={`$${fmtInt(s.available_credit)}`} accent="emerald" />
         )}
       </div>
 
@@ -935,19 +942,19 @@ function FinanceSummary({ statement: s }) {
           {s.purchase_apr != null && (
             <div className="rounded-lg bg-rose-50 border border-rose-100 px-3 py-2">
               <p className="text-[10px] uppercase tracking-wider text-rose-700 font-semibold flex items-center gap-1"><Percent size={10} /> Purchase APR</p>
-              <p className="font-bold text-rose-800">{Number(s.purchase_apr).toFixed(2)}%</p>
+              <p className="gg-num font-bold text-rose-800">{Number(s.purchase_apr).toFixed(2)}%</p>
             </div>
           )}
           {s.balance_transfer_apr != null && (
             <div className="rounded-lg bg-amber-50 border border-amber-100 px-3 py-2">
               <p className="text-[10px] uppercase tracking-wider text-amber-700 font-semibold flex items-center gap-1"><Percent size={10} /> Balance-transfer APR</p>
-              <p className="font-bold text-amber-800">{Number(s.balance_transfer_apr).toFixed(2)}%</p>
+              <p className="gg-num font-bold text-amber-800">{Number(s.balance_transfer_apr).toFixed(2)}%</p>
             </div>
           )}
           {s.cash_advance_apr != null && (
             <div className="rounded-lg bg-orange-50 border border-orange-100 px-3 py-2">
               <p className="text-[10px] uppercase tracking-wider text-orange-700 font-semibold flex items-center gap-1"><Percent size={10} /> Cash-advance APR</p>
-              <p className="font-bold text-orange-800">{Number(s.cash_advance_apr).toFixed(2)}%</p>
+              <p className="gg-num font-bold text-orange-800">{Number(s.cash_advance_apr).toFixed(2)}%</p>
             </div>
           )}
         </div>
@@ -963,9 +970,9 @@ function FinanceSummary({ statement: s }) {
                 <p className="text-sm text-rose-700 font-bold mt-0.5">Minimum doesn&apos;t even cover monthly interest — balance grows forever.</p>
               ) : (
                 <p className="text-sm text-gray-700 mt-0.5">
-                  <span className="font-bold text-guac-700">{payoffMonthsLabel(s.payoff_months_min)}</span> to clear ${Number(s.new_balance).toFixed(2)}
+                  <span className="font-bold text-guac-700">{payoffMonthsLabel(s.payoff_months_min)}</span> to clear <span className="gg-num">${fmtMoney(s.new_balance)}</span>
                   {s.payoff_total_interest != null && (
-                    <> · costs you <span className="font-bold text-rose-700">${Number(s.payoff_total_interest).toFixed(2)}</span> in interest</>
+                    <> · costs you <span className="gg-num font-bold text-rose-700">${fmtMoney(s.payoff_total_interest)}</span> in interest</>
                   )}
                 </p>
               )}
@@ -987,7 +994,7 @@ function FinanceCell({ label, value, accent = 'gray', emoji }) {
   return (
     <div className={`rounded-xl border px-3 py-2.5 ${FINANCE_TONE[accent] || FINANCE_TONE.gray}`}>
       <p className="text-[10px] uppercase tracking-wider font-bold opacity-70">{emoji ? `${emoji} ` : ''}{label}</p>
-      <p className="text-sm font-bold mt-0.5">{value}</p>
+      <p className="gg-num text-sm font-bold mt-0.5">{value}</p>
     </div>
   )
 }
@@ -1062,11 +1069,11 @@ function StatementDetail({ statement, fees, transactions }) {
 
       <div className="card flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-lg font-bold text-gray-900">{statement.issuer || 'Statement'} {statement.account_last4 && <span className="font-mono text-sm text-gray-500">••{statement.account_last4}</span>}</h2>
+          <h2 className="gg-h2">{statement.issuer || 'Statement'} {statement.account_last4 && <span className="gg-num text-sm text-gray-500">••{statement.account_last4}</span>}</h2>
           <p className="text-xs text-gray-500">
-            {statement.period_start && statement.period_end ? `${statement.period_start} → ${statement.period_end}` : '—'}
+            {statement.period_start && statement.period_end ? `${formatDateShort(statement.period_start)} → ${formatDateShort(statement.period_end)}` : '—'}
             {statement.statement_kind && ` · ${statement.statement_kind}`}
-            {' · '}Uploaded {new Date(statement.uploaded_at).toLocaleDateString()}
+            {' · '}Uploaded {formatDateShort(statement.uploaded_at)}
           </p>
         </div>
         <div className="grid grid-cols-3 lg:grid-cols-5 gap-2 text-xs">
@@ -1097,8 +1104,8 @@ function StatementDetail({ statement, fees, transactions }) {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
+            <table className="gg-tbl w-full text-sm">
+              <thead className="border-b border-guac-line gg-colhead">
                 <tr>
                   <th className="px-2 py-2 text-left">Date</th>
                   <th className="px-2 py-2 text-left">Kind</th>
@@ -1142,8 +1149,8 @@ function StatementDetail({ statement, fees, transactions }) {
                           <span className="ml-1 inline-block px-1.5 py-0.5 rounded-full bg-guac-50 text-guac-700 border border-blue-100 font-semibold">Biz</span>
                         )}
                       </td>
-                      <td className={'px-2 py-1.5 text-right font-mono ' + (tx.amount < 0 ? 'text-guac-700' : 'text-gray-900')}>
-                        ${tx.amount.toFixed(2)}
+                      <td className={'px-2 py-1.5 text-right gg-num ' + (tx.amount < 0 ? 'text-guac-700' : 'text-gray-900')}>
+                        {tx.amount < 0 ? '-' : ''}${fmtMoney(Math.abs(tx.amount))}
                       </td>
                     </tr>
                   )
@@ -1167,7 +1174,7 @@ function StatementDetail({ statement, fees, transactions }) {
                   <span className="text-gray-600">{formatDateShort(f.date)}</span>
                   {f.merchant && <span className="text-gray-500 truncate max-w-xs">{f.merchant}</span>}
                 </span>
-                <span className="font-mono font-semibold text-amber-700">${Number(f.amount).toFixed(2)}</span>
+                <span className="gg-num font-semibold text-amber-700">${fmtMoney(f.amount)}</span>
               </li>
             ))}
           </ul>
@@ -1210,8 +1217,8 @@ function CombinedTransactionTable({ transactions, statements }) {
         </div>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
+        <table className="gg-tbl w-full text-sm">
+          <thead className="border-b border-guac-line gg-colhead">
             <tr>
               <th className="px-2 py-2 text-left">Date</th>
               <th className="px-2 py-2 text-left">Kind</th>
@@ -1257,8 +1264,8 @@ function CombinedTransactionTable({ transactions, statements }) {
                       <span className="inline-block px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500 border border-gray-200">Not imported</span>
                     )}
                   </td>
-                  <td className={'px-2 py-1.5 text-right font-mono ' + (tx.amount < 0 ? 'text-guac-700' : 'text-gray-900')}>
-                    ${tx.amount.toFixed(2)}
+                  <td className={'px-2 py-1.5 text-right gg-num ' + (tx.amount < 0 ? 'text-guac-700' : 'text-gray-900')}>
+                    {tx.amount < 0 ? '-' : ''}${fmtMoney(Math.abs(tx.amount))}
                   </td>
                 </tr>
               )
@@ -1274,7 +1281,7 @@ function Mini({ label, value }) {
   return (
     <div className="rounded-lg bg-white border border-gray-100 px-2.5 py-1.5">
       <p className="text-[9px] uppercase tracking-wider text-gray-400 font-semibold">{label}</p>
-      <p className="text-sm font-semibold text-gray-800">{value == null ? '—' : `$${Number(value).toFixed(2)}`}</p>
+      <p className="gg-num text-sm font-semibold text-gray-800">{value == null ? '—' : `$${fmtMoney(value)}`}</p>
     </div>
   )
 }
@@ -1297,8 +1304,8 @@ function BigTotal({ label, value, icon: Icon, tone, sub }) {
           {/* CountUp tweens the bank-bite total so the hero number
               lands the "you lost $X this period" punch like Mint's
               old hero numbers. */}
-          <p className={`text-2xl font-extrabold ${t.text} mt-0.5`}>
-            <CountUp value={Number(value) || 0} duration={620} prefix="$" decimals={2} />
+          <p className={`gg-stat ${t.text} mt-0.5`}>
+            <CountUp value={Number(value) || 0} duration={620} className="gg-num" format={(n) => `$${fmtMoney(n)}`} />
           </p>
           {sub && <p className={`text-[11px] ${t.accent} mt-1`}>{sub}</p>}
         </div>
@@ -1316,13 +1323,13 @@ const TOTAL_TONE = {
 }
 function Stat({ icon: Icon, tone, label, value, raw }) {
   const t = TOTAL_TONE[tone] || TOTAL_TONE.amber
-  const display = raw ? value : (value == null ? '$0.00' : `$${Number(value).toFixed(2)}`)
+  const display = raw ? fmtInt(value) : (value == null ? '$0.00' : `$${fmtMoney(value)}`)
   return (
     <div className="stat-card">
       <div className={`p-3 rounded-xl ${t.bg}`}><Icon size={20} className={t.icon} /></div>
       <div>
         <p className="text-xs text-gray-500 font-medium">{label}</p>
-        <p className={`text-xl font-bold ${t.text}`}>{display}</p>
+        <p className={`gg-stat gg-num ${t.text}`}>{display}</p>
       </div>
     </div>
   )

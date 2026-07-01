@@ -1,10 +1,13 @@
 // Shared date formatter so every list/detail view renders dates the same way.
-// Backend stores dates as ISO yyyy-MM-dd; users want dd-MMM-yyyy (25-May-2026).
+// Backend stores dates as ISO yyyy-MM-dd; the design mockups render dates as
+// `dd MMM yyyy` with SPACES (e.g. 25 Jun 2026) — this is the single source of
+// truth so every page matches the mockups and each other. (Was hyphenated
+// `25-May-2026`; unified to spaces 2026-07-01 to kill cross-page date drift.)
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 /**
- * Render an ISO date string (yyyy-MM-dd) or Date as dd-MMM-yyyy.
+ * Render an ISO date string (yyyy-MM-dd) or Date as `dd MMM yyyy` (spaces).
  * Falls back to the raw input if it can't be parsed (so a bad row at least
  * shows _something_ instead of "Invalid Date").
  */
@@ -17,7 +20,7 @@ export function formatDateShort(input) {
     if (m) {
       const [, y, mm, dd] = m
       const monthIdx = parseInt(mm, 10) - 1
-      if (monthIdx >= 0 && monthIdx < 12) return `${dd}-${MONTHS[monthIdx]}-${y}`
+      if (monthIdx >= 0 && monthIdx < 12) return `${dd} ${MONTHS[monthIdx]} ${y}`
     }
   }
   const d = input instanceof Date ? input : new Date(input)
@@ -25,5 +28,5 @@ export function formatDateShort(input) {
   const dd = String(d.getDate()).padStart(2, '0')
   const mmm = MONTHS[d.getMonth()]
   const yyyy = d.getFullYear()
-  return `${dd}-${mmm}-${yyyy}`
+  return `${dd} ${mmm} ${yyyy}`
 }

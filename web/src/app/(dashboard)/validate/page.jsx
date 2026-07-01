@@ -35,6 +35,19 @@ const COUNT_OPTIONS = {
 const DEFAULT_COUNT = { daily: 30, weekly: 4, monthly: 3, yearly: 1 }
 const UNIT_LABEL = { daily: 'day', weekly: 'week', monthly: 'month', yearly: 'year' }
 
+// Money with thousands separators + 2 decimals, e.g. 1218.99 -> "1,218.99".
+function money(x) {
+  return Number(x || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+// Whole-dollar money with thousands separators, e.g. 2567 -> "2,567".
+function money0(x) {
+  return Number(x || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })
+}
+// Date as "DD MMM YYYY" with spaces (mockup style), e.g. "25 Jun 2026".
+function dateSpaced(input) {
+  return formatDateShort(input).replace(/-/g, ' ')
+}
+
 function periodStart(period, count) {
   const now = new Date()
   if (period === 'daily')   return subDays(now,  count)
@@ -135,11 +148,15 @@ export default function ValidatePage() {
     }
     return [...buckets.values()].filter(b => b.spend > 0).map(b => ({
       name: `${b.emoji} ${b.label}`,
+      emoji: b.emoji,
+      label: b.label,
       value: b.spend,
       count: b.count,
       fill: b.fill,
     }))
   }, [filtered])
+
+  const totalSpend = useMemo(() => pieData.reduce((s, d) => s + d.value, 0), [pieData])
 
   const avgRating = useMemo(() => {
     const rated = filtered.filter(r => r.rating != null)
@@ -156,7 +173,7 @@ export default function ValidatePage() {
       <FeatureHeader
         expression="thumbsup"
         title="Worth It?"
-        subtitle="Rate every purchase — high = must-have, low = adhoc"
+        subtitle="Rate every purchase — high = must-have, low = ad-hoc."
         action={
           <div className="text-sm text-gray-500">
             <span className="font-bold text-guac-700">{ratedCount}</span> of {filtered.length} rated
@@ -206,31 +223,38 @@ export default function ValidatePage() {
         <div className="card">
           <div className="grid lg:grid-cols-3 gap-4 items-center">
             <div className="lg:col-span-1">
-              <p className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-1 text-center">Spend by Rating</p>
-              <ResponsiveContainer width="100%" height={180}>
-                <PieChart>
-                  <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={40} outerRadius={70} paddingAngle={3} isAnimationActive={false}>
-                    {pieData.map((d, i) => <Cell key={i} fill={d.fill} />)}
-                  </Pie>
-                  <RTooltip formatter={(v, _n, p) => [`$${Number(v).toFixed(2)} (${p.payload.count})`, p.payload.name]} />
-                </PieChart>
-              </ResponsiveContainer>
+              <p className="gg-colhead mb-1 text-center">Spend by Rating</p>
+              <div className="relative">
+                <ResponsiveContainer width="100%" height={180}>
+                  <PieChart>
+                    <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={48} outerRadius={70} paddingAngle={3} isAnimationActive={false}>
+                      {pieData.map((d, i) => <Cell key={i} fill={d.fill} />)}
+                    </Pie>
+                    <RTooltip formatter={(v, _n, p) => [`$${money(v)} (${p.payload.count})`, p.payload.name]} />
+                  </PieChart>
+                </ResponsiveContainer>
+                {/* Total spend printed in the donut hole (= sum of buckets). */}
+                <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="gg-colhead text-guac-muted">Spend</span>
+                  <span className="gg-num font-extrabold text-guac-ink text-xl leading-none">${money0(totalSpend)}</span>
+                </div>
+              </div>
             </div>
 
             <div className="lg:col-span-1 space-y-1.5">
               {pieData.map(d => (
-                <div key={d.name} className="flex items-center gap-2 text-xs">
-                  <span className="w-3 h-3 rounded-full" style={{ backgroundColor: d.fill }} />
-                  <span className="flex-1 font-semibold text-gray-700">{d.name}</span>
-                  <span className="text-gray-500">{d.count}</span>
-                  <span className="font-bold text-gray-700 w-16 text-right">${d.value.toFixed(0)}</span>
+                <div key={d.name} className="flex items-center gap-2.5 text-xs">
+                  <span className="text-[15px] leading-none">{d.emoji}</span>
+                  <span className="flex-1 font-semibold text-guac-body">{d.label}</span>
+                  <span className="text-guac-muted w-7 text-right">{d.count}</span>
+                  <span className="gg-num font-extrabold text-guac-ink w-16 text-right">${money0(d.value)}</span>
                 </div>
               ))}
             </div>
 
             <div className="lg:col-span-1 grid grid-cols-2 gap-2">
               <ValStat label="Avg Rating"   value={`${avgRating.toFixed(1)} ★`}                          tone="emerald" />
-              <ValStat label="Regret Spend" value={`$${regretSpend.toFixed(0)}`}                          tone="rose" />
+              <ValStat label="Regret Spend" value={`$${money0(regretSpend)}`}                             tone="rose" />
               <ValStat label="Rated"        value={`${ratedCount} / ${filtered.length}`}                  tone="gray" />
               <ValStat label="Period"       value={`${count} ${UNIT_LABEL[period]}${count === 1 ? '' : 's'}`} tone="amber" />
             </div>
@@ -248,10 +272,18 @@ export default function ValidatePage() {
             <p className="text-gray-500">No transactions match. Try widening the period or clearing the filter.</p>
           </div>
         ) : (
-          <table className="w-full text-sm">
-            <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
-              <tr>{['', 'Date', 'Store', 'Amount', 'Worth It?', 'Tags', ''].map((h, i) =>
-                <th key={i} className="px-4 py-3 text-left font-semibold">{h}</th>
+          <table className="gg-tbl w-full text-sm">
+            <thead className="border-b border-guac-line">
+              <tr>{[
+                { h: '',          align: 'text-left' },
+                { h: 'Date',      align: 'text-left' },
+                { h: 'Store',     align: 'text-left' },
+                { h: 'Amount',    align: 'text-right' },
+                { h: 'Worth It?', align: 'text-center' },
+                { h: 'Tags',      align: 'text-center' },
+                { h: '',          align: 'text-right' },
+              ].map((c, i) =>
+                <th key={i} className={`gg-colhead ${c.align}`}>{c.h}</th>
               )}</tr>
             </thead>
             <tbody className="divide-y divide-guac-line">
@@ -286,6 +318,12 @@ function ReceiptRow({ r, isExpanded, onToggle }) {
     onError: err => toast.error(err.message),
   })
 
+  const amount = parseFloat(r.total_amount || 0)
+  const isRefund = amount < 0
+  const isRegret = r.rating != null && r.rating <= 2
+  // Amount is neutral/dark by default; only a regret-rated purchase paints red.
+  const amountColor = isRegret ? 'text-rose-600' : isRefund ? 'text-guac-600' : 'text-guac-ink'
+
   return (
     <tr className="hover:bg-guac-50/30">
       <td className="px-4 py-3" onClick={onToggle}>
@@ -293,15 +331,17 @@ function ReceiptRow({ r, isExpanded, onToggle }) {
           {isExpanded ? <ChevronDown size={14} /> : <ChevRight size={14} />}
         </button>
       </td>
-      <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{formatDateShort(r.date)}</td>
-      <td className="px-4 py-3 font-medium">
-        <Link href={`/receipts/${r.id}`} className="text-guac-700 hover:underline">{displayStoreName(r.store_name)}</Link>
+      <td className="px-4 py-3 whitespace-nowrap"><span className="gg-num text-guac-body">{dateSpaced(r.date)}</span></td>
+      <td className="px-4 py-3 font-semibold">
+        <Link href={`/receipts/${r.id}`} className="text-guac-ink hover:text-guac-700 hover:underline">{displayStoreName(r.store_name)}</Link>
       </td>
-      <td className={`px-4 py-3 font-bold whitespace-nowrap ${parseFloat(r.total_amount) < 0 ? 'text-guac-600' : 'text-rose-600'}`}>
-        {parseFloat(r.total_amount) < 0 ? '+' : ''}${Math.abs(parseFloat(r.total_amount || 0)).toFixed(2)}
+      <td className="px-4 py-3 text-right whitespace-nowrap">
+        <span className={`gg-num font-extrabold ${amountColor}`}>
+          {isRefund ? '+' : ''}${money(Math.abs(amount))}
+        </span>
       </td>
       <td className="px-4 py-3">
-        <div className="flex items-center gap-0.5">
+        <div className="flex items-center justify-center gap-0.5">
           {[1, 2, 3, 4, 5].map(n => {
             const info = RATING_LABELS[n]
             const active = r.rating === n
@@ -309,7 +349,9 @@ function ReceiptRow({ r, isExpanded, onToggle }) {
               <button key={n} type="button" onClick={() => rate.mutate(n)} disabled={rate.isPending}
                 title={info.label}
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-base transition-all ${
-                  active ? 'bg-guac-100 ring-2 ring-guac-600 scale-110' : 'hover:bg-guac-50 opacity-50 hover:opacity-100'
+                  active
+                    ? (isRegret ? 'bg-rose-100 ring-2 ring-rose-500 scale-110' : 'bg-guac-100 ring-2 ring-guac-600 scale-110')
+                    : 'hover:bg-guac-50 opacity-50 hover:opacity-100'
                 }`}>
                 {info.emoji}
               </button>
@@ -317,18 +359,20 @@ function ReceiptRow({ r, isExpanded, onToggle }) {
           })}
         </div>
       </td>
-      <td className="px-4 py-3">
-        {r.validation_tags?.length > 0 ? (
-          <div className="flex flex-wrap gap-1 max-w-[200px]">
+      <td className="px-4 py-3 text-center">
+        {isRegret ? (
+          <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-600 text-[10px] font-extrabold">Regret</span>
+        ) : r.validation_tags?.length > 0 ? (
+          <div className="flex flex-wrap justify-center gap-1 max-w-[200px]">
             {r.validation_tags.slice(0, 2).map(t => (
               <span key={t} className="px-2 py-0.5 rounded-full bg-guac-100 text-guac-700 text-[10px] font-semibold">{t}</span>
             ))}
-            {r.validation_tags.length > 2 && <span className="text-[10px] text-gray-400">+{r.validation_tags.length - 2}</span>}
+            {r.validation_tags.length > 2 && <span className="text-[10px] text-guac-faint">+{r.validation_tags.length - 2}</span>}
           </div>
-        ) : <span className="text-gray-300 text-xs">—</span>}
+        ) : <span className="text-guac-faint text-xs">—</span>}
       </td>
-      <td className="px-4 py-3">
-        <Link href={`/receipts/${r.id}`} className="text-xs text-guac-600 hover:underline">Details →</Link>
+      <td className="px-4 py-3 text-right">
+        <Link href={`/receipts/${r.id}`} className="text-xs font-bold text-guac-700 hover:underline">Details →</Link>
       </td>
     </tr>
   )
@@ -363,8 +407,8 @@ function ValStat({ label, value, tone }) {
   const t = VAL_TONES[tone] || VAL_TONES.gray
   return (
     <div className={`rounded-2xl border ${t.border} ${t.bg} p-3`}>
-      <p className="text-[10px] uppercase tracking-wider text-gray-500 font-bold font-sans">{label}</p>
-      <p className={`text-xl font-bold mt-0.5 font-sans tabular-nums ${t.text}`}>{value}</p>
+      <p className="gg-colhead">{label}</p>
+      <p className={`gg-num text-xl font-extrabold mt-0.5 ${t.text}`}>{value}</p>
     </div>
   )
 }
@@ -380,8 +424,8 @@ function ItemRow({ item }) {
     <div className="flex items-center gap-3 bg-white rounded-xl px-3 py-2 shadow-sm">
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold truncate">{item.item_name}</p>
-        <p className="text-[11px] text-gray-400">
-          {item.qty}× · ${parseFloat(item.price || 0).toFixed(2)}
+        <p className="text-[11px] text-guac-faint">
+          <span className="gg-num">{item.qty}× · ${money(item.price)}</span>
           {item.sku && <span className="ml-2 font-mono">SKU {item.sku}</span>}
           {item.model && <span className="ml-2 font-mono">Model {item.model}</span>}
         </p>

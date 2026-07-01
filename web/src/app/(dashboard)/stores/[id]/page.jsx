@@ -20,6 +20,13 @@ import errorBlobLottie from '../../../../lottie/error-blob.json'
 const PLACEHOLDER_REWARD_RE = /^GG-[A-Z0-9]{8}$/
 function isPlaceholderReward(n) { return !n || PLACEHOLDER_REWARD_RE.test(String(n)) }
 
+// Money formatter with thousands separators ($1,218.99), matching the
+// mockup. Presentation only — raw numeric values are untouched. Replaces
+// bare .toFixed(2) on rendered amounts.
+function money(n) {
+  return Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
 export default function StoreDetailPage() {
   const { id } = useParams()
   const router = useRouter()
@@ -176,16 +183,16 @@ export default function StoreDetailPage() {
 
       <div className="grid grid-cols-3 gap-3">
         <div className="card text-center py-3">
-          <p className="text-xs text-gray-400 uppercase tracking-wide">Receipts</p>
-          <p className="text-2xl font-semibold mt-1">{receipts.length}</p>
+          <p className="gg-colhead">Receipts</p>
+          <p className="gg-stat gg-num mt-1">{receipts.length}</p>
         </div>
         <div className="card text-center py-3">
-          <p className="text-xs text-gray-400 uppercase tracking-wide">Locations</p>
-          <p className="text-2xl font-semibold mt-1">{locations.length || 1}</p>
+          <p className="gg-colhead">Locations</p>
+          <p className="gg-stat gg-num mt-1">{locations.length || 1}</p>
         </div>
         <div className="card text-center py-3">
-          <p className="text-xs text-gray-400 uppercase tracking-wide">Total Spend</p>
-          <p className="text-2xl font-semibold mt-1">${totalSpend.toFixed(2)}</p>
+          <p className="gg-colhead">Total Spend</p>
+          <p className="gg-stat gg-num mt-1">${money(totalSpend)}</p>
         </div>
       </div>
 
@@ -200,7 +207,7 @@ export default function StoreDetailPage() {
       )}
 
       <div className="card">
-        <h3 className="font-semibold text-gray-800 mb-4">Store Details</h3>
+        <h3 className="gg-h2 mb-4">Store Details</h3>
         <form onSubmit={handleSave} className="space-y-4">
           {fields.map(({ label, key, icon: Icon, required }) => (
             <div key={key}>
@@ -229,7 +236,7 @@ export default function StoreDetailPage() {
 
       {locations.length > 0 && (
         <div className="card">
-          <h3 className="font-semibold text-gray-800 mb-3">Locations</h3>
+          <h3 className="gg-h2 mb-3">Locations</h3>
           <div className="divide-y divide-guac-line">
             {locations.map(loc => {
               const fullAddr = [loc.address, loc.city, loc.state, loc.zip].filter(Boolean).join(', ')
@@ -262,7 +269,7 @@ export default function StoreDetailPage() {
         <div className="card">
           <div className="flex items-center gap-2 mb-3">
             <Shield size={16} className="text-guac-600" />
-            <h3 className="font-semibold text-gray-800">Return Policy</h3>
+            <h3 className="gg-h2">Return Policy</h3>
             <span className="ml-auto text-[11px] text-gray-400">From the merchant's published policy</span>
           </div>
           <div className="space-y-3">
@@ -305,7 +312,7 @@ export default function StoreDetailPage() {
       <div className="card p-0 overflow-hidden">
         <div className="flex items-center gap-2 px-5 py-4 border-b">
           <Receipt size={16} className="text-gray-500" />
-          <h3 className="font-semibold text-gray-800">Receipts at this store</h3>
+          <h3 className="gg-h2">Receipts at this store</h3>
           <span className="text-sm text-gray-400 ml-auto">{receipts.length}</span>
         </div>
         {receipts.length === 0 ? (
@@ -336,9 +343,9 @@ export default function StoreDetailPage() {
                     <Link key={r.id} href={`/receipts/${r.id}`}
                       className="flex items-center justify-between px-5 py-3 hover:bg-guac-row transition-colors group">
                       <div className="flex items-center gap-3 min-w-0 flex-wrap">
-                        <span className="text-sm text-gray-500 w-24 shrink-0">{formatDateShort(r.date)}</span>
-                        <span className={`text-sm font-semibold ${parseFloat(r.total_amount) < 0 ? 'text-rose-600' : 'text-gray-800'}`}>
-                          ${parseFloat(r.total_amount || 0).toFixed(2)}
+                        <span className="gg-num text-sm text-gray-500 w-24 shrink-0">{formatDateShort(r.date)}</span>
+                        <span className={`gg-num text-sm font-semibold ${parseFloat(r.total_amount) < 0 ? 'text-rose-600' : 'text-guac-ink'}`}>
+                          ${money(r.total_amount)}
                         </span>
                         {r.business_purchase && <span className="badge-blue text-xs">Biz</span>}
                         {parseFloat(r.total_amount) < 0 && <span className="badge-gray text-xs">Return</span>}
@@ -365,7 +372,7 @@ export default function StoreDetailPage() {
 
       <div className="text-xs text-gray-400">
         Store ID: <span className="font-mono">{store.id}</span>
-        {store.created_at && <span className="ml-4">Created: {new Date(store.created_at).toLocaleDateString()}</span>}
+        {store.created_at && <span className="ml-4">Created: <span className="gg-num">{formatDateShort(store.created_at)}</span></span>}
       </div>
     </div>
   )

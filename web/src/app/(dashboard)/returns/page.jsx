@@ -8,6 +8,11 @@ import { getReturns, updateReceiptItem, getEligibleReturns } from '../../../lib/
 import FeatureHeader from '../../../components/FeatureHeader'
 import { displayStoreName } from '../../../lib/store-name-normalize'
 import { StoreLogo } from '../../../components/StoreLogo'
+import { formatDateShort } from '../../../lib/dateFormat'
+
+// Money → $1,234.56 (thousands separators, always 2 decimals). Mockup renders
+// every dollar figure in Bricolage (font-display) with grouped thousands.
+const fmtMoney = (n) => Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
 export default function ReturnsPage() {
   const qc = useQueryClient()
@@ -117,30 +122,30 @@ export default function ReturnsPage() {
           <>
             <div className="rounded-2xl border border-guac-line bg-white px-5 py-4 text-center">
               <p className="text-[10.5px] font-extrabold tracking-[0.07em] text-guac-faint">RETURNED ITEMS</p>
-              <p className="font-display text-3xl font-extrabold text-guac-ink mt-2">{returns.length}</p>
+              <p className="gg-num font-display text-3xl font-extrabold text-guac-ink mt-2">{returns.length}</p>
             </div>
             <div className="rounded-2xl border px-5 py-4 text-center" style={{ background: '#FEF1F1', borderColor: 'rgba(220,38,38,0.16)' }}>
               <p className="text-[10.5px] font-extrabold tracking-[0.07em]" style={{ color: '#C2554F' }}>TOTAL REFUNDED</p>
-              <p className="font-display text-3xl font-extrabold mt-2" style={{ color: '#DC2626' }}>${totalRefunded.toFixed(2)}</p>
+              <p className="gg-num font-display text-3xl font-extrabold mt-2" style={{ color: '#DC2626' }}>${fmtMoney(totalRefunded)}</p>
             </div>
             <div className="rounded-2xl border border-guac-line bg-white px-5 py-4 text-center">
               <p className="text-[10.5px] font-extrabold tracking-[0.07em] text-guac-faint">STORES</p>
-              <p className="font-display text-3xl font-extrabold text-guac-ink mt-2">{new Set(returns.map(r => r.receipts?.store_name).filter(Boolean)).size}</p>
+              <p className="gg-num font-display text-3xl font-extrabold text-guac-ink mt-2">{new Set(returns.map(r => r.receipts?.store_name).filter(Boolean)).size}</p>
             </div>
           </>
         ) : (
           <>
             <div className="rounded-2xl border border-guac-line bg-white px-5 py-4 text-center">
               <p className="text-[10.5px] font-extrabold tracking-[0.07em] text-guac-faint">IN RETURN WINDOW</p>
-              <p className="font-display text-3xl font-extrabold text-guac-ink mt-2">{eligible.length}</p>
+              <p className="gg-num font-display text-3xl font-extrabold text-guac-ink mt-2">{eligible.length}</p>
             </div>
             <div className="rounded-2xl border bg-guac-50 px-5 py-4 text-center" style={{ borderColor: 'rgba(31,138,61,0.16)' }}>
               <p className="text-[10.5px] font-extrabold tracking-[0.07em]" style={{ color: '#3F7A4F' }}>VALUE IF RETURNED</p>
-              <p className="font-display text-3xl font-extrabold text-guac-600 mt-2">${totalEligibleValue.toFixed(2)}</p>
+              <p className="gg-num font-display text-3xl font-extrabold text-guac-600 mt-2">${fmtMoney(totalEligibleValue)}</p>
             </div>
             <div className="rounded-2xl border border-guac-line bg-white px-5 py-4 text-center">
               <p className="text-[10.5px] font-extrabold tracking-[0.07em] text-guac-faint">EXPIRING SOON (7D)</p>
-              <p className="font-display text-3xl font-extrabold mt-2 text-amber-600">{eligible.filter(e => e.days_left <= 7).length}</p>
+              <p className="gg-num font-display text-3xl font-extrabold mt-2 text-amber-600">{eligible.filter(e => e.days_left <= 7).length}</p>
             </div>
           </>
         )}
@@ -168,8 +173,8 @@ export default function ReturnsPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
+              <table className="gg-tbl w-full text-sm">
+                <thead className="border-b border-guac-line gg-colhead">
                   <tr>
                     <th className={`${thBase} text-left`}>Days Left</th>
                     <th className={`${thBase} text-left`}>Item</th>
@@ -192,7 +197,7 @@ export default function ReturnsPage() {
                     return (
                       <tr key={r.item_id} className="hover:bg-guac-row transition-colors" style={{ borderBottom: '1px solid rgba(20,83,45,0.06)' }}>
                         <td className="px-5 py-3.5">
-                          <span className={`inline-flex items-center justify-center px-2.5 py-[5px] rounded-[9px] text-xs font-extrabold border ${tone}`}>
+                          <span className={`gg-num inline-flex items-center justify-center px-2.5 py-[5px] rounded-[9px] text-xs font-extrabold border ${tone}`}>
                             {r.days_left}d
                           </span>
                         </td>
@@ -216,13 +221,13 @@ export default function ReturnsPage() {
                             )}
                           </div>
                         </td>
-                        <td className="px-5 py-3.5 text-[12.5px] text-guac-muted whitespace-nowrap">{r.receipt_date || '—'}</td>
+                        <td className="px-5 py-3.5 text-[12.5px] text-guac-muted whitespace-nowrap">{formatDateShort(r.receipt_date) || '—'}</td>
                         <td className="px-5 py-3.5 text-right">
-                          <span className="font-display text-sm font-extrabold text-guac-600">${refund.toFixed(2)}</span>
+                          <span className="gg-num font-display text-sm font-extrabold text-guac-600">${fmtMoney(refund)}</span>
                         </td>
                         <td className="px-5 py-3.5">
                           <span className="text-xs text-guac-faint">
-                            {r.policy.days ? `${r.policy.days}d window` : 'lifetime'} · expires {r.policy.expiry_date}
+                            {r.policy.days ? `${r.policy.days}d window` : 'lifetime'} · expires {formatDateShort(r.policy.expiry_date)}
                           </span>
                           {r.policy.source_url && (
                             <a href={r.policy.source_url} target="_blank" rel="noopener noreferrer"
@@ -279,8 +284,8 @@ export default function ReturnsPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
+              <table className="gg-tbl w-full text-sm">
+                <thead className="border-b border-guac-line gg-colhead">
                   <tr>
                     <th className={`${thBase} text-left`}>Return Date</th>
                     <th className={`${thBase} text-left`}>Item</th>
@@ -299,7 +304,7 @@ export default function ReturnsPage() {
                         <td className="px-5 py-3.5 whitespace-nowrap">
                           {r.return_date ? (
                             <span className="inline-flex items-center gap-1 text-[12.5px] font-semibold text-guac-muted">
-                              <Calendar size={11} className="text-guac-faint" />{r.return_date}
+                              <Calendar size={11} className="text-guac-faint" />{formatDateShort(r.return_date)}
                             </span>
                           ) : <span className="text-guac-faint">—</span>}
                         </td>
@@ -310,7 +315,7 @@ export default function ReturnsPage() {
                           </div>
                         </td>
                         <td className="px-5 py-3.5 text-right">
-                          <span className="font-display text-sm font-extrabold" style={{ color: '#DC2626' }}>${refund.toFixed(2)}</span>
+                          <span className="gg-num font-display text-sm font-extrabold" style={{ color: '#DC2626' }}>${fmtMoney(refund)}</span>
                         </td>
                         <td className="px-5 py-3.5">
                           <div className="flex items-center gap-2.5 min-w-0">
@@ -324,7 +329,7 @@ export default function ReturnsPage() {
                             )}
                           </div>
                         </td>
-                        <td className="px-5 py-3.5 text-[12.5px] text-guac-muted whitespace-nowrap">{r.receipts?.date || '—'}</td>
+                        <td className="px-5 py-3.5 text-[12.5px] text-guac-muted whitespace-nowrap">{formatDateShort(r.receipts?.date) || '—'}</td>
                         <td className="px-5 py-3.5">
                           <div className="flex justify-center">
                             <Link href={`/receipts/${r.receipt_id}`} title={`Receipt ${r.receipt_id?.slice(0, 8)}`}

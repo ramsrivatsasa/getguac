@@ -12,13 +12,13 @@ import UpcomingReturnsBanner from '../../../components/UpcomingReturnsBanner'
 import AnomaliesPanel from '../../../components/AnomaliesPanel'
 import DashboardSavedSearches from '../../../components/DashboardSavedSearches'
 import DashboardSteals from '../../../components/DashboardSteals'
-import { ActivityFeed } from '../../../components/ActivityFeed'
 import { fetchGuacMoneyPoints, formatGuacMoney } from '../../../lib/guacMoney'
 import { generateInsights } from '../../../lib/financeInsights'
 import { computeWizardScore } from '../../../lib/wizardScore'
 import { createClient as createSbClient } from '../../../lib/supabase/client'
 import { subDays, subWeeks, subMonths, subYears } from 'date-fns'
 import { displayStoreName, storeGroupKey } from '../../../lib/store-name-normalize'
+import { StoreLogo } from '../../../components/StoreLogo'
 import { periodToReceiptsChip, buildReceiptsUrl } from '../../../lib/receipts-deeplink'
 import { isPaymentReceipt } from '../../../lib/payment-rows'
 import PaymentTile, { PAYMENT_TILE_CONFIGS } from '../../../components/PaymentTile'
@@ -31,12 +31,9 @@ import { computeSmashDays } from '../../../lib/smashDays'
 import mascotBus from '../../../lib/mascotEventBus'
 import { CountUp, FadeUpStagger } from '../../../components/animated'
 const PERIODS = ['daily', 'weekly', 'monthly', 'yearly']
-// Multi-colour palette for the Spending-by-Store bars (brand-leaning,
-// cycles if there are more than 8 stores).
-// Spending-by-Store bars share one fixed green→amber→red gradient sized to the
-// FULL track, so every bar starts green and extends toward red the more that
-// store's spend approaches the top spender's — a smooth green-to-red scale.
-const SPEND_GRADIENT = 'linear-gradient(90deg, #22C55E 0%, #F59E0B 55%, #DC2626 100%)'
+// Spending-by-Store bars use a single solid brand-green fill (#1F8A3D) on a
+// pale track (#F0F4EA), matching the dashboard mockup — bar length alone
+// encodes each store's share of spend.
 
 // Dropdown options for "how many <period>s back to include"
 const COUNT_OPTIONS = {
@@ -298,11 +295,6 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
           saves into the account on load). Self-hides when none. */}
       <DashboardSavedSearches />
 
-      {/* "Steals for you" — deals the Steals job found, grouped by the search
-          the user configured (top 5 each, best discount first) + an "X new"
-          count. Self-hides when no steals have been found yet. */}
-      <DashboardSteals />
-
       {/* Financial-tile horizontal scroll — eight tiles driven by
           the centralized analysisEngine (web/src/lib/analysisEngine).
           Each tile shows current value + a delta vs the prior
@@ -317,16 +309,16 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Spending chart */}
         <div className="card lg:col-span-2">
-          <h3 className="font-semibold text-gray-900 mb-1">Spending by Store</h3>
+          <h3 className="gg-h2 mb-1">Spending by Store</h3>
           <p className="text-xs text-gray-500 mb-3">Tap a bar to see that store&apos;s receipts.</p>
           {chartData.length === 0 ? (
             <div className="h-48 flex items-center justify-center text-gray-400 text-sm">
               No transactions for this period
             </div>
           ) : (
-            // Horizontal heat bars (matches mobile): each store's bar reddens
-            // as its spend climbs toward the top spender's. Click → that
-            // store's receipts (same deep-link as before).
+            // Horizontal bars: each store's solid brand-green bar is sized to
+            // its share of the top spender's total. Click → that store's
+            // receipts (same deep-link as before).
             <div className="space-y-3 mt-1">
               {(() => {
                 const max = Math.max(...chartData.map(d => d.amount)) || 1
@@ -341,13 +333,13 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
                         period: periodToReceiptsChip(period, periodCount),
                       }))}
                       className="w-full flex items-center gap-3 group"
-                      title={`${d.fullName} — $${d.amount.toFixed(2)}`}
+                      title={`${d.fullName} — $${d.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                     >
                       <span className="w-28 shrink-0 text-left text-[13px] font-semibold text-guac-ink truncate group-hover:text-guac-700 transition-colors">{d.fullName}</span>
-                      <span className="flex-1 h-2.5 rounded-full bg-guac-50 overflow-hidden">
-                        <span className="block h-full rounded-full transition-[width] duration-500" style={{ width: pct + '%', background: SPEND_GRADIENT, backgroundSize: `${10000 / pct}% 100%`, backgroundRepeat: 'no-repeat' }} />
+                      <span className="flex-1 h-3 rounded-full bg-[#F0F4EA] overflow-hidden">
+                        <span className="block h-full rounded-full bg-[#1F8A3D] transition-[width] duration-500" style={{ width: pct + '%' }} />
                       </span>
-                      <span className="w-20 shrink-0 text-right text-[13px] font-bold text-guac-ink tabular-nums">${Math.round(d.amount).toLocaleString()}</span>
+                      <span className="w-20 shrink-0 text-right text-[13px] gg-num font-extrabold text-guac-ink">${Math.round(d.amount).toLocaleString('en-US')}</span>
                     </button>
                   )
                 })
@@ -359,7 +351,7 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
         {/* Rewards expiring soon */}
         <div className="card">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-gray-900">Rewards</h3>
+            <h3 className="gg-h2">Rewards</h3>
             <Link href="/rewards" title="View all rewards" aria-label="View all rewards"
               className="w-8 h-8 rounded-full bg-guac-100 text-guac-700 hover:bg-guac-100 hover:scale-110 active:scale-95 transition-all flex items-center justify-center shadow-sm">
               <ArrowRight size={14} />
@@ -374,11 +366,11 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
               {initialRewards.slice(0, 4).map(r => (
                 <div key={r.id} className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium leading-tight">{r.reward_title}</p>
-                    <p className="text-xs text-gray-400">{displayStoreName(r.store_name)}</p>
+                    <p className="text-sm font-bold text-guac-ink leading-tight">{r.reward_title}</p>
+                    <p className="gg-colhead mt-0.5">{displayStoreName(r.store_name)}</p>
                   </div>
                   <span className={`badge ${r.expiry_date < today ? 'badge-red' : 'badge-green'} ml-2 flex-shrink-0`}>
-                    {r.expiry_date < today ? 'Expired' : r.expiry_date}
+                    {r.expiry_date < today ? 'Expired' : formatDateShort(r.expiry_date)}
                   </span>
                 </div>
               ))}
@@ -390,7 +382,7 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
       {/* Recent transactions table */}
       <div className="card p-0 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-          <h3 className="font-semibold text-gray-900">Recent Transactions</h3>
+          <h3 className="gg-h2">Recent Transactions</h3>
           <Link href="/receipts" title="All receipts" aria-label="All receipts"
             className="w-8 h-8 rounded-full bg-guac-100 text-guac-700 hover:bg-guac-100 hover:scale-110 active:scale-95 transition-all flex items-center justify-center shadow-sm">
             <ArrowRight size={14} />
@@ -399,28 +391,33 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
         {filtered.length === 0 ? (
           <div className="py-10 text-center text-gray-400 text-sm">No transactions this period</div>
         ) : (
-          <table className="w-full text-sm">
-            <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
+          <table className="gg-tbl">
+            <thead>
               <tr>
-                {['Merchant','Date','Amount','Tax','Business'].map(h => (
-                  <th key={h} className="px-5 py-3 text-left font-semibold">{h}</th>
-                ))}
+                <th className="text-left">Merchant</th>
+                <th className="text-left">Date</th>
+                <th className="text-right">Amount</th>
+                <th className="text-right">Tax</th>
+                <th className="text-right">Type</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-guac-line">
+            <tbody>
               {filtered.slice(0, 8).map((r, idx) => (
                 <tr
                   key={r.id}
                   style={{ animationDelay: `${idx * 35}ms`, animationDuration: '220ms' }}
                   className="hover:bg-guac-row anim-fadeup">
-                  <td className="px-5 py-3 font-medium">
-                    <Link href={`/receipts/${r.id}`} className="hover:text-guac-700">{displayStoreName(r.store_name)}</Link>
+                  <td>
+                    <Link href={`/receipts/${r.id}`} className="flex items-center gap-2.5 group">
+                      <StoreLogo storeName={r.store_name} size={28} />
+                      <span className="font-semibold text-guac-ink group-hover:text-guac-700">{displayStoreName(r.store_name)}</span>
+                    </Link>
                   </td>
-                  <td className="px-5 py-3 text-gray-500">{formatDateShort(r.date)}</td>
-                  <td className="px-5 py-3 font-semibold">${parseFloat(r.total_amount || 0).toFixed(2)}</td>
-                  <td className="px-5 py-3 text-gray-500">${parseFloat(r.tax_paid || 0).toFixed(2)}</td>
-                  <td className="px-5 py-3">
-                    <span className={r.business_purchase ? 'badge-blue' : 'badge-gray'}>
+                  <td className="gg-num text-guac-muted whitespace-nowrap">{formatDateShort(r.date)}</td>
+                  <td className="text-right gg-num font-extrabold text-guac-ink">${parseFloat(r.total_amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  <td className="text-right gg-num text-guac-faint">${parseFloat(r.tax_paid || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  <td className="text-right">
+                    <span className={r.business_purchase ? 'badge-green' : 'badge-gray'}>
                       {r.business_purchase ? 'Business' : 'Personal'}
                     </span>
                   </td>
@@ -431,13 +428,11 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
         )}
       </div>
 
-      {/* Recent activity — chronological "what just happened" rail.
-          Lives at the bottom so the dashboard's primary signals
-          (GuacScore, spend tiles, charts, recent receipts table)
-          read first. Empty state self-renders when the user has
-          nothing yet, so the dashboard never looks blank for new
-          accounts. */}
-      <ActivityFeed receipts={spendingReceipts} />
+      {/* "Steals for you" — moved to the dashboard's bottom slot (the former
+          Recent Activity position). Deals the Steals job found, grouped by the
+          user's saved searches (top 5 each, best discount first). Self-hides
+          when no steals have been found yet. */}
+      <DashboardSteals />
     </div>
   )
 }
@@ -516,7 +511,7 @@ function AllPaymentsScroll({ spendingReceipts, period, periodCount }) {
     periodCount,
   })
 
-  const money = (n) => `$${Number(n || 0).toFixed(2)}`
+  const money = (n) => `$${Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
   // Tiles in user's requested order. Each entry carries:
   //   - the raw numeric value (drives the CountUp tween inside
   //     PaymentTile so timeframe flips smooth-retally instead of
@@ -644,12 +639,12 @@ function GuacWizardTile() {
         <p className={`text-[10px] uppercase tracking-wider font-bold ${tone.label}`}>GuacWizard</p>
         {score === undefined ? (
           <>
-            <p className={`text-xl font-black ${tone.value} tabular-nums leading-tight`}>—</p>
+            <p className={`text-xl font-black ${tone.value} gg-num leading-tight`}>—</p>
             <p className={`text-[10px] font-semibold mt-0.5 ${tone.sub}`}>loading…</p>
           </>
         ) : score != null ? (
           <>
-            <p className={`text-xl font-black ${tone.value} tabular-nums leading-tight`}>
+            <p className={`text-xl font-black ${tone.value} gg-num leading-tight`}>
               <CountUp value={score} duration={520} />
               <span className="text-xs font-bold opacity-60 ml-0.5">/ 100</span>
             </p>
@@ -683,12 +678,12 @@ function GuacMoneyTile() {
       </div>
       <div className="min-w-0 flex-1 relative z-10">
         <p className="text-[10px] uppercase tracking-wider font-bold text-guac-700">GuacMoney</p>
-        <p className="text-xl font-black text-guac-ink tabular-nums leading-tight">
+        <p className="text-xl font-black text-guac-ink gg-num leading-tight">
           {isLoading ? '—' : <CountUp value={Number(total) || 0} duration={520} format={v => Math.round(v).toLocaleString()} />}
         </p>
         {active ? (
           <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-extrabold text-amber-800 bg-gradient-to-r from-amber-100 to-yellow-100 ring-1 ring-amber-200 rounded-full px-2 py-0.5">
-            🪙 ≈ ${(total / 1000).toFixed(2)} value
+            🪙 ≈ ${(total / 1000).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} value
           </span>
         ) : (
           <p className="text-[10px] font-semibold mt-0.5 text-guac-700">rate buys to earn →</p>
@@ -720,7 +715,7 @@ function RewardsTile({ count }) {
       </div>
       <div className="min-w-0 flex-1 relative z-10">
         <p className={`text-[10px] uppercase tracking-wider font-bold ${active ? 'text-rose-700' : 'text-gray-500'}`}>Rewards</p>
-        <p className={`text-xl font-black ${active ? 'text-rose-900' : 'text-gray-900'} tabular-nums leading-tight`}>
+        <p className={`text-xl font-black ${active ? 'text-rose-900' : 'text-gray-900'} gg-num leading-tight`}>
           <CountUp value={count} duration={420} />
         </p>
         <p className={`text-[10px] font-semibold mt-0.5 ${active ? 'text-rose-700' : 'text-gray-500'}`}>

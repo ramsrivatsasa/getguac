@@ -195,10 +195,10 @@ export default function Sidebar({ isAdmin }) {
                             )}
                             {hoverMascot && (
                               <span
-                                className="shrink-0 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200"
+                                className="shrink-0 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 -my-1"
                                 aria-hidden="true"
                               >
-                                <GuacMascotAnimated animation="wave" size={30} />
+                                <GuacMascotAnimated animation="wave" size={22} />
                               </span>
                             )}
                           </>

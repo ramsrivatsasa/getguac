@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
-import { Store, Phone, Globe, MapPin, ChevronRight, ChevronDown, Search, Trash2, AlertTriangle, Shield, ExternalLink, Link2, CreditCard } from 'lucide-react'
+import { Store, Phone, Globe, MapPin, ChevronRight, ChevronDown, Search, Trash2, AlertTriangle, Shield, ExternalLink, Link2 } from 'lucide-react'
 import { getStores, deleteStore, getAllStoreDefaultPolicies, getRewards } from '../../../lib/db'
 import { normalizeStoreName, storeGroupKey, displayStoreName } from '../../../lib/store-name-normalize'
 import { useConfirm } from '../../../components/ConfirmDialog'
@@ -222,7 +222,7 @@ export default function StoresPage() {
         <div className="card border-amber-300 bg-amber-50/60">
           <div className="flex items-center gap-2 mb-3">
             <AlertTriangle size={18} className="text-amber-600" />
-            <h3 className="font-semibold text-amber-900">
+            <h3 className="gg-h2 text-amber-900">
               {duplicateClusters.length} duplicate group{duplicateClusters.length === 1 ? '' : 's'} detected
             </h3>
             <span className="text-xs text-amber-700 ml-auto">Matched by name, phone, or address</span>
@@ -290,7 +290,7 @@ export default function StoresPage() {
                   <StoreLogo storeName={store.store_name} size={40} />
                   <Link href={`/stores/${store.id}`} className="flex-1 flex items-center justify-between min-w-0">
                     <div className="space-y-1 min-w-0">
-                      <p className="font-semibold text-guac-ink group-hover:text-guac-700 transition-colors">{displayStoreName(store.store_name)}</p>
+                      <p className="text-[14.5px] font-bold text-guac-ink group-hover:text-guac-700 transition-colors">{displayStoreName(store.store_name)}</p>
                       <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-gray-400">
                         {store.address && <span className="flex items-center gap-1"><MapPin size={11} />{store.address}</span>}
                         {store.phone_no && <span className="flex items-center gap-1"><Phone size={11} />{store.phone_no}</span>}
@@ -335,8 +335,8 @@ export default function StoresPage() {
                   />
                   <StoreLogo storeName={g.display} size={40} />
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-guac-ink">{g.display}</p>
-                    <p className="text-xs text-guac-faint">{g.stores.length} locations</p>
+                    <p className="text-[14.5px] font-bold text-guac-ink">{g.display}</p>
+                    <p className="gg-num text-xs text-guac-faint">{g.stores.length} locations</p>
                   </div>
                   {/* Membership # is chain-wide, so it rides on the group
                       header (same number for every location below). */}
@@ -391,10 +391,10 @@ function RewardChip({ reward, className = '' }) {
   if (!reward || isPlaceholderReward(reward.reward_no)) return null
   return (
     <span
-      className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-violet-50 text-violet-700 border-violet-100 ${className}`}
+      className={`inline-flex items-center gap-1 font-mono text-[11px] font-bold px-2.5 py-1 rounded-md bg-[#F2F4EF] text-guac-faint ${className}`}
       title={`Member / reward number: ${reward.reward_no}`}
     >
-      <CreditCard size={10} /> {reward.reward_no}
+      {reward.reward_no}
     </span>
   )
 }

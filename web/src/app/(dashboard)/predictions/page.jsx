@@ -14,7 +14,7 @@ const FILTERS = [
 
 const STATUS_STYLE = {
   auto:      { color: 'bg-violet-100 text-violet-700',  label: 'Auto' },
-  confirmed: { color: 'bg-emerald-100 text-emerald-700', label: 'Confirmed' },
+  confirmed: { color: 'bg-guac-100 text-guac-700', label: 'Confirmed' },
   rejected:  { color: 'bg-rose-100 text-rose-700',       label: 'Rejected' },
 }
 
@@ -85,7 +85,7 @@ export default function PredictionsPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b text-xs text-gray-500 uppercase tracking-wide">
+              <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
                 <tr>
                   <th className="px-4 py-3 text-left font-semibold">Alias</th>
                   <th className="px-4 py-3 text-left font-semibold">Merged into</th>
@@ -94,7 +94,7 @@ export default function PredictionsPage() {
                   <th className="px-4 py-3 text-left font-semibold">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-guac-line">
                 {filtered.map((a, idx) => {
                   const style = STATUS_STYLE[a.status] || STATUS_STYLE.auto
                   // 30ms stagger fade-in keyed on alias_key so newly
@@ -104,7 +104,7 @@ export default function PredictionsPage() {
                     ? { animationDelay: `${idx * 30}ms`, animationDuration: '220ms' }
                     : undefined
                   return (
-                    <tr key={a.alias_key} style={animStyle} className="hover:bg-gray-50/50 anim-fadeup">
+                    <tr key={a.alias_key} style={animStyle} className="hover:bg-guac-row anim-fadeup">
                       <td className="px-4 py-3 font-medium text-gray-700">{a.alias_key}</td>
                       <td className="px-4 py-3">
                         <div className="font-medium">{a.canonical_display_name || a.canonical_key}</div>
@@ -128,7 +128,7 @@ export default function PredictionsPage() {
                             <button
                               disabled={update.isPending}
                               onClick={() => setStatus(a.alias_key, 'confirmed', 'Merge confirmed')}
-                              className="px-2 py-1 rounded bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-medium inline-flex items-center gap-1 disabled:opacity-50"
+                              className="px-2 py-1 rounded bg-guac-600 hover:bg-guac-700 text-white text-xs font-medium inline-flex items-center gap-1 disabled:opacity-50"
                               title="Lock this merge so future predictions always treat these as the same product"
                             >
                               <CheckCircle size={12} /> Confirm

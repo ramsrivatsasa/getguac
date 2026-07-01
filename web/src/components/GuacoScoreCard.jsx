@@ -39,7 +39,7 @@ export default function GuacoScoreCard({ receipts = [], bankBite = null, size = 
 
   if (small) {
     return (
-      <div className={`stat-card relative overflow-hidden bg-gradient-to-br ${tint.bg} ring-1 ${tint.ring} ${className}`}>
+      <div className={`stat-card relative overflow-hidden ${className}`}>
         <div className="relative shrink-0" style={{ width: svgSize, height: svgSize }}>
           <svg viewBox={`0 0 ${svgSize} ${svgSize}`} width={svgSize} height={svgSize}>
             <circle cx={svgSize / 2} cy={svgSize / 2} r={R} fill="white" />
@@ -79,7 +79,7 @@ export default function GuacoScoreCard({ receipts = [], bankBite = null, size = 
   }
 
   return (
-    <div className={`card relative overflow-hidden bg-gradient-to-br ${tint.bg} border-0 ring-1 ${tint.ring} ${className}`}>
+    <div className={`card relative overflow-hidden ${className}`}>
       <div className="flex items-center gap-4">
         <div className="relative shrink-0" style={{ width: svgSize, height: svgSize }}>
           <svg viewBox={`0 0 ${svgSize} ${svgSize}`} width={svgSize} height={svgSize}>

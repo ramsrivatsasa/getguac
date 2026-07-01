@@ -81,8 +81,8 @@ export function ConfirmProvider({ children }) {
             <div className="flex items-start gap-3">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
                 state.danger ? 'bg-rose-100 text-rose-600' :
-                state.success ? 'bg-emerald-100 text-emerald-600' :
-                'bg-emerald-100 text-emerald-700'
+                state.success ? 'bg-guac-100 text-guac-600' :
+                'bg-guac-100 text-guac-700'
               }`}>
                 {state.danger
                   ? <AlertTriangle size={20} />
@@ -112,7 +112,7 @@ export function ConfirmProvider({ children }) {
                 className={`px-4 py-2 rounded-xl text-sm font-bold text-white shadow ${
                   state.danger
                     ? 'bg-rose-600 hover:bg-rose-700'
-                    : 'bg-emerald-600 hover:bg-emerald-700'
+                    : 'bg-guac-700 hover:bg-guac-700'
                 }`}
               >
                 {state.confirmText}

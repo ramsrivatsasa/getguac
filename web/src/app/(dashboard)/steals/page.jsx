@@ -139,7 +139,7 @@ export default function StealsPage() {
 
       {/* Search box */}
       <form onSubmit={handleSearch} className="card flex items-center gap-3">
-        <Search size={16} className="text-emerald-600 shrink-0" />
+        <Search size={16} className="text-guac-600 shrink-0" />
         <input
           className="flex-1 bg-transparent text-base focus:outline-none placeholder:text-gray-400 font-sans"
           placeholder="Type any product — e.g. laptop, iPhone, 65 inch TV…"
@@ -153,20 +153,20 @@ export default function StealsPage() {
 
       {/* Configure what to search — pick a category and its spec dropdowns
           appear. Works alongside the freeform search bar above. */}
-      <div className="card border-emerald-200/70">
+      <div className="card border-guac-100/70">
         <button type="button" onClick={() => setShowConfig(v => !v)}
           className="w-full flex items-center justify-between gap-2">
-          <span className="text-xs font-bold uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
+          <span className="text-xs font-bold uppercase tracking-wider text-guac-700 flex items-center gap-1.5">
             <Sliders size={13} /> Configure your search
-            {category && <span className="text-emerald-600 normal-case tracking-normal">· {SEARCH_SPECS[category]?.label}</span>}
+            {category && <span className="text-guac-600 normal-case tracking-normal">· {SEARCH_SPECS[category]?.label}</span>}
           </span>
-          <ChevronDown size={16} className={`text-emerald-700 transition-transform ${showConfig ? 'rotate-180' : ''}`} />
+          <ChevronDown size={16} className={`text-guac-700 transition-transform ${showConfig ? 'rotate-180' : ''}`} />
         </button>
         {showConfig && (
           <div className="mt-3">
             {spec && (
               <div className="flex justify-end mb-2">
-                <button onClick={handleSave} className="text-xs font-bold text-emerald-700 hover:underline flex items-center gap-1">
+                <button onClick={handleSave} className="text-xs font-bold text-guac-700 hover:underline flex items-center gap-1">
                   <Bookmark size={12} /> Save search
                 </button>
               </div>
@@ -194,12 +194,12 @@ export default function StealsPage() {
           <p className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2 flex items-center gap-1.5">
             <Bookmark size={12} /> Saved searches
           </p>
-          <div className="divide-y divide-gray-50">
+          <div className="divide-y divide-guac-line">
             {saved.map(s => (
               <div key={s.id}
                 onClick={() => runSaved(s)}
-                className="flex items-center gap-2.5 py-2 -mx-1 px-1 rounded-lg cursor-pointer hover:bg-emerald-50/60 transition-colors">
-                <span className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0"><Search size={13} /></span>
+                className="flex items-center gap-2.5 py-2 -mx-1 px-1 rounded-lg cursor-pointer hover:bg-guac-50/60 transition-colors">
+                <span className="w-7 h-7 rounded-full bg-guac-100 text-guac-700 flex items-center justify-center shrink-0"><Search size={13} /></span>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-gray-800 truncate">{s.label}</p>
                   <p className="text-[11px] text-gray-500 truncate">
@@ -297,7 +297,7 @@ export default function StealsPage() {
 
             {search.isPending && (
               <div className="flex flex-col items-center gap-3 py-16">
-                <div className="w-7 h-7 rounded-full border-2 border-emerald-200 border-t-emerald-600 animate-spin" />
+                <div className="w-7 h-7 rounded-full border-2 border-guac-line2 border-t-emerald-600 animate-spin" />
                 <p className="text-sm font-bold text-gray-700">Scanning Walmart, Amazon, Best Buy, Target…</p>
               </div>
             )}
@@ -333,7 +333,7 @@ export default function StealsPage() {
                     <div className="flex flex-wrap gap-1.5">
                       {search.data.sources.map((s, i) => (
                         <a key={i} href={s.url} target="_blank" rel="noreferrer"
-                          className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 hover:bg-emerald-50 hover:text-emerald-800 truncate max-w-[180px]">{s.title}</a>
+                          className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 hover:bg-guac-50 hover:text-guac-700 truncate max-w-[180px]">{s.title}</a>
                       ))}
                     </div>
                   </div>
@@ -392,7 +392,7 @@ export default function StealsPage() {
               )}
               {replenish.length > 0 && (
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 mb-1.5 flex items-center gap-1"><RefreshCw size={10} /> Likely due for a restock</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-guac-700 mb-1.5 flex items-center gap-1"><RefreshCw size={10} /> Likely due for a restock</p>
                   <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {replenish.map(r => (
                       <StealCard key={r.key} item={r}
@@ -422,8 +422,8 @@ export default function StealsPage() {
 
           <div className="card bg-gradient-to-br from-emerald-50/60 to-lime-50/40">
             <div className="flex items-center gap-2 mb-2">
-              <ShoppingCart size={14} className="text-emerald-600" />
-              <span className="text-xs font-bold uppercase tracking-wider text-emerald-800">How Steals works</span>
+              <ShoppingCart size={14} className="text-guac-600" />
+              <span className="text-xs font-bold uppercase tracking-wider text-guac-700">How Steals works</span>
             </div>
             <ol className="text-sm text-gray-700 space-y-1 list-decimal list-inside">
               <li>Type a product — pin the exact brand &amp; specs if we recognise the category.</li>
@@ -463,13 +463,13 @@ function ResultCard({ r, best, fresh }) {
   // site (known retailers) → Google's item page only for unrecognised stores.
   const dealUrl = bestDealUrl(r)
   return (
-    <div className="group h-full rounded-xl border border-gray-100 bg-white p-2.5 hover:shadow-md hover:border-emerald-200 transition-all flex flex-col">
+    <div className="group h-full rounded-xl border border-gray-100 bg-white p-2.5 hover:shadow-md hover:border-guac-line2 transition-all flex flex-col">
       <div className="relative aspect-square bg-gray-50 rounded-lg overflow-hidden mb-2 flex items-center justify-center">
         {r.original_price > 0 && (
           <span className="absolute top-1.5 left-1.5 z-10 text-[10px] font-extrabold bg-rose-600 text-white px-1.5 py-0.5 rounded">SALE</span>
         )}
         {best && (
-          <span className="absolute top-1.5 right-1.5 z-10 text-[10px] font-extrabold bg-emerald-600 text-white px-1.5 py-0.5 rounded">BEST</span>
+          <span className="absolute top-1.5 right-1.5 z-10 text-[10px] font-extrabold bg-guac-700 text-white px-1.5 py-0.5 rounded">BEST</span>
         )}
         {fresh && !best && (
           <span className="absolute top-1.5 right-1.5 z-10 text-[10px] font-extrabold bg-rose-600 text-white px-1.5 py-0.5 rounded">NEW</span>
@@ -484,7 +484,7 @@ function ResultCard({ r, best, fresh }) {
       </div>
       <p className="text-xs font-semibold text-gray-900 leading-snug line-clamp-2 min-h-[2rem]">{r.title || r.matched_name || r.store}</p>
       <div className="flex items-baseline gap-1.5 mt-1">
-        <span className="text-base font-extrabold text-emerald-700 tabular-nums">${r.price.toFixed(2)}</span>
+        <span className="text-base font-extrabold text-guac-700 tabular-nums">${r.price.toFixed(2)}</span>
         {r.original_price > 0 && <span className="text-[11px] text-gray-400 line-through tabular-nums">${r.original_price.toFixed(2)}</span>}
       </div>
       <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
@@ -500,7 +500,7 @@ function ResultCard({ r, best, fresh }) {
       {r.specs && <p className="text-[10px] text-gray-400 mt-0.5 line-clamp-2">{r.specs}</p>}
       {!r.available && <p className="text-[10px] text-rose-500 mt-0.5">Out of stock</p>}
       <a href={dealUrl} target="_blank" rel="noreferrer"
-        className="mt-auto pt-2 inline-flex justify-center items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors">
+        className="mt-auto pt-2 inline-flex justify-center items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-bold bg-guac-700 text-white hover:bg-guac-700 transition-colors">
         View deal <ExternalLink size={12} />
       </a>
     </div>

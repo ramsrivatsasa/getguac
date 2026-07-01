@@ -72,7 +72,7 @@ export default function ProductCard({
     <button
       type="button"
       onClick={onClick}
-      className="text-left bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-md hover:border-emerald-200 hover:-translate-y-0.5 transition-all w-full"
+      className="text-left bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-md hover:border-guac-line2 hover:-translate-y-0.5 transition-all w-full"
     >
       {/* Colored thumbnail tile — squarish, padding-only so the product
           image floats on the tint. */}
@@ -128,7 +128,7 @@ export default function ProductCard({
             )}
           </div>
           {guacMoney != null && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-extrabold tabular-nums">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-guac-100 text-guac-700 text-xs font-extrabold tabular-nums">
               🥑 ${typeof guacMoney === 'number' ? guacMoney.toFixed(0) : guacMoney}
             </span>
           )}

@@ -39,7 +39,7 @@ export default function AdminPage() {
   return (
     <div className="space-y-6 max-w-5xl">
       <div className="flex items-center gap-3">
-        <div className="p-2.5 bg-blue-100 rounded-xl"><ShieldCheck className="text-blue-800" size={22} /></div>
+        <div className="p-2.5 bg-guac-100 rounded-xl"><ShieldCheck className="text-blue-800" size={22} /></div>
         <div>
           <h1 className="page-title">Admin Panel</h1>
           <p className="text-sm text-gray-400">admin@getguac.app</p>
@@ -69,10 +69,10 @@ export default function AdminPage() {
           <div className="px-5 py-3 bg-gray-50 border-b text-sm font-semibold">{results.length} results</div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b text-xs text-gray-500 uppercase">
+              <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
                 <tr>{['ID','User','Store','Date','Amount'].map(h => <th key={h} className="px-4 py-3 text-left font-semibold">{h}</th>)}</tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-guac-line">
                 {results.map(r => (
                   <tr key={r.id}>
                     <td className="px-4 py-3 font-mono text-xs text-gray-400">{r.id.substring(0, 8)}…</td>
@@ -167,14 +167,14 @@ function TestDataImporter() {
   }
 
   return (
-    <div className="card border-emerald-200 bg-emerald-50/40 space-y-4">
+    <div className="card border-guac-line2 bg-guac-50/40 space-y-4">
       <div className="flex items-start gap-3">
-        <div className="p-2 bg-emerald-100 rounded-lg shrink-0">
-          <Upload className="text-emerald-800" size={18} />
+        <div className="p-2 bg-guac-100 rounded-lg shrink-0">
+          <Upload className="text-guac-700" size={18} />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-bold text-emerald-900">Tester data importer</h3>
-          <p className="text-xs text-emerald-800/80 mt-0.5">
+          <h3 className="font-bold text-guac-ink">Tester data importer</h3>
+          <p className="text-xs text-guac-700/80 mt-0.5">
             Bulk-import the QA fixture from <code className="px-1 py-0.5 bg-white rounded text-[11px]">getguac/test/TEST_DATA.csv</code> into your own account.
             Tagged <code className="px-1 py-0.5 bg-white rounded text-[11px]">[TEST IMPORT]</code> so you can wipe them in one click.
             <span className="block mt-1 text-amber-800 font-semibold">Remove this whole section before going live to real users.</span>
@@ -220,7 +220,7 @@ function TestDataImporter() {
         </div>
 
         {result && (
-          <div className="text-xs bg-white border border-emerald-200 rounded-lg p-3 font-mono whitespace-pre-wrap break-all">
+          <div className="text-xs bg-white border border-guac-line2 rounded-lg p-3 font-mono whitespace-pre-wrap break-all">
             {JSON.stringify(result, null, 2)}
           </div>
         )}

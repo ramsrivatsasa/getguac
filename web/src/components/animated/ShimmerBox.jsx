@@ -19,7 +19,7 @@ export default function ShimmerBox({ className = '', rounded = '2xl', tone = 'gr
     rounded === '2xl'  ? 'rounded-2xl' :
     rounded === false  ? '' : 'rounded-xl'
   const base = tone === 'emerald'
-    ? 'bg-emerald-50/60'
+    ? 'bg-guac-50/60'
     : 'bg-gray-100'
   return (
     <div className={`anim-shimmer ${base} ${radius} ${className}`} aria-hidden="true" />

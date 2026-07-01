@@ -21,20 +21,20 @@ export function StoreList({ stores, best, onAddToSmashlist }) {
         const isBest = best && s.id === best.id && stores.length > 1
         return (
           <div key={`${s.id || s.name}-${s.web ? 'web' : 'own'}`}
-            className={`flex items-center gap-2 text-xs px-2 py-1.5 rounded-lg hover:bg-emerald-50/60 transition-colors ${isBest ? 'bg-emerald-100/70 font-semibold' : ''}`}>
+            className={`flex items-center gap-2 text-xs px-2 py-1.5 rounded-lg hover:bg-guac-50/60 transition-colors ${isBest ? 'bg-guac-100/70 font-semibold' : ''}`}>
             <StoreMini name={s.name} web={s.web} isBest={isBest} />
             {s.web && s.url ? (
               <a href={s.url} target="_blank" rel="noreferrer" className="text-fuchsia-700 hover:underline truncate">{s.name}</a>
             ) : s.id ? (
-              <Link href={`/stores/${s.id}`} className="text-emerald-800 hover:underline truncate">{s.name}</Link>
+              <Link href={`/stores/${s.id}`} className="text-guac-700 hover:underline truncate">{s.name}</Link>
             ) : (
               <span className="text-gray-700 truncate">{s.name}</span>
             )}
             {s.notes && <span className="text-[9px] text-amber-700 italic truncate max-w-[80px]">{s.notes}</span>}
-            <span className={`ml-auto font-bold tabular-nums w-16 text-right shrink-0 ${s.web ? 'text-fuchsia-700' : 'text-emerald-700'}`}>
+            <span className={`ml-auto font-bold tabular-nums w-16 text-right shrink-0 ${s.web ? 'text-fuchsia-700' : 'text-guac-700'}`}>
               ${(s.min_price || s.last_price || 0).toFixed(2)}
             </span>
-            {isBest && <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-600 shrink-0">Best</span>}
+            {isBest && <span className="text-[9px] font-bold uppercase tracking-wider text-guac-600 shrink-0">Best</span>}
             {onAddToSmashlist && (
               <button
                 type="button"
@@ -73,6 +73,6 @@ function StoreMini({ name, web, isBest }) {
     )
   }
   return (
-    <StoreIcon size={11} className={web ? 'text-fuchsia-500' : isBest ? 'text-emerald-700' : 'text-gray-400'} />
+    <StoreIcon size={11} className={web ? 'text-fuchsia-500' : isBest ? 'text-guac-700' : 'text-gray-400'} />
   )
 }

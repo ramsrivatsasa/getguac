@@ -177,7 +177,7 @@ export default function ReceiptDetailPage() {
   if (!current) return (
     <div className="py-16 text-center text-red-500 flex flex-col items-center gap-3">
       <p>Receipt not found</p>
-      <Link href="/receipts" className="text-sm text-emerald-700 font-semibold hover:underline">Back to receipts</Link>
+      <Link href="/receipts" className="text-sm text-guac-700 font-semibold hover:underline">Back to receipts</Link>
     </div>
   )
 
@@ -259,7 +259,7 @@ export default function ReceiptDetailPage() {
         {/* Category picker — controls what page this receipt feeds into (Bites, etc.) */}
         <div>
           <label className="label flex items-center gap-1.5">
-            <Tag size={12} className="text-emerald-500" />
+            <Tag size={12} className="text-guac-600" />
             Category
             <span className="text-[10px] text-gray-400 normal-case font-normal">
               {current.category === 'eats' && '— restaurant items appear on Bites'}
@@ -275,8 +275,8 @@ export default function ReceiptDetailPage() {
                   onClick={() => handleFieldChange('category', c.slug)}
                   className={`px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all ${
                     active
-                      ? 'bg-emerald-600 border-emerald-600 text-white shadow'
-                      : 'bg-white border-gray-200 text-gray-600 hover:border-emerald-300 hover:text-emerald-800'
+                      ? 'bg-guac-700 border-guac-700 text-white shadow'
+                      : 'bg-white border-gray-200 text-gray-600 hover:border-guac-line2 hover:text-guac-700'
                   }`}>
                   {c.emoji} {c.label}
                 </button>
@@ -288,10 +288,10 @@ export default function ReceiptDetailPage() {
         {/* Worth It? rating — hidden for statement-imported, returns, and non-positive totals.
             Those aren't rateable purchases. */}
         {!current.from_statement && !current.is_return && (parseFloat(current.total_amount ?? 0) > 0) && (
-        <div className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50/70 via-white to-lime-50/40 p-4 space-y-3">
+        <div className="rounded-2xl border border-guac-line bg-gradient-to-br from-emerald-50/70 via-white to-lime-50/40 p-4 space-y-3">
           <div className="flex items-center gap-2">
             <span className="text-base">🥑</span>
-            <span className="text-xs font-bold uppercase tracking-wider text-emerald-800">Worth It?</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-guac-700">Worth It?</span>
             <span className="text-[10px] text-gray-500">Tap a rating — applies to the whole receipt</span>
           </div>
           <div className="grid grid-cols-5 gap-2">
@@ -314,11 +314,11 @@ export default function ReceiptDetailPage() {
                     title={info.label}
                     className={`relative flex flex-col items-center gap-1 py-2 rounded-2xl border-2 transition-all ${
                       active
-                        ? 'border-emerald-500 bg-emerald-50 shadow-sm scale-[1.03]'
-                        : 'border-gray-100 hover:border-emerald-200 hover:bg-emerald-50/50'
+                        ? 'border-guac-600 bg-guac-50 shadow-sm scale-[1.03]'
+                        : 'border-gray-100 hover:border-guac-line2 hover:bg-guac-50/50'
                     }`}>
                     <span className="text-xl">{info.emoji}</span>
-                    <span className={`text-[10px] font-bold uppercase tracking-wide ${active ? 'text-emerald-800' : 'text-gray-500'}`}>{info.label}</span>
+                    <span className={`text-[10px] font-bold uppercase tracking-wide ${active ? 'text-guac-700' : 'text-gray-500'}`}>{info.label}</span>
                     {/* Fires only on the freshly-chosen rating —
                         ratingPop bumps each tap; SuccessPop's effect
                         clears after 900ms so additional taps re-fire. */}
@@ -331,7 +331,7 @@ export default function ReceiptDetailPage() {
 
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <Sparkles size={12} className="text-emerald-500" />
+              <Sparkles size={12} className="text-guac-600" />
               <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Quick tags</span>
             </div>
             <div className="flex flex-wrap gap-1.5">
@@ -346,8 +346,8 @@ export default function ReceiptDetailPage() {
                     }}
                     className={`px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all ${
                       active
-                        ? 'bg-emerald-600 border-emerald-600 text-white shadow'
-                        : 'bg-white border-gray-200 text-gray-600 hover:border-emerald-300 hover:text-emerald-800'
+                        ? 'bg-guac-700 border-guac-700 text-white shadow'
+                        : 'bg-white border-gray-200 text-gray-600 hover:border-guac-line2 hover:text-guac-700'
                     }`}>
                     {t}
                   </button>
@@ -419,7 +419,7 @@ export default function ReceiptDetailPage() {
                 rel="noreferrer"
                 title="View receipt image"
                 aria-label="View receipt image"
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 active:scale-95 transition-all shadow-sm font-bold text-sm">
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-guac-700 text-white hover:bg-guac-700 active:scale-95 transition-all shadow-sm font-bold text-sm">
                 <ImageIcon size={16} /> View image
               </a>
             )
@@ -427,11 +427,11 @@ export default function ReceiptDetailPage() {
           // Multi-page receipt — show one button per page so the user can open each.
           return (
             <div className="inline-flex items-center gap-1.5 flex-wrap">
-              <span className="text-xs font-semibold text-emerald-800 mr-1">{pages.length} pages:</span>
+              <span className="text-xs font-semibold text-guac-700 mr-1">{pages.length} pages:</span>
               {pages.map((url, i) => (
                 <a key={i} href={url} target="_blank" rel="noreferrer"
                   title={`Open page ${i + 1}`} aria-label={`Open page ${i + 1}`}
-                  className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 active:scale-95 transition-all shadow-sm text-xs font-bold">
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-guac-700 text-white hover:bg-guac-700 active:scale-95 transition-all shadow-sm text-xs font-bold">
                   <ImageIcon size={12} /> {i + 1}
                 </a>
               ))}
@@ -446,14 +446,14 @@ export default function ReceiptDetailPage() {
           return pdf ? (
             <a href={pdf} target="_blank" rel="noreferrer"
               title="Download this receipt as a PDF"
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50 active:scale-95 transition-all shadow-sm font-bold text-sm">
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white border border-guac-line2 text-guac-700 hover:bg-guac-50 active:scale-95 transition-all shadow-sm font-bold text-sm">
               <FileText size={16} /> PDF
             </a>
           ) : null
         })()}
         {/* Auto-snapshot in progress (email receipt with no image yet). */}
         {snapshot.isPending && !current.receipt_link && (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-50 text-emerald-700 text-sm font-semibold">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-guac-50 text-guac-700 text-sm font-semibold">
             <RefreshCw size={14} className="animate-spin" /> Saving email image…
           </span>
         )}
@@ -464,7 +464,7 @@ export default function ReceiptDetailPage() {
             type="button"
             onClick={() => setShowEmail(true)}
             title="View the source email this receipt was parsed from"
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50 active:scale-95 transition-all shadow-sm font-bold text-sm">
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white border border-guac-line2 text-guac-700 hover:bg-guac-50 active:scale-95 transition-all shadow-sm font-bold text-sm">
             <MessageCircle size={16} /> View email
           </button>
         )}
@@ -480,7 +480,7 @@ export default function ReceiptDetailPage() {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start justify-between gap-3 p-4 border-b border-gray-100">
               <div className="min-w-0">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 flex items-center gap-1"><MessageCircle size={12} /> Source email</div>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-guac-700 flex items-center gap-1"><MessageCircle size={12} /> Source email</div>
                 <div className="font-bold text-gray-900 truncate mt-0.5">{emailMsg.subject || '(no subject)'}</div>
                 <div className="text-xs text-gray-500 truncate">From {emailMsg.from_addr || 'unknown sender'}</div>
               </div>
@@ -499,12 +499,12 @@ export default function ReceiptDetailPage() {
       {refundPolicies.length > 0 && (
         <div className="card">
           <div className="flex items-center gap-2 mb-3">
-            <Shield size={16} className="text-emerald-600" />
+            <Shield size={16} className="text-guac-600" />
             <h3 className="font-semibold text-gray-800">Refund Policy</h3>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b text-xs text-gray-500 uppercase tracking-wide">
+              <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
                 <tr>
                   <th className="px-3 py-1 text-left">Policy</th>
                   <th className="px-3 py-1 text-left">Days</th>
@@ -514,14 +514,14 @@ export default function ReceiptDetailPage() {
                   <th className="px-3 py-1 text-left">Details</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-guac-line">
                 {refundPolicies.map(p => {
                   const expired = p.expiry_date && new Date(p.expiry_date) < new Date()
                   // Source badge: where the policy data came from. Lets the user
                   // see at a glance whether the policy was printed on their
                   // receipt vs looked up from a store's published default.
                   const sourceInfo = {
-                    'receipt':       { label: 'On receipt',      cls: 'bg-emerald-50 text-emerald-700 border-emerald-100', tip: 'Printed on the receipt body' },
+                    'receipt':       { label: 'On receipt',      cls: 'bg-guac-50 text-guac-700 border-guac-line', tip: 'Printed on the receipt body' },
                     'store-default': { label: 'Store default',   cls: 'bg-sky-50 text-sky-700 border-sky-100',             tip: 'Looked up from the merchant’s published policy' },
                     'manual':        { label: 'You set this',    cls: 'bg-amber-50 text-amber-800 border-amber-100',       tip: 'Manually entered' },
                   }[p.source || 'receipt']
@@ -548,7 +548,7 @@ export default function ReceiptDetailPage() {
                               href={p.source_url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-700 hover:text-emerald-800 underline-offset-2 hover:underline"
+                              className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-guac-700 hover:text-guac-700 underline-offset-2 hover:underline"
                               title={`Read ${current.store_name || 'the store'}'s full return policy`}
                             >
                               View policy ↗
@@ -602,13 +602,13 @@ export default function ReceiptDetailPage() {
           <p className="text-sm text-gray-400 py-4">No items. Add line items from your receipt.</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead className="bg-gray-50 border-b">
+            <table className="w-full text-sm">
+              <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
                 <tr>{['SKU','Model','Name','Category','Date','Qty','Price','Worth It?','Policy','Warranty','Return Date','Returned','Smashlist'].map(h =>
-                  <th key={h} className="px-3 py-1 text-left font-semibold text-gray-500 uppercase tracking-wide">{h}</th>
+                  <th key={h} className="px-3 py-1 text-left">{h}</th>
                 )}</tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-guac-line">
                 {items.map(item => {
                   // Per-line non-returnable check: covers charity, subs,
                   // cloud (hosting/domain/AWS), bills, bank-fees, drinks,
@@ -669,7 +669,7 @@ export default function ReceiptDetailPage() {
                                 mascotBus.celebrate('Rated!')
                               }}
                               className={`w-6 h-6 rounded-full flex items-center justify-center text-xs transition-all ${
-                                active ? 'bg-emerald-100 ring-2 ring-emerald-500 scale-110' : 'hover:bg-emerald-50 opacity-60 hover:opacity-100'
+                                active ? 'bg-guac-100 ring-2 ring-guac-600 scale-110' : 'hover:bg-guac-50 opacity-60 hover:opacity-100'
                               }`}>
                               {emoji}
                             </button>

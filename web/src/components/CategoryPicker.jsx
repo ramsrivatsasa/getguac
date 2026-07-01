@@ -15,7 +15,7 @@ import EmojiCatalog from './EmojiCatalog'
 // Usage:
 //   <CategoryPicker value={item.category} onChange={(slug) => save(slug)} />
 //   <CategoryCreatePill onCreated={(slug) => save(slug)} />   // separate "+ New" affordance
-export default function CategoryPicker({ value, onChange, className = '', size = 'md', disabled = false, allowClear = true }) {
+export default function CategoryPicker({ value, onChange, className = '', size = 'md', disabled = false, allowClear = true, hideEmoji = false, soft = false }) {
   const { categories } = useCategories()
   const [modalOpen, setModalOpen] = useState(false)
 
@@ -25,27 +25,37 @@ export default function CategoryPicker({ value, onChange, className = '', size =
     onChange(v || null)
   }
 
-  const sizeCls = size === 'xs'
-    ? 'text-[10px] px-2 py-0.5'
-    : size === 'sm'
-      ? 'text-xs px-2.5 py-1'
-      : 'text-xs px-3 py-1.5'
+  // soft pills hug their text: explicit pl/pr (room for the custom caret on the
+  // right) instead of symmetric px, and a touch taller (py-1.5).
+  const sizeCls = soft
+    ? 'text-[12px] pl-3 pr-6 py-1.5'
+    : size === 'xs'
+      ? 'text-[10px] px-2 py-0.5'
+      : size === 'sm'
+        ? 'text-xs px-2.5 py-1'
+        : 'text-xs px-3 py-1.5'
 
-  const cls = `font-semibold rounded-full border focus:outline-none cursor-pointer font-sans ${categoryClass(value)} ${sizeCls} ${className}`
+  // soft = borderless 8px pill in the inherited body font (redesign receipts
+  // table); default keeps the 1px-outlined full pill used elsewhere. The
+  // uncategorized chip in soft mode uses the mockup's pale grey-green tone
+  // instead of the heavier default gray.
+  const toneCls = (!value && soft) ? 'bg-[#F2F4EF] text-[#9AA89E]' : categoryClass(value)
+  const cls = `${soft ? 'appearance-none bg-no-repeat font-bold rounded-lg' : 'font-semibold rounded-full border font-sans'} focus:outline-none cursor-pointer ${toneCls} ${sizeCls} ${className}`
 
   return (
     <>
-      <select value={value || ''} onChange={handleChange} disabled={disabled} title="Change category" className={cls}>
-        {allowClear && <option value="">— Uncategorized</option>}
+      <select value={value || ''} onChange={handleChange} disabled={disabled} title="Change category" className={cls}
+        style={soft ? { backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239AA89E' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundPosition: 'right 7px center', backgroundSize: '11px' } : undefined}>
+        {allowClear && <option value="">Uncategorized</option>}
         <optgroup label="Presets">
           {categories.filter(c => !c.custom).map(c => (
-            <option key={c.slug} value={c.slug}>{c.emoji} {c.label}</option>
+            <option key={c.slug} value={c.slug}>{hideEmoji ? c.label : `${c.emoji} ${c.label}`}</option>
           ))}
         </optgroup>
         {categories.some(c => c.custom) && (
           <optgroup label="Yours">
             {categories.filter(c => c.custom).map(c => (
-              <option key={c.slug} value={c.slug}>{c.emoji} {c.label}</option>
+              <option key={c.slug} value={c.slug}>{hideEmoji ? c.label : `${c.emoji} ${c.label}`}</option>
             ))}
           </optgroup>
         )}
@@ -67,7 +77,7 @@ export function CategoryCreatePill({ onCreated, className = '' }) {
         type="button"
         onClick={() => setOpen(true)}
         title="Create a new category"
-        className={`inline-flex items-center gap-1 rounded-full border border-dashed border-emerald-400 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 ${className}`}
+        className={`inline-flex items-center gap-1 rounded-full border border-dashed border-guac-600 bg-white px-3 py-1.5 text-xs font-semibold text-guac-700 hover:bg-guac-50 ${className}`}
       >
         <span className="text-base leading-none">＋</span>
         <span>New</span>
@@ -78,7 +88,7 @@ export function CategoryCreatePill({ onCreated, className = '' }) {
 }
 
 const COLOR_OPTIONS = [
-  { key: 'emerald', dot: 'bg-emerald-500' },
+  { key: 'emerald', dot: 'bg-guac-600' },
   { key: 'sky',     dot: 'bg-sky-500' },
   { key: 'indigo',  dot: 'bg-indigo-500' },
   { key: 'amber',   dot: 'bg-amber-500' },

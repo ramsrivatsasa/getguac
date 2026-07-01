@@ -127,10 +127,10 @@ export default function ScreenshotCapture({ open, onClose, onCapture }) {
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between px-4 py-3 border-b">
           <div className="flex items-center gap-2">
-            <Monitor size={18} className="text-emerald-600" />
+            <Monitor size={18} className="text-guac-600" />
             <h3 className="font-semibold">Screen Capture</h3>
           </div>
-          <button onClick={onClose} className="p-1 text-gray-500 hover:bg-gray-100 rounded-md" aria-label="Close">
+          <button onClick={onClose} className="p-1 text-gray-500 hover:bg-guac-50 rounded-md" aria-label="Close">
             <X size={18} />
           </button>
         </div>

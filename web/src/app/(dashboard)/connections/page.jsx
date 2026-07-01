@@ -119,7 +119,7 @@ export default function ConnectionsPage() {
           tile is the only brand accent. */}
       <section className="bg-white border border-gray-200 rounded-2xl p-5 mb-7">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-emerald-600 text-white flex items-center justify-center">
+          <div className="w-12 h-12 rounded-xl bg-guac-700 text-white flex items-center justify-center">
             <Mail size={22} />
           </div>
           <div className="flex-1 min-w-0">
@@ -131,7 +131,7 @@ export default function ConnectionsPage() {
           {aliasEmail && (
             <button
               onClick={copyAlias}
-              className="px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 text-xs font-bold hover:bg-gray-50 inline-flex items-center gap-1.5"
+              className="px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 text-xs font-bold hover:bg-guac-row inline-flex items-center gap-1.5"
             >
               <Copy size={13} /> Copy
             </button>
@@ -209,7 +209,7 @@ function RetailerRow({ retailer, conn, onClick, onDismiss }) {
   return (
     <div
       onClick={onClick}
-      className="bg-white border border-gray-100 rounded-2xl p-3 flex items-center gap-3 cursor-pointer hover:border-emerald-200 hover:shadow-sm transition-all"
+      className="bg-white border border-gray-100 rounded-2xl p-3 flex items-center gap-3 cursor-pointer hover:border-guac-line2 hover:shadow-sm transition-all"
     >
       <StoreLogo
         storeName={retailer.name}
@@ -221,12 +221,12 @@ function RetailerRow({ retailer, conn, onClick, onDismiss }) {
         <div className="flex items-center gap-2 flex-wrap">
           <p className="font-bold text-gray-900">{retailer.name}</p>
           {isVerified && (
-            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-black bg-emerald-100 text-emerald-800">
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-black bg-guac-100 text-guac-700">
               <Check size={9} /> VERIFIED
             </span>
           )}
           {LINKABLE_IN_MOBILE.has(retailer.id) && (
-            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-black bg-guac-50 text-guac-700 border border-guac-line2">
               <Link2 size={9} /> LINKABLE
             </span>
           )}
@@ -245,7 +245,7 @@ function RetailerRow({ retailer, conn, onClick, onDismiss }) {
           <X size={16} />
         </button>
       ) : (
-        <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full bg-guac-700 text-white flex items-center justify-center">
           <Plus size={16} />
         </div>
       )}
@@ -276,10 +276,10 @@ function SetupDialog({ retailer, alias, existingStatus, onClose, onMarkActive })
 
         <div className="p-5">
           {LINKABLE_IN_MOBILE.has(retailer.id) && (
-            <div className="mb-5 p-4 rounded-2xl border-2 border-emerald-200 bg-emerald-50/40">
+            <div className="mb-5 p-4 rounded-2xl border-2 border-guac-line2 bg-guac-50/40">
               <div className="flex items-center gap-2 mb-1.5">
-                <Link2 size={16} className="text-emerald-700" />
-                <p className="text-xs font-black uppercase tracking-wider text-emerald-800">
+                <Link2 size={16} className="text-guac-700" />
+                <p className="text-xs font-black uppercase tracking-wider text-guac-700">
                   Link account directly
                 </p>
                 <span className="text-[9px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800 rounded-full px-1.5 py-0.5">
@@ -292,7 +292,7 @@ function SetupDialog({ retailer, alias, existingStatus, onClose, onMarkActive })
               </p>
               <Link
                 href="/download"
-                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white border-2 border-emerald-300 text-emerald-800 text-sm font-bold hover:bg-emerald-50 no-underline"
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white border-2 border-guac-line2 text-guac-700 text-sm font-bold hover:bg-guac-50 no-underline"
               >
                 <Smartphone size={15} /> Open in mobile app
               </Link>
@@ -309,7 +309,7 @@ function SetupDialog({ retailer, alias, existingStatus, onClose, onMarkActive })
           <ol className="space-y-3">
             {retailer.setupSteps.map((step, i) => (
               <li key={i} className="flex gap-3">
-                <span className="shrink-0 w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 text-xs font-black flex items-center justify-center">
+                <span className="shrink-0 w-6 h-6 rounded-full bg-guac-100 text-guac-700 text-xs font-black flex items-center justify-center">
                   {i + 1}
                 </span>
                 <p className="text-sm text-gray-700 leading-relaxed">{step}</p>
@@ -329,7 +329,7 @@ function SetupDialog({ retailer, alias, existingStatus, onClose, onMarkActive })
           {!retailer.captureOnly && (
             <button
               onClick={onMarkActive}
-              className="w-full mt-5 px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold inline-flex items-center justify-center gap-2"
+              className="w-full mt-5 px-4 py-3 rounded-xl bg-guac-700 hover:bg-guac-700 text-white font-bold inline-flex items-center justify-center gap-2"
             >
               <Check size={16} />
               {existingStatus === 'active' || existingStatus === 'verified' ? "I've updated my setup" : "I've completed setup"}
@@ -338,7 +338,7 @@ function SetupDialog({ retailer, alias, existingStatus, onClose, onMarkActive })
           {retailer.captureOnly && (
             <Link
               href="/receipts"
-              className="w-full mt-5 px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold inline-flex items-center justify-center gap-2 no-underline"
+              className="w-full mt-5 px-4 py-3 rounded-xl bg-guac-700 hover:bg-guac-700 text-white font-bold inline-flex items-center justify-center gap-2 no-underline"
             >
               <ChevronRight size={16} /> Snap a receipt now
             </Link>

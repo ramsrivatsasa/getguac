@@ -10,6 +10,7 @@ import FeatureHeader from '../../../components/FeatureHeader'
 import LottieAnimation from '../../../components/LottieAnimation'
 import croissantBite from '../../../lottie/croissant-bite.json'
 import { displayStoreName } from '../../../lib/store-name-normalize'
+import { StoreLogo } from '../../../components/StoreLogo'
 
 export default function BitesPage() {
   const qc = useQueryClient()
@@ -93,7 +94,7 @@ export default function BitesPage() {
         subtitle="Every dish you've tried — like it or pass on it"
         action={
           <span className="text-sm text-gray-500">
-            <span className="font-bold text-emerald-700">{rows.length}</span> bites
+            <span className="font-bold text-guac-700">{rows.length}</span> bites
           </span>
         }
       />
@@ -109,7 +110,7 @@ export default function BitesPage() {
       {/* Smashlist destination chips — tap one to set as the default for one-tap reorders */}
       <div className="card p-3">
         <div className="flex items-center gap-2 mb-2">
-          <ShoppingCart size={12} className="text-emerald-500" />
+          <ShoppingCart size={12} className="text-guac-600" />
           <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Reorder destination</span>
           <span className="text-[10px] text-gray-400">— tap a list, then tap the 🥑 cart on any dish to send it there</span>
         </div>
@@ -147,7 +148,7 @@ export default function BitesPage() {
         <div className="card py-10 text-center flex flex-col items-center gap-3">
           <p className="text-gray-500 max-w-md">
             {rows.length === 0 ? (
-              <>No restaurant receipts yet. Drop one at <Link href="/receipts" className="text-emerald-700 font-semibold hover:underline">/receipts</Link> — Guac-AI tags it as <span className="font-semibold">🍽️ Eats</span> and items land here.</>
+              <>No restaurant receipts yet. Drop one at <Link href="/receipts" className="text-guac-700 font-semibold hover:underline">/receipts</Link> — Guac-AI tags it as <span className="font-semibold">🍽️ Eats</span> and items land here.</>
             ) : (
               'Nothing matches the filter.'
             )}
@@ -158,8 +159,8 @@ export default function BitesPage() {
           {byRestaurant.map(({ store, store_id, items }) => (
             <div key={store} className="card p-0 overflow-hidden">
               <div className="px-5 py-3 bg-gradient-to-r from-amber-50 via-orange-50 to-rose-50 border-b border-amber-100 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Utensils size={14} className="text-amber-600" />
+                <div className="flex items-center gap-2.5">
+                  <StoreLogo storeName={store} size={26} fallbackEmoji="🍽️" />
                   {store_id ? (
                     <Link href={`/stores/${store_id}`} className="font-bold text-amber-900 hover:underline">{store}</Link>
                   ) : (
@@ -168,12 +169,12 @@ export default function BitesPage() {
                   <span className="text-xs text-amber-700/70">{items.length} dish{items.length === 1 ? '' : 'es'}</span>
                 </div>
               </div>
-              <div className="divide-y divide-gray-50">
+              <div className="divide-y divide-guac-line">
                 {items.map(r => {
                   const liked = r.rating === 5
                   const disliked = r.rating === 1
                   return (
-                    <div key={r.id} className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50/40">
+                    <div key={r.id} className="flex items-center gap-3 px-5 py-3 hover:bg-guac-row">
                       <div className="flex-1 min-w-0">
                         <p className={`text-sm font-semibold ${disliked ? 'line-through text-gray-400' : 'text-gray-800'}`}>
                           {r.item_name}
@@ -193,7 +194,7 @@ export default function BitesPage() {
                           className={`relative w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-md hover:scale-110 active:scale-95 ring-2 ${
                             liked
                               ? 'bg-gradient-to-br from-emerald-400 to-green-600 text-white ring-white shadow-lg scale-105'
-                              : 'bg-white text-emerald-600 ring-emerald-100 hover:ring-emerald-300'
+                              : 'bg-white text-guac-600 ring-guac-100 hover:ring-guac-600'
                           }`}>
                           <ThumbsUp size={15} className="drop-shadow-sm" fill={liked ? 'currentColor' : 'none'} />
                         </button>
@@ -214,7 +215,7 @@ export default function BitesPage() {
                         <Link
                           href={`/receipts/${r.receipt_id}`}
                           title="View receipt"
-                          className="ml-1 text-gray-400 hover:text-emerald-700">
+                          className="ml-1 text-gray-400 hover:text-guac-700">
                           <ExternalLink size={13} />
                         </Link>
                       </div>
@@ -232,7 +233,7 @@ export default function BitesPage() {
 
 const CHIP_TONES = {
   gray:    { active: 'from-gray-400 to-gray-600',       text: 'text-gray-700' },
-  emerald: { active: 'from-emerald-400 to-green-600',   text: 'text-emerald-800' },
+  emerald: { active: 'from-emerald-400 to-green-600',   text: 'text-guac-700' },
   rose:    { active: 'from-rose-400 to-red-600',        text: 'text-rose-700' },
   amber:   { active: 'from-amber-300 to-orange-500',    text: 'text-amber-800' },
 }
@@ -257,13 +258,13 @@ function ReorderMenu({ dish, target, onPick }) {
         onClick={() => setOpen(v => !v)}
         title="Choose another list"
         aria-label="Choose another list"
-        className="ml-0.5 w-5 h-10 text-gray-400 hover:text-emerald-700 text-[10px]">
+        className="ml-0.5 w-5 h-10 text-gray-400 hover:text-guac-700 text-[10px]">
         ▾
       </button>
       {open && (
         <>
           <div className="fixed inset-0 z-20" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full mt-1 z-30 bg-white rounded-2xl shadow-xl border border-emerald-100 py-2 w-52">
+          <div className="absolute right-0 top-full mt-1 z-30 bg-white rounded-2xl shadow-xl border border-guac-line py-2 w-52">
             <p className="px-3 pb-1 text-[10px] uppercase tracking-wider font-bold text-gray-500">Reorder to…</p>
             {SHOPPING_LISTS.map(name => {
               const m = SHOPPING_LIST_META[name] || {}
@@ -272,7 +273,7 @@ function ReorderMenu({ dish, target, onPick }) {
                   key={name}
                   type="button"
                   onClick={() => { onPick(name); setOpen(false) }}
-                  className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-emerald-50 ${target === name ? 'bg-emerald-50/60' : ''}`}>
+                  className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-guac-50 ${target === name ? 'bg-guac-50/60' : ''}`}>
                   <span className="text-base">{m.emoji}</span>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-gray-800">{name}</p>
@@ -304,7 +305,7 @@ function SmashlistChip({ active, onClick, emoji, label, count, tone }) {
       className={`group inline-flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border-2 font-semibold text-xs transition-all hover:scale-[1.04] ${
         active
           ? `bg-gradient-to-br ${grad} text-white border-white shadow-lg`
-          : 'bg-white text-gray-700 border-gray-200 hover:border-emerald-300 shadow-sm'
+          : 'bg-white text-gray-700 border-gray-200 hover:border-guac-line2 shadow-sm'
       }`}>
       <span className={`w-7 h-7 rounded-full flex items-center justify-center text-base shrink-0 ${
         active ? 'bg-white/30 shadow-inner' : `bg-gradient-to-br ${grad} text-white shadow-sm`
@@ -324,7 +325,7 @@ function FilterChip({ active, onClick, label, value, tone, emoji }) {
       className={`rounded-2xl p-3 border-2 transition-all text-left ${
         active
           ? `bg-gradient-to-br ${t.active} text-white border-white shadow-md`
-          : 'bg-white border-gray-100 hover:border-emerald-200 shadow-sm'
+          : 'bg-white border-gray-100 hover:border-guac-line2 shadow-sm'
       }`}>
       <div className="flex items-center justify-between">
         <span className="text-lg">{emoji}</span>

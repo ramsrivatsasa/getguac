@@ -25,6 +25,8 @@ import { useStore } from '../../../store'
 import TimeframePicker from '../../../components/TimeframePicker'
 import { BarChart3, PieChart as PieIcon, Repeat, Award, Store as StoreIcon, X, Receipt as ReceiptIcon, Download, HeartHandshake, Briefcase, Percent, RotateCw, TrendingUp } from 'lucide-react'
 import FeatureHeader from '../../../components/FeatureHeader'
+import { StoreLogo } from '../../../components/StoreLogo'
+import { ChevronUp, ChevronDown } from 'lucide-react'
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
 
 // Time-frame is owned by the dashboard via the Zustand store.
@@ -153,6 +155,25 @@ export default function ReportsPage() {
   const oneTime = useMemo(() => itemHistory.filter(it => it.count === 1).sort((a, b) => b.spent - a.spent), [itemHistory])
   const repeats = useMemo(() => itemHistory.filter(it => it.count >= 2).sort((a, b) => b.count - a.count || b.spent - a.spent), [itemHistory])
 
+  // Top-stores table: click a column header to re-sort. Default is spend
+  // descending (matches the byStore memo). `showAllStores` toggles the
+  // 25-row cap so power users can see every merchant they've shopped.
+  const [storeSort, setStoreSort] = useState({ key: 'spent', dir: 'desc' })
+  const [showAllStores, setShowAllStores] = useState(false)
+  const toggleStoreSort = (key) => setStoreSort(s =>
+    s.key === key ? { key, dir: s.dir === 'desc' ? 'asc' : 'desc' } : { key, dir: 'desc' })
+  const sortedStores = useMemo(() => {
+    const val = (s) => storeSort.key === 'name' ? (s.name || '').toLowerCase()
+      : storeSort.key === 'avg' ? (s.spent / (s.count || 1))
+      : s[storeSort.key]
+    const arr = [...byStore].sort((a, b) => {
+      const av = val(a), bv = val(b)
+      const cmp = typeof av === 'string' ? av.localeCompare(bv) : av - bv
+      return storeSort.dir === 'desc' ? -cmp : cmp
+    })
+    return showAllStores ? arr : arr.slice(0, 25)
+  }, [byStore, storeSort, showAllStores])
+
   // Tax rollups — computed via the central lib so the same numbers
   // show on /reports today AND can be reused later (year-end email,
   // GuacWizard prompts, etc.) without duplicating the aggregation.
@@ -229,7 +250,7 @@ export default function ReportsPage() {
           {/* 1. Spending by category */}
           <div className="card">
             <div className="flex items-center gap-2 mb-3">
-              <PieIcon size={14} className="text-emerald-700" />
+              <PieIcon size={14} className="text-guac-700" />
               <h2 className="font-semibold text-gray-800 text-sm">Spending by category</h2>
             </div>
             <div className="flex flex-col lg:flex-row gap-6 items-start">
@@ -267,7 +288,7 @@ export default function ReportsPage() {
                         type="button"
                         onClick={() => toggleCategory(c.slug)}
                         title={isSelected ? 'Hide records' : 'Show records'}
-                        className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border self-center justify-self-start max-w-fit transition-all hover:scale-105 ${categoryClass(c.slug)} ${isSelected ? 'ring-2 ring-emerald-400 shadow-sm' : ''}`}
+                        className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border self-center justify-self-start max-w-fit transition-all hover:scale-105 ${categoryClass(c.slug)} ${isSelected ? 'ring-2 ring-guac-600 shadow-sm' : ''}`}
                       >
                         <span className="w-2 h-2 rounded-full shrink-0" style={{ background: CATEGORY_COLORS[c.slug] || '#94a3b8' }} />
                         <span>{categoryLabel(c.slug)}</span>
@@ -275,12 +296,12 @@ export default function ReportsPage() {
                       <button
                         type="button"
                         onClick={() => toggleCategory(c.slug)}
-                        className={`font-semibold self-center text-right tabular-nums hover:text-emerald-700 ${isSelected ? 'text-emerald-700' : 'text-gray-700'}`}
+                        className={`font-semibold self-center text-right tabular-nums hover:text-guac-700 ${isSelected ? 'text-guac-700' : 'text-gray-700'}`}
                       >${c.amount.toFixed(2)}</button>
                       <button
                         type="button"
                         onClick={() => toggleCategory(c.slug)}
-                        className={`self-center text-right tabular-nums w-10 hover:text-emerald-600 ${isSelected ? 'text-emerald-600' : 'text-gray-400'}`}
+                        className={`self-center text-right tabular-nums w-10 hover:text-guac-600 ${isSelected ? 'text-guac-600' : 'text-gray-400'}`}
                       >{((c.amount / totalSpent) * 100).toFixed(0)}%</button>
                       {trendsShown && trend && (
                         <span
@@ -288,7 +309,7 @@ export default function ReportsPage() {
                             trend.tone === 'up'
                               ? 'bg-rose-50 text-rose-700 border border-rose-100'
                               : trend.tone === 'down'
-                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                                ? 'bg-guac-50 text-guac-700 border border-guac-line'
                                 : 'bg-gray-50 text-gray-400 border border-gray-100'
                           }`}
                           title={`vs avg of prior 3 ${period.label.toLowerCase()} windows`}
@@ -328,8 +349,8 @@ export default function ReportsPage() {
                 <p className="text-xs text-gray-400 py-4 text-center">No receipts tagged with this category in the selected period.</p>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-xs">
-                    <thead className="bg-gray-50 border-b text-gray-500">
+                  <table className="w-full text-sm">
+                    <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
                       <tr>
                         <th className="px-3 py-1 text-left">Date</th>
                         <th className="px-3 py-1 text-left">Store</th>
@@ -337,16 +358,16 @@ export default function ReportsPage() {
                         <th className="px-3 py-1 text-right">Total</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-50">
+                    <tbody className="divide-y divide-guac-line">
                       {categoryReceipts.map(r => {
                         const itemCount = (r.receipt_items || []).filter(i => !i.returned).length
                         const preview = (r.receipt_items || []).filter(i => !i.returned).slice(0, 3).map(i => i.item_name).filter(Boolean).join(', ')
                         return (
-                          <tr key={r.id} className="hover:bg-emerald-50/30">
+                          <tr key={r.id} className="hover:bg-guac-50/30">
                             <td className="px-3 py-1.5 text-gray-500 whitespace-nowrap">{formatDateShort(r.date)}</td>
                             <td className="px-3 py-1.5">
                               {r.store_id ? (
-                                <Link href={`/stores/${r.store_id}`} className="text-blue-700 hover:underline">{displayStoreName(r.store_name) || '—'}</Link>
+                                <Link href={`/stores/${r.store_id}`} className="text-guac-700 hover:underline">{displayStoreName(r.store_name) || '—'}</Link>
                               ) : <span>{displayStoreName(r.store_name) || '—'}</span>}
                             </td>
                             <td className="px-3 py-1.5 text-gray-500 max-w-md truncate" title={preview}>
@@ -355,7 +376,7 @@ export default function ReportsPage() {
                                 : <span className="text-gray-300">—</span>}
                             </td>
                             <td className="px-3 py-1.5 text-right font-semibold tabular-nums">
-                              <Link href={`/receipts/${r.id}`} className="hover:text-emerald-700">${parseFloat(r.total_amount || 0).toFixed(2)}</Link>
+                              <Link href={`/receipts/${r.id}`} className="hover:text-guac-700">${parseFloat(r.total_amount || 0).toFixed(2)}</Link>
                             </td>
                           </tr>
                         )
@@ -376,7 +397,7 @@ export default function ReportsPage() {
           <div className="card">
             <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
               <div className="flex items-center gap-2">
-                <ReceiptIcon size={14} className="text-emerald-700" />
+                <ReceiptIcon size={14} className="text-guac-700" />
                 <h2 className="font-semibold text-gray-800 text-sm">Tax summary</h2>
                 <span className="text-xs text-gray-400">· {period.label}</span>
               </div>
@@ -384,7 +405,7 @@ export default function ReportsPage() {
                 type="button"
                 onClick={downloadTaxCsv}
                 disabled={taxStats.businessCount === 0 && taxStats.charityCount === 0}
-                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold text-xs hover:bg-emerald-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-guac-50 border border-guac-line2 text-guac-700 font-semibold text-xs hover:bg-guac-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 title="Download business + charity receipts as CSV for filing"
               >
                 <Download size={12} />
@@ -392,12 +413,12 @@ export default function ReportsPage() {
               </button>
             </div>
             <div className="grid sm:grid-cols-3 gap-3">
-              <div className="rounded-lg border border-blue-100 bg-blue-50/50 p-3">
-                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-semibold text-blue-700">
+              <div className="rounded-lg border border-blue-100 bg-guac-50/50 p-3">
+                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-semibold text-guac-700">
                   <Briefcase size={11} /> Business
                 </div>
                 <p className="font-bold text-blue-900 mt-1 text-lg">${taxStats.businessSpent.toFixed(2)}</p>
-                <p className="text-[11px] text-blue-700/80 mt-0.5">
+                <p className="text-[11px] text-guac-700/80 mt-0.5">
                   {taxStats.businessCount} receipt{taxStats.businessCount === 1 ? '' : 's'}
                   {taxStats.businessTax > 0 && <> · ${taxStats.businessTax.toFixed(2)} tax</>}
                 </p>
@@ -449,8 +470,8 @@ export default function ReportsPage() {
                 </div>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead className="bg-gray-50 border-b text-gray-500">
+                <table className="w-full text-sm">
+                  <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
                     <tr>
                       <th className="px-3 py-2 text-left font-medium">Merchant</th>
                       <th className="px-3 py-2 text-left font-medium">Cadence</th>
@@ -459,7 +480,7 @@ export default function ReportsPage() {
                       <th className="px-3 py-2 text-right font-medium">Per month</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-50">
+                  <tbody className="divide-y divide-guac-line">
                     {subscriptions.map(s => (
                       <tr key={s.storeKey} className="hover:bg-violet-50/30">
                         <td className="px-3 py-1.5">
@@ -480,7 +501,7 @@ export default function ReportsPage() {
                               className={`ml-1.5 inline-flex items-center gap-0.5 text-[10px] font-bold px-1 py-0.5 rounded-full ${
                                 (s.priceChangePct ?? 0) > 0
                                   ? 'bg-rose-50 text-rose-700 border border-rose-100'
-                                  : 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                                  : 'bg-guac-50 text-guac-700 border border-guac-line'
                               }`}
                               title={`Last charge ${(s.priceChangePct ?? 0) > 0 ? 'up' : 'down'} ${Math.abs(Math.round(s.priceChangePct))}% vs prior avg`}
                             >
@@ -503,29 +524,42 @@ export default function ReportsPage() {
 
           {/* 4. Top stores by spend */}
           <div className="card">
-            <div className="flex items-center gap-2 mb-3">
-              <StoreIcon size={14} className="text-emerald-700" />
-              <h2 className="font-semibold text-gray-800 text-sm">Top stores by spend</h2>
+            <div className="flex items-center justify-between gap-2 mb-3">
+              <div className="flex items-center gap-2">
+                <StoreIcon size={14} className="text-guac-700" />
+                <h2 className="font-semibold text-gray-800 text-sm">Top stores by spend</h2>
+              </div>
+              {byStore.length > 25 && (
+                <button
+                  onClick={() => setShowAllStores(v => !v)}
+                  className="text-[11px] font-semibold text-guac-700 hover:underline"
+                >
+                  {showAllStores ? 'Show top 25' : `Show all ${byStore.length}`}
+                </button>
+              )}
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead className="bg-gray-50 border-b text-gray-500">
+              <table className="w-full text-sm">
+                <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
                   <tr>
                     <th className="px-3 py-1 text-left">Rank</th>
-                    <th className="px-3 py-1 text-left">Store</th>
-                    <th className="px-3 py-1 text-right">Receipts</th>
-                    <th className="px-3 py-1 text-right">Total spend</th>
-                    <th className="px-3 py-1 text-right">Avg basket</th>
+                    <SortableTh label="Store" sortKey="name" align="left" sort={storeSort} onSort={toggleStoreSort} />
+                    <SortableTh label="Receipts" sortKey="count" align="right" sort={storeSort} onSort={toggleStoreSort} />
+                    <SortableTh label="Total spend" sortKey="spent" align="right" sort={storeSort} onSort={toggleStoreSort} />
+                    <SortableTh label="Avg basket" sortKey="avg" align="right" sort={storeSort} onSort={toggleStoreSort} />
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {byStore.slice(0, 25).map((s, i) => (
-                    <tr key={s.id || s.name} className="hover:bg-blue-50/40">
+                <tbody className="divide-y divide-guac-line">
+                  {sortedStores.map((s, i) => (
+                    <tr key={s.id || s.name} className="hover:bg-guac-50/40">
                       <td className="px-3 py-1 text-gray-400">#{i + 1}</td>
                       <td className="px-3 py-1">
-                        {s.id ? (
-                          <Link href={`/stores/${s.id}`} className="text-blue-700 hover:underline">{s.name}</Link>
-                        ) : <span>{s.name}</span>}
+                        <div className="flex items-center gap-2">
+                          <StoreLogo storeName={s.name} size={22} />
+                          {s.id ? (
+                            <Link href={`/stores/${s.id}`} className="text-guac-700 hover:underline">{s.name}</Link>
+                          ) : <span>{s.name}</span>}
+                        </div>
                       </td>
                       <td className="px-3 py-1 text-right text-gray-500">{s.count}</td>
                       <td className="px-3 py-1 text-right font-semibold">${s.spent.toFixed(2)}</td>
@@ -540,15 +574,15 @@ export default function ReportsPage() {
           {/* 3. Repeat purchases */}
           <div className="card">
             <div className="flex items-center gap-2 mb-3">
-              <Repeat size={14} className="text-emerald-700" />
+              <Repeat size={14} className="text-guac-700" />
               <h2 className="font-semibold text-gray-800 text-sm">Repeat purchases <span className="text-gray-400 font-normal">— bought 2+ times</span></h2>
             </div>
             {repeats.length === 0 ? (
               <p className="text-xs text-gray-400 py-4 text-center">No repeat purchases yet in this period.</p>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead className="bg-gray-50 border-b text-gray-500">
+                <table className="w-full text-sm">
+                  <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
                     <tr>
                       <th className="px-3 py-1 text-left">Item</th>
                       <th className="px-3 py-1 text-right">Buys</th>
@@ -558,9 +592,9 @@ export default function ReportsPage() {
                       <th className="px-3 py-1 text-left">Last bought</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-50">
+                  <tbody className="divide-y divide-guac-line">
                     {repeats.slice(0, 50).map(it => (
-                      <tr key={(it.name || '') + '|' + (it.sku || '')} className="hover:bg-blue-50/40">
+                      <tr key={(it.name || '') + '|' + (it.sku || '')} className="hover:bg-guac-50/40">
                         <td className="px-3 py-1 max-w-xs truncate" title={it.name}>{it.name || '—'}</td>
                         <td className="px-3 py-1 text-right font-semibold">{it.count}</td>
                         <td className="px-3 py-1 text-right text-gray-500">{it.qty}</td>
@@ -568,7 +602,7 @@ export default function ReportsPage() {
                         <td className="px-3 py-1 text-gray-500 max-w-xs truncate" title={it.stores.join(', ')}>{it.stores.join(', ') || '—'}</td>
                         <td className="px-3 py-1 text-gray-500 whitespace-nowrap">
                           {it.lastReceiptId
-                            ? <Link href={`/receipts/${it.lastReceiptId}`} className="text-blue-700 hover:underline">{formatDateShort(it.lastDate)}</Link>
+                            ? <Link href={`/receipts/${it.lastReceiptId}`} className="text-guac-700 hover:underline">{formatDateShort(it.lastDate)}</Link>
                             : formatDateShort(it.lastDate)}
                         </td>
                       </tr>
@@ -589,8 +623,8 @@ export default function ReportsPage() {
               <p className="text-xs text-gray-400 py-4 text-center">Nothing bought just once in this period.</p>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead className="bg-gray-50 border-b text-gray-500">
+                <table className="w-full text-sm">
+                  <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
                     <tr>
                       <th className="px-3 py-1 text-left">Item</th>
                       <th className="px-3 py-1 text-right">Spend</th>
@@ -598,15 +632,15 @@ export default function ReportsPage() {
                       <th className="px-3 py-1 text-left">Bought</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-50">
+                  <tbody className="divide-y divide-guac-line">
                     {oneTime.slice(0, 100).map(it => (
-                      <tr key={(it.name || '') + '|' + (it.sku || '')} className="hover:bg-blue-50/40">
+                      <tr key={(it.name || '') + '|' + (it.sku || '')} className="hover:bg-guac-50/40">
                         <td className="px-3 py-1 max-w-md truncate" title={it.name}>{it.name || '—'}</td>
                         <td className="px-3 py-1 text-right">${it.spent.toFixed(2)}</td>
                         <td className="px-3 py-1 text-gray-500 max-w-xs truncate">{it.stores[0] || '—'}</td>
                         <td className="px-3 py-1 text-gray-500 whitespace-nowrap">
                           {it.lastReceiptId
-                            ? <Link href={`/receipts/${it.lastReceiptId}`} className="text-blue-700 hover:underline">{formatDateShort(it.lastDate)}</Link>
+                            ? <Link href={`/receipts/${it.lastReceiptId}`} className="text-guac-700 hover:underline">{formatDateShort(it.lastDate)}</Link>
                             : formatDateShort(it.lastDate)}
                         </td>
                       </tr>
@@ -619,6 +653,24 @@ export default function ReportsPage() {
         </>
       )}
     </div>
+  )
+}
+
+// Clickable table header: shows the active sort direction and toggles it.
+// align controls text/justify so the arrow sits beside numeric columns.
+function SortableTh({ label, sortKey, align, sort, onSort }) {
+  const active = sort.key === sortKey
+  const Arrow = sort.dir === 'desc' ? ChevronDown : ChevronUp
+  return (
+    <th className={`px-3 py-1 ${align === 'right' ? 'text-right' : 'text-left'}`}>
+      <button
+        onClick={() => onSort(sortKey)}
+        className={`inline-flex items-center gap-0.5 uppercase tracking-[0.05em] font-extrabold ${align === 'right' ? 'flex-row-reverse' : ''} ${active ? 'text-guac-700' : 'text-guac-label hover:text-guac-700'}`}
+      >
+        {label}
+        <Arrow size={11} className={active ? 'opacity-100' : 'opacity-0'} />
+      </button>
+    </th>
   )
 }
 

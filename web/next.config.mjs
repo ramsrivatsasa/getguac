@@ -49,6 +49,10 @@ const nextConfig = {
   // the binary into the serverless function. Required for the email-snapshot
   // route to render on Vercel.
   experimental: {
+    // Tree-shake big barrel packages so a route only pulls the symbols it
+    // actually uses (lucide-react is imported on nearly every page; the
+    // sidebar alone references ~30 icons). Cuts dev compile time + bundle size.
+    optimizePackageImports: ['lucide-react', 'date-fns', 'recharts'],
     // Next 14.2 name (renamed to top-level `serverExternalPackages` in Next 15).
     // At top level it's silently ignored here, so it MUST live under experimental
     // — keeps webpack from mangling the brotli-packed Chromium binary.
@@ -100,13 +104,20 @@ const nextConfig = {
 // NEXT_PUBLIC_SENTRY_DSN is absent (free-tier-friendly): no DSN means
 // source-map upload is skipped and the Sentry SDK in the bundle stays
 // uninitialized at runtime.
-export default withSentryConfig(nextConfig, {
-  // Pass --silent in CI to keep build logs quiet. Auth token only needed
-  // for source-map upload; absent token = no upload, build still succeeds.
-  silent: true,
-  authToken: process.env.SENTRY_AUTH_TOKEN,
-  // We disable source-map upload entirely when there's no auth token, so
-  // a missing token never breaks the Vercel build.
-  disableServerWebpackPlugin: !process.env.SENTRY_AUTH_TOKEN,
-  disableClientWebpackPlugin: !process.env.SENTRY_AUTH_TOKEN,
-})
+//
+// Dev-speed: Sentry's webpack/instrumentation hooks add real overhead to
+// `next dev` (and source-map upload only matters for production). So we only
+// apply the wrapper for production builds — local `next dev` skips it entirely
+// and compiles noticeably faster. Production output is unchanged.
+export default process.env.NODE_ENV === 'production'
+  ? withSentryConfig(nextConfig, {
+      // Pass --silent in CI to keep build logs quiet. Auth token only needed
+      // for source-map upload; absent token = no upload, build still succeeds.
+      silent: true,
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+      // We disable source-map upload entirely when there's no auth token, so
+      // a missing token never breaks the Vercel build.
+      disableServerWebpackPlugin: !process.env.SENTRY_AUTH_TOKEN,
+      disableClientWebpackPlugin: !process.env.SENTRY_AUTH_TOKEN,
+    })
+  : nextConfig

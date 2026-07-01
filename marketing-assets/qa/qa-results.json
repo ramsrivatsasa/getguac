@@ -1,0 +1,170 @@
+[
+  {
+    "id": "N1",
+    "area": "Negative",
+    "name": "Forgot-pw invalid email",
+    "expected": "Blocked by validation",
+    "actual": "Blocked",
+    "status": "PASS"
+  },
+  {
+    "id": "P0",
+    "area": "Positive",
+    "name": "Demo sign-in",
+    "expected": "Lands on dashboard",
+    "actual": "Dashboard loaded",
+    "status": "PASS"
+  },
+  {
+    "id": "P1",
+    "area": "Positive",
+    "name": "Dashboard data",
+    "expected": "Renders real seeded data",
+    "actual": "shows expected data",
+    "status": "PASS"
+  },
+  {
+    "id": "P2",
+    "area": "Positive",
+    "name": "Receipts list (seeded)",
+    "expected": "Renders real seeded data",
+    "actual": "shows expected data",
+    "status": "PASS"
+  },
+  {
+    "id": "P3",
+    "area": "Positive",
+    "name": "Reports categories (no Uncategorized)",
+    "expected": "Renders real seeded data",
+    "actual": "shows expected data",
+    "status": "PASS"
+  },
+  {
+    "id": "P4",
+    "area": "Positive",
+    "name": "Steals restock list",
+    "expected": "Renders real seeded data",
+    "actual": "shows expected data",
+    "status": "PASS"
+  },
+  {
+    "id": "P5",
+    "area": "Positive",
+    "name": "Returns items + window",
+    "expected": "Renders real seeded data",
+    "actual": "shows expected data",
+    "status": "PASS"
+  },
+  {
+    "id": "P6",
+    "area": "Positive",
+    "name": "GuacWizard score + bites",
+    "expected": "Renders real seeded data",
+    "actual": "shows expected data",
+    "status": "PASS"
+  },
+  {
+    "id": "P7",
+    "area": "Positive",
+    "name": "Bites worth-it",
+    "expected": "Renders real seeded data",
+    "actual": "shows expected data",
+    "status": "PASS"
+  },
+  {
+    "id": "P8",
+    "area": "Positive",
+    "name": "Stash items",
+    "expected": "Renders real seeded data",
+    "actual": "shows expected data",
+    "status": "PASS"
+  },
+  {
+    "id": "P9",
+    "area": "Positive",
+    "name": "Smashlist",
+    "expected": "Renders real seeded data",
+    "actual": "shows expected data",
+    "status": "PASS"
+  },
+  {
+    "id": "P10",
+    "area": "Positive",
+    "name": "Bank statements/fees",
+    "expected": "Renders real seeded data",
+    "actual": "shows expected data",
+    "status": "PASS"
+  },
+  {
+    "id": "P11",
+    "area": "Positive",
+    "name": "Guacanomics",
+    "expected": "Renders real seeded data",
+    "actual": "shows expected data",
+    "status": "PASS"
+  },
+  {
+    "id": "P12",
+    "area": "Positive",
+    "name": "Rewards",
+    "expected": "Renders real seeded data",
+    "actual": "shows expected data",
+    "status": "PASS"
+  },
+  {
+    "id": "P13",
+    "area": "Positive",
+    "name": "Invite code + share link",
+    "expected": "Renders real seeded data",
+    "actual": "shows expected data",
+    "status": "PASS"
+  },
+  {
+    "id": "P14",
+    "area": "Positive",
+    "name": "Profile (John)",
+    "expected": "Renders real seeded data",
+    "actual": "shows expected data",
+    "status": "PASS"
+  },
+  {
+    "id": "P15",
+    "area": "Positive",
+    "name": "Receipt detail parsed fields",
+    "expected": "Shows store/total/items",
+    "actual": "parsed receipt shown",
+    "status": "PASS"
+  },
+  {
+    "id": "N2",
+    "area": "Negative",
+    "name": "Dead route /items",
+    "expected": "Graceful 404",
+    "actual": "404 page",
+    "status": "PASS"
+  },
+  {
+    "id": "N3",
+    "area": "Negative",
+    "name": "Unknown route",
+    "expected": "Graceful 404",
+    "actual": "404 page",
+    "status": "PASS"
+  },
+  {
+    "id": "N4",
+    "area": "Negative",
+    "name": "Steals empty query",
+    "expected": "No crash",
+    "actual": "handled",
+    "status": "PASS"
+  },
+  {
+    "id": "P16",
+    "area": "Positive",
+    "name": "Sign out",
+    "expected": "Returns to login",
+    "actual": "signed out → login",
+    "status": "PASS"
+  }
+]

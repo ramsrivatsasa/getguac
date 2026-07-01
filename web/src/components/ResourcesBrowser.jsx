@@ -45,7 +45,7 @@ export default function ResourcesBrowser() {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search resources…"
-          className="w-full pl-11 pr-4 py-3 rounded-full border border-emerald-200 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+          className="w-full pl-11 pr-4 py-3 rounded-full border border-guac-line2 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-guac-600"
         />
       </div>
 
@@ -57,8 +57,8 @@ export default function ResourcesBrowser() {
               {tools.map((x) => {
                 const Icon = x.icon
                 return (
-                  <Link key={x.href} href={x.href} className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-emerald-200 p-4 transition-all">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center mb-2"><Icon size={18} /></div>
+                  <Link key={x.href} href={x.href} className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-guac-line2 p-4 transition-all">
+                    <div className="w-10 h-10 rounded-xl bg-guac-100 text-guac-700 flex items-center justify-center mb-2"><Icon size={18} /></div>
                     <h3 className="font-bold text-gray-900">{x.title}</h3>
                     <p className="text-sm text-gray-500 mt-0.5">{x.desc}</p>
                   </Link>
@@ -73,13 +73,13 @@ export default function ResourcesBrowser() {
         {articles.length > 0 && (
           <section>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-black text-gray-900 inline-flex items-center gap-2"><Newspaper size={18} className="text-emerald-600" /> Articles</h2>
-              <Link href="/articles" className="text-xs font-bold text-emerald-700 hover:underline">All articles →</Link>
+              <h2 className="text-lg font-black text-gray-900 inline-flex items-center gap-2"><Newspaper size={18} className="text-guac-600" /> Articles</h2>
+              <Link href="/articles" className="text-xs font-bold text-guac-700 hover:underline">All articles →</Link>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {articles.map((a) => (
-                <Link key={a.slug} href={`/articles/${a.slug}`} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-emerald-200 p-4 transition-all flex flex-col">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">{a.category}</span>
+                <Link key={a.slug} href={`/articles/${a.slug}`} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-guac-line2 p-4 transition-all flex flex-col">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-guac-700">{a.category}</span>
                   <h3 className="font-bold text-gray-900 leading-snug mt-1">{a.title}</h3>
                   <p className="text-sm text-gray-500 mt-1">{a.excerpt}</p>
                 </Link>
@@ -94,10 +94,10 @@ export default function ResourcesBrowser() {
             <p className="text-xs text-gray-400 mb-3">Trusted, non-commercial sources (no affiliate links).</p>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {guides.map((g) => (
-                <a key={g.title} href={g.url} target="_blank" rel="noreferrer" className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-emerald-200 p-4 transition-all flex flex-col">
+                <a key={g.title} href={g.url} target="_blank" rel="noreferrer" className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-guac-line2 p-4 transition-all flex flex-col">
                   <h3 className="font-bold text-gray-900 leading-snug">{g.title}</h3>
                   <p className="text-sm text-gray-500 mt-1 flex-1">{g.desc}</p>
-                  <p className="text-[11px] font-semibold text-emerald-700 mt-2 inline-flex items-center gap-1">{g.source} <ExternalLink size={11} /></p>
+                  <p className="text-[11px] font-semibold text-guac-700 mt-2 inline-flex items-center gap-1">{g.source} <ExternalLink size={11} /></p>
                 </a>
               ))}
             </div>

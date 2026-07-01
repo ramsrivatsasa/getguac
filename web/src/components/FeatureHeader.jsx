@@ -156,11 +156,11 @@ export default function FeatureHeader({ theme, expression = 'happy', mascot, tit
           wrapping the mascot onto its own line on narrow mobile WebViews; a
           wide `action` (score, buttons) wraps below it cleanly via flex-wrap. */}
       <div className="flex-1 min-w-[11rem]">
-        <h1 className="text-2xl sm:text-3xl font-black text-gray-900 leading-tight tracking-tight">{title}</h1>
-        {subtitle && <p className="text-xs sm:text-sm text-gray-500 mt-1.5">{subtitle}</p>}
+        <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-guac-ink leading-tight tracking-tight">{title}</h1>
+        {subtitle && <p className="text-xs sm:text-sm text-guac-muted mt-1.5">{subtitle}</p>}
       </div>
       {badge && (
-        <span className="text-[10px] uppercase tracking-wider font-bold text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-full shrink-0">
+        <span className="text-[10px] uppercase tracking-[0.12em] font-extrabold text-guac-700 bg-guac-100 px-2.5 py-1 rounded-full shrink-0">
           {badge}
         </span>
       )}

@@ -1,0 +1,55 @@
+{
+  "signup": {
+    "total": 20,
+    "wallClockMs": 4396,
+    "statusDistribution": {
+      "200": 20
+    },
+    "created": [
+      "qau4aj00",
+      "qau4aj01",
+      "qau4aj02",
+      "qau4aj03",
+      "qau4aj04",
+      "qau4aj05",
+      "qau4aj06",
+      "qau4aj07",
+      "qau4aj08",
+      "qau4aj09",
+      "qau4aj10",
+      "qau4aj11",
+      "qau4aj12",
+      "qau4aj13",
+      "qau4aj14",
+      "qau4aj15",
+      "qau4aj16",
+      "qau4aj17",
+      "qau4aj18",
+      "qau4aj19"
+    ],
+    "createdCount": 20,
+    "rateLimited": 0,
+    "latency": {
+      "min": 3073,
+      "max": 4388,
+      "avg": 3954
+    },
+    "sampleErrors": []
+  },
+  "functions": {
+    "concurrent": 20,
+    "wallClockMs": 1506,
+    "ok": 20,
+    "failed": [],
+    "latency": {
+      "min": 301,
+      "max": 1505,
+      "avg": 615
+    },
+    "slowest": [
+      "/rewards 1505ms",
+      "/profile 1256ms",
+      "/steals 1196ms"
+    ]
+  }
+}

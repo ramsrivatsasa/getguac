@@ -86,16 +86,16 @@ export default function AddressInput({
         )}
       </div>
       {open && results.length > 0 && (
-        <ul className="absolute left-0 right-0 mt-1 z-30 bg-white rounded-2xl border border-emerald-100 shadow-lg overflow-hidden max-h-64 overflow-y-auto">
+        <ul className="absolute left-0 right-0 mt-1 z-30 bg-white rounded-2xl border border-guac-line shadow-lg overflow-hidden max-h-64 overflow-y-auto">
           {results.map((r, i) => (
             <li key={r.place_id}
               onMouseEnter={() => setHighlight(i)}
               onMouseDown={(e) => { e.preventDefault(); pick(r) }}
               className={`px-3 py-2 cursor-pointer text-xs border-b border-gray-50 last:border-0 ${
-                i === highlight ? 'bg-emerald-50' : 'hover:bg-gray-50'
+                i === highlight ? 'bg-guac-50' : 'hover:bg-guac-row'
               }`}>
               <div className="flex items-start gap-2">
-                <MapPin size={11} className="mt-0.5 text-emerald-500 shrink-0" />
+                <MapPin size={11} className="mt-0.5 text-guac-600 shrink-0" />
                 <span className="text-gray-700 leading-snug">{r.display_name}</span>
               </div>
             </li>

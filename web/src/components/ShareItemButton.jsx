@@ -148,10 +148,10 @@ export function ShareItemButton({ item, buildPayload, triggerClassName }) {
         Share this item via…
       </div>
       {[
-        { key: 'whatsapp', icon: <MessageCircle size={14} className="text-emerald-600" />, label: 'WhatsApp', tone: 'hover:bg-emerald-50' },
+        { key: 'whatsapp', icon: <MessageCircle size={14} className="text-guac-600" />, label: 'WhatsApp', tone: 'hover:bg-guac-50' },
         { key: 'sms',      icon: <Phone size={14} className="text-sky-600" />,            label: 'Text / SMS', tone: 'hover:bg-sky-50' },
         { key: 'email',    icon: <Mail size={14} className="text-amber-600" />,           label: 'Email',     tone: 'hover:bg-amber-50' },
-        { key: 'copy',     icon: <Copy size={14} className="text-gray-600" />,            label: 'Copy link', tone: 'hover:bg-gray-50' },
+        { key: 'copy',     icon: <Copy size={14} className="text-gray-600" />,            label: 'Copy link', tone: 'hover:bg-guac-row' },
         { key: 'native',   icon: <Share2 size={14} className="text-violet-600" />,        label: 'More…',     tone: 'hover:bg-violet-50' },
       ].map(opt => (
         <button
@@ -177,7 +177,7 @@ export function ShareItemButton({ item, buildPayload, triggerClassName }) {
         onClick={() => setOpen(v => !v)}
         disabled={busy}
         title="Share this item"
-        className={triggerClassName || 'w-8 h-8 rounded-xl bg-white/70 hover:bg-white text-emerald-700 hover:text-emerald-900 ring-1 ring-emerald-200 shadow-sm hover:shadow-md active:scale-95 transition-all flex items-center justify-center'}
+        className={triggerClassName || 'w-8 h-8 rounded-xl bg-white/70 hover:bg-white text-guac-700 hover:text-guac-ink ring-1 ring-guac-100 shadow-sm hover:shadow-md active:scale-95 transition-all flex items-center justify-center'}
       >
         <Share2 size={13} />
       </button>

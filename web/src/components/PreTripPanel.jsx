@@ -55,18 +55,18 @@ export default function PreTripPanel() {
   const hiddenCount = grouped.length - visibleGroups.length
 
   return (
-    <div className="card border-l-4 border-emerald-300 bg-emerald-50/30 py-3 px-4">
+    <div className="card border-l-4 border-guac-line2 bg-guac-50/30 py-3 px-4">
       <div className="flex items-center justify-between gap-3 mb-2">
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
-            <ShoppingCart size={16} className="text-emerald-700" />
+          <div className="w-9 h-9 rounded-full bg-guac-100 flex items-center justify-center shrink-0">
+            <ShoppingCart size={16} className="text-guac-700" />
           </div>
           <div>
-            <p className="text-sm font-bold text-emerald-900">
+            <p className="text-sm font-bold text-guac-ink">
               Heading out? You usually buy {pending.length} item{pending.length === 1 ? '' : 's'}
               {grouped.length > 1 && <> across {grouped.length} store{grouped.length === 1 ? '' : 's'}</>}
             </p>
-            <p className="text-[11px] text-emerald-800/80">
+            <p className="text-[11px] text-guac-700/80">
               Glance before you walk in — combine the trip if it makes sense.
             </p>
           </div>
@@ -74,7 +74,7 @@ export default function PreTripPanel() {
         <div className="flex items-center gap-1 shrink-0">
           <Link
             href="/shopping"
-            className="inline-flex items-center gap-1 h-8 px-3 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-900 text-xs font-bold transition-colors"
+            className="inline-flex items-center gap-1 h-8 px-3 rounded-lg bg-guac-100 hover:bg-guac-100 text-guac-ink text-xs font-bold transition-colors"
           >
             Plan
             <ChevronRight size={12} />
@@ -82,7 +82,7 @@ export default function PreTripPanel() {
           <button
             type="button"
             onClick={dismiss}
-            className="w-8 h-8 rounded-lg text-emerald-700 hover:bg-emerald-100 flex items-center justify-center transition-colors"
+            className="w-8 h-8 rounded-lg text-guac-700 hover:bg-guac-100 flex items-center justify-center transition-colors"
             aria-label="Hide until next session"
             title="Hide until next session"
           >
@@ -96,11 +96,11 @@ export default function PreTripPanel() {
           const storeName = group.items[0]?.store?.store_name
           const display = storeName ? displayStoreName(storeName) : 'NO STORE TAGGED'
           return (
-            <div key={group.storeId || 'nostore'} className="rounded-lg bg-white border border-emerald-100 px-3 py-2">
+            <div key={group.storeId || 'nostore'} className="rounded-lg bg-white border border-guac-line px-3 py-2">
               <div className="flex items-center gap-1.5 mb-1">
-                <MapPin size={11} className="text-emerald-700" />
-                <p className="font-bold text-emerald-900 text-xs truncate">{display}</p>
-                <span className="text-[10px] text-emerald-700/70 shrink-0">·{group.itemCount}</span>
+                <MapPin size={11} className="text-guac-700" />
+                <p className="font-bold text-guac-ink text-xs truncate">{display}</p>
+                <span className="text-[10px] text-guac-700/70 shrink-0">·{group.itemCount}</span>
               </div>
               <p className="text-[11px] text-gray-600 truncate">
                 {group.items.slice(0, 3).map(i => i.item_name).join(' · ')}
@@ -112,7 +112,7 @@ export default function PreTripPanel() {
         {hiddenCount > 0 && (
           <Link
             href="/shopping"
-            className="rounded-lg bg-emerald-100/50 border border-dashed border-emerald-200 px-3 py-2 flex items-center justify-center text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors"
+            className="rounded-lg bg-guac-100/50 border border-dashed border-guac-line2 px-3 py-2 flex items-center justify-center text-xs font-semibold text-guac-700 hover:bg-guac-100 transition-colors"
           >
             +{hiddenCount} more store{hiddenCount === 1 ? '' : 's'} →
           </Link>

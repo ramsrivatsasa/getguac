@@ -187,7 +187,7 @@ export default function ItemDetailPage() {
   if (!item) return (
     <div className="text-rose-500 py-10 text-center flex flex-col items-center gap-3">
       <p>Item not found.</p>
-      <Link href="/stash" className="text-sm text-emerald-700 font-semibold hover:underline">Back to stash</Link>
+      <Link href="/stash" className="text-sm text-guac-700 font-semibold hover:underline">Back to stash</Link>
     </div>
   )
 
@@ -264,17 +264,17 @@ export default function ItemDetailPage() {
             Buy {buys90}
           </span>
         ) : (
-          <span className="inline-flex px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-emerald-50 text-emerald-700">
+          <span className="inline-flex px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-guac-50 text-guac-700">
             In your kitchen
           </span>
         )}
 
         {/* Big bold title + lighter subtitle (category · last store · last date) */}
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-gray-900 leading-tight">
+          <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-guac-ink leading-tight">
             {item.item_name || 'Item'}
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-guac-muted mt-1">
             {[
               item.category && titleCase(item.category),
               displayStoreName(item.receipt?.store_name),
@@ -287,7 +287,7 @@ export default function ItemDetailPage() {
             CountUp tweens the dollar figure on mount so "lifetime spent" lands
             with the same retally cadence as the dashboard hero numbers. */}
         <div className="flex items-center gap-3">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-800 text-sm font-extrabold tabular-nums">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-guac-100 text-guac-700 text-sm font-extrabold tabular-nums">
             <span aria-hidden>🥑</span>
             <CountUp value={Number(totalSpent) || 0} duration={520} prefix="$" decimals={2} from={0} />
           </span>
@@ -315,11 +315,11 @@ export default function ItemDetailPage() {
       {stores.length > 0 && (
         <section className="mt-5 bg-white rounded-2xl shadow-sm px-5 py-4">
           <h2 className="font-semibold text-gray-900 text-sm mb-3 flex items-center gap-2">
-            <MapPin size={14} className="text-emerald-600" /> Where you've bought it
+            <MapPin size={14} className="text-guac-600" /> Where you've bought it
           </h2>
           {/* Staggered fade-in on mount — each store row lands with
               a 35ms offset so the list reads as building itself up. */}
-          <FadeUpStagger as="ul" className="divide-y divide-gray-100" delayMs={35}>
+          <FadeUpStagger as="ul" className="divide-y divide-guac-line" delayMs={35}>
             {stores.map(s => (
               <li key={s.name} className="flex items-center gap-3 py-2.5">
                 <StoreLogo storeName={s.name} size={32} fallbackEmoji="🏬" emojiBg="#15803d" />
@@ -340,12 +340,12 @@ export default function ItemDetailPage() {
         <h2 className="font-semibold text-gray-900 text-sm mb-3 flex items-center gap-2">
           <Receipt size={14} className="text-sky-600" /> Recent receipts
         </h2>
-        <FadeUpStagger as="ul" className="divide-y divide-gray-100" delayMs={35}>
+        <FadeUpStagger as="ul" className="divide-y divide-guac-line" delayMs={35}>
           {sortedRows.slice(0, 5).map(r => (
             <li key={r.id}>
               <Link
                 href={`/receipts/${r.receipt?.id}`}
-                className="flex items-center gap-3 py-2.5 -mx-1 px-1 rounded-lg hover:bg-gray-50 transition"
+                className="flex items-center gap-3 py-2.5 -mx-1 px-1 rounded-lg hover:bg-guac-row transition"
               >
                 <div className="text-xs font-semibold text-gray-500 w-16 tabular-nums shrink-0">
                   {formatDateShort(r.receipt?.date)}
@@ -353,7 +353,7 @@ export default function ItemDetailPage() {
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold text-gray-800 truncate">
                     {displayStoreName(r.receipt?.store_name) || '—'}
-                    {r.isCurrent && <span className="ml-1.5 text-[10px] font-bold text-emerald-700">· this</span>}
+                    {r.isCurrent && <span className="ml-1.5 text-[10px] font-bold text-guac-700">· this</span>}
                   </p>
                   <p className="text-[11px] text-gray-500">
                     {r.qty} unit{r.qty === 1 ? '' : 's'} · ${(r.price || 0).toFixed(2)}

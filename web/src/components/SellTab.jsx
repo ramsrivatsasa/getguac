@@ -64,7 +64,7 @@ export default function SellTab({ query = '' }) {
         {LISTING_CATEGORIES.map((c) => (
           <button key={c} onClick={() => setCategory(c)}
             className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
-              category === c ? 'bg-emerald-600 text-white shadow' : 'bg-white text-gray-600 border border-gray-200 hover:border-emerald-200 hover:text-emerald-700'
+              category === c ? 'bg-guac-700 text-white shadow' : 'bg-white text-gray-600 border border-gray-200 hover:border-guac-line2 hover:text-guac-700'
             }`}>
             {c}
           </button>
@@ -143,7 +143,7 @@ function SellCta({ me, onClick, className = '', label = 'Sell an item' }) {
 function ListingCard({ l, onClick }) {
   const img = Array.isArray(l.images) && l.images[0]
   return (
-    <button onClick={onClick} className="text-left bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-lg hover:border-emerald-200 hover:-translate-y-0.5 transition-all flex flex-col">
+    <button onClick={onClick} className="text-left bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-lg hover:border-guac-line2 hover:-translate-y-0.5 transition-all flex flex-col">
       <div className="relative bg-gray-50 flex items-center justify-center" style={{ aspectRatio: '1 / 1' }}>
         {img
           // eslint-disable-next-line @next/next/no-img-element
@@ -199,7 +199,7 @@ function ListingForm({ onClose, onCreated }) {
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {/* Photos */}
           <div>
-            <button type="button" onClick={() => fileRef.current?.click()} className="w-full border-2 border-dashed border-emerald-200 rounded-xl py-5 flex flex-col items-center gap-1 text-emerald-700 hover:bg-emerald-50">
+            <button type="button" onClick={() => fileRef.current?.click()} className="w-full border-2 border-dashed border-guac-line2 rounded-xl py-5 flex flex-col items-center gap-1 text-guac-700 hover:bg-guac-50">
               <ImagePlus size={22} />
               <span className="text-sm font-semibold">{files.length ? `${files.length} photo${files.length > 1 ? 's' : ''} selected` : 'Add photos (up to 5)'}</span>
             </button>
@@ -261,7 +261,7 @@ function ListingDetail({ l, me, onClose, onChanged }) {
     <div className="fixed inset-0 z-[120] bg-black/60 flex items-center justify-center p-4" onClick={onClose}>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between p-3 border-b border-gray-100">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Listing</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-guac-700">Listing</span>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-700"><X size={20} /></button>
         </div>
         <div className="flex-1 overflow-y-auto">
@@ -274,7 +274,7 @@ function ListingDetail({ l, me, onClose, onChanged }) {
             </div>
           )}
           <div className="p-4 space-y-2">
-            <p className="text-2xl font-extrabold text-emerald-700">{Number(l.price) === 0 ? 'Free' : money(l.price)}</p>
+            <p className="text-2xl font-extrabold text-guac-700">{Number(l.price) === 0 ? 'Free' : money(l.price)}</p>
             <h3 className="text-lg font-bold text-gray-900">{l.title}</h3>
             <div className="flex items-center gap-2 flex-wrap text-xs text-gray-500">
               {l.condition && <span className="px-2 py-0.5 rounded-full bg-gray-100 font-semibold">{l.condition}</span>}
@@ -283,7 +283,7 @@ function ListingDetail({ l, me, onClose, onChanged }) {
             </div>
             {l.description && <p className="text-sm text-gray-700 whitespace-pre-wrap pt-1">{l.description}</p>}
             {l.receipt_id && (
-              <p className="text-xs text-emerald-700 inline-flex items-center gap-1 pt-1"><BadgeCheck size={13} /> Proof of purchase on file</p>
+              <p className="text-xs text-guac-700 inline-flex items-center gap-1 pt-1"><BadgeCheck size={13} /> Proof of purchase on file</p>
             )}
           </div>
         </div>

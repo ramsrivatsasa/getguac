@@ -12,7 +12,7 @@ export default function HeaderSearch({ className = '' }) {
         placeholder="Search products or stores…"
         aria-label="Search the GetGuac Marketplace"
         autoComplete="off"
-        className="w-full pl-9 pr-3 py-2 rounded-full border border-emerald-200 bg-white/90 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+        className="w-full pl-9 pr-3 py-2 rounded-full border border-guac-line2 bg-white/90 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-guac-600"
       />
     </form>
   )

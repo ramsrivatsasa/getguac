@@ -13,6 +13,7 @@ import {
   Banknote, FileText, AlertTriangle, Percent, CreditCard, Trash2, ExternalLink, ChevronDown, ChevronRight, Sparkles, ArrowLeft, Upload, Calendar, Clock, Wand2, Loader2, RefreshCw
 } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
+import { StoreLogo } from '../../../components/StoreLogo'
 import { bankAccountTotals, PERIODS } from '../../../lib/financeInsights'
 import { CountUp } from '../../../components/animated'
 const FEE_KIND_TONE = {
@@ -23,11 +24,11 @@ const FEE_KIND_TONE = {
 
 const KIND_STYLE = {
   purchase:   { label: 'Purchase',   cls: 'bg-rose-50 text-rose-700 border-rose-100' },
-  refund:     { label: 'Refund',     cls: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
+  refund:     { label: 'Refund',     cls: 'bg-guac-50 text-guac-700 border-guac-line' },
   fee:        { label: 'Fee',        cls: 'bg-amber-50 text-amber-800 border-amber-100' },
   interest:   { label: 'Interest',   cls: 'bg-orange-50 text-orange-800 border-orange-100' },
   payment:    { label: 'Payment',    cls: 'bg-gray-100 text-gray-700 border-gray-200' },
-  deposit:    { label: 'Deposit',    cls: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
+  deposit:    { label: 'Deposit',    cls: 'bg-guac-50 text-guac-700 border-guac-line' },
   withdrawal: { label: 'Withdrawal', cls: 'bg-rose-50 text-rose-700 border-rose-100' },
   transfer:   { label: 'Transfer',   cls: 'bg-sky-50 text-sky-700 border-sky-100' },
   other:      { label: 'Other',      cls: 'bg-gray-100 text-gray-700 border-gray-200' },
@@ -535,7 +536,7 @@ export default function BankPage() {
           <details className="card group" open>
             <summary className="cursor-pointer flex items-center justify-between gap-2 list-none">
               <div className="flex items-center gap-2">
-                <CreditCard size={16} className="text-emerald-600" />
+                <CreditCard size={16} className="text-guac-600" />
                 <h3 className="font-semibold text-gray-900 text-sm">All transactions across this account</h3>
                 <span className="text-[11px] text-gray-400">· {combinedTx.length} rows from {pickedBank.statements.length} statement{pickedBank.statements.length === 1 ? '' : 's'}</span>
               </div>
@@ -552,7 +553,7 @@ export default function BankPage() {
             <h3 className="font-semibold text-gray-900 text-sm">Statements for {pickedBank.issuer}</h3>
           </div>
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-[10px] text-gray-500 uppercase tracking-wide">
+            <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
               <tr>
                 <th className="px-3 py-2 text-left">Period</th>
                 <th className="px-3 py-2 text-left">Account</th>
@@ -563,9 +564,9 @@ export default function BankPage() {
                 <th className="px-3 py-2 w-10"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-guac-line">
               {pickedBank.statements.map(s => (
-                <tr key={s.id} className="hover:bg-gray-50/60 cursor-pointer"
+                <tr key={s.id} className="hover:bg-guac-row cursor-pointer"
                   onClick={() => { setPickedStatementId(s.id); setView('transactions') }}>
                   <td className="px-3 py-3 font-medium text-gray-900 whitespace-nowrap">
                     {s.period_start && s.period_end ? `${s.period_start} → ${s.period_end}` : '—'}
@@ -573,7 +574,7 @@ export default function BankPage() {
                     {s.minimum_payment_due != null && s.payment_due_date && (() => {
                       const d = daysUntil(s.payment_due_date)
                       const tone = d == null ? 'gray' : d < 0 ? 'rose' : d <= 7 ? 'amber' : 'emerald'
-                      const cls = { rose: 'bg-rose-100 text-rose-700', amber: 'bg-amber-100 text-amber-800', emerald: 'bg-emerald-100 text-emerald-800', gray: 'bg-gray-100 text-gray-600' }[tone]
+                      const cls = { rose: 'bg-rose-100 text-rose-700', amber: 'bg-amber-100 text-amber-800', emerald: 'bg-guac-100 text-guac-700', gray: 'bg-gray-100 text-gray-600' }[tone]
                       return (
                         <div className={`inline-block mt-1 ml-0 px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${cls}`}>
                           ${Number(s.minimum_payment_due).toFixed(2)} due {s.payment_due_date}
@@ -591,7 +592,7 @@ export default function BankPage() {
                   </td>
                   <td className="px-3 py-3 text-right text-xs">
                     {s.reconciled_count > 0
-                      ? <span className="font-semibold text-emerald-700">{s.reconciled_count}</span>
+                      ? <span className="font-semibold text-guac-700">{s.reconciled_count}</span>
                       : <span className="text-gray-300">0</span>}
                   </td>
                   <td className="px-3 py-3 text-right text-xs text-gray-500">{new Date(s.uploaded_at).toLocaleDateString()}</td>
@@ -627,13 +628,13 @@ export default function BankPage() {
       {/* Drag-anywhere overlay */}
       {pageDragging && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-emerald-500/20 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-guac-600/20 backdrop-blur-sm"
           onDragOver={(e) => { e.preventDefault(); e.stopPropagation() }}
           onDrop={handleOverlayDrop}
         >
-          <div className="rounded-2xl border-4 border-dashed border-emerald-500 bg-white/95 px-10 py-8 flex flex-col items-center gap-3 shadow-2xl pointer-events-none">
+          <div className="rounded-2xl border-4 border-dashed border-guac-600 bg-white/95 px-10 py-8 flex flex-col items-center gap-3 shadow-2xl pointer-events-none">
             <GuacMascot expression="rich" size={64} />
-            <p className="text-xl font-semibold text-emerald-800">Drop to crunch this statement</p>
+            <p className="text-xl font-semibold text-guac-700">Drop to crunch this statement</p>
             <p className="text-sm text-gray-500">PDF or image — we&apos;ll parse every transaction</p>
           </div>
         </div>
@@ -648,13 +649,13 @@ export default function BankPage() {
       {/* Big drop card — always visible so users see it without dragging */}
       <div {...getRootProps()} className={
         'card border-2 border-dashed text-center cursor-pointer transition-all py-5 ' +
-        (isDragActive ? 'border-emerald-500 bg-emerald-50' : 'border-emerald-200 hover:border-emerald-400 hover:bg-emerald-50/40')
+        (isDragActive ? 'border-guac-600 bg-guac-50' : 'border-guac-line2 hover:border-guac-600 hover:bg-guac-50/40')
       }>
         <input {...getInputProps()} />
         <div className="flex items-center justify-center gap-3">
           <GuacMascot expression="thumbsup" size={32} />
           <div className="text-left">
-            <p className="font-bold text-emerald-900">Drop a statement here, or click to pick a file</p>
+            <p className="font-bold text-guac-ink">Drop a statement here, or click to pick a file</p>
             <p className="text-[11px] text-gray-500">PDF or image · drag it from any screen · you can also paste with Ctrl+V on the next page</p>
           </div>
         </div>
@@ -687,7 +688,7 @@ export default function BankPage() {
                 <button
                   onClick={() => repairLedger.mutate()}
                   disabled={repairLedger.isPending}
-                  className="inline-flex items-center gap-2 text-xs font-bold px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+                  className="inline-flex items-center gap-2 text-xs font-bold px-3 py-1.5 rounded-lg bg-guac-700 text-white hover:bg-guac-700 disabled:opacity-50 transition-colors"
                 >
                   {repairLedger.isPending ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
                   Repair from receipts
@@ -706,7 +707,7 @@ export default function BankPage() {
         <div className="inline-flex bg-gray-100 rounded-xl p-1 gap-1 flex-wrap">
           {PERIODS.map(p => (
             <button key={p.key} onClick={() => setPeriod(p.key)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${period === p.key ? 'bg-white text-emerald-800 shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}>
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${period === p.key ? 'bg-white text-guac-700 shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}>
               {p.label}
             </button>
           ))}
@@ -716,7 +717,7 @@ export default function BankPage() {
             type="button"
             onClick={() => refreshAll.mutate()}
             disabled={refreshAll.isPending || statements.length === 0}
-            className="inline-flex items-center gap-2 h-9 px-3 rounded-xl bg-white border border-emerald-200 text-emerald-800 font-bold text-xs shadow-sm hover:bg-emerald-50 disabled:opacity-50 transition-all"
+            className="inline-flex items-center gap-2 h-9 px-3 rounded-xl bg-white border border-guac-line2 text-guac-700 font-bold text-xs shadow-sm hover:bg-guac-50 disabled:opacity-50 transition-all"
             title="Re-sync counters from actual rows, backfill missing transactions, and re-run reconcile"
           >
             {refreshAll.isPending
@@ -778,7 +779,7 @@ export default function BankPage() {
                     <p className="text-[11px] text-gray-500">
                       {b.statements.length} statement{b.statements.length === 1 ? '' : 's'} · latest {b.latestPeriod || '—'}
                     </p>
-                    <p className="text-[10px] text-emerald-700 font-semibold uppercase tracking-wider mt-0.5">
+                    <p className="text-[10px] text-guac-700 font-semibold uppercase tracking-wider mt-0.5">
                       {(PERIODS.find(p => p.key === period) || PERIODS[3]).label}
                     </p>
                     {b.issuerAliases.length > 1 && (
@@ -788,7 +789,7 @@ export default function BankPage() {
                     )}
                   </div>
                 </div>
-                <ChevronRight size={18} className="text-gray-300 group-hover:text-emerald-600 transition-colors shrink-0" />
+                <ChevronRight size={18} className="text-gray-300 group-hover:text-guac-600 transition-colors shrink-0" />
               </div>
               <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
                 <div className="rounded-lg bg-rose-50 border border-rose-100 px-2 py-1.5">
@@ -809,9 +810,9 @@ export default function BankPage() {
                   <p className="text-[9px] uppercase tracking-wider text-orange-700 font-semibold">Interest paid</p>
                   <p className="font-bold text-orange-800">${b.totalInterest.toFixed(2)}</p>
                 </div>
-                <div className="rounded-lg bg-emerald-50 border border-emerald-100 px-2 py-1.5 col-span-2">
-                  <p className="text-[9px] uppercase tracking-wider text-emerald-600 font-semibold">Refunds</p>
-                  <p className="font-bold text-emerald-700">${b.totalRefunds.toFixed(2)}</p>
+                <div className="rounded-lg bg-guac-50 border border-guac-line px-2 py-1.5 col-span-2">
+                  <p className="text-[9px] uppercase tracking-wider text-guac-600 font-semibold">Refunds</p>
+                  <p className="font-bold text-guac-700">${b.totalRefunds.toFixed(2)}</p>
                 </div>
               </div>
             </button>
@@ -829,8 +830,8 @@ function PageHeader({ title, subtitle, cta }) {
     <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
       <GuacMascot expression="rich" size={60} className="shrink-0" />
       <div className="min-w-0">
-        <h1 className="text-2xl sm:text-3xl font-black text-gray-900 leading-none tracking-tight">{title}</h1>
-        {subtitle && <p className="text-xs sm:text-sm text-gray-500 mt-1.5">{subtitle}</p>}
+        <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-guac-ink leading-none tracking-tight">{title}</h1>
+        {subtitle && <p className="text-xs sm:text-sm text-guac-muted mt-1.5">{subtitle}</p>}
       </div>
       {cta && <div className="ml-auto shrink-0">{cta}</div>}
     </div>
@@ -840,14 +841,14 @@ function PageHeader({ title, subtitle, cta }) {
 function Breadcrumb({ onBank, onIssuer, issuer, leaf }) {
   return (
     <div className="flex items-center gap-2 text-sm text-gray-500 flex-wrap">
-      <button onClick={onBank} className="inline-flex items-center gap-1 hover:text-emerald-700 font-medium">
+      <button onClick={onBank} className="inline-flex items-center gap-1 hover:text-guac-700 font-medium">
         <ArrowLeft size={14} /> Banks
       </button>
       {issuer && (
         <>
           <ChevronRight size={12} className="text-gray-300" />
           {onIssuer ? (
-            <button onClick={onIssuer} className="hover:text-emerald-700 font-medium">{issuer}</button>
+            <button onClick={onIssuer} className="hover:text-guac-700 font-medium">{issuer}</button>
           ) : (
             <span className="font-semibold text-gray-700">{issuer}</span>
           )}
@@ -891,7 +892,7 @@ function FinanceSummary({ statement: s }) {
   const DUE_TONE = {
     rose:    'bg-rose-50 text-rose-800 border-rose-200',
     amber:   'bg-amber-50 text-amber-800 border-amber-200',
-    emerald: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+    emerald: 'bg-guac-50 text-guac-700 border-guac-line2',
     gray:    'bg-gray-50 text-gray-700 border-gray-200',
   }
 
@@ -953,16 +954,16 @@ function FinanceSummary({ statement: s }) {
       )}
 
       {(s.new_balance != null && s.minimum_payment_due != null && s.purchase_apr != null) && (
-        <div className="mt-3 rounded-xl border border-emerald-100 bg-gradient-to-br from-emerald-50/70 via-white to-amber-50/40 p-3">
+        <div className="mt-3 rounded-xl border border-guac-line bg-gradient-to-br from-emerald-50/70 via-white to-amber-50/40 p-3">
           <div className="flex items-start gap-3">
-            <Clock size={18} className="text-emerald-700 shrink-0 mt-0.5" />
+            <Clock size={18} className="text-guac-700 shrink-0 mt-0.5" />
             <div className="flex-1">
-              <p className="text-xs font-semibold text-emerald-900">Paying minimum only?</p>
+              <p className="text-xs font-semibold text-guac-ink">Paying minimum only?</p>
               {s.payoff_months_min == null ? (
                 <p className="text-sm text-rose-700 font-bold mt-0.5">Minimum doesn&apos;t even cover monthly interest — balance grows forever.</p>
               ) : (
                 <p className="text-sm text-gray-700 mt-0.5">
-                  <span className="font-bold text-emerald-800">{payoffMonthsLabel(s.payoff_months_min)}</span> to clear ${Number(s.new_balance).toFixed(2)}
+                  <span className="font-bold text-guac-700">{payoffMonthsLabel(s.payoff_months_min)}</span> to clear ${Number(s.new_balance).toFixed(2)}
                   {s.payoff_total_interest != null && (
                     <> · costs you <span className="font-bold text-rose-700">${Number(s.payoff_total_interest).toFixed(2)}</span> in interest</>
                   )}
@@ -979,7 +980,7 @@ function FinanceSummary({ statement: s }) {
 const FINANCE_TONE = {
   rose:    'bg-rose-50 text-rose-700 border-rose-100',
   indigo:  'bg-indigo-50 text-indigo-700 border-indigo-100',
-  emerald: 'bg-emerald-50 text-emerald-700 border-emerald-100',
+  emerald: 'bg-guac-50 text-guac-700 border-guac-line',
   gray:    'bg-gray-50 text-gray-700 border-gray-200',
 }
 function FinanceCell({ label, value, accent = 'gray', emoji }) {
@@ -1088,7 +1089,7 @@ function StatementDetail({ statement, fees, transactions }) {
             <div className="inline-flex bg-gray-50 rounded-lg p-0.5 gap-0.5 border border-gray-100 flex-wrap">
               {['all', ...Object.keys(counts).filter(k => k !== 'all')].map(k => (
                 <button key={k} onClick={() => setKindFilter(k)}
-                  className={`px-2 py-0.5 rounded-md text-[10px] font-semibold transition-all ${kindFilter === k ? 'bg-white text-emerald-800 shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}>
+                  className={`px-2 py-0.5 rounded-md text-[10px] font-semibold transition-all ${kindFilter === k ? 'bg-white text-guac-700 shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}>
                   {k === 'all' ? 'All' : (KIND_STYLE[k]?.label || k)} <span className="text-gray-400">{counts[k]}</span>
                 </button>
               ))}
@@ -1096,8 +1097,8 @@ function StatementDetail({ statement, fees, transactions }) {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead className="bg-gray-50 text-[10px] text-gray-500 uppercase tracking-wide border-b border-gray-100">
+            <table className="w-full text-sm">
+              <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
                 <tr>
                   <th className="px-2 py-2 text-left">Date</th>
                   <th className="px-2 py-2 text-left">Kind</th>
@@ -1107,11 +1108,11 @@ function StatementDetail({ statement, fees, transactions }) {
                   <th className="px-2 py-2 text-right">Amount</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-guac-line">
                 {visible.map(tx => {
                   const k = KIND_STYLE[tx.kind] || KIND_STYLE.other
                   return (
-                    <tr key={tx.id} className="hover:bg-gray-50/60">
+                    <tr key={tx.id} className="hover:bg-guac-row">
                       <td className="px-2 py-1.5 whitespace-nowrap text-gray-600">{formatDateShort(tx.date)}</td>
                       <td className="px-2 py-1.5">
                         <span className={`inline-block px-1.5 py-0.5 rounded-full text-[10px] font-semibold border ${k.cls}`}>
@@ -1127,7 +1128,7 @@ function StatementDetail({ statement, fees, transactions }) {
                       <td className="px-2 py-1.5 text-gray-500">{tx.category || '—'}</td>
                       <td className="px-2 py-1.5 text-[10px]">
                         {tx.receipts ? (
-                          <Link href={`/receipts/${tx.receipts.id}`} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 font-semibold">
+                          <Link href={`/receipts/${tx.receipts.id}`} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-guac-50 text-guac-700 border border-guac-line font-semibold">
                             Imported <ExternalLink size={9} />
                           </Link>
                         ) : tx.is_fee || tx.is_interest ? (
@@ -1138,10 +1139,10 @@ function StatementDetail({ statement, fees, transactions }) {
                           <span className="inline-block px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500 border border-gray-200">Not imported</span>
                         )}
                         {tx.business && (
-                          <span className="ml-1 inline-block px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100 font-semibold">Biz</span>
+                          <span className="ml-1 inline-block px-1.5 py-0.5 rounded-full bg-guac-50 text-guac-700 border border-blue-100 font-semibold">Biz</span>
                         )}
                       </td>
-                      <td className={'px-2 py-1.5 text-right font-mono ' + (tx.amount < 0 ? 'text-emerald-700' : 'text-gray-900')}>
+                      <td className={'px-2 py-1.5 text-right font-mono ' + (tx.amount < 0 ? 'text-guac-700' : 'text-gray-900')}>
                         ${tx.amount.toFixed(2)}
                       </td>
                     </tr>
@@ -1202,15 +1203,15 @@ function CombinedTransactionTable({ transactions, statements }) {
         <div className="inline-flex bg-gray-50 rounded-lg p-0.5 gap-0.5 border border-gray-100 flex-wrap">
           {['all', ...Object.keys(counts).filter(k => k !== 'all')].map(k => (
             <button key={k} onClick={() => setKindFilter(k)}
-              className={`px-2 py-0.5 rounded-md text-[10px] font-semibold transition-all ${kindFilter === k ? 'bg-white text-emerald-800 shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}>
+              className={`px-2 py-0.5 rounded-md text-[10px] font-semibold transition-all ${kindFilter === k ? 'bg-white text-guac-700 shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}>
               {k === 'all' ? 'All' : (KIND_STYLE[k]?.label || k)} <span className="text-gray-400">{counts[k]}</span>
             </button>
           ))}
         </div>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full text-xs">
-          <thead className="bg-gray-50 text-[10px] text-gray-500 uppercase tracking-wide border-b border-gray-100">
+        <table className="w-full text-sm">
+          <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
             <tr>
               <th className="px-2 py-2 text-left">Date</th>
               <th className="px-2 py-2 text-left">Kind</th>
@@ -1220,25 +1221,32 @@ function CombinedTransactionTable({ transactions, statements }) {
               <th className="px-2 py-2 text-right">Amount</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-guac-line">
             {visible.map(tx => {
               const k = KIND_STYLE[tx.kind] || KIND_STYLE.other
               const stmt = stmtById.get(tx.statement_id)
               return (
-                <tr key={tx.id} className="hover:bg-gray-50/60">
+                <tr key={tx.id} className="hover:bg-guac-row">
                   <td className="px-2 py-1.5 whitespace-nowrap text-gray-600">{formatDateShort(tx.date)}</td>
                   <td className="px-2 py-1.5">
                     <span className={`inline-block px-1.5 py-0.5 rounded-full text-[10px] font-semibold border ${k.cls}`}>
                       {tx.fee_kind || k.label}
                     </span>
                   </td>
-                  <td className="px-2 py-1.5 text-gray-900 font-medium">{tx.merchant}</td>
+                  <td className="px-2 py-1.5 text-gray-900 font-medium">
+                    <div className="flex items-center gap-2">
+                      {!tx.is_fee && !tx.is_interest && !tx.is_payment && (
+                        <StoreLogo storeName={tx.merchant} size={20} />
+                      )}
+                      <span>{tx.merchant}</span>
+                    </div>
+                  </td>
                   <td className="px-2 py-1.5 text-[10px] text-gray-500 whitespace-nowrap">
                     {stmt?.period_start && stmt?.period_end ? `${stmt.period_start.slice(5)} → ${stmt.period_end.slice(5)}` : '—'}
                   </td>
                   <td className="px-2 py-1.5 text-[10px]">
                     {tx.receipts ? (
-                      <Link href={`/receipts/${tx.receipts.id}`} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 font-semibold">
+                      <Link href={`/receipts/${tx.receipts.id}`} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-guac-50 text-guac-700 border border-guac-line font-semibold">
                         Imported <ExternalLink size={9} />
                       </Link>
                     ) : tx.is_fee || tx.is_interest ? (
@@ -1249,7 +1257,7 @@ function CombinedTransactionTable({ transactions, statements }) {
                       <span className="inline-block px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500 border border-gray-200">Not imported</span>
                     )}
                   </td>
-                  <td className={'px-2 py-1.5 text-right font-mono ' + (tx.amount < 0 ? 'text-emerald-700' : 'text-gray-900')}>
+                  <td className={'px-2 py-1.5 text-right font-mono ' + (tx.amount < 0 ? 'text-guac-700' : 'text-gray-900')}>
                     ${tx.amount.toFixed(2)}
                   </td>
                 </tr>
@@ -1304,7 +1312,7 @@ const TOTAL_TONE = {
   orange:  { bg: 'bg-orange-50',  text: 'text-orange-700',  icon: 'text-orange-600'  },
   indigo:  { bg: 'bg-indigo-50',  text: 'text-indigo-700',  icon: 'text-indigo-600'  },
   sky:     { bg: 'bg-sky-50',     text: 'text-sky-700',     icon: 'text-sky-600'     },
-  emerald: { bg: 'bg-emerald-50', text: 'text-emerald-700', icon: 'text-emerald-600' },
+  emerald: { bg: 'bg-guac-50', text: 'text-guac-700', icon: 'text-guac-600' },
 }
 function Stat({ icon: Icon, tone, label, value, raw }) {
   const t = TOTAL_TONE[tone] || TOTAL_TONE.amber

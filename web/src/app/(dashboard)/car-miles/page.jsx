@@ -217,10 +217,10 @@ export default function CarMilesPage() {
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {[
-          { label: 'Business', miles: businessMiles, color: 'bg-blue-100 text-blue-700' },
+          { label: 'Business', miles: businessMiles, color: 'bg-guac-100 text-guac-700' },
           { label: 'Charity',  miles: charityMiles,  color: 'bg-rose-100 text-rose-700' },
           { label: 'Medical',  miles: medicalMiles,  color: 'bg-amber-100 text-amber-700' },
-          { label: 'Personal', miles: personalMiles, color: 'bg-green-100 text-green-700' },
+          { label: 'Personal', miles: personalMiles, color: 'bg-guac-100 text-guac-700' },
           { label: 'Total',    miles: businessMiles + charityMiles + medicalMiles + personalMiles, color: 'bg-purple-100 text-purple-700' },
         ].map(({ label, miles, color }) => (
           <div key={label} className="stat-card">
@@ -238,8 +238,8 @@ export default function CarMilesPage() {
           <h3 className="font-semibold">{editingId ? 'Edit Trip' : 'Add Trip'}</h3>
           <form onSubmit={handleSave} className="space-y-4">
             {/* From / To addresses with auto-calculate */}
-            <div className="rounded-2xl border border-emerald-100 bg-emerald-50/40 p-3 space-y-3">
-              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-800">
+            <div className="rounded-2xl border border-guac-line bg-guac-50/40 p-3 space-y-3">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-guac-700">
                 <MapPin size={12} /> Route (auto-calculates miles)
               </div>
               <div className="grid sm:grid-cols-2 gap-3">
@@ -247,7 +247,7 @@ export default function CarMilesPage() {
                   <div className="flex items-center justify-between">
                     <label className="label">From</label>
                     <button type="button" onClick={useMyLocation} disabled={locating}
-                      className="text-[10px] font-bold text-emerald-700 hover:text-emerald-900 inline-flex items-center gap-1 mb-1">
+                      className="text-[10px] font-bold text-guac-700 hover:text-guac-ink inline-flex items-center gap-1 mb-1">
                       {locating ? <Loader2 size={10} className="animate-spin" /> : <Crosshair size={10} />}
                       Use my location
                     </button>
@@ -273,7 +273,7 @@ export default function CarMilesPage() {
                           e.target.value = ''
                         }}
                         value=""
-                        className="text-[10px] font-bold text-emerald-700 bg-transparent border-none cursor-pointer mb-1">
+                        className="text-[10px] font-bold text-guac-700 bg-transparent border-none cursor-pointer mb-1">
                         <option value="" disabled>🏪 Pick a store…</option>
                         {storesList.map(st => (
                           <option key={st.id} value={st.id}>{displayStoreName(st.store_name)}</option>
@@ -342,8 +342,8 @@ export default function CarMilesPage() {
                     <button key={t.label} type="button" onClick={() => toggleTag(t.label)}
                       className={`px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all ${
                         active
-                          ? 'bg-emerald-600 border-emerald-600 text-white shadow'
-                          : 'bg-white border-gray-200 text-gray-600 hover:border-emerald-300 hover:text-emerald-800'
+                          ? 'bg-guac-700 border-guac-700 text-white shadow'
+                          : 'bg-white border-gray-200 text-gray-600 hover:border-guac-line2 hover:text-guac-700'
                       }`}>
                       {t.emoji} {t.label}
                     </button>
@@ -402,7 +402,7 @@ export default function CarMilesPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b text-xs text-gray-500 uppercase tracking-wide">
+              <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
                 <tr>
                   <th className="pl-4 pr-2 py-3 w-10">
                     <input type="checkbox" className="w-4 h-4 rounded cursor-pointer" checked={allSelected}
@@ -413,9 +413,9 @@ export default function CarMilesPage() {
                   )}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-guac-line">
                 {trips.map(t => (
-                  <tr key={t.id} className={`hover:bg-gray-50/50 ${selected.has(t.id) ? 'bg-blue-50/60' : ''}`}>
+                  <tr key={t.id} className={`hover:bg-guac-row ${selected.has(t.id) ? 'bg-guac-50/60' : ''}`}>
                     <td className="pl-4 pr-2 py-3">
                       <input type="checkbox" className="w-4 h-4 rounded cursor-pointer" checked={selected.has(t.id)}
                         onChange={() => toggleOne(t.id)} aria-label="Select trip" />
@@ -435,7 +435,7 @@ export default function CarMilesPage() {
                       {(t.tags || []).length > 0 && (
                         <div className="flex flex-wrap gap-1 mb-0.5">
                           {(t.tags || []).slice(0, 4).map(tag => (
-                            <span key={tag} className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">{tag}</span>
+                            <span key={tag} className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-guac-50 text-guac-700 border border-guac-line2">{tag}</span>
                           ))}
                           {(t.tags || []).length > 4 && <span className="text-[10px] text-gray-400">+{(t.tags || []).length - 4}</span>}
                         </div>
@@ -445,7 +445,7 @@ export default function CarMilesPage() {
                     <td className="px-4 py-3">
                       <div className="flex gap-1.5">
                         <button onClick={() => startEdit(t)} aria-label="Edit trip"
-                          className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 hover:bg-emerald-200 hover:scale-110 active:scale-95 transition-all flex items-center justify-center shadow-sm">
+                          className="w-8 h-8 rounded-full bg-guac-100 text-guac-700 hover:bg-guac-100 hover:scale-110 active:scale-95 transition-all flex items-center justify-center shadow-sm">
                           <Pencil size={14} />
                         </button>
                         <button onClick={() => del.mutate(t.id, { onSuccess: () => toast.success('Deleted') })} aria-label="Delete trip"

@@ -28,7 +28,7 @@ export default function DashboardSteals() {
   const { data: savedSearches = [] } = useSavedSearches()
   const steals = data?.steals || []
   const unread = data?.unread || 0
-  const [open, setOpen] = useState(true)
+  const [open, setOpen] = useState(false)
   if (!steals.length && !savedSearches.length) return null
 
   // Group by the configured steal (the saved search the deal came from).
@@ -56,17 +56,17 @@ export default function DashboardSteals() {
           type="button"
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
-          className="font-semibold text-gray-900 flex items-center gap-2 -m-1 p-1 rounded-lg hover:text-emerald-800"
+          className="font-semibold text-gray-900 flex items-center gap-2 -m-1 p-1 rounded-lg hover:text-guac-700"
         >
-          <Tag size={18} className="text-emerald-600" /> Steals for you
+          <Tag size={18} className="text-guac-600" /> Steals for you
           {unread > 0 && (
-            <span className="text-[11px] font-extrabold bg-emerald-100 text-emerald-700 rounded-full px-2 py-0.5">
+            <span className="text-[11px] font-extrabold bg-guac-100 text-guac-700 rounded-full px-2 py-0.5">
               {unread} new
             </span>
           )}
           <ChevronDown size={16} className={`text-gray-400 transition-transform ${open ? '' : '-rotate-90'}`} />
         </button>
-        <Link href="/steals" className="text-xs font-semibold text-emerald-700 hover:text-emerald-900 inline-flex items-center gap-1">
+        <Link href="/steals" className="text-xs font-semibold text-guac-700 hover:text-guac-ink inline-flex items-center gap-1">
           All steals <ArrowRight size={13} />
         </Link>
       </div>
@@ -83,7 +83,7 @@ export default function DashboardSteals() {
         {hunting.map((q) => (
           <div key={`hunt-${q}`}>
             <div className="text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1.5 truncate">{q}</div>
-            <Link href="/steals" className="flex items-center gap-2 text-xs text-gray-400 rounded-xl border border-dashed border-gray-200 bg-gray-50/60 px-3 py-3 hover:border-emerald-200 hover:text-emerald-700 transition-colors">
+            <Link href="/steals" className="flex items-center gap-2 text-xs text-gray-400 rounded-xl border border-dashed border-gray-200 bg-gray-50/60 px-3 py-3 hover:border-guac-line2 hover:text-guac-700 transition-colors">
               <Search size={13} className="animate-pulse" /> Hunting for deals on this — they’ll land here the moment we find one.
             </Link>
           </div>
@@ -154,7 +154,7 @@ function DealCard({ d }) {
       href={d.url || '/steals'}
       target={d.url ? '_blank' : undefined}
       rel="noopener noreferrer"
-      className="snap-start shrink-0 w-40 rounded-xl border border-gray-100 bg-white hover:shadow-md hover:border-emerald-200 transition overflow-hidden"
+      className="snap-start shrink-0 w-40 rounded-xl border border-gray-100 bg-white hover:shadow-md hover:border-guac-line2 transition overflow-hidden"
     >
       <div className="h-24 bg-gray-50 flex items-center justify-center overflow-hidden">
         {d.image ? (
@@ -167,7 +167,7 @@ function DealCard({ d }) {
       <div className="p-2.5">
         <p className="text-[11px] font-semibold text-gray-800 line-clamp-2 leading-tight min-h-[28px]">{d.title || d.store}</p>
         <div className="flex items-center gap-1.5 mt-1">
-          <span className="text-sm font-black text-emerald-700 tabular-nums">${price.toFixed(2)}</span>
+          <span className="text-sm font-black text-guac-700 tabular-nums">${price.toFixed(2)}</span>
           {orig > price && <span className="text-[10px] text-gray-400 line-through tabular-nums">${orig.toFixed(2)}</span>}
           {off > 0 && <span className="text-[9px] font-extrabold bg-rose-100 text-rose-700 rounded px-1">−{off}%</span>}
         </div>

@@ -157,11 +157,11 @@ export default function ChatPage() {
                         onClick={() => setActiveId(t.id)}
                         className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs text-left transition-colors ${
                           active
-                            ? 'bg-emerald-100 text-emerald-900 font-semibold'
-                            : 'hover:bg-emerald-50 text-gray-700'
+                            ? 'bg-guac-100 text-guac-ink font-semibold'
+                            : 'hover:bg-guac-50 text-gray-700'
                         }`}
                       >
-                        <span className="w-7 h-7 rounded-full bg-emerald-200/60 text-emerald-800 font-bold text-[11px] flex items-center justify-center shrink-0">
+                        <span className="w-7 h-7 rounded-full bg-guac-100/60 text-guac-700 font-bold text-[11px] flex items-center justify-center shrink-0">
                           {initialFor(row, t.peer_id)}
                         </span>
                         <span className="flex-1 min-w-0 truncate">{formatName(row, t.peer_id)}</span>
@@ -252,7 +252,7 @@ function Thread({ threadId, peerName, onBack }) {
         <button
           type="button"
           onClick={onBack}
-          className="lg:hidden text-emerald-700 text-xs font-semibold"
+          className="lg:hidden text-guac-700 text-xs font-semibold"
         >← Back</button>
         <span className="font-semibold text-gray-800 text-sm truncate">{peerName}</span>
       </header>
@@ -272,16 +272,16 @@ function Thread({ threadId, peerName, onBack }) {
                     instead of snapping. */}
                 <div className={`anim-bubble-in max-w-[75%] rounded-2xl px-3 py-1.5 text-sm leading-snug ${
                   mine
-                    ? 'bg-emerald-600 text-white rounded-br-md'
+                    ? 'bg-guac-700 text-white rounded-br-md'
                     : 'bg-white text-gray-800 ring-1 ring-gray-100 rounded-bl-md'
                 }`}>
                   {!mine && (
-                    <div className="text-[10px] font-bold text-emerald-700 mb-0.5">
+                    <div className="text-[10px] font-bold text-guac-700 mb-0.5">
                       {formatName(names.get(m.user_id), m.user_id)}
                     </div>
                   )}
                   <div className="break-words">{m.body}</div>
-                  <div className={`text-[9px] ${mine ? 'text-emerald-100' : 'text-gray-400'} mt-0.5 text-right`}>
+                  <div className={`text-[9px] ${mine ? 'text-guac-100' : 'text-gray-400'} mt-0.5 text-right`}>
                     {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </div>
                 </div>

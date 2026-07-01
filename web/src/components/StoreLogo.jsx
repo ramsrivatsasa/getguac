@@ -17,7 +17,7 @@ export function StoreLogo({
   fallbackEmoji = '🛒',
   size = 40,
   className = '',
-  emojiClassName = 'bg-emerald-500 text-white',
+  emojiClassName = 'bg-guac-600 text-white',
 }) {
   const [errored, setErrored] = useState(false)
   const url = logoUrlForStore(storeName)

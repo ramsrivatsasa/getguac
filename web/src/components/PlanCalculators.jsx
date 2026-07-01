@@ -82,8 +82,8 @@ const CALCS = [
       return {
         tone: onTrack ? 'ok' : 'warn',
         headline: (<>
-          <p>At {v.retire}: ~<b className="text-emerald-800">{money(projected)}</b> · you’d want ~<b>{money(target)}</b> (25× your {money(v.income)}/yr).</p>
-          {onTrack ? <p className="mt-1 font-bold text-emerald-700">✅ On track — and so much of it is growth.</p>
+          <p>At {v.retire}: ~<b className="text-guac-700">{money(projected)}</b> · you’d want ~<b>{money(target)}</b> (25× your {money(v.income)}/yr).</p>
+          {onTrack ? <p className="mt-1 font-bold text-guac-700">✅ On track — and so much of it is growth.</p>
                    : <p className="mt-1 font-bold text-amber-700">~{money(extra)}/mo closes the gap. Totally doable.</p>}
         </>),
         insights: [
@@ -113,7 +113,7 @@ const CALCS = [
         tone: 'ok',
         headline: reach == null
           ? <p>At this pace it’s a long road — nudge the monthly up and watch it shrink fast.</p>
-          : <p>You hit <b className="text-emerald-800">$1,000,000</b> in ~<b>{reach.toFixed(1)} years</b>. 🎉</p>,
+          : <p>You hit <b className="text-guac-700">$1,000,000</b> in ~<b>{reach.toFixed(1)} years</b>. 🎉</p>,
         insights: [
           `📈 The last few years do the most — compounding accelerates as the balance grows.`,
           `💪 Bumping the monthly even a little can cut years off the timeline.`,
@@ -138,7 +138,7 @@ const CALCS = [
       const need = pmtNeeded(v.cost, v.savings, v.ret, years)
       return {
         tone: 'ok',
-        headline: <p>Save ~<b className="text-emerald-800">{money(need)}/mo</b> for {years} years to reach <b>{money(v.cost)}</b>.</p>,
+        headline: <p>Save ~<b className="text-guac-700">{money(need)}/mo</b> for {years} years to reach <b>{money(v.cost)}</b>.</p>,
         insights: [`🎓 A 529 plan grows tax-free for education — many states add a tax deduction.`, `⏱️ Starting now is the cheapest it’ll ever be.`],
       }
     },
@@ -163,7 +163,7 @@ const CALCS = [
       const monthly = pmtNeeded(total, 0, v.ret, Math.max(0, v.retire - v.age))
       return {
         tone: 'ok',
-        headline: <p>~<b className="text-emerald-800">{money(total)}</b> across {yrs} retirement years. Set aside ~<b>{money(monthly)}/mo</b> until {v.retire}.</p>,
+        headline: <p>~<b className="text-guac-700">{money(total)}</b> across {yrs} retirement years. Set aside ~<b>{money(monthly)}/mo</b> until {v.retire}.</p>,
         insights: [`🏥 An HSA is triple tax-advantaged — the #1 account for this.`, `👵 Fidelity estimates a 65-yr-old couple needs ~$315k for healthcare alone.`],
       }
     },
@@ -190,7 +190,7 @@ const CALCS = [
       const p = target > 0 ? Math.min(100, Math.round((v.savings / target) * 100)) : 0
       return {
         tone: done ? 'ok' : 'warn',
-        headline: <p>Goal: <b>{money(target)}</b> ({v.months} mo).{' '}{done ? <b className="text-emerald-700">✅ Fully funded!</b> : <>You’re <b>{p}% there</b> — ~<b className="text-emerald-800">{money(monthly)}/mo</b> finishes it.</>}</p>,
+        headline: <p>Goal: <b>{money(target)}</b> ({v.months} mo).{' '}{done ? <b className="text-guac-700">✅ Fully funded!</b> : <>You’re <b>{p}% there</b> — ~<b className="text-guac-700">{money(monthly)}/mo</b> finishes it.</>}</p>,
         insights: [`🏦 Keep it in a high-yield savings account (~4–5% APY), not checking.`, `⚡ Automate the transfer on payday so it fills itself.`],
       }
     },
@@ -210,7 +210,7 @@ const CALCS = [
     validate: (v) => v.years > 0 || 'Add a timeframe.',
     compute: (v) => {
       const need = pmtNeeded(v.goal, v.savings, v.ret, v.years)
-      return { tone: 'ok', headline: <p>Save ~<b className="text-emerald-800">{money(need)}/mo</b> for {v.years} years to reach <b>{money(v.goal)}</b>.</p>,
+      return { tone: 'ok', headline: <p>Save ~<b className="text-guac-700">{money(need)}/mo</b> for {v.years} years to reach <b>{money(v.goal)}</b>.</p>,
         insights: [`📈 A high-yield account or index fund makes the goal arrive sooner.`, `🎯 Automating the monthly transfer is the single biggest predictor of hitting it.`] }
     },
   },
@@ -227,7 +227,7 @@ const CALCS = [
     compute: (v) => {
       const end = fv(v.start, v.monthly, v.ret, v.years)
       const put = v.start + v.monthly * 12 * v.years
-      return { tone: 'ok', headline: <p>In {v.years} years: ~<b className="text-emerald-800">{money(end)}</b> — you put in {money(put)}, growth added <b>{money(Math.max(0, end - put))}</b>.</p>,
+      return { tone: 'ok', headline: <p>In {v.years} years: ~<b className="text-guac-700">{money(end)}</b> — you put in {money(put)}, growth added <b>{money(Math.max(0, end - put))}</b>.</p>,
         insights: [`🪄 That growth is compounding — returns earning returns.`, `🛡️ A tax-advantaged account (Roth IRA / 401k) keeps more of it yours.`] }
     },
   },
@@ -244,7 +244,7 @@ const CALCS = [
     compute: (v) => {
       const m = loanPayment(v.amount, v.rate, v.years)
       const total = m * v.years * 12
-      return { tone: 'ok', headline: <p>~<b className="text-emerald-800">{money(m)}/mo</b> (P&I). Over {v.years} yrs you’ll pay <b>{money(total)}</b> — {money(total - v.amount)} of it interest.</p>,
+      return { tone: 'ok', headline: <p>~<b className="text-guac-700">{money(m)}/mo</b> (P&I). Over {v.years} yrs you’ll pay <b>{money(total)}</b> — {money(total - v.amount)} of it interest.</p>,
         insights: [`🏦 A 15-year term costs more monthly but saves a fortune in interest.`, `💡 One extra payment a year can shave years off the loan.`] }
     },
   },
@@ -260,7 +260,7 @@ const CALCS = [
     compute: (v) => {
       const m = loanPayment(v.amount, v.rate, v.years)
       const total = m * v.years * 12
-      return { tone: 'ok', headline: <p>~<b className="text-emerald-800">{money(m)}/mo</b>. Total cost <b>{money(total)}</b> ({money(total - v.amount)} interest).</p>,
+      return { tone: 'ok', headline: <p>~<b className="text-guac-700">{money(m)}/mo</b>. Total cost <b>{money(total)}</b> ({money(total - v.amount)} interest).</p>,
         insights: [`🚗 Shorter terms = less interest and you’re never “upside down”.`, `💡 A bigger down payment cuts both the payment and the interest.`] }
     },
   },
@@ -282,7 +282,7 @@ const CALCS = [
       }
       const months = Math.ceil(-Math.log(1 - (v.balance * i) / v.payment) / Math.log(1 + i))
       const totalInterest = v.payment * months - v.balance
-      return { tone: 'ok', headline: <p>Debt-free in ~<b className="text-emerald-800">{months} months</b> ({(months / 12).toFixed(1)} yrs). Interest paid: <b>{money(totalInterest)}</b>.</p>,
+      return { tone: 'ok', headline: <p>Debt-free in ~<b className="text-guac-700">{months} months</b> ({(months / 12).toFixed(1)} yrs). Interest paid: <b>{money(totalInterest)}</b>.</p>,
         insights: [`💳 A 0% balance-transfer offer could wipe out most of that ${money(totalInterest)} interest.`, `⚡ Every extra $50/mo gets you free months sooner.`] }
     },
   },
@@ -297,7 +297,7 @@ const CALCS = [
     compute: (v) => {
       const ratio = (v.debt / v.income) * 100
       const good = ratio <= 36
-      return { tone: good ? 'ok' : 'warn', headline: <p>Your DTI is <b className={good ? 'text-emerald-800' : 'text-amber-700'}>{pct(ratio)}</b>. {good ? 'Lenders love under 36%. ✅' : 'Aim for under 36% to qualify easily.'}</p>,
+      return { tone: good ? 'ok' : 'warn', headline: <p>Your DTI is <b className={good ? 'text-guac-700' : 'text-amber-700'}>{pct(ratio)}</b>. {good ? 'Lenders love under 36%. ✅' : 'Aim for under 36% to qualify easily.'}</p>,
         insights: [`🏦 Under 36% (and housing under 28%) is the lender sweet spot.`, `📉 Paying down a card or two is the fastest way to drop this.`] }
     },
   },
@@ -320,7 +320,7 @@ const CALCS = [
       const i = (v.rate / 100) / 12, n = 360
       const loan = i > 0 ? maxPI * (1 - Math.pow(1 + i, -n)) / i : maxPI * n
       const price = loan + v.down
-      return { tone: 'ok', headline: <p>You can likely afford a home around <b className="text-emerald-800">{money(price)}</b> (~{money(maxHousing)}/mo all-in).</p>,
+      return { tone: 'ok', headline: <p>You can likely afford a home around <b className="text-guac-700">{money(price)}</b> (~{money(maxHousing)}/mo all-in).</p>,
         insights: [`🏠 Lenders use the 28/36 rule — housing ≤28% of income, all debt ≤36%.`, `💡 A bigger down payment or a lower rate stretches your budget further.`] }
     },
   },
@@ -337,7 +337,7 @@ const CALCS = [
     compute: (v) => {
       const own = loanPayment(v.price - v.down, v.rate, 30) + v.price * (0.011 + 0.005 + 0.01) / 12
       const cheaper = own <= v.rent
-      return { tone: 'ok', headline: <p>Owning ≈ <b className="text-emerald-800">{money(own)}/mo</b> all-in vs renting <b>{money(v.rent)}/mo</b>. {cheaper ? 'Owning costs less here — and builds equity.' : 'Renting’s cheaper monthly, but owning builds equity.'}</p>,
+      return { tone: 'ok', headline: <p>Owning ≈ <b className="text-guac-700">{money(own)}/mo</b> all-in vs renting <b>{money(v.rent)}/mo</b>. {cheaper ? 'Owning costs less here — and builds equity.' : 'Renting’s cheaper monthly, but owning builds equity.'}</p>,
         insights: [`🏠 Owning adds taxes, insurance & upkeep (~1%/yr) on top of the mortgage.`, `📈 Buying usually wins the longer you stay (5+ years); renting wins if you might move soon.`] }
     },
   },
@@ -352,7 +352,7 @@ const CALCS = [
     validate: (v) => v.years > 0 || 'Add a timeframe.',
     compute: (v) => {
       const end = v.amount * Math.pow(1 + v.apy / 100, v.years)
-      return { tone: 'ok', headline: <p>~<b className="text-emerald-800">{money(end)}</b> after {v.years} years — <b>{money(end - v.amount)}</b> in interest.</p>,
+      return { tone: 'ok', headline: <p>~<b className="text-guac-700">{money(end)}</b> after {v.years} years — <b>{money(end - v.amount)}</b> in interest.</p>,
         insights: [`🏦 Lock a CD when rates are high; keep emergency cash in a liquid HYSA.`, `📅 Longer terms usually pay more — but your money is tied up.`] }
     },
   },
@@ -371,7 +371,7 @@ const CALCS = [
       const fed = federalTaxSingle(taxable)
       const net = Math.max(0, v.gross - pretax - fed - v.gross * 0.0765 - v.gross * (v.statePct / 100))
       const rate = v.gross > 0 ? ((v.gross - net - pretax) / v.gross) * 100 : 0
-      return { tone: 'ok', headline: <p>Take-home ≈ <b className="text-emerald-800">{money(net)}/yr</b> (~{money(net / 12)}/mo). Effective tax ~{pct(rate)}; plus {money(pretax)} saved pre-tax.</p>,
+      return { tone: 'ok', headline: <p>Take-home ≈ <b className="text-guac-700">{money(net)}/yr</b> (~{money(net / 12)}/mo). Effective tax ~{pct(rate)}; plus {money(pretax)} saved pre-tax.</p>,
         insights: [`💼 Pre-tax 401(k) lowers today’s taxable income — it costs less than it looks.`, `🧾 Rough single-filer estimate; an HSA/FSA trims taxable income further.`] }
     },
   },
@@ -391,7 +391,7 @@ const CALCS = [
       const assets = (v.cash || 0) + (v.investments || 0) + (v.home || 0)
       const debts = (v.mortgage || 0) + (v.loans || 0) + (v.cards || 0)
       const nw = assets - debts
-      return { tone: nw >= 0 ? 'ok' : 'warn', headline: <p>Net worth: <b className={nw >= 0 ? 'text-emerald-800' : 'text-amber-700'}>{money(nw)}</b> — {money(assets)} assets minus {money(debts)} debt.</p>,
+      return { tone: nw >= 0 ? 'ok' : 'warn', headline: <p>Net worth: <b className={nw >= 0 ? 'text-guac-700' : 'text-amber-700'}>{money(nw)}</b> — {money(assets)} assets minus {money(debts)} debt.</p>,
         insights: [`📊 Track it quarterly — the trend matters more than the number.`, `🔥 Killing high-interest debt raises net worth faster than almost any investment.`] }
     },
   },
@@ -442,15 +442,15 @@ export default function PlanCalculators() {
           <nav className="sticky top-20 space-y-3">
             {CATEGORIES.map((cat) => (
               <div key={cat}>
-                <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-700/70 px-2 mb-1">{cat}</div>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-guac-700/70 px-2 mb-1">{cat}</div>
                 <div className="space-y-0.5">
                   {CALCS.filter((c) => c.cat === cat).map((c) => {
                     const Icon = c.icon
                     const active = c.id === selId
                     return (
                       <button key={c.id} onClick={() => setSelId(c.id)}
-                        className={`w-full text-left text-sm rounded-lg px-2 py-1.5 inline-flex items-center gap-2 transition-colors ${active ? 'bg-emerald-100 text-emerald-900 font-bold' : 'text-gray-600 hover:bg-emerald-50'}`}>
-                        <Icon size={14} className={active ? 'text-emerald-700' : 'text-gray-400'} /> {c.title}
+                        className={`w-full text-left text-sm rounded-lg px-2 py-1.5 inline-flex items-center gap-2 transition-colors ${active ? 'bg-guac-100 text-guac-ink font-bold' : 'text-gray-600 hover:bg-guac-50'}`}>
+                        <Icon size={14} className={active ? 'text-guac-700' : 'text-gray-400'} /> {c.title}
                       </button>
                     )
                   })}
@@ -528,7 +528,7 @@ function Calculator({ id, icon: Icon, title, subtitle, fields, validate, compute
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5">
       <div className="flex items-center gap-2 mb-3">
-        <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center"><Icon size={20} /></div>
+        <div className="w-10 h-10 rounded-xl bg-guac-100 text-guac-700 flex items-center justify-center"><Icon size={20} /></div>
         <div>
           <h2 className="font-black text-gray-900 leading-tight text-lg">{title}</h2>
           {subtitle && <p className="text-xs text-gray-400">{subtitle}</p>}
@@ -539,7 +539,7 @@ function Calculator({ id, icon: Icon, title, subtitle, fields, validate, compute
         {fields.map((f) => (
           <label key={f.key} className="block">
             <span className="text-[11px] font-semibold text-gray-500">{f.label}</span>
-            <div className="mt-0.5 flex items-center rounded-lg border border-gray-200 bg-white focus-within:ring-2 focus-within:ring-emerald-300 overflow-hidden">
+            <div className="mt-0.5 flex items-center rounded-lg border border-gray-200 bg-white focus-within:ring-2 focus-within:ring-guac-600 overflow-hidden">
               {f.prefix && <span className="pl-2.5 text-gray-400 text-sm">{f.prefix}</span>}
               <input type="number" inputMode="decimal" step={f.step || 1} min={0}
                 value={vals[f.key] ?? ''} placeholder={f.placeholder}
@@ -558,14 +558,14 @@ function Calculator({ id, icon: Icon, title, subtitle, fields, validate, compute
 
       {result && (
         <>
-          <div className={`mt-3 rounded-xl bg-gradient-to-br ${result.tone === 'warn' ? 'from-amber-50 to-orange-50 border-amber-200' : 'from-emerald-50 to-lime-50 border-emerald-200'} border p-3 text-sm`}>
+          <div className={`mt-3 rounded-xl bg-gradient-to-br ${result.tone === 'warn' ? 'from-amber-50 to-orange-50 border-amber-200' : 'from-emerald-50 to-lime-50 border-guac-line2'} border p-3 text-sm`}>
             {result.headline}
           </div>
 
           <div className="mt-2.5">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-700/80 inline-flex items-center gap-1 mb-1"><Sparkles size={11} /> Guac-AI strategy</div>
+            <div className="text-[10px] font-bold uppercase tracking-wider text-guac-700/80 inline-flex items-center gap-1 mb-1"><Sparkles size={11} /> Guac-AI strategy</div>
             {ai.status === 'loading' ? (
-              <p className="text-[12px] text-gray-400 inline-flex items-center gap-1.5"><Loader2 size={12} className="animate-spin text-emerald-500" /> Guac-AI is building your strategy…</p>
+              <p className="text-[12px] text-gray-400 inline-flex items-center gap-1.5"><Loader2 size={12} className="animate-spin text-guac-600" /> Guac-AI is building your strategy…</p>
             ) : (
               <>
                 <ul className="space-y-1.5">
@@ -574,12 +574,12 @@ function Calculator({ id, icon: Icon, title, subtitle, fields, validate, compute
                   ))}
                 </ul>
                 {ai.status === 'done' && ai.data?.taxBenefits?.length > 0 && (
-                  <div className="mt-2 rounded-lg bg-emerald-50/70 border border-emerald-100 p-2">
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 mb-0.5">Tax benefits</div>
-                    <ul className="space-y-1">{ai.data.taxBenefits.map((t, i) => <li key={i} className="text-[11.5px] text-emerald-900/80 leading-snug">🏛️ {t}</li>)}</ul>
+                  <div className="mt-2 rounded-lg bg-guac-50/70 border border-guac-line p-2">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-guac-700 mb-0.5">Tax benefits</div>
+                    <ul className="space-y-1">{ai.data.taxBenefits.map((t, i) => <li key={i} className="text-[11.5px] text-guac-ink/80 leading-snug">🏛️ {t}</li>)}</ul>
                   </div>
                 )}
-                {ai.status === 'done' && ai.data?.encouragement && <p className="text-[12px] text-emerald-700 font-semibold mt-2">💪 {ai.data.encouragement}</p>}
+                {ai.status === 'done' && ai.data?.encouragement && <p className="text-[12px] text-guac-700 font-semibold mt-2">💪 {ai.data.encouragement}</p>}
               </>
             )}
           </div>
@@ -587,13 +587,13 @@ function Calculator({ id, icon: Icon, title, subtitle, fields, validate, compute
           <div className="mt-3 flex items-center justify-between min-h-[18px]">
             {authed ? (
               <>
-                <span className="text-[11px] text-gray-400">{savedOk ? <span className="text-emerald-700 font-semibold inline-flex items-center gap-1"><Check size={12} /> Saved to your account</span> : 'Save these numbers?'}</span>
-                <button onClick={save} disabled={saving} className="text-xs font-bold text-emerald-700 hover:underline inline-flex items-center gap-1 disabled:opacity-50">
+                <span className="text-[11px] text-gray-400">{savedOk ? <span className="text-guac-700 font-semibold inline-flex items-center gap-1"><Check size={12} /> Saved to your account</span> : 'Save these numbers?'}</span>
+                <button onClick={save} disabled={saving} className="text-xs font-bold text-guac-700 hover:underline inline-flex items-center gap-1 disabled:opacity-50">
                   {saving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />} {savedOk ? 'Update' : 'Save'}
                 </button>
               </>
             ) : authed === false ? (
-              <span className="text-[11px] text-gray-400"><Link href="/register" className="text-emerald-700 font-bold hover:underline">Sign up free</Link> to save your plan.</span>
+              <span className="text-[11px] text-gray-400"><Link href="/register" className="text-guac-700 font-bold hover:underline">Sign up free</Link> to save your plan.</span>
             ) : null}
           </div>
         </>
@@ -601,13 +601,13 @@ function Calculator({ id, icon: Icon, title, subtitle, fields, validate, compute
 
       {(guide || (ai.data?.pros?.length) || pros) && (
         <details className="mt-3 border-t border-gray-100 pt-2">
-          <summary className="cursor-pointer text-xs font-bold text-emerald-700 inline-flex items-center gap-1 select-none"><BookOpen size={12} /> Strategy guide &amp; pros / cons</summary>
+          <summary className="cursor-pointer text-xs font-bold text-guac-700 inline-flex items-center gap-1 select-none"><BookOpen size={12} /> Strategy guide &amp; pros / cons</summary>
           <div className="mt-2 text-[12px] text-gray-600 space-y-2 leading-relaxed">
             {(guide || []).map((p, i) => <p key={i}>{p}</p>)}
             <div className="grid grid-cols-2 gap-3 pt-1">
               <div>
-                <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 mb-1">Pros</div>
-                <ul className="space-y-1">{((ai.data?.pros?.length ? ai.data.pros : pros) || []).map((x, i) => <li key={i} className="flex gap-1.5"><span className="text-emerald-500 font-bold">＋</span><span>{x}</span></li>)}</ul>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-guac-700 mb-1">Pros</div>
+                <ul className="space-y-1">{((ai.data?.pros?.length ? ai.data.pros : pros) || []).map((x, i) => <li key={i} className="flex gap-1.5"><span className="text-guac-600 font-bold">＋</span><span>{x}</span></li>)}</ul>
               </div>
               <div>
                 <div className="text-[10px] font-bold uppercase tracking-wider text-amber-700 mb-1">Watch-outs</div>

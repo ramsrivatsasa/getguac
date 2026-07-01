@@ -8,6 +8,7 @@ import GuacMascot from '../../../components/GuacMascot'
 import FeatureHeader from '../../../components/FeatureHeader'
 import MascotLoading from '../../../components/MascotLoading'
 import { displayStoreName } from '../../../lib/store-name-normalize'
+import { StoreLogo } from '../../../components/StoreLogo'
 import { useConfirm } from '../../../components/ConfirmDialog'
 
 const EMPTY = { reward_no: '', expiry_date: '', reward_type: '', reward_title: '', description: '', store_name: '' }
@@ -62,7 +63,7 @@ export default function RewardsPage() {
           <div className="flex items-center gap-2">
             <Link
               href="/connections"
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-emerald-200 text-emerald-700 text-sm font-bold hover:bg-emerald-50 transition-colors"
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-guac-line2 text-guac-700 text-sm font-bold hover:bg-guac-50 transition-colors"
             >
               <Link2 size={15} /> Set up retailers
             </Link>
@@ -114,7 +115,7 @@ export default function RewardsPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b text-xs text-gray-500 uppercase tracking-wide">
+              <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
                 <tr>
                   <th className="pl-4 pr-2 py-3 w-10">
                     <input type="checkbox" className="w-4 h-4 rounded cursor-pointer" checked={allSelected}
@@ -125,12 +126,12 @@ export default function RewardsPage() {
                   )}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-guac-line">
                 {rewards.map((r, idx) => (
                   <tr
                     key={r.id}
                     style={idx < 8 ? { animationDelay: `${idx * 28}ms`, animationDuration: '220ms' } : undefined}
-                    className={`hover:bg-gray-50/50 anim-fadeup ${selected.has(r.id) ? 'bg-blue-50/60' : ''}`}>
+                    className={`hover:bg-guac-row anim-fadeup ${selected.has(r.id) ? 'bg-guac-50/60' : ''}`}>
                     <td className="pl-4 pr-2 py-3">
                       <input type="checkbox" className="w-4 h-4 rounded cursor-pointer" checked={selected.has(r.id)}
                         onChange={() => toggleOne(r.id)} aria-label={`Select ${r.reward_title}`} />
@@ -138,7 +139,12 @@ export default function RewardsPage() {
                     <td className="px-4 py-3 font-mono text-xs text-gray-500">{r.reward_no}</td>
                     <td className="px-4 py-3 font-medium">{r.reward_title}</td>
                     <td className="px-4 py-3 text-gray-500">{r.reward_type}</td>
-                    <td className="px-4 py-3 text-gray-500">{displayStoreName(r.store_name)}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <StoreLogo storeName={r.store_name} size={28} />
+                        <span className="font-medium text-guac-ink truncate">{displayStoreName(r.store_name)}</span>
+                      </div>
+                    </td>
                     <td className="px-4 py-3 text-gray-500">{r.expiry_date}</td>
                     <td className="px-4 py-3">
                       <span className={r.expiry_date < today ? 'badge-red' : 'badge-green'}>
@@ -148,7 +154,7 @@ export default function RewardsPage() {
                     <td className="px-4 py-3">
                       <div className="flex gap-1.5">
                         <Link href={`/rewards/${r.id}`} aria-label="View"
-                          className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 hover:bg-emerald-200 hover:scale-110 active:scale-95 transition-all flex items-center justify-center shadow-sm">
+                          className="w-8 h-8 rounded-full bg-guac-100 text-guac-700 hover:bg-guac-100 hover:scale-110 active:scale-95 transition-all flex items-center justify-center shadow-sm">
                           <Eye size={14} />
                         </Link>
                         <button onClick={() => handleDelete(r.id)} aria-label="Delete"

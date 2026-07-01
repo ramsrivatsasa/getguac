@@ -43,27 +43,27 @@ export default function TimeframePicker({ trailing = null, compact = false }) {
 
   return (
     <div className="flex flex-nowrap items-center gap-2 overflow-x-auto">
-      <div className="inline-flex shrink-0 bg-emerald-50 rounded-full p-1 gap-1 border border-emerald-100">
+      <div className="inline-flex shrink-0 bg-gray-100 rounded-xl p-1 gap-1">
         {PERIODS.map(p => (
           <button
             key={p}
             onClick={() => selectPeriod(p)}
-            className={`${compact ? 'px-3' : 'px-4'} py-1.5 rounded-full text-sm font-semibold capitalize transition-all ${
+            className={`${compact ? 'px-3' : 'px-3.5'} py-1.5 rounded-lg text-sm capitalize font-semibold transition-all ${
               period === p
-                ? 'bg-white text-emerald-900 shadow-sm ring-1 ring-emerald-200'
-                : 'text-emerald-700/70 hover:text-emerald-900'
+                ? 'bg-white text-guac-ink shadow-sm'
+                : 'text-gray-500 hover:text-gray-800'
             }`}
           >
             {p}
           </button>
         ))}
       </div>
-      <div className="inline-flex shrink-0 items-center gap-2 bg-white rounded-full pl-4 pr-2 py-1 border border-emerald-100 shadow-sm">
+      <div className="inline-flex shrink-0 items-center gap-2 bg-white rounded-xl pl-4 pr-2 py-1.5 border border-guac-line2 shadow-sm">
         <span className="text-xs font-semibold text-gray-500">Last</span>
         <select
           value={periodCount}
           onChange={e => setSpendingPeriodCount(parseInt(e.target.value, 10))}
-          className="bg-transparent text-sm font-bold text-emerald-800 focus:outline-none cursor-pointer font-sans"
+          className="bg-transparent text-sm font-bold text-guac-ink focus:outline-none cursor-pointer font-sans"
         >
           {(COUNT_OPTIONS[period] || [1]).map(n => (
             <option key={n} value={n}>{n}</option>

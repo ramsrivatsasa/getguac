@@ -11,7 +11,7 @@ import { Sparkles, Play, X } from 'lucide-react'
 const Presentation = dynamic(() => import('../app/how-it-works/Presentation'), {
   ssr: false,
   loading: () => (
-    <div className="py-16 text-center text-emerald-700 font-semibold">Loading the tour…</div>
+    <div className="py-16 text-center text-guac-700 font-semibold">Loading the tour…</div>
   ),
 })
 
@@ -38,8 +38,8 @@ export default function WatchVideoCard() {
   // Tour embedded inline on the home page.
   if (playing) {
     return (
-      <div className="rounded-3xl bg-white ring-1 ring-emerald-100 shadow-xl overflow-hidden">
-        <div className="flex items-center justify-between px-4 sm:px-5 py-3 bg-emerald-900 text-white">
+      <div className="rounded-3xl bg-white ring-1 ring-guac-100 shadow-xl overflow-hidden">
+        <div className="flex items-center justify-between px-4 sm:px-5 py-3 bg-guac-ink text-white">
           <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider">
             <Sparkles size={12} /> The GetGuac tour
           </span>
@@ -63,7 +63,7 @@ export default function WatchVideoCard() {
           <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-white leading-tight">
             Take control of your money.
           </h2>
-          <p className="text-emerald-50/95 mt-3 max-w-2xl mx-auto text-sm sm:text-base">
+          <p className="text-guac-100/95 mt-3 max-w-2xl mx-auto text-sm sm:text-base">
             GetGuac reads your receipts and statements, finds you better prices and
             the refunds you’re owed, and shows you exactly where your money goes —
             in about a minute.
@@ -76,7 +76,7 @@ export default function WatchVideoCard() {
                 <span className="text-2xl leading-none flex-shrink-0" aria-hidden="true">{b.icon}</span>
                 <div>
                   <div className="text-white font-bold text-sm sm:text-base">{b.q}</div>
-                  <div className="text-emerald-50/80 text-xs sm:text-[13px] leading-snug mt-0.5">{b.d}</div>
+                  <div className="text-guac-100/80 text-xs sm:text-[13px] leading-snug mt-0.5">{b.d}</div>
                 </div>
               </div>
             ))}
@@ -88,7 +88,7 @@ export default function WatchVideoCard() {
             </p>
             <div className="mt-3 flex flex-wrap gap-2 justify-center">
               {GOALS.map((g) => (
-                <span key={g} className="px-3 py-1.5 rounded-full bg-emerald-900/40 ring-1 ring-lime-300/30 text-lime-50 text-xs sm:text-[13px] font-bold">
+                <span key={g} className="px-3 py-1.5 rounded-full bg-guac-ink/40 ring-1 ring-lime-300/30 text-lime-50 text-xs sm:text-[13px] font-bold">
                   {g}
                 </span>
               ))}
@@ -99,9 +99,9 @@ export default function WatchVideoCard() {
           <button
             type="button"
             onClick={() => setPlaying(true)}
-            className="mt-6 inline-flex items-center gap-3 rounded-full bg-lime-400 text-emerald-900 font-black text-lg px-7 py-3.5 shadow-lg hover:bg-lime-300 hover:scale-[1.03] transition-all"
+            className="mt-6 inline-flex items-center gap-3 rounded-full bg-lime-400 text-guac-ink font-black text-lg px-7 py-3.5 shadow-lg hover:bg-lime-300 hover:scale-[1.03] transition-all"
           >
-            <span className="w-9 h-9 rounded-full bg-emerald-900/90 text-lime-300 flex items-center justify-center">
+            <span className="w-9 h-9 rounded-full bg-guac-ink/90 text-lime-300 flex items-center justify-center">
               <Play size={18} className="ml-0.5" fill="currentColor" />
             </span>
             Play the tour

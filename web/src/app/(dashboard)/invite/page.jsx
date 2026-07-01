@@ -121,7 +121,7 @@ export default function InvitePage() {
         subtitle={
           <>
             Share your code. When a friend signs up with it, you each get{' '}
-            <strong className="text-emerald-700">{REWARD_DAYS} Smash days</strong> on
+            <strong className="text-guac-700">{REWARD_DAYS} Smash days</strong> on
             your 🔥 chip.
           </>
         }
@@ -129,7 +129,7 @@ export default function InvitePage() {
 
       {/* Big code card */}
       <section className="bg-gradient-to-br from-emerald-500 via-emerald-600 to-green-700 text-white rounded-2xl p-6 shadow-md">
-        <p className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-50">
+        <p className="text-[10px] font-extrabold uppercase tracking-widest text-guac-100">
           Your invite code
         </p>
         <div className="mt-2 flex items-center gap-3 flex-wrap">
@@ -169,7 +169,7 @@ export default function InvitePage() {
             <button
               type="button"
               onClick={() => copy(shareUrl, 'Link')}
-              className="shrink-0 px-2.5 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-700 text-xs font-bold hover:bg-gray-50 inline-flex items-center gap-1.5"
+              className="shrink-0 px-2.5 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-700 text-xs font-bold hover:bg-guac-row inline-flex items-center gap-1.5"
             >
               <Copy size={12} /> Copy
             </button>
@@ -191,11 +191,11 @@ export default function InvitePage() {
       </section>
 
       {/* Reward explanation */}
-      <section className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5">
-        <h2 className="font-extrabold text-emerald-900 text-base mb-1.5">
+      <section className="bg-guac-50 border border-guac-line2 rounded-2xl p-5">
+        <h2 className="font-extrabold text-guac-ink text-base mb-1.5">
           How the reward works
         </h2>
-        <ul className="text-sm text-emerald-900/90 space-y-1.5 list-disc pl-5 leading-relaxed">
+        <ul className="text-sm text-guac-ink/90 space-y-1.5 list-disc pl-5 leading-relaxed">
           <li>You share your code or link with a friend.</li>
           <li>They sign up at getguac.app and the code lands with them.</li>
           <li>
@@ -228,7 +228,7 @@ export default function InvitePage() {
                   className={
                     'w-10 h-10 rounded-full flex items-center justify-center ' +
                     (r.credited_at
-                      ? 'bg-emerald-100 text-emerald-700'
+                      ? 'bg-guac-100 text-guac-700'
                       : 'bg-amber-100 text-amber-700')
                   }
                 >
@@ -253,7 +253,7 @@ export default function InvitePage() {
       </section>
 
       <p className="text-center text-xs text-gray-400 pt-2">
-        Question or stuck? <Link href="/profile" className="text-emerald-700 font-semibold hover:underline">Profile</Link>
+        Question or stuck? <Link href="/profile" className="text-guac-700 font-semibold hover:underline">Profile</Link>
       </p>
     </div>
   )

@@ -59,7 +59,7 @@ export default function BillsCalendar() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-black text-gray-900 inline-flex items-center gap-2">
-            <CalendarDays className="text-emerald-600" /> Bills calendar
+            <CalendarDays className="text-guac-600" /> Bills calendar
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">Your recurring bills, laid out on the days they’re due.</p>
         </div>
@@ -80,12 +80,12 @@ export default function BillsCalendar() {
           {/* Calendar */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
             <div className="flex items-center justify-between mb-3">
-              <button onClick={() => shiftMonth(-1)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-600"><ChevronLeft size={18} /></button>
+              <button onClick={() => shiftMonth(-1)} className="p-1.5 rounded-lg hover:bg-guac-50 text-gray-600"><ChevronLeft size={18} /></button>
               <div className="text-center">
                 <div className="font-black text-gray-900">{monthName}</div>
-                <div className="text-[11px] font-semibold text-emerald-700">{money(monthTotal)} due this month</div>
+                <div className="text-[11px] font-semibold text-guac-700">{money(monthTotal)} due this month</div>
               </div>
-              <button onClick={() => shiftMonth(1)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-600"><ChevronRight size={18} /></button>
+              <button onClick={() => shiftMonth(1)} className="p-1.5 rounded-lg hover:bg-guac-50 text-gray-600"><ChevronRight size={18} /></button>
             </div>
 
             <div className="grid grid-cols-7 gap-1 text-center">
@@ -104,14 +104,14 @@ export default function BillsCalendar() {
                     key={iso}
                     onClick={() => setSelected(iso)}
                     className={`aspect-square rounded-xl border flex flex-col items-center justify-center gap-0.5 text-xs transition-all ${
-                      isSel ? 'border-emerald-500 bg-emerald-50' : 'border-transparent hover:bg-gray-50'
+                      isSel ? 'border-guac-600 bg-guac-50' : 'border-transparent hover:bg-guac-row'
                     }`}
                   >
-                    <span className={`font-bold ${isToday ? 'w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center' : 'text-gray-700'}`}>
+                    <span className={`font-bold ${isToday ? 'w-5 h-5 rounded-full bg-guac-700 text-white flex items-center justify-center' : 'text-gray-700'}`}>
                       {day}
                     </span>
                     {total > 0 && (
-                      <span className="text-[9px] font-extrabold text-emerald-700 leading-none">{money0(total)}</span>
+                      <span className="text-[9px] font-extrabold text-guac-700 leading-none">{money0(total)}</span>
                     )}
                   </button>
                 )
@@ -135,7 +135,7 @@ export default function BillsCalendar() {
             </div>
 
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-              <h3 className="font-bold text-gray-900 text-sm mb-2 inline-flex items-center gap-1.5"><Repeat size={14} className="text-emerald-600" /> Upcoming bills</h3>
+              <h3 className="font-bold text-gray-900 text-sm mb-2 inline-flex items-center gap-1.5"><Repeat size={14} className="text-guac-600" /> Upcoming bills</h3>
               {upcoming.length === 0 ? (
                 <p className="text-sm text-gray-400">Nothing coming up.</p>
               ) : (
@@ -164,7 +164,7 @@ function BillRow({ b, showDate }) {
           {b.priceChanged && <span className="ml-1 text-amber-600 inline-flex items-center gap-0.5"><AlertTriangle size={9} /> price changed</span>}
         </p>
       </div>
-      <span className="font-black text-emerald-700 tabular-nums text-sm shrink-0">{money(b.amount)}</span>
+      <span className="font-black text-guac-700 tabular-nums text-sm shrink-0">{money(b.amount)}</span>
     </div>
   )
 }

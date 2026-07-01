@@ -52,7 +52,7 @@ const SORTS = [
 ]
 
 const TONE_TINT = {
-  emerald:  { from: 'from-emerald-50',  to: 'to-green-100',   ring: 'ring-emerald-200',  text: 'text-emerald-900', accent: 'bg-emerald-500' },
+  emerald:  { from: 'from-emerald-50',  to: 'to-green-100',   ring: 'ring-guac-100',  text: 'text-guac-ink', accent: 'bg-guac-600' },
   orange:   { from: 'from-orange-50',   to: 'to-amber-100',   ring: 'ring-orange-200',   text: 'text-orange-900',  accent: 'bg-orange-500' },
   sky:      { from: 'from-sky-50',      to: 'to-blue-100',    ring: 'ring-sky-200',      text: 'text-sky-900',     accent: 'bg-sky-500' },
   indigo:   { from: 'from-indigo-50',   to: 'to-violet-100',  ring: 'ring-indigo-200',   text: 'text-indigo-900',  accent: 'bg-indigo-500' },
@@ -405,7 +405,7 @@ export default function StashPage() {
         subtitle="Everything you've ever bought — find the best store for each"
         action={
           <span className="text-sm text-gray-500">
-            <span className="font-bold text-emerald-700 tabular-nums">{items.length}</span> products ·{' '}
+            <span className="font-bold text-guac-700 tabular-nums">{items.length}</span> products ·{' '}
             <span className="font-bold text-amber-700 tabular-nums">{multiStoreCount}</span> multi-store
           </span>
         }
@@ -452,7 +452,7 @@ export default function StashPage() {
           type="button"
           aria-label="Scroll categories left"
           onClick={() => scrollCats(-1)}
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white shadow-md border border-gray-200 flex items-center justify-center text-gray-700 hover:bg-gray-50 hover:text-emerald-700 opacity-70 group-hover:opacity-100 transition-opacity"
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white shadow-md border border-gray-200 flex items-center justify-center text-gray-700 hover:bg-guac-row hover:text-guac-700 opacity-70 group-hover:opacity-100 transition-opacity"
         >
           <ChevronLeft size={18} />
         </button>
@@ -460,7 +460,7 @@ export default function StashPage() {
           type="button"
           aria-label="Scroll categories right"
           onClick={() => scrollCats(1)}
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white shadow-md border border-gray-200 flex items-center justify-center text-gray-700 hover:bg-gray-50 hover:text-emerald-700 opacity-70 group-hover:opacity-100 transition-opacity"
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white shadow-md border border-gray-200 flex items-center justify-center text-gray-700 hover:bg-guac-row hover:text-guac-700 opacity-70 group-hover:opacity-100 transition-opacity"
         >
           <ChevronRight size={18} />
         </button>
@@ -472,29 +472,29 @@ export default function StashPage() {
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input className="input pl-9" placeholder="Search item, SKU, model, or store…" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
-        <div className="inline-flex items-center gap-2 bg-white rounded-full pl-4 pr-2 py-1 border border-emerald-100 shadow-sm">
+        <div className="inline-flex items-center gap-2 bg-white rounded-full pl-4 pr-2 py-1 border border-guac-line shadow-sm">
           <span className="text-xs font-semibold text-gray-500">When</span>
-          <select value={timeframe} onChange={e => setTimeframe(e.target.value)} className="bg-transparent text-sm font-bold text-emerald-800 focus:outline-none cursor-pointer font-sans">
+          <select value={timeframe} onChange={e => setTimeframe(e.target.value)} className="bg-transparent text-sm font-bold text-guac-700 focus:outline-none cursor-pointer font-sans">
             {TIMEFRAMES.map(o => <option key={o.key} value={o.key}>{o.label}</option>)}
           </select>
         </div>
-        <div className="inline-flex items-center gap-2 bg-white rounded-full pl-4 pr-2 py-1 border border-emerald-100 shadow-sm">
+        <div className="inline-flex items-center gap-2 bg-white rounded-full pl-4 pr-2 py-1 border border-guac-line shadow-sm">
           <span className="text-xs font-semibold text-gray-500">Sort</span>
-          <select value={sort} onChange={e => setSort(e.target.value)} className="bg-transparent text-sm font-bold text-emerald-800 focus:outline-none cursor-pointer font-sans">
+          <select value={sort} onChange={e => setSort(e.target.value)} className="bg-transparent text-sm font-bold text-guac-700 focus:outline-none cursor-pointer font-sans">
             {SORTS.map(o => <option key={o.key} value={o.key}>{o.label}</option>)}
           </select>
         </div>
-        <div className="inline-flex bg-emerald-50 rounded-full p-1 gap-1 border border-emerald-100">
+        <div className="inline-flex bg-gray-100 rounded-full p-1 gap-1">
           <button onClick={() => setView('grid')} title="Grid view"
-            className={`p-1.5 rounded-full transition-all ${view === 'grid' ? 'bg-white text-emerald-900 shadow-sm' : 'text-emerald-700/70 hover:text-emerald-900'}`}>
+            className={`p-1.5 rounded-full transition-all ${view === 'grid' ? 'bg-white text-guac-ink shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}>
             <LayoutGrid size={14} />
           </button>
           <button onClick={() => setView('list')} title="List view"
-            className={`p-1.5 rounded-full transition-all ${view === 'list' ? 'bg-white text-emerald-900 shadow-sm' : 'text-emerald-700/70 hover:text-emerald-900'}`}>
+            className={`p-1.5 rounded-full transition-all ${view === 'list' ? 'bg-white text-guac-ink shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}>
             <List size={14} />
           </button>
           <button onClick={() => setView('accordion')} title="Grouped by category"
-            className={`p-1.5 rounded-full transition-all ${view === 'accordion' ? 'bg-white text-emerald-900 shadow-sm' : 'text-emerald-700/70 hover:text-emerald-900'}`}>
+            className={`p-1.5 rounded-full transition-all ${view === 'accordion' ? 'bg-white text-guac-ink shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}>
             <Layers size={14} />
           </button>
         </div>
@@ -515,7 +515,7 @@ export default function StashPage() {
           <LottieAnimation data={emptyListLottie} size={160} fallback="🥑" />
           <p className="text-gray-500 max-w-sm">
             {items.length === 0
-              ? <>No items yet. <Link href="/receipts" className="text-emerald-700 font-semibold hover:underline">Add your first receipt</Link> to start your stash.</>
+              ? <>No items yet. <Link href="/receipts" className="text-guac-700 font-semibold hover:underline">Add your first receipt</Link> to start your stash.</>
               : 'No matches in this category.'}
           </p>
         </div>
@@ -580,12 +580,12 @@ export default function StashPage() {
       ) : (
         <div className="card p-0 overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b text-xs text-gray-500 uppercase tracking-wide">
+            <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
               <tr>{['Category','Item','Stores','Best price','Times','Total spend',''].map(h =>
-                <th key={h} className="px-4 py-3 text-left font-semibold">{h}</th>
+                <th key={h} className="px-4 py-3 text-left">{h}</th>
               )}</tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-guac-line">
               {filtered.map(it => {
                 const cat = CATEGORY_BY_SLUG[it.category] || CATEGORY_BY_SLUG['misc']
                 return (
@@ -609,7 +609,7 @@ export default function StashPage() {
                           <span className="text-xs text-gray-500">{it.last_store}</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 font-bold text-emerald-700 tabular-nums">
+                      <td className="px-4 py-3 font-bold text-guac-700 tabular-nums">
                         ${(it.best?.min_price || it.last_price).toFixed(2)}
                         {it.best && it.best.name && <span className="text-[10px] text-gray-400 ml-1 font-normal">at {it.best.name}</span>}
                       </td>
@@ -624,7 +624,7 @@ export default function StashPage() {
                       </td>
                     </tr>
                     {expanded === it.key && (
-                      <tr className="bg-emerald-50/20">
+                      <tr className="bg-guac-50/20">
                         <td colSpan={7} className="px-6 py-3">
                           <StoreList stores={it.stores_list} best={it.best} />
                         </td>
@@ -665,7 +665,7 @@ function CategorySection({ cat, items, expandedKey, onCardToggle, onAddToSmashli
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors"
+        className="w-full flex items-center justify-between px-4 py-3 hover:bg-guac-row transition-colors"
       >
         <div className="flex items-center gap-3">
           <span className="text-2xl">{cat.emoji}</span>
@@ -793,7 +793,7 @@ const StashCard = memo(function StashCard({ item, expanded, onToggle, onAddToSma
                     sale: false,
                   })),
                 })}
-                triggerClassName="text-xs font-bold text-emerald-700 hover:text-emerald-900"
+                triggerClassName="text-xs font-bold text-guac-700 hover:text-guac-ink"
               />
               <button onClick={() => onFindDeals?.()}
                 className="text-xs font-bold text-amber-700 hover:text-amber-900">
@@ -922,7 +922,7 @@ const ProductCard = memo(function ProductCard({ item, expanded, onToggle, onAddT
   })
 
   return (
-    <div className={`relative bg-gradient-to-br ${tone.from} ${tone.to} rounded-2xl border-2 border-transparent shadow-sm hover:shadow-xl hover:border-emerald-300 hover:scale-[1.02] hover:-translate-y-0.5 transition-all duration-200 ring-1 ${tone.ring} group`}>
+    <div className={`relative bg-gradient-to-br ${tone.from} ${tone.to} rounded-2xl border-2 border-transparent shadow-sm hover:shadow-xl hover:border-guac-line2 hover:scale-[1.02] hover:-translate-y-0.5 transition-all duration-200 ring-1 ${tone.ring} group`}>
       {/* Color stripe header — explicit rounded-t-2xl now that the
           card no longer overflow-hidden's (so the Share dropdown can
           escape the card boundary). */}
@@ -1009,7 +1009,7 @@ const ProductCard = memo(function ProductCard({ item, expanded, onToggle, onAddT
             {item.warranty_info && (
               <span
                 title={item.warranty_info}
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 max-w-[200px] truncate"
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-guac-100 text-guac-700 border border-guac-line2 max-w-[200px] truncate"
               >
                 🛡 Warranty
               </span>
@@ -1043,7 +1043,7 @@ const ProductCard = memo(function ProductCard({ item, expanded, onToggle, onAddT
         <div className="grid grid-cols-3 gap-2 mt-3 text-xs">
           <div className="rounded-xl bg-white/80 px-2 py-1 text-center ring-1 ring-white">
             <p className="text-[9px] uppercase text-gray-500 font-bold">{isMulti ? 'Best' : 'Last'} $</p>
-            <p className="font-bold text-emerald-700 tabular-nums">${(item.best?.min_price || item.last_price).toFixed(2)}</p>
+            <p className="font-bold text-guac-700 tabular-nums">${(item.best?.min_price || item.last_price).toFixed(2)}</p>
           </div>
           <div className="rounded-xl bg-white/80 px-2 py-1 text-center ring-1 ring-white">
             <p className="text-[9px] uppercase text-gray-500 font-bold">Bought</p>
@@ -1069,7 +1069,7 @@ const ProductCard = memo(function ProductCard({ item, expanded, onToggle, onAddT
         )}
 
         <button onClick={onToggle}
-          className="mt-3 flex items-center gap-1 text-xs font-semibold text-emerald-800 hover:text-emerald-900 self-start">
+          className="mt-3 flex items-center gap-1 text-xs font-semibold text-guac-700 hover:text-guac-ink self-start">
           {expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
           {item.store_count > 1 ? `Compare ${item.store_count} stores` : `1 store`}
         </button>
@@ -1087,7 +1087,7 @@ const ProductCard = memo(function ProductCard({ item, expanded, onToggle, onAddT
 
             {webPrices && webPrices.length > 0 && (
               <div className="pt-2 border-t border-gray-100">
-                <p className="text-[9px] uppercase tracking-wider font-bold text-emerald-700 mb-1 px-2">💎 Live web prices</p>
+                <p className="text-[9px] uppercase tracking-wider font-bold text-guac-700 mb-1 px-2">💎 Live web prices</p>
                 <StoreList
                   stores={webPrices.map(p => ({ id: null, name: p.store, last_price: p.price, min_price: p.price, count: 1, url: p.url, web: true, notes: p.notes }))}
                   best={null}
@@ -1100,7 +1100,7 @@ const ProductCard = memo(function ProductCard({ item, expanded, onToggle, onAddT
               type="button"
               onClick={huntWebPrices}
               disabled={webLoading}
-              className="w-full text-[11px] font-bold text-emerald-700 hover:bg-emerald-50 rounded-lg py-1.5 transition-all flex items-center justify-center gap-1.5">
+              className="w-full text-[11px] font-bold text-guac-700 hover:bg-guac-50 rounded-lg py-1.5 transition-all flex items-center justify-center gap-1.5">
               {webLoading
                 ? <>⏳ Scanning the web…</>
                 : webPrices ? <>🔄 Refresh web prices</> : <>💎 Hunt web prices</>}
@@ -1109,7 +1109,7 @@ const ProductCard = memo(function ProductCard({ item, expanded, onToggle, onAddT
         )}
 
         <div className="flex items-center justify-between mt-4 pt-3 border-t border-white/50 gap-2">
-          <Link href={`/receipts/${item.last_receipt_id}`} className="inline-flex items-center gap-1 text-xs text-emerald-800 hover:underline font-semibold">
+          <Link href={`/receipts/${item.last_receipt_id}`} className="inline-flex items-center gap-1 text-xs text-guac-700 hover:underline font-semibold">
             Last receipt <ExternalLink size={10} />
           </Link>
           <div className="flex items-center gap-1.5">
@@ -1212,7 +1212,7 @@ function ProductRater({ currentRating, onRate, disabled }) {
       {chip && (
         <span
           className={`ml-auto inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-            chip.tone === 'emerald' ? 'bg-emerald-100 text-emerald-800' :
+            chip.tone === 'emerald' ? 'bg-guac-100 text-guac-700' :
             chip.tone === 'rose'    ? 'bg-rose-100 text-rose-800' :
                                        'bg-gray-100 text-gray-600'
           }`}
@@ -1240,11 +1240,11 @@ function OnHandStepper({ value, onChange, disabled, subtitle }) {
           type="button"
           disabled={disabled || safe === 0}
           onClick={() => onChange(Math.max(0, safe - 1))}
-          className="w-7 h-7 rounded-full bg-emerald-100 hover:bg-emerald-200 text-emerald-700 text-base font-bold leading-none disabled:opacity-40 transition-all active:scale-95"
+          className="w-7 h-7 rounded-full bg-guac-100 hover:bg-guac-100 text-guac-700 text-base font-bold leading-none disabled:opacity-40 transition-all active:scale-95"
           aria-label="Decrease on-hand count"
         >−</button>
         <span className={`text-sm font-black tabular-nums w-7 text-center ${
-          safe === 0 ? 'text-rose-700' : safe <= 1 ? 'text-amber-700' : 'text-emerald-800'
+          safe === 0 ? 'text-rose-700' : safe <= 1 ? 'text-amber-700' : 'text-guac-700'
         }`}>
           {safe}
         </span>
@@ -1252,7 +1252,7 @@ function OnHandStepper({ value, onChange, disabled, subtitle }) {
           type="button"
           disabled={disabled}
           onClick={() => onChange(safe + 1)}
-          className="w-7 h-7 rounded-full bg-emerald-100 hover:bg-emerald-200 text-emerald-700 text-base font-bold leading-none disabled:opacity-40 transition-all active:scale-95"
+          className="w-7 h-7 rounded-full bg-guac-100 hover:bg-guac-100 text-guac-700 text-base font-bold leading-none disabled:opacity-40 transition-all active:scale-95"
           aria-label="Increase on-hand count"
         >+</button>
       </div>
@@ -1269,8 +1269,8 @@ function CatChip({ active, onClick, emoji, label, count, tone }) {
     <button type="button" onClick={onClick}
       className={`group shrink-0 inline-flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border-2 font-semibold text-xs transition-all hover:scale-[1.04] ${
         active
-          ? `bg-gradient-to-br ${grad} text-white border-white shadow-lg ring-1 ring-emerald-200`
-          : 'bg-white text-gray-700 border-gray-200 hover:border-emerald-300 shadow-sm'
+          ? `bg-gradient-to-br ${grad} text-white border-white shadow-lg ring-1 ring-guac-100`
+          : 'bg-white text-gray-700 border-gray-200 hover:border-guac-line2 shadow-sm'
       }`}>
       <span className={`w-7 h-7 rounded-full flex items-center justify-center text-base shrink-0 ${
         active ? 'bg-white/30 shadow-inner' : `bg-gradient-to-br ${grad} text-white shadow-sm`

@@ -37,12 +37,12 @@ export default function DashboardSavedSearches() {
   const items = saved.slice(0, 12)
 
   return (
-    <div className="bg-white rounded-2xl border border-emerald-100 shadow-sm p-4 mb-4">
+    <div className="bg-white rounded-2xl border border-guac-line shadow-sm p-4 mb-4">
       <div className="flex items-center justify-between mb-3">
         <h3 className="font-bold text-gray-900 inline-flex items-center gap-2 text-sm">
-          <Bookmark size={15} className="text-emerald-600" /> Searches you saved
+          <Bookmark size={15} className="text-guac-600" /> Searches you saved
         </h3>
-        <Link href="/steals" className="text-xs font-semibold text-emerald-700 hover:underline inline-flex items-center gap-1">
+        <Link href="/steals" className="text-xs font-semibold text-guac-700 hover:underline inline-flex items-center gap-1">
           Manage in Steals <ArrowRight size={12} />
         </Link>
       </div>
@@ -53,7 +53,7 @@ export default function DashboardSavedSearches() {
             <Link
               key={s.id}
               href={`/marketplace?q=${encodeURIComponent(q)}`}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 text-sm font-semibold text-emerald-800 hover:bg-emerald-100 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-guac-50 border border-guac-line text-sm font-semibold text-guac-700 hover:bg-guac-100 transition-colors"
             >
               <Search size={12} /> {s.label || s.query}
             </Link>

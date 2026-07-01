@@ -58,12 +58,12 @@ export default function NotificationsPage() {
         subtitle="Pick which alerts you want. Changes save automatically."
       />
 
-      <div className="card divide-y divide-gray-100 p-0 overflow-hidden">
+      <div className="card divide-y divide-guac-line p-0 overflow-hidden">
         {CATEGORIES.map(({ key, icon: Icon, label, desc }) => {
           const on = prefs[key] !== false
           return (
-            <label key={key} className="flex items-start gap-3 p-4 hover:bg-emerald-50/30 cursor-pointer transition-colors">
-              <div className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${on ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-400'}`}>
+            <label key={key} className="flex items-start gap-3 p-4 hover:bg-guac-50/30 cursor-pointer transition-colors">
+              <div className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${on ? 'bg-guac-100 text-guac-700' : 'bg-gray-100 text-gray-400'}`}>
                 <Icon size={18} />
               </div>
               <div className="flex-1 min-w-0">
@@ -75,7 +75,7 @@ export default function NotificationsPage() {
                 checked={on}
                 disabled={busy === key}
                 onChange={e => toggle(key, e.target.checked)}
-                className="mt-1.5 w-10 h-6 appearance-none rounded-full bg-gray-200 checked:bg-emerald-500 relative cursor-pointer transition-colors before:content-[''] before:absolute before:top-0.5 before:left-0.5 before:w-5 before:h-5 before:rounded-full before:bg-white before:shadow checked:before:translate-x-4 before:transition-transform"
+                className="mt-1.5 w-10 h-6 appearance-none rounded-full bg-gray-200 checked:bg-guac-600 relative cursor-pointer transition-colors before:content-[''] before:absolute before:top-0.5 before:left-0.5 before:w-5 before:h-5 before:rounded-full before:bg-white before:shadow checked:before:translate-x-4 before:transition-transform"
               />
             </label>
           )
@@ -94,7 +94,7 @@ export default function NotificationsPage() {
             type="checkbox"
             checked={prefs.quiet_hours === true}
             onChange={e => toggle('quiet_hours', e.target.checked)}
-            className="w-10 h-6 appearance-none rounded-full bg-gray-200 checked:bg-emerald-500 relative cursor-pointer transition-colors before:content-[''] before:absolute before:top-0.5 before:left-0.5 before:w-5 before:h-5 before:rounded-full before:bg-white before:shadow checked:before:translate-x-4 before:transition-transform"
+            className="w-10 h-6 appearance-none rounded-full bg-gray-200 checked:bg-guac-600 relative cursor-pointer transition-colors before:content-[''] before:absolute before:top-0.5 before:left-0.5 before:w-5 before:h-5 before:rounded-full before:bg-white before:shadow checked:before:translate-x-4 before:transition-transform"
           />
           <Clock size={14} className="text-gray-400" />
           <input

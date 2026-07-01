@@ -33,7 +33,7 @@ function rowSectionKey(t) {
 
 const TONE = {
   rose:    { bg: 'bg-rose-50',    text: 'text-rose-700',    ring: 'ring-rose-100',    icon: 'text-rose-600',    chip: 'bg-rose-100 text-rose-700'        },
-  emerald: { bg: 'bg-emerald-50', text: 'text-emerald-700', ring: 'ring-emerald-100', icon: 'text-emerald-600', chip: 'bg-emerald-100 text-emerald-800'  },
+  emerald: { bg: 'bg-guac-50', text: 'text-guac-700', ring: 'ring-guac-100', icon: 'text-guac-600', chip: 'bg-guac-100 text-guac-700'  },
   amber:   { bg: 'bg-amber-50',   text: 'text-amber-800',   ring: 'ring-amber-100',   icon: 'text-amber-600',   chip: 'bg-amber-100 text-amber-800'      },
   orange:  { bg: 'bg-orange-50',  text: 'text-orange-800',  ring: 'ring-orange-100',  icon: 'text-orange-600',  chip: 'bg-orange-100 text-orange-800'    },
   gray:    { bg: 'bg-gray-50',    text: 'text-gray-700',    ring: 'ring-gray-200',    icon: 'text-gray-500',    chip: 'bg-gray-100 text-gray-700'        },
@@ -263,12 +263,12 @@ export default function StatementsPage() {
         </Link>
       </div>
 
-      <div className="card bg-emerald-50/40 border-emerald-100">
+      <div className="card bg-guac-50/40 border-guac-line">
         <div className="flex gap-3">
-          <ShieldCheck className="text-emerald-700 shrink-0 mt-0.5" size={20} />
-          <div className="text-sm text-emerald-900">
+          <ShieldCheck className="text-guac-700 shrink-0 mt-0.5" size={20} />
+          <div className="text-sm text-guac-ink">
             <p className="font-semibold mb-1">How your statement is handled</p>
-            <ul className="list-disc pl-5 space-y-1 text-emerald-800/90">
+            <ul className="list-disc pl-5 space-y-1 text-guac-700/90">
               <li>The file is sent to our AI parser, processed in memory, and not stored.</li>
               <li>Each row is auto-classified as <b>Spending</b>, <b>Refund</b>, <b>Fee</b>, <b>Interest</b>, or <b>Card payment</b>.</li>
               <li>Only the rows you confirm are written to your receipts. Fees / interest / card-payments are off by default.</li>
@@ -281,7 +281,7 @@ export default function StatementsPage() {
       <div className="card">
         <div {...getRootProps()} className={
           'border-2 border-dashed rounded-2xl p-8 text-center transition-all cursor-pointer ' +
-          (isDragActive ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 hover:border-emerald-400 hover:bg-emerald-50/30')
+          (isDragActive ? 'border-guac-600 bg-guac-50' : 'border-gray-200 hover:border-guac-600 hover:bg-guac-50/30')
         }>
           <input {...getInputProps()} />
           {parsing ? (
@@ -291,7 +291,7 @@ export default function StatementsPage() {
             </div>
           ) : file ? (
             <div className="flex flex-col items-center gap-2">
-              {file.type === 'application/pdf' ? <FileText size={32} className="text-emerald-600" /> : <ImageIcon size={32} className="text-emerald-600" />}
+              {file.type === 'application/pdf' ? <FileText size={32} className="text-guac-600" /> : <ImageIcon size={32} className="text-guac-600" />}
               <p className="text-sm font-medium">{file.name}</p>
               <p className="text-xs text-gray-400">Drop another file to replace</p>
             </div>
@@ -347,7 +347,7 @@ export default function StatementsPage() {
                     </Link>
                     <button
                       onClick={() => { setParsed(null); setFile(null) }}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-colors"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-600 hover:bg-guac-50 transition-colors"
                     >
                       Cancel
                     </button>
@@ -374,7 +374,7 @@ export default function StatementsPage() {
                 className={`inline-flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-xl border transition-all ${
                   businessAll
                     ? 'bg-blue-600 text-white border-blue-700 shadow-sm'
-                    : 'bg-white text-blue-700 border-blue-200 hover:bg-blue-50'
+                    : 'bg-white text-guac-700 border-guac-line2 hover:bg-guac-50'
                 }`}
                 title="Tag every imported row as a business expense"
               >
@@ -406,15 +406,30 @@ export default function StatementsPage() {
           {categoryBreakdown.length > 0 && (
             <div className="card">
               <h3 className="font-semibold text-gray-900 mb-3 text-sm">Spending by category (this statement)</h3>
-              <div className="flex flex-wrap gap-2">
-                {categoryBreakdown.map(c => (
-                  <span key={c.slug} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-50 border border-gray-200">
-                    <span>{c.meta.emoji}</span>
-                    <span>{c.meta.label}</span>
-                    <span className={c.net < 0 ? 'text-emerald-700' : 'text-gray-700'}>${Math.abs(c.net).toFixed(2)}</span>
-                    <span className="text-gray-400 text-[10px]">{c.count}</span>
-                  </span>
-                ))}
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
+                    <tr>
+                      <th className="px-3 py-1 text-left">Category</th>
+                      <th className="px-3 py-1 text-right">Spend</th>
+                      <th className="px-3 py-1 text-right">Rows</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-guac-line">
+                    {categoryBreakdown.map(c => (
+                      <tr key={c.slug} className="hover:bg-guac-50/40">
+                        <td className="px-3 py-1.5">
+                          <span className="inline-flex items-center gap-1.5">
+                            <span>{c.meta.emoji}</span>
+                            <span>{c.meta.label}</span>
+                          </span>
+                        </td>
+                        <td className={`px-3 py-1.5 text-right font-semibold tabular-nums ${c.net < 0 ? 'text-guac-700' : 'text-gray-700'}`}>${Math.abs(c.net).toFixed(2)}</td>
+                        <td className="px-3 py-1.5 text-right text-gray-400 tabular-nums">{c.count}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           )}
@@ -460,7 +475,7 @@ export default function StatementsPage() {
 
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
-                        <thead className="text-[10px] text-gray-500 uppercase tracking-wide bg-gray-50">
+                        <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
                           <tr>
                             <th className="px-2 py-2 w-8"></th>
                             <th className="px-3 py-2 text-left">Date</th>
@@ -474,11 +489,11 @@ export default function StatementsPage() {
                             <th className="px-3 py-2 text-right">Amount</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-50">
+                        <tbody className="divide-y divide-guac-line">
                           {rows.map(t => (
                             <tr key={t._i} className={t._import ? 'bg-white' : 'bg-gray-50/40 opacity-70'}>
                               <td className="px-2 py-2 text-center">
-                                <input type="checkbox" className="w-4 h-4 accent-emerald-600"
+                                <input type="checkbox" className="w-4 h-4 accent-guac-600"
                                   checked={!!t._import} onChange={() => toggleRow(t._i)} />
                               </td>
                               <td className="px-3 py-2 text-xs text-gray-700 whitespace-nowrap">
@@ -514,7 +529,7 @@ export default function StatementsPage() {
                                   title="Mark this row as a business expense"
                                 />
                               </td>
-                              <td className={'px-3 py-2 text-right text-xs font-mono ' + (t.amount < 0 ? 'text-emerald-700' : 'text-gray-900')}>
+                              <td className={'px-3 py-2 text-right text-xs font-mono ' + (t.amount < 0 ? 'text-guac-700' : 'text-gray-900')}>
                                 ${t.amount.toFixed(2)}
                               </td>
                             </tr>

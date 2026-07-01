@@ -66,7 +66,7 @@ export default function UpdatePrompt() {
   if (!hasUpdate || dismissed) return null
 
   return (
-    <div className="fixed bottom-4 right-4 z-[60] max-w-sm bg-white border border-emerald-200 shadow-lg rounded-2xl px-4 py-3 flex items-start gap-3 animate-in slide-in-from-bottom-4 fade-in duration-300">
+    <div className="fixed bottom-4 right-4 z-[60] max-w-sm bg-white border border-guac-line2 shadow-lg rounded-2xl px-4 py-3 flex items-start gap-3 animate-in slide-in-from-bottom-4 fade-in duration-300">
       <div className="shrink-0 w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-lime-500 flex items-center justify-center">
         <RefreshCw size={16} className="text-white" />
       </div>
@@ -77,7 +77,7 @@ export default function UpdatePrompt() {
           <button
             type="button"
             onClick={() => window.location.reload()}
-            className="text-xs font-bold bg-emerald-600 text-white px-3 py-1.5 rounded-full hover:bg-emerald-700 transition-colors"
+            className="text-xs font-bold bg-guac-700 text-white px-3 py-1.5 rounded-full hover:bg-guac-700 transition-colors"
           >
             Reload now
           </button>

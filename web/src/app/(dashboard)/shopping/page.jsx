@@ -23,7 +23,7 @@ import mascotBus from '../../../lib/mascotEventBus'
 // the Stash grid. Maps the per-Smashlist color (Pantry=emerald,
 // Cravings=rose, Snack Stack=amber, Grub & Grab=lime).
 const TONE_TINT = {
-  emerald: { from: 'from-emerald-50', to: 'to-green-100',   ring: 'ring-emerald-200', text: 'text-emerald-900', accent: 'bg-emerald-500' },
+  emerald: { from: 'from-emerald-50', to: 'to-green-100',   ring: 'ring-guac-100', text: 'text-guac-ink', accent: 'bg-guac-600' },
   rose:    { from: 'from-rose-50',    to: 'to-red-100',     ring: 'ring-rose-200',    text: 'text-rose-900',    accent: 'bg-rose-500' },
   amber:   { from: 'from-amber-50',   to: 'to-yellow-100',  ring: 'ring-amber-200',   text: 'text-amber-900',   accent: 'bg-amber-500' },
   lime:    { from: 'from-lime-50',    to: 'to-emerald-100', ring: 'ring-lime-200',    text: 'text-lime-900',    accent: 'bg-lime-500' },
@@ -854,7 +854,7 @@ export default function ShoppingPage() {
       {errandPlan.length >= 2 && (
         <section className="space-y-2">
           <div className="flex items-center gap-2">
-            <MapPin size={16} className="text-emerald-700" />
+            <MapPin size={16} className="text-guac-700" />
             <h2 className="font-semibold text-gray-800">Errand plan</h2>
             <span className="text-xs text-gray-500">
               {errandPlan.length} stores · {filteredSuggestions.length} items · combine the trip
@@ -865,14 +865,14 @@ export default function ShoppingPage() {
               const storeName = group.items[0]?.store?.store_name
               const display = storeName ? displayStoreName(storeName) : 'NO STORE TAGGED'
               return (
-                <div key={group.storeId || 'nostore'} className="card border-emerald-100 hover:border-emerald-300 hover:shadow-sm transition-all">
+                <div key={group.storeId || 'nostore'} className="card border-guac-line hover:border-guac-line2 hover:shadow-sm transition-all">
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
-                      <StoreIcon size={15} className="text-emerald-700" />
+                    <div className="w-8 h-8 rounded-lg bg-guac-100 flex items-center justify-center">
+                      <StoreIcon size={15} className="text-guac-700" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="font-bold text-gray-900 truncate text-sm">{display}</p>
-                      <p className="text-[11px] text-emerald-700/80">
+                      <p className="text-[11px] text-guac-700/80">
                         {group.itemCount} item{group.itemCount === 1 ? '' : 's'}
                       </p>
                     </div>
@@ -909,7 +909,7 @@ export default function ShoppingPage() {
                 <button
                   type="button"
                   onClick={() => setSelectedSuggestions(new Set(filteredSuggestions.map(s => s.id)))}
-                  className="text-emerald-700 hover:text-emerald-900 px-2 py-1"
+                  className="text-guac-700 hover:text-guac-ink px-2 py-1"
                 >
                   Select all
                 </button>
@@ -918,7 +918,7 @@ export default function ShoppingPage() {
                   <button
                     type="button"
                     onClick={() => setSelectedSuggestions(new Set(filteredSuggestions.map(s => s.id)))}
-                    className="text-emerald-700 hover:text-emerald-900 px-2 py-1"
+                    className="text-guac-700 hover:text-guac-ink px-2 py-1"
                   >
                     Select all
                   </button>
@@ -939,11 +939,11 @@ export default function ShoppingPage() {
               Drives the "Add selected to <store>" picker which sends
               the chosen items to one specific store in a single click. */}
           {selectedSuggestions.size > 0 && (
-            <div className="card bg-emerald-50/70 border border-emerald-200 flex items-center gap-3 py-2 px-3 flex-wrap">
-              <span className="text-sm font-bold text-emerald-900">
+            <div className="card bg-guac-50/70 border border-guac-line2 flex items-center gap-3 py-2 px-3 flex-wrap">
+              <span className="text-sm font-bold text-guac-ink">
                 {selectedSuggestions.size} selected
               </span>
-              <span className="text-xs text-emerald-700/80">Send to:</span>
+              <span className="text-xs text-guac-700/80">Send to:</span>
               {/* Typeable picker — narrow the list as you type. Restricted
                   to stores where the user has bought at least one of the
                   selected items. For sending an item to a brand-new store,
@@ -996,7 +996,7 @@ export default function ShoppingPage() {
           visible header so the user can find where Approved items go. */}
       <section className="space-y-2">
         <div className="flex items-center gap-2 flex-wrap">
-          <ShoppingCart size={16} className="text-emerald-700" />
+          <ShoppingCart size={16} className="text-guac-700" />
           <h2 className="font-semibold text-gray-800">Your Smashlist</h2>
           <span className="text-xs text-gray-500">
             {filteredOwn.length} item{filteredOwn.length === 1 ? '' : 's'} ready to grab
@@ -1034,7 +1034,7 @@ export default function ShoppingPage() {
               <button
                 type="button"
                 onClick={() => setCollapsedStores(new Set())}
-                className="text-[11px] font-semibold text-emerald-700 hover:text-emerald-900 px-2 py-1"
+                className="text-[11px] font-semibold text-guac-700 hover:text-guac-ink px-2 py-1"
                 title="Expand every store group"
               >
                 Expand all
@@ -1066,7 +1066,7 @@ export default function ShoppingPage() {
               </p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-guac-line">
               {ownByStore.map(({ store, items: rows }) => {
                 const collapsed = collapsedStores.has(store)
                 const meta = storeMeta.get(store) || {}
@@ -1102,16 +1102,16 @@ export default function ShoppingPage() {
                             return next
                           })
                         }}
-                        className="flex-1 flex items-start gap-2 text-left hover:bg-emerald-50/50 -mx-1 px-1 py-1 rounded-lg transition-colors"
+                        className="flex-1 flex items-start gap-2 text-left hover:bg-guac-50/50 -mx-1 px-1 py-1 rounded-lg transition-colors"
                       >
-                        <div className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center mt-0.5 shrink-0">
+                        <div className="w-7 h-7 rounded-lg bg-guac-100 flex items-center justify-center mt-0.5 shrink-0">
                           {collapsed
-                            ? <ChevronRight size={14} className="text-emerald-700" />
-                            : <ChevronDown size={14} className="text-emerald-700" />}
+                            ? <ChevronRight size={14} className="text-guac-700" />
+                            : <ChevronDown size={14} className="text-guac-700" />}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="font-bold text-emerald-900 text-sm">{store}</h3>
+                            <h3 className="font-bold text-guac-ink text-sm">{store}</h3>
                             <span className="text-[10px] text-gray-500 font-semibold bg-gray-100 px-1.5 py-0.5 rounded-full">
                               {rows.length} item{rows.length === 1 ? '' : 's'}
                             </span>
@@ -1133,7 +1133,7 @@ export default function ShoppingPage() {
                                   <a
                                     href={`tel:${meta.phone_no}`}
                                     onClick={(e) => e.stopPropagation()}
-                                    className="inline-flex items-center gap-1 hover:text-emerald-700"
+                                    className="inline-flex items-center gap-1 hover:text-guac-700"
                                   >
                                     <Phone size={10} className="text-gray-400" />
                                     {meta.phone_no}
@@ -1167,7 +1167,7 @@ export default function ShoppingPage() {
                     {!collapsed && (
                       <div className="overflow-x-auto border-t border-gray-50">
                         <table className="w-full text-sm">
-                          <thead className="bg-gray-50/60 border-b text-xs text-gray-500 uppercase tracking-wide">
+                          <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
                             <tr>
                               <th className="px-3 py-2 w-8"></th>
                               {['Item','SKU','Qty','Price','Frequency','Status','Actions'].map(h =>
@@ -1175,7 +1175,7 @@ export default function ShoppingPage() {
                               )}
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-gray-50">
+                          <tbody className="divide-y divide-guac-line">
                             {rows.map(item => (
                               <SmashRow
                                 key={item.id}
@@ -1237,7 +1237,7 @@ function AlertModal({ title, body, onClose }) {
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold"
+            className="px-4 py-2 rounded-xl bg-guac-600 hover:bg-guac-700 text-white text-sm font-bold"
           >
             OK
           </button>
@@ -1289,7 +1289,7 @@ function AutoAddMenu({ count, stores = [], onPick }) {
               key={opt.key}
               type="button"
               onClick={() => { onPick(opt.key); close() }}
-              className="w-full flex items-start gap-3 px-3 py-2 text-sm text-gray-800 hover:bg-emerald-50 text-left"
+              className="w-full flex items-start gap-3 px-3 py-2 text-sm text-gray-800 hover:bg-guac-50 text-left"
             >
               <span className="text-base leading-none mt-0.5">{opt.icon}</span>
               <span className="flex-1 min-w-0">
@@ -1305,7 +1305,7 @@ function AutoAddMenu({ count, stores = [], onPick }) {
             type="button"
             onClick={() => setPickStoreMode(true)}
             disabled={stores.length === 0}
-            className="w-full flex items-start gap-3 px-3 py-2 text-sm text-gray-800 hover:bg-emerald-50 text-left border-t border-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full flex items-start gap-3 px-3 py-2 text-sm text-gray-800 hover:bg-guac-50 text-left border-t border-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
             title={stores.length === 0 ? 'No stores on file yet — add receipts to populate' : 'Send every item to one specific store'}
           >
             <span className="text-base leading-none mt-0.5">🛒</span>
@@ -1389,10 +1389,10 @@ function ShareMenu({ buildText, getShareUrl, handlers }) {
             Send your list to…
           </div>
           {[
-            { key: 'whatsapp',  icon: <MessageCircle size={14} className="text-emerald-600" />, label: 'WhatsApp', tone: 'hover:bg-emerald-50' },
+            { key: 'whatsapp',  icon: <MessageCircle size={14} className="text-guac-600" />, label: 'WhatsApp', tone: 'hover:bg-guac-50' },
             { key: 'sms',       icon: <Phone size={14} className="text-sky-600" />,            label: 'Text / SMS', tone: 'hover:bg-sky-50' },
             { key: 'email',     icon: <Mail size={14} className="text-amber-600" />,           label: 'Email',     tone: 'hover:bg-amber-50' },
-            { key: 'clipboard', icon: <Copy size={14} className="text-gray-600" />,            label: 'Copy text', tone: 'hover:bg-gray-50' },
+            { key: 'clipboard', icon: <Copy size={14} className="text-gray-600" />,            label: 'Copy text', tone: 'hover:bg-guac-row' },
             { key: 'native',    icon: <Share2 size={14} className="text-violet-600" />,        label: 'More…',     tone: 'hover:bg-violet-50' },
           ].map(opt => (
             <button
@@ -1420,7 +1420,7 @@ function SmashRow({ item, omitStoreCol = false, selected = false, onToggleSelect
   const meta = SHOPPING_LIST_META[item.list_name || 'Pantry'] || {}
   const cellPad = omitStoreCol ? 'px-3 py-2' : 'px-4 py-3'
   return (
-    <tr className={`hover:bg-gray-50/50 ${selected ? 'bg-rose-50/60' : ''}`}>
+    <tr className={`hover:bg-guac-row ${selected ? 'bg-rose-50/60' : ''}`}>
       {onToggleSelect && (
         <td className="px-3 py-2 w-8">
           <input
@@ -1434,7 +1434,7 @@ function SmashRow({ item, omitStoreCol = false, selected = false, onToggleSelect
       )}
       <td className={cellPad}>
         <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 border border-emerald-200 text-emerald-800 shrink-0">
+          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-guac-50 border border-guac-line2 text-guac-700 shrink-0">
             {meta.emoji}
           </span>
           <span className="font-medium">{item.item_name}</span>
@@ -1461,7 +1461,7 @@ function SmashRow({ item, omitStoreCol = false, selected = false, onToggleSelect
       <td className={cellPad}>
         <button onClick={onToggleApproved} className="flex items-center gap-1 text-xs font-medium">
           {item.approved
-            ? <><CheckCircle size={14} className="text-green-500" /> <span className="text-green-600">Approved</span></>
+            ? <><CheckCircle size={14} className="text-guac-600" /> <span className="text-guac-600">Approved</span></>
             : <><Circle size={14} className="text-yellow-400" /> <span className="text-yellow-600">Pending</span></>
           }
         </button>
@@ -1569,7 +1569,7 @@ function BuyAgainCard({ item, selected = false, onToggleSelect, onAdd, onQty }) 
   }, [item.item_name, getLocation])
 
   return (
-    <div className={`relative bg-gradient-to-br ${tone.from} ${tone.to} rounded-2xl border-2 ${selected ? 'border-emerald-500 ring-2 ring-emerald-300' : 'border-transparent'} shadow-sm hover:shadow-xl hover:border-emerald-300 hover:scale-[1.01] hover:-translate-y-0.5 transition-all duration-200 ring-1 ${tone.ring}`}>
+    <div className={`relative bg-gradient-to-br ${tone.from} ${tone.to} rounded-2xl border-2 ${selected ? 'border-guac-600 ring-2 ring-guac-600' : 'border-transparent'} shadow-sm hover:shadow-xl hover:border-guac-line2 hover:scale-[1.01] hover:-translate-y-0.5 transition-all duration-200 ring-1 ${tone.ring}`}>
       <div className={`h-1 ${tone.accent} rounded-t-2xl`} />
       {/* Top-left checkbox — sits over the gradient so it's discoverable
           without taking grid space from the rest of the card. The label
@@ -1578,7 +1578,7 @@ function BuyAgainCard({ item, selected = false, onToggleSelect, onAdd, onQty }) 
         <label className="absolute top-2 left-2 z-10 cursor-pointer p-1 -m-1" title={selected ? 'Deselect' : 'Select to bulk-add'}>
           <input
             type="checkbox"
-            className="w-4 h-4 accent-emerald-600 cursor-pointer"
+            className="w-4 h-4 accent-guac-600 cursor-pointer"
             checked={selected}
             onChange={onToggleSelect}
             aria-label={`Select ${item.item_name}`}
@@ -1608,7 +1608,7 @@ function BuyAgainCard({ item, selected = false, onToggleSelect, onAdd, onQty }) 
           {/* Right stack: list pill + urgency badge (matches the
               "Drinks dropdown + count chip" stack on the Stash card). */}
           <div className="shrink-0 flex flex-col items-end gap-1">
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/80 text-emerald-800 border border-emerald-200">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/80 text-guac-700 border border-guac-line2">
               {meta.emoji} {item.list_name || 'Pantry'}
             </span>
             {u?.isUrgent ? (
@@ -1652,7 +1652,7 @@ function BuyAgainCard({ item, selected = false, onToggleSelect, onAdd, onQty }) 
           </div>
           <div className="rounded-xl bg-white/80 px-2 py-1 text-center ring-1 ring-white truncate">
             <p className="text-[9px] uppercase text-gray-500 font-bold">Store</p>
-            <p className="font-bold text-[11px] text-emerald-700 truncate" title={storeName}>
+            <p className="font-bold text-[11px] text-guac-700 truncate" title={storeName}>
               {storeName || '—'}
             </p>
           </div>
@@ -1677,7 +1677,7 @@ function BuyAgainCard({ item, selected = false, onToggleSelect, onAdd, onQty }) 
         <button
           type="button"
           onClick={() => { setExpanded(v => !v); fetchStoreHistory() }}
-          className="mt-3 flex items-center gap-1 text-xs font-semibold text-emerald-800 hover:text-emerald-900 self-start"
+          className="mt-3 flex items-center gap-1 text-xs font-semibold text-guac-700 hover:text-guac-ink self-start"
         >
           {expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
           {yourStores && yourStores.length > 1
@@ -1730,7 +1730,7 @@ function BuyAgainCard({ item, selected = false, onToggleSelect, onAdd, onQty }) 
               type="button"
               onClick={huntBestPrice}
               disabled={webLoading}
-              className="w-full text-[11px] font-bold text-emerald-700 hover:bg-emerald-50 rounded-lg py-1.5 transition-all flex items-center justify-center gap-1.5"
+              className="w-full text-[11px] font-bold text-guac-700 hover:bg-guac-50 rounded-lg py-1.5 transition-all flex items-center justify-center gap-1.5"
             >
               {webLoading ? <>⏳ Scanning the web…</> : webPrices ? <>🔄 Refresh web prices</> : <>💎 Hunt web prices</>}
             </button>
@@ -1748,7 +1748,7 @@ function BuyAgainCard({ item, selected = false, onToggleSelect, onAdd, onQty }) 
             <button
               type="button"
               onClick={onAdd}
-              className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold shadow-sm hover:shadow-md transition-all"
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-guac-600 hover:bg-guac-700 text-white text-xs font-bold shadow-sm hover:shadow-md transition-all"
               title="Add to Smashlist"
             >
               <ShoppingCart size={13} /> Add
@@ -1841,9 +1841,9 @@ function StorePicker({ stores, onPick, placeholder = 'Pick a store…', disabled
               key={st.id}
               type="button"
               onClick={() => pick(st)}
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-emerald-50"
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-guac-50"
             >
-              <StoreIcon size={12} className="text-emerald-700 shrink-0" />
+              <StoreIcon size={12} className="text-guac-700 shrink-0" />
               <span className="truncate font-medium">{displayStoreName(st.store_name)}</span>
             </button>
           ))}
@@ -1878,7 +1878,7 @@ function StoreFilterList({ stores, onPick }) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Type to filter…"
-          className="w-full px-2 py-1 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-emerald-400"
+          className="w-full px-2 py-1 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-guac-600"
         />
       </div>
       <div className="max-h-64 overflow-y-auto">
@@ -1890,9 +1890,9 @@ function StoreFilterList({ stores, onPick }) {
               key={st.id}
               type="button"
               onClick={() => onPick(st.id)}
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-800 hover:bg-emerald-50 text-left"
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-800 hover:bg-guac-50 text-left"
             >
-              <StoreIcon size={12} className="text-emerald-700 shrink-0" />
+              <StoreIcon size={12} className="text-guac-700 shrink-0" />
               <span className="truncate font-medium">{displayStoreName(st.store_name)}</span>
             </button>
           ))
@@ -1949,7 +1949,7 @@ function ListTab({ active, onClick, emoji, label, count, tone, desc }) {
       className={`group inline-flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border-2 font-semibold text-xs transition-all hover:scale-[1.04] ${
         active
           ? `bg-gradient-to-br ${grad} text-white border-white shadow-lg`
-          : 'bg-white text-gray-700 border-gray-200 hover:border-emerald-300 shadow-sm'
+          : 'bg-white text-gray-700 border-gray-200 hover:border-guac-line2 shadow-sm'
       }`}>
       <span className={`w-7 h-7 rounded-full flex items-center justify-center text-base shrink-0 ${
         active ? 'bg-white/30 shadow-inner' : `bg-gradient-to-br ${grad} text-white shadow-sm`

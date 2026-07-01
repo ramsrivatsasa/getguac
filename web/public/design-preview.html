@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GetGuac — Design System Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* ── GetGuac avocado tokens (twin of globals.css :root) ────────────── */
+  :root{
+    --gg-bg:#EEF1EC; --gg-panel:#FFFFFF; --gg-sidebar:#FBFCF9; --gg-logo:#176B33;
+    --gg-700:#14532D; --gg-600:#1F8A3D; --gg-100:#E9F5DD; --gg-50:#F1F6EA;
+    --gg-row:#F7FBF1; --gg-ink:#14241A; --gg-body:#4A5A4E; --gg-muted:#6B7A6E;
+    --gg-faint:#9AA89E; --gg-mist:#A6B3A9; --gg-label:#B3BEB2;
+    --gg-line:rgba(20,83,45,.08); --gg-line2:rgba(20,83,45,.14);
+    --gg-card-radius:20px; --gg-card-shadow:0 40px 90px -50px rgba(16,40,26,.5);
+    --display:'Bricolage Grotesque', system-ui, sans-serif;
+    --sans:'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--sans);color:var(--gg-body);background:radial-gradient(120% 60% at 50% 0%,#F2F5EE 0%,#E6EAE1 80%);min-height:100vh;padding:36px 20px 80px;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1100px;margin:0 auto}
+  h1,h2,h3{font-family:var(--display);color:var(--gg-ink);letter-spacing:-.02em;line-height:1.1}
+  .eyebrow{font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--gg-label)}
+
+  /* page header */
+  .head{display:flex;align-items:center;gap:14px;margin-bottom:8px}
+  .logo{width:48px;height:48px;border-radius:14px;background:var(--gg-logo);display:flex;align-items:center;justify-content:center;font-size:26px}
+  .head h1{font-size:30px;font-weight:800}
+  .sub{color:var(--gg-muted);font-size:14px;margin:2px 0 30px 62px}
+
+  /* section card */
+  .card{background:var(--gg-panel);border:1px solid var(--gg-line);border-radius:var(--gg-card-radius);box-shadow:0 1px 2px rgba(16,40,26,.04);padding:24px;margin-bottom:22px}
+  .card > .eyebrow{margin-bottom:16px}
+  .grid{display:grid;gap:14px}
+  .row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+
+  /* swatches */
+  .swatches{grid-template-columns:repeat(auto-fill,minmax(132px,1fr))}
+  .sw{border:1px solid var(--gg-line);border-radius:12px;overflow:hidden;font-size:11px}
+  .sw .chip{height:54px}
+  .sw .meta{padding:8px 10px;background:#fff}
+  .sw .nm{font-weight:700;color:var(--gg-ink)}
+  .sw .hx{color:var(--gg-faint);font-family:ui-monospace,monospace;font-size:10px;margin-top:2px}
+
+  /* type specimen */
+  .spec{font-family:var(--display);color:var(--gg-ink);font-weight:800}
+  .specimen .big{font-size:40px}
+  .specimen .med{font-size:22px;font-weight:700}
+  .specimen .body{font-family:var(--sans);font-weight:400;font-size:15px;color:var(--gg-body);margin-top:10px;max-width:60ch;line-height:1.6}
+
+  /* buttons (mirror .btn-*) */
+  .btn{display:inline-flex;align-items:center;gap:7px;border:0;cursor:pointer;border-radius:12px;font-family:var(--sans);font-weight:700;font-size:13px;padding:10px 16px;transition:all .15s}
+  .btn-primary{background:var(--gg-700);color:#fff;box-shadow:0 1px 2px rgba(16,40,26,.12)}
+  .btn-primary:hover{background:var(--gg-ink)}
+  .btn-secondary{background:#fff;color:var(--gg-body);border:1px solid var(--gg-line2)}
+  .btn-secondary:hover{background:var(--gg-50);color:var(--gg-700)}
+  .btn-danger{background:linear-gradient(135deg,#f43f5e,#dc2626);color:#fff}
+  .btn-ghost{background:transparent;color:var(--gg-body);border-radius:10px;padding:6px 12px;font-weight:600}
+  .btn-ghost:hover{background:var(--gg-50);color:var(--gg-700)}
+  .btn-cta{background:linear-gradient(135deg,#FBB040,#E8870E);color:#fff;font-weight:800;box-shadow:0 6px 16px -8px rgba(232,135,14,.6)}
+
+  /* badges + pills */
+  .badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700}
+  .b-blue{background:var(--gg-100);color:var(--gg-600)}
+  .b-green{background:var(--gg-100);color:var(--gg-700)}
+  .b-red{background:#FEF1F1;color:#DC2626}
+  .b-gray{background:#F2F4EF;color:var(--gg-faint)}
+  .b-amber{background:#FBEFD2;color:#92590A}
+  .pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:6px 11px;border-radius:8px}
+
+  /* inputs */
+  .label{display:block;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--gg-label);margin-bottom:6px}
+  .input{width:100%;padding:11px 14px;border:1px solid var(--gg-line2);border-radius:12px;font-family:var(--sans);font-size:14px;color:var(--gg-ink);background:#fff}
+  .input::placeholder{color:var(--gg-mist)}
+  .input:focus{outline:none;border-color:transparent;box-shadow:0 0 0 3px rgba(31,138,61,.25)}
+
+  /* segment */
+  .segment{display:inline-flex;background:var(--gg-50);border-radius:12px;padding:4px;gap:2px}
+  .segment span{padding:7px 14px;border-radius:8px;font-size:12.5px;font-weight:600;color:var(--gg-muted);cursor:pointer}
+  .segment span.on{background:#fff;color:var(--gg-700);font-weight:800;box-shadow:0 1px 3px rgba(20,40,28,.08)}
+
+  /* stat tiles */
+  .stats{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+  .stat{background:#fff;border:1px solid var(--gg-line);border-radius:16px;padding:16px}
+  .stat .k{font-size:11px;font-weight:700;color:var(--gg-faint);text-transform:uppercase;letter-spacing:.06em}
+  .stat .v{font-family:var(--display);font-weight:800;font-size:26px;color:var(--gg-ink);margin-top:6px}
+
+  /* receipts table (the hero — mirrors the Receipts mockup) */
+  .table{background:#fff;border:1px solid var(--gg-line);border-radius:var(--gg-card-radius);overflow:hidden}
+  .thead,.trow{display:grid;grid-template-columns:1.6fr 150px 90px 110px 90px;align-items:center;padding:13px 22px}
+  .thead{font-size:10.5px;font-weight:800;letter-spacing:.05em;color:var(--gg-label);border-bottom:1px solid var(--gg-line)}
+  .thead .r,.trow .r{text-align:right}
+  .trow{border-bottom:1px solid rgba(20,83,45,.06);transition:background .15s}
+  .trow:hover{background:var(--gg-row)}
+  .trow:last-child{border-bottom:0}
+  .store{display:flex;align-items:center;gap:12px}
+  .avatar{width:36px;height:36px;border-radius:11px;background:var(--gg-50);color:var(--gg-600);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px}
+  .nm{font-size:14px;font-weight:700;color:var(--gg-ink)}
+  .id{font-size:11px;color:var(--gg-label);font-family:ui-monospace,monospace}
+  .amt{text-align:right;font-family:var(--display);font-weight:800;font-size:14.5px;color:var(--gg-ink)}
+  .tax{text-align:right;font-size:13px;color:var(--gg-faint)}
+
+  .note{font-size:12.5px;color:var(--gg-muted);margin-top:6px}
+  a{color:var(--gg-600)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="head" style="gap:10px;">
+    <!-- Our real logo — exact GetGuac home-page lockup (MarketingShell.jsx). -->
+    <span style="font-size:32px;line-height:1;">🥑</span>
+    <span style="font-family:var(--display);font-weight:800;font-size:30px;color:#15281C;letter-spacing:-0.02em;">GetGuac</span>
+    <span style="font-family:var(--display);font-weight:700;font-size:15px;color:var(--gg-label);align-self:flex-end;padding-bottom:5px;">Design System</span>
+  </div>
+  <p class="sub" style="margin-left:0;">Local preview of the avocado theme applied app-wide via <code>tailwind.config.js</code> + <code>globals.css</code>. Bricolage Grotesque · Plus Jakarta Sans.</p>
+
+  <!-- PALETTE -->
+  <div class="card">
+    <div class="eyebrow">Palette</div>
+    <div class="grid swatches">
+      <div class="sw"><div class="chip" style="background:#176B33"></div><div class="meta"><div class="nm">logo</div><div class="hx">#176B33</div></div></div>
+      <div class="sw"><div class="chip" style="background:#14532D"></div><div class="meta"><div class="nm">green-700</div><div class="hx">#14532D</div></div></div>
+      <div class="sw"><div class="chip" style="background:#1F8A3D"></div><div class="meta"><div class="nm">green-600</div><div class="hx">#1F8A3D</div></div></div>
+      <div class="sw"><div class="chip" style="background:#E9F5DD"></div><div class="meta"><div class="nm">green-100</div><div class="hx">#E9F5DD</div></div></div>
+      <div class="sw"><div class="chip" style="background:#F1F6EA"></div><div class="meta"><div class="nm">green-50</div><div class="hx">#F1F6EA</div></div></div>
+      <div class="sw"><div class="chip" style="background:#14241A"></div><div class="meta"><div class="nm">ink</div><div class="hx">#14241A</div></div></div>
+      <div class="sw"><div class="chip" style="background:#4A5A4E"></div><div class="meta"><div class="nm">body</div><div class="hx">#4A5A4E</div></div></div>
+      <div class="sw"><div class="chip" style="background:#6B7A6E"></div><div class="meta"><div class="nm">muted</div><div class="hx">#6B7A6E</div></div></div>
+      <div class="sw"><div class="chip" style="background:#9AA89E"></div><div class="meta"><div class="nm">faint</div><div class="hx">#9AA89E</div></div></div>
+      <div class="sw"><div class="chip" style="background:#B3BEB2"></div><div class="meta"><div class="nm">label</div><div class="hx">#B3BEB2</div></div></div>
+      <div class="sw"><div class="chip" style="background:#FBFCF9;border-bottom:1px solid var(--gg-line)"></div><div class="meta"><div class="nm">sidebar</div><div class="hx">#FBFCF9</div></div></div>
+      <div class="sw"><div class="chip" style="background:#EEF1EC;border-bottom:1px solid var(--gg-line)"></div><div class="meta"><div class="nm">bg</div><div class="hx">#EEF1EC</div></div></div>
+    </div>
+  </div>
+
+  <!-- TYPOGRAPHY -->
+  <div class="card specimen">
+    <div class="eyebrow">Typography</div>
+    <div class="spec big">Money's wingman 🥑</div>
+    <div class="spec med">Bricolage Grotesque — display, headings &amp; $ amounts</div>
+    <div class="body">Plus Jakarta Sans carries body, navigation and labels. The quick brown fox jumps over $1,218.99 — comma separators intact, tabular feel for figures.</div>
+  </div>
+
+  <!-- BUTTONS -->
+  <div class="card">
+    <div class="eyebrow">Buttons</div>
+    <div class="row">
+      <button class="btn btn-primary">＋ Add</button>
+      <button class="btn btn-secondary">Find duplicates</button>
+      <button class="btn btn-cta">🥑 Worth It?</button>
+      <button class="btn btn-danger">Delete</button>
+      <button class="btn btn-ghost">Ghost action</button>
+    </div>
+  </div>
+
+  <!-- BADGES + PILLS -->
+  <div class="card">
+    <div class="eyebrow">Badges &amp; category pills</div>
+    <div class="row" style="margin-bottom:16px">
+      <span class="badge b-blue">blue</span>
+      <span class="badge b-green">Biz</span>
+      <span class="badge b-red">red</span>
+      <span class="badge b-gray">gray</span>
+      <span class="badge b-amber">amber</span>
+    </div>
+    <div class="row">
+      <span class="pill b-gray">Uncategorized ▾</span>
+      <span class="pill b-amber">Fix-It ▾</span>
+      <span class="pill b-green">Big Stuff ▾</span>
+      <span class="pill b-red">Gas Up ▾</span>
+    </div>
+  </div>
+
+  <!-- INPUTS + SEGMENT -->
+  <div class="card">
+    <div class="eyebrow">Inputs &amp; controls</div>
+    <div class="grid" style="grid-template-columns:1fr 1fr;gap:18px;align-items:end">
+      <div>
+        <label class="label">Store</label>
+        <input class="input" placeholder="Search store, item, category, ID…">
+      </div>
+      <div>
+        <label class="label">Range</label>
+        <div class="segment"><span class="on">1M</span><span>3M</span><span>6M</span><span>1Y</span><span>All</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STAT TILES -->
+  <div class="card">
+    <div class="eyebrow">Stat tiles</div>
+    <div class="grid stats">
+      <div class="stat"><div class="k">GuacScore</div><div class="v">82</div></div>
+      <div class="stat"><div class="k">Total Spent</div><div class="v">$3,041</div></div>
+      <div class="stat"><div class="k">Tax Paid</div><div class="v">$184.21</div></div>
+      <div class="stat"><div class="k">GuacMoney</div><div class="v">12,400</div></div>
+    </div>
+  </div>
+
+  <!-- RECEIPTS TABLE -->
+  <div class="card" style="padding:0;overflow:hidden">
+    <div style="padding:20px 22px 14px"><div class="eyebrow">Receipts table</div></div>
+    <div class="table" style="border:0;border-radius:0">
+      <div class="thead">
+        <span>STORE</span><span>CATEGORY</span><span>DATE</span><span class="r">AMOUNT</span><span class="r">TAX</span>
+      </div>
+      <div class="trow">
+        <div class="store"><div class="avatar">G</div><div><div class="nm">Glory Days Grill</div><div class="id">23a0293a</div></div></div>
+        <div><span class="pill b-gray">Uncategorized ▾</span></div>
+        <div style="font-size:13px;color:var(--gg-muted);font-weight:600">25 Jun</div>
+        <div class="amt">$39.00</div><div class="tax">$0.00</div>
+      </div>
+      <div class="trow">
+        <div class="store"><div class="avatar">L</div><div><div class="nm">Lowe's</div><div class="id">ffcc4bba</div></div></div>
+        <div><span class="pill b-amber">Fix-It ▾</span></div>
+        <div style="font-size:13px;color:var(--gg-muted);font-weight:600">13 Jun</div>
+        <div class="amt">$1.46</div><div class="tax">$0.08</div>
+      </div>
+      <div class="trow">
+        <div class="store"><div class="avatar">L</div><div><div class="nm">Lowe's</div><div class="id">e90579fa</div></div></div>
+        <div><span class="pill b-green">Big Stuff ▾</span></div>
+        <div style="font-size:13px;color:var(--gg-muted);font-weight:600">13 Jun</div>
+        <div class="amt">$61.63</div><div class="tax">$3.49</div>
+      </div>
+      <div class="trow">
+        <div class="store"><div class="avatar">C</div><div><div class="nm">Costco</div><div class="id">5315add5</div></div></div>
+        <div><span class="pill b-gray">Uncategorized ▾</span></div>
+        <div style="font-size:13px;color:var(--gg-muted);font-weight:600">11 Jun</div>
+        <div class="amt">$1,218.99</div><div class="tax">$69.00</div>
+      </div>
+      <div class="trow">
+        <div class="store"><div class="avatar">C</div><div><div class="nm">Costco — Gas</div><div class="id">b6423790</div></div></div>
+        <div><span class="pill b-red">Gas Up ▾</span></div>
+        <div style="font-size:13px;color:var(--gg-muted);font-weight:600">06 Jun</div>
+        <div class="amt">$30.00</div><div class="tax">$0.00</div>
+      </div>
+    </div>
+    <p class="note" style="padding:14px 22px 20px">Amounts keep the thousands comma · letter avatars · row hover tint <code>#F7FBF1</code>.</p>
+  </div>
+
+  <p class="note" style="text-align:center">Served at <a href="/design-preview.html">/design-preview.html</a> when <code>npm run dev</code> is running, or open this file directly in a browser.</p>
+
+</div>
+</body>
+</html>

@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useStore } from '../../../store'
 import Link from 'next/link'
-import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { Gift, ArrowRight, Sparkles, PiggyBank, Wand2, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import GuacoScoreCard from '../../../components/GuacoScoreCard'
@@ -34,7 +33,10 @@ import { CountUp, FadeUpStagger } from '../../../components/animated'
 const PERIODS = ['daily', 'weekly', 'monthly', 'yearly']
 // Multi-colour palette for the Spending-by-Store bars (brand-leaning,
 // cycles if there are more than 8 stores).
-const STORE_BAR_COLORS = ['#16A34A', '#65A30D', '#0EA5E9', '#F59E0B', '#8B5CF6', '#EC4899', '#14B8A6', '#F97316']
+// Spending-by-Store bars share one fixed green→amber→red gradient sized to the
+// FULL track, so every bar starts green and extends toward red the more that
+// store's spend approaches the top spender's — a smooth green-to-red scale.
+const SPEND_GRADIENT = 'linear-gradient(90deg, #22C55E 0%, #F59E0B 55%, #DC2626 100%)'
 
 // Dropdown options for "how many <period>s back to include"
 const COUNT_OPTIONS = {
@@ -219,12 +221,12 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
           </Link>
           <Link href="/guacanomics"
             className="flex items-center gap-3 px-4 py-2.5 rounded-full bg-gradient-to-br from-green-500 to-emerald-700 text-white shadow-md hover:shadow-lg hover:scale-[1.02] transition-all group">
-            <Sparkles size={18} className="text-green-100" />
+            <Sparkles size={18} className="text-guac-100" />
             <div className="text-left">
               <p className="font-extrabold text-sm leading-tight">Guacanomics</p>
-              <p className="text-[11px] text-green-100/90 leading-tight">Money's wingman</p>
+              <p className="text-[11px] text-guac-100/90 leading-tight">Money's wingman</p>
             </div>
-            <ArrowRight size={16} className="text-green-100 group-hover:translate-x-0.5 transition-transform" />
+            <ArrowRight size={16} className="text-guac-100 group-hover:translate-x-0.5 transition-transform" />
           </Link>
           </div>
         }
@@ -322,48 +324,35 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
               No transactions for this period
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart
-                data={chartData}
-                margin={{ top: 12, right: 12, left: -12, bottom: 0 }}
-                barCategoryGap="25%"
-                // Recharts surfaces the clicked datum on chart-level onClick.
-                // Bar-level onClick fires twice on some versions; chart-level
-                // is the reliable path.
-                onClick={(state) => {
-                  const datum = state?.activePayload?.[0]?.payload
-                  if (datum?.fullName) {
-                    // Build the deep-link via the shared helper so the URL
-                    // shape + chip mapping live in one place (used by every
-                    // dashboard-to-receipts transfer, present and future).
-                    router.push(buildReceiptsUrl({
-                      store: datum.fullName,
-                      period: periodToReceiptsChip(period, periodCount),
-                    }))
-                  }
-                }}
-              >
-                <CartesianGrid strokeDasharray="2 4" stroke="#f1f5f9" vertical={false} />
-                <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                <Tooltip
-                  cursor={{ fill: '#f8fafc' }}
-                  contentStyle={{ borderRadius: 12, border: '1px solid #d1fae5', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', fontSize: 12 }}
-                  formatter={v => [`$${v.toFixed(2)}`, 'Amount']}
-                  labelFormatter={(label, payload) => payload?.[0]?.payload?.fullName || label}
-                />
-                <Bar
-                  dataKey="amount"
-                  radius={[8, 8, 0, 0]}
-                  maxBarSize={56}
-                  cursor="pointer"
-                >
-                  {chartData.map((_, i) => (
-                    <Cell key={i} fill={STORE_BAR_COLORS[i % STORE_BAR_COLORS.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            // Horizontal heat bars (matches mobile): each store's bar reddens
+            // as its spend climbs toward the top spender's. Click → that
+            // store's receipts (same deep-link as before).
+            <div className="space-y-3 mt-1">
+              {(() => {
+                const max = Math.max(...chartData.map(d => d.amount)) || 1
+                return chartData.map((d, i) => {
+                  const t = d.amount / max
+                  const pct = Math.max(5, t * 100)
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => router.push(buildReceiptsUrl({
+                        store: d.fullName,
+                        period: periodToReceiptsChip(period, periodCount),
+                      }))}
+                      className="w-full flex items-center gap-3 group"
+                      title={`${d.fullName} — $${d.amount.toFixed(2)}`}
+                    >
+                      <span className="w-28 shrink-0 text-left text-[13px] font-semibold text-guac-ink truncate group-hover:text-guac-700 transition-colors">{d.fullName}</span>
+                      <span className="flex-1 h-2.5 rounded-full bg-guac-50 overflow-hidden">
+                        <span className="block h-full rounded-full transition-[width] duration-500" style={{ width: pct + '%', background: SPEND_GRADIENT, backgroundSize: `${10000 / pct}% 100%`, backgroundRepeat: 'no-repeat' }} />
+                      </span>
+                      <span className="w-20 shrink-0 text-right text-[13px] font-bold text-guac-ink tabular-nums">${Math.round(d.amount).toLocaleString()}</span>
+                    </button>
+                  )
+                })
+              })()}
+            </div>
           )}
         </div>
 
@@ -372,7 +361,7 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-gray-900">Rewards</h3>
             <Link href="/rewards" title="View all rewards" aria-label="View all rewards"
-              className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 hover:bg-emerald-200 hover:scale-110 active:scale-95 transition-all flex items-center justify-center shadow-sm">
+              className="w-8 h-8 rounded-full bg-guac-100 text-guac-700 hover:bg-guac-100 hover:scale-110 active:scale-95 transition-all flex items-center justify-center shadow-sm">
               <ArrowRight size={14} />
             </Link>
           </div>
@@ -403,7 +392,7 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
           <h3 className="font-semibold text-gray-900">Recent Transactions</h3>
           <Link href="/receipts" title="All receipts" aria-label="All receipts"
-            className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 hover:bg-emerald-200 hover:scale-110 active:scale-95 transition-all flex items-center justify-center shadow-sm">
+            className="w-8 h-8 rounded-full bg-guac-100 text-guac-700 hover:bg-guac-100 hover:scale-110 active:scale-95 transition-all flex items-center justify-center shadow-sm">
             <ArrowRight size={14} />
           </Link>
         </div>
@@ -411,21 +400,21 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
           <div className="py-10 text-center text-gray-400 text-sm">No transactions this period</div>
         ) : (
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide">
+            <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
               <tr>
                 {['Merchant','Date','Amount','Tax','Business'].map(h => (
                   <th key={h} className="px-5 py-3 text-left font-semibold">{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-guac-line">
               {filtered.slice(0, 8).map((r, idx) => (
                 <tr
                   key={r.id}
                   style={{ animationDelay: `${idx * 35}ms`, animationDuration: '220ms' }}
-                  className="hover:bg-gray-50/50 anim-fadeup">
+                  className="hover:bg-guac-row anim-fadeup">
                   <td className="px-5 py-3 font-medium">
-                    <Link href={`/receipts/${r.id}`} className="hover:text-blue-700">{displayStoreName(r.store_name)}</Link>
+                    <Link href={`/receipts/${r.id}`} className="hover:text-guac-700">{displayStoreName(r.store_name)}</Link>
                   </td>
                   <td className="px-5 py-3 text-gray-500">{formatDateShort(r.date)}</td>
                   <td className="px-5 py-3 font-semibold">${parseFloat(r.total_amount || 0).toFixed(2)}</td>
@@ -591,7 +580,7 @@ function AllPaymentsScroll({ spendingReceipts, period, periodCount }) {
         type="button"
         aria-label="Scroll left"
         onClick={() => scrollBy(-1)}
-        className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white shadow-md border border-gray-200 flex items-center justify-center text-gray-700 hover:bg-gray-50 hover:text-emerald-700 opacity-70 group-hover:opacity-100 transition-opacity"
+        className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white shadow-md border border-gray-200 flex items-center justify-center text-gray-700 hover:bg-guac-row hover:text-guac-700 opacity-70 group-hover:opacity-100 transition-opacity"
       >
         <ChevronLeft size={18} />
       </button>
@@ -599,7 +588,7 @@ function AllPaymentsScroll({ spendingReceipts, period, periodCount }) {
         type="button"
         aria-label="Scroll right"
         onClick={() => scrollBy(1)}
-        className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white shadow-md border border-gray-200 flex items-center justify-center text-gray-700 hover:bg-gray-50 hover:text-emerald-700 opacity-70 group-hover:opacity-100 transition-opacity"
+        className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white shadow-md border border-gray-200 flex items-center justify-center text-gray-700 hover:bg-guac-row hover:text-guac-700 opacity-70 group-hover:opacity-100 transition-opacity"
       >
         <ChevronRight size={18} />
       </button>
@@ -633,14 +622,14 @@ function GuacWizardTile() {
   const tone =
     score === undefined ? { bg: 'from-slate-50 to-slate-100',     ring: 'ring-slate-200',   chip: 'from-slate-300 to-slate-400',     label: 'text-slate-600',   value: 'text-slate-700',   sub: 'text-slate-500' } :
     score === null      ? { bg: 'from-violet-50 to-purple-100',   ring: 'ring-violet-200',  chip: 'from-violet-400 to-violet-600',   label: 'text-violet-700',  value: 'text-violet-900',  sub: 'text-violet-600' } :
-    score >= 65         ? { bg: 'from-emerald-50 to-lime-100',    ring: 'ring-emerald-200', chip: 'from-emerald-400 to-lime-600',    label: 'text-emerald-700', value: 'text-emerald-900', sub: 'text-emerald-700' } :
+    score >= 65         ? { bg: 'from-emerald-50 to-lime-100',    ring: 'ring-guac-100', chip: 'from-emerald-400 to-lime-600',    label: 'text-guac-700', value: 'text-guac-ink', sub: 'text-guac-700' } :
     score >= 35         ? { bg: 'from-amber-50 to-orange-100',    ring: 'ring-amber-200',   chip: 'from-amber-400 to-orange-600',    label: 'text-amber-700',   value: 'text-amber-900',   sub: 'text-amber-700' } :
                           { bg: 'from-rose-50 to-red-100',        ring: 'ring-rose-200',    chip: 'from-rose-400 to-red-600',        label: 'text-rose-700',    value: 'text-rose-900',    sub: 'text-rose-700' }
 
   return (
     <Link
       href="/guacwizard"
-      className={`payment-tile-card stat-card relative overflow-hidden bg-gradient-to-br ${tone.bg} ring-1 ${tone.ring} hover:shadow-md transition-all`}
+      className="payment-tile-card stat-card relative overflow-hidden hover:shadow-md transition-all"
       title="GuacWizard health score"
     >
       {/* 🥑 brand watermark + 🧙‍♂️ theme watermark — same proportions
@@ -686,15 +675,15 @@ function GuacMoneyTile() {
   // a fresh account still feels designed.
   const active = total > 0
   return (
-    <div className={`payment-tile-card stat-card relative overflow-hidden bg-gradient-to-br ${active ? 'from-emerald-50 to-lime-100' : 'from-emerald-50/60 to-lime-50/60'} ring-1 ring-emerald-200 hover:shadow-md transition-all`}>
+    <div className="payment-tile-card stat-card relative overflow-hidden hover:shadow-md transition-all">
       <span aria-hidden className="tile-watermark-avocado absolute select-none pointer-events-none leading-none" style={{ top: '-4px', left: '52px', '--wm-rot': '16deg', fontSize: '30px', opacity: 0.22 }}>🥑</span>
       <span aria-hidden className="tile-watermark-theme absolute select-none pointer-events-none leading-none" style={{ top: '2px', right: '6px', '--wm-rot': '-8deg', fontSize: '20px', opacity: 0.28 }}>💰</span>
       <div className={`tile-chip-host shrink-0 w-11 h-11 rounded-xl flex items-center justify-center relative z-10 bg-gradient-to-br ${active ? 'from-emerald-400 via-emerald-500 to-lime-600' : 'from-emerald-200 to-lime-300'} shadow-md text-white`}>
         <PiggyBank size={20} className="tile-chip-icon text-white" />
       </div>
       <div className="min-w-0 flex-1 relative z-10">
-        <p className="text-[10px] uppercase tracking-wider font-bold text-emerald-700">GuacMoney</p>
-        <p className="text-xl font-black text-emerald-900 tabular-nums leading-tight">
+        <p className="text-[10px] uppercase tracking-wider font-bold text-guac-700">GuacMoney</p>
+        <p className="text-xl font-black text-guac-ink tabular-nums leading-tight">
           {isLoading ? '—' : <CountUp value={Number(total) || 0} duration={520} format={v => Math.round(v).toLocaleString()} />}
         </p>
         {active ? (
@@ -702,7 +691,7 @@ function GuacMoneyTile() {
             🪙 ≈ ${(total / 1000).toFixed(2)} value
           </span>
         ) : (
-          <p className="text-[10px] font-semibold mt-0.5 text-emerald-700">rate buys to earn →</p>
+          <p className="text-[10px] font-semibold mt-0.5 text-guac-700">rate buys to earn →</p>
         )}
       </div>
     </div>

@@ -1,0 +1,92 @@
+[
+  {
+    "id": "R1",
+    "area": "Register",
+    "name": "Empty form",
+    "expected": "Submit disabled until username+terms",
+    "actual": "Submit is disabled",
+    "status": "PASS",
+    "shot": "R1-empty.png"
+  },
+  {
+    "id": "R2",
+    "area": "Register",
+    "name": "Invalid username \"a\"",
+    "expected": "Shows invalid-format hint",
+    "actual": "Must start and end with a letter or number · 3–32 chars",
+    "status": "PASS",
+    "shot": "R2-username-invalid.png"
+  },
+  {
+    "id": "R3",
+    "area": "Register",
+    "name": "Reserved username \"admin\"",
+    "expected": "Shows taken/reserved",
+    "actual": "Reserved word — try something else",
+    "status": "PASS",
+    "shot": "R3-username-taken.png"
+  },
+  {
+    "id": "R4",
+    "area": "Register",
+    "name": "Available username",
+    "expected": "Shows \"is available\"",
+    "actual": "qaneg7421@getguac.app\nis available",
+    "status": "PASS",
+    "shot": "R4-username-available.png"
+  },
+  {
+    "id": "R5",
+    "area": "Register",
+    "name": "Terms unchecked",
+    "expected": "Submit disabled until Terms accepted",
+    "actual": "Submit disabled",
+    "status": "PASS",
+    "shot": "R5-terms-unchecked.png"
+  },
+  {
+    "id": "R6",
+    "area": "Register",
+    "name": "Password < 10 chars",
+    "expected": "Blocked (minLength 10)",
+    "actual": "Blocked: \"Please lengthen this text to 10 characters or more (you are currently using 6 characters).\"",
+    "status": "PASS",
+    "shot": "R6-short-password.png"
+  },
+  {
+    "id": "R7",
+    "area": "Register",
+    "name": "Password mismatch",
+    "expected": "Toast: \"Passwords do not match\"",
+    "actual": "Passwords do not match",
+    "status": "PASS",
+    "shot": "R7-password-mismatch.png"
+  },
+  {
+    "id": "R8",
+    "area": "Register",
+    "name": "Invalid email format",
+    "expected": "Blocked by email validation",
+    "actual": "Blocked: \"Please include an '@' in the email address. 'notanemail' is missing an '@'.\"",
+    "status": "PASS",
+    "shot": "R8-invalid-email.png"
+  },
+  {
+    "id": "L1",
+    "area": "Login",
+    "name": "Empty submit",
+    "expected": "Required fields block submit",
+    "actual": "Blocked (required)",
+    "status": "PASS",
+    "shot": "L1-empty.png"
+  },
+  {
+    "id": "L2",
+    "area": "Login",
+    "name": "Wrong credentials",
+    "expected": "Error toast, no login",
+    "actual": "✕\nInvalid username or password",
+    "status": "PASS",
+    "shot": "L2-wrong-credentials.png"
+  }
+]

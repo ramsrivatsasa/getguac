@@ -9,6 +9,7 @@ import {
   Mail, Search, Inbox as InboxIcon, Star, Archive, Trash2, Reply, Send, Loader2, X, Sparkles, Filter, Edit3, RefreshCw, ChevronsLeft, ChevronsRight, ChevronDown, DownloadCloud, Link2,
 } from 'lucide-react'
 import FeatureHeader from '../../../components/FeatureHeader'
+import { StoreLogo } from '../../../components/StoreLogo'
 import { displayStoreName } from '../../../lib/store-name-normalize'
 import { useConfirm } from '../../../components/ConfirmDialog'
 import { FadeUpStagger, ShimmerBox } from '../../../components/animated'
@@ -185,26 +186,26 @@ export default function InboxPage() {
   return (
     <div className="space-y-4 font-sans">
       {newMailboxPw !== null && (
-        <div className="mb-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3 flex items-start gap-3">
-          <Mail size={18} className="text-emerald-700 mt-0.5 shrink-0" />
+        <div className="mb-3 rounded-xl border border-guac-line2 bg-guac-50 p-3 flex items-start gap-3">
+          <Mail size={18} className="text-guac-700 mt-0.5 shrink-0" />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-emerald-900">Mailbox reconnected ✅</p>
-            <p className="text-xs text-emerald-800 mt-0.5">
+            <p className="text-sm font-bold text-guac-ink">Mailbox reconnected ✅</p>
+            <p className="text-xs text-guac-700 mt-0.5">
               Your latest emails will sync on the next poll — or click <strong>Backfill</strong> to pull them in now.
               {newMailboxPw ? ' If you sign in to webmail directly, your new mailbox password is:' : ''}
             </p>
             {newMailboxPw && (
               <>
                 <div className="mt-1.5 flex items-center gap-2">
-                  <code className="text-xs font-mono bg-white border border-emerald-200 rounded px-2 py-1 select-all break-all">{newMailboxPw}</code>
+                  <code className="text-xs font-mono bg-white border border-guac-line2 rounded px-2 py-1 select-all break-all">{newMailboxPw}</code>
                   <button onClick={() => { navigator.clipboard?.writeText(newMailboxPw); toast.success('Copied') }}
-                    className="text-xs font-bold text-emerald-700 hover:underline shrink-0">Copy</button>
+                    className="text-xs font-bold text-guac-700 hover:underline shrink-0">Copy</button>
                 </div>
-                <p className="text-[11px] text-emerald-700/70 mt-1">Save it now — it won&apos;t be shown again.</p>
+                <p className="text-[11px] text-guac-700/70 mt-1">Save it now — it won&apos;t be shown again.</p>
               </>
             )}
           </div>
-          <button onClick={() => setNewMailboxPw(null)} className="text-emerald-700 hover:text-emerald-900 shrink-0" aria-label="Dismiss"><X size={16} /></button>
+          <button onClick={() => setNewMailboxPw(null)} className="text-guac-700 hover:text-guac-ink shrink-0" aria-label="Dismiss"><X size={16} /></button>
         </div>
       )}
 
@@ -221,13 +222,13 @@ export default function InboxPage() {
               {filed.length > 0 && (
                 <>
                   <span className="text-gray-300">·</span>
-                  <span className="text-emerald-700">🥑 <span className="font-semibold">{filed.length}</span> filed</span>
+                  <span className="text-guac-700">🥑 <span className="font-semibold">{filed.length}</span> filed</span>
                 </>
               )}
               {filedToday.length > 0 && (
                 <>
                   <span className="text-gray-300">·</span>
-                  <span className="font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
+                  <span className="font-bold text-guac-700 bg-guac-50 border border-guac-line2 rounded-full px-2 py-0.5">
                     {filedToday.length} today
                   </span>
                 </>
@@ -239,7 +240,7 @@ export default function InboxPage() {
           <div className="flex items-center gap-2">
             <Link
               href="/connections"
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-emerald-200 text-emerald-700 text-sm font-bold hover:bg-emerald-50 transition-colors"
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-guac-line2 text-guac-700 text-sm font-bold hover:bg-guac-50 transition-colors"
               title="Set up retailers to email receipts here automatically"
             >
               <Link2 size={14} /> Connect retailers
@@ -297,7 +298,7 @@ export default function InboxPage() {
                   className="flex-1 bg-transparent text-sm outline-none"
                 />
               </div>
-              <div className="flex-1 overflow-y-auto divide-y divide-gray-50">
+              <div className="flex-1 overflow-y-auto divide-y divide-guac-line">
                 {list.isLoading ? (
                   // Shimmer skeleton rows — match the row height of
                   // the real list so the layout doesn't jump when
@@ -337,7 +338,7 @@ export default function InboxPage() {
             </section>
           </Panel>
 
-          <PanelResizeHandle className="w-1 bg-gray-100 hover:bg-emerald-300 transition-colors data-[resize-handle-active]:bg-emerald-400" />
+          <PanelResizeHandle className="w-1 bg-gray-100 hover:bg-guac-100 transition-colors data-[resize-handle-active]:bg-guac-600" />
 
           {/* Preview panel */}
           <Panel defaultSize={47} minSize={25}>
@@ -364,9 +365,9 @@ export default function InboxPage() {
               ) : (
                 <div className="flex-1 flex items-center justify-center text-sm flex-col gap-4 px-6 text-center bg-gradient-to-br from-emerald-50/40 to-lime-50/30">
                   <div className="space-y-1.5">
-                    <p className="font-bold text-emerald-900 text-base">Pick a message to read</p>
+                    <p className="font-bold text-guac-ink text-base">Pick a message to read</p>
                     <p className="text-gray-500 text-xs max-w-xs">
-                      Forward any receipt to your <span className="font-mono font-semibold text-emerald-700">+g</span> address and Guac-AI will file it as a receipt automatically.
+                      Forward any receipt to your <span className="font-mono font-semibold text-guac-700">+g</span> address and Guac-AI will file it as a receipt automatically.
                     </p>
                   </div>
                 </div>
@@ -385,7 +386,7 @@ export default function InboxPage() {
                 const active = folder === f.value
                 return (
                   <button key={f.value} onClick={() => setFolder(f.value)}
-                    className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold ${active ? 'bg-emerald-100 text-emerald-900' : 'text-gray-600'}`}>
+                    className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold ${active ? 'bg-guac-100 text-guac-ink' : 'text-gray-600'}`}>
                     {f.label}
                   </button>
                 )
@@ -403,7 +404,7 @@ export default function InboxPage() {
                 <Search size={14} className="text-gray-400" />
                 <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search…" className="flex-1 bg-transparent text-sm outline-none" />
               </div>
-              <div className="divide-y divide-gray-50 max-h-[calc(100vh-280px)] overflow-y-auto">
+              <div className="divide-y divide-guac-line max-h-[calc(100vh-280px)] overflow-y-auto">
                 {messages.length === 0
                   ? <EmptyState folder={folder} filter={filter} />
                   : messages.map(m => (
@@ -416,7 +417,7 @@ export default function InboxPage() {
           </>
         ) : (
           <div className="card p-0 overflow-hidden">
-            <button onClick={() => setSelectedId(null)} className="px-4 py-2 text-sm font-semibold text-emerald-700 flex items-center gap-1">
+            <button onClick={() => setSelectedId(null)} className="px-4 py-2 text-sm font-semibold text-guac-700 flex items-center gap-1">
               ← Back
             </button>
             {message.data?.message && (
@@ -487,13 +488,13 @@ function MessageRow({ m, selected, onClick, onToggleStar }) {
     <button
       onClick={onClick}
       className={`w-full text-left pl-2 pr-3 py-2.5 flex items-start gap-2 transition relative ${
-        selected ? 'bg-emerald-50' : unread ? 'bg-white hover:bg-gray-50' : 'bg-gray-50/40 hover:bg-gray-50'
+        selected ? 'bg-guac-50' : unread ? 'bg-white hover:bg-guac-row' : 'bg-gray-50/40 hover:bg-guac-row'
       }`}
     >
       {/* Avocado-green accent stripe for receipt-hook rows — instant visual scan */}
       {m.is_receipts_hook && (
         <span className={`absolute left-0 top-0 bottom-0 w-1 rounded-r ${
-          isReturn ? 'bg-rose-400' : isReceipt && rcpt?.processed ? 'bg-emerald-500' : 'bg-emerald-300 animate-pulse'
+          isReturn ? 'bg-rose-400' : isReceipt && rcpt?.processed ? 'bg-guac-600' : 'bg-guac-100 animate-pulse'
         }`} />
       )}
       <span
@@ -507,12 +508,14 @@ function MessageRow({ m, selected, onClick, onToggleStar }) {
         <div className="flex items-center gap-2 mb-0.5">
           {isReceipt ? (
             <>
-              <span className="text-base">{isReturn ? '↩️' : '🥑'}</span>
-              <span className={`text-sm truncate ${unread ? 'font-extrabold text-emerald-900' : 'font-bold text-emerald-800'}`}>
+              {isReturn
+                ? <span className="text-base">↩️</span>
+                : <StoreLogo storeName={rcpt.store_name} size={20} />}
+              <span className={`text-sm truncate ${unread ? 'font-extrabold text-guac-ink' : 'font-bold text-guac-700'}`}>
                 {displayStoreName(rcpt.store_name) || 'Receipt'}
               </span>
               {amount && (
-                <span className={`text-xs font-extrabold tabular-nums ${isReturn ? 'text-rose-600' : 'text-emerald-700'}`}>
+                <span className={`text-xs font-extrabold tabular-nums ${isReturn ? 'text-rose-600' : 'text-guac-700'}`}>
                   {amount}
                 </span>
               )}
@@ -526,7 +529,7 @@ function MessageRow({ m, selected, onClick, onToggleStar }) {
                 {trimAddr(m.from_addr)}
               </span>
               {m.is_receipts_hook && (
-                <span className="text-[9px] font-bold uppercase bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-full">+g</span>
+                <span className="text-[9px] font-bold uppercase bg-guac-100 text-guac-700 px-1.5 py-0.5 rounded-full">+g</span>
               )}
             </>
           )}
@@ -560,8 +563,8 @@ function MessagePreview({ m, onStar, onTrash, onReply }) {
           <button onClick={onStar} className="p-2 hover:bg-amber-50 rounded-lg" title={m.starred ? 'Unstar' : 'Star'}>
             <Star size={16} className={m.starred ? 'fill-amber-400 text-amber-500' : 'text-gray-400'} />
           </button>
-          <button onClick={onReply} className="p-2 hover:bg-emerald-50 rounded-lg" title="Reply">
-            <Reply size={16} className="text-emerald-700" />
+          <button onClick={onReply} className="p-2 hover:bg-guac-50 rounded-lg" title="Reply">
+            <Reply size={16} className="text-guac-700" />
           </button>
           <button onClick={onTrash} className="p-2 hover:bg-rose-50 rounded-lg" title="Trash">
             <Trash2 size={16} className="text-rose-600" />
@@ -626,11 +629,11 @@ function MessageBody({ m }) {
           <span className="text-gray-400 mr-1">View:</span>
           <button
             onClick={() => setView('html')}
-            className={`px-2 py-1 rounded-full font-semibold ${view === 'html' ? 'bg-emerald-100 text-emerald-900' : 'text-gray-500 hover:bg-gray-100'}`}
+            className={`px-2 py-1 rounded-full font-semibold ${view === 'html' ? 'bg-guac-100 text-guac-ink' : 'text-gray-500 hover:bg-guac-50'}`}
           >Rich</button>
           <button
             onClick={() => setView('text')}
-            className={`px-2 py-1 rounded-full font-semibold ${view === 'text' ? 'bg-emerald-100 text-emerald-900' : 'text-gray-500 hover:bg-gray-100'}`}
+            className={`px-2 py-1 rounded-full font-semibold ${view === 'text' ? 'bg-guac-100 text-guac-ink' : 'text-gray-500 hover:bg-guac-50'}`}
           >Plain</button>
         </div>
       )}
@@ -736,7 +739,7 @@ function ComposeModal({ prefill, onClose, onSent }) {
       <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[88vh] flex flex-col shadow-2xl">
         <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
           <h2 className="font-bold text-gray-900">{prefill?.in_reply_to_id ? 'Reply' : 'New message'}</h2>
-          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded"><X size={18} /></button>
+          <button onClick={onClose} className="p-1 hover:bg-guac-50 rounded"><X size={18} /></button>
         </div>
         <div className="p-5 space-y-3 flex-1 overflow-y-auto">
           <input className="input" placeholder="To" value={to} onChange={e => setTo(e.target.value)} />

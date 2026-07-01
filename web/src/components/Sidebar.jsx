@@ -102,35 +102,32 @@ export default function Sidebar({ isAdmin }) {
       )}
       <aside className={clsx(
         'fixed lg:static inset-y-0 left-0 z-50 flex flex-col overflow-hidden font-sans',
-        'bg-gradient-to-b from-emerald-50/80 via-white to-lime-50/60 text-gray-700',
-        'border-r border-emerald-100',
+        'bg-[#FBFCF9] text-[#4A5A4E]',
+        'border-r border-[#176B33]/10',
         'transform transition-all duration-200 ease-in-out',
         collapsed ? 'lg:w-20' : 'lg:w-64',
         'w-64',
         sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-      )}>
+      )} style={{ fontFamily: 'var(--font-jakarta)' }}>
         {/* Brand */}
         <div className={clsx(
           'flex items-center border-b border-emerald-100/80 h-16 shrink-0',
           collapsed ? 'lg:justify-center px-3' : 'px-5 justify-between'
         )}>
           <Link href="/dashboard" className="flex items-center gap-3 min-w-0">
-            {/* ╔═════════════════════════════════════════════════════╗
-                ║  🔒 DO NOT CHANGE — the GetGuac brand logo.         ║
-                ║  Static 🥑 emoji in emerald-gradient rounded square ║
-                ║  + "GetGuac" + "money's wingman" tagline.           ║
-                ║  Locked by user 2026-06-04. No animation, no swap   ║
-                ║  to AnimatedMascot, no Lottie, no SVG redraw, no    ║
-                ║  emoji change. If you think it needs a refresh —    ║
-                ║  ASK FIRST.                                         ║
-                ╚═════════════════════════════════════════════════════╝ */}
-            <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-lime-300 via-emerald-400 to-emerald-700 shadow-md ring-2 ring-white flex items-center justify-center shrink-0">
-              <span className="text-2xl leading-none" aria-label="GetGuac">🥑</span>
-            </div>
-            {!collapsed && (
-              <div className="min-w-0 font-sans">
-                <div className="text-xl font-black tracking-tight text-emerald-900 leading-none font-sans">GetGuac</div>
-                <div className="text-[10px] text-emerald-600 font-semibold mt-1 uppercase tracking-wider font-sans">money's wingman</div>
+            {/* Brand logo — matches the marketing home-page lockup EXACTLY
+                (MarketingShell.jsx): 🥑 emoji + "GetGuac" in Bricolage
+                display, #15281C. The "money's wingman" tagline sits beneath
+                it. Collapsed rail shows the emoji only. */}
+            {collapsed ? (
+              <span className="leading-none" style={{ fontSize: 22 }} aria-label="GetGuac">🥑</span>
+            ) : (
+              <div className="min-w-0">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                  <span style={{ fontSize: 22 }}>🥑</span>
+                  <span style={{ fontFamily: 'var(--font-bricolage), sans-serif', fontWeight: 800, fontSize: 20, color: '#15281C', letterSpacing: '-0.02em' }}>GetGuac</span>
+                </div>
+                <div className="text-[10px] text-guac-faint font-bold mt-1 uppercase tracking-[0.14em]">money's wingman</div>
               </div>
             )}
           </Link>
@@ -142,11 +139,11 @@ export default function Sidebar({ isAdmin }) {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 py-1.5 overflow-y-auto">
+        <nav className="flex-1 py-1 overflow-y-auto">
           {sections.map(section => (
             <div key={section.title} className={clsx('mb-0.5', collapsed && 'lg:mb-0.5')}>
               {!collapsed && (
-                <div className="px-5 pb-px pt-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700/70">
+                <div className="px-5 pb-0.5 pt-1.5 text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#B3BEB2]">
                   {section.title}
                 </div>
               )}
@@ -170,21 +167,23 @@ export default function Sidebar({ isAdmin }) {
                         }}
                         title={collapsed ? label : undefined}
                         className={clsx(
-                          'group flex items-center rounded-xl text-sm transition-all',
+                          'group flex items-center rounded-xl text-[13.5px] transition-all',
                           collapsed ? 'lg:flex-col lg:justify-center lg:gap-0.5 lg:px-1 lg:py-1.5 px-3 py-1 gap-2.5' : 'gap-2.5 px-3 py-1',
-                          // Active row is simply highlighted (gradient +
-                          // ring) — no pop/scale animation, so clicking a
-                          // menu item never looks like it vibrates.
+                          // Active row is a flat avocado pill with an inset
+                          // hairline ring — no pop/scale animation, so clicking
+                          // a menu item never looks like it vibrates.
                           active
-                            ? 'bg-gradient-to-r from-emerald-100 to-lime-100 text-emerald-900 font-semibold shadow-sm ring-1 ring-emerald-200/60'
-                            : 'text-gray-600 hover:bg-emerald-50 hover:text-emerald-900'
+                            ? 'bg-[#E9F5DD] text-[#14532D] font-extrabold shadow-[inset_0_0_0_1px_rgba(31,138,61,0.16)]'
+                            : 'text-[#4A5A4E] hover:bg-[#F1F6EA] hover:text-[#14532D]'
                         )}
                       >
                         <span className={clsx(
-                          'flex items-center justify-center text-sm shrink-0 transition-all',
-                          collapsed ? 'w-8 h-8 lg:w-8 lg:h-8' : 'w-6 h-6',
-                          'rounded-lg',
-                          active ? 'bg-white shadow-sm ring-1 ring-emerald-200/60' : 'group-hover:bg-white/70'
+                          'flex items-center justify-center shrink-0 transition-all text-base',
+                          // Collapsed rail keeps the rounded tap-target chip;
+                          // expanded mode shows the bare emoji (avocado redesign).
+                          collapsed
+                            ? clsx('w-8 h-8 rounded-lg', active ? 'bg-white shadow-sm ring-1 ring-emerald-200/60' : 'group-hover:bg-white/70')
+                            : 'w-5'
                         )}>{emoji}</span>
                         {!collapsed ? (
                           <>
@@ -252,7 +251,7 @@ export default function Sidebar({ isAdmin }) {
             title={collapsed ? 'Sign Out' : undefined}
             className={clsx(
               'flex items-center w-full rounded-2xl text-sm font-medium transition-all',
-              'text-gray-600 hover:bg-rose-50 hover:text-rose-700',
+              'text-[#4A5A4E] hover:bg-rose-50 hover:text-rose-700',
               collapsed ? 'lg:flex-col lg:justify-center lg:gap-0.5 lg:px-1 lg:py-1.5 px-3 py-1.5 gap-2.5' : 'gap-2.5 px-3 py-1.5'
             )}>
             <span className="w-8 h-8 rounded-xl flex items-center justify-center bg-white/70 text-base shrink-0">👋</span>

@@ -168,9 +168,9 @@ export default function PrivacyPanel() {
 
   return (
     <div className="space-y-5">
-      <div className="card border-emerald-200 bg-gradient-to-br from-emerald-50/60 via-white to-lime-50/40">
+      <div className="card border-guac-line2 bg-gradient-to-br from-emerald-50/60 via-white to-lime-50/40">
         <div className="flex items-start gap-3">
-          <ShieldCheck className="text-emerald-700 shrink-0 mt-0.5" size={22} />
+          <ShieldCheck className="text-guac-700 shrink-0 mt-0.5" size={22} />
           <div>
             <h3 className="font-bold text-gray-900">Privacy & Security</h3>
             <p className="text-xs text-gray-600 mt-0.5">
@@ -186,7 +186,7 @@ export default function PrivacyPanel() {
         <h3 className="font-semibold text-gray-900 mb-2 flex items-center gap-2"><Lock size={15} /> Privacy switches</h3>
         {PRIVACY_TOGGLES.map(t => (
           <label key={t.key} className="flex items-start gap-3 py-2 cursor-pointer">
-            <input type="checkbox" className="mt-1 w-4 h-4 accent-emerald-600"
+            <input type="checkbox" className="mt-1 w-4 h-4 accent-guac-600"
               checked={!!settings[t.key]}
               onChange={() => toggleSwitch(t.key)}
               disabled={saving} />
@@ -202,7 +202,7 @@ export default function PrivacyPanel() {
       <div className="card">
         <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
           <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-            {settings.auto_purge_enabled ? <Eye size={15} className="text-emerald-600" /> : <EyeOff size={15} className="text-gray-400" />}
+            {settings.auto_purge_enabled ? <Eye size={15} className="text-guac-600" /> : <EyeOff size={15} className="text-gray-400" />}
             Retention windows
           </h3>
           <button className="btn-secondary text-xs py-1" onClick={runSweep} disabled={busyAction === 'sweep' || !settings.auto_purge_enabled}>
@@ -243,7 +243,7 @@ export default function PrivacyPanel() {
           Up to 3 downloads per hour.
         </p>
         <label className="flex items-center gap-2 text-sm mb-3">
-          <input type="checkbox" className="w-4 h-4 accent-emerald-600"
+          <input type="checkbox" className="w-4 h-4 accent-guac-600"
             checked={includeEmbeddingsInExport}
             onChange={e => setIncludeEmbeddingsInExport(e.target.checked)} />
           Include AI embedding vectors (large, mostly noise to humans)

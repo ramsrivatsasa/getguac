@@ -141,7 +141,7 @@ function deltaSubtextClass(deltaArrow, deltaGoodWhen) {
   if (deltaGoodWhen === 'neutral') return 'text-gray-500'
   const goingUp = deltaArrow === '↑'
   const good = (deltaGoodWhen === 'up' && goingUp) || (deltaGoodWhen === 'down' && !goingUp)
-  return good ? 'text-emerald-700' : 'text-rose-700'
+  return good ? 'text-guac-700' : 'text-rose-700'
 }
 
 export default function PaymentTile({

@@ -21,10 +21,10 @@ import LottieAnimation from './LottieAnimation'
 import emptyListLottie from '../lottie/empty-list.json'
 
 const ICONS = {
-  receipt: <Receipt size={13} className="text-emerald-700" />,
+  receipt: <Receipt size={13} className="text-guac-700" />,
   smashlist: <ShoppingCart size={13} className="text-rose-700" />,
   rating: <Star size={13} className="text-amber-600 fill-amber-500" />,
-  guacmoney: <PiggyBank size={13} className="text-emerald-700" />,
+  guacmoney: <PiggyBank size={13} className="text-guac-700" />,
 }
 
 const ROW_LIMIT = 10
@@ -101,7 +101,7 @@ export function ActivityFeed({ receipts = [] }) {
     return (
       <div className="card">
         <div className="flex items-center gap-2 mb-2">
-          <Clock size={14} className="text-emerald-700" />
+          <Clock size={14} className="text-guac-700" />
           <h3 className="font-bold text-gray-800 text-sm">Recent activity</h3>
         </div>
         <div className="flex flex-col items-center gap-2 py-2">
@@ -117,7 +117,7 @@ export function ActivityFeed({ receipts = [] }) {
   return (
     <div className="card">
       <div className="flex items-center gap-2 mb-3">
-        <Clock size={14} className="text-emerald-700" />
+        <Clock size={14} className="text-guac-700" />
         <h3 className="font-bold text-gray-800 text-sm">Recent activity</h3>
         <span className="ml-auto text-[10px] text-gray-400 uppercase tracking-wider font-bold">
           last {events.length}
@@ -127,7 +127,7 @@ export function ActivityFeed({ receipts = [] }) {
           real feed instead of a static list dump. Cap at first 8
           rows for the stagger; anything below is instant so a long
           feed doesn't take seconds to settle. */}
-      <FadeUpStagger as="ul" className="divide-y divide-gray-100" delayMs={35} maxItems={8}>
+      <FadeUpStagger as="ul" className="divide-y divide-guac-line" delayMs={35} maxItems={8}>
         {events.map((e, i) => (
           <ActivityRow key={`${e.kind}-${e.ts}-${i}`} event={e} />
         ))}
@@ -154,7 +154,7 @@ function ActivityRow({ event }) {
       </div>
       <div className="text-right shrink-0">
         {event.amount != null && (
-          <p className={`font-bold tabular-nums text-sm ${event.moneyEarn ? 'text-emerald-600' : 'text-emerald-700'}`}>
+          <p className={`font-bold tabular-nums text-sm ${event.moneyEarn ? 'text-guac-600' : 'text-guac-700'}`}>
             {event.moneyEarn ? '+' : ''}${event.amount.toFixed(2)}
             {event.moneyEarn && <span className="text-[10px] ml-1">🥑</span>}
           </p>
@@ -166,7 +166,7 @@ function ActivityRow({ event }) {
   if (event.href) {
     return (
       <li>
-        <Link href={event.href} className="block hover:bg-gray-50/70 -mx-2 px-2 rounded-lg transition-colors">
+        <Link href={event.href} className="block hover:bg-guac-row -mx-2 px-2 rounded-lg transition-colors">
           {inner}
         </Link>
       </li>

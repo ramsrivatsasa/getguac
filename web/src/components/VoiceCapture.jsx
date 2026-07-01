@@ -169,7 +169,7 @@ export default function VoiceCapture({ open, onClose, onTranscript }) {
                 className={`w-20 h-20 rounded-full flex items-center justify-center transition-all shadow-lg ${
                   listening
                     ? 'bg-red-500 hover:bg-red-600 animate-pulse'
-                    : 'bg-emerald-500 hover:bg-emerald-600'
+                    : 'bg-guac-600 hover:bg-guac-700'
                 }`}
                 aria-label={listening ? 'Stop recording' : 'Start recording'}
               >

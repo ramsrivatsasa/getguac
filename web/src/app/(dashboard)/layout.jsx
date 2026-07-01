@@ -34,13 +34,20 @@ export default async function DashboardLayout({ children }) {
 
   return (
     <ConfirmProvider>
-      <div className="flex h-screen bg-gray-50 overflow-hidden">
-        <Sidebar isAdmin={isAdmin} />
-        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-          <TopBar user={user} />
-          <main className="flex-1 overflow-y-auto p-4 lg:px-6 lg:py-4">
-            {children}
-          </main>
+      {/* Redesign shell: gradient backdrop with the whole app floating in a
+          centered rounded card (mockup layout). */}
+      <div
+        className="h-screen overflow-hidden flex justify-center p-0 sm:p-3 lg:p-7"
+        style={{ background: 'radial-gradient(120% 70% at 50% 0%, #F2F5EE 0%, #E6EAE1 80%)' }}
+      >
+        <div className="w-full max-w-[1320px] flex overflow-hidden rounded-none sm:rounded-2xl lg:rounded-[28px] border border-[#176B33]/10 bg-white shadow-[0_40px_90px_-50px_rgba(16,40,26,0.5)]">
+          <Sidebar isAdmin={isAdmin} />
+          <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+            <TopBar user={user} />
+            <main className="flex-1 overflow-y-auto p-4 lg:px-6 lg:py-4">
+              {children}
+            </main>
+          </div>
         </div>
         <QuickAddReceipt />
         <OutboxFlusher />

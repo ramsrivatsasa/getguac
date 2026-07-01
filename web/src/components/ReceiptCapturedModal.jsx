@@ -59,7 +59,7 @@ export default function ReceiptCapturedModal({ open, receipt, onClose, onSnapAno
             <X size={16} />
           </button>
           <div className="text-5xl mb-1 mascot-pop">🥑</div>
-          <p className="text-[11px] font-extrabold uppercase tracking-widest text-emerald-100">Receipt captured</p>
+          <p className="text-[11px] font-extrabold uppercase tracking-widest text-guac-100">Receipt captured</p>
           <p className="text-4xl font-black tabular-nums mt-1 leading-none">
             +${guacMoney}
             <span className="text-base font-bold align-top ml-1">GuacMoney</span>
@@ -83,7 +83,7 @@ export default function ReceiptCapturedModal({ open, receipt, onClose, onSnapAno
 
         {/* Items preview — first 4 line items */}
         {itemCount > 0 && (
-          <div className="mx-5 mb-4 rounded-2xl border border-gray-100 divide-y divide-gray-100 overflow-hidden">
+          <div className="mx-5 mb-4 rounded-2xl border border-gray-100 divide-y divide-guac-line overflow-hidden">
             {items.slice(0, 4).map((it, i) => (
               <div key={i} className="flex items-center justify-between px-3 py-2.5 text-sm">
                 <span className="truncate font-medium text-gray-800">{it.item_name || 'Item'}</span>
@@ -93,7 +93,7 @@ export default function ReceiptCapturedModal({ open, receipt, onClose, onSnapAno
               </div>
             ))}
             {itemCount > 4 && (
-              <div className="px-3 py-2 text-[11px] font-semibold text-emerald-700 bg-emerald-50/60 text-center">
+              <div className="px-3 py-2 text-[11px] font-semibold text-guac-700 bg-guac-50/60 text-center">
                 + {itemCount - 4} more
               </div>
             )}
@@ -105,7 +105,7 @@ export default function ReceiptCapturedModal({ open, receipt, onClose, onSnapAno
           <button
             type="button"
             onClick={() => { onClose?.(); onSnapAnother?.() }}
-            className="flex-1 inline-flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-gray-200 hover:border-emerald-300 text-gray-700 font-bold"
+            className="flex-1 inline-flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-gray-200 hover:border-guac-line2 text-gray-700 font-bold"
           >
             <Camera size={15} /> Snap another
           </button>

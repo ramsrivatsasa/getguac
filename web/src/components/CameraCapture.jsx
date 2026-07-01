@@ -153,14 +153,14 @@ export default function CameraCapture({ open, onClose, onCapture }) {
             <>
               <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/30 pointer-events-none" />
               <div
-                className="relative border-2 border-dashed border-emerald-300 rounded-2xl frame-pulse"
+                className="relative border-2 border-dashed border-guac-line2 rounded-2xl frame-pulse"
                 style={{ width: '78%', maxWidth: 360, aspectRatio: '5 / 7' }}
               >
                 {/* Corner brackets — bright emerald to read against any background */}
-                <span className="absolute -top-0.5 -left-0.5 w-6 h-6 border-t-4 border-l-4 border-emerald-400 rounded-tl-2xl" />
-                <span className="absolute -top-0.5 -right-0.5 w-6 h-6 border-t-4 border-r-4 border-emerald-400 rounded-tr-2xl" />
-                <span className="absolute -bottom-0.5 -left-0.5 w-6 h-6 border-b-4 border-l-4 border-emerald-400 rounded-bl-2xl" />
-                <span className="absolute -bottom-0.5 -right-0.5 w-6 h-6 border-b-4 border-r-4 border-emerald-400 rounded-br-2xl" />
+                <span className="absolute -top-0.5 -left-0.5 w-6 h-6 border-t-4 border-l-4 border-guac-600 rounded-tl-2xl" />
+                <span className="absolute -top-0.5 -right-0.5 w-6 h-6 border-t-4 border-r-4 border-guac-600 rounded-tr-2xl" />
+                <span className="absolute -bottom-0.5 -left-0.5 w-6 h-6 border-b-4 border-l-4 border-guac-600 rounded-bl-2xl" />
+                <span className="absolute -bottom-0.5 -right-0.5 w-6 h-6 border-b-4 border-r-4 border-guac-600 rounded-br-2xl" />
               </div>
 
               {/* Tip line under the guide */}
@@ -175,7 +175,7 @@ export default function CameraCapture({ open, onClose, onCapture }) {
           {error && (
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white px-6 py-10 bg-black/85">
               <p className="text-sm mb-3 opacity-80">{error}</p>
-              <button onClick={pickFile} className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 font-bold">
+              <button onClick={pickFile} className="px-4 py-2 rounded-xl bg-guac-700 hover:bg-guac-700 font-bold">
                 Choose a photo instead
               </button>
             </div>

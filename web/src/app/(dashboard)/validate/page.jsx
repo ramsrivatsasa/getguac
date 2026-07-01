@@ -159,37 +159,37 @@ export default function ValidatePage() {
         subtitle="Rate every purchase — high = must-have, low = adhoc"
         action={
           <div className="text-sm text-gray-500">
-            <span className="font-bold text-emerald-700">{ratedCount}</span> of {filtered.length} rated
+            <span className="font-bold text-guac-700">{ratedCount}</span> of {filtered.length} rated
           </div>
         }
       />
 
       {/* Period + count + sort + search */}
       <div className="flex flex-wrap items-center gap-3">
-        <div className="inline-flex bg-emerald-50 rounded-full p-1 gap-1 border border-emerald-100">
+        <div className="inline-flex bg-gray-100 rounded-xl p-1 gap-1">
           {PERIODS.map(p => (
             <button key={p} onClick={() => selectPeriod(p)}
-              className={`px-4 py-1.5 rounded-full text-sm font-semibold capitalize transition-all ${
-                period === p ? 'bg-white text-emerald-900 shadow-sm ring-1 ring-emerald-200' : 'text-emerald-700/70 hover:text-emerald-900'
+              className={`px-3.5 py-1.5 rounded-lg text-sm font-semibold capitalize transition-all ${
+                period === p ? 'bg-white text-guac-ink shadow-sm' : 'text-gray-500 hover:text-gray-800'
               }`}>
               {p}
             </button>
           ))}
         </div>
 
-        <div className="inline-flex items-center gap-2 bg-white rounded-full pl-4 pr-2 py-1 border border-emerald-100 shadow-sm">
+        <div className="inline-flex items-center gap-2 bg-white rounded-xl pl-4 pr-2 py-1.5 border border-guac-line2 shadow-sm">
           <span className="text-xs font-semibold text-gray-500">Last</span>
           <select value={count} onChange={e => setCount(parseInt(e.target.value, 10))}
-            className="bg-transparent text-sm font-bold text-emerald-800 focus:outline-none cursor-pointer font-sans">
+            className="bg-transparent text-sm font-bold text-guac-ink focus:outline-none cursor-pointer font-sans">
             {(COUNT_OPTIONS[period] || [1]).map(n => <option key={n} value={n}>{n}</option>)}
           </select>
           <span className="text-xs font-semibold text-gray-500">{UNIT_LABEL[period]}{count === 1 ? '' : 's'}</span>
         </div>
 
-        <div className="inline-flex items-center gap-2 bg-white rounded-full pl-4 pr-2 py-1 border border-emerald-100 shadow-sm">
+        <div className="inline-flex items-center gap-2 bg-white rounded-full pl-4 pr-2 py-1 border border-guac-line shadow-sm">
           <span className="text-xs font-semibold text-gray-500">Sort</span>
           <select value={sort} onChange={e => setSort(e.target.value)}
-            className="bg-transparent text-sm font-bold text-emerald-800 focus:outline-none cursor-pointer font-sans">
+            className="bg-transparent text-sm font-bold text-guac-700 focus:outline-none cursor-pointer font-sans">
             {SORT_OPTIONS.map(o => <option key={o.key} value={o.key}>{o.label}</option>)}
           </select>
         </div>
@@ -249,12 +249,12 @@ export default function ValidatePage() {
           </div>
         ) : (
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b text-xs text-gray-500 uppercase tracking-wide">
+            <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
               <tr>{['', 'Date', 'Store', 'Amount', 'Worth It?', 'Tags', ''].map((h, i) =>
                 <th key={i} className="px-4 py-3 text-left font-semibold">{h}</th>
               )}</tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-guac-line">
               {filtered.map(r => (
                 <Fragment key={r.id}>
                   <ReceiptRow r={r} isExpanded={expandedId === r.id} onToggle={() => toggleExpanded(r.id)} />
@@ -287,17 +287,17 @@ function ReceiptRow({ r, isExpanded, onToggle }) {
   })
 
   return (
-    <tr className="hover:bg-emerald-50/30">
+    <tr className="hover:bg-guac-50/30">
       <td className="px-4 py-3" onClick={onToggle}>
-        <button type="button" className="text-emerald-600 hover:bg-emerald-100 rounded-full p-1">
+        <button type="button" className="text-guac-600 hover:bg-guac-100 rounded-full p-1">
           {isExpanded ? <ChevronDown size={14} /> : <ChevRight size={14} />}
         </button>
       </td>
       <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{formatDateShort(r.date)}</td>
       <td className="px-4 py-3 font-medium">
-        <Link href={`/receipts/${r.id}`} className="text-emerald-800 hover:underline">{displayStoreName(r.store_name)}</Link>
+        <Link href={`/receipts/${r.id}`} className="text-guac-700 hover:underline">{displayStoreName(r.store_name)}</Link>
       </td>
-      <td className={`px-4 py-3 font-bold whitespace-nowrap ${parseFloat(r.total_amount) < 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+      <td className={`px-4 py-3 font-bold whitespace-nowrap ${parseFloat(r.total_amount) < 0 ? 'text-guac-600' : 'text-rose-600'}`}>
         {parseFloat(r.total_amount) < 0 ? '+' : ''}${Math.abs(parseFloat(r.total_amount || 0)).toFixed(2)}
       </td>
       <td className="px-4 py-3">
@@ -309,7 +309,7 @@ function ReceiptRow({ r, isExpanded, onToggle }) {
               <button key={n} type="button" onClick={() => rate.mutate(n)} disabled={rate.isPending}
                 title={info.label}
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-base transition-all ${
-                  active ? 'bg-emerald-100 ring-2 ring-emerald-500 scale-110' : 'hover:bg-emerald-50 opacity-50 hover:opacity-100'
+                  active ? 'bg-guac-100 ring-2 ring-guac-600 scale-110' : 'hover:bg-guac-50 opacity-50 hover:opacity-100'
                 }`}>
                 {info.emoji}
               </button>
@@ -321,14 +321,14 @@ function ReceiptRow({ r, isExpanded, onToggle }) {
         {r.validation_tags?.length > 0 ? (
           <div className="flex flex-wrap gap-1 max-w-[200px]">
             {r.validation_tags.slice(0, 2).map(t => (
-              <span key={t} className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-semibold">{t}</span>
+              <span key={t} className="px-2 py-0.5 rounded-full bg-guac-100 text-guac-700 text-[10px] font-semibold">{t}</span>
             ))}
             {r.validation_tags.length > 2 && <span className="text-[10px] text-gray-400">+{r.validation_tags.length - 2}</span>}
           </div>
         ) : <span className="text-gray-300 text-xs">—</span>}
       </td>
       <td className="px-4 py-3">
-        <Link href={`/receipts/${r.id}`} className="text-xs text-emerald-600 hover:underline">Details →</Link>
+        <Link href={`/receipts/${r.id}`} className="text-xs text-guac-600 hover:underline">Details →</Link>
       </td>
     </tr>
   )
@@ -354,7 +354,7 @@ function ItemList({ receiptId, search }) {
 }
 
 const VAL_TONES = {
-  emerald: { border: 'border-emerald-200', bg: 'bg-emerald-50/50', text: 'text-emerald-800' },
+  emerald: { border: 'border-guac-line2', bg: 'bg-guac-50/50', text: 'text-guac-700' },
   rose:    { border: 'border-rose-200',    bg: 'bg-rose-50/50',    text: 'text-rose-700' },
   gray:    { border: 'border-gray-200',    bg: 'bg-gray-50/50',    text: 'text-gray-800' },
   amber:   { border: 'border-amber-200',   bg: 'bg-amber-50/50',   text: 'text-amber-800' },
@@ -394,7 +394,7 @@ function ItemRow({ item }) {
             <button key={n} type="button" onClick={() => rate.mutate(n)} disabled={rate.isPending}
               title={info.label}
               className={`w-7 h-7 rounded-full flex items-center justify-center text-sm transition-all ${
-                active ? 'bg-emerald-100 ring-2 ring-emerald-500 scale-110' : 'hover:bg-emerald-50 opacity-50 hover:opacity-100'
+                active ? 'bg-guac-100 ring-2 ring-guac-600 scale-110' : 'hover:bg-guac-50 opacity-50 hover:opacity-100'
               }`}>
               {info.emoji}
             </button>

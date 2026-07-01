@@ -12,6 +12,7 @@ import emptyListLottie from '../../../lottie/empty-list.json'
 import thinkingLottie from '../../../lottie/thinking.json'
 import MascotLoading from '../../../components/MascotLoading'
 import FeatureHeader from '../../../components/FeatureHeader'
+import { StoreLogo } from '../../../components/StoreLogo'
 // Placeholder reward_no shape the server mints before a real member #
 // is known ("GG-" + 8 base36 chars). Mirrors PLACEHOLDER_REWARD_RE in
 // lib/save-receipt.js — we only surface REAL numbers on this page.
@@ -191,7 +192,7 @@ export default function StoresPage() {
           <div className="flex items-center gap-3">
             <Link
               href="/connections"
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-emerald-200 text-emerald-700 text-sm font-bold hover:bg-emerald-50 transition-colors"
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-guac-line2 text-guac-700 text-sm font-bold hover:bg-guac-50 transition-colors"
             >
               <Link2 size={15} /> Connect retailers
             </Link>
@@ -268,7 +269,7 @@ export default function StoresPage() {
           <p>{stores.length === 0 ? 'No stores yet — they are created automatically when you scan receipts.' : 'No results.'}</p>
         </div>
       ) : (
-        <div className="card p-0 divide-y divide-gray-50">
+        <div className="card p-0 divide-y divide-guac-line">
           {grouped.map(g => {
             const isMulti = g.stores.length > 1
             const isOpen = expandedGroups.has(g.key)
@@ -280,15 +281,16 @@ export default function StoresPage() {
               const store = g.stores[0]
               return (
                 <div key={store.id}
-                  className={`flex items-center gap-3 px-5 py-4 hover:bg-gray-50/70 transition-colors group ${selected.has(store.id) ? 'bg-blue-50/60' : ''} ${dupIds.has(store.id) ? 'border-l-4 border-l-amber-400' : ''}`}>
+                  className={`flex items-center gap-3 px-5 py-4 hover:bg-guac-row transition-colors group ${selected.has(store.id) ? 'bg-guac-50/70' : ''} ${dupIds.has(store.id) ? 'border-l-4 border-l-amber-400' : ''}`}>
                   {dupIds.has(store.id) && (
                     <span title="Duplicate detected" className="text-amber-500"><AlertTriangle size={14} /></span>
                   )}
                   <input type="checkbox" className="w-4 h-4 rounded cursor-pointer" checked={selected.has(store.id)}
                     onChange={() => toggleOne(store.id)} aria-label={`Select ${store.store_name}`} />
+                  <StoreLogo storeName={store.store_name} size={40} />
                   <Link href={`/stores/${store.id}`} className="flex-1 flex items-center justify-between min-w-0">
                     <div className="space-y-1 min-w-0">
-                      <p className="font-semibold text-gray-800 group-hover:text-blue-700 transition-colors">{displayStoreName(store.store_name)}</p>
+                      <p className="font-semibold text-guac-ink group-hover:text-guac-700 transition-colors">{displayStoreName(store.store_name)}</p>
                       <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-gray-400">
                         {store.address && <span className="flex items-center gap-1"><MapPin size={11} />{store.address}</span>}
                         {store.phone_no && <span className="flex items-center gap-1"><Phone size={11} />{store.phone_no}</span>}
@@ -301,7 +303,7 @@ export default function StoresPage() {
                         card lives. */}
                     <RewardChip reward={rewardFor(store)} className="mr-2" />
                     <PolicyChip policy={policyFor(store)} className="mr-3" />
-                    <ChevronRight size={16} className="text-gray-300 group-hover:text-blue-500 shrink-0 ml-4" />
+                    <ChevronRight size={16} className="text-guac-mist group-hover:text-guac-600 shrink-0 ml-4" />
                   </Link>
                 </div>
               )
@@ -313,7 +315,7 @@ export default function StoresPage() {
                 <button
                   type="button"
                   onClick={() => toggleGroup(g.key)}
-                  className={`w-full flex items-center gap-3 px-5 py-4 hover:bg-gray-50/70 transition-colors text-left ${groupAnyDup ? 'border-l-4 border-l-amber-400' : ''}`}
+                  className={`w-full flex items-center gap-3 px-5 py-4 hover:bg-guac-row transition-colors text-left ${groupAnyDup ? 'border-l-4 border-l-amber-400' : ''}`}
                 >
                   {groupAnyDup && <span title="Contains duplicates" className="text-amber-500"><AlertTriangle size={14} /></span>}
                   <input
@@ -331,9 +333,10 @@ export default function StoresPage() {
                     }}
                     aria-label={`Select all ${g.display} locations`}
                   />
+                  <StoreLogo storeName={g.display} size={40} />
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-800">{g.display}</p>
-                    <p className="text-xs text-gray-400">{g.stores.length} locations</p>
+                    <p className="font-semibold text-guac-ink">{g.display}</p>
+                    <p className="text-xs text-guac-faint">{g.stores.length} locations</p>
                   </div>
                   {/* Membership # is chain-wide, so it rides on the group
                       header (same number for every location below). */}
@@ -342,14 +345,14 @@ export default function StoresPage() {
                       share the chain's curated policy. */}
                   <PolicyChip policy={policyFor(g.stores[0])} className="mr-3" />
                   {isOpen
-                    ? <ChevronDown size={16} className="text-gray-400 shrink-0" />
-                    : <ChevronRight size={16} className="text-gray-400 shrink-0" />}
+                    ? <ChevronDown size={16} className="text-guac-mist shrink-0" />
+                    : <ChevronRight size={16} className="text-guac-mist shrink-0" />}
                 </button>
                 {isOpen && (
-                  <div className="bg-gray-50/40 border-t border-gray-100">
+                  <div className="bg-guac-50/40 border-t border-guac-line">
                     {g.stores.map(store => (
                       <div key={store.id}
-                        className={`flex items-center gap-3 pl-12 pr-5 py-3 hover:bg-white transition-colors group ${selected.has(store.id) ? 'bg-blue-50/60' : ''} ${dupIds.has(store.id) ? 'border-l-4 border-l-amber-400' : ''}`}>
+                        className={`flex items-center gap-3 pl-12 pr-5 py-3 hover:bg-white transition-colors group ${selected.has(store.id) ? 'bg-guac-50/70' : ''} ${dupIds.has(store.id) ? 'border-l-4 border-l-amber-400' : ''}`}>
                         {dupIds.has(store.id) && (
                           <span title="Duplicate detected" className="text-amber-500"><AlertTriangle size={12} /></span>
                         )}
@@ -365,7 +368,7 @@ export default function StoresPage() {
                               {store.website && <span className="flex items-center gap-1"><Globe size={11} />{store.website}</span>}
                             </div>
                           </div>
-                          <ChevronRight size={14} className="text-gray-300 group-hover:text-blue-500 shrink-0 ml-4" />
+                          <ChevronRight size={14} className="text-guac-mist group-hover:text-guac-600 shrink-0 ml-4" />
                         </Link>
                       </div>
                     ))}
@@ -414,7 +417,7 @@ function PolicyChip({ policy, className = '' }) {
   const tone = !eligible
     ? 'bg-gray-100 text-gray-600 border-gray-200'
     : days == null || days >= 90
-      ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+      ? 'bg-guac-50 text-guac-700 border-guac-line'
       : days >= 30
         ? 'bg-sky-50 text-sky-700 border-sky-100'
         : 'bg-amber-50 text-amber-700 border-amber-100'

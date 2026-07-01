@@ -14,6 +14,7 @@ import { formatDateShort } from '../../../lib/dateFormat'
 import { Upload, Trash2, Eye, Search, Download, Loader2, Sparkles, X, Shield, Camera, ChevronDown, ChevronRight, Undo2, ShoppingCart, Monitor, Link2, Tag, RefreshCw, Copy, FileText, Mic, Plus } from 'lucide-react'
 import { guessCategory } from '../../../lib/categorizeRules'
 import { normalizeStoreName, displayStoreName } from '../../../lib/store-name-normalize'
+import { logoUrlForStore } from '../../../lib/store-logo'
 import { RECEIPT_CHIP_IDS, parseReceiptsUrlParams, chipToDateFrom } from '../../../lib/receipts-deeplink'
 import { isItemPerishable, getNonReturnableReason } from '../../../lib/perishable'
 import { isItemNonReturnable } from '../../../lib/non-returnable'
@@ -35,19 +36,77 @@ const EMPTY = { store_name: '', date: '', total_amount: '', tax_paid: '', reward
 
 // Column definitions for the receipts table. `default` is the initial pixel
 // width; users can drag the right edge of any header to override, and the
-// override is persisted to localStorage under 'receipts_col_widths_v1'.
+// override is persisted to localStorage under 'receipts_col_widths_v2'.
+// Clean column set matching the redesign mockup. The receipt id moved into
+// the Store cell (under the name), and Reward No + the receipt-download column
+// were dropped — both still live on the receipt detail page.
 const RECEIPT_COLUMNS = [
-  { id: 'id',       label: 'Receipt ID', default: 140 },
-  { id: 'store',    label: 'Store',      default: 220 },
-  { id: 'category', label: 'Category',   default: 140 },
-  { id: 'date',     label: 'Date',       default: 120 },
-  { id: 'amount',   label: 'Amount',     default: 110 },
-  { id: 'tax',      label: 'Tax',        default: 90  },
-  { id: 'reward',   label: 'Reward No',  default: 130 },
-  { id: 'business', label: 'Business',   default: 90  },
-  { id: 'receipt',  label: 'Receipt',    default: 90  },
-  { id: 'actions',  label: 'Actions',    default: 130 },
+  { id: 'store',    label: 'Store',    default: 300, align: 'left'   },
+  { id: 'category', label: 'Category', default: 150, align: 'left'   },
+  { id: 'date',     label: 'Date',     default: 96,  align: 'left'   },
+  { id: 'amount',   label: 'Amount',   default: 110, align: 'right'  },
+  { id: 'tax',      label: 'Tax',      default: 86,  align: 'right'  },
+  { id: 'business', label: 'Biz',      default: 76,  align: 'center' },
+  { id: 'actions',  label: 'Actions',  default: 110, align: 'right'  },
 ]
+
+// First alphanumeric character of a store's display name, for the round
+// avatar tile in the receipts table. Falls back to "?" for blank names.
+function storeInitial(name) {
+  const m = (displayStoreName(name) || '').match(/[A-Za-z0-9]/)
+  return m ? m[0].toUpperCase() : '?'
+}
+
+// Receipt-table display name: brands print in ALL CAPS on receipts, but the
+// redesign shows them Title Cased. Names that already carry mixed case (real
+// brand casing like "McDonald's") are left untouched; only all-caps strings get
+// re-cased, and the lowercase "'s" possessive is preserved.
+function titleCaseStore(name) {
+  const s = displayStoreName(name) || ''
+  if (/[a-z]/.test(s)) return s
+  return s.toLowerCase().replace(/(^|[\s&/-])([a-z])/g, (_, pre, c) => pre + c.toUpperCase())
+}
+
+// Compact "25 Jun" date (day + short month, no year) for the receipts table,
+// matching the redesign mockup. Parses YYYY-MM-DD without a timezone shift.
+const _MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+function formatDayMonth(dateStr) {
+  if (!dateStr) return '—'
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(dateStr))
+  const d = m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(dateStr)
+  if (isNaN(d.getTime())) return String(dateStr)
+  return `${String(d.getDate()).padStart(2, '0')} ${_MONTHS[d.getMonth()]}`
+}
+
+// 36px store avatar — prefers a real brand logo (logoUrlForStore resolves a
+// curated domain or a best-effort favicon) and falls back to the avocado
+// initial tile when there's no logo or the image 404s. The error swap is what
+// keeps a wrong/blank logo from ever rendering for ambiguous merchant names.
+function StoreAvatar({ name }) {
+  const [errored, setErrored] = useState(false)
+  const url = errored ? null : logoUrlForStore(name)
+  if (url) {
+    return (
+      <span className="shrink-0 w-9 h-9 rounded-[11px] bg-white ring-1 ring-guac-100 overflow-hidden flex items-center justify-center" title={titleCaseStore(name)}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={url}
+          alt=""
+          width={22}
+          height={22}
+          loading="lazy"
+          onError={() => setErrored(true)}
+          className="w-[22px] h-[22px] object-contain"
+        />
+      </span>
+    )
+  }
+  return (
+    <span aria-hidden="true" className="shrink-0 w-9 h-9 rounded-[11px] bg-[#F1F6EA] text-[#1F8A3D] flex items-center justify-center font-extrabold text-sm">
+      {storeInitial(name)}
+    </span>
+  )
+}
 
 export default function ReceiptsPage() {
   const router = useRouter()
@@ -119,12 +178,12 @@ export default function ReceiptsPage() {
     const defaults = Object.fromEntries(RECEIPT_COLUMNS.map(c => [c.id, c.default]))
     if (typeof window === 'undefined') return defaults
     try {
-      const saved = JSON.parse(localStorage.getItem('receipts_col_widths_v1') || '{}')
+      const saved = JSON.parse(localStorage.getItem('receipts_col_widths_v2') || '{}')
       return { ...defaults, ...saved }
     } catch { return defaults }
   })
   useEffect(() => {
-    try { localStorage.setItem('receipts_col_widths_v1', JSON.stringify(colWidths)) } catch {}
+    try { localStorage.setItem('receipts_col_widths_v2', JSON.stringify(colWidths)) } catch {}
   }, [colWidths])
 
   // Keep the search box AND period chip in sync with the URL so coming
@@ -909,7 +968,7 @@ export default function ReceiptsPage() {
   }
 
   return (
-    <div className="space-y-5 max-w-7xl">
+    <div className="space-y-5 max-w-7xl" style={{ fontFamily: 'var(--font-jakarta)' }}>
       <CameraCapture open={cameraOpen} onClose={() => setCameraOpen(false)} onCapture={handleCameraCapture} />
       <ScreenshotCapture open={screenOpen} onClose={() => setScreenOpen(false)} onCapture={(f) => onQuickDrop([f])} />
       <VoiceCapture open={voiceOpen} onClose={() => setVoiceOpen(false)} onTranscript={handleVoiceTranscript} />
@@ -926,138 +985,127 @@ export default function ReceiptsPage() {
           onDragOver={(e) => { e.preventDefault(); e.stopPropagation() }}
           onDrop={handleOverlayDrop}
         >
-          <div className="rounded-2xl border-4 border-dashed border-blue-500 bg-white/95 px-10 py-8 flex flex-col items-center gap-3 shadow-2xl pointer-events-none">
+          <div className="rounded-2xl border-4 border-dashed border-guac-600 bg-white/95 px-10 py-8 flex flex-col items-center gap-3 shadow-2xl pointer-events-none">
             {/* Paper-drop reads as "drop your receipt here". Replaces
                 the too-generic animate-bounce with a softer 8px lift
                 using a backOut curve. */}
-            <Upload size={48} className="text-blue-600 anim-paper-drop" />
+            <Upload size={48} className="text-guac-600 anim-paper-drop" />
             <p className="text-xl font-semibold text-blue-800">Drop to auto-add</p>
             <p className="text-sm text-gray-500">PDF or images — we&apos;ll scan and save each one</p>
           </div>
         </div>
       )}
 
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-3">
-          <GuacMascot expression="happy" size={60} className="shrink-0" />
-          <h1 className="page-title">Receipts</h1>
+      {/* Header row 1 — title + wide drop zone (mockup layout). */}
+      <div className="flex items-center gap-4 flex-wrap">
+        <div className="flex items-center gap-3 shrink-0">
+          <GuacMascot expression="happy" size={50} className="shrink-0" />
+          <h1 className="page-title" style={{ fontFamily: 'var(--font-bricolage)', color: '#14241A', letterSpacing: '-0.02em', fontSize: '30px', lineHeight: 1 }}>Receipts</h1>
         </div>
-        <div className="flex items-center gap-3 flex-1 min-w-0 justify-end">
-          {/* Click-to-upload button styled like a dropzone (the actual drop target is the overlay) */}
+        {/* Click-to-upload button styled like a dropzone (the real drop target is the overlay) */}
+        <button
+          type="button"
+          onClick={handleQuickClick}
+          className={`flex-1 min-w-[220px] cursor-pointer rounded-[14px] border-[1.5px] border-dashed px-4 py-3 text-[13px] font-semibold flex items-center justify-center gap-2 transition-all ${
+            quickBusy > 0 ? 'border-amber-400 bg-amber-50 text-amber-700' :
+            pageDragging ? 'border-guac-600 bg-guac-50 text-guac-700' :
+            'border-[#176B33]/[0.22] text-[#9AA89E] hover:border-guac-600 hover:bg-guac-50/40'
+          }`}
+        >
+          {quickBusy > 0 ? (
+            <><Loader2 size={15} className="animate-spin" /><span>Scanning {quickBusy} file{quickBusy === 1 ? '' : 's'}…</span></>
+          ) : (
+            <><Upload size={15} /><span>Drop receipt or order screenshot to add</span></>
+          )}
+        </button>
+        <input ref={quickFileRef} type="file" multiple accept="image/*,application/pdf" className="hidden" onChange={handleQuickChange} />
+        <input ref={pdfFileRef} type="file" multiple accept="application/pdf,.pdf" className="hidden" onChange={handlePdfChange} />
+      </div>
+
+      {/* Header row 2 — action buttons. */}
+      <div className="flex items-center gap-2.5 flex-wrap">
+        {/* Floating "Add" menu — Camera / Voice / Screen / Drop PDF behind one
+            green trigger instead of a sprawling row of pills. */}
+        <div className="relative shrink-0" ref={addMenuRef}>
           <button
             type="button"
-            onClick={handleQuickClick}
-            className={`flex-1 max-w-md cursor-pointer rounded-xl border-2 border-dashed px-4 py-2.5 text-sm flex items-center justify-center gap-2 transition-all ${
-              quickBusy > 0 ? 'border-amber-400 bg-amber-50 text-amber-700' :
-              pageDragging ? 'border-blue-500 bg-blue-50 text-blue-700 scale-105' :
-              'border-gray-300 text-gray-500 hover:border-blue-400 hover:bg-gray-50'
-            }`}
+            onClick={() => setAddMenuOpen((o) => !o)}
+            className="inline-flex items-center gap-1.5 rounded-[11px] bg-[#14532D] px-4 py-2.5 text-[13px] font-bold text-white hover:bg-[#0f3d22] transition-colors"
+            aria-haspopup="menu"
+            aria-expanded={addMenuOpen}
+            title="Add a receipt another way"
           >
-            {quickBusy > 0 ? (
-              <><Loader2 size={15} className="animate-spin" /><span>Scanning {quickBusy} file{quickBusy === 1 ? '' : 's'}…</span></>
-            ) : (
-              <><Upload size={15} /><span>Drop receipt or order screenshot (Ctrl+V to paste)</span></>
-            )}
+            {(voiceParsing || pdfBusy > 0)
+              ? <Loader2 size={16} className="animate-spin" />
+              : <Plus size={16} className={`transition-transform ${addMenuOpen ? 'rotate-45' : ''}`} />}
+            Add
           </button>
-          <input
-            ref={quickFileRef}
-            type="file"
-            multiple
-            accept="image/*,application/pdf"
-            className="hidden"
-            onChange={handleQuickChange}
-          />
-          {/* Floating "Add" menu — Camera / Voice / Screen / Drop PDF tucked
-              behind one trigger instead of a sprawling row of pills. */}
-          <div className="relative shrink-0" ref={addMenuRef}>
-            <button
-              type="button"
-              onClick={() => setAddMenuOpen((o) => !o)}
-              className="btn-secondary"
-              aria-haspopup="menu"
-              aria-expanded={addMenuOpen}
-              title="Add a receipt another way"
-            >
-              {(voiceParsing || pdfBusy > 0)
-                ? <Loader2 size={16} className="animate-spin" />
-                : <Plus size={16} className={`transition-transform ${addMenuOpen ? 'rotate-45' : ''}`} />}
-              Add
-            </button>
-            {addMenuOpen && (
-              <div role="menu" className="absolute right-0 top-full mt-2 z-30 w-48 rounded-2xl bg-white shadow-xl ring-1 ring-gray-100 p-1.5 anim-fadeup">
-                <button role="menuitem" type="button" onClick={() => { setAddMenuOpen(false); handleCameraClick() }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors">
-                  <Camera size={16} /> Camera
-                </button>
-                <button role="menuitem" type="button" disabled={voiceParsing} onClick={() => { setAddMenuOpen(false); handleVoiceClick() }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors disabled:opacity-50">
-                  {voiceParsing ? <Loader2 size={16} className="animate-spin" /> : <Mic size={16} />} Voice
-                </button>
-                <button role="menuitem" type="button" onClick={() => { setAddMenuOpen(false); handleScreenClick() }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors">
-                  <Monitor size={16} /> Screen
-                </button>
-                {/* PDF-only upload. Utility bills, internet invoices,
-                    subscription statements, pay stubs — parsed via Gemini→Groq. */}
-                <button role="menuitem" type="button" disabled={pdfBusy > 0} onClick={() => { setAddMenuOpen(false); handlePdfClick() }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors disabled:opacity-50">
-                  {pdfBusy > 0
-                    ? <><Loader2 size={16} className="animate-spin" /> {pdfBusy} PDF{pdfBusy === 1 ? '' : 's'}…</>
-                    : <><FileText size={16} /> Drop PDF</>}
-                </button>
-              </div>
-            )}
-          </div>
-          <input
-            ref={pdfFileRef}
-            type="file"
-            multiple
-            accept="application/pdf,.pdf"
-            className="hidden"
-            onChange={handlePdfChange}
-          />
-          {unreconciledStatementCount > 0 && (
-            <button
-              type="button"
-              onClick={handleReconcileAll}
-              disabled={reconciling}
-              className="btn-secondary"
-              title="Match unreconciled statement rows to real receipts by date, store, and amount"
-            >
-              {reconciling ? <Loader2 size={14} className="animate-spin" /> : <Link2 size={16} />}
-              Reconcile <span className="ml-1 text-[10px] font-bold bg-blue-100 text-blue-800 rounded-full px-1.5">{unreconciledStatementCount}</span>
-            </button>
+          {addMenuOpen && (
+            <div role="menu" className="absolute left-0 top-full mt-2 z-30 w-48 rounded-2xl bg-white shadow-xl ring-1 ring-gray-100 p-1.5 anim-fadeup">
+              <button role="menuitem" type="button" onClick={() => { setAddMenuOpen(false); handleCameraClick() }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-gray-700 hover:bg-guac-50 hover:text-guac-700 transition-colors">
+                <Camera size={16} /> Camera
+              </button>
+              <button role="menuitem" type="button" disabled={voiceParsing} onClick={() => { setAddMenuOpen(false); handleVoiceClick() }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-gray-700 hover:bg-guac-50 hover:text-guac-700 transition-colors disabled:opacity-50">
+                {voiceParsing ? <Loader2 size={16} className="animate-spin" /> : <Mic size={16} />} Voice
+              </button>
+              <button role="menuitem" type="button" onClick={() => { setAddMenuOpen(false); handleScreenClick() }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-gray-700 hover:bg-guac-50 hover:text-guac-700 transition-colors">
+                <Monitor size={16} /> Screen
+              </button>
+              {/* PDF-only upload. Utility bills, internet invoices,
+                  subscription statements, pay stubs — parsed via Gemini→Groq. */}
+              <button role="menuitem" type="button" disabled={pdfBusy > 0} onClick={() => { setAddMenuOpen(false); handlePdfClick() }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-gray-700 hover:bg-guac-50 hover:text-guac-700 transition-colors disabled:opacity-50">
+                {pdfBusy > 0
+                  ? <><Loader2 size={16} className="animate-spin" /> {pdfBusy} PDF{pdfBusy === 1 ? '' : 's'}…</>
+                  : <><FileText size={16} /> Drop PDF</>}
+              </button>
+            </div>
           )}
+        </div>
+        {unreconciledStatementCount > 0 && (
           <button
             type="button"
-            onClick={handleFindDuplicates}
-            disabled={dedupBusy}
-            className="btn-secondary"
-            title="Scan for duplicate receipts (same store, date, total) and merge them"
+            onClick={handleReconcileAll}
+            disabled={reconciling}
+            className="inline-flex items-center gap-1.5 rounded-[11px] border border-[#176B33]/[0.14] bg-white px-4 py-2.5 text-[13px] font-bold text-[#4A5A4E] hover:bg-[#F1F6EA] transition-colors disabled:opacity-50"
+            title="Match unreconciled statement rows to real receipts by date, store, and amount"
           >
-            {dedupBusy ? <Loader2 size={14} className="animate-spin" /> : <Copy size={16} />}
-            Find duplicates
+            {reconciling ? <Loader2 size={14} className="animate-spin" /> : <Link2 size={16} />}
+            Reconcile <span className="ml-1 text-[10px] font-bold bg-guac-100 text-blue-800 rounded-full px-1.5">{unreconciledStatementCount}</span>
           </button>
-          {uncategorizedCount > 0 && (
-            <button
-              type="button"
-              onClick={handleAutoCategorize}
-              disabled={autocatBusy}
-              className="btn-secondary"
-              title="Auto-categorize uncategorized receipts (rules + AI fallback)"
-            >
-              {autocatBusy ? <Loader2 size={14} className="animate-spin" /> : <Tag size={16} />}
-              Auto-categorize <span className="ml-1 text-[10px] font-bold bg-emerald-100 text-emerald-800 rounded-full px-1.5">{uncategorizedCount}</span>
-            </button>
-          )}
-          <Link href="/validate"
-            className="group inline-flex items-center gap-2 h-10 pl-3 pr-4 rounded-full bg-gradient-to-br from-amber-400 via-amber-500 to-rose-500 text-white font-bold text-sm shadow-md hover:shadow-lg hover:scale-[1.03] active:scale-[0.98] transition-all"
-            title="Rate your purchases — high = must-have, low = adhoc">
-            <span className="text-base leading-none">🥑</span>
-            <span>Worth&nbsp;It?</span>
-            <span className="text-[10px] uppercase tracking-wider opacity-80 hidden sm:inline">Validate</span>
-          </Link>
-        </div>
+        )}
+        <button
+          type="button"
+          onClick={handleFindDuplicates}
+          disabled={dedupBusy}
+          className="inline-flex items-center gap-1.5 rounded-[11px] border border-[#176B33]/[0.14] bg-white px-4 py-2.5 text-[13px] font-bold text-[#4A5A4E] hover:bg-[#F1F6EA] transition-colors disabled:opacity-50"
+          title="Scan for duplicate receipts (same store, date, total) and merge them"
+        >
+          {dedupBusy ? <Loader2 size={14} className="animate-spin" /> : <Copy size={16} />}
+          Find duplicates
+        </button>
+        {uncategorizedCount > 0 && (
+          <button
+            type="button"
+            onClick={handleAutoCategorize}
+            disabled={autocatBusy}
+            className="inline-flex items-center gap-1.5 rounded-[11px] border border-[#176B33]/[0.14] bg-white px-4 py-2.5 text-[13px] font-bold text-[#4A5A4E] hover:bg-[#F1F6EA] transition-colors disabled:opacity-50"
+            title="Auto-categorize uncategorized receipts (rules + AI fallback)"
+          >
+            {autocatBusy ? <Loader2 size={14} className="animate-spin" /> : <Tag size={16} />}
+            Auto-categorize <span className="ml-1 text-[11px] font-extrabold bg-[#E9F5DD] text-[#1F8A3D] rounded-full px-[7px] py-0.5">{uncategorizedCount}</span>
+          </button>
+        )}
+        <Link href="/validate"
+          className="group ml-auto inline-flex items-center gap-2 rounded-[11px] bg-gradient-to-br from-[#FBB040] to-[#E8870E] px-[18px] py-2.5 text-[13px] font-extrabold text-white shadow-[0_6px_16px_-8px_rgba(232,135,14,0.6)] hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all"
+          title="Rate your purchases — high = must-have, low = adhoc">
+          <span className="text-base leading-none">🥑</span>
+          <span>Worth&nbsp;It?</span>
+          <span className="text-[10px] uppercase tracking-wider opacity-80 hidden sm:inline">Validate</span>
+        </Link>
       </div>
 
       {showForm && (
@@ -1068,7 +1116,7 @@ export default function ReceiptsPage() {
           <div>
             <label className="label">Upload Receipt</label>
             <div {...getRootProps()} className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors ${
-              isDragActive ? 'border-blue-500 bg-blue-50' : parsing ? 'border-amber-400 bg-amber-50' : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50'
+              isDragActive ? 'border-guac-600 bg-guac-50' : parsing ? 'border-amber-400 bg-amber-50' : 'border-gray-300 hover:border-guac-600 hover:bg-guac-row'
             }`}>
               <input {...getInputProps()} />
               {parsing ? (
@@ -1078,8 +1126,8 @@ export default function ReceiptsPage() {
                 </div>
               ) : file ? (
                 <div className="flex flex-col items-center gap-1">
-                  <Sparkles size={20} className="text-green-600" />
-                  <p className="text-sm text-green-700 font-medium">{file.name}</p>
+                  <Sparkles size={20} className="text-guac-600" />
+                  <p className="text-sm text-guac-700 font-medium">{file.name}</p>
                   <p className="text-xs text-gray-400">Drop a new file to re-scan</p>
                 </div>
               ) : (
@@ -1124,11 +1172,11 @@ export default function ReceiptsPage() {
             {parsedItems.length > 0 && (
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="label mb-0">Line Items <span className="text-blue-600 font-semibold">({parsedItems.length} scanned)</span></label>
+                  <label className="label mb-0">Line Items <span className="text-guac-600 font-semibold">({parsedItems.length} scanned)</span></label>
                 </div>
                 <div className="border rounded-xl overflow-hidden">
                   <table className="w-full text-sm">
-                    <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
+                    <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
                       <tr>
                         <th className="px-3 py-2 text-left">Item</th>
                         <th className="px-3 py-2 text-left w-16">Qty</th>
@@ -1140,7 +1188,7 @@ export default function ReceiptsPage() {
                     </thead>
                     <tbody className="divide-y">
                       {parsedItems.map((item, i) => (
-                        <tr key={i} className="hover:bg-gray-50/50">
+                        <tr key={i} className="hover:bg-guac-row">
                           <td className="px-3 py-0.5">
                             <input className="input py-1 text-sm" value={item.item_name} onChange={e => updateItem(i, 'item_name', e.target.value)} />
                           </td>
@@ -1173,12 +1221,12 @@ export default function ReceiptsPage() {
             {refundPolicies.length > 0 && (
               <div>
                 <label className="label flex items-center gap-1.5">
-                  <Shield size={13} className="text-emerald-500" /> Refund Policy
-                  <span className="text-emerald-600 font-semibold">({refundPolicies.length} scanned)</span>
+                  <Shield size={13} className="text-guac-600" /> Refund Policy
+                  <span className="text-guac-600 font-semibold">({refundPolicies.length} scanned)</span>
                 </label>
                 <div className="border rounded-xl overflow-hidden">
                   <table className="w-full text-sm">
-                    <thead className="bg-emerald-50/60 text-xs text-emerald-700 uppercase">
+                    <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
                       <tr>
                         <th className="px-3 py-2 text-left w-16">Policy</th>
                         <th className="px-3 py-2 text-left w-16">Days</th>
@@ -1190,7 +1238,7 @@ export default function ReceiptsPage() {
                     </thead>
                     <tbody className="divide-y">
                       {refundPolicies.map((p, i) => (
-                        <tr key={i} className="hover:bg-gray-50/50">
+                        <tr key={i} className="hover:bg-guac-row">
                           <td className="px-3 py-0.5">
                             <input className="input py-1 text-sm w-14" value={p.policy_id || ''} onChange={e => updatePolicy(i, 'policy_id', e.target.value)} />
                           </td>
@@ -1257,39 +1305,37 @@ export default function ReceiptsPage() {
           in. Self-hides when nothing pending; session-dismissable. */}
       <PreTripPanel />
 
-      {/* Period chips — mirrors mobile's chip row. 1M default; wider on tap. */}
-      <div className="flex items-center gap-1.5 flex-wrap">
-        <span className="text-[11px] font-bold uppercase tracking-wider text-gray-500 mr-1">Show:</span>
-        {RECEIPT_CHIP_IDS.map(id => (
-          <button
-            key={id}
-            type="button"
-            onClick={() => setPeriod(id)}
-            className={`text-xs font-bold px-2.5 py-1 rounded-full transition-colors ${
-              period === id
-                ? 'bg-emerald-100 text-emerald-900 ring-1 ring-emerald-200'
-                : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
-            }`}
-          >
-            {id}
-          </button>
-        ))}
-      </div>
-
-      {/* Search + bulk actions */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <div className="relative max-w-sm">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input className="input pl-9" placeholder="Search store, item, category, ID…" value={search} onChange={e => setSearch(e.target.value)} />
+      {/* Filter row — segmented period control + search + result count, all on
+          one line (mockup layout: no "Show" label, no Select-all button). */}
+      <div className="flex items-center gap-3.5 flex-wrap">
+        <div className="inline-flex items-center gap-1 rounded-[11px] bg-[#F1F6EA] p-1 shrink-0">
+          {RECEIPT_CHIP_IDS.map(id => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setPeriod(id)}
+              className={`text-[12.5px] px-3.5 py-1.5 rounded-lg transition-colors ${
+                period === id
+                  ? 'bg-white text-[#14532D] font-extrabold shadow-[0_1px_3px_rgba(20,40,28,0.08)]'
+                  : 'text-[#7C8A7E] font-semibold hover:text-[#14532D]'
+              }`}
+            >
+              {id}
+            </button>
+          ))}
         </div>
-        <span className="text-sm text-gray-400">{filtered.length} result{filtered.length !== 1 ? 's' : ''}</span>
-        {filtered.length > 0 && (
-          <button type="button" onClick={toggleAll} className="btn-secondary text-xs py-1.5">
-            {allSelected ? 'Clear all' : 'Select all'}
-          </button>
-        )}
+        <div className="relative flex-1 min-w-[200px]">
+          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#A6B3A9]" />
+          <input
+            className="w-full rounded-[11px] border border-[#176B33]/[0.12] bg-white pl-11 pr-4 py-2.5 text-[13.5px] text-[#14241A] placeholder:text-[#A6B3A9] focus:outline-none focus:ring-2 focus:ring-guac-600/30 focus:border-transparent transition-all"
+            placeholder="Search store, item, category…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+        </div>
+        <span className="shrink-0 text-[13px] font-semibold text-[#9AA89E]">{filtered.length} result{filtered.length !== 1 ? 's' : ''}</span>
         {selected.size > 0 && (
-          <button type="button" onClick={handleDeleteSelected} className="btn-danger text-xs py-1.5">
+          <button type="button" onClick={handleDeleteSelected} className="btn-danger text-xs py-1.5 shrink-0">
             <Trash2 size={13} /> Delete {selected.size}
           </button>
         )}
@@ -1325,7 +1371,7 @@ export default function ReceiptsPage() {
               if (files.length) onQuickDrop(files)
             }}
             onClick={handleQuickClick}
-            className="py-10 px-6 text-center flex flex-col items-center gap-3 cursor-pointer rounded-xl border-2 border-dashed border-gray-300 hover:border-blue-400 hover:bg-blue-50/30 transition-colors m-4"
+            className="py-10 px-6 text-center flex flex-col items-center gap-3 cursor-pointer rounded-xl border-2 border-dashed border-guac-100/60 hover:border-guac-600 hover:bg-guac-50/30 transition-colors m-4"
           >
             <LottieAnimation data={emptyReceiptsLottie} size={160} fallback="📥" />
             <p className="text-gray-700 font-semibold">Drag screenshots here</p>
@@ -1337,32 +1383,32 @@ export default function ReceiptsPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-xs" style={{ tableLayout: 'fixed' }}>
+            <table className="w-full text-[13px]" style={{ tableLayout: 'fixed' }}>
               <colgroup>
                 <col style={{ width: 40 }} />
                 {RECEIPT_COLUMNS.map(c => (
                   <col key={c.id} style={{ width: colWidths[c.id] }} />
                 ))}
               </colgroup>
-              <thead className="bg-gray-50 border-b text-xs text-gray-500">
+              <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
                 <tr>
-                  <th className="pl-4 pr-2 py-1">
+                  <th className="pl-4 pr-2 py-3">
                     <input type="checkbox" className="w-4 h-4 rounded cursor-pointer" checked={allSelected}
                       onChange={toggleAll} aria-label="Select all" />
                   </th>
                   {RECEIPT_COLUMNS.map(c => (
-                    <th key={c.id} className="px-4 py-1 text-left relative select-none overflow-hidden whitespace-nowrap text-ellipsis">
+                    <th key={c.id} className={`px-4 py-3 relative select-none overflow-hidden whitespace-nowrap text-ellipsis ${c.align === 'right' ? 'text-right' : c.align === 'center' ? 'text-center' : 'text-left'}`}>
                       {c.label}
                       <span
                         onMouseDown={(e) => startResize(e, c.id)}
-                        className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-emerald-400 active:bg-emerald-500 transition-colors"
+                        className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-guac-600 active:bg-guac-600 transition-colors"
                         title="Drag to resize"
                       />
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-guac-line">
                 {filtered.map((r, idx) => {
                   const isExpanded = expandedId === r.id
                   // Soft fade-in keyed on receipt id. New rows from
@@ -1378,51 +1424,39 @@ export default function ReceiptsPage() {
                       <tr
                         onClick={() => router.push(`/receipts/${r.id}`)}
                         style={animStyle}
-                        className={`hover:bg-blue-50/40 cursor-pointer transition-colors anim-fadeup ${selected.has(r.id) ? 'bg-blue-50/60' : ''}`}>
+                        className={`hover:bg-[#F7FBF1] cursor-pointer transition-colors anim-fadeup ${selected.has(r.id) ? 'bg-guac-50/60' : ''}`}>
                         <td className="pl-4 pr-2 py-1" onClick={e => e.stopPropagation()}>
                           <input type="checkbox" className="w-4 h-4 rounded cursor-pointer" checked={selected.has(r.id)}
                             onChange={() => toggleOne(r.id)} aria-label={`Select ${r.store_name}`} />
                         </td>
-                        <td className="px-4 py-1" onClick={e => e.stopPropagation()}>
-                          {(() => {
-                            const itemCount = Array.isArray(r.receipt_items) ? r.receipt_items.length : 0
-                            const canExpand = itemCount > 0
-                            // Both branches use the SAME flex layout with a 12px chevron slot
-                            // so the receipt-id text starts at the same x-coordinate whether
-                            // the row has line items or not. Non-expandable rows render an
-                            // invisible spacer in place of the chevron.
-                            const slot = canExpand
-                              ? (isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />)
-                              : <span aria-hidden="true" style={{ display: 'inline-block', width: 12, height: 12 }} />
-                            if (!canExpand) {
-                              return (
-                                <span className="inline-flex items-center gap-1 text-xs text-gray-400 px-2 py-1" title="No line items">
-                                  {slot}
-                                  {r.id?.slice(0, 8) || '—'}
-                                </span>
-                              )
-                            }
-                            return (
-                              <button
-                                type="button"
-                                onClick={() => toggleExpanded(r.id)}
-                                className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
-                                title={`Click to show ${itemCount} line item${itemCount === 1 ? '' : 's'}`}>
-                                {slot}
-                                {r.id?.slice(0, 8) || '—'}
-                                <span className="ml-1 text-[10px] text-gray-400">·{itemCount}</span>
-                              </button>
-                            )
-                          })()}
-                        </td>
-                        <td className="px-4 py-1">
-                          {/* Display canonicalized name ("Costco" instead of
-                              "COSTCO WHOLESALE" / "Costco Wholesale"). The
-                              underlying receipts.store_name still stores the
-                              raw printed merchant string; this is purely a
-                              presentation layer. The nightly normalize-stores
-                              cron eventually rewrites the DB to match. */}
-                          <div className="text-blue-700 hover:underline">{displayStoreName(r.store_name)}</div>
+                        <td className="px-4 py-2">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            {/* Real brand logo when resolvable, else the
+                                avocado initial tile. */}
+                            <StoreAvatar name={r.store_name} />
+                            <div className="min-w-0">
+                              {/* Canonicalized display name; the raw printed
+                                  receipts.store_name is still stored in the DB. */}
+                              <div className="text-[#14241A] text-sm font-medium truncate">{titleCaseStore(r.store_name)}</div>
+                              {/* Receipt id sits beneath the name (mockup layout).
+                                  With line items it doubles as the inline expand
+                                  toggle; otherwise it's plain mono text. */}
+                              {(() => {
+                                const itemCount = Array.isArray(r.receipt_items) ? r.receipt_items.length : 0
+                                if (itemCount > 0) {
+                                  return (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => { e.stopPropagation(); toggleExpanded(r.id) }}
+                                      title={`Click to show ${itemCount} line item${itemCount === 1 ? '' : 's'}`}
+                                      className="inline-flex items-center gap-1 font-mono text-[11px] text-[#B3BEB2] hover:text-guac-700 transition-colors">
+                                      {isExpanded ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
+                                      {r.id?.slice(0, 8) || '—'}
+                                    </button>
+                                  )
+                                }
+                                return <div className="font-mono text-[11px] text-[#B3BEB2]">{r.id?.slice(0, 8) || '—'}</div>
+                              })()}
                           <div className="flex items-center gap-1 mt-0.5 flex-wrap">
                             {(() => {
                               const bank = bankInfoFor(r)
@@ -1440,63 +1474,59 @@ export default function ReceiptsPage() {
                                   <button
                                     type="button"
                                     onClick={e => { e.stopPropagation(); handleUnreconcile(r.id) }}
-                                    className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-100 transition-colors"
+                                    className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-guac-50 text-guac-700 border border-guac-line hover:bg-rose-50 hover:text-rose-700 hover:border-rose-100 transition-colors"
                                     title={bank ? `Reconciled with ${stmtTooltip} — click to unlink` : 'Reconciled — click to unlink'}
                                   >
-                                    <Link2 size={10} /> Reconciled{!r.from_statement && bankLabel ? <span className="text-emerald-600 font-normal">· {bankLabel}</span> : null}
+                                    <Link2 size={10} /> Reconciled{!r.from_statement && bankLabel ? <span className="text-guac-600 font-normal">· {bankLabel}</span> : null}
                                   </button>
                                 )}
                               </>
                             })()}
                           </div>
+                            </div>
+                          </div>
                         </td>
-                        <td className="px-4 py-1" onClick={e => e.stopPropagation()}>
+                        <td className="px-4 py-2" onClick={e => e.stopPropagation()}>
                           <CategoryPicker
-                            size="xs"
+                            size="sm"
+                            hideEmoji
+                            soft
                             value={r.category || ''}
                             onChange={slug => handleRowCategoryChange(r.id, slug)}
                           />
                         </td>
-                        <td className="px-4 py-1 text-gray-500 whitespace-nowrap">{formatDateShort(r.date)}</td>
-                        <td className="px-4 py-1">${parseFloat(r.total_amount || 0).toFixed(2)}</td>
-                        <td className="px-4 py-1 text-gray-500">${parseFloat(r.tax_paid || 0).toFixed(2)}</td>
-                        <td className="px-4 py-1 text-gray-400 text-xs">{r.reward_no || '—'}</td>
-                        <td className="px-4 py-1">
-                          <span className={r.business_purchase ? 'badge-blue' : 'badge-gray'}>
-                            {r.business_purchase ? 'Yes' : 'No'}
-                          </span>
+                        <td className="px-4 py-2 text-[#6B7A6E] whitespace-nowrap">{formatDayMonth(r.date)}</td>
+                        <td className="px-4 py-2 text-right text-sm font-medium text-[#14241A]">${parseFloat(r.total_amount || 0).toFixed(2)}</td>
+                        <td className="px-4 py-2 text-right text-[#9AA89E]">${parseFloat(r.tax_paid || 0).toFixed(2)}</td>
+                        <td className="px-4 py-2 text-center">
+                          {r.business_purchase
+                            ? <span className="inline-flex items-center text-[11px] font-extrabold text-[#1F8A3D] bg-[#E9F5DD] px-2 py-0.5 rounded-full">Biz</span>
+                            : <span className="text-gray-300">—</span>}
                         </td>
-                        <td className="px-4 py-1" onClick={e => e.stopPropagation()}>
-                          {r.receipt_link ? (
-                            <a href={r.receipt_link} target="_blank" rel="noreferrer" className="text-blue-500 hover:text-blue-700">
-                              <Download size={15} />
-                            </a>
-                          ) : '—'}
-                        </td>
-                        <td className="px-4 py-1" onClick={e => e.stopPropagation()}>
-                          <div className="flex gap-1.5">
+                        <td className="px-4 py-2" onClick={e => e.stopPropagation()}>
+                          <div className="flex items-center justify-end gap-0.5 text-[#A6B3A9]">
                             <Link href={`/receipts/${r.id}`} aria-label="View"
-                              className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 hover:bg-emerald-200 hover:scale-110 active:scale-95 transition-all flex items-center justify-center shadow-sm">
-                              <Eye size={12} />
+                              className="w-7 h-7 rounded-lg hover:bg-guac-50 hover:text-guac-700 transition-colors flex items-center justify-center">
+                              <Eye size={15} />
                             </Link>
                             <button
                               onClick={() => handleReparse(r.id, r.store_name)}
                               aria-label="Re-parse this receipt"
                               title="Re-parse this receipt from the source email (only works for email-forwarded receipts)"
                               disabled={reparsing.has(r.id)}
-                              className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 hover:bg-indigo-200 hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center shadow-sm">
-                              <RefreshCw size={11} className={reparsing.has(r.id) ? 'animate-spin' : ''} />
+                              className="w-7 h-7 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center">
+                              <RefreshCw size={14} className={reparsing.has(r.id) ? 'animate-spin' : ''} />
                             </button>
                             <button onClick={() => handleDelete(r.id)} aria-label="Delete"
-                              className="w-6 h-6 rounded-full bg-rose-100 text-rose-600 hover:bg-rose-200 hover:scale-110 active:scale-95 transition-all flex items-center justify-center shadow-sm">
-                              <Trash2 size={12} />
+                              className="w-7 h-7 rounded-lg hover:bg-rose-50 hover:text-rose-600 transition-colors flex items-center justify-center">
+                              <Trash2 size={15} />
                             </button>
                           </div>
                         </td>
                       </tr>
                       {isExpanded && (
-                        <tr className="bg-gray-50/50">
-                          <td colSpan={10} className="px-6 py-3">
+                        <tr className="bg-[#F7FBF1]">
+                          <td colSpan={8} className="px-6 py-3">
                             <ReceiptLineItems receiptId={r.id} />
                           </td>
                         </tr>
@@ -1548,7 +1578,7 @@ export default function ReceiptsPage() {
                         </div>
                       )}
                       <table className="w-full">
-                        <thead className="bg-gray-100 text-[10px] uppercase text-gray-500">
+                        <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
                           <tr>
                             <th className="px-2 py-1.5 text-center w-12">Keep</th>
                             <th className="px-2 py-1.5 text-center w-14">Delete</th>
@@ -1556,12 +1586,12 @@ export default function ReceiptsPage() {
                             <th className="px-2 py-1.5 text-right">Why</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100">
+                        <tbody className="divide-y divide-guac-line">
                           {g.receipts.map(r => {
                             const isKeeper = sel.keeperId === r.id
                             const isDeleting = sel.deleteIds.has(r.id)
                             return (
-                              <tr key={r.id} className={isKeeper ? 'bg-emerald-50/60' : (isDeleting ? '' : 'bg-amber-50/30')}>
+                              <tr key={r.id} className={isKeeper ? 'bg-guac-50/60' : (isDeleting ? '' : 'bg-amber-50/30')}>
                                 <td className="px-2 py-1.5 text-center">
                                   <input
                                     type="radio"
@@ -1582,12 +1612,12 @@ export default function ReceiptsPage() {
                                 </td>
                                 <td className="px-2 py-1.5">
                                   <div className="flex items-center gap-1.5 flex-wrap">
-                                    <Link href={`/receipts/${r.id}`} target="_blank" className="text-blue-700 hover:underline font-mono text-[10px]">{r.id.slice(0, 8)}</Link>
+                                    <Link href={`/receipts/${r.id}`} target="_blank" className="text-guac-700 hover:underline font-mono text-[10px]">{r.id.slice(0, 8)}</Link>
                                     <span className="text-gray-700">{displayStoreName(r.store_name)}</span>
                                     {r.from_statement && <span className="inline-flex items-center text-[9px] px-1 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">🏦 Statement</span>}
-                                    {r.reconciled && <span className="inline-flex items-center text-[9px] px-1 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">🔗 Reconciled</span>}
+                                    {r.reconciled && <span className="inline-flex items-center text-[9px] px-1 py-0.5 rounded-full bg-guac-50 text-guac-700 border border-guac-line">🔗 Reconciled</span>}
                                     {r.is_return && <span className="inline-flex items-center text-[9px] px-1 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-100">Refund</span>}
-                                    {r.receipt_link && <a href={r.receipt_link} target="_blank" rel="noreferrer" className="text-blue-500 hover:text-blue-700" title="Open receipt link"><Download size={11} /></a>}
+                                    {r.receipt_link && <a href={r.receipt_link} target="_blank" rel="noreferrer" className="text-guac-600 hover:text-guac-700" title="Open receipt link"><Download size={11} /></a>}
                                   </div>
                                   <div className="text-[10px] text-gray-400 mt-0.5">tax ${Number(r.tax_paid || 0).toFixed(2)} · created {(r.created_at || '').slice(0,10)}</div>
                                 </td>
@@ -1690,11 +1720,11 @@ function ReceiptLineItems({ receiptId }) {
       )
     }
     return (
-      <div className="flex items-center gap-2 py-2 px-3 rounded-xl bg-emerald-50 border border-emerald-200">
+      <div className="flex items-center gap-2 py-2 px-3 rounded-xl bg-guac-50 border border-guac-line2">
         <span className="text-lg">🥑</span>
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-bold text-emerald-900">Nothing chopped yet</p>
-          <p className="text-[11px] text-emerald-700">Open the receipt to add items, or re-scan a clearer photo so Guac-AI can pull them in.</p>
+          <p className="text-xs font-bold text-guac-ink">Nothing chopped yet</p>
+          <p className="text-[11px] text-guac-700">Open the receipt to add items, or re-scan a clearer photo so Guac-AI can pull them in.</p>
         </div>
       </div>
     )
@@ -1780,8 +1810,8 @@ function ReceiptLineItems({ receiptId }) {
           {nonReturnableLabel} — return option hidden
         </div>
       )}
-      <table className="w-full text-xs">
-        <thead className="bg-gray-100/70 text-gray-500 uppercase">
+      <table className="w-full text-sm">
+        <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
           <tr>
             <th className="px-3 py-0.5 text-left">SKU</th>
             <th className="px-3 py-0.5 text-left">Model</th>
@@ -1794,7 +1824,7 @@ function ReceiptLineItems({ receiptId }) {
             <th className="px-3 py-0.5 text-left w-12">Cart</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-50">
+        <tbody className="divide-y divide-guac-line">
           {items.map(it => {
             // Per-item non-returnable check.
             //   'perishable' = fresh produce / dairy / raw meat / eggs /
@@ -1832,7 +1862,7 @@ function ReceiptLineItems({ receiptId }) {
               <td className="px-3 py-0.5 text-gray-400 text-[11px]">{it.sku || '—'}</td>
               <td className="px-3 py-0.5 text-gray-400 text-[11px]">{it.model || '—'}</td>
               <td className="px-3 py-0.5">
-                <Link href={`/items/${it.id}`} className="text-blue-700 hover:underline" title="Item details + purchase history">
+                <Link href={`/items/${it.id}`} className="text-[#14532D] font-medium hover:underline" title="Item details + purchase history">
                   {it.item_name}
                 </Link>
               </td>
@@ -1872,7 +1902,7 @@ function ReceiptLineItems({ receiptId }) {
                     ? 'inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-100'
                     : (p.eligible === false
                       ? 'inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200'
-                      : 'inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100')
+                      : 'inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-guac-50 text-guac-700 border border-guac-line')
                   return (
                     <span className={cls} title={tip}>
                       {p.policy_id || 'default'}
@@ -1930,7 +1960,7 @@ function ReceiptLineItems({ receiptId }) {
                       return (
                         <Link
                           href={`/receipts/${match.id}`}
-                          className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100"
+                          className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-guac-50 text-guac-700 border border-guac-line hover:bg-guac-100"
                           title={`Reconciled with ${match.store_name || 'receipt'} on ${match.date}`}
                         >
                           ✓ Reconciled
@@ -1940,7 +1970,7 @@ function ReceiptLineItems({ receiptId }) {
                     return (
                       <Link
                         href={`/receipts/${match.id}`}
-                        className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-100 hover:bg-blue-100"
+                        className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-md bg-guac-50 text-guac-700 border border-blue-100 hover:bg-guac-100"
                         title={`Open the matching receipt — ${match.store_name || ''} on ${match.date}`}
                       >
                         <Eye size={11} /> View receipt

@@ -87,8 +87,8 @@ export default function EmailAliasPicker({ userId }) {
   return (
     <div className="card space-y-4">
       <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-100 to-lime-100 ring-1 ring-emerald-200 flex items-center justify-center shrink-0">
-          <Mail size={20} className="text-emerald-700" />
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-100 to-lime-100 ring-1 ring-guac-100 flex items-center justify-center shrink-0">
+          <Mail size={20} className="text-guac-700" />
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-gray-900">Your GetGuac email</h3>
@@ -100,52 +100,52 @@ export default function EmailAliasPicker({ userId }) {
 
       {/* Currently-claimed alias */}
       {currentFull ? (
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4 space-y-3">
+        <div className="rounded-xl border border-guac-line2 bg-guac-50/60 p-4 space-y-3">
           <div>
-            <p className="text-[10px] uppercase tracking-wider font-bold text-emerald-700">Personal mailbox</p>
+            <p className="text-[10px] uppercase tracking-wider font-bold text-guac-700">Personal mailbox</p>
             <div className="flex items-center gap-2 mt-1">
-              <span className="font-mono text-base font-bold text-emerald-900 truncate">{currentFull}</span>
+              <span className="font-mono text-base font-bold text-guac-ink truncate">{currentFull}</span>
               <button
                 type="button"
                 onClick={() => copyAlias(currentFull)}
-                className="ml-auto text-emerald-700 hover:text-emerald-900 p-1 rounded-md hover:bg-emerald-100/60"
+                className="ml-auto text-guac-700 hover:text-guac-ink p-1 rounded-md hover:bg-guac-100/60"
                 title="Copy"
               >
                 <Copy size={14} />
               </button>
             </div>
-            <p className="text-[10px] text-emerald-700/70 mt-1">Read &amp; send mail right inside GetGuac. Pause inbox sync any time.</p>
+            <p className="text-[10px] text-guac-700/70 mt-1">Read &amp; send mail right inside GetGuac. Pause inbox sync any time.</p>
           </div>
-          <div className="border-t border-emerald-200/70" />
+          <div className="border-t border-guac-100/70" />
           <div>
-            <p className="text-[10px] uppercase tracking-wider font-bold text-emerald-700 flex items-center gap-1">
+            <p className="text-[10px] uppercase tracking-wider font-bold text-guac-700 flex items-center gap-1">
               <span>🥑</span> Receipts hook
             </p>
             <div className="flex items-center gap-2 mt-1">
-              <span className="font-mono text-sm font-bold text-emerald-900 truncate">
+              <span className="font-mono text-sm font-bold text-guac-ink truncate">
                 {profile.email_alias}+g@{EMAIL_DOMAIN}
               </span>
               <button
                 type="button"
                 onClick={() => copyAlias(`${profile.email_alias}+g@${EMAIL_DOMAIN}`)}
-                className="ml-auto text-emerald-700 hover:text-emerald-900 p-1 rounded-md hover:bg-emerald-100/60"
+                className="ml-auto text-guac-700 hover:text-guac-ink p-1 rounded-md hover:bg-guac-100/60"
                 title="Copy"
               >
                 <Copy size={14} />
               </button>
             </div>
-            <p className="text-[10px] text-emerald-700/80 mt-1">
+            <p className="text-[10px] text-guac-700/80 mt-1">
               Forward order confirmations here — GetGuac auto-creates the receipt within 10 minutes.
             </p>
           </div>
           {profile.alias_set_at && (
-            <p className="text-[10px] text-emerald-700/70">
+            <p className="text-[10px] text-guac-700/70">
               Claimed {new Date(profile.alias_set_at).toLocaleDateString()}
             </p>
           )}
           <Link
             href="/inbox"
-            className="inline-flex items-center gap-2 text-xs font-bold text-emerald-800 hover:text-emerald-900 hover:underline"
+            className="inline-flex items-center gap-2 text-xs font-bold text-guac-700 hover:text-guac-ink hover:underline"
           >
             Open my GetGuac Inbox →
           </Link>
@@ -163,7 +163,7 @@ export default function EmailAliasPicker({ userId }) {
       <div>
         <label className="label">{currentFull ? 'Change to a new address' : 'Pick your address'}</label>
         <div className="flex items-stretch gap-2">
-          <div className="flex-1 flex items-stretch rounded-xl border-2 border-gray-200 focus-within:border-emerald-400 transition-colors overflow-hidden">
+          <div className="flex-1 flex items-stretch rounded-xl border-2 border-gray-200 focus-within:border-guac-600 transition-colors overflow-hidden">
             <input
               className="flex-1 px-3 py-2 text-sm bg-transparent outline-none"
               value={draft}
@@ -200,7 +200,7 @@ export default function EmailAliasPicker({ userId }) {
           ) : checking ? (
             <span className="text-gray-500 inline-flex items-center gap-1"><Loader2 size={11} className="animate-spin" /> Checking…</span>
           ) : status === 'available' ? (
-            <span className="text-emerald-700 font-semibold inline-flex items-center gap-1"><Check size={12} /> {draftNorm}@{EMAIL_DOMAIN} is available</span>
+            <span className="text-guac-700 font-semibold inline-flex items-center gap-1"><Check size={12} /> {draftNorm}@{EMAIL_DOMAIN} is available</span>
           ) : status === 'taken' ? (
             <span className="text-rose-700 font-semibold inline-flex items-center gap-1"><X size={12} /> Already taken</span>
           ) : status === 'reserved' ? (
@@ -216,7 +216,7 @@ export default function EmailAliasPicker({ userId }) {
         {checkResult?.suggestions?.length > 0 && (
           <div className="mt-3">
             <p className="text-[10px] uppercase tracking-wider font-bold text-gray-500 mb-1.5 flex items-center gap-1">
-              <Sparkles size={11} className="text-emerald-500" /> Available alternatives
+              <Sparkles size={11} className="text-guac-600" /> Available alternatives
             </p>
             <div className="flex flex-wrap gap-1.5">
               {checkResult.suggestions.map(s => (
@@ -224,7 +224,7 @@ export default function EmailAliasPicker({ userId }) {
                   key={s}
                   type="button"
                   onClick={() => setDraft(s)}
-                  className="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 transition-colors"
+                  className="px-2.5 py-1 rounded-full text-xs font-semibold bg-guac-50 text-guac-700 border border-guac-line2 hover:bg-guac-100 transition-colors"
                   title={`Use ${s}@${EMAIL_DOMAIN}`}
                 >
                   {s}

@@ -27,7 +27,7 @@ export default function SuccessPop({ trigger = false, size = 28, color = 'emeral
 
   const ringColor =
     color === 'amber' ? 'bg-amber-500' :
-    color === 'rose'  ? 'bg-rose-500'  : 'bg-emerald-500'
+    color === 'rose'  ? 'bg-rose-500'  : 'bg-guac-600'
 
   return (
     <span

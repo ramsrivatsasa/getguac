@@ -57,7 +57,7 @@ export default function CouponsPageClient() {
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           placeholder="Find a store…"
-          className="w-full pl-11 pr-4 py-3 rounded-full border border-emerald-200 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+          className="w-full pl-11 pr-4 py-3 rounded-full border border-guac-line2 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-guac-600"
         />
       </div>
 
@@ -83,7 +83,7 @@ function StoreCoupons({ s, st }) {
           <h2 className="font-black text-gray-900 leading-tight">{s.name} coupons</h2>
           <p className="text-[11px] text-gray-400">{s.category}</p>
         </div>
-        <a href={s.dealsUrl} target="_blank" rel="noreferrer" className="shrink-0 inline-flex items-center gap-1 text-xs font-bold text-emerald-700 hover:underline">
+        <a href={s.dealsUrl} target="_blank" rel="noreferrer" className="shrink-0 inline-flex items-center gap-1 text-xs font-bold text-guac-700 hover:underline">
           Official deals <ExternalLink size={12} />
         </a>
       </div>
@@ -97,7 +97,7 @@ function StoreCoupons({ s, st }) {
           </div>
         )}
         {st.status === 'error' && (
-          <p className="text-sm text-gray-400 px-1 py-2">Couldn’t load coupons right now. <a className="text-emerald-700 font-semibold hover:underline" href={s.dealsUrl} target="_blank" rel="noreferrer">See {s.name} deals →</a></p>
+          <p className="text-sm text-gray-400 px-1 py-2">Couldn’t load coupons right now. <a className="text-guac-700 font-semibold hover:underline" href={s.dealsUrl} target="_blank" rel="noreferrer">See {s.name} deals →</a></p>
         )}
         {st.status === 'done' && coupons.length === 0 && (
           <p className="text-sm text-gray-400 px-1 py-2">No coupon pages found right now.</p>
@@ -115,13 +115,13 @@ function StoreCoupons({ s, st }) {
 function CouponCard({ c }) {
   return (
     <a href={c.url} target="_blank" rel="noreferrer"
-      className="block rounded-xl border border-gray-100 hover:border-emerald-200 hover:bg-emerald-50/40 p-3 transition-colors">
+      className="block rounded-xl border border-gray-100 hover:border-guac-line2 hover:bg-guac-50/40 p-3 transition-colors">
       <div className="flex items-start gap-2">
-        <Ticket size={15} className="text-emerald-600 mt-0.5 shrink-0" />
+        <Ticket size={15} className="text-guac-600 mt-0.5 shrink-0" />
         <div className="min-w-0 flex-1">
           <p className="font-semibold text-gray-900 text-sm leading-snug line-clamp-2">{c.title}</p>
           {c.snippet && <p className="text-[11px] text-gray-500 mt-0.5 line-clamp-2">{c.snippet}</p>}
-          <p className="text-[10px] text-emerald-700 font-semibold mt-1 inline-flex items-center gap-1">
+          <p className="text-[10px] text-guac-700 font-semibold mt-1 inline-flex items-center gap-1">
             <Globe size={10} /> {c.source}{c.date ? ` · ${c.date}` : ''}
           </p>
         </div>

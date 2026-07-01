@@ -17,6 +17,7 @@ import { getSavedSearches, saveSearch, removeSearch, getSavedStores, toggleSaved
 import { STORE_CATALOG, STORE_CATEGORIES } from '../lib/storeCatalog'
 import SellTab from './SellTab'
 import AdSlot from './AdSlot'
+import { StoreLogo } from './StoreLogo'
 
 const TABS = [
   { key: 'deals',  label: 'Deals',  icon: Tag,   live: true  },
@@ -38,7 +39,7 @@ function DealCard({ r }) {
       href={href}
       target="_blank"
       rel="noreferrer"
-      className="group text-left bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-lg hover:border-emerald-200 hover:-translate-y-0.5 transition-all flex flex-col"
+      className="group text-left bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-lg hover:border-guac-line2 hover:-translate-y-0.5 transition-all flex flex-col"
     >
       <div className="relative flex items-center justify-center bg-gray-50" style={{ aspectRatio: '1.1 / 1' }}>
         {off > 0 && (
@@ -53,7 +54,7 @@ function DealCard({ r }) {
         ) : (
           <span className="text-5xl opacity-60">🛒</span>
         )}
-        <span className="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow opacity-0 group-hover:opacity-100 transition-opacity">
+        <span className="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-guac-700 text-white flex items-center justify-center shadow opacity-0 group-hover:opacity-100 transition-opacity">
           <ExternalLink size={14} />
         </span>
       </div>
@@ -62,7 +63,7 @@ function DealCard({ r }) {
         <div className="mt-auto flex items-end justify-between gap-2">
           <div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-lg font-extrabold text-emerald-700 tabular-nums">
+              <span className="text-lg font-extrabold text-guac-700 tabular-nums">
                 {r.price > 0 ? `$${Number(r.price).toFixed(2)}` : '—'}
               </span>
               {r.original_price > r.price && (
@@ -173,7 +174,7 @@ export default function MarketplaceClient({ initialQuery = '', initialTab = 'dea
             : tab === 'sell' ? 'Search items for sale…'
             : 'Search any product or store — e.g. “AirPods Pro”'
           }
-          className={`w-full pl-12 ${tab === 'deals' ? 'pr-28' : 'pr-5'} py-4 rounded-full border border-emerald-200 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 text-base`}
+          className={`w-full pl-12 ${tab === 'deals' ? 'pr-28' : 'pr-5'} py-4 rounded-full border border-guac-line2 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-guac-600 text-base`}
           autoComplete="off"
         />
         {tab === 'deals' && (
@@ -189,12 +190,12 @@ export default function MarketplaceClient({ initialQuery = '', initialTab = 'dea
       {/* Saved searches (cookie — no account) */}
       {tab === 'deals' && saved.length > 0 && (
         <div className="max-w-2xl mx-auto mt-3 flex items-center gap-2 flex-wrap">
-          <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700">
+          <span className="inline-flex items-center gap-1 text-xs font-semibold text-guac-700">
             <Bookmark size={12} /> Saved:
           </span>
           {saved.map((s) => (
-            <span key={s.q} className="group inline-flex items-center gap-1 pl-3 pr-1.5 py-1 rounded-full bg-white border border-emerald-100 text-xs font-semibold text-gray-700 shadow-sm">
-              <button onClick={() => runSearch(s.q)} className="hover:text-emerald-700">{s.q}</button>
+            <span key={s.q} className="group inline-flex items-center gap-1 pl-3 pr-1.5 py-1 rounded-full bg-white border border-guac-line text-xs font-semibold text-gray-700 shadow-sm">
+              <button onClick={() => runSearch(s.q)} className="hover:text-guac-700">{s.q}</button>
               <button onClick={() => onRemove(s.q)} aria-label={`Remove ${s.q}`} className="w-4 h-4 rounded-full flex items-center justify-center text-gray-300 hover:text-rose-500 hover:bg-rose-50">
                 <X size={11} />
               </button>
@@ -214,7 +215,7 @@ export default function MarketplaceClient({ initialQuery = '', initialTab = 'dea
               key={t.key}
               onClick={() => setTab(t.key)}
               className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold transition-all ${
-                active ? 'bg-emerald-600 text-white shadow' : 'bg-white text-gray-600 border border-gray-200 hover:border-emerald-200 hover:text-emerald-700'
+                active ? 'bg-guac-700 text-white shadow' : 'bg-white text-gray-600 border border-gray-200 hover:border-guac-line2 hover:text-guac-700'
               }`}
             >
               <Icon size={15} /> {t.label}
@@ -303,7 +304,7 @@ function DealsTab({ status, error, results, meta, query, onRetry }) {
   return (
     <>
       {meta?.enhancement && meta.enhancement.enhanced && meta.enhancement.enhanced !== meta.enhancement.original && (
-        <p className="text-center text-xs text-emerald-700 mb-4">
+        <p className="text-center text-xs text-guac-700 mb-4">
           <Sparkles size={12} className="inline -mt-0.5" /> Refined to <span className="font-semibold">{meta.enhancement.enhanced}</span>
         </p>
       )}
@@ -338,7 +339,7 @@ function StoresTab({ query, category, setCategory, saved, onToggle, onFindDeals,
             key={c}
             onClick={() => setCategory(c)}
             className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
-              category === c ? 'bg-emerald-600 text-white shadow' : 'bg-white text-gray-600 border border-gray-200 hover:border-emerald-200 hover:text-emerald-700'
+              category === c ? 'bg-guac-700 text-white shadow' : 'bg-white text-gray-600 border border-gray-200 hover:border-guac-line2 hover:text-guac-700'
             }`}
           >
             {c}
@@ -366,7 +367,7 @@ function StoresTab({ query, category, setCategory, saved, onToggle, onFindDeals,
 
 function StoreCard({ s, saved, onToggle, onFindDeals, onCoupons }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-lg hover:border-emerald-200 transition-all flex flex-col">
+    <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-lg hover:border-guac-line2 transition-all flex flex-col">
       <div className="relative flex items-center justify-center" style={{ aspectRatio: '1.7 / 1', backgroundColor: s.color }}>
         <span className="text-3xl drop-shadow-sm">{s.emoji}</span>
         <span className="absolute bottom-1.5 left-2.5 text-white font-black text-sm drop-shadow">{s.name}</span>
@@ -381,19 +382,19 @@ function StoreCard({ s, saved, onToggle, onFindDeals, onCoupons }) {
         </button>
       </div>
       <div className="p-3 flex flex-col gap-1.5 flex-1">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">{s.category}</span>
+        <span className="text-[10px] font-bold uppercase tracking-wider text-guac-700">{s.category}</span>
         <p className="text-[11px] text-gray-500">Log receipts here to earn 🥑 GuacMoney.</p>
         <div className="mt-auto flex items-center gap-2 pt-1">
           <button
             onClick={onFindDeals}
-            className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 active:scale-95 transition-all"
+            className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-guac-700 text-white text-xs font-bold hover:bg-guac-700 active:scale-95 transition-all"
           >
             <Tag size={12} /> Find deals
           </button>
           <button
             onClick={onCoupons}
             title={`Find ${s.name} coupons`}
-            className="inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-white border border-emerald-200 text-emerald-700 text-xs font-bold hover:bg-emerald-50 active:scale-95 transition-all"
+            className="inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-white border border-guac-line2 text-guac-700 text-xs font-bold hover:bg-guac-50 active:scale-95 transition-all"
           >
             <Ticket size={12} /> Coupons
           </button>
@@ -412,11 +413,9 @@ function CouponsModal({ state, onClose }) {
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[88vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="flex items-center gap-3 p-4 border-b border-gray-100">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0" style={{ backgroundColor: store.color }}>
-            <span className="drop-shadow-sm">{store.emoji}</span>
-          </div>
+          <StoreLogo storeName={store.name} fallbackEmoji={store.emoji} size={40} />
           <div className="min-w-0 flex-1">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 flex items-center gap-1"><Ticket size={12} /> Coupons</div>
+            <div className="text-[10px] font-bold uppercase tracking-wider text-guac-700 flex items-center gap-1"><Ticket size={12} /> Coupons</div>
             <div className="font-bold text-gray-900 truncate">{store.name}</div>
           </div>
           <button onClick={onClose} aria-label="Close" className="text-gray-400 hover:text-gray-700 shrink-0"><X size={20} /></button>
@@ -426,7 +425,7 @@ function CouponsModal({ state, onClose }) {
         <div className="flex-1 overflow-y-auto p-4">
           {status === 'loading' && (
             <div className="flex flex-col items-center gap-2 py-12 text-gray-500">
-              <Loader2 size={28} className="animate-spin text-emerald-500" />
+              <Loader2 size={28} className="animate-spin text-guac-600" />
               <p className="text-sm font-semibold">Searching Google for {store.name} coupons…</p>
             </div>
           )}
@@ -450,13 +449,13 @@ function CouponsModal({ state, onClose }) {
             <div className="space-y-2">
               {coupons.map((c, i) => (
                 <a key={i} href={c.url} target="_blank" rel="noreferrer"
-                  className="block rounded-xl border border-gray-100 hover:border-emerald-200 hover:bg-emerald-50/40 p-3 transition-colors">
+                  className="block rounded-xl border border-gray-100 hover:border-guac-line2 hover:bg-guac-50/40 p-3 transition-colors">
                   <div className="flex items-start gap-2">
-                    <Ticket size={15} className="text-emerald-600 mt-0.5 shrink-0" />
+                    <Ticket size={15} className="text-guac-600 mt-0.5 shrink-0" />
                     <div className="min-w-0 flex-1">
                       <p className="font-semibold text-gray-900 text-sm leading-snug line-clamp-2">{c.title}</p>
                       {c.snippet && <p className="text-[12px] text-gray-500 mt-0.5 line-clamp-2">{c.snippet}</p>}
-                      <p className="text-[10px] text-emerald-700 font-semibold mt-1 inline-flex items-center gap-1">
+                      <p className="text-[10px] text-guac-700 font-semibold mt-1 inline-flex items-center gap-1">
                         <Globe size={10} /> {c.source}{c.date ? ` · ${c.date}` : ''}
                       </p>
                     </div>
@@ -471,7 +470,7 @@ function CouponsModal({ state, onClose }) {
         {/* Footer */}
         <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between gap-2">
           <p className="text-[10px] text-gray-400 leading-tight">Sourced from the web — verify the code at checkout.</p>
-          <a href={store.dealsUrl} target="_blank" rel="noreferrer" className="shrink-0 inline-flex items-center gap-1 text-xs font-bold text-emerald-700 hover:underline">
+          <a href={store.dealsUrl} target="_blank" rel="noreferrer" className="shrink-0 inline-flex items-center gap-1 text-xs font-bold text-guac-700 hover:underline">
             Official deals <ExternalLink size={12} />
           </a>
         </div>
@@ -484,10 +483,10 @@ function RegisterCta() {
   return (
     <div className="mt-10 rounded-3xl bg-gradient-to-br from-emerald-600 to-lime-500 text-white p-6 sm:p-8 text-center shadow-lg">
       <h3 className="text-xl sm:text-2xl font-black">Get price-drop alerts on what you save</h3>
-      <p className="text-emerald-50 mt-1.5 max-w-lg mx-auto">
+      <p className="text-guac-100 mt-1.5 max-w-lg mx-auto">
         Create a free account and GetGuac watches these searches for you — pinging you the moment a price drops.
       </p>
-      <Link href="/register" className="inline-flex items-center gap-1.5 mt-4 bg-white text-emerald-700 font-bold px-6 py-3 rounded-full hover:scale-105 active:scale-95 transition-transform">
+      <Link href="/register" className="inline-flex items-center gap-1.5 mt-4 bg-white text-guac-700 font-bold px-6 py-3 rounded-full hover:scale-105 active:scale-95 transition-transform">
         🥑 Get started free <ArrowRight size={16} />
       </Link>
     </div>

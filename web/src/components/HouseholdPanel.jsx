@@ -126,12 +126,12 @@ function CreateForm({ onCreated }) {
     }
   }
   return (
-    <form onSubmit={submit} className="card border-emerald-100 bg-emerald-50/30 p-4">
+    <form onSubmit={submit} className="card border-guac-line bg-guac-50/30 p-4">
       <div className="flex items-center gap-2 mb-2">
-        <Home size={16} className="text-emerald-700" />
-        <h3 className="font-bold text-emerald-900 text-sm">Start a household</h3>
+        <Home size={16} className="text-guac-700" />
+        <h3 className="font-bold text-guac-ink text-sm">Start a household</h3>
       </div>
-      <p className="text-xs text-emerald-800/80 mb-3">
+      <p className="text-xs text-guac-700/80 mb-3">
         Share a shopping list + a quick chat with whoever lives with you. Receipts + analytics stay personal — only the list and chat are shared.
       </p>
       <div className="flex gap-2">
@@ -172,14 +172,14 @@ function Header({ household, onChanged }) {
   return (
     <div className="card flex items-center justify-between gap-3 p-3">
       <div className="flex items-center gap-2.5 min-w-0">
-        <div className="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
-          <Home size={16} className="text-emerald-700" />
+        <div className="w-9 h-9 rounded-full bg-guac-100 flex items-center justify-center shrink-0">
+          <Home size={16} className="text-guac-700" />
         </div>
         <div className="min-w-0">
           <p className="font-bold text-gray-900 truncate">{household.name}</p>
           <p className="text-[11px] text-gray-500">
             {household.members.length} member{household.members.length === 1 ? '' : 's'}
-            {isOwner && <> · <span className="text-emerald-700">you own this</span></>}
+            {isOwner && <> · <span className="text-guac-700">you own this</span></>}
           </p>
         </div>
       </div>
@@ -252,14 +252,14 @@ function Members({ household, onChanged }) {
         {household.members.map(m => (
           <li key={m.user_id} className="flex items-center justify-between gap-2 text-xs py-1">
             <span className="flex items-center gap-2 min-w-0">
-              <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[11px] flex items-center justify-center shrink-0">
+              <span className="w-6 h-6 rounded-full bg-guac-100 text-guac-700 font-bold text-[11px] flex items-center justify-center shrink-0">
                 {initialFor(names.get(m.user_id), m.user_id)}
               </span>
               <span className="text-gray-700 truncate">{formatName(names.get(m.user_id), m.user_id)}</span>
             </span>
             <div className="flex items-center gap-2 shrink-0">
               {m.role === 'owner' && (
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-guac-700 bg-guac-100 px-2 py-0.5 rounded-full">
                   <Crown size={9} /> owner
                 </span>
               )}
@@ -268,7 +268,7 @@ function Members({ household, onChanged }) {
                   type="button"
                   onClick={() => chatWith(m.user_id)}
                   title="Send a direct message"
-                  className="inline-flex items-center gap-1 text-emerald-700 hover:text-emerald-900 hover:bg-emerald-50 px-2 py-0.5 rounded-full text-[10px] font-semibold"
+                  className="inline-flex items-center gap-1 text-guac-700 hover:text-guac-ink hover:bg-guac-50 px-2 py-0.5 rounded-full text-[10px] font-semibold"
                 >
                   <MessageSquare size={11} /> Chat
                 </button>
@@ -359,7 +359,7 @@ function Chat({ householdId, memberIds }) {
         ) : (
           messages.map(m => (
             <div key={m.id} className="flex items-baseline gap-2 leading-tight">
-              <span className="text-[10px] font-semibold text-emerald-700 shrink-0">
+              <span className="text-[10px] font-semibold text-guac-700 shrink-0">
                 {formatName(names.get(m.user_id), m.user_id)}
               </span>
               <span className="text-gray-700 break-words">{m.body}</span>

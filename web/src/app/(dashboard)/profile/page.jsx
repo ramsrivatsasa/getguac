@@ -64,13 +64,13 @@ export default function ProfilePage() {
           <div className="flex items-center gap-2 flex-wrap">
             <Link
               href="/invite"
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-emerald-200 text-emerald-700 text-sm font-bold hover:bg-emerald-50 transition-colors"
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-guac-line2 text-guac-700 text-sm font-bold hover:bg-guac-50 transition-colors"
             >
               <Gift size={14} /> Invite friends
             </Link>
             <Link
               href="/connections"
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-emerald-200 text-emerald-700 text-sm font-bold hover:bg-emerald-50 transition-colors"
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-guac-line2 text-guac-700 text-sm font-bold hover:bg-guac-50 transition-colors"
             >
               <Link2 size={14} /> Connections
             </Link>
@@ -92,7 +92,7 @@ export default function ProfilePage() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-extrabold text-base">Invite friends → 3 Smash days each</p>
-            <p className="text-xs text-emerald-50/90 mt-0.5">
+            <p className="text-xs text-guac-100/90 mt-0.5">
               Share your code; you both get a 🔥 boost when they sign up.
             </p>
           </div>

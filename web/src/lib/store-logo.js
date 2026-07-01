@@ -94,19 +94,29 @@ function guessDomain(name) {
 // (free, 200s for any real domain, served from Google's CDN). The
 // image is smaller than a Clearbit wordmark — typically 32-64px
 // square — but it renders consistently and there's no rate limit.
-// Brand-logo fetching is OFF by design: the favicon lookup produced
-// wrong/low-quality logos for ambiguous or item-like names (and they
-// flashed in while loading inside the mobile WebView). Every StoreLogo
-// now renders its clean emoji tile. Flip this to re-enable the favicon
-// path — the curated map + guess logic below are kept intact.
-const USE_BRAND_LOGOS = false
+// Brand-logo fetching is ON (user request 2026-06-30): real retailer logos
+// anchor merchants when resolvable. Callers MUST keep an onError fallback
+// (StoreLogo → emoji tile; the receipts table → avocado initial tile) because
+// the favicon endpoint 404s for ambiguous / unknown names — that error path is
+// what keeps a wrong-or-missing logo from ever showing.
+const USE_BRAND_LOGOS = true
 
 export function logoUrlForStore(storeName) {
   if (!USE_BRAND_LOGOS) return null
   if (!storeName) return null
   const key = normalizeKey(storeName)
   if (!key) return null
-  const domain = KNOWN_DOMAINS[key] || guessDomain(storeName)
+  let domain = KNOWN_DOMAINS[key]
+  if (!domain) {
+    // Prefix-match against curated brands so receipt-name variants resolve to
+    // the SAME logo as the bare brand — "Lowe's Home Centers" → lowes,
+    // "Costco Wholesale #218" → costco. Longest brand key wins (so "samsclub"
+    // beats "sams"); keys < 4 chars are exact-match only to avoid false hits.
+    for (const k of Object.keys(KNOWN_DOMAINS).sort((a, b) => b.length - a.length)) {
+      if (k.length >= 4 && key.startsWith(k)) { domain = KNOWN_DOMAINS[k]; break }
+    }
+  }
+  if (!domain) domain = guessDomain(storeName)
   if (!domain) return null
   return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`
 }

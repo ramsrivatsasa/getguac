@@ -12,7 +12,7 @@ import TimeframePicker from '../../../components/TimeframePicker'
 import { CountUp, FadeUpStagger } from '../../../components/animated'
 import { TrendingUp, TrendingDown, AlertTriangle, Percent, CreditCard, Banknote, Sparkles } from 'lucide-react'
 const SEVERITY_STYLE = {
-  good:    { card: 'bg-emerald-50 border-emerald-200', label: 'text-emerald-700' },
+  good:    { card: 'bg-guac-50 border-guac-line2', label: 'text-guac-700' },
   neutral: { card: 'bg-gray-50 border-gray-200',       label: 'text-gray-700' },
   watch:   { card: 'bg-amber-50 border-amber-200',     label: 'text-amber-800' },
   warning: { card: 'bg-orange-50 border-orange-200',   label: 'text-orange-800' },
@@ -67,8 +67,8 @@ export default function GuacWizardPage() {
         subtitle="Our money wizard 🪄 One wave, no sneaky fee, charge, or leak survives the spell."
         action={
           <div className="text-right">
-            <p className="text-[10px] uppercase tracking-wider font-bold text-emerald-700">Wizard score</p>
-            <p className="text-4xl font-black text-emerald-900 leading-none">
+            <p className="text-[10px] uppercase tracking-wider font-bold text-guac-700">Wizard score</p>
+            <p className="text-4xl font-black text-guac-ink leading-none">
               <CountUp value={Number(score) || 0} duration={680} from={0} />
               <span className="text-base font-bold opacity-60"> / 100</span>
             </p>
@@ -91,7 +91,7 @@ export default function GuacWizardPage() {
 
       {/* Insights stream */}
       <div className="space-y-3">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-emerald-800 flex items-center gap-2">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-guac-700 flex items-center gap-2">
           <Sparkles size={14} className="text-amber-500" /> Insights
         </h2>
         {insights.length === 0 ? (
@@ -113,8 +113,8 @@ export default function GuacWizardPage() {
                     <p className={`font-bold ${s.label}`}>{i.title}</p>
                     {i.body && <p className="text-sm text-gray-700 mt-1">{i.body}</p>}
                     {i.action && (
-                      <p className="text-xs text-emerald-900 mt-2 font-semibold flex items-start gap-1">
-                        <span className="text-emerald-600">→</span> {i.action}
+                      <p className="text-xs text-guac-ink mt-2 font-semibold flex items-start gap-1">
+                        <span className="text-guac-600">→</span> {i.action}
                       </p>
                     )}
                   </div>
@@ -130,12 +130,12 @@ export default function GuacWizardPage() {
       {/* Per-card breakdown */}
       {accounts.length > 0 && (
         <div className="card">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-emerald-800 mb-3 flex items-center gap-2">
-            <Banknote size={14} className="text-emerald-600" /> Cost per card — {summary.periodLabel}
+          <h2 className="text-sm font-bold uppercase tracking-wider text-guac-700 mb-3 flex items-center gap-2">
+            <Banknote size={14} className="text-guac-600" /> Cost per card — {summary.periodLabel}
           </h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-[10px] text-gray-500 uppercase tracking-wide">
+              <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
                 <tr>
                   <th className="px-3 py-2 text-left">Card</th>
                   <th className="px-3 py-2 text-right">Interest paid</th>
@@ -145,9 +145,9 @@ export default function GuacWizardPage() {
                   <th className="px-3 py-2 text-right">APR</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-guac-line">
                 {accounts.map(a => (
-                  <tr key={a.key} className="hover:bg-gray-50/60">
+                  <tr key={a.key} className="hover:bg-guac-row">
                     <td className="px-3 py-2 font-medium text-gray-900">
                       {a.issuer}
                       {a.account_last4 && <span className="ml-2 font-mono text-xs text-indigo-700">••{a.account_last4}</span>}
@@ -160,8 +160,8 @@ export default function GuacWizardPage() {
                     <td className="px-3 py-2 text-right text-xs text-gray-600">{a.latestApr != null ? `${Number(a.latestApr).toFixed(2)}%` : '—'}</td>
                   </tr>
                 ))}
-                <tr className="bg-emerald-50/40 font-bold border-t-2 border-emerald-200">
-                  <td className="px-3 py-2 text-emerald-900">Total</td>
+                <tr className="bg-guac-50/40 font-bold border-t-2 border-guac-line2">
+                  <td className="px-3 py-2 text-guac-ink">Total</td>
                   <td className="px-3 py-2 text-right font-mono text-orange-800">${summary.totalInterest.toFixed(2)}</td>
                   <td className="px-3 py-2 text-right font-mono text-amber-800">${summary.totalFees.toFixed(2)}</td>
                   <td className="px-3 py-2 text-right font-mono text-sky-800">${summary.totalPayments.toFixed(2)}</td>
@@ -183,7 +183,7 @@ export default function GuacWizardPage() {
             {reasons.map((r, i) => (
               <li key={i} className="flex items-center justify-between text-xs bg-gray-50 rounded-lg px-3 py-1.5">
                 <span className="text-gray-700">{r.why}</span>
-                <span className={`font-mono font-bold ${r.label.startsWith('+') ? 'text-emerald-700' : r.label.startsWith('-') ? 'text-rose-700' : 'text-gray-600'}`}>{r.label}</span>
+                <span className={`font-mono font-bold ${r.label.startsWith('+') ? 'text-guac-700' : r.label.startsWith('-') ? 'text-rose-700' : 'text-gray-600'}`}>{r.label}</span>
               </li>
             ))}
           </ul>
@@ -206,7 +206,7 @@ const TILE_TONE = {
   orange:  { bg: 'bg-orange-50',  text: 'text-orange-800',  icon: 'text-orange-600',  border: 'border-orange-200' },
   amber:   { bg: 'bg-amber-50',   text: 'text-amber-800',   icon: 'text-amber-600',   border: 'border-amber-200' },
   rose:    { bg: 'bg-rose-50',    text: 'text-rose-800',    icon: 'text-rose-600',    border: 'border-rose-100' },
-  emerald: { bg: 'bg-emerald-50', text: 'text-emerald-800', icon: 'text-emerald-600', border: 'border-emerald-100' },
+  emerald: { bg: 'bg-guac-50', text: 'text-guac-700', icon: 'text-guac-600', border: 'border-guac-line' },
 }
 function Tile({ icon: Icon, tone, label, value, bold }) {
   const t = TILE_TONE[tone] || TILE_TONE.sky

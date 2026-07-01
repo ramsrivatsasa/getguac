@@ -202,8 +202,8 @@ export default function GuacanomicsPage() {
           <div className="inline-flex bg-gray-100 rounded-xl p-1 gap-1">
             {RANGES.map(r => (
               <button key={r.key} onClick={() => setRange(r.key)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
-                  range === r.key ? 'bg-white text-emerald-900 shadow-sm' : 'text-gray-500 hover:text-gray-800'
+                className={`px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+                  range === r.key ? 'bg-white text-guac-ink shadow-sm' : 'text-gray-500 hover:text-gray-800'
                 }`}>
                 {r.label}
               </button>
@@ -216,7 +216,7 @@ export default function GuacanomicsPage() {
         <MascotLoading label="Loading insights…" />
       ) : receipts.length === 0 ? (
         <div className="card py-12 text-center text-gray-400 flex flex-col items-center gap-3">
-          <p>No receipts yet. <Link href="/receipts" className="text-blue-600 hover:underline">Add some</Link> to unlock your spending picture.</p>
+          <p>No receipts yet. <Link href="/receipts" className="text-guac-600 hover:underline">Add some</Link> to unlock your spending picture.</p>
         </div>
       ) : (
         <>

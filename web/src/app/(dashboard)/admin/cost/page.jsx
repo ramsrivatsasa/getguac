@@ -96,9 +96,9 @@ export default function AdminCostPage() {
     return (
       <div className="max-w-2xl mx-auto p-8 text-center">
         <AlertCircle size={40} className="mx-auto text-rose-500 mb-3" />
-        <h1 className="text-2xl font-black text-gray-900 mb-2">Admin only</h1>
+        <h1 className="font-display text-2xl font-extrabold text-guac-ink mb-2">Admin only</h1>
         <p className="text-gray-600">This page is restricted. Set <code>profiles.is_admin = true</code> in Supabase to access it.</p>
-        <Link href="/dashboard" className="inline-block mt-4 text-emerald-700 font-bold">← Dashboard</Link>
+        <Link href="/dashboard" className="inline-block mt-4 text-guac-700 font-bold">← Dashboard</Link>
       </div>
     )
   }
@@ -108,8 +108,8 @@ export default function AdminCostPage() {
   return (
     <div className="max-w-4xl pb-20">
       <header className="flex items-start gap-4 mb-6">
-        <div className="w-14 h-14 rounded-2xl bg-emerald-100 flex items-center justify-center">
-          <TrendingUp size={28} className="text-emerald-700" />
+        <div className="w-14 h-14 rounded-2xl bg-guac-100 flex items-center justify-center">
+          <TrendingUp size={28} className="text-guac-700" />
         </div>
         <div className="flex-1 min-w-0">
           <h1 className="page-title">Cost monitoring</h1>
@@ -130,7 +130,7 @@ export default function AdminCostPage() {
             const tone =
               v >= c.hard ? 'bg-rose-500' :
               v >= c.soft ? 'bg-amber-400' :
-              'bg-emerald-500'
+              'bg-guac-600'
             return (
               <div key={metric} className="bg-white border border-gray-200 rounded-2xl p-4">
                 <div className="flex items-baseline justify-between gap-3 mb-2">
@@ -160,11 +160,11 @@ export default function AdminCostPage() {
             type="button"
             onClick={handleRecategorize}
             disabled={recatBusy}
-            className="flex items-start gap-3 px-3 py-2.5 rounded-xl bg-white border border-gray-200 hover:border-emerald-300 hover:shadow-sm disabled:opacity-60 text-left"
+            className="flex items-start gap-3 px-3 py-2.5 rounded-xl bg-white border border-gray-200 hover:border-guac-line2 hover:shadow-sm disabled:opacity-60 text-left"
             title="Re-runs the categorize step on any receipt where category is NULL / 'misc'. Skips user-curated rows."
           >
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
-              <Sparkles size={16} className="text-emerald-700" />
+            <div className="w-8 h-8 rounded-lg bg-guac-50 flex items-center justify-center shrink-0">
+              <Sparkles size={16} className="text-guac-700" />
             </div>
             <div className="min-w-0">
               <p className="font-bold text-gray-900">{recatBusy ? 'Working…' : 'Re-categorize uncategorized'}</p>
@@ -176,7 +176,7 @@ export default function AdminCostPage() {
             type="button"
             onClick={handleTagItems}
             disabled={tagBusy}
-            className="flex items-start gap-3 px-3 py-2.5 rounded-xl bg-white border border-gray-200 hover:border-emerald-300 hover:shadow-sm disabled:opacity-60 text-left"
+            className="flex items-start gap-3 px-3 py-2.5 rounded-xl bg-white border border-gray-200 hover:border-guac-line2 hover:shadow-sm disabled:opacity-60 text-left"
             title="Runs the Guac-AI item-tagger on every receipt_items row whose ai_tag is NULL."
           >
             <div className="w-8 h-8 rounded-lg bg-sky-50 flex items-center justify-center shrink-0">
@@ -203,7 +203,7 @@ export default function AdminCostPage() {
             { name: 'PostHog',                  href: 'https://us.posthog.com',             note: 'Events vs free tier (1M / mo)' },
           ].map(d => (
             <a key={d.href} href={d.href} target="_blank" rel="noopener noreferrer"
-              className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl bg-white border border-gray-200 hover:border-emerald-200 hover:shadow-sm">
+              className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl bg-white border border-gray-200 hover:border-guac-line2 hover:shadow-sm">
               <div className="min-w-0">
                 <p className="font-bold text-gray-900">{d.name}</p>
                 <p className="text-[11px] text-gray-500">{d.note}</p>
@@ -219,7 +219,7 @@ export default function AdminCostPage() {
         <h2 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-3">Last 14 days · raw metrics</h2>
         <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-[11px] uppercase tracking-wider text-gray-500">
+            <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
               <tr>
                 <th className="text-left px-3 py-2">Day</th>
                 <th className="text-left px-3 py-2">Metric</th>

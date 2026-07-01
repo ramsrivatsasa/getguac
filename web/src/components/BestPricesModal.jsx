@@ -69,15 +69,15 @@ export default function BestPricesModal({ open, onClose, item }) {
     <div className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
         {/* Header */}
-        <div className="px-5 py-4 border-b border-emerald-100 bg-gradient-to-r from-emerald-50 to-lime-50 flex items-start gap-3">
+        <div className="px-5 py-4 border-b border-guac-line bg-gradient-to-r from-emerald-50 to-lime-50 flex items-start gap-3">
           <GuacMascot expression="rich" size={52} />
           <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-lg text-emerald-900">Finding your Steals</h3>
-            <p className="text-xs text-emerald-700/80 truncate">{item?.item_name}{item?.sku ? ` · SKU ${item.sku}` : ''}</p>
+            <h3 className="font-bold text-lg text-guac-ink">Finding your Steals</h3>
+            <p className="text-xs text-guac-700/80 truncate">{item?.item_name}{item?.sku ? ` · SKU ${item.sku}` : ''}</p>
           </div>
           <button onClick={handleAddToSteals} disabled={addSteal.isPending}
             title="Save this product to your Steals saved searches"
-            className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white/70 border border-emerald-200 text-emerald-700 text-xs font-bold hover:bg-white transition-colors disabled:opacity-50">
+            className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white/70 border border-guac-line2 text-guac-700 text-xs font-bold hover:bg-white transition-colors disabled:opacity-50">
             <Bookmark size={13} /> Add to Steals
           </button>
           <button onClick={onClose} className="p-1.5 text-gray-500 hover:bg-white/60 rounded-full shrink-0">
@@ -115,22 +115,22 @@ export default function BestPricesModal({ open, onClose, item }) {
             search.data.enhancement.applied_aliases?.length > 0 ||
             search.data.enhancement.matched_stash
           ) && (
-            <div className="mb-3 px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-xs flex items-start gap-2">
-              <Wand2 size={14} className="text-emerald-600 mt-0.5 shrink-0" />
+            <div className="mb-3 px-3 py-2 rounded-xl bg-guac-50 border border-guac-line2 text-xs flex items-start gap-2">
+              <Wand2 size={14} className="text-guac-600 mt-0.5 shrink-0" />
               <div className="min-w-0">
-                <p className="font-bold text-emerald-800">Guac-Search refined your query</p>
-                <p className="text-emerald-700/90 mt-0.5 leading-snug">
+                <p className="font-bold text-guac-700">Guac-Search refined your query</p>
+                <p className="text-guac-700/90 mt-0.5 leading-snug">
                   <span className="line-through text-gray-400">{search.data.enhancement.original}</span>
                   {' → '}
                   <span className="font-semibold">{search.data.enhancement.enhanced}</span>
                 </p>
                 {search.data.enhancement.matched_stash && (
-                  <p className="text-[10px] text-emerald-600 mt-1">
+                  <p className="text-[10px] text-guac-600 mt-1">
                     Matched your stash: <span className="font-semibold">{search.data.enhancement.matched_stash.item_name}</span>
                   </p>
                 )}
                 {search.data.enhancement.category && (
-                  <p className="text-[10px] text-emerald-600 mt-0.5">Category: {search.data.enhancement.category}</p>
+                  <p className="text-[10px] text-guac-600 mt-0.5">Category: {search.data.enhancement.category}</p>
                 )}
               </div>
             </div>
@@ -154,14 +154,14 @@ export default function BestPricesModal({ open, onClose, item }) {
                     <p className="text-[10px] uppercase tracking-wider font-bold text-amber-700">Best price</p>
                     <p className="font-bold text-amber-900">{best.store}</p>
                   </div>
-                  <p className="text-2xl font-extrabold text-emerald-700 tabular-nums">${best.price.toFixed(2)}</p>
+                  <p className="text-2xl font-extrabold text-guac-700 tabular-nums">${best.price.toFixed(2)}</p>
                 </div>
               )}
               {results.map((r, i) => {
                 const isBest = i === 0
                 return (
-                  <div key={`${r.store}-${i}`} className={`rounded-xl border p-3 flex items-center gap-3 ${isBest ? 'border-emerald-200 bg-emerald-50/40' : 'border-gray-100 hover:bg-gray-50'}`}>
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-base shrink-0 ${isBest ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-600'}`}>
+                  <div key={`${r.store}-${i}`} className={`rounded-xl border p-3 flex items-center gap-3 ${isBest ? 'border-guac-line2 bg-guac-50/40' : 'border-gray-100 hover:bg-guac-row'}`}>
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-base shrink-0 ${isBest ? 'bg-guac-600 text-white' : 'bg-gray-100 text-gray-600'}`}>
                       <ShoppingCart size={15} />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -172,12 +172,12 @@ export default function BestPricesModal({ open, onClose, item }) {
                       {r.notes && <p className="text-[11px] text-amber-700 mt-0.5">{r.notes}</p>}
                       {!r.available && <p className="text-[11px] text-rose-500 mt-0.5">Out of stock</p>}
                     </div>
-                    <p className={`text-lg font-bold tabular-nums ${isBest ? 'text-emerald-700' : 'text-gray-700'}`}>${r.price.toFixed(2)}</p>
+                    <p className={`text-lg font-bold tabular-nums ${isBest ? 'text-guac-700' : 'text-gray-700'}`}>${r.price.toFixed(2)}</p>
                     <a
                       href={bestDealUrl({ ...r, title: r.matched_name || item?.item_name })}
                       target="_blank" rel="noreferrer"
                       title={r.url ? 'Open product page' : `Search ${r.store} for this product`}
-                      className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 hover:bg-emerald-200 hover:scale-110 active:scale-95 transition-all flex items-center justify-center shadow-sm shrink-0">
+                      className="w-8 h-8 rounded-full bg-guac-100 text-guac-700 hover:bg-guac-100 hover:scale-110 active:scale-95 transition-all flex items-center justify-center shadow-sm shrink-0">
                       <ExternalLink size={13} />
                     </a>
                   </div>
@@ -191,7 +191,7 @@ export default function BestPricesModal({ open, onClose, item }) {
                   <div className="flex flex-wrap gap-1.5">
                     {sources.map((s, i) => (
                       <a key={i} href={s.url} target="_blank" rel="noreferrer"
-                        className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 hover:text-emerald-800 hover:bg-emerald-50 truncate max-w-[180px]">
+                        className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 hover:text-guac-700 hover:bg-guac-50 truncate max-w-[180px]">
                         {s.title}
                       </a>
                     ))}

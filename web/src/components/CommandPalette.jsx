@@ -188,7 +188,7 @@ export default function CommandPalette() {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
-          <Search size={18} className="text-emerald-600" />
+          <Search size={18} className="text-guac-600" />
           <input
             ref={inputRef}
             type="text"
@@ -201,7 +201,7 @@ export default function CommandPalette() {
           <kbd className="text-[10px] font-semibold text-gray-400 bg-gray-100 rounded px-1.5 py-0.5">ESC</kbd>
           <button
             onClick={() => setOpen(false)}
-            className="ml-1 w-7 h-7 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 flex items-center justify-center"
+            className="ml-1 w-7 h-7 rounded-full text-gray-400 hover:text-gray-700 hover:bg-guac-50 flex items-center justify-center"
             aria-label="Close"
           >
             <X size={16} />
@@ -224,11 +224,11 @@ export default function CommandPalette() {
                 onMouseEnter={() => setActiveIdx(i)}
                 onClick={() => goTo(r.href)}
                 className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition ${
-                  active ? 'bg-emerald-50' : 'hover:bg-gray-50'
+                  active ? 'bg-guac-50' : 'hover:bg-guac-row'
                 }`}
               >
                 <span className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                  active ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'
+                  active ? 'bg-guac-100 text-guac-700' : 'bg-gray-100 text-gray-500'
                 }`}>
                   <Icon size={15} />
                 </span>

@@ -1,0 +1,226 @@
+[
+  {
+    "id": "B0",
+    "area": "Login",
+    "name": "Demo sign-in (positive)",
+    "expected": "Lands on dashboard",
+    "actual": "Dashboard loaded",
+    "status": "PASS"
+  },
+  {
+    "id": "B1",
+    "area": "Page smoke",
+    "name": "/dashboard",
+    "expected": "Loads without 404/error",
+    "actual": "OK (HTTP 200)",
+    "status": "PASS"
+  },
+  {
+    "id": "B2",
+    "area": "Page smoke",
+    "name": "/receipts",
+    "expected": "Loads without 404/error",
+    "actual": "OK (HTTP 200)",
+    "status": "PASS"
+  },
+  {
+    "id": "B3",
+    "area": "Page smoke",
+    "name": "/reports",
+    "expected": "Loads without 404/error",
+    "actual": "OK (HTTP 200)",
+    "status": "PASS"
+  },
+  {
+    "id": "B4",
+    "area": "Page smoke",
+    "name": "/steals",
+    "expected": "Loads without 404/error",
+    "actual": "OK (HTTP 200)",
+    "status": "PASS"
+  },
+  {
+    "id": "B5",
+    "area": "Page smoke",
+    "name": "/returns",
+    "expected": "Loads without 404/error",
+    "actual": "OK (HTTP 200)",
+    "status": "PASS"
+  },
+  {
+    "id": "B6",
+    "area": "Page smoke",
+    "name": "/guacwizard",
+    "expected": "Loads without 404/error",
+    "actual": "OK (HTTP 200)",
+    "status": "PASS"
+  },
+  {
+    "id": "B7",
+    "area": "Page smoke",
+    "name": "/bites",
+    "expected": "Loads without 404/error",
+    "actual": "OK (HTTP 200)",
+    "status": "PASS"
+  },
+  {
+    "id": "B8",
+    "area": "Page smoke",
+    "name": "/stash",
+    "expected": "Loads without 404/error",
+    "actual": "OK (HTTP 200)",
+    "status": "PASS"
+  },
+  {
+    "id": "B9",
+    "area": "Page smoke",
+    "name": "/shopping",
+    "expected": "Loads without 404/error",
+    "actual": "OK (HTTP 200)",
+    "status": "PASS"
+  },
+  {
+    "id": "B10",
+    "area": "Page smoke",
+    "name": "/bank",
+    "expected": "Loads without 404/error",
+    "actual": "OK (HTTP 200)",
+    "status": "PASS"
+  },
+  {
+    "id": "B11",
+    "area": "Page smoke",
+    "name": "/guacanomics",
+    "expected": "Loads without 404/error",
+    "actual": "OK (HTTP 200)",
+    "status": "PASS"
+  },
+  {
+    "id": "B12",
+    "area": "Page smoke",
+    "name": "/rewards",
+    "expected": "Loads without 404/error",
+    "actual": "OK (HTTP 200)",
+    "status": "PASS"
+  },
+  {
+    "id": "B13",
+    "area": "Page smoke",
+    "name": "/stores",
+    "expected": "Loads without 404/error",
+    "actual": "OK (HTTP 200)",
+    "status": "PASS"
+  },
+  {
+    "id": "B14",
+    "area": "Page smoke",
+    "name": "/statements",
+    "expected": "Loads without 404/error",
+    "actual": "OK (HTTP 200)",
+    "status": "PASS"
+  },
+  {
+    "id": "B15",
+    "area": "Page smoke",
+    "name": "/profile",
+    "expected": "Loads without 404/error",
+    "actual": "OK (HTTP 200)",
+    "status": "PASS"
+  },
+  {
+    "id": "B16",
+    "area": "Page smoke",
+    "name": "/validate",
+    "expected": "Loads without 404/error",
+    "actual": "OK (HTTP 200)",
+    "status": "PASS"
+  },
+  {
+    "id": "B17",
+    "area": "Page smoke",
+    "name": "/car-miles",
+    "expected": "Loads without 404/error",
+    "actual": "OK (HTTP 200)",
+    "status": "PASS"
+  },
+  {
+    "id": "B18",
+    "area": "Page smoke",
+    "name": "/predictions",
+    "expected": "Loads without 404/error",
+    "actual": "OK (HTTP 200)",
+    "status": "PASS"
+  },
+  {
+    "id": "B19",
+    "area": "Page smoke",
+    "name": "/inbox",
+    "expected": "Loads without 404/error",
+    "actual": "OK (HTTP 200)",
+    "status": "PASS"
+  },
+  {
+    "id": "B20",
+    "area": "Page smoke",
+    "name": "/connections",
+    "expected": "Loads without 404/error",
+    "actual": "OK (HTTP 200)",
+    "status": "PASS"
+  },
+  {
+    "id": "B21",
+    "area": "Page smoke",
+    "name": "/notifications",
+    "expected": "Loads without 404/error",
+    "actual": "OK (HTTP 200)",
+    "status": "PASS"
+  },
+  {
+    "id": "B22",
+    "area": "Page smoke",
+    "name": "/invite",
+    "expected": "Loads without 404/error",
+    "actual": "OK (HTTP 200)",
+    "status": "PASS"
+  },
+  {
+    "id": "C1",
+    "area": "Negative",
+    "name": "Dead route /items",
+    "expected": "Graceful 404 page",
+    "actual": "404 page shown",
+    "status": "PASS"
+  },
+  {
+    "id": "C2",
+    "area": "Negative",
+    "name": "Unknown route",
+    "expected": "Graceful 404 page",
+    "actual": "404 page shown",
+    "status": "PASS"
+  },
+  {
+    "id": "C3",
+    "area": "Negative",
+    "name": "Steals empty query",
+    "expected": "No crash; input handled",
+    "actual": "handled gracefully",
+    "status": "PASS"
+  },
+  {
+    "id": "C4",
+    "area": "Negative",
+    "name": "best-prices API empty q",
+    "expected": "Handled (4xx or empty 200)",
+    "actual": "HTTP 405",
+    "status": "INFO"
+  },
+  {
+    "id": "C5",
+    "area": "Negative",
+    "name": "Forgot-pw invalid email",
+    "expected": "Blocked by email validation",
+    "actual": "Blocked",
+    "status": "PASS"
+  }
+]

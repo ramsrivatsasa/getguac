@@ -161,7 +161,7 @@ export default function StoreDetailPage() {
       <div className="flex items-center gap-3">
         <button onClick={() => router.back()} className="btn-ghost p-1.5"><ArrowLeft size={20} /></button>
         <div className="flex items-center gap-2">
-          <div className="p-2 bg-blue-100 rounded-xl"><Store className="text-blue-800" size={18} /></div>
+          <div className="p-2 bg-guac-100 rounded-xl"><Store className="text-blue-800" size={18} /></div>
           <h1 className="page-title">{displayStoreName(store.store_name)}</h1>
         </div>
         <button
@@ -230,7 +230,7 @@ export default function StoreDetailPage() {
       {locations.length > 0 && (
         <div className="card">
           <h3 className="font-semibold text-gray-800 mb-3">Locations</h3>
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-guac-line">
             {locations.map(loc => {
               const fullAddr = [loc.address, loc.city, loc.state, loc.zip].filter(Boolean).join(', ')
               return (
@@ -244,7 +244,7 @@ export default function StoreDetailPage() {
                       href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(fullAddr)}`}
                       target="_blank" rel="noreferrer"
                       title="Open directions in Google Maps"
-                      className="ml-auto inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 hover:text-emerald-900 px-2 py-1 rounded-full bg-emerald-50 hover:bg-emerald-100">
+                      className="ml-auto inline-flex items-center gap-1 text-[11px] font-semibold text-guac-700 hover:text-guac-ink px-2 py-1 rounded-full bg-guac-50 hover:bg-guac-100">
                       <Navigation size={11} /> Directions
                     </a>
                   )}
@@ -261,7 +261,7 @@ export default function StoreDetailPage() {
       {returnPolicies.length > 0 && (
         <div className="card">
           <div className="flex items-center gap-2 mb-3">
-            <Shield size={16} className="text-emerald-600" />
+            <Shield size={16} className="text-guac-600" />
             <h3 className="font-semibold text-gray-800">Return Policy</h3>
             <span className="ml-auto text-[11px] text-gray-400">From the merchant's published policy</span>
           </div>
@@ -271,7 +271,7 @@ export default function StoreDetailPage() {
               const eligible = p.eligible !== false
               return (
                 <div key={p.id} className="flex items-start gap-3 py-2 border-t border-gray-100 first:border-0 first:pt-0">
-                  <div className={`shrink-0 w-12 text-center px-2 py-1 rounded-lg text-xs font-bold ${eligible ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'}`}>
+                  <div className={`shrink-0 w-12 text-center px-2 py-1 rounded-lg text-xs font-bold ${eligible ? 'bg-guac-50 text-guac-700 border border-guac-line' : 'bg-rose-50 text-rose-700 border border-rose-100'}`}>
                     {p.days == null && eligible ? '∞' : (p.days ?? '—')}
                     <div className="text-[9px] font-medium uppercase tracking-wider text-gray-500 mt-0.5">
                       {p.days == null && eligible ? 'days' : (eligible ? 'days' : 'final')}
@@ -288,7 +288,7 @@ export default function StoreDetailPage() {
                         href={p.source_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 mt-1.5 text-[11px] font-semibold text-emerald-700 hover:text-emerald-900"
+                        className="inline-flex items-center gap-1 mt-1.5 text-[11px] font-semibold text-guac-700 hover:text-guac-ink"
                         title={`Read ${displayStoreName(store.store_name)}'s full return policy`}
                       >
                         Read {displayStoreName(store.store_name)}'s full policy <ExternalLink size={11} />
@@ -325,7 +325,7 @@ export default function StoreDetailPage() {
                 ) : 'Unassigned location'}
                 <span className="float-right">{items.length} receipt{items.length !== 1 ? 's' : ''}</span>
               </div>
-              <div className="divide-y divide-gray-50">
+              <div className="divide-y divide-guac-line">
                 {items.map(r => {
                   const bank = bankInfoFor(r)
                   const bankLabel = bank ? `${bank.issuer || 'Bank'}${bank.account_last4 ? ` ••${bank.account_last4}` : ''}` : null
@@ -334,7 +334,7 @@ export default function StoreDetailPage() {
                     : null
                   return (
                     <Link key={r.id} href={`/receipts/${r.id}`}
-                      className="flex items-center justify-between px-5 py-3 hover:bg-gray-50/70 transition-colors group">
+                      className="flex items-center justify-between px-5 py-3 hover:bg-guac-row transition-colors group">
                       <div className="flex items-center gap-3 min-w-0 flex-wrap">
                         <span className="text-sm text-gray-500 w-24 shrink-0">{formatDateShort(r.date)}</span>
                         <span className={`text-sm font-semibold ${parseFloat(r.total_amount) < 0 ? 'text-rose-600' : 'text-gray-800'}`}>
@@ -348,12 +348,12 @@ export default function StoreDetailPage() {
                           </span>
                         )}
                         {r.reconciled && (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100" title={bank ? `Reconciled with ${stmtTooltip}` : 'Reconciled'}>
-                            <Link2 size={10} /> Reconciled{!r.from_statement && bankLabel ? <span className="text-emerald-600 font-normal">· {bankLabel}</span> : null}
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-guac-50 text-guac-700 border border-guac-line" title={bank ? `Reconciled with ${stmtTooltip}` : 'Reconciled'}>
+                            <Link2 size={10} /> Reconciled{!r.from_statement && bankLabel ? <span className="text-guac-600 font-normal">· {bankLabel}</span> : null}
                           </span>
                         )}
                       </div>
-                      <ChevronRight size={16} className="text-gray-300 group-hover:text-blue-500" />
+                      <ChevronRight size={16} className="text-gray-300 group-hover:text-guac-600" />
                     </Link>
                   )
                 })}
@@ -405,18 +405,18 @@ function StoreDirections({ storeName, address, phone }) {
   }
 
   return (
-    <div className="card bg-gradient-to-br from-emerald-50/60 to-lime-50/40 border-emerald-200">
+    <div className="card bg-gradient-to-br from-emerald-50/60 to-lime-50/40 border-guac-line2">
       <div className="flex items-start gap-3 flex-wrap">
-        <div className="w-10 h-10 rounded-2xl bg-emerald-500 text-white shadow-md flex items-center justify-center ring-2 ring-white">
+        <div className="w-10 h-10 rounded-2xl bg-guac-600 text-white shadow-md flex items-center justify-center ring-2 ring-white">
           <Navigation size={18} />
         </div>
         <div className="flex-1 min-w-[200px]">
-          <p className="text-xs font-bold uppercase tracking-wider text-emerald-800">Get there</p>
+          <p className="text-xs font-bold uppercase tracking-wider text-guac-700">Get there</p>
           <p className="text-sm text-gray-700 mt-0.5 flex items-center gap-1">
             <MapPin size={12} className="text-gray-400" /> {address}
           </p>
           {distance != null && (
-            <p className="text-xs text-emerald-700 mt-1 font-semibold">
+            <p className="text-xs text-guac-700 mt-1 font-semibold">
               ~{distance} mi from your current location (driving est.)
             </p>
           )}
@@ -442,7 +442,7 @@ function StoreDirections({ storeName, address, phone }) {
           {phone && (
             <a
               href={`tel:${phone.replace(/\D+/g, '')}`}
-              className="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-all flex items-center justify-center shadow-sm"
+              className="w-9 h-9 rounded-full bg-guac-100 text-guac-700 hover:bg-guac-100 transition-all flex items-center justify-center shadow-sm"
               title={`Call ${phone}`}>
               <Phone size={13} />
             </a>

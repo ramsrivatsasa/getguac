@@ -37,15 +37,15 @@ import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis
 
 // Recharts donut colors — matches CATEGORIES palette as closely as Tailwind lets.
 const CATEGORY_COLORS = {
-  grub: '#10b981', eats: '#f97316', snacks: '#fbbf24', bars: '#d946ef', tea: '#10b981',
+  grub: '#22C55E', eats: '#f97316', snacks: '#fbbf24', bars: '#d946ef', tea: '#10b981',
   drinks: '#ef4444',
-  subs: '#8b5cf6', bills: '#0ea5e9', 'bank-fees': '#dc2626', cloud: '#38bdf8', tech: '#0ea5e9',
+  subs: '#8b5cf6', bills: '#38BDF8', 'bank-fees': '#dc2626', cloud: '#38bdf8', tech: '#3B82F6',
   'big-stuff': '#6366f1', 'fix-it': '#f59e0b', outdoors: '#84cc16',
-  supplies: '#6366f1', fits: '#d946ef',
+  supplies: '#6366f1', fits: '#A855F7',
   pharmacy: '#f43f5e', health: '#10b981',
   'personal-care': '#ec4899', household: '#f59e0b',
   'gas-up': '#ef4444', fun: '#8b5cf6',
-  gifting: '#ec4899', charity: '#f43f5e', misc: '#94a3b8',
+  gifting: '#ec4899', charity: '#f43f5e', misc: '#9AA3AE',
 }
 
 // Presentation-only money formatter — thousands separators + 2 decimals
@@ -267,7 +267,6 @@ export default function ReportsPage() {
             />
             <KpiCard
               label="Top category"
-              emoji={byCategory[0] ? CATEGORY_BY_SLUG[byCategory[0].slug]?.emoji : null}
               value={byCategory[0] ? (CATEGORY_BY_SLUG[byCategory[0].slug]?.label || byCategory[0].slug) : '—'}
               sub={byCategory[0] && totalSpent > 0 ? `${money(byCategory[0].amount)} · ${((byCategory[0].amount / totalSpent) * 100).toFixed(0)}% of spend` : 'no spend yet'}
             />
@@ -451,7 +450,7 @@ export default function ReportsPage() {
                 </p>
               </div>
               <div className="rounded-2xl border border-rose-200/60 bg-rose-50/50 p-4">
-                <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.05em] font-extrabold text-rose-600"><span className="text-sm">❤️</span> Charity</div>
+                <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.05em] font-extrabold text-rose-600"><span className="text-sm">💝</span> Charity</div>
                 <p className="gg-stat !text-rose-600 mt-2">{money(taxStats.charityDonated)}</p>
                 <p className="gg-sub mt-1.5">{taxStats.charityCount} donation{taxStats.charityCount === 1 ? '' : 's'}</p>
               </div>

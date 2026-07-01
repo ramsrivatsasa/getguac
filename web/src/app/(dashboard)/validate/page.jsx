@@ -20,7 +20,7 @@ import { displayStoreName } from '../../../lib/store-name-normalize'
 const RATING_LABELS = {
   5: { label: 'Essential', emoji: '💎', color: 'emerald', fill: '#10b981' },
   4: { label: 'Important', emoji: '✅', color: 'lime',    fill: '#84cc16' },
-  3: { label: 'OK',        emoji: '🙂', color: 'amber',   fill: '#facc15' },
+  3: { label: 'OK',        emoji: '😊', color: 'amber',   fill: '#facc15' },
   2: { label: 'Splurge',   emoji: '🍿', color: 'orange',  fill: '#f97316' },
   1: { label: 'Regret',    emoji: '🙈', color: 'rose',    fill: '#e11d48' },
 }
@@ -176,14 +176,14 @@ export default function ValidatePage() {
         subtitle="Rate every purchase — high = must-have, low = ad-hoc."
         action={
           <div className="text-sm text-gray-500">
-            <span className="font-bold text-guac-700">{ratedCount}</span> of {filtered.length} rated
+            <span className="font-bold text-guac-600">{ratedCount}</span> of {filtered.length} rated
           </div>
         }
       />
 
       {/* Period + count + sort + search */}
       <div className="flex flex-wrap items-center gap-3">
-        <div className="inline-flex bg-gray-100 rounded-xl p-1 gap-1">
+        <div className="inline-flex bg-guac-50 rounded-xl p-1 gap-1">
           {PERIODS.map(p => (
             <button key={p} onClick={() => selectPeriod(p)}
               className={`px-3.5 py-1.5 rounded-lg text-sm font-semibold capitalize transition-all ${
@@ -203,7 +203,7 @@ export default function ValidatePage() {
           <span className="text-xs font-semibold text-gray-500">{UNIT_LABEL[period]}{count === 1 ? '' : 's'}</span>
         </div>
 
-        <div className="inline-flex items-center gap-2 bg-white rounded-full pl-4 pr-2 py-1 border border-guac-line shadow-sm">
+        <div className="inline-flex items-center gap-2 bg-white rounded-xl pl-4 pr-2 py-1 border border-guac-line shadow-sm">
           <span className="text-xs font-semibold text-gray-500">Sort</span>
           <select value={sort} onChange={e => setSort(e.target.value)}
             className="bg-transparent text-sm font-bold text-guac-700 focus:outline-none cursor-pointer font-sans">
@@ -220,11 +220,11 @@ export default function ValidatePage() {
 
       {/* Worth It? pie chart summary */}
       {pieData.length > 0 && (
-        <div className="card">
-          <div className="grid lg:grid-cols-3 gap-4 items-center">
-            <div className="lg:col-span-1">
-              <p className="gg-colhead mb-1 text-center">Spend by Rating</p>
-              <div className="relative">
+        <div className="card rounded-[22px]">
+          <div className="flex flex-col lg:flex-row gap-4 items-center">
+            {/* Donut + legend grouped */}
+            <div className="flex-1 w-full flex flex-col sm:flex-row items-center gap-4">
+              <div className="relative w-full sm:w-1/2">
                 <ResponsiveContainer width="100%" height={180}>
                   <PieChart>
                     <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={48} outerRadius={70} paddingAngle={3} isAnimationActive={false}>
@@ -239,20 +239,21 @@ export default function ValidatePage() {
                   <span className="gg-num font-extrabold text-guac-ink text-xl leading-none">${money0(totalSpend)}</span>
                 </div>
               </div>
+
+              <div className="w-full sm:w-1/2 space-y-1.5">
+                <p className="gg-colhead mb-1">Spend by Rating</p>
+                {pieData.map(d => (
+                  <div key={d.name} className="flex items-center gap-2.5 text-xs">
+                    <span className="text-[15px] leading-none">{d.emoji}</span>
+                    <span className="flex-1 font-semibold text-guac-body">{d.label}</span>
+                    <span className="text-guac-muted w-7 text-right">{d.count}</span>
+                    <span className="gg-num font-extrabold text-guac-ink w-16 text-right">${money0(d.value)}</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <div className="lg:col-span-1 space-y-1.5">
-              {pieData.map(d => (
-                <div key={d.name} className="flex items-center gap-2.5 text-xs">
-                  <span className="text-[15px] leading-none">{d.emoji}</span>
-                  <span className="flex-1 font-semibold text-guac-body">{d.label}</span>
-                  <span className="text-guac-muted w-7 text-right">{d.count}</span>
-                  <span className="gg-num font-extrabold text-guac-ink w-16 text-right">${money0(d.value)}</span>
-                </div>
-              ))}
-            </div>
-
-            <div className="lg:col-span-1 grid grid-cols-2 gap-2">
+            <div className="w-full lg:w-[360px] shrink-0 grid grid-cols-2 gap-2">
               <ValStat label="Avg Rating"   value={`${avgRating.toFixed(1)} ★`}                          tone="emerald" />
               <ValStat label="Regret Spend" value={`$${money0(regretSpend)}`}                             tone="rose" />
               <ValStat label="Rated"        value={`${ratedCount} / ${filtered.length}`}                  tone="gray" />
@@ -263,7 +264,7 @@ export default function ValidatePage() {
       )}
 
       {/* List */}
-      <div className="card p-0 overflow-hidden">
+      <div className="card p-0 overflow-hidden rounded-[22px]">
         {isLoading ? (
           <MascotLoading label="Loading…" />
         ) : filtered.length === 0 ? (

@@ -10,18 +10,18 @@ import GuacMascot from '../../../components/GuacMascot'
 import FeatureHeader from '../../../components/FeatureHeader'
 import TimeframePicker from '../../../components/TimeframePicker'
 import { CountUp, FadeUpStagger } from '../../../components/animated'
-import { TrendingUp, TrendingDown, AlertTriangle, Percent, CreditCard, Banknote, Sparkles } from 'lucide-react'
+import { Banknote, Sparkles } from 'lucide-react'
 
 // Money figures render with thousands separators + 2 dp and a leading $ —
 // matching the mockup (Bricolage display font via .gg-num, neutral ink).
 const fmtMoney = (n) => `$${Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
 const SEVERITY_STYLE = {
-  good:    { card: 'bg-guac-50 border-guac-line2', label: 'text-guac-700' },
-  neutral: { card: 'bg-gray-50 border-gray-200',       label: 'text-gray-700' },
-  watch:   { card: 'bg-amber-50 border-amber-200',     label: 'text-amber-800' },
-  warning: { card: 'bg-orange-50 border-orange-200',   label: 'text-orange-800' },
-  urgent:  { card: 'bg-rose-50 border-rose-300',       label: 'text-rose-800' },
+  good:    { card: 'bg-[#F4FAF5] border-guac-line2',   label: 'text-guac-700',       badge: 'bg-[#DDF3E1]' },
+  neutral: { card: 'bg-gray-50 border-gray-200',       label: 'text-gray-700',       badge: 'bg-gray-100' },
+  watch:   { card: 'bg-[#FEFBEF] border-amber-100',    label: 'text-[#A07A1A]',      badge: 'bg-[#FCEFC7]' },
+  warning: { card: 'bg-[#FFF6EF] border-orange-100',   label: 'text-[#B23C0C]',      badge: 'bg-[#FFE0CB]' },
+  urgent:  { card: 'bg-[#FDF3F3] border-rose-200',     label: 'text-rose-700',       badge: 'bg-[#FBDADA]' },
 }
 
 const MASCOT_BY_SCORE = (score) => {
@@ -87,16 +87,16 @@ export default function GuacWizardPage() {
 
       {/* Money-moved strip */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-        <Tile icon={CreditCard}     tone="sky"     label="Payments made"    value={summary.totalPayments} />
-        <Tile icon={Percent}        tone="orange"  label="Interest paid"    value={summary.totalInterest} bold />
-        <Tile icon={AlertTriangle}  tone="amber"   label="Fees paid"        value={summary.totalFees} bold />
-        <Tile icon={TrendingUp}     tone="rose"    label="Purchases"        value={summary.totalPurch} />
-        <Tile icon={TrendingDown}   tone="emerald" label="Refunds"          value={summary.totalRefunds} />
+        <Tile emoji="💳" label="Payments made"    value={summary.totalPayments} />
+        <Tile emoji="🪙" label="Interest paid"    value={summary.totalInterest} bold />
+        <Tile emoji="⚠️" label="Fees paid"        value={summary.totalFees} bold />
+        <Tile emoji="📈" label="Purchases"        value={summary.totalPurch} />
+        <Tile emoji="📉" label="Refunds"          value={summary.totalRefunds} />
       </div>
 
       {/* Insights stream */}
       <div className="space-y-3">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-guac-700 flex items-center gap-2">
+        <h2 className="font-display text-sm font-bold uppercase tracking-wider text-guac-700 flex items-center gap-2">
           <Sparkles size={14} className="text-amber-500" /> Insights
         </h2>
         {insights.length === 0 ? (
@@ -113,7 +113,7 @@ export default function GuacWizardPage() {
             return (
               <div key={i.id} className={`card border ${s.card}`}>
                 <div className="flex items-start gap-3">
-                  <div className="text-3xl shrink-0">{i.emoji}</div>
+                  <div className={`w-10 h-10 rounded-[12px] flex items-center justify-center text-xl shrink-0 ${s.badge}`}>{i.emoji}</div>
                   <div className="flex-1 min-w-0">
                     <p className={`font-bold ${s.label}`}>{i.title}</p>
                     {i.body && <p className="text-sm text-gray-700 mt-1">{i.body}</p>}
@@ -123,7 +123,7 @@ export default function GuacWizardPage() {
                       </p>
                     )}
                   </div>
-                  <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full bg-white/70 ${s.label} shrink-0`}>{i.severity}</span>
+                  <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full bg-white/70 ${s.label} shrink-0`}>{i.severity.toUpperCase()}</span>
                 </div>
               </div>
             )
@@ -135,7 +135,7 @@ export default function GuacWizardPage() {
       {/* Per-card breakdown */}
       {accounts.length > 0 && (
         <div className="card">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-guac-700 mb-3 flex items-center gap-2">
+          <h2 className="font-display text-sm font-bold uppercase tracking-wider text-guac-700 mb-3 flex items-center gap-2">
             <Banknote size={14} className="text-guac-600" /> Cost per card — {summary.periodLabel}
           </h2>
           <div className="overflow-x-auto">
@@ -206,18 +206,10 @@ export default function GuacWizardPage() {
   )
 }
 
-const TILE_TONE = {
-  sky:     { bg: 'bg-sky-50',     text: 'text-sky-800',     icon: 'text-sky-600',     border: 'border-sky-100' },
-  orange:  { bg: 'bg-orange-50',  text: 'text-orange-800',  icon: 'text-orange-600',  border: 'border-orange-200' },
-  amber:   { bg: 'bg-amber-50',   text: 'text-amber-800',   icon: 'text-amber-600',   border: 'border-amber-200' },
-  rose:    { bg: 'bg-rose-50',    text: 'text-rose-800',    icon: 'text-rose-600',    border: 'border-rose-100' },
-  emerald: { bg: 'bg-guac-50', text: 'text-guac-700', icon: 'text-guac-600', border: 'border-guac-line' },
-}
-function Tile({ icon: Icon, tone, label, value, bold }) {
-  const t = TILE_TONE[tone] || TILE_TONE.sky
+function Tile({ emoji, label, value, bold }) {
   return (
-    <div className={`stat-card border ${t.border} ${t.bg}`}>
-      <div className={`p-3 rounded-xl bg-white shadow-sm`}><Icon size={20} className={t.icon} /></div>
+    <div className="stat-card bg-white border rounded-[18px]" style={{ borderColor: 'rgba(20,83,45,.1)' }}>
+      <div className="text-2xl leading-none shrink-0">{emoji}</div>
       <div className="min-w-0">
         <p className="text-[10.5px] uppercase tracking-[0.06em] font-extrabold text-guac-label">{label}</p>
         <p className="gg-stat gg-num text-[22px] text-guac-ink">{fmtMoney(value)}</p>

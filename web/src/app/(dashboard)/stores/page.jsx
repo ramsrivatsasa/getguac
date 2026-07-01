@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
-import { Store, Phone, Globe, MapPin, ChevronRight, ChevronDown, Search, Trash2, AlertTriangle, Shield, ExternalLink, Link2 } from 'lucide-react'
+import { Store, Phone, Globe, MapPin, ChevronRight, ChevronDown, Search, Trash2, AlertTriangle, Shield, Clock, ExternalLink, Link2 } from 'lucide-react'
 import { getStores, deleteStore, getAllStoreDefaultPolicies, getRewards } from '../../../lib/db'
 import { normalizeStoreName, storeGroupKey, displayStoreName } from '../../../lib/store-name-normalize'
 import { useConfirm } from '../../../components/ConfirmDialog'
@@ -415,18 +415,14 @@ function PolicyChip({ policy, className = '' }) {
       ? 'Lifetime ∞'
       : `${days}d return`
   const tone = !eligible
-    ? 'bg-gray-100 text-gray-600 border-gray-200'
-    : days == null || days >= 90
-      ? 'bg-guac-50 text-guac-700 border-guac-line'
-      : days >= 30
-        ? 'bg-sky-50 text-sky-700 border-sky-100'
-        : 'bg-amber-50 text-amber-700 border-amber-100'
+    ? 'bg-[#FBEFD2] text-[#92590A]'
+    : 'bg-[#E9F5DD] text-[#1F8A3D]'
   return (
     <span
-      className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${tone} ${className}`}
+      className={`inline-flex items-center gap-1 text-[11.5px] font-bold px-2.5 py-[5px] rounded-full ${tone} ${className}`}
       title={policy.details ? `${policy.details} — click row for full policy + citation` : 'Tap row for full policy + citation'}
     >
-      <Shield size={10} /> {label}
+      <Clock size={12} /> {label}
     </span>
   )
 }

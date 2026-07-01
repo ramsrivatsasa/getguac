@@ -3,7 +3,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { Undo2, Search, ExternalLink, RotateCcw, Calendar, Receipt, Clock } from 'lucide-react'
+import { Undo2, Search, ExternalLink, RotateCcw, Receipt, Clock } from 'lucide-react'
 import { getReturns, updateReceiptItem, getEligibleReturns } from '../../../lib/db'
 import FeatureHeader from '../../../components/FeatureHeader'
 import { displayStoreName } from '../../../lib/store-name-normalize'
@@ -197,7 +197,7 @@ export default function ReturnsPage() {
                     return (
                       <tr key={r.item_id} className="hover:bg-guac-row transition-colors" style={{ borderBottom: '1px solid rgba(20,83,45,0.06)' }}>
                         <td className="px-5 py-3.5">
-                          <span className={`gg-num inline-flex items-center justify-center px-2.5 py-[5px] rounded-[9px] text-xs font-extrabold border ${tone}`}>
+                          <span className={`gg-num inline-flex items-center justify-self-start px-2.5 py-[5px] rounded-[9px] text-xs font-extrabold border ${tone}`}>
                             {r.days_left}d
                           </span>
                         </td>
@@ -303,8 +303,8 @@ export default function ReturnsPage() {
                       <tr key={r.id} className="hover:bg-guac-row transition-colors" style={{ borderBottom: '1px solid rgba(20,83,45,0.06)' }}>
                         <td className="px-5 py-3.5 whitespace-nowrap">
                           {r.return_date ? (
-                            <span className="inline-flex items-center gap-1 text-[12.5px] font-semibold text-guac-muted">
-                              <Calendar size={11} className="text-guac-faint" />{formatDateShort(r.return_date)}
+                            <span className="text-[12px] font-semibold text-guac-muted">
+                              {formatDateShort(r.return_date)}
                             </span>
                           ) : <span className="text-guac-faint">—</span>}
                         </td>

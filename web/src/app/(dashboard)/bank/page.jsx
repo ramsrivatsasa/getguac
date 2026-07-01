@@ -711,7 +711,7 @@ export default function BankPage() {
 
       {/* Period selector — drives all per-card totals below */}
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="inline-flex bg-gray-100 rounded-xl p-1 gap-1 flex-wrap">
+        <div className="inline-flex bg-[#F1F6EA] rounded-xl p-1 gap-1 flex-wrap">
           {PERIODS.map(p => (
             <button key={p.key} onClick={() => setPeriod(p.key)}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${period === p.key ? 'bg-white text-guac-700 shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}>
@@ -734,7 +734,7 @@ export default function BankPage() {
           </button>
           <Link
             href="/guacwizard"
-            className="inline-flex items-center gap-2 h-9 px-3 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 text-white font-bold text-xs shadow hover:shadow-lg transition-all"
+            className="inline-flex items-center gap-2 h-9 px-3 rounded-xl bg-guac-700 text-white font-bold text-xs shadow hover:shadow-lg transition-all"
             title="Open GuacWizard for behavioral insights"
           >
             <Wand2 size={14} /> Ask the Wizard
@@ -771,14 +771,14 @@ export default function BankPage() {
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-100 via-sky-100 to-emerald-100 ring-1 ring-white flex items-center justify-center shrink-0">
-                    <Banknote size={26} className="text-indigo-700" />
+                  <div className="w-11 h-11 rounded-[13px] bg-[#F1F6EA] flex items-center justify-center shrink-0">
+                    <CreditCard size={22} className="text-guac-600" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="font-bold text-gray-900 truncate flex items-center gap-2">
                       <span className="truncate">{b.issuer}</span>
                       {b.account_last4 && (
-                        <span className="gg-num text-xs text-indigo-700 bg-indigo-50 border border-indigo-100 rounded-full px-1.5 py-0.5 shrink-0">
+                        <span className="gg-num text-xs text-guac-700 bg-[#E9F5DD] border border-guac-line rounded-md px-1.5 py-0.5 shrink-0">
                           ••{b.account_last4}
                         </span>
                       )}
@@ -799,25 +799,25 @@ export default function BankPage() {
                 <ChevronRight size={18} className="text-gray-300 group-hover:text-guac-600 transition-colors shrink-0" />
               </div>
               <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-                <div className="rounded-lg bg-rose-50 border border-rose-100 px-2 py-1.5">
-                  <p className="text-[9px] uppercase tracking-wider text-rose-600 font-semibold">Purchases</p>
-                  <p className="gg-num font-bold text-rose-700">${fmtMoney(b.totalPurchases)}</p>
+                <div className="rounded-lg bg-[#FBFCF9] border border-guac-line px-2 py-1.5">
+                  <p className="text-[9px] uppercase tracking-wider text-guac-faint font-semibold">Purchases</p>
+                  <p className="gg-num font-bold text-guac-ink">${fmtMoney(b.totalPurchases)}</p>
                 </div>
-                <div className="rounded-lg bg-sky-50 border border-sky-100 px-2 py-1.5">
-                  <p className="text-[9px] uppercase tracking-wider text-sky-700 font-semibold">
+                <div className="rounded-lg bg-[#FBFCF9] border border-guac-line px-2 py-1.5">
+                  <p className="text-[9px] uppercase tracking-wider text-guac-faint font-semibold">
                     Payments made{b.paymentCount > 0 ? ` (${b.paymentCount})` : ''}
                   </p>
-                  <p className="gg-num font-bold text-sky-800">${fmtMoney(b.totalPayments)}</p>
+                  <p className="gg-num font-bold text-guac-ink">${fmtMoney(b.totalPayments)}</p>
                 </div>
-                <div className="rounded-lg bg-amber-50 border border-amber-100 px-2 py-1.5">
-                  <p className="text-[9px] uppercase tracking-wider text-amber-700 font-semibold">Fees paid</p>
-                  <p className="gg-num font-bold text-amber-800">${fmtMoney(b.totalFees)}</p>
+                <div className="rounded-lg bg-[#FBFCF9] border border-guac-line px-2 py-1.5">
+                  <p className="text-[9px] uppercase tracking-wider text-guac-faint font-semibold">Fees paid</p>
+                  <p className="gg-num font-bold text-guac-ink">${fmtMoney(b.totalFees)}</p>
                 </div>
-                <div className="rounded-lg bg-orange-50 border border-orange-100 px-2 py-1.5">
-                  <p className="text-[9px] uppercase tracking-wider text-orange-700 font-semibold">Interest paid</p>
-                  <p className="gg-num font-bold text-orange-800">${fmtMoney(b.totalInterest)}</p>
+                <div className="rounded-lg bg-[#FFF6EF] border border-guac-line px-2 py-1.5">
+                  <p className="text-[9px] uppercase tracking-wider text-[#B23C0C] font-semibold">Interest paid</p>
+                  <p className="gg-num font-bold text-[#B23C0C]">${fmtMoney(b.totalInterest)}</p>
                 </div>
-                <div className="rounded-lg bg-guac-50 border border-guac-line px-2 py-1.5 col-span-2">
+                <div className="rounded-lg bg-[#F1F6EA] border border-guac-line px-2 py-1.5 col-span-2">
                   <p className="text-[9px] uppercase tracking-wider text-guac-600 font-semibold">Refunds</p>
                   <p className="gg-num font-bold text-guac-700">${fmtMoney(b.totalRefunds)}</p>
                 </div>

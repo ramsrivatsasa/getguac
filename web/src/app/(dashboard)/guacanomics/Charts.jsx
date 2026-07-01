@@ -2,7 +2,7 @@
 import { formatDateShort } from '../../../lib/dateFormat'
 import Link from 'next/link'
 import {
-  LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
+  ComposedChart, Area, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts'
 import { Sparkles, TrendingDown, Tag, Calendar, ShoppingBag } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
@@ -44,7 +44,13 @@ export default function Charts({ insights }) {
             <div className="h-56 flex items-center justify-center text-gray-400 text-sm">No data in this range</div>
           ) : (
             <ResponsiveContainer width="100%" height={260}>
-              <LineChart data={insights.timeSeries} margin={{ top: 16, right: 16, left: -8, bottom: 0 }}>
+              <ComposedChart data={insights.timeSeries} margin={{ top: 16, right: 16, left: -8, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="spentFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#E5194B" stopOpacity={0.2} />
+                    <stop offset="100%" stopColor="#E5194B" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
                 <CartesianGrid strokeDasharray="2 4" stroke="#f1f5f9" vertical={false} />
                 <XAxis dataKey="month" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
@@ -54,9 +60,9 @@ export default function Charts({ insights }) {
                   formatter={v => `$${money2(v)}`}
                 />
                 <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} iconType="circle" />
-                <Line type="monotone" dataKey="spent" name="Spent" stroke="#e11d48" strokeWidth={2} dot={{ r: 2.5, fill: '#e11d48', strokeWidth: 0 }} activeDot={{ r: 5 }} isAnimationActive={false} />
-                <Line type="monotone" dataKey="refunded" name="Refunded" stroke="#10b981" strokeWidth={2} dot={{ r: 2.5, fill: '#10b981', strokeWidth: 0 }} activeDot={{ r: 5 }} isAnimationActive={false} />
-              </LineChart>
+                <Area type="monotone" dataKey="spent" name="Spent" stroke="#E5194B" strokeWidth={2} fill="url(#spentFill)" dot={{ r: 2.5, fill: '#E5194B', strokeWidth: 0 }} activeDot={{ r: 5 }} isAnimationActive={false} />
+                <Line type="monotone" dataKey="refunded" name="Refunded" stroke="#22C55E" strokeWidth={2} dot={{ r: 2.5, fill: '#22C55E', strokeWidth: 0 }} activeDot={{ r: 5 }} isAnimationActive={false} />
+              </ComposedChart>
             </ResponsiveContainer>
           )}
         </div>
@@ -73,23 +79,35 @@ export default function Charts({ insights }) {
             </div>
           ) : (
             <>
-              <ResponsiveContainer width="100%" height={180}>
-                <PieChart>
-                  <Pie
-                    data={insights.ratingBuckets.filter(b => b.spend > 0).map(b => ({ name: `${b.emoji} ${b.label}`, value: b.spend, color: b.color }))}
-                    dataKey="value" nameKey="name" cx="50%" cy="50%"
-                    innerRadius={50} outerRadius={72} paddingAngle={2} strokeWidth={0} isAnimationActive={false}>
-                    {insights.ratingBuckets.filter(b => b.spend > 0).map((b, i) => <Cell key={i} fill={b.color} />)}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{ borderRadius: 14, border: '1px solid #d1fae5', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', fontSize: 12 }}
-                    formatter={v => `$${money2(v)}`}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="flex items-center justify-around text-xs pt-2 border-t border-guac-line">
-                <span><span className="text-guac-muted">Avg</span> <span className="gg-num font-bold text-guac-700">{insights.avgRating.toFixed(1)} ★</span></span>
-                <span><span className="text-guac-muted">Regret</span> <span className="gg-num font-bold text-rose-700">${money0(insights.regretSpend)}</span></span>
+              <div className="relative">
+                <ResponsiveContainer width="100%" height={180}>
+                  <PieChart>
+                    <Pie
+                      data={insights.ratingBuckets.filter(b => b.spend > 0).map(b => ({ name: `${b.emoji} ${b.label}`, value: b.spend, color: b.color }))}
+                      dataKey="value" nameKey="name" cx="50%" cy="50%"
+                      innerRadius={50} outerRadius={72} paddingAngle={2} strokeWidth={0} isAnimationActive={false}>
+                      {insights.ratingBuckets.filter(b => b.spend > 0).map((b, i) => <Cell key={i} fill={b.color} />)}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{ borderRadius: 14, border: '1px solid #d1fae5', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', fontSize: 12 }}
+                      formatter={v => `$${money2(v)}`}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  <span className="gg-num text-2xl font-extrabold text-guac-ink leading-none">{insights.avgRating.toFixed(1)}</span>
+                  <span className="text-[10px] text-guac-muted mt-0.5">avg ★</span>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 pt-3 border-t border-guac-line text-center">
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-guac-muted font-bold">Avg rating</p>
+                  <p className="gg-num text-sm font-bold text-guac-700 mt-0.5">{insights.avgRating.toFixed(1)} ★</p>
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-guac-muted font-bold">Regret</p>
+                  <p className="gg-num text-sm font-bold text-rose-700 mt-0.5">${money0(insights.regretSpend)}</p>
+                </div>
               </div>
               <Link href="/validate" className="text-center text-xs text-guac-700 hover:underline mt-2 font-semibold">
                 Rate {insights.unratedCount} pending →
@@ -117,13 +135,13 @@ export default function Charts({ insights }) {
               const max = Math.max(...insights.topStores.map(s => s.spent || 0)) || 1
               return (
                 <div>
-                  <div className="space-y-2.5">
+                  <div className="flex flex-col gap-[11px]">
                     {insights.topStores.map((s, i) => {
                       const pct = Math.max(3, Math.round((s.spent || 0) / max * 100))
                       return (
                         <div key={i} className="flex items-center gap-3">
-                          <span className="w-28 shrink-0 truncate text-[13px] font-semibold text-guac-ink" title={s.store}>{s.store}</span>
-                          <div className="flex-1 h-[9px] rounded-[5px] bg-[#F0F4EA] overflow-hidden">
+                          <span className="w-[132px] shrink-0 truncate text-right text-[13px] font-semibold text-guac-ink" title={s.store}>{s.store}</span>
+                          <div className="flex-1 h-[15px] rounded-[5px] bg-[#F0F4EA] overflow-hidden">
                             <div className="h-full rounded-[5px]" style={{ width: `${pct}%`, background: spendHeatHex((s.spent || 0) / max) }} />
                           </div>
                           <span className="gg-num w-20 shrink-0 text-right text-[13px] font-extrabold text-guac-ink">${money0(s.spent)}</span>
@@ -131,9 +149,12 @@ export default function Charts({ insights }) {
                       )
                     })}
                   </div>
-                  <div className="flex justify-between ml-[124px] mr-[92px] mt-3 gg-num text-[10px] font-semibold text-guac-faint">
-                    <span>$0</span>
-                    <span>${money0(max)}</span>
+                  <div className="flex justify-between ml-[144px] mr-[92px] mt-3 gg-num text-[10px] font-semibold text-guac-faint">
+                    <span>{money0(0)}</span>
+                    <span>{money0(max * 0.25)}</span>
+                    <span>{money0(max * 0.5)}</span>
+                    <span>{money0(max * 0.75)}</span>
+                    <span>{money0(max)}</span>
                   </div>
                 </div>
               )
@@ -151,25 +172,31 @@ export default function Charts({ insights }) {
           {insights.grossSpend === 0 ? (
             <div className="h-56 flex items-center justify-center text-gray-400 text-sm">No purchases</div>
           ) : (
-            <ResponsiveContainer width="100%" height={240}>
-              <PieChart>
-                <Pie data={insights.purchaseVsReturn} dataKey="value" nameKey="name"
-                  cx="50%" cy="50%" innerRadius={62} outerRadius={88} paddingAngle={2} strokeWidth={0} isAnimationActive={false}>
-                  {insights.purchaseVsReturn.map((_, i) => <Cell key={i} fill={PIE_COLORS[i]} />)}
-                </Pie>
-                <Tooltip
-                  contentStyle={{ borderRadius: 14, border: '1px solid #d1fae5', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', fontSize: 12 }}
-                  formatter={v => `$${money2(v)}`}
-                />
-                <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} iconType="circle" />
-              </PieChart>
-            </ResponsiveContainer>
+            <div className="relative">
+              <ResponsiveContainer width="100%" height={240}>
+                <PieChart>
+                  <Pie data={insights.purchaseVsReturn} dataKey="value" nameKey="name"
+                    cx="50%" cy="50%" innerRadius={62} outerRadius={88} paddingAngle={2} strokeWidth={0} isAnimationActive={false}>
+                    {insights.purchaseVsReturn.map((_, i) => <Cell key={i} fill={PIE_COLORS[i]} />)}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{ borderRadius: 14, border: '1px solid #d1fae5', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', fontSize: 12 }}
+                    formatter={v => `$${money2(v)}`}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} iconType="circle" />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="absolute inset-0 bottom-8 flex flex-col items-center justify-center pointer-events-none">
+                <span className="text-[10px] uppercase tracking-wider text-guac-muted font-bold">Net out</span>
+                <span className="gg-num text-xl font-extrabold text-guac-ink leading-tight">${money0(insights.netSpend)}</span>
+              </div>
+            </div>
           )}
         </div>
       </div>
 
       {insights.categoryBuckets.length > 0 && (
-        <div className="card">
+        <div className="card !rounded-[22px]">
           <h3 className="gg-h2 mb-4 flex items-center gap-2.5">
             <span className="inline-flex items-center justify-center w-[30px] h-[30px] rounded-[9px] bg-guac-50 text-guac-700 shrink-0">
               <Tag size={15} />
@@ -177,18 +204,25 @@ export default function Charts({ insights }) {
             Spend by Category
           </h3>
           <div className="grid lg:grid-cols-2 gap-6">
-            <ResponsiveContainer width="100%" height={240}>
-              <PieChart>
-                <Pie data={insights.categoryBuckets} dataKey="spend" nameKey="label"
-                  cx="50%" cy="50%" innerRadius={62} outerRadius={92} paddingAngle={2} strokeWidth={0} isAnimationActive={false}>
-                  {insights.categoryBuckets.map((c, i) => <Cell key={i} fill={c.color} />)}
-                </Pie>
-                <Tooltip
-                  contentStyle={{ borderRadius: 14, border: '1px solid #d1fae5', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', fontSize: 12 }}
-                  formatter={v => `$${money2(v)}`}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+            <div className="relative">
+              <ResponsiveContainer width="100%" height={240}>
+                <PieChart>
+                  <Pie data={insights.categoryBuckets} dataKey="spend" nameKey="label"
+                    cx="50%" cy="50%" innerRadius={62} outerRadius={92} paddingAngle={2} strokeWidth={0} isAnimationActive={false}>
+                    {insights.categoryBuckets.map((c, i) => <Cell key={i} fill={c.color} />)}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{ borderRadius: 14, border: '1px solid #d1fae5', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', fontSize: 12 }}
+                    formatter={v => `$${money2(v)}`}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span className="text-[10px] uppercase tracking-wider text-guac-muted font-bold">Total</span>
+                <span className="gg-num text-xl font-extrabold text-guac-ink leading-tight">${money0(insights.categoryBuckets.reduce((n, c) => n + c.spend, 0))}</span>
+                <span className="text-[10px] text-guac-muted mt-0.5">this range</span>
+              </div>
+            </div>
             <table className="gg-tbl w-full text-sm">
               <thead className="border-b border-guac-line gg-colhead">
                 <tr>
@@ -227,7 +261,7 @@ export default function Charts({ insights }) {
         </div>
       )}
 
-      <div className="card">
+      <div className="card !rounded-[22px]">
         <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
           <h3 className="gg-h2 flex items-center gap-2">
             <span className="text-lg">🥑</span>
@@ -297,7 +331,7 @@ export default function Charts({ insights }) {
                 <Sparkles size={12} className="text-guac-600" /> Top Tags
               </p>
               {insights.topTags.length === 0 ? (
-                <p className="text-sm text-guac-faint">No tags yet.</p>
+                <p className="text-sm text-guac-faint">Rate a few purchases and the reasons you tag them — &lsquo;on sale&rsquo;, &lsquo;impulse&rsquo;, &lsquo;needed it&rsquo; — show up here.</p>
               ) : (
                 <div className="flex flex-wrap gap-1.5">
                   {insights.topTags.map(([tag, count]) => (

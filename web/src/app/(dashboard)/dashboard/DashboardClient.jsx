@@ -208,7 +208,7 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
         action={
           <div className="flex items-center gap-2 flex-wrap">
           <Link href="/validate"
-            className="flex items-center gap-3 px-4 py-2.5 rounded-full bg-gradient-to-br from-amber-400 via-amber-500 to-rose-500 text-white shadow-md hover:shadow-lg hover:scale-[1.02] transition-all group">
+            className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-gradient-to-br from-[#FBB040] to-[#E8870E] text-white shadow-md hover:shadow-lg hover:scale-[1.02] transition-all group">
             <span className="text-xl leading-none">🥑</span>
             <div className="text-left">
               <p className="font-extrabold text-sm leading-tight">Worth It?</p>
@@ -217,7 +217,7 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
             <ArrowRight size={16} className="text-amber-100 group-hover:translate-x-0.5 transition-transform" />
           </Link>
           <Link href="/guacanomics"
-            className="flex items-center gap-3 px-4 py-2.5 rounded-full bg-gradient-to-br from-green-500 to-emerald-700 text-white shadow-md hover:shadow-lg hover:scale-[1.02] transition-all group">
+            className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-gradient-to-br from-[#34D17A] to-[#14924A] text-white shadow-md hover:shadow-lg hover:scale-[1.02] transition-all group">
             <Sparkles size={18} className="text-guac-100" />
             <div className="text-left">
               <p className="font-extrabold text-sm leading-tight">Guacanomics</p>

@@ -72,6 +72,17 @@ const TONE_TINT = {
   gray:     { from: 'from-gray-50',     to: 'to-slate-100',   ring: 'ring-gray-200',     text: 'text-gray-900',    accent: 'bg-gray-500' },
 }
 
+// Soft solid tint (hex) per category color — powers the mockup's
+// 52×52 rounded emoji tile on the savings grid card. Keyed by the
+// same `color` field on CATEGORIES so a category's tile matches its
+// chip. Falls back to a neutral green wash.
+const TINT_HEX = {
+  emerald: '#E7F5E1', orange: '#FCEEDD', sky: '#E2EFFB', indigo: '#E8E6FB',
+  amber: '#FBF1DA', lime: '#EDF7D6', fuchsia: '#FBE6F4', rose: '#FCE4E7',
+  red: '#FBE3E1', violet: '#EEE7FB', pink: '#FBE6EE', slate: '#E9EDF1',
+  gray: '#ECF0EA',
+}
+
 export default function StashPage() {
   const [search, setSearch] = useState('')
   const [activeCat, setActiveCat] = useState('all')
@@ -270,6 +281,27 @@ export default function StashPage() {
 
   const multiStoreCount = items.filter(it => it.store_count > 1).length
 
+  // Best-store savings math (drives the hero banner + the two new
+  // status chips). An item is "overpaying" when it's multi-store, has
+  // a resolved cheapest store (`best`), and the user's most-recent
+  // price beats-able by that store's min_price. Everything below is
+  // derived from the already-aggregated `items` — no new queries.
+  const overpaying = useMemo(
+    () => items.filter(it => it.store_count > 1 && it.best && Number(it.last_price) > Number(it.best.min_price)),
+    [items]
+  )
+  const overCount = overpaying.length
+  const saveTotal = useMemo(
+    () => overpaying.reduce((sum, it) => sum + (Number(it.last_price) - Number(it.best.min_price)), 0),
+    [overpaying]
+  )
+  // "Best price" = you already bought it at (or below) the cheapest
+  // store you know of. Requires a resolved `best` so the claim holds.
+  const bestPriceCount = useMemo(
+    () => items.filter(it => it.best && Number(it.last_price) <= Number(it.best.min_price)).length,
+    [items]
+  )
+
   // Central engine rules — see web/src/lib/stashEngine.js#selectStashView:
   //   1. Search is GLOBAL — when a query is typed, ignore the category
   //      filter so users can find any item without picking the right pill.
@@ -279,9 +311,11 @@ export default function StashPage() {
     const s = search.trim().toLowerCase()
     const hasSearch = s.length > 0
     let list = items
-    // Apply category filter ONLY when no active search.
+    // Apply category / status filter ONLY when no active search.
     if (!hasSearch) {
       if (activeCat === '_multi') list = list.filter(it => it.store_count > 1)
+      else if (activeCat === '_overpaying') list = list.filter(it => it.store_count > 1 && it.best && Number(it.last_price) > Number(it.best.min_price))
+      else if (activeCat === '_bestprice') list = list.filter(it => it.best && Number(it.last_price) <= Number(it.best.min_price))
       else if (activeCat !== 'all') list = list.filter(it => it.category === activeCat)
     }
     if (hasSearch) list = list.filter(it =>
@@ -408,7 +442,7 @@ export default function StashPage() {
       <FeatureHeader
         expression="standing"
         title="Stash"
-        subtitle="Everything you've ever bought — find the best store for each"
+        subtitle="Everything you've ever bought — and where to buy it cheapest."
         action={
           <span className="text-sm text-gray-500">
             <span className="font-bold text-guac-700 gg-num">{items.length}</span> products ·{' '}
@@ -416,6 +450,46 @@ export default function StashPage() {
           </span>
         }
       />
+
+      {/* Best-store savings hero — self-hides unless the user is
+          overpaying on at least one multi-store item. Headline + save
+          total come straight from the `overpaying` set above; the
+          white pill jumps the grid to the new "Overpaying" filter so
+          the banner and the list stay in sync. */}
+      {overCount > 0 && (
+        <div
+          className="relative overflow-hidden flex items-center gap-5 text-white px-6 py-5 sm:px-7"
+          style={{
+            background: 'linear-gradient(120deg,#1C7E39,#0F5A2A)',
+            borderRadius: '22px',
+            boxShadow: '0 24px 44px -28px rgba(15,90,42,.7)',
+          }}
+        >
+          <div
+            className="pointer-events-none absolute -top-12 right-28 w-56 h-56"
+            style={{ background: 'radial-gradient(circle, rgba(182,242,61,.22), transparent 68%)' }}
+          />
+          <div className="relative flex-1 min-w-0">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-[11px] font-extrabold tracking-wide text-lime-100 mb-2.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-lime-300" />
+              BEST-STORE CHECK
+            </span>
+            <p className="font-display font-extrabold text-white leading-tight text-xl sm:text-2xl">
+              You're overpaying on <span className="gg-num">{overCount}</span> item{overCount === 1 ? '' : 's'} — <span className="gg-num">{money0(saveTotal)}</span> in easy savings.
+            </p>
+            <p className="text-[13px] text-emerald-100/90 mt-1.5">
+              Buy each at its cheapest store on your next run and pocket the difference.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => { setSearch(''); setActiveCat('_overpaying') }}
+            className="relative shrink-0 whitespace-nowrap rounded-xl bg-white px-5 py-3 text-[13.5px] font-extrabold text-guac-700 shadow-lg hover:bg-emerald-50 active:scale-95 transition-all"
+          >
+            Review {overCount} item{overCount === 1 ? '' : 's'} →
+          </button>
+        </div>
+      )}
 
       {/* Category chips — single horizontal scroll row with ← →
           arrow buttons (matches the dashboard's AllPaymentsScroll
@@ -433,8 +507,32 @@ export default function StashPage() {
           .no-scrollbar::-webkit-scrollbar { display: none; }
         `}</style>
         <div ref={catScrollRef} className="no-scrollbar overflow-x-auto scroll-smooth pb-1">
-          <div className="flex flex-nowrap gap-2 min-w-max">
-            <CatChip active={activeCat === 'all'} onClick={() => setActiveCat('all')} emoji="🌈" label="All" count={items.length} />
+          <div className="flex flex-nowrap items-center gap-2 min-w-max">
+            {/* Status chips — best-store savings lenses first, then a
+                thin divider, then the per-category chips. */}
+            <CatChip active={activeCat === 'all'} onClick={() => setActiveCat('all')} emoji="🌈" label="All" count={items.length} status />
+            {overCount > 0 && (
+              <CatChip
+                active={activeCat === '_overpaying'}
+                onClick={() => setActiveCat('_overpaying')}
+                emoji="⚠"
+                label="Overpaying"
+                count={overCount}
+                tone="amber"
+                status
+              />
+            )}
+            {bestPriceCount > 0 && (
+              <CatChip
+                active={activeCat === '_bestprice'}
+                onClick={() => setActiveCat('_bestprice')}
+                emoji="✓"
+                label="Best price"
+                count={bestPriceCount}
+                tone="emerald"
+                status
+              />
+            )}
             {multiStoreCount > 0 && (
               <CatChip
                 active={activeCat === '_multi'}
@@ -443,8 +541,10 @@ export default function StashPage() {
                 label="Multi-store"
                 count={multiStoreCount}
                 tone="amber"
+                status
               />
             )}
+            <span className="shrink-0 w-px h-6 mx-1 bg-guac-line2" aria-hidden="true" />
             {CATEGORIES.map(c => {
               const count = catCounts.get(c.slug) || 0
               if (count === 0 && activeCat !== c.slug) return null
@@ -472,35 +572,42 @@ export default function StashPage() {
         </button>
       </div>
 
-      {/* Search + sort + view toggle */}
+      {/* Search + sort + view toggle — flatter, 12px-radius toolbar
+          matching the mockup (white bg, guac-line2 hairline border,
+          no pills). */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[220px] max-w-md">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input className="input pl-9" placeholder="Search item, SKU, model, or store…" value={search} onChange={e => setSearch(e.target.value)} />
+          <input
+            className="w-full rounded-xl border border-guac-line2 bg-white pl-9 pr-3 py-2.5 text-sm text-guac-ink placeholder:text-gray-400 focus:outline-none focus:border-guac-600 focus:ring-1 focus:ring-guac-100 font-sans"
+            placeholder="Search item, SKU, model, or store…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
         </div>
-        <div className="inline-flex items-center gap-2 bg-white rounded-full pl-4 pr-2 py-1 border border-guac-line shadow-sm">
+        <div className="inline-flex items-center gap-2 bg-white rounded-xl pl-4 pr-2 py-2 border border-guac-line2">
           <span className="text-xs font-semibold text-gray-500">When</span>
           <select value={timeframe} onChange={e => setTimeframe(e.target.value)} className="bg-transparent text-sm font-bold text-guac-700 focus:outline-none cursor-pointer font-sans">
             {TIMEFRAMES.map(o => <option key={o.key} value={o.key}>{o.label}</option>)}
           </select>
         </div>
-        <div className="inline-flex items-center gap-2 bg-white rounded-full pl-4 pr-2 py-1 border border-guac-line shadow-sm">
+        <div className="inline-flex items-center gap-2 bg-white rounded-xl pl-4 pr-2 py-2 border border-guac-line2">
           <span className="text-xs font-semibold text-gray-500">Sort</span>
           <select value={sort} onChange={e => setSort(e.target.value)} className="bg-transparent text-sm font-bold text-guac-700 focus:outline-none cursor-pointer font-sans">
             {SORTS.map(o => <option key={o.key} value={o.key}>{o.label}</option>)}
           </select>
         </div>
-        <div className="inline-flex bg-gray-100 rounded-full p-1 gap-1">
+        <div className="inline-flex items-center gap-1 bg-white rounded-xl p-1 border border-guac-line2">
           <button onClick={() => setView('grid')} title="Grid view"
-            className={`p-1.5 rounded-full transition-all ${view === 'grid' ? 'bg-white text-guac-ink shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}>
+            className={`p-1.5 rounded-lg transition-all ${view === 'grid' ? 'bg-[#E9F5DD] text-guac-700' : 'text-gray-500 hover:text-gray-800'}`}>
             <LayoutGrid size={14} />
           </button>
           <button onClick={() => setView('list')} title="List view"
-            className={`p-1.5 rounded-full transition-all ${view === 'list' ? 'bg-white text-guac-ink shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}>
+            className={`p-1.5 rounded-lg transition-all ${view === 'list' ? 'bg-[#E9F5DD] text-guac-700' : 'text-gray-500 hover:text-gray-800'}`}>
             <List size={14} />
           </button>
           <button onClick={() => setView('accordion')} title="Grouped by category"
-            className={`p-1.5 rounded-full transition-all ${view === 'accordion' ? 'bg-white text-guac-ink shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}>
+            className={`p-1.5 rounded-lg transition-all ${view === 'accordion' ? 'bg-[#E9F5DD] text-guac-700' : 'text-gray-500 hover:text-gray-800'}`}>
             <Layers size={14} />
           </button>
         </div>
@@ -561,23 +668,15 @@ export default function StashPage() {
           delayMs={40}
         >
           {filtered.map(it => {
-            const likeKey = imageCacheKey(it.item_name)
-            const ls = likeStats.get(likeKey)
-            // Wrapper div is needed because StashCard is memo'd and
+            // Wrapper div is needed because the card is memo'd and
             // doesn't forward className/style — FadeUpStagger applies
             // its animation classes to the immediate child.
             return (
               <div key={it.key}>
-                <StashCard
+                <StashSavingsCard
                   item={it}
-                  expanded={expanded === it.key}
-                  onToggle={() => toggleExpand(it.key)}
-                  onAddToSmashlist={(store) => handleAddToSmashlist(it, store)}
+                  onAddToSmashlist={() => handleAddToSmashlist(it)}
                   onFindDeals={() => setStealsItem(it)}
-                  imageUrl={productImages[it.item_name]}
-                  loveCount={ls?.totalLikes}
-                  likedByMe={ls?.likedByMe || false}
-                  onToggleLove={() => handleToggleLove(it.item_name)}
                 />
               </div>
             )
@@ -818,6 +917,150 @@ const StashCard = memo(function StashCard({ item, expanded, onToggle, onAddToSma
           />
         </div>
       )}
+    </div>
+  )
+})
+
+/**
+ * StashSavingsCard — the mockup's "best-store savings" grid card.
+ * Vertical white card, tinted category-emoji tile, a best-store
+ * INSIGHT BAND (green "best price" / amber "save $X" / neutral
+ * single-store), and a footer with the last-paid price + a "+ List"
+ * repurchase button. A compact star row keeps rating alive. Every
+ * value comes from the already-aggregated `item` — no new queries.
+ */
+const StashSavingsCard = memo(function StashSavingsCard({ item, onAddToSmashlist, onFindDeals }) {
+  const qc = useQueryClient()
+  const cat = CATEGORY_BY_SLUG[item.category] || CATEGORY_BY_SLUG['misc']
+  const tintBg = TINT_HEX[cat.color] || TINT_HEX.gray
+  const isMulti = item.store_count > 1
+  const [hoverRate, setHoverRate] = useState(0)
+
+  // Bulk-rate mutation — cascades the rating across every
+  // receipt_item of this product at each store (same as StashCard).
+  const rerate = useMutation({
+    mutationFn: async (rating) => {
+      const calls = [...item.stores.values()].map(s =>
+        s.id ? setStashProductRating({ storeId: s.id, sku: item.sku, item_name: item.item_name, rating }) : null
+      ).filter(Boolean)
+      return Promise.allSettled(calls)
+    },
+    onSuccess: (_data, rating) => {
+      const chip = guacImpactChip(rating)
+      toast.success(chip?.delta > 0
+        ? `Worth it ⭐ — ${chip.label}`
+        : chip?.delta < 0 ? `Noted — ${chip.label}` : 'Rating saved')
+      qc.invalidateQueries({ queryKey: ['stash'] })
+      qc.invalidateQueries({ queryKey: ['receipts'] })
+    },
+    onError: err => toast.error(err.message),
+  })
+
+  // Best-store insight — three states, all derived from `best`:
+  //   • best price: your last price already at/under the cheapest store
+  //   • overpaying: a cheaper store exists → show the saveable delta
+  //   • single-store: neutral "only store you've bought this at"
+  const best = item.best
+  const savings = best ? Number(item.last_price) - Number(best.min_price) : 0
+  const isBest = isMulti && best && (Number(item.last_price) <= Number(best.min_price) || item.last_store === best.name)
+  const isOver = isMulti && best && !isBest && savings > 0
+
+  const lastDate = item.last_date ? friendlyDate(item.last_date) : '—'
+  const meta = `Bought ${item.times}× · last ${lastDate}`
+  const personalRating = item.rating_count > 0 ? Math.round(item.avg_rating) : 0
+
+  const goReceipt = item.last_receipt_id
+    ? () => { window.location.href = `/receipts/${item.last_receipt_id}` }
+    : undefined
+
+  return (
+    <div
+      className={`flex flex-col gap-3 bg-white rounded-[20px] p-4 border transition-shadow ${goReceipt ? 'cursor-pointer hover:shadow-md' : ''}`}
+      style={{ borderColor: 'rgba(20,83,45,.09)' }}
+      onClick={goReceipt}
+    >
+      {/* Head: tinted emoji tile + name + meta + multi-store star pill */}
+      <div className="flex items-start gap-3">
+        <div
+          className="w-[52px] h-[52px] rounded-[15px] flex items-center justify-center text-2xl shrink-0"
+          style={{ background: tintBg }}
+        >
+          {cat.emoji}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-guac-ink text-[14.5px] leading-snug line-clamp-2">{item.item_name}</p>
+          <p className="text-[11.5px] text-gray-400 mt-1">{meta}</p>
+        </div>
+        {isMulti && (
+          <span className="shrink-0 bg-[#F1F6EA] text-[#5E8A46] text-[10px] font-extrabold px-2 py-1 rounded-full">
+            {item.store_count}★
+          </span>
+        )}
+      </div>
+
+      {/* Best-store insight band */}
+      {isBest ? (
+        <div className="flex items-center gap-2.5 rounded-lg px-3 py-2 bg-[#F2F9EA] text-guac-700 text-[12.5px] leading-snug">
+          <span className="shrink-0 font-bold">✓</span>
+          <span>Best price — cheapest at <strong className="font-extrabold">{best.name}</strong></span>
+        </div>
+      ) : isOver ? (
+        <div className="flex items-center gap-2.5 rounded-lg px-3 py-2 bg-[#FBF3E1] text-[#B5730C] text-[12.5px] leading-snug">
+          <span className="shrink-0 font-bold">↓</span>
+          <span>Save <strong className="font-extrabold gg-num">{money(savings)}</strong> — <strong className="font-extrabold">{best.name}</strong> has it at <span className="gg-num">{money(best.min_price)}</span></span>
+        </div>
+      ) : (
+        <div className="flex items-center gap-2.5 rounded-lg px-3 py-2 bg-gray-50 text-gray-500 text-[12px] leading-snug">
+          <span className="shrink-0">🏬</span>
+          <span>Only store you've bought this at{item.last_store ? ` — ${item.last_store}` : ''}</span>
+        </div>
+      )}
+
+      {/* Compact rate row — keeps ratings alive without the full rater.
+          stopPropagation so a star tap doesn't open the receipt. */}
+      <div className="flex items-center gap-0.5" onClick={e => e.stopPropagation()} onMouseLeave={() => setHoverRate(0)}>
+        <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mr-1">Worth it?</span>
+        {[1, 2, 3, 4, 5].map(n => (
+          <button
+            key={n}
+            type="button"
+            disabled={rerate.isPending}
+            onClick={() => rerate.mutate(n)}
+            onMouseEnter={() => setHoverRate(n)}
+            title={`Rate ${n}★`}
+            className="p-0.5 hover:scale-125 active:scale-95 transition-transform disabled:opacity-50"
+          >
+            <Star size={13} className={n <= (hoverRate || personalRating) ? 'text-amber-500 fill-amber-500' : 'text-gray-300'} />
+          </button>
+        ))}
+        <button
+          type="button"
+          onClick={() => onFindDeals?.()}
+          title="Find deals — live web price scan"
+          className="ml-auto text-[11px] font-bold text-guac-600 hover:text-guac-700"
+        >
+          💎 Deals
+        </button>
+      </div>
+
+      {/* Footer: last-paid price + "+ List" repurchase button */}
+      <div
+        className="flex items-end justify-between pt-3"
+        style={{ borderTop: '1px solid rgba(20,83,45,.07)' }}
+      >
+        <div>
+          <p className="font-display font-extrabold text-guac-ink text-[19px] leading-none gg-num">{money(item.last_price)}</p>
+          <p className="text-[11px] text-gray-400 mt-1">you last paid</p>
+        </div>
+        <button
+          type="button"
+          onClick={e => { e.stopPropagation(); onAddToSmashlist?.() }}
+          className="inline-flex items-center gap-1.5 rounded-[10px] px-3 py-2 text-[12.5px] font-bold text-[#2E6B3D] bg-white border transition-colors hover:bg-guac-50"
+          style={{ borderColor: 'rgba(20,83,45,.14)' }}
+        >
+          <span className="text-[15px] leading-none">+</span> List
+        </button>
+      </div>
     </div>
   )
 })
@@ -1269,7 +1512,31 @@ function OnHandStepper({ value, onChange, disabled, subtitle }) {
   )
 }
 
-function CatChip({ active, onClick, emoji, label, count, tone }) {
+function CatChip({ active, onClick, emoji, label, count, tone, status }) {
+  // STATUS chips (All / Overpaying / Best price / Multi-store) use the
+  // mockup's flatter fill: All → solid dark, Overpaying → amber,
+  // Best price → soft green; inactive = white + hairline border. No
+  // emoji tile — the glyph sits inline. Category chips keep the
+  // original gradient pill look.
+  if (status) {
+    const activeFill =
+      tone === 'amber'   ? 'bg-[#FBF3E1] text-[#B5730C] border border-[rgba(217,119,6,.32)]' :
+      tone === 'emerald' ? 'bg-[#E9F5DD] text-guac-700 border border-guac-line2' :
+                           'bg-[#14241A] text-white border border-[#14241A]'
+    const countCls = active
+      ? (tone === 'amber' ? 'bg-[#F1CE8E] text-[#8A560A]' : tone === 'emerald' ? 'bg-white/70 text-guac-700' : 'bg-white/20 text-white')
+      : 'bg-gray-100 text-gray-500'
+    return (
+      <button type="button" onClick={onClick}
+        className={`shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full font-bold text-[12.5px] transition-colors ${
+          active ? activeFill : 'bg-white text-guac-body border border-guac-line2 hover:border-guac-600'
+        }`}>
+        <span>{emoji}</span>
+        <span>{label}</span>
+        <span className={`text-[11px] font-extrabold px-1.5 py-0.5 rounded-full gg-num ${countCls}`}>{count}</span>
+      </button>
+    )
+  }
   const grad = TONE_GRADIENT[tone] || 'from-emerald-300 to-lime-400'
   return (
     <button type="button" onClick={onClick}

@@ -1,7 +1,7 @@
 name: getguac
 description: GetGuac — Smart receipt & rewards management
 publish_to: 'none'
-version: 0.4.1+194
+version: 0.4.2+195
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -140,12 +140,30 @@ flutter:
   # Bundled app fonts — matching the website type system. Bundled (not
   # fetched at runtime via google_fonts) so they ALWAYS render offline /
   # regardless of whether fonts.gstatic.com is reachable on the device.
-  # Both are variable fonts (weight axis); weights are applied in code via
-  # FontVariation('wght', ...) in theme/gg_design.dart.
+  # STATIC per-weight instances (generated from the variable originals via
+  # fonttools varLib.instancer). The variable *.ttf were registered fine in
+  # FontManifest but Flutter's Android engine (Impeller) rendered them as
+  # system-font fallback (Roboto) — a known variable-font weak spot. Static
+  # single-weight files render reliably. Flutter picks the file whose `weight`
+  # is closest to the requested fontWeight; the code's fontVariations become
+  # harmless no-ops on static fonts. Bricolage only ships 700/800 (headings +
+  # amounts never go lighter); Jakarta ships the full body range.
   fonts:
     - family: Bricolage Grotesque
       fonts:
-        - asset: assets/fonts/BricolageGrotesque-Variable.ttf
+        - asset: assets/fonts/static/BricolageGrotesque-700.ttf
+          weight: 700
+        - asset: assets/fonts/static/BricolageGrotesque-800.ttf
+          weight: 800
     - family: Plus Jakarta Sans
       fonts:
-        - asset: assets/fonts/PlusJakartaSans-Variable.ttf
+        - asset: assets/fonts/static/PlusJakartaSans-400.ttf
+          weight: 400
+        - asset: assets/fonts/static/PlusJakartaSans-500.ttf
+          weight: 500
+        - asset: assets/fonts/static/PlusJakartaSans-600.ttf
+          weight: 600
+        - asset: assets/fonts/static/PlusJakartaSans-700.ttf
+          weight: 700
+        - asset: assets/fonts/static/PlusJakartaSans-800.ttf
+          weight: 800

@@ -1,6 +1,6 @@
 {
-  "version": "v0.4.1",
-  "name": "v0.4.1 — Font fix + white dashboard",
-  "downloadUrl": "https://getguac.app/downloads/v0.4.1/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Fixed the fonts across the whole app — headings and dollar amounts now render in their proper bold weight everywhere (they were showing up thin before).\n• Dashboard background is now clean white to match the neutral look."
+  "version": "v0.4.2",
+  "name": "v0.4.2 — Real font fix",
+  "downloadUrl": "https://getguac.app/downloads/v0.4.2/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Fixed the app fonts for real — the custom Bricolage + Jakarta type now actually renders on Android instead of falling back to the system font. (Switched to static font files, which the Android engine renders reliably.)\n• This build shows a small font-check strip on the Home screen; it will be removed in the next update once confirmed."
 }

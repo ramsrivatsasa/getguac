@@ -312,7 +312,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             // real numbers for the selected window instead of dead subtitle.
             Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('$_salutation, $greeting',
+                Text('$_salutation $greeting',
                   style: ggHeading(size: 26, weight: FontWeight.w800, color: ggInk, height: 1.1)),
                 const SizedBox(height: 6),
                 Row(children: [
@@ -503,11 +503,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return '\$$b';
   }
 
-  // Time-aware greeting prefix.
-  String get _salutation {
-    final h = DateTime.now().hour;
-    return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
-  }
+  // Fixed greeting prefix — same regardless of time of day.
+  String get _salutation => 'Hello!!';
 
   // Gross spend over the selected window (returns excluded).
   double _periodSpend(List<Receipt> rs) =>

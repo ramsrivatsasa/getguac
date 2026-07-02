@@ -65,14 +65,8 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
   const periodCount = spendingPeriodCount || DEFAULT_COUNT[period] || 1
   const setPeriodCount = setSpendingPeriodCount
 
-  // Time-aware greeting, set after mount so the server-rendered hour
-  // (server timezone) never mismatches the client and triggers a
-  // hydration warning. Starts on a neutral "Good day".
-  const [greeting, setGreeting] = useState('Good day')
-  useEffect(() => {
-    const h = new Date().getHours()
-    setGreeting(h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening')
-  }, [])
+  // Fixed greeting — same regardless of time of day.
+  const greeting = 'Hello!!'
 
   function selectPeriod(p) {
     setSpendingPeriod(p)

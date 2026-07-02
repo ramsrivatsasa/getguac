@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.98",
-  "name": "v0.3.98 — Consistent fonts + Smashlist polish",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.98/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Dollar amounts across the app now use the website's Bricolage display font for a consistent look.\n• Smashlist polish — Buy Again suggestions grouped in their own card, cleaner empty states."
+  "version": "v0.3.99",
+  "name": "v0.3.99 — Fonts now built in",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.99/app-arm64-v8a-release.apk",
+  "releaseNotes": "• The Bricolage + Jakarta fonts now ship inside the app, so headings and amounts always render in the website's typefaces — previously they were fetched at runtime and could silently fall back to the system font."
 }

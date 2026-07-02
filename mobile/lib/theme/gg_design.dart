@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// Shared "new design" tokens — the clean, airy avocado look from the
 /// redesigned getguac.app home page, ported to the native app.
@@ -79,6 +78,15 @@ BoxDecoration ggChip() => BoxDecoration(
 // source of truth. Screens should use these helpers instead of ad-hoc
 // TextStyle(fontFamily: ...) so fonts stay consistent across the board.
 
+/// Bundled font families (declared in pubspec.yaml → flutter/fonts). Both are
+/// variable fonts with a `wght` axis; Flutter maps [TextStyle.fontWeight] onto
+/// that axis automatically, so a plain `fontWeight:` renders the right weight
+/// with NO runtime download. (The old google_fonts path fetched from
+/// fonts.gstatic.com at runtime and silently fell back to the system font
+/// whenever that wasn't reachable — which hid the whole type system.)
+const kDisplayFont = 'Bricolage Grotesque';
+const kBodyFont    = 'Plus Jakarta Sans';
+
 /// Website heading / display font — Bricolage Grotesque.
 TextStyle ggHeading({
   required double size,
@@ -87,7 +95,8 @@ TextStyle ggHeading({
   double letterSpacing = -0.5,
   double height = 1.08,
 }) =>
-    GoogleFonts.bricolageGrotesque(
+    TextStyle(
+      fontFamily: kDisplayFont,
       fontSize: size, fontWeight: weight, color: color,
       letterSpacing: letterSpacing, height: height,
     );
@@ -98,7 +107,8 @@ TextStyle ggAmount({
   FontWeight weight = FontWeight.w800,
   Color color = ggInk,
 }) =>
-    GoogleFonts.bricolageGrotesque(
+    TextStyle(
+      fontFamily: kDisplayFont,
       fontSize: size, fontWeight: weight, color: color, letterSpacing: -0.3,
     );
 
@@ -109,7 +119,8 @@ TextStyle ggBody({
   Color color = ggMuted,
   double height = 1.45,
 }) =>
-    GoogleFonts.plusJakartaSans(
+    TextStyle(
+      fontFamily: kBodyFont,
       fontSize: size, fontWeight: weight, color: color, height: height,
     );
 
@@ -117,9 +128,11 @@ TextStyle ggBody({
 /// Wired into ThemeData.textTheme so all inherited text picks up the website
 /// fonts without per-screen `fontFamily` overrides.
 TextTheme ggTextTheme() {
-  final body = GoogleFonts.plusJakartaSansTextTheme();
+  // Standard Material text theme, re-fonted to the bundled Jakarta for body.
+  final body = Typography.blackMountainView.apply(fontFamily: kBodyFont);
   TextStyle head(TextStyle? s, FontWeight w) =>
-      GoogleFonts.bricolageGrotesque(textStyle: s, fontWeight: w, letterSpacing: -0.5);
+      (s ?? const TextStyle()).copyWith(
+        fontFamily: kDisplayFont, fontWeight: w, letterSpacing: -0.5);
   return body.copyWith(
     displayLarge:   head(body.displayLarge,   FontWeight.w800),
     displayMedium:  head(body.displayMedium,  FontWeight.w800),

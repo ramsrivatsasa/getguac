@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
@@ -213,7 +212,8 @@ class GetGuacApp extends StatelessWidget {
             shadowColor: ggShadow,
             centerTitle: false,
             shape: const Border(bottom: BorderSide(color: ggBorder, width: 1)),
-            titleTextStyle: GoogleFonts.bricolageGrotesque(
+            titleTextStyle: const TextStyle(
+              fontFamily: kDisplayFont,
               color: ggInk,
               fontSize: 21,
               fontWeight: FontWeight.w800,

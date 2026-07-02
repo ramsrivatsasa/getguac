@@ -1,7 +1,7 @@
 name: getguac
 description: GetGuac — Smart receipt & rewards management
 publish_to: 'none'
-version: 0.3.98+191
+version: 0.3.99+192
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -137,3 +137,15 @@ flutter:
     - assets/mascot/
     - assets/icon/
     - assets/lottie/
+  # Bundled app fonts — matching the website type system. Bundled (not
+  # fetched at runtime via google_fonts) so they ALWAYS render offline /
+  # regardless of whether fonts.gstatic.com is reachable on the device.
+  # Both are variable fonts (weight axis); weights are applied in code via
+  # FontVariation('wght', ...) in theme/gg_design.dart.
+  fonts:
+    - family: Bricolage Grotesque
+      fonts:
+        - asset: assets/fonts/BricolageGrotesque-Variable.ttf
+    - family: Plus Jakarta Sans
+      fonts:
+        - asset: assets/fonts/PlusJakartaSans-Variable.ttf

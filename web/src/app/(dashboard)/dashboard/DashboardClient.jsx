@@ -1,10 +1,10 @@
 'use client'
 import { formatDateShort } from '../../../lib/dateFormat'
-import { useState, useRef, useEffect } from 'react'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useStore } from '../../../store'
 import Link from 'next/link'
-import { Gift, ArrowRight, Sparkles, PiggyBank, Wand2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Gift, ArrowRight, Sparkles, PiggyBank, Wand2 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import GuacoScoreCard from '../../../components/GuacoScoreCard'
 import FeatureHeader from '../../../components/FeatureHeader'
@@ -31,10 +31,10 @@ import { computeSmashDays } from '../../../lib/smashDays'
 import mascotBus from '../../../lib/mascotEventBus'
 import { CountUp, FadeUpStagger } from '../../../components/animated'
 const PERIODS = ['daily', 'weekly', 'monthly', 'yearly']
-// Spending-by-Store bars sit on a pale track (#F0F4EA); bar length encodes
-// each store's share of spend. Bars below the auto "heat" limit use a solid
-// brand-green fill (#1F8A3D); bars at/above it (top spenders) switch to a
-// green→pink gradient so the biggest chunks of spend stand out.
+// Spending-by-Store bars sit on a pale gray track; bar length encodes each
+// store's share of spend. Bars below the auto "heat" limit use a light slate
+// fill (#94A3B8); bars at/above it (top spenders) switch to a darker slate
+// (#475569) so the biggest chunks of spend stand out — neutral, no green.
 
 // Dropdown options for "how many <period>s back to include"
 const COUNT_OPTIONS = {
@@ -187,8 +187,8 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
 
   return (
     <div className="space-y-3 max-w-7xl">
-      {/* Soft brand gradient behind the whole dashboard screen. */}
-      <div aria-hidden className="fixed inset-0 -z-10 bg-gradient-to-b from-[#F4F5F1] via-[#EDF1E8] to-[#E4E8DF]" />
+      {/* Soft neutral gradient behind the whole dashboard screen. */}
+      <div aria-hidden className="fixed inset-0 -z-10 bg-gradient-to-b from-[#FAFAFA] via-[#F5F5F4] to-[#EEEEEC]" />
       {/* If the user signed up via /?ref=<CODE>, this fires once on
           first dashboard load to credit 3 Smash days to both sides.
           Renders nothing — pure side-effect island. */}
@@ -212,13 +212,13 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
             <ArrowRight size={16} className="text-amber-100 group-hover:translate-x-0.5 transition-transform" />
           </Link>
           <Link href="/guacanomics"
-            className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-gradient-to-br from-[#34D17A] to-[#14924A] text-white shadow-md hover:shadow-lg hover:scale-[1.02] transition-all group">
-            <Sparkles size={18} className="text-guac-100" />
+            className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-gradient-to-br from-slate-600 to-slate-800 text-white shadow-md hover:shadow-lg hover:scale-[1.02] transition-all group">
+            <Sparkles size={18} className="text-slate-200" />
             <div className="text-left">
               <p className="font-extrabold text-sm leading-tight">Guacanomics</p>
-              <p className="text-[11px] text-guac-100/90 leading-tight">Money's wingman</p>
+              <p className="text-[11px] text-slate-200/90 leading-tight">Money's wingman</p>
             </div>
-            <ArrowRight size={16} className="text-guac-100 group-hover:translate-x-0.5 transition-transform" />
+            <ArrowRight size={16} className="text-slate-200 group-hover:translate-x-0.5 transition-transform" />
           </Link>
           </div>
         }
@@ -252,33 +252,28 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
       {/* Stat tiles — GuacScore leads, then GuacWizard right next
           to it (paired engagement scores), then GuacMoney, then
           financial tiles, then Smash days last per user request. */}
-      {/* Engagement strip — single horizontal scroll so the row
-          reads as a swipeable carousel (matching the mobile
-          dashboard's behaviour). Each tile is the same fixed
-          width so the layout doesn't reflow as data lands; each
-          carries an onTap routed to its detail surface
-          (GuacScore → /guacanomics, GuacWizard → /guacwizard,
-          GuacMoney → /shopping, Rewards → /rewards). */}
-      <div className="-mx-2 px-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {/* Engagement strip — FadeUpStagger gives each tile a 40ms
-            offset entrance on initial paint. Each tile carries its
-            own CountUp internally for hero numbers, so timeframe
-            flips also smooth-retally inside without needing a key. */}
-        <FadeUpStagger className="flex gap-3 min-w-max" delayMs={50}>
-          {/* GuacScore reads lifetime rated purchases, not just the
-              current period filter — otherwise a 3-month dashboard
-              window with no rated purchases inside it shows score=0
-              even when the user has rated items further back. The
-              big card on /guacanomics already uses a wider window;
-              this matches that behavior. */}
-          <Link href="/guacanomics" className="w-64 shrink-0 block">
-            <GuacScoreTileWithBankBite receipts={spendingReceipts} />
-          </Link>
-          <div className="w-64 shrink-0"><GuacWizardTile /></div>
-          <Link href="/validate" className="w-64 shrink-0 block"><GuacMoneyTile /></Link>
-          <div className="w-64 shrink-0"><RewardsTile count={initialRewards.length} /></div>
-        </FadeUpStagger>
-      </div>
+      {/* Engagement strip — responsive grid so the four tiles always
+          fit the screen (2×2 on mobile, 1×4 on desktop) instead of
+          overflowing off the right edge. All tiles stretch to the
+          same height. Each routes to its detail surface (GuacScore →
+          /guacanomics, GuacWizard → /guacwizard, GuacMoney →
+          /validate, Rewards → /rewards). FadeUpStagger gives each a
+          40ms offset entrance; each tile carries its own CountUp so
+          timeframe flips smooth-retally inside. */}
+      <FadeUpStagger className="grid grid-cols-2 lg:grid-cols-4 gap-3" delayMs={50}>
+        {/* GuacScore reads lifetime rated purchases, not just the
+            current period filter — otherwise a 3-month dashboard
+            window with no rated purchases inside it shows score=0
+            even when the user has rated items further back. The
+            big card on /guacanomics already uses a wider window;
+            this matches that behavior. */}
+        <Link href="/guacanomics" className="block h-full">
+          <GuacScoreTileWithBankBite receipts={spendingReceipts} />
+        </Link>
+        <div className="h-full"><GuacWizardTile /></div>
+        <Link href="/validate" className="block h-full"><GuacMoneyTile /></Link>
+        <div className="h-full"><RewardsTile count={initialRewards.length} /></div>
+      </FadeUpStagger>
 
       {/* Spending anomalies sits ABOVE the financial-tile scroll so
           warning state is visible before the user scans the row of
@@ -336,9 +331,9 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
                       className="w-full flex items-center gap-3 group"
                       title={`${d.fullName} — $${d.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                     >
-                      <span className="w-28 shrink-0 text-left text-[13px] font-semibold text-guac-ink truncate group-hover:text-guac-700 transition-colors">{d.fullName}</span>
-                      <span className="flex-1 h-3 rounded-full bg-[#F0F4EA] overflow-hidden">
-                        <span className="block h-full rounded-full transition-[width] duration-500" style={{ width: pct + '%', background: hot ? 'linear-gradient(90deg,#15803D,#EC4899)' : '#1F8A3D' }} />
+                      <span className="w-28 shrink-0 text-left text-[13px] font-semibold text-guac-ink truncate group-hover:text-gray-900 transition-colors">{d.fullName}</span>
+                      <span className="flex-1 h-3 rounded-full bg-gray-100 overflow-hidden">
+                        <span className="block h-full rounded-full transition-[width] duration-500" style={{ width: pct + '%', background: hot ? '#475569' : '#94A3B8' }} />
                       </span>
                       <span className="w-20 shrink-0 text-right text-[13px] gg-num font-extrabold text-guac-ink">${Math.round(d.amount).toLocaleString('en-US')}</span>
                     </button>
@@ -354,7 +349,7 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
           <div className="flex items-center justify-between mb-4">
             <h3 className="gg-h2">Rewards</h3>
             <Link href="/rewards" title="View all rewards" aria-label="View all rewards"
-              className="w-8 h-8 rounded-full bg-guac-100 text-guac-700 hover:bg-guac-100 hover:scale-110 active:scale-95 transition-all flex items-center justify-center shadow-sm">
+              className="w-8 h-8 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 hover:scale-110 active:scale-95 transition-all flex items-center justify-center shadow-sm">
               <ArrowRight size={14} />
             </Link>
           </div>
@@ -370,7 +365,7 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
                     <p className="text-sm font-bold text-guac-ink leading-tight">{r.reward_title}</p>
                     <p className="gg-colhead mt-0.5">{displayStoreName(r.store_name)}</p>
                   </div>
-                  <span className={`badge ${r.expiry_date < today ? 'badge-red' : 'badge-green'} ml-2 flex-shrink-0`}>
+                  <span className={`badge ${r.expiry_date < today ? 'badge-red' : 'badge-gray'} ml-2 flex-shrink-0`}>
                     {r.expiry_date < today ? 'Expired' : formatDateShort(r.expiry_date)}
                   </span>
                 </div>
@@ -385,7 +380,7 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
           <h3 className="gg-h2">Recent Transactions</h3>
           <Link href="/receipts" title="All receipts" aria-label="All receipts"
-            className="w-8 h-8 rounded-full bg-guac-100 text-guac-700 hover:bg-guac-100 hover:scale-110 active:scale-95 transition-all flex items-center justify-center shadow-sm">
+            className="w-8 h-8 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 hover:scale-110 active:scale-95 transition-all flex items-center justify-center shadow-sm">
             <ArrowRight size={14} />
           </Link>
         </div>
@@ -407,18 +402,18 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
                 <tr
                   key={r.id}
                   style={{ animationDelay: `${idx * 35}ms`, animationDuration: '220ms' }}
-                  className="hover:bg-guac-row anim-fadeup">
+                  className="hover:bg-gray-50 anim-fadeup">
                   <td>
                     <Link href={`/receipts/${r.id}`} className="flex items-center gap-2.5 group">
                       <StoreLogo storeName={r.store_name} size={28} />
-                      <span className="font-semibold text-guac-ink group-hover:text-guac-700">{displayStoreName(r.store_name)}</span>
+                      <span className="font-semibold text-guac-ink group-hover:text-gray-900">{displayStoreName(r.store_name)}</span>
                     </Link>
                   </td>
                   <td className="gg-num text-guac-muted whitespace-nowrap">{formatDateShort(r.date)}</td>
                   <td className="text-right gg-num font-extrabold text-guac-ink">${parseFloat(r.total_amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   <td className="text-right gg-num text-guac-faint">${parseFloat(r.tax_paid || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   <td className="text-right">
-                    <span className={r.business_purchase ? 'badge-green' : 'badge-gray'}>
+                    <span className={r.business_purchase ? 'badge bg-slate-200 text-slate-700' : 'badge-gray'}>
                       {r.business_purchase ? 'Business' : 'Personal'}
                     </span>
                   </td>
@@ -471,7 +466,7 @@ function GuacScoreTileWithBankBite({ receipts }) {
   }
   const bankBite = { interest, fees, total: interest + fees }
   const runDays = computeSmashDays(receipts).smashDays
-  return <GuacoScoreCard receipts={receipts} bankBite={bankBite} size="sm" runDays={runDays} />
+  return <GuacoScoreCard receipts={receipts} bankBite={bankBite} size="sm" runDays={runDays} className="h-full" />
 }
 
 // 8-tile financial scroll. Pulls bank data via the same useQuery
@@ -500,7 +495,6 @@ const METRIC_DIRECTIONS = {
 }
 
 function AllPaymentsScroll({ spendingReceipts, period, periodCount }) {
-  const scrollRef = useRef(null)
   const { statements, fees, transactions } = useBankData()
 
   const analysis = computeDashboardAnalysis({
@@ -532,63 +526,29 @@ function AllPaymentsScroll({ spendingReceipts, period, periodCount }) {
     { key: 'bankFees',     value: analysis.metrics.bankFees.current,     format: money,       prefix: '$' },
   ]
 
-  // Smooth-scroll the row by roughly one tile (~172px = w-40 + gap).
-  // Multiplied by 3 so each click moves a meaningful chunk on wide
-  // screens. behavior:'smooth' = the "auto"-feeling slide.
-  const scrollBy = (dir) => {
-    const el = scrollRef.current
-    if (!el) return
-    el.scrollBy({ left: dir * 236 * 2, behavior: 'smooth' })
-  }
-
   return (
-    // Outer wrapper has px-12 padding so the absolutely-positioned
-    // arrows sit *outside* the scroll area instead of on top of the
-    // first/last tile (which was the original overlap bug).
-    <div className="relative group px-12">
-      <style jsx>{`
-        .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-      `}</style>
-      <div ref={scrollRef} className="no-scrollbar overflow-x-auto scroll-smooth pb-1">
-        {/* FadeUpStagger gives the financial scroll a 1-shot
-            entrance on mount; subsequent timeframe flips animate
-            the numeric values inside each PaymentTile via CountUp. */}
-        <FadeUpStagger className="flex gap-3 min-w-max" delayMs={45}>
-          {TILES.map(({ key, value, format, prefix }) => {
-            const m = analysis.metrics[key]
-            return (
-              <PaymentTile
-                key={key}
-                {...PAYMENT_TILE_CONFIGS[key]}
-                value={format(value)}
-                numericValue={Number(value) || 0}
-                prefix={prefix}
-                deltaLabel={m.deltaLabel}
-                deltaArrow={m.deltaArrow}
-                deltaGoodWhen={METRIC_DIRECTIONS[key]}
-              />
-            )
-          })}
-        </FadeUpStagger>
-      </div>
-      <button
-        type="button"
-        aria-label="Scroll left"
-        onClick={() => scrollBy(-1)}
-        className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white shadow-md border border-gray-200 flex items-center justify-center text-gray-700 hover:bg-guac-row hover:text-guac-700 opacity-70 group-hover:opacity-100 transition-opacity"
-      >
-        <ChevronLeft size={18} />
-      </button>
-      <button
-        type="button"
-        aria-label="Scroll right"
-        onClick={() => scrollBy(1)}
-        className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white shadow-md border border-gray-200 flex items-center justify-center text-gray-700 hover:bg-guac-row hover:text-guac-700 opacity-70 group-hover:opacity-100 transition-opacity"
-      >
-        <ChevronRight size={18} />
-      </button>
-    </div>
+    // Wrapping row — the eight financial tiles flow onto as many rows
+    // as needed to fit the screen width (no off-screen horizontal
+    // scroll or arrow controls). FadeUpStagger gives a 1-shot entrance
+    // on mount; timeframe flips animate the numeric values inside each
+    // PaymentTile via CountUp.
+    <FadeUpStagger className="flex flex-wrap gap-3" delayMs={45}>
+      {TILES.map(({ key, value, format, prefix }) => {
+        const m = analysis.metrics[key]
+        return (
+          <PaymentTile
+            key={key}
+            {...PAYMENT_TILE_CONFIGS[key]}
+            value={format(value)}
+            numericValue={Number(value) || 0}
+            prefix={prefix}
+            deltaLabel={m.deltaLabel}
+            deltaArrow={m.deltaArrow}
+            deltaGoodWhen={METRIC_DIRECTIONS[key]}
+          />
+        )
+      })}
+    </FadeUpStagger>
   )
 }
 
@@ -610,22 +570,15 @@ function GuacWizardTile() {
     const since = periodStartDate(spendingPeriod, spendingPeriodCount)
     return computeWizardScore(generateInsights({ statements, fees, transactions }, since)).score
   })()
-  // Score-band tone applied to the WHOLE tile (bg + ring + chip +
-  // every text color) — if green means "healthy", commit to it
-  // everywhere on the card, not just a tiny dot. While loading,
-  // use a neutral slate palette so we never flash through a wrong
-  // color before the real score lands.
-  const tone =
-    score === undefined ? { bg: 'from-slate-50 to-slate-100',     ring: 'ring-slate-200',   chip: 'from-slate-300 to-slate-400',     label: 'text-slate-600',   value: 'text-slate-700',   sub: 'text-slate-500' } :
-    score === null      ? { bg: 'from-violet-50 to-purple-100',   ring: 'ring-violet-200',  chip: 'from-violet-400 to-violet-600',   label: 'text-violet-700',  value: 'text-violet-900',  sub: 'text-violet-600' } :
-    score >= 65         ? { bg: 'from-emerald-50 to-lime-100',    ring: 'ring-guac-100', chip: 'from-emerald-400 to-lime-600',    label: 'text-guac-700', value: 'text-guac-ink', sub: 'text-guac-700' } :
-    score >= 35         ? { bg: 'from-amber-50 to-orange-100',    ring: 'ring-amber-200',   chip: 'from-amber-400 to-orange-600',    label: 'text-amber-700',   value: 'text-amber-900',   sub: 'text-amber-700' } :
-                          { bg: 'from-rose-50 to-red-100',        ring: 'ring-rose-200',    chip: 'from-rose-400 to-red-600',        label: 'text-rose-700',    value: 'text-rose-900',    sub: 'text-rose-700' }
+  // Neutral tone — a single slate palette for every score band so the
+  // tile stays neutral (no green "healthy" state). The score number
+  // still communicates health; the chrome no longer colors it.
+  const tone = { chip: 'from-slate-500 to-slate-600', label: 'text-gray-500', value: 'text-gray-900', sub: 'text-gray-500' }
 
   return (
     <Link
       href="/guacwizard"
-      className="payment-tile-card stat-card relative overflow-hidden hover:shadow-md transition-all"
+      className="payment-tile-card stat-card relative overflow-hidden h-full hover:shadow-md transition-all"
       title="GuacWizard health score"
     >
       {/* 🥑 brand watermark + 🧙‍♂️ theme watermark — same proportions
@@ -666,20 +619,20 @@ function GuacMoneyTile() {
     queryFn: fetchGuacMoneyPoints,
     staleTime: 60_000,
   })
-  // Emerald palette throughout — the brand colour. Active = strong
-  // gradient chip + filled bg; idle = same shape with paler tints so
-  // a fresh account still feels designed.
+  // Neutral slate palette. Active = solid gradient chip; idle = paler
+  // tints so a fresh account still feels designed. The gold value pill
+  // (amber) is kept — it's the dollar-value indicator, not chrome.
   const active = total > 0
   return (
-    <div className="payment-tile-card stat-card relative overflow-hidden hover:shadow-md transition-all">
+    <div className="payment-tile-card stat-card relative overflow-hidden h-full hover:shadow-md transition-all">
       <span aria-hidden className="tile-watermark-avocado absolute select-none pointer-events-none leading-none" style={{ top: '-4px', left: '52px', '--wm-rot': '16deg', fontSize: '30px', opacity: 0.22 }}>🥑</span>
       <span aria-hidden className="tile-watermark-theme absolute select-none pointer-events-none leading-none" style={{ top: '2px', right: '6px', '--wm-rot': '-8deg', fontSize: '20px', opacity: 0.28 }}>💰</span>
-      <div className={`tile-chip-host shrink-0 w-11 h-11 rounded-xl flex items-center justify-center relative z-10 bg-gradient-to-br ${active ? 'from-emerald-400 via-emerald-500 to-lime-600' : 'from-emerald-200 to-lime-300'} shadow-md text-white`}>
+      <div className={`tile-chip-host shrink-0 w-11 h-11 rounded-xl flex items-center justify-center relative z-10 bg-gradient-to-br ${active ? 'from-slate-500 to-slate-600' : 'from-slate-300 to-slate-400'} shadow-md text-white`}>
         <PiggyBank size={20} className="tile-chip-icon text-white" />
       </div>
       <div className="min-w-0 flex-1 relative z-10">
-        <p className="text-[10px] uppercase tracking-wider font-bold text-guac-700">GuacMoney</p>
-        <p className="text-xl font-black text-guac-ink gg-num leading-tight">
+        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-500">GuacMoney</p>
+        <p className="text-xl font-black text-gray-900 gg-num leading-tight">
           {isLoading ? '—' : <CountUp value={Number(total) || 0} duration={520} format={v => Math.round(v).toLocaleString()} />}
         </p>
         {active ? (
@@ -687,7 +640,7 @@ function GuacMoneyTile() {
             🪙 ≈ ${(total / 1000).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} value
           </span>
         ) : (
-          <p className="text-[10px] font-semibold mt-0.5 text-guac-700">rate buys to earn →</p>
+          <p className="text-[10px] font-semibold mt-0.5 text-gray-500">rate buys to earn →</p>
         )}
       </div>
     </div>
@@ -699,27 +652,25 @@ function GuacMoneyTile() {
 // tiles so the row reads as one design system.
 function RewardsTile({ count }) {
   const active = count > 0
-  // Rose/pink palette gives Rewards its own visual identity so the
-  // 4-tile engagement row doesn't read as three-quarters green.
-  // GuacScore (amber band) · GuacWizard (violet) · GuacMoney
-  // (emerald) · Rewards (rose) → four distinct color homes.
+  // Neutral slate/gray palette so the whole engagement row reads as
+  // one calm, neutral design system (no color-per-tile).
   return (
     <Link
       href="/rewards"
-      className={`payment-tile-card stat-card relative overflow-hidden bg-gradient-to-br ${active ? 'from-rose-50 to-pink-100' : 'from-gray-50 to-gray-100/40'} ring-1 ${active ? 'ring-rose-200' : 'ring-gray-200'} hover:shadow-md transition-all`}
+      className="payment-tile-card stat-card relative overflow-hidden h-full bg-gradient-to-br from-gray-50 to-gray-100/60 ring-1 ring-gray-200 hover:shadow-md transition-all"
       title="Rewards available"
     >
       <span aria-hidden className="tile-watermark-avocado absolute select-none pointer-events-none leading-none" style={{ bottom: '-4px', right: '4px', '--wm-rot': '-18deg', fontSize: '30px', opacity: 0.22 }}>🥑</span>
       <span aria-hidden className="tile-watermark-theme absolute select-none pointer-events-none leading-none" style={{ top: '2px', right: '6px', '--wm-rot': '12deg', fontSize: '20px', opacity: 0.28 }}>🎁</span>
-      <div className={`tile-chip-host shrink-0 w-11 h-11 rounded-xl flex items-center justify-center relative z-10 bg-gradient-to-br ${active ? 'from-rose-400 to-pink-600' : 'from-gray-300 to-gray-400'} shadow-md text-white`}>
+      <div className={`tile-chip-host shrink-0 w-11 h-11 rounded-xl flex items-center justify-center relative z-10 bg-gradient-to-br ${active ? 'from-slate-500 to-slate-600' : 'from-gray-300 to-gray-400'} shadow-md text-white`}>
         <Gift size={20} className="tile-chip-icon text-white" />
       </div>
       <div className="min-w-0 flex-1 relative z-10">
-        <p className={`text-[10px] uppercase tracking-wider font-bold ${active ? 'text-rose-700' : 'text-gray-500'}`}>Rewards</p>
-        <p className={`text-xl font-black ${active ? 'text-rose-900' : 'text-gray-900'} gg-num leading-tight`}>
+        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-500">Rewards</p>
+        <p className="text-xl font-black text-gray-900 gg-num leading-tight">
           <CountUp value={count} duration={420} />
         </p>
-        <p className={`text-[10px] font-semibold mt-0.5 ${active ? 'text-rose-700' : 'text-gray-500'}`}>
+        <p className="text-[10px] font-semibold mt-0.5 text-gray-500">
           {active ? 'available' : 'none yet'}
         </p>
       </div>

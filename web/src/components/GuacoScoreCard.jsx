@@ -31,8 +31,12 @@ export default function GuacoScoreCard({ receipts = [], bankBite = null, size = 
     : grade
 
   const tint = GRADE_TINT[displayGrade.color] || GRADE_TINT.emerald
-  const R = small ? 22 : 56
-  const STROKE = small ? 5 : 9
+  // Small (dashboard) mode uses a smaller ring so the gauge matches the
+  // 44px icon chips on the sibling engagement tiles instead of towering
+  // over them, and a neutral slate palette so the tile reads neutral
+  // (no green). The large /guacanomics card keeps the colored tint.
+  const R = small ? 16 : 56
+  const STROKE = small ? 4 : 9
   const C = 2 * Math.PI * R
   const offset = C * (1 - displayScore / 100)
   const svgSize = (R + STROKE) * 2 + 4
@@ -46,7 +50,7 @@ export default function GuacoScoreCard({ receipts = [], bankBite = null, size = 
             <circle cx={svgSize / 2} cy={svgSize / 2} r={R}
               fill="none" stroke="#e5e7eb" strokeWidth={STROKE} />
             <circle cx={svgSize / 2} cy={svgSize / 2} r={R}
-              fill="none" stroke={tint.stroke} strokeWidth={STROKE} strokeLinecap="round"
+              fill="none" stroke="#475569" strokeWidth={STROKE} strokeLinecap="round"
               strokeDasharray={C} strokeDashoffset={offset}
               transform={`rotate(-90 ${svgSize / 2} ${svgSize / 2})`}
               style={{ transition: 'stroke-dashoffset 0.6s ease-out' }}
@@ -57,19 +61,19 @@ export default function GuacoScoreCard({ receipts = [], bankBite = null, size = 
                 ring's stroke-dashoffset transition above (600ms).
                 Number + arc finish together instead of the number
                 snapping while the arc eases. */}
-            <CountUp value={displayScore} duration={600} className={`font-extrabold ${tint.text} text-sm`} />
+            <CountUp value={displayScore} duration={600} className="font-extrabold text-gray-700 text-[11px]" />
           </div>
         </div>
         <div className="min-w-0 flex-1">
-          <p className={`text-[10px] uppercase tracking-wider font-bold ${tint.text}`}>GuacScore</p>
-          <p className={`text-base font-black ${tint.text} flex items-center gap-1 mt-0.5 truncate`}>
+          <p className="text-[10px] uppercase tracking-wider font-bold text-gray-500">GuacScore</p>
+          <p className="text-base font-black text-gray-800 flex items-center gap-1 mt-0.5 truncate">
             <span>{displayGrade.emoji}</span>
             <span className="truncate">{displayGrade.label}</span>
           </p>
           {isPreRating ? (
-            <p className={`text-[10px] font-semibold mt-0.5 ${tint.text} opacity-70`}>rate to start</p>
+            <p className="text-[10px] font-semibold mt-0.5 text-gray-400">rate to start</p>
           ) : (
-            <p className={`text-[10px] font-bold mt-0.5 ${tint.text}`}>
+            <p className="text-[10px] font-bold mt-0.5 text-gray-500">
               ▲ Beating ~{Math.min(99, Math.round(40 + displayScore * 0.6))}%{runDays > 0 ? ` · ${runDays}d run` : ''}
             </p>
           )}

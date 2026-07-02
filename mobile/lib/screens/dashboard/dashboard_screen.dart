@@ -31,13 +31,14 @@ import '../../services/guacoscore.dart' as guac_engine;
 import '../../services/timeframe_store.dart';
 import '../../theme/gg_design.dart';
 
-// Retained for the multicolor data tiles / chart accents that keep their own
-// brand colours. Greeting + chrome now use the central gg_design tokens.
-const _kEmerald700 = ggLime;
-const _kEmerald800 = ggInk;
-const _kEmerald900 = ggInk;
-const _kEmerald50  = ggChipBg;
-const _kEmerald100 = ggBorderLime;
+// De-greened dashboard chrome: these former lime/emerald aliases now map to
+// neutral slate so the dashboard reads neutral (no green highlights). ggInk is
+// near-black, so the *800/*900 text aliases stay put as the dark text colour.
+const _kEmerald700 = Color(0xFF475569); // slate-600 — arrows, inactive tab text
+const _kEmerald800 = ggInk;             // near-black text
+const _kEmerald900 = ggInk;             // near-black text
+const _kEmerald50  = Color(0xFFF1F5F9); // slate-100 — pill / track background
+const _kEmerald100 = Color(0xFFE2E8F0); // slate-200 — hairline border
 
 enum _Period { daily, weekly, monthly, yearly }
 
@@ -316,7 +317,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   style: ggHeading(size: 26, weight: FontWeight.w800, color: ggInk, height: 1.1)),
                 const SizedBox(height: 6),
                 Row(children: [
-                  Text(_money(_periodSpend(filtered)), style: ggAmount(size: 18, color: ggLime)),
+                  Text(_money(_periodSpend(filtered)), style: ggAmount(size: 18, color: ggInk)),
                   Text('  spent · ${filtered.length} receipt${filtered.length == 1 ? '' : 's'}',
                     style: ggBody(size: 13, weight: FontWeight.w600, color: ggMuted)),
                 ]),
@@ -541,7 +542,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _featureIconStrip() {
     final items = <({String route, IconData icon, String label, List<Color> gradient, Color color})>[
       (route: '/validate',    icon: Icons.fact_check_rounded,            label: 'Worth It?',   gradient: const [Color(0xFFfbbf24), Color(0xFFf43f5e)], color: const Color(0xFFf59e0b)),
-      (route: '/guacanomics', icon: Icons.auto_awesome,                  label: 'Guacanomics', gradient: const [Color(0xFF34d399), Color(0xFF15803d)], color: const Color(0xFF16a34a)),
+      (route: '/guacanomics', icon: Icons.auto_awesome,                  label: 'Guacanomics', gradient: const [Color(0xFF64748B), Color(0xFF334155)], color: const Color(0xFF475569)),
       (route: '/guacwizard',  icon: Icons.auto_fix_high,                 label: 'GuacWizard',  gradient: const [Color(0xFFa78bfa), Color(0xFF7c3aed)], color: const Color(0xFF7c3aed)),
       (route: '/steals',      icon: Icons.local_offer,                   label: 'Steals',      gradient: const [Color(0xFFf9a8d4), Color(0xFFdb2777)], color: const Color(0xFFdb2777)),
       (route: '/rewards',     icon: Icons.card_giftcard_rounded,         label: 'Rewards',     gradient: const [Color(0xFFfb7185), Color(0xFFe11d48)], color: const Color(0xFFe11d48)),
@@ -793,12 +794,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     String subtext;
     String value;
     if (r.score == null) {
-      tone = kToneEmerald;
+      tone = kToneSlate;
       value = 'Fresh';
       subtext = 'rate to start';
     } else {
       final s = r.score!;
-      tone = s >= 65 ? kToneEmerald : s >= 50 ? kToneEmerald : s >= 35 ? kToneAmber : kToneRose;
+      tone = kToneSlate; // neutral — no score-band green/amber/rose tinting
       value = '$s';
       subtext = '${r.ratedCount} rated';
     }
@@ -845,12 +846,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
       value = '—';
       sub = 'loading…';
     } else if (r.score == null) {
-      tone = kToneViolet;
+      tone = kToneSlate;
       value = 'Set up';
       sub = 'connect bank →';
     } else {
       final s = r.score!;
-      tone = s >= 65 ? kToneEmerald : s >= 35 ? kToneAmber : kToneRose;
+      tone = kToneSlate; // neutral — no score-band tinting
       value = '$s/100';
       sub = 'health score';
     }
@@ -904,7 +905,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _rewardsTile(int count) {
     final active = count > 0;
-    final tone = active ? kToneRose : kToneSlate;
+    const tone = kToneSlate; // neutral — was rose when active
     return EngagementTile(
       label: 'REWARDS', value: '$count',
       subtext: active ? 'available' : 'none yet',
@@ -1109,11 +1110,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ]);
   }
 
-  // One horizontal spending bar: store name · rounded gradient track
+  // One horizontal spending bar: store name · rounded slate track
   // (length ∝ spend) · dollar amount. Tapping opens that store's receipts.
-  // Auto-detected "heat" limit: stores past 40% of the top spender switch
-  // from green→lime to a green→pink gradient so the biggest chunks of spend
-  // stand out. Scales with the window (swap for a fixed dollar value here).
+  // Auto-detected "heat" limit: stores past 40% of the top spender use a
+  // darker slate so the biggest chunks of spend stand out. Neutral, no green.
+  // Scales with the window (swap for a fixed dollar value here).
   Widget _storeBar(_StoreSpend s, double maxAmount) {
     final frac = maxAmount > 0 ? (s.amount / maxAmount).clamp(0.08, 1.0) : 0.0;
     final hot = maxAmount > 0 && s.amount >= maxAmount * 0.4;
@@ -1133,15 +1134,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
             borderRadius: BorderRadius.circular(999),
             child: Container(
               height: 13,
-              color: const Color(0xFFEDF2E8),
+              color: const Color(0xFFF1F5F9),
               child: FractionallySizedBox(
                 alignment: Alignment.centerLeft,
                 widthFactor: frac,
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(colors: hot
-                      ? const [Color(0xFF15803D), Color(0xFFEC4899)]
-                      : const [Color(0xFF15803D), Color(0xFF84CC16)]),
+                      ? const [Color(0xFF64748B), Color(0xFF334155)]
+                      : const [Color(0xFF94A3B8), Color(0xFF64748B)]),
                   ),
                 ),
               ),
@@ -1248,7 +1249,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           trailing: Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
-              color: r.isExpired ? const Color(0xFFfee2e2) : const Color(0xFFd1fae5),
+              color: r.isExpired ? const Color(0xFFfee2e2) : const Color(0xFFF1F5F9),
               borderRadius: BorderRadius.circular(99),
             ),
             child: Text(r.isExpired ? 'Expired' : formatDateShort(r.expiryDate),

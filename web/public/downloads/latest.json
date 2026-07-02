@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.99",
-  "name": "v0.3.99 — Fonts now built in",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.99/app-arm64-v8a-release.apk",
-  "releaseNotes": "• The Bricolage + Jakarta fonts now ship inside the app, so headings and amounts always render in the website's typefaces — previously they were fetched at runtime and could silently fall back to the system font."
+  "version": "v0.4.0",
+  "name": "v0.4.0 — Neutral dashboard",
+  "downloadUrl": "https://getguac.app/downloads/v0.4.0/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Cleaner, neutral dashboard — removed the green highlights across the home screen (score tiles, spending bars, badges, arrows) for a calmer, uniform look. Same numbers, same layout, just easier on the eyes."
 }

@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../widgets/animated_primitives.dart';
 import '../../widgets/top_app_bar_actions.dart';
+import '../../theme/gg_design.dart';
 
 class ReturnsScreen extends StatefulWidget {
   const ReturnsScreen({super.key});
@@ -134,7 +135,7 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
                       subtitle: Text('Bought ${r.date} · expires ${r.expiryDate}',
                         style: const TextStyle(fontSize: 11, color: Colors.black54)),
                       trailing: Text('\$${r.totalAmount.toStringAsFixed(2)}',
-                        style: const TextStyle(fontWeight: FontWeight.w800)),
+                        style: ggAmount()),
                       onTap: () => context.push('/receipts/${r.id}'),
                     ),
                   ),

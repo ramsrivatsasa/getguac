@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.97",
-  "name": "v0.3.97 — Cleaner Smashlist",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.97/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Redesigned Smashlist — each store is now a clean white card, refreshed list tabs, and consistent website fonts throughout."
+  "version": "v0.3.98",
+  "name": "v0.3.98 — Consistent fonts + Smashlist polish",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.98/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Dollar amounts across the app now use the website's Bricolage display font for a consistent look.\n• Smashlist polish — Buy Again suggestions grouped in their own card, cleaner empty states."
 }

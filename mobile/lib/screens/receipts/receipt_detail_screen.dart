@@ -15,6 +15,7 @@ import '../../services/receipt_reparse_service.dart';
 import '../../services/mascot_event_bus.dart';
 import '../../widgets/animated_primitives.dart';
 import '../../widgets/top_app_bar_actions.dart';
+import '../../theme/gg_design.dart';
 
 class ReceiptDetailScreen extends StatefulWidget {
   final String id;
@@ -452,10 +453,7 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
             value: headlineValue,
             duration: const Duration(milliseconds: 480),
             formatter: (v) => '\$${v.toStringAsFixed(2)}',
-            style: const TextStyle(
-              color: Color(0xFF6b7280), fontSize: 13,
-              fontWeight: FontWeight.w600,
-            ),
+            style: ggAmount(size: 13, weight: FontWeight.w600, color: const Color(0xFF6b7280)),
           ),
           Text('  •  ${formatDateShort(r.date)}',
             style: const TextStyle(
@@ -532,9 +530,10 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
           ])),
           const SizedBox(width: 12),
           Text('\$${(item.price * item.qty).toStringAsFixed(2)}',
-            style: TextStyle(
-              fontSize: 14, fontWeight: FontWeight.w800,
+            style: ggAmount(
+              size: 14,
               color: item.returned ? const Color(0xFF94a3b8) : const Color(0xFF0f172a),
+            ).copyWith(
               decoration: item.returned ? TextDecoration.lineThrough : null,
             ),
           ),

@@ -1220,7 +1220,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           title: Text(r.storeName, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
           subtitle: Text(formatDateShort(r.date), style: const TextStyle(fontSize: 11, color: Colors.black45)),
           trailing: Text('\$${r.totalAmount.toStringAsFixed(2)}',
-            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
+            style: ggAmount(size: 14)),
           onTap: () => context.push('/receipts/${r.id}'),
         )),
       ]),

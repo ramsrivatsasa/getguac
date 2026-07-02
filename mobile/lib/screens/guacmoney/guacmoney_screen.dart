@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../services/guac_money_service.dart';
 import '../../widgets/top_app_bar_actions.dart';
+import '../../theme/gg_design.dart';
 
 /// GuacMoney — one balance combining the money our Guac-AI saved you
 /// (not-worth-it ratings + refunds, $-for-$) plus engagement (scan +100,
@@ -112,7 +113,7 @@ class _GuacMoneyScreenState extends State<GuacMoneyScreen> {
                   ),
                   const SizedBox(width: 12),
                   Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                    Text('\$${saved.toStringAsFixed(2)}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 24, height: 1)),
+                    Text('\$${saved.toStringAsFixed(2)}', style: ggAmount(size: 24, color: Colors.white).copyWith(height: 1)),
                     const SizedBox(height: 2),
                     const Text('our Guac-AI saved you', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12)),
                   ])),

@@ -468,8 +468,17 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                                   .copyWith(letterSpacing: 0.3)),
                             ]),
                           ),
-                          ...buyAgain.map((it) => _itemTile(it, isPredicted: true)),
-                          const SizedBox(height: 8),
+                          Container(
+                            margin: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+                            decoration: ggCard(radius: 16),
+                            clipBehavior: Clip.antiAlias,
+                            child: Column(children: [
+                              for (int bi = 0; bi < buyAgain.length; bi++) ...[
+                                if (bi > 0) const Divider(height: 1, color: ggBorder),
+                                _itemTile(buyAgain[bi], isPredicted: true),
+                              ],
+                            ]),
+                          ),
                         ],
                         if (approved.isNotEmpty) ...[
                           Padding(
@@ -672,14 +681,14 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
   Widget _emptyView() => Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
     Text(_kListEmoji[_activeList] ?? '🛒', style: const TextStyle(fontSize: 60)),
     const SizedBox(height: 12),
-    Text('$_activeList is empty', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+    Text('$_activeList is empty', style: ggBody(size: 16, weight: FontWeight.w800, color: ggInk)),
     const SizedBox(height: 4),
     Text(
       _items.isEmpty
         ? 'No items yet. Add some via web or by parsing a receipt.'
         : 'Nothing in $_activeList. Check the other tabs.',
       textAlign: TextAlign.center,
-      style: const TextStyle(color: Colors.black54),
+      style: ggBody(size: 13, color: ggMuted),
     ),
   ]));
 
@@ -688,11 +697,11 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
     child: Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
       const Icon(Icons.error_outline, color: Colors.red, size: 48),
       const SizedBox(height: 8),
-      const Text('Could not load Smashlist',
-        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.red)),
+      Text('Could not load Smashlist',
+        style: ggBody(size: 16, weight: FontWeight.w800, color: const Color(0xFFdc2626))),
       const SizedBox(height: 6),
       Text(_loadError!, textAlign: TextAlign.center,
-        style: const TextStyle(fontSize: 12, color: Colors.black54)),
+        style: ggBody(size: 12, color: ggMuted)),
       const SizedBox(height: 12),
       FilledButton.icon(onPressed: _load, icon: const Icon(Icons.refresh), label: const Text('Retry')),
     ])),

@@ -27,6 +27,7 @@ import '../../utils/date_format.dart';
 import '../../services/product_image_service.dart';
 import '../../widgets/animated_primitives.dart';
 import '../../widgets/top_app_bar_actions.dart';
+import '../../theme/gg_design.dart';
 
 class ItemDetailScreen extends StatefulWidget {
   final String id;
@@ -470,9 +471,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                 value: totalSpent,
                 duration: const Duration(milliseconds: 600),
                 formatter: (v) => '\$${v.toStringAsFixed(2)}',
-                style: const TextStyle(
-                  color: Color(0xFF065f46), fontSize: 14, fontWeight: FontWeight.w900,
-                ),
+                style: ggAmount(size: 14, color: const Color(0xFF065f46)),
               ),
             ]),
           ),

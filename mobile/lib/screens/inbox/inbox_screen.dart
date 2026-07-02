@@ -175,49 +175,41 @@ class _InboxScreenState extends State<InboxScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Row(mainAxisSize: MainAxisSize.min, children: [
-          AnimatedMascot(mood: MascotMood.happy, size: 32),
-          SizedBox(width: 8),
-          Text('Inbox'),
-        ]),
-        actions: [
-          IconButton(icon: const Icon(Icons.edit_outlined), onPressed: () {
-            _openComposer(context, prefill: null);
-          }, tooltip: 'Compose'),
-          IconButton(icon: const Icon(Icons.refresh), onPressed: _refresh, tooltip: 'Refresh'),
-          // Direct webmail link — reassures the user that nothing is being
-          // hidden by GetGuac. Processed mail lives in the "Guacked" folder
-          // on the mail server and is readable here any time.
-          IconButton(
-            icon: const Icon(Icons.open_in_new),
-            tooltip: 'Open in webmail',
-            onPressed: () => UpdateService.openDownload('https://webmail.getguac.app'),
-          ),
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert),
-            onSelected: (v) {
-              if (v == 'backfill') _backfillAll();
-              if (v == 'webmail') UpdateService.openDownload('https://webmail.getguac.app');
-            },
-            itemBuilder: (_) => const [
-              PopupMenuItem(value: 'backfill', child: ListTile(
-                leading: Icon(Icons.cloud_download_outlined, size: 18),
-                title: Text('Backfill all mail', style: TextStyle(fontSize: 13)),
-                subtitle: Text('Download every message from the start', style: TextStyle(fontSize: 11)),
-                visualDensity: VisualDensity.compact,
-              )),
-              PopupMenuItem(value: 'webmail', child: ListTile(
-                leading: Icon(Icons.open_in_new, size: 18),
-                title: Text('Open in webmail', style: TextStyle(fontSize: 13)),
-                subtitle: Text('Read your full mailbox at webmail.getguac.app', style: TextStyle(fontSize: 11)),
-                visualDensity: VisualDensity.compact,
-              )),
-            ],
-          ),
-          signOutAction(context),
-        ],
-      ),
+      appBar: ggAppBar(context, 'Inbox', extraActions: [
+        IconButton(icon: const Icon(Icons.edit_outlined), onPressed: () {
+          _openComposer(context, prefill: null);
+        }, tooltip: 'Compose'),
+        IconButton(icon: const Icon(Icons.refresh), onPressed: _refresh, tooltip: 'Refresh'),
+        // Direct webmail link — reassures the user that nothing is being
+        // hidden by GetGuac. Processed mail lives in the "Guacked" folder
+        // on the mail server and is readable here any time.
+        IconButton(
+          icon: const Icon(Icons.open_in_new),
+          tooltip: 'Open in webmail',
+          onPressed: () => UpdateService.openDownload('https://webmail.getguac.app'),
+        ),
+        PopupMenuButton<String>(
+          icon: const Icon(Icons.more_vert),
+          onSelected: (v) {
+            if (v == 'backfill') _backfillAll();
+            if (v == 'webmail') UpdateService.openDownload('https://webmail.getguac.app');
+          },
+          itemBuilder: (_) => const [
+            PopupMenuItem(value: 'backfill', child: ListTile(
+              leading: Icon(Icons.cloud_download_outlined, size: 18),
+              title: Text('Backfill all mail', style: TextStyle(fontSize: 13)),
+              subtitle: Text('Download every message from the start', style: TextStyle(fontSize: 11)),
+              visualDensity: VisualDensity.compact,
+            )),
+            PopupMenuItem(value: 'webmail', child: ListTile(
+              leading: Icon(Icons.open_in_new, size: 18),
+              title: Text('Open in webmail', style: TextStyle(fontSize: 13)),
+              subtitle: Text('Read your full mailbox at webmail.getguac.app', style: TextStyle(fontSize: 11)),
+              visualDensity: VisualDensity.compact,
+            )),
+          ],
+        ),
+      ]),
       body: Column(children: [
         // Folder + filter chips row
         Container(

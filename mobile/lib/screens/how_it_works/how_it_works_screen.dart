@@ -30,10 +30,7 @@ class HowItWorksScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _kEmerald50,
-      appBar: AppBar(
-        title: const Text('How GetGuac Works'),
-        actions: [signOutAction(context)],
-      ),
+      appBar: ggAppBar(context, 'How GetGuac Works'),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
         children: [

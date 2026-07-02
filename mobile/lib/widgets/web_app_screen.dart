@@ -146,10 +146,10 @@ class _WebAppScreenState extends State<WebAppScreen> with SingleTickerProviderSt
         automaticallyImplyLeading: false,
         titleSpacing: 16,
         title: Row(mainAxisSize: MainAxisSize.min, children: [
-          // App mascot (locked — the branded avocado).
+          // Logo matches the website + dashboard — the 🥑 emoji, no chip.
           const Padding(
             padding: EdgeInsets.only(right: 8),
-            child: GuacMascot(size: 28),
+            child: Text('🥑', style: TextStyle(fontSize: 22)),
           ),
           Text(widget.title, style: ggHeading(size: 18, color: ggInk)),
         ]),

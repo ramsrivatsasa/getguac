@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'guac_mascot.dart';
 import 'top_app_bar_actions.dart';
 import 'guac_ad_banner.dart';
+import '../theme/gg_design.dart';
 import '../services/update_service.dart';
 
 // Colorful bottom nav matching the web's brand palette.
@@ -13,23 +13,27 @@ import '../services/update_service.dart';
 // GuacScore, GuacWizard, Stash, Steals, Car Miles, Security.
 // Regular tap on Profile still goes to /profile.
 
+// Uniform-green bottom nav (was per-tab blue/gold/purple). Outline icons that
+// switch to a filled variant + green when active; a single accent green keeps
+// the bar calm and consistent.
+const _kNavActive   = Color(0xFF16A34A); // green-600
+const _kNavInactive = Color(0xFF9AA3AE); // slate-400
+
 class _NavItem {
   final String route;
-  final IconData icon;
+  final IconData icon;       // inactive (outline)
+  final IconData activeIcon; // active (filled)
   final String label;
-  final Color color;
-  final List<Color> activeGradient;
-  const _NavItem(this.route, this.icon, this.label, this.color, this.activeGradient);
+  const _NavItem(this.route, this.icon, this.activeIcon, this.label);
 }
 
-// Four tabs flanking a raised centre camera (Add Receipt). Miles lives in the
-// quick-launch strip now, so it's dropped from the tab row to make room.
-// Visual order is Home · Receipts · [📷] · Smashlist · Menu.
+// Four tabs flanking the raised centre "+" (Add Receipt). Visual order is
+// Home · Receipts · [+] · Smashlist · Menu. Outline icon inactive, filled active.
 const _items = <_NavItem>[
-  _NavItem('/dashboard', Icons.dashboard_rounded,         'Home',     Color(0xFF15803d), [Color(0xFFa3e635), Color(0xFF15803d)]),
-  _NavItem('/receipts',  Icons.receipt_long_rounded,      'Receipts', Color(0xFF1d4ed8), [Color(0xFF60a5fa), Color(0xFF1d4ed8)]),
-  _NavItem('/shopping',  Icons.shopping_cart_rounded,     'Smashlist',Color(0xFFca8a04), [Color(0xFFfcd34d), Color(0xFFca8a04)]),
-  _NavItem('/profile',   Icons.menu_rounded,              'Menu',     Color(0xFF7c3aed), [Color(0xFFa78bfa), Color(0xFF7c3aed)]),
+  _NavItem('/dashboard', Icons.home_outlined,          Icons.home_rounded,          'Home'),
+  _NavItem('/receipts',  Icons.receipt_long_outlined,  Icons.receipt_long_rounded,  'Receipts'),
+  _NavItem('/shopping',  Icons.shopping_cart_outlined, Icons.shopping_cart_rounded, 'Smashlist'),
+  _NavItem('/profile',   Icons.grid_view_outlined,     Icons.grid_view_rounded,     'Menu'),
 ];
 
 class _QuickAction {
@@ -278,33 +282,28 @@ class _MainScaffoldState extends State<MainScaffold> with WidgetsBindingObserver
   // Raised centre camera — the primary "Add Receipt" action, Fetch-style.
   // Always elevated; opens the photo/gallery/voice capture menu.
   Widget _cameraButton(BuildContext context) {
+    // Raised orange rounded-square "+" — the primary Add-Receipt action.
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       child: GestureDetector(
         onTap: () => context.go('/receipts?add=${DateTime.now().millisecondsSinceEpoch}'),
         behavior: HitTestBehavior.opaque,
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          SizedBox(
-            height: 34,
-            child: Center(
-              child: Container(
-                width: 36, height: 36,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft, end: Alignment.bottomRight,
-                    colors: [Color(0xFFfbbf24), Color(0xFFf59e0b)],
-                  ),
-                  boxShadow: [BoxShadow(color: const Color(0xFFf59e0b).withValues(alpha: 0.4), blurRadius: 6, offset: const Offset(0, 2))],
-                ),
-                child: const Icon(Icons.photo_camera_rounded, color: Colors.white, size: 20),
+        child: Transform.translate(
+          offset: const Offset(0, -6),
+          child: Container(
+            width: 52, height: 52,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft, end: Alignment.bottomRight,
+                colors: [Color(0xFFFBBF24), Color(0xFFF59E0B)],
               ),
+              boxShadow: [BoxShadow(color: const Color(0xFFF59E0B).withValues(alpha: 0.45), blurRadius: 10, offset: const Offset(0, 4))],
             ),
+            child: const Icon(Icons.add_rounded, color: Colors.white, size: 30),
           ),
-          const SizedBox(height: 2),
-          const Text('Add Receipts', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: Color(0xFFd97706)), maxLines: 1, overflow: TextOverflow.ellipsis),
-        ]),
+        ),
       ),
     );
   }
@@ -388,6 +387,7 @@ class _NavButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final color = active ? _kNavActive : _kNavInactive;
     return Expanded(
       child: InkWell(
         onTap: onTap,
@@ -398,33 +398,38 @@ class _NavButton extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Flat tab in a fixed-height icon row so every label lands on the
-              // same baseline as the camera's, with no empty band above.
               SizedBox(
-                height: 34,
+                height: 30,
                 child: Center(
                   child: Stack(clipBehavior: Clip.none, alignment: Alignment.center, children: [
-                    Icon(item.icon, size: 23, color: active ? item.color : Colors.black45),
+                    Icon(active ? item.activeIcon : item.icon, size: 24, color: color),
                     if (showLongPressHint)
                       Positioned(
                         top: -2, right: -6,
                         child: Container(
                           width: 6, height: 6,
-                          decoration: BoxDecoration(color: active ? item.color : Colors.black45, shape: BoxShape.circle),
+                          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
                         ),
                       ),
                   ]),
                 ),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 3),
+              // Constant weight so switching tabs doesn't re-flow label widths —
+              // the old w600↔w800 swap made the row jitter ("flutter").
               Text(
                 item.label,
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: active ? FontWeight.w800 : FontWeight.w600,
-                  color: active ? item.color : Colors.black45,
-                ),
+                style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: color),
                 overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 3),
+              // Active indicator pill.
+              Container(
+                width: 16, height: 3,
+                decoration: BoxDecoration(
+                  color: active ? _kNavActive : Colors.transparent,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ],
           ),
@@ -461,10 +466,10 @@ class _ProfileQuickMenu extends StatelessWidget {
               decoration: BoxDecoration(color: Colors.black12, borderRadius: BorderRadius.circular(2)),
             ),
             Row(children: [
-              const GuacMascot(size: 28),
+              const Text('🥑', style: TextStyle(fontSize: 22)),
               const SizedBox(width: 8),
-              const Expanded(child: Text('Quick access',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: Color(0xFF064e3b)))),
+              Expanded(child: Text('Quick access',
+                style: ggHeading(size: 15, weight: FontWeight.w800, color: ggInk))),
               IconButton(
                 icon: const Icon(Icons.close, size: 20),
                 onPressed: () => Navigator.of(context).pop(),

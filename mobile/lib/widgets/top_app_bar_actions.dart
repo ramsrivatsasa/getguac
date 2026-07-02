@@ -13,6 +13,47 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../providers/auth_provider.dart';
+import '../theme/gg_design.dart';
+
+/// Shared native app bar — the 🥑 logo (matching the website) + a Bricolage
+/// title + the standard action row (Steals · More · Sign out) in DARK ink on
+/// the clean white bar. Use on every native screen so the chrome is identical:
+///   appBar: ggAppBar(context, 'Receipts')
+/// `extraActions` prepends screen-specific buttons before the shared row;
+/// `leading` supplies a back/close button (logo auto-hidden then).
+PreferredSizeWidget ggAppBar(
+  BuildContext context,
+  String title, {
+  List<Widget> extraActions = const [],
+  bool showLogo = true,
+  Widget? leading,
+}) {
+  final logo = showLogo && leading == null;
+  return AppBar(
+    backgroundColor: Colors.white,
+    surfaceTintColor: Colors.transparent,
+    foregroundColor: ggInk,
+    iconTheme: const IconThemeData(color: ggInk),
+    elevation: 0,
+    leading: leading,
+    titleSpacing: leading == null ? 16 : 0,
+    title: Row(mainAxisSize: MainAxisSize.min, children: [
+      if (logo)
+        const Padding(
+          padding: EdgeInsets.only(right: 8),
+          child: Text('🥑', style: TextStyle(fontSize: 22)),
+        ),
+      Flexible(
+        child: Text(title,
+          overflow: TextOverflow.ellipsis,
+          style: ggHeading(size: 20, weight: FontWeight.w800, color: ggInk)),
+      ),
+    ]),
+    // whiteIcons:false → icons inherit the dark foreground so they're visible
+    // on the light bar (white icons were invisible on the redesigned bars).
+    actions: [...extraActions, ...topAppBarActions(context, whiteIcons: false)],
+  );
+}
 
 /// Single Sign-Out icon button for the top-right of any screen that doesn't
 /// want the full action row — confirms, then signs out. Used so EVERY screen

@@ -357,19 +357,15 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
     final approved = inList.where((i) => !i.predicted || i.approved).toList();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Smashlist'),
-        actions: [
-          // Refresh — re-fetches the list. Same affordance the web
-          // page has as "Refresh list" button next to Auto-Add.
-          IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.white),
-            tooltip: 'Refresh list',
-            onPressed: _loading ? null : _load,
-          ),
-          ...topAppBarActions(context),
-        ],
-      ),
+      appBar: ggAppBar(context, 'Smashlist', extraActions: [
+        // Refresh — re-fetches the list. Same affordance the web
+        // page has as "Refresh list" button next to Auto-Add.
+        IconButton(
+          icon: const Icon(Icons.refresh),
+          tooltip: 'Refresh list',
+          onPressed: _loading ? null : _load,
+        ),
+      ]),
       bottomNavigationBar: _selectedBuyAgain.isEmpty ? null : _compareStoresBar(),
       body: Column(children: [
         // List tabs

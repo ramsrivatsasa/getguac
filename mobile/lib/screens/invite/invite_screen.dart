@@ -98,7 +98,7 @@ class _InviteScreenState extends State<InviteScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Invite friends'), actions: [signOutAction(context)]),
+      appBar: ggAppBar(context, 'Invite friends'),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : ListView(

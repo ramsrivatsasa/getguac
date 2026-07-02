@@ -180,7 +180,12 @@ class _CountUpState extends State<CountUp> {
   @override
   void initState() {
     super.initState();
-    _from = 0;
+    // Start AT the current value — NOT 0. In a scrolling ListView the tiles
+    // are recycled, so a new State is created every time one scrolls back into
+    // view; resetting to 0 replayed the 0->value count-up each time, which made
+    // the dashboard "shake"/jump while scrolling. Real value changes still
+    // animate via didUpdateWidget below.
+    _from = widget.value;
     _to = widget.value;
   }
 

@@ -86,15 +86,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Row(children: [
-          Icon(Icons.chat_bubble_outline, color: Colors.white, size: 20),
-          SizedBox(width: 8),
-          Text('Chat', style: TextStyle(fontWeight: FontWeight.w900, color: Colors.white)),
-        ]),
-        elevation: 0.5,
-        actions: [signOutAction(context)],
-      ),
+      appBar: ggAppBar(context, 'Chat'),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/receipt_provider.dart';
@@ -402,37 +401,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
       surfaceTintColor: Colors.transparent,
       foregroundColor: ggInk,
       elevation: 0,
+      scrolledUnderElevation: 0,
       titleSpacing: 16,
       systemOverlayStyle: SystemUiOverlayStyle.dark,
       iconTheme: const IconThemeData(color: ggInk),
       title: Row(children: [
-        // 🔒 DO NOT CHANGE — app-bar logo is the 🥑 emoji in the emerald
-        // rounded-square, locked forever per user (never swap to GuacMascot/
-        // mascot SVG/Lottie). See feedback_mascot_locked memory.
-        Container(
-          width: 36, height: 36,
-          margin: const EdgeInsets.only(right: 8),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft, end: Alignment.bottomRight,
-              colors: [Color(0xFFa3e635), Color(0xFF15803d)],
-            ),
-            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.18), blurRadius: 4, offset: const Offset(0, 1))],
-          ),
-          alignment: Alignment.center,
-          child: const Text('🥑', style: TextStyle(fontSize: 22)),
+        // Logo matches the website header — the 🥑 emoji + "GetGuac" wordmark,
+        // no coloured chip, on the neutral white app bar (per user request).
+        const Padding(
+          padding: EdgeInsets.only(right: 8),
+          child: Text('🥑', style: TextStyle(fontSize: 24)),
         ),
         Text('GetGuac', style: ggHeading(size: 20, weight: FontWeight.w800, color: ggInk)),
         // Tagline "MONEY'S WINGMAN" lives only on the login screen now — kept
         // off the app bar to free space for the action icons.
       ]),
       actions: [
-        // Notifications + Chat + Sign Out from the shared
-        // topAppBarActions helper — any new screen that drops the
-        // same helper in its appBar inherits the same row, so the
-        // user always finds Sign Out in the same place.
-        ...topAppBarActions(context),
+        // Notifications + Chat + Sign Out from the shared helper. whiteIcons
+        // false → dark ink icons, visible on the new light app bar.
+        ...topAppBarActions(context, whiteIcons: false),
       ],
     );
   }
@@ -1125,6 +1112,49 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ]);
   }
 
+  // One horizontal spending bar: store name · rounded green-gradient track
+  // (length ∝ spend) · dollar amount. Tapping opens that store's receipts.
+  Widget _storeBar(_StoreSpend s, double maxAmount) {
+    final frac = maxAmount > 0 ? (s.amount / maxAmount).clamp(0.08, 1.0) : 0.0;
+    return InkWell(
+      onTap: () => context.push(_receiptsDeepLink(store: s.name)),
+      borderRadius: BorderRadius.circular(10),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 7),
+        child: Row(children: [
+          SizedBox(
+            width: 66,
+            child: Text(s.name, maxLines: 1, overflow: TextOverflow.ellipsis,
+              style: ggBody(size: 12.5, weight: FontWeight.w600, color: ggInk)),
+          ),
+          const SizedBox(width: 10),
+          Expanded(child: ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: Container(
+              height: 13,
+              color: const Color(0xFFEDF2E8),
+              child: FractionallySizedBox(
+                alignment: Alignment.centerLeft,
+                widthFactor: frac,
+                child: const DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(colors: [Color(0xFF15803D), Color(0xFF84CC16)]),
+                  ),
+                ),
+              ),
+            ),
+          )),
+          const SizedBox(width: 12),
+          SizedBox(
+            width: 58,
+            child: Text(_money(s.amount), textAlign: TextAlign.right,
+              style: ggAmount(size: 13.5, color: ggInk)),
+          ),
+        ]),
+      ),
+    );
+  }
+
   Widget _spendingChart(List<Receipt> filtered) {
     // Aggregate by SHARED-normalized store name so "COSTCO WHOLESALE",
     // "Costco", "Costco #218", "amazon.com" and "AMAZON.COM, INC." all roll
@@ -1159,65 +1189,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
         if (topData.isEmpty)
           const SizedBox(height: 160, child: Center(child: Text('No transactions for this period', style: TextStyle(color: Colors.black38, fontSize: 13))))
         else
-          SizedBox(
-            height: 200,
-            child: BarChart(BarChartData(
-              alignment: BarChartAlignment.spaceAround,
-              maxY: (topData.map((s) => s.amount).reduce((a, b) => a > b ? a : b)) * 1.2,
-              gridData: const FlGridData(show: false),
-              borderData: FlBorderData(show: false),
-              // Tap handling: when the user taps a bar, fl_chart fires
-              // touchCallback with the bar index. Navigate to /receipts
-              // with the aggregated store name as the filter so the user
-              // sees every receipt that contributed to the bar.
-              barTouchData: BarTouchData(
-                enabled: true,
-                handleBuiltInTouches: true,
-                touchCallback: (event, response) {
-                  if (!event.isInterestedForInteractions) return;
-                  if (response?.spot == null) return;
-                  final idx = response!.spot!.touchedBarGroupIndex;
-                  if (idx < 0 || idx >= topData.length) return;
-                  final store = topData[idx].name;
-                  if (store.isEmpty) return;
-                  // Carry the dashboard's EXACT cutoff date into the
-                  // receipts screen so chart-aggregated bars and the
-                  // filtered receipts list can't disagree on which rows
-                  // fall inside "Last N months" — the chip-bucket
-                  // (1M/3M/6M/1Y) is too coarse for calendar-month math.
-                  context.push(_receiptsDeepLink(store: store));
-                },
-              ),
-              barGroups: topData.asMap().entries.map((e) => BarChartGroupData(
-                x: e.key,
-                barRods: [BarChartRodData(
-                  toY: e.value.amount,
-                  color: const Color(0xFFe11d48),
-                  width: 18,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
-                )],
-              )).toList(),
-              titlesData: FlTitlesData(
-                leftTitles:   const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                topTitles:    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                rightTitles:  const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                bottomTitles: AxisTitles(sideTitles: SideTitles(
-                  showTitles: true,
-                  reservedSize: 28,
-                  getTitlesWidget: (v, _) {
-                    final idx = v.toInt();
-                    if (idx < 0 || idx >= topData.length) return const SizedBox();
-                    final name = topData[idx].name;
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 6),
-                      child: Text(name.length > 6 ? name.substring(0, 6) : name,
-                        style: const TextStyle(fontSize: 10, color: Colors.black54)),
-                    );
-                  },
-                )),
-              ),
-            )),
-          ),
+          // Horizontal gradient bars (store · bar · amount) — cleaner than the
+          // old vertical fl_chart. Each row taps into that store's receipts.
+          Column(children: [
+            for (final s in topData) _storeBar(s, topData.first.amount),
+          ]),
       ]),
     );
   }

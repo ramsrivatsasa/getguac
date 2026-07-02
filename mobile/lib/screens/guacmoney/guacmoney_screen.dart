@@ -54,13 +54,7 @@ class _GuacMoneyScreenState extends State<GuacMoneyScreen> {
     const emerald = Color(0xFF166534);
     return Scaffold(
       backgroundColor: const Color(0xFFf9fafb),
-      appBar: AppBar(
-        backgroundColor: emerald,
-        foregroundColor: Colors.white,
-        iconTheme: const IconThemeData(color: Colors.white),
-        title: const Text('GuacMoney', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
-        actions: [signOutAction(context)],
-      ),
+      appBar: ggAppBar(context, 'GuacMoney'),
       body: FutureBuilder<_Gm>(
         future: _future,
         builder: (ctx, snap) {

@@ -276,7 +276,7 @@ class _CarMilesScreenState extends State<CarMilesScreen> {
         .fold<double>(0, (s, t) => s + t.totalMiles);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Car Miles'), actions: [signOutAction(context)]),
+      appBar: ggAppBar(context, 'Car Miles'),
       floatingActionButton: FloatingActionButton(
         backgroundColor: _kBrand,
         onPressed: _add,

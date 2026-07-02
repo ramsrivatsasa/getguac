@@ -137,7 +137,7 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
     final available = kRetailers.where((r) => !activeIds.contains(r.id)).toList();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Connections'), actions: [signOutAction(context)]),
+      appBar: ggAppBar(context, 'Connections'),
       body: _loading
         ? ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),

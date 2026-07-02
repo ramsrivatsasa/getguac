@@ -11,6 +11,7 @@ import '../../services/premium_service.dart';
 import '../../services/purchase_service.dart';
 import '../../widgets/animated_mascot.dart';
 import '../../widgets/animated_primitives.dart';
+import '../../widgets/top_app_bar_actions.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -198,12 +199,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final receipts = hasAlias ? '$aliasStr+g@getguac.app' : '';
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
-        // Sign-out IconButton removed — the slim OutlinedButton at the
-        // bottom of the body is the single source of truth now. AppBar
-        // was redundant + made the chrome feel cluttered.
-      ),
+      appBar: ggAppBar(context, 'Profile'),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [

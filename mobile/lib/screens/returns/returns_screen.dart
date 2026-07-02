@@ -75,7 +75,7 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Returns'), actions: [signOutAction(context)]),
+      appBar: ggAppBar(context, 'Returns'),
       body: _loading
         ? ListView.builder(
             padding: const EdgeInsets.all(16),

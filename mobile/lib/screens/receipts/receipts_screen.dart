@@ -538,22 +538,20 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
     ).toList();
 
     return Scaffold(
-      appBar: AppBar(
-        leading: _selectionMode
-          ? IconButton(icon: const Icon(Icons.close), onPressed: () => setState(_selected.clear))
-          : null,
-        title: Text(_selectionMode ? '${_selected.length} selected' : 'Receipts'),
-        actions: _selectionMode
-          ? [
+      appBar: _selectionMode
+        ? AppBar(
+            leading: IconButton(icon: const Icon(Icons.close), onPressed: () => setState(_selected.clear)),
+            title: Text('${_selected.length} selected'),
+            actions: [
               IconButton(
                 icon: const Icon(Icons.select_all),
                 onPressed: () => _selectAll(filtered),
                 tooltip: 'Select all',
               ),
               IconButton(icon: const Icon(Icons.delete), onPressed: _deleteSelected, tooltip: 'Delete'),
-            ]
-          : [...topAppBarActions(context)],
-      ),
+            ],
+          )
+        : ggAppBar(context, 'Receipts'),
       // Add Receipt now lives in the bottom-bar centre camera button — the
       // floating button here was removed to avoid duplication.
       body: Column(children: [

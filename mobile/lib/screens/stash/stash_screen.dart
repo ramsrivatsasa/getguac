@@ -218,7 +218,7 @@ class _StashScreenState extends State<StashScreen> {
     final categoryCounts = _categoryCounts();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Stash'), actions: [signOutAction(context)]),
+      appBar: ggAppBar(context, 'Stash'),
       body: _loading
         ? const Center(child: CircularProgressIndicator())
         : RefreshIndicator(

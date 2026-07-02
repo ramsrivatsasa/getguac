@@ -235,7 +235,7 @@ export default function CarMilesPage() {
 
       {showForm && (
         <div className="card space-y-4">
-          <h3 className="font-semibold">{editingId ? 'Edit Trip' : 'Add Trip'}</h3>
+          <h3 className="gg-h2">{editingId ? 'Edit Trip' : 'Add Trip'}</h3>
           <form onSubmit={handleSave} className="space-y-4">
             {/* From / To addresses with auto-calculate */}
             <div className="rounded-2xl border border-guac-line bg-guac-50/40 p-3 space-y-3">
@@ -401,8 +401,8 @@ export default function CarMilesPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
+            <table className="gg-tbl w-full text-sm">
+              <thead className="border-b border-guac-line gg-colhead">
                 <tr>
                   <th className="pl-4 pr-2 py-3 w-10">
                     <input type="checkbox" className="w-4 h-4 rounded cursor-pointer" checked={allSelected}

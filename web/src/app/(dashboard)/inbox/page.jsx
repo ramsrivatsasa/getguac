@@ -551,7 +551,7 @@ function MessagePreview({ m, onStar, onTrash, onReply }) {
     <div className="flex flex-col h-full">
       <div className="p-4 border-b border-gray-100 flex items-start gap-3">
         <div className="flex-1 min-w-0">
-          <h2 className="font-bold text-gray-900 text-base leading-snug">{m.subject || '(no subject)'}</h2>
+          <h2 className="gg-h3 leading-snug">{m.subject || '(no subject)'}</h2>
           <p className="text-xs text-gray-500 mt-1">
             <strong>{m.from_addr}</strong> · {new Date(m.received_at).toLocaleString()}
           </p>
@@ -738,7 +738,7 @@ function ComposeModal({ prefill, onClose, onSent }) {
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 font-sans">
       <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[88vh] flex flex-col shadow-2xl">
         <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
-          <h2 className="font-bold text-gray-900">{prefill?.in_reply_to_id ? 'Reply' : 'New message'}</h2>
+          <h2 className="gg-h2">{prefill?.in_reply_to_id ? 'Reply' : 'New message'}</h2>
           <button onClick={onClose} className="p-1 hover:bg-guac-50 rounded"><X size={18} /></button>
         </div>
         <div className="p-5 space-y-3 flex-1 overflow-y-auto">

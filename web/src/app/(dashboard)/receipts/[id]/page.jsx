@@ -234,7 +234,7 @@ export default function ReceiptDetailPage() {
 
       {/* Receipt header */}
       <div className="card space-y-4">
-        <h3 className="font-semibold text-gray-800">Receipt Details</h3>
+        <h3 className="gg-h2">Receipt Details</h3>
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
           {[
             { label: 'Store Name', key: 'store_name' },
@@ -500,11 +500,11 @@ export default function ReceiptDetailPage() {
         <div className="card">
           <div className="flex items-center gap-2 mb-3">
             <Shield size={16} className="text-guac-600" />
-            <h3 className="font-semibold text-gray-800">Refund Policy</h3>
+            <h3 className="gg-h2">Refund Policy</h3>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
+            <table className="gg-tbl w-full text-sm">
+              <thead className="border-b border-guac-line gg-colhead">
                 <tr>
                   <th className="px-3 py-1 text-left">Policy</th>
                   <th className="px-3 py-1 text-left">Days</th>
@@ -569,7 +569,7 @@ export default function ReceiptDetailPage() {
       {/* Items */}
       <div className="card">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-gray-800">Line Items</h3>
+          <h3 className="gg-h2">Line Items</h3>
           <button onClick={() => setShowItemForm(v => !v)} className="btn-secondary text-xs py-1.5">
             <Plus size={13} /> Add Item
           </button>
@@ -602,8 +602,8 @@ export default function ReceiptDetailPage() {
           <p className="text-sm text-gray-400 py-4">No items. Add line items from your receipt.</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
+            <table className="gg-tbl w-full text-sm">
+              <thead className="border-b border-guac-line gg-colhead">
                 <tr>{['SKU','Model','Name','Category','Date','Qty','Price','Worth It?','Policy','Warranty','Return Date','Returned','Smashlist'].map(h =>
                   <th key={h} className="px-3 py-1 text-left">{h}</th>
                 )}</tr>

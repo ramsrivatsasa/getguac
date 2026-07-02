@@ -39,7 +39,7 @@ export default function DashboardSavedSearches() {
   return (
     <div className="bg-white rounded-2xl border border-guac-line shadow-sm p-4 mb-4">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-bold text-gray-900 inline-flex items-center gap-2 text-sm">
+        <h3 className="gg-h2 inline-flex items-center gap-2">
           <Bookmark size={15} className="text-guac-600" /> Searches you saved
         </h3>
         <Link href="/steals" className="text-xs font-semibold text-guac-700 hover:underline inline-flex items-center gap-1">

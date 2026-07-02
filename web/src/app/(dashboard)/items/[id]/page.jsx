@@ -271,7 +271,7 @@ export default function ItemDetailPage() {
 
         {/* Big bold title + lighter subtitle (category · last store · last date) */}
         <div>
-          <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-guac-ink leading-tight">
+          <h1 className="gg-h2 font-display leading-tight">
             {item.item_name || 'Item'}
           </h1>
           <p className="text-sm text-guac-muted mt-1">
@@ -314,7 +314,7 @@ export default function ItemDetailPage() {
       {/* Where you've bought it (replaces "Excludes") */}
       {stores.length > 0 && (
         <section className="mt-5 bg-white rounded-2xl shadow-sm px-5 py-4">
-          <h2 className="font-semibold text-gray-900 text-sm mb-3 flex items-center gap-2">
+          <h2 className="gg-h2 mb-3 flex items-center gap-2">
             <MapPin size={14} className="text-guac-600" /> Where you've bought it
           </h2>
           {/* Staggered fade-in on mount — each store row lands with
@@ -337,7 +337,7 @@ export default function ItemDetailPage() {
 
       {/* Recent receipts (replaces "Conditions") — tappable rows -> /receipts/[id] */}
       <section className="mt-5 bg-white rounded-2xl shadow-sm px-5 py-4">
-        <h2 className="font-semibold text-gray-900 text-sm mb-3 flex items-center gap-2">
+        <h2 className="gg-h2 mb-3 flex items-center gap-2">
           <Receipt size={14} className="text-sky-600" /> Recent receipts
         </h2>
         <FadeUpStagger as="ul" className="divide-y divide-guac-line" delayMs={35}>
@@ -370,7 +370,7 @@ export default function ItemDetailPage() {
       {/* Category + returned controls — kept exactly as before so bulk
           recategorise + returned-flag still work without surprise. */}
       <section className="mt-5 bg-white rounded-2xl shadow-sm px-5 py-4 space-y-3">
-        <h2 className="font-semibold text-gray-900 text-sm">Details</h2>
+        <h2 className="gg-h2">Details</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
           <Field label="SKU" value={item.sku || '—'} />
           <Field label="Model" value={item.model || '—'} />

@@ -803,7 +803,7 @@ export default function ShoppingPage() {
 
       {showForm && (
         <div className="card space-y-4">
-          <h3 className="font-semibold">Add Item</h3>
+          <h3 className="gg-h2">Add Item</h3>
           <form onSubmit={handleSave} className="space-y-4">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               <div>
@@ -855,7 +855,7 @@ export default function ShoppingPage() {
         <section className="space-y-2">
           <div className="flex items-center gap-2">
             <MapPin size={16} className="text-guac-700" />
-            <h2 className="font-semibold text-gray-800">Errand plan</h2>
+            <h2 className="gg-h2">Errand plan</h2>
             <span className="text-xs text-gray-500">
               {errandPlan.length} stores · {filteredSuggestions.length} items · combine the trip
             </span>
@@ -899,7 +899,7 @@ export default function ShoppingPage() {
         <section className="space-y-2">
           <div className="flex items-center gap-2 flex-wrap">
             <Sparkles size={16} className="text-violet-500" />
-            <h2 className="font-semibold text-gray-800">Buy Again</h2>
+            <h2 className="gg-h2">Buy Again</h2>
             <span className="text-xs text-gray-500">Items you usually buy that look due for a restock. ✓ to add, ✕ to hide.</span>
             {/* Selection toggle — fast "select all visible" / "clear"
                 action. The per-card checkbox handles fine-grained
@@ -997,7 +997,7 @@ export default function ShoppingPage() {
       <section className="space-y-2">
         <div className="flex items-center gap-2 flex-wrap">
           <ShoppingCart size={16} className="text-guac-700" />
-          <h2 className="font-semibold text-gray-800">Your Smashlist</h2>
+          <h2 className="gg-h2">Your Smashlist</h2>
           <span className="text-xs text-gray-500">
             {filteredOwn.length} item{filteredOwn.length === 1 ? '' : 's'} ready to grab
           </span>
@@ -1111,7 +1111,7 @@ export default function ShoppingPage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="font-bold text-guac-ink text-sm">{store}</h3>
+                            <h3 className="gg-h3">{store}</h3>
                             <span className="text-[10px] text-gray-500 font-semibold bg-gray-100 px-1.5 py-0.5 rounded-full">
                               {rows.length} item{rows.length === 1 ? '' : 's'}
                             </span>
@@ -1166,8 +1166,8 @@ export default function ShoppingPage() {
                     </div>
                     {!collapsed && (
                       <div className="overflow-x-auto border-t border-gray-50">
-                        <table className="w-full text-sm">
-                          <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
+                        <table className="gg-tbl w-full text-sm">
+                          <thead className="border-b border-guac-line gg-colhead">
                             <tr>
                               <th className="px-3 py-2 w-8"></th>
                               {['Item','SKU','Qty','Price','Frequency','Status','Actions'].map(h =>
@@ -1231,7 +1231,7 @@ function AlertModal({ title, body, onClose }) {
         className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 ring-1 ring-gray-200"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="text-lg font-black text-gray-900 mb-2">{title}</h3>
+        <h3 className="gg-h2 mb-2">{title}</h3>
         <p className="text-sm text-gray-700 leading-relaxed">{body}</p>
         <div className="mt-5 flex justify-end">
           <button

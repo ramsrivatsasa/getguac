@@ -91,7 +91,7 @@ export default function EmailAliasPicker({ userId }) {
           <Mail size={20} className="text-guac-700" />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-gray-900">Your GetGuac email</h3>
+          <h3 className="gg-h2">Your GetGuac email</h3>
           <p className="text-xs text-gray-500 mt-0.5">
             Forward order confirmations to this address — GetGuac auto-creates the receipt.
           </p>

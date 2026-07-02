@@ -530,7 +530,7 @@ function Calculator({ id, icon: Icon, title, subtitle, fields, validate, compute
       <div className="flex items-center gap-2 mb-3">
         <div className="w-10 h-10 rounded-xl bg-guac-100 text-guac-700 flex items-center justify-center"><Icon size={20} /></div>
         <div>
-          <h2 className="font-black text-gray-900 leading-tight text-lg">{title}</h2>
+          <h2 className="gg-h2 leading-tight">{title}</h2>
           {subtitle && <p className="text-xs text-gray-400">{subtitle}</p>}
         </div>
       </div>

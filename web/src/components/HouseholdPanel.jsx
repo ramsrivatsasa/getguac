@@ -129,7 +129,7 @@ function CreateForm({ onCreated }) {
     <form onSubmit={submit} className="card border-guac-line bg-guac-50/30 p-4">
       <div className="flex items-center gap-2 mb-2">
         <Home size={16} className="text-guac-700" />
-        <h3 className="font-bold text-guac-ink text-sm">Start a household</h3>
+        <h3 className="gg-h2">Start a household</h3>
       </div>
       <p className="text-xs text-guac-700/80 mb-3">
         Share a shopping list + a quick chat with whoever lives with you. Receipts + analytics stay personal — only the list and chat are shared.
@@ -246,7 +246,7 @@ function Members({ household, onChanged }) {
     <div className="card p-3 space-y-2">
       <div className="flex items-center gap-2">
         <Users size={14} className="text-gray-500" />
-        <h4 className="font-semibold text-gray-800 text-sm">Members</h4>
+        <h4 className="gg-h2">Members</h4>
       </div>
       <ul className="space-y-1">
         {household.members.map(m => (
@@ -347,7 +347,7 @@ function Chat({ householdId, memberIds }) {
     <div className="card p-3 space-y-2">
       <div className="flex items-center gap-2">
         <MessageSquare size={14} className="text-gray-500" />
-        <h4 className="font-semibold text-gray-800 text-sm">Family chat</h4>
+        <h4 className="gg-h2">Family chat</h4>
         <span className="text-[10px] text-gray-400">"I'm at Costco — anything else?"</span>
       </div>
       <div

@@ -363,7 +363,7 @@ export default function PreviewPage() {
         {/* Where each primitive shows up in the real app */}
         <section>
           <h2 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-3">Live in the app</h2>
-          <table className="w-full text-sm rounded-2xl overflow-hidden border border-gray-200 bg-white">
+          <table className="gg-tbl w-full text-sm rounded-2xl overflow-hidden border border-gray-200 bg-white">
             <thead className="bg-gray-50 text-[11px] uppercase tracking-wider text-gray-500">
               <tr><th className="text-left px-3 py-2">Primitive</th><th className="text-left px-3 py-2">Where it ships</th></tr>
             </thead>

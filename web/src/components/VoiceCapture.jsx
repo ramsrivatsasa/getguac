@@ -147,7 +147,7 @@ export default function VoiceCapture({ open, onClose, onTranscript }) {
           <X size={20} />
         </button>
 
-        <h3 className="text-lg font-bold text-gray-800 mb-1">Voice → Receipt</h3>
+        <h3 className="gg-h2 mb-1">Voice → Receipt</h3>
         <p className="text-sm text-gray-500 mb-4">
           Say something like <em>&quot;Thirty bucks at Costco on groceries.&quot;</em>
         </p>

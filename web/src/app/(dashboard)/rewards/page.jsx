@@ -74,7 +74,7 @@ export default function RewardsPage() {
 
       {showForm && (
         <div className="card space-y-4">
-          <h3 className="font-semibold">Add Reward</h3>
+          <h3 className="gg-h2">Add Reward</h3>
           <form onSubmit={handleSave} className="space-y-4">
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
               <div><label className="label">Reward No</label><input required className="input" value={form.reward_no} onChange={s('reward_no')} /></div>
@@ -114,8 +114,8 @@ export default function RewardsPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
+            <table className="gg-tbl w-full text-sm">
+              <thead className="border-b border-guac-line gg-colhead">
                 <tr>
                   <th className="pl-4 pr-2 py-3 w-10">
                     <input type="checkbox" className="w-4 h-4 rounded cursor-pointer" checked={allSelected}

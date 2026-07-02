@@ -253,7 +253,7 @@ function RatingPickerDialog({ itemTitle, current, onPick, onClose }) {
         className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="text-base font-black">How worth it?</h3>
+        <h3 className="gg-h2">How worth it?</h3>
         <p className="text-sm text-gray-500 mt-0.5 line-clamp-2">{itemTitle}</p>
         <div className="flex items-center justify-between mt-5 mb-3">
           {[1, 2, 3, 4, 5].map((n) => (

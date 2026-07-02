@@ -47,7 +47,7 @@ export default function AdminPage() {
       </div>
 
       <div className="card">
-        <h3 className="font-semibold mb-4">Search All Records</h3>
+        <h3 className="gg-h2 mb-4">Search All Records</h3>
         <form onSubmit={search} className="space-y-4">
           <div className="flex gap-2 mb-3">
             {['receipts','rewards'].map(t => (
@@ -68,8 +68,8 @@ export default function AdminPage() {
         <div className="card p-0 overflow-hidden">
           <div className="px-5 py-3 bg-gray-50 border-b text-sm font-semibold">{results.length} results</div>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
+            <table className="gg-tbl w-full text-sm">
+              <thead className="border-b border-guac-line gg-colhead">
                 <tr>{['ID','User','Store','Date','Amount'].map(h => <th key={h} className="px-4 py-3 text-left font-semibold">{h}</th>)}</tr>
               </thead>
               <tbody className="divide-y divide-guac-line">
@@ -173,7 +173,7 @@ function TestDataImporter() {
           <Upload className="text-guac-700" size={18} />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-bold text-guac-ink">Tester data importer</h3>
+          <h3 className="gg-h2">Tester data importer</h3>
           <p className="text-xs text-guac-700/80 mt-0.5">
             Bulk-import the QA fixture from <code className="px-1 py-0.5 bg-white rounded text-[11px]">getguac/test/TEST_DATA.csv</code> into your own account.
             Tagged <code className="px-1 py-0.5 bg-white rounded text-[11px]">[TEST IMPORT]</code> so you can wipe them in one click.

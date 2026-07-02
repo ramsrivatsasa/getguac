@@ -218,8 +218,8 @@ export default function AdminCostPage() {
       <section>
         <h2 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-3">Last 14 days · raw metrics</h2>
         <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
+          <table className="gg-tbl w-full text-sm">
+            <thead className="border-b border-guac-line gg-colhead">
               <tr>
                 <th className="text-left px-3 py-2">Day</th>
                 <th className="text-left px-3 py-2">Metric</th>

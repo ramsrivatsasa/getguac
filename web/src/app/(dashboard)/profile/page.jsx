@@ -141,7 +141,7 @@ export default function ProfilePage() {
       {/* Payment options */}
       <div className="card space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold flex items-center gap-2"><CreditCard size={17} /> Payment Options</h3>
+          <h3 className="gg-h2 flex items-center gap-2"><CreditCard size={17} /> Payment Options</h3>
           <button onClick={() => setShowPayForm(v => !v)} className="btn-secondary text-xs py-1.5"><Plus size={13} /> Add</button>
         </div>
 

@@ -266,7 +266,7 @@ function SetupDialog({ retailer, alias, existingStatus, onClose, onMarkActive })
         <header className="sticky top-0 bg-white p-5 border-b border-gray-100 flex items-center gap-3">
           <StoreLogo storeName={retailer.name} fallbackEmoji="🏪" size={40} />
           <div className="flex-1">
-            <h3 className="font-black text-lg text-gray-900">{retailer.name}</h3>
+            <h3 className="gg-h2">{retailer.name}</h3>
             <p className="text-[11px] text-gray-500 capitalize">{retailer.category.replace('-', ' ')}</p>
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1">

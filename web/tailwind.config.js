@@ -35,6 +35,9 @@ module.exports = {
         // Sans    = Plus Jakarta Sans (body, nav, labels).
         display: ['var(--font-bricolage)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
         sans:    ['var(--font-jakarta)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        // Mono = Roboto Mono (the mockup's number/date font). `font-mono` and
+        // `.gg-num` resolve here, so every figure app-wide matches the mockup.
+        mono:    ['var(--font-roboto-mono)', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace'],
       },
       borderRadius: {
         guac: '20px', // standard card radius from the mockup

@@ -89,7 +89,7 @@ export function ConfirmProvider({ children }) {
                   : <CheckCircle2 size={20} />}
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-base font-bold text-gray-900">{state.title}</h3>
+                <h3 className="gg-h2">{state.title}</h3>
                 {state.body && (
                   <p className="text-sm text-gray-600 mt-1 whitespace-pre-line">{state.body}</p>
                 )}

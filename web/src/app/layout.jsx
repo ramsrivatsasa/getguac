@@ -1,6 +1,6 @@
 import './globals.css'
 import Script from 'next/script'
-import { Bricolage_Grotesque, Plus_Jakarta_Sans } from 'next/font/google'
+import { Bricolage_Grotesque, Plus_Jakarta_Sans, Roboto_Mono } from 'next/font/google'
 import { Providers } from './providers'
 
 // New marketing design typefaces. Exposed as CSS variables so the redesigned
@@ -8,6 +8,9 @@ import { Providers } from './providers'
 // var(--font-jakarta) for body) without changing the app-wide default font.
 const bricolage = Bricolage_Grotesque({ subsets: ['latin'], weight: ['600', '700', '800'], variable: '--font-bricolage', display: 'swap' })
 const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700'], variable: '--font-jakarta', display: 'swap' })
+// Roboto Mono = the mockup's number/date typeface. Wired as Tailwind `font-mono`
+// (see tailwind.config.js) so every `.gg-num` figure across the app matches.
+const robotoMono = Roboto_Mono({ subsets: ['latin'], weight: ['500', '600', '700'], variable: '--font-roboto-mono', display: 'swap' })
 import UpdatePrompt from '../components/UpdatePrompt'
 import PosthogProvider from '../components/PosthogProvider'
 
@@ -101,7 +104,7 @@ const jsonLd = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${bricolage.variable} ${jakarta.variable}`}>
+    <html lang="en" className={`${bricolage.variable} ${jakarta.variable} ${robotoMono.variable}`}>
       <body>
         {/* Site-wide JSON-LD structured data for rich results. */}
         <script

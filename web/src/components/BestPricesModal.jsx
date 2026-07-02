@@ -72,7 +72,7 @@ export default function BestPricesModal({ open, onClose, item }) {
         <div className="px-5 py-4 border-b border-guac-line bg-gradient-to-r from-emerald-50 to-lime-50 flex items-start gap-3">
           <GuacMascot expression="rich" size={52} />
           <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-lg text-guac-ink">Finding your Steals</h3>
+            <h3 className="gg-h2">Finding your Steals</h3>
             <p className="text-xs text-guac-700/80 truncate">{item?.item_name}{item?.sku ? ` · SKU ${item.sku}` : ''}</p>
           </div>
           <button onClick={handleAddToSteals} disabled={addSteal.isPending}

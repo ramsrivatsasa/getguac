@@ -51,7 +51,7 @@ export default function SellTab({ query = '' }) {
       {/* Toolbar */}
       <div className="flex items-center justify-between gap-3 mb-5">
         <div>
-          <h2 className="text-xl font-black text-gray-900">Marketplace</h2>
+          <h2 className="gg-h2">Marketplace</h2>
           <p className="text-sm text-gray-500">
             Buy & sell with the GetGuac community{me === null ? ' — members only to sell' : ''}.
           </p>
@@ -193,7 +193,7 @@ function ListingForm({ onClose, onCreated }) {
     <div className="fixed inset-0 z-[120] bg-black/60 flex items-center justify-center p-4" onClick={onClose}>
       <form onSubmit={submit} className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between p-4 border-b border-gray-100">
-          <h3 className="font-black text-gray-900">List an item</h3>
+          <h3 className="gg-h2">List an item</h3>
           <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-700"><X size={20} /></button>
         </div>
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -275,7 +275,7 @@ function ListingDetail({ l, me, onClose, onChanged }) {
           )}
           <div className="p-4 space-y-2">
             <p className="text-2xl font-extrabold text-guac-700">{Number(l.price) === 0 ? 'Free' : money(l.price)}</p>
-            <h3 className="text-lg font-bold text-gray-900">{l.title}</h3>
+            <h3 className="gg-h2">{l.title}</h3>
             <div className="flex items-center gap-2 flex-wrap text-xs text-gray-500">
               {l.condition && <span className="px-2 py-0.5 rounded-full bg-gray-100 font-semibold">{l.condition}</span>}
               {l.category && <span className="px-2 py-0.5 rounded-full bg-gray-100 font-semibold">{l.category}</span>}

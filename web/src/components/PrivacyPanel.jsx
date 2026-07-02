@@ -172,7 +172,7 @@ export default function PrivacyPanel() {
         <div className="flex items-start gap-3">
           <ShieldCheck className="text-guac-700 shrink-0 mt-0.5" size={22} />
           <div>
-            <h3 className="font-bold text-gray-900">Privacy & Security</h3>
+            <h3 className="gg-h2">Privacy & Security</h3>
             <p className="text-xs text-gray-600 mt-0.5">
               Your data lives in your private Supabase row, encrypted at rest, isolated by Row Level Security.
               Below you control retention, scrubbing, and the right to delete.
@@ -183,7 +183,7 @@ export default function PrivacyPanel() {
 
       {/* Toggles */}
       <div className="card space-y-1">
-        <h3 className="font-semibold text-gray-900 mb-2 flex items-center gap-2"><Lock size={15} /> Privacy switches</h3>
+        <h3 className="gg-h2 mb-2 flex items-center gap-2"><Lock size={15} /> Privacy switches</h3>
         {PRIVACY_TOGGLES.map(t => (
           <label key={t.key} className="flex items-start gap-3 py-2 cursor-pointer">
             <input type="checkbox" className="mt-1 w-4 h-4 accent-guac-600"
@@ -201,7 +201,7 @@ export default function PrivacyPanel() {
       {/* Retention */}
       <div className="card">
         <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
-          <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+          <h3 className="gg-h2 flex items-center gap-2">
             {settings.auto_purge_enabled ? <Eye size={15} className="text-guac-600" /> : <EyeOff size={15} className="text-gray-400" />}
             Retention windows
           </h3>
@@ -237,7 +237,7 @@ export default function PrivacyPanel() {
 
       {/* Export */}
       <div className="card">
-        <h3 className="font-semibold text-gray-900 mb-2 flex items-center gap-2"><Download size={15} /> Export everything</h3>
+        <h3 className="gg-h2 mb-2 flex items-center gap-2"><Download size={15} /> Export everything</h3>
         <p className="text-xs text-gray-500 mb-3">
           Download every record we hold about you as one JSON file (right-to-data-portability).
           Up to 3 downloads per hour.
@@ -260,7 +260,7 @@ export default function PrivacyPanel() {
       {/* Selective delete */}
       <div className="card border-rose-200/70">
         <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
-          <h3 className="font-semibold text-gray-900 flex items-center gap-2 text-rose-700"><Trash2 size={15} /> Delete data</h3>
+          <h3 className="gg-h2 flex items-center gap-2 text-rose-700"><Trash2 size={15} /> Delete data</h3>
           <button className="btn-secondary text-xs py-1" onClick={() => setShowDelete(v => !v)}>
             {showDelete ? 'Cancel' : 'Configure…'}
           </button>

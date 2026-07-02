@@ -141,7 +141,7 @@ export function CategoryCreateModal({ open, onClose, onCreated }) {
         className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-5 space-y-4 max-h-[92vh] overflow-y-auto">
         <div className="flex items-center gap-2">
           <span className="text-2xl">{emoji}</span>
-          <h3 className="font-bold text-lg">New category</h3>
+          <h3 className="gg-h2">New category</h3>
         </div>
 
         <div>

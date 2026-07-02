@@ -52,14 +52,14 @@ export default function ResourcesBrowser() {
       <div className="space-y-10">
         {tools.length > 0 && (
           <section>
-            <h2 className="text-lg font-black text-gray-900 mb-3">GetGuac tools</h2>
+            <h2 className="gg-h2 mb-3">GetGuac tools</h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {tools.map((x) => {
                 const Icon = x.icon
                 return (
                   <Link key={x.href} href={x.href} className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-guac-line2 p-4 transition-all">
                     <div className="w-10 h-10 rounded-xl bg-guac-100 text-guac-700 flex items-center justify-center mb-2"><Icon size={18} /></div>
-                    <h3 className="font-bold text-gray-900">{x.title}</h3>
+                    <h3 className="gg-h3">{x.title}</h3>
                     <p className="text-sm text-gray-500 mt-0.5">{x.desc}</p>
                   </Link>
                 )
@@ -73,14 +73,14 @@ export default function ResourcesBrowser() {
         {articles.length > 0 && (
           <section>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-black text-gray-900 inline-flex items-center gap-2"><Newspaper size={18} className="text-guac-600" /> Articles</h2>
+              <h2 className="gg-h2 inline-flex items-center gap-2"><Newspaper size={18} className="text-guac-600" /> Articles</h2>
               <Link href="/articles" className="text-xs font-bold text-guac-700 hover:underline">All articles →</Link>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {articles.map((a) => (
                 <Link key={a.slug} href={`/articles/${a.slug}`} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-guac-line2 p-4 transition-all flex flex-col">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-guac-700">{a.category}</span>
-                  <h3 className="font-bold text-gray-900 leading-snug mt-1">{a.title}</h3>
+                  <h3 className="gg-h3 leading-snug mt-1">{a.title}</h3>
                   <p className="text-sm text-gray-500 mt-1">{a.excerpt}</p>
                 </Link>
               ))}
@@ -90,12 +90,12 @@ export default function ResourcesBrowser() {
 
         {guides.length > 0 && (
           <section>
-            <h2 className="text-lg font-black text-gray-900 mb-1">Money guides</h2>
+            <h2 className="gg-h2 mb-1">Money guides</h2>
             <p className="text-xs text-gray-400 mb-3">Trusted, non-commercial sources (no affiliate links).</p>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {guides.map((g) => (
                 <a key={g.title} href={g.url} target="_blank" rel="noreferrer" className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-guac-line2 p-4 transition-all flex flex-col">
-                  <h3 className="font-bold text-gray-900 leading-snug">{g.title}</h3>
+                  <h3 className="gg-h3 leading-snug">{g.title}</h3>
                   <p className="text-sm text-gray-500 mt-1 flex-1">{g.desc}</p>
                   <p className="text-[11px] font-semibold text-guac-700 mt-2 inline-flex items-center gap-1">{g.source} <ExternalLink size={11} /></p>
                 </a>

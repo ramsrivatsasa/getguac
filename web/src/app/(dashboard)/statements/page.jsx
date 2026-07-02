@@ -360,7 +360,7 @@ export default function StatementsPage() {
           {/* Header strip */}
           <div className="card flex items-center justify-between flex-wrap gap-3">
             <div>
-              <h3 className="font-bold text-lg">{parsed.issuer || 'Statement'}</h3>
+              <h3 className="gg-h2">{parsed.issuer || 'Statement'}</h3>
               <p className="text-xs text-gray-500">
                 {parsed.account_last4 ? `••${parsed.account_last4}` : ''}
                 {parsed.period_start && parsed.period_end ? ` · ${parsed.period_start} → ${parsed.period_end}` : ''}
@@ -405,10 +405,10 @@ export default function StatementsPage() {
           {/* Category breakdown */}
           {categoryBreakdown.length > 0 && (
             <div className="card">
-              <h3 className="font-semibold text-gray-900 mb-3 text-sm">Spending by category (this statement)</h3>
+              <h3 className="gg-h2 mb-3">Spending by category (this statement)</h3>
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
+                <table className="gg-tbl w-full text-sm">
+                  <thead className="border-b border-guac-line gg-colhead">
                     <tr>
                       <th className="px-3 py-1 text-left">Category</th>
                       <th className="px-3 py-1 text-right">Spend</th>
@@ -474,8 +474,8 @@ export default function StatementsPage() {
                     </div>
 
                     <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
+                      <table className="gg-tbl w-full text-sm">
+                        <thead className="border-b border-guac-line gg-colhead">
                           <tr>
                             <th className="px-2 py-2 w-8"></th>
                             <th className="px-3 py-2 text-left">Date</th>

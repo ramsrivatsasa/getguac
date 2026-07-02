@@ -80,7 +80,7 @@ function StoreCoupons({ s, st }) {
           <span className="drop-shadow-sm">{s.emoji}</span>
         </div>
         <div className="min-w-0 flex-1">
-          <h2 className="font-black text-gray-900 leading-tight">{s.name} coupons</h2>
+          <h2 className="gg-h2 leading-tight">{s.name} coupons</h2>
           <p className="text-[11px] text-gray-400">{s.category}</p>
         </div>
         <a href={s.dealsUrl} target="_blank" rel="noreferrer" className="shrink-0 inline-flex items-center gap-1 text-xs font-bold text-guac-700 hover:underline">

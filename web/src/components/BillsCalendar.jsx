@@ -58,7 +58,7 @@ export default function BillsCalendar() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-gray-900 inline-flex items-center gap-2">
+          <h1 className="gg-h2 inline-flex items-center gap-2">
             <CalendarDays className="text-guac-600" /> Bills calendar
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">Your recurring bills, laid out on the days they’re due.</p>
@@ -122,7 +122,7 @@ export default function BillsCalendar() {
           {/* Side panel: selected day + upcoming */}
           <div className="space-y-4">
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-              <h3 className="font-bold text-gray-900 text-sm mb-2">
+              <h3 className="gg-h2 mb-2">
                 {selected === todayIso ? 'Due today' : new Date(`${selected}T00:00:00`).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
               </h3>
               {selectedBills.length === 0 ? (
@@ -135,7 +135,7 @@ export default function BillsCalendar() {
             </div>
 
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-              <h3 className="font-bold text-gray-900 text-sm mb-2 inline-flex items-center gap-1.5"><Repeat size={14} className="text-guac-600" /> Upcoming bills</h3>
+              <h3 className="gg-h2 mb-2 inline-flex items-center gap-1.5"><Repeat size={14} className="text-guac-600" /> Upcoming bills</h3>
               {upcoming.length === 0 ? (
                 <p className="text-sm text-gray-400">Nothing coming up.</p>
               ) : (

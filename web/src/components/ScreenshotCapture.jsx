@@ -128,7 +128,7 @@ export default function ScreenshotCapture({ open, onClose, onCapture }) {
         <div className="flex items-center justify-between px-4 py-3 border-b">
           <div className="flex items-center gap-2">
             <Monitor size={18} className="text-guac-600" />
-            <h3 className="font-semibold">Screen Capture</h3>
+            <h3 className="gg-h2">Screen Capture</h3>
           </div>
           <button onClick={onClose} className="p-1 text-gray-500 hover:bg-guac-50 rounded-md" aria-label="Close">
             <X size={18} />

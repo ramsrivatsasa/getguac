@@ -102,7 +102,7 @@ export function ActivityFeed({ receipts = [] }) {
       <div className="card">
         <div className="flex items-center gap-2 mb-2">
           <Clock size={14} className="text-guac-700" />
-          <h3 className="font-bold text-gray-800 text-sm">Recent activity</h3>
+          <h3 className="gg-h2">Recent activity</h3>
         </div>
         <div className="flex flex-col items-center gap-2 py-2">
           <LottieAnimation data={emptyListLottie} size={120} fallback="⏰" />
@@ -118,7 +118,7 @@ export function ActivityFeed({ receipts = [] }) {
     <div className="card">
       <div className="flex items-center gap-2 mb-3">
         <Clock size={14} className="text-guac-700" />
-        <h3 className="font-bold text-gray-800 text-sm">Recent activity</h3>
+        <h3 className="gg-h2">Recent activity</h3>
         <span className="ml-auto text-[10px] text-gray-400 uppercase tracking-wider font-bold">
           last {events.length}
         </span>

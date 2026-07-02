@@ -84,8 +84,8 @@ export default function PredictionsPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="border-b border-guac-line text-[10.5px] uppercase tracking-[0.05em] text-guac-label font-extrabold">
+            <table className="gg-tbl w-full text-sm">
+              <thead className="border-b border-guac-line gg-colhead">
                 <tr>
                   <th className="px-4 py-3 text-left font-semibold">Alias</th>
                   <th className="px-4 py-3 text-left font-semibold">Merged into</th>

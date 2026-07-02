@@ -201,7 +201,7 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
       <FeatureHeader
         expression="standing"
         title={<>
-          <span className="block text-sm font-semibold text-gray-400 leading-tight">{greeting} 👋</span>
+          <span className="block text-sm font-semibold text-gray-400 leading-tight">{greeting}</span>
           <span className="block leading-tight">{firstName}</span>
         </>}
         subtitle="Here's your financial snapshot"

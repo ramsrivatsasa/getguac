@@ -312,7 +312,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             // real numbers for the selected window instead of dead subtitle.
             Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('$_salutation, $greeting 👋',
+                Text('$_salutation, $greeting',
                   style: ggHeading(size: 26, weight: FontWeight.w800, color: ggInk, height: 1.1)),
                 const SizedBox(height: 6),
                 Row(children: [

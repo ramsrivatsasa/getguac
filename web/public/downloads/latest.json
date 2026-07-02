@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.96",
-  "name": "v0.3.96 — Consistent receipt amounts",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.96/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Receipt dollar amounts now use the website's Bricolage display font, so the Receipts list matches the web look."
+  "version": "v0.3.97",
+  "name": "v0.3.97 — Cleaner Smashlist",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.97/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Redesigned Smashlist — each store is now a clean white card, refreshed list tabs, and consistent website fonts throughout."
 }

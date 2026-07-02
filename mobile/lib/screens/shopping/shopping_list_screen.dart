@@ -17,6 +17,7 @@ import '../../services/share_service.dart';
 import '../../widgets/store_logo.dart';
 import '../../widgets/top_app_bar_actions.dart';
 import '../../widgets/animated_primitives.dart';
+import '../../theme/gg_design.dart';
 
 const _kBrand = Color(0xFF15803d);
 
@@ -378,11 +379,27 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
               final count = _items.where((i) => i.listName == l && !i.approved).length;
               return Padding(
                 padding: const EdgeInsets.only(right: 8),
-                child: ChoiceChip(
-                  label: Text('${_kListEmoji[l]}  $l${count > 0 ? "  ($count)" : ""}'),
-                  selected: active,
-                  onSelected: (_) => setState(() => _activeList = l),
-                  selectedColor: _kBrand.withValues(alpha: 0.15),
+                child: GestureDetector(
+                  onTap: () => setState(() => _activeList = l),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                    decoration: BoxDecoration(
+                      color: active ? ggChipBg : Colors.white,
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: active ? ggLime : ggBorder),
+                    ),
+                    child: Row(mainAxisSize: MainAxisSize.min, children: [
+                      if (active)
+                        const Icon(Icons.check_rounded, size: 16, color: ggLimeDk)
+                      else
+                        Text(_kListEmoji[l] ?? '', style: const TextStyle(fontSize: 14)),
+                      const SizedBox(width: 6),
+                      Text('$l${count > 0 ? " ($count)" : ""}',
+                        style: ggBody(size: 13.5, weight: FontWeight.w700,
+                          color: active ? ggLimeDk : ggInk)),
+                    ]),
+                  ),
                 ),
               );
             }).toList()),
@@ -447,8 +464,8 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                               const Icon(Icons.auto_awesome, size: 14, color: Color(0xFF7c3aed)),
                               const SizedBox(width: 4),
                               Text('Buy Again · ${buyAgain.length}',
-                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800,
-                                  letterSpacing: 0.5, color: Color(0xFF6b21a8))),
+                                style: ggBody(size: 12, weight: FontWeight.w800, color: const Color(0xFF6b21a8))
+                                  .copyWith(letterSpacing: 0.3)),
                             ]),
                           ),
                           ...buyAgain.map((it) => _itemTile(it, isPredicted: true)),
@@ -461,8 +478,8 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                               const Icon(Icons.shopping_cart_outlined, size: 14, color: _kBrand),
                               const SizedBox(width: 4),
                               Text('Your Smashlist · ${approved.length}',
-                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800,
-                                  letterSpacing: 0.5, color: _kBrand)),
+                                style: ggBody(size: 12, weight: FontWeight.w800, color: _kBrand)
+                                  .copyWith(letterSpacing: 0.3)),
                             ]),
                           ),
                           // Group curated rows by store so each header
@@ -529,22 +546,18 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
         title: AnimatedDefaultTextStyle(
           duration: const Duration(milliseconds: 220),
           curve: Curves.easeOutCubic,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            decoration: it.approved ? TextDecoration.lineThrough : TextDecoration.none,
-            color: it.approved ? Colors.black54 : const Color(0xFF111827),
-          ),
+          style: ggBody(size: 15.5, weight: FontWeight.w700, color: it.approved ? ggFaint : ggInk)
+            .copyWith(decoration: it.approved ? TextDecoration.lineThrough : TextDecoration.none),
           child: Text(it.name),
         ),
         subtitle: Row(children: [
-          Text('×${it.qty}', style: const TextStyle(fontSize: 12, color: Colors.black54)),
+          Text('×${it.qty}', style: ggBody(size: 12, color: ggMuted)),
           if (it.storeNameDisplay != null && it.storeNameDisplay!.isNotEmpty) ...[
             const SizedBox(width: 6),
-            const Text('·', style: TextStyle(color: Colors.black38)),
+            Text('·', style: ggBody(size: 12, color: ggFaint)),
             const SizedBox(width: 6),
             Flexible(child: Text(it.storeNameDisplay!, overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 12, color: _kBrand, fontWeight: FontWeight.w600))),
+              style: ggBody(size: 12, weight: FontWeight.w600, color: ggLimeDk))),
           ],
         ]),
         trailing: isPredicted
@@ -708,41 +721,44 @@ class _StoreAccordionState extends State<_StoreAccordion> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: Color(0xFFf3f4f6))),
-      ),
+      margin: const EdgeInsets.fromLTRB(12, 6, 12, 6),
+      decoration: ggCard(radius: 16),
+      clipBehavior: Clip.antiAlias,
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         InkWell(
           onTap: () => setState(() => _expanded = !_expanded),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+            padding: const EdgeInsets.fromLTRB(12, 11, 12, 11),
             child: Row(children: [
               StoreLogo(
                 storeName: widget.storeName == 'Any Store' ? null : widget.storeName,
                 fallbackEmoji: '🏬',
-                size: 28,
-                emojiBg: const Color(0xFF15803d),
+                size: 30,
+                emojiBg: ggLime,
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(widget.storeName,
-                  style: const TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF064e3b))),
+                  style: ggBody(size: 14.5, weight: FontWeight.w800, color: ggInk)),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFf3f4f6),
+                  color: ggChipBg,
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text('${widget.items.length}',
-                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.black54)),
+                  style: ggBody(size: 11.5, weight: FontWeight.w800, color: ggLimeDk)),
               ),
               const SizedBox(width: 4),
-              Icon(_expanded ? Icons.expand_less : Icons.expand_more, color: Colors.black54),
+              Icon(_expanded ? Icons.expand_less : Icons.expand_more, color: ggFaint),
             ]),
           ),
         ),
-        if (_expanded) ...widget.items.map(widget.buildTile),
+        if (_expanded) ...[
+          const Divider(height: 1, color: ggBorder),
+          ...widget.items.map(widget.buildTile),
+        ],
       ]),
     );
   }

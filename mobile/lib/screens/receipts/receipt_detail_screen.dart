@@ -266,8 +266,8 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
                       child: const Text('🥑', style: TextStyle(fontSize: 24)),
                     ),
                     const SizedBox(width: 12),
-                    const Expanded(child: Text('Worth it?',
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF0f172a)),
+                    Expanded(child: Text('Worth it?',
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: const Color(0xFF0f172a), fontVariations: ggWght(FontWeight.w800)),
                     )),
                     WorthItRating(
                       value: r.rating,
@@ -330,9 +330,9 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
                       child: const Text('🔍', style: TextStyle(fontSize: 18)),
                     ),
                     const SizedBox(width: 10),
-                    const Expanded(child: Text(
+                    Expanded(child: Text(
                       'Rate this receipt to nudge your GuacScore.',
-                      style: TextStyle(fontSize: 12, color: Color(0xFF5b21b6), fontWeight: FontWeight.w700, height: 1.4),
+                      style: TextStyle(fontSize: 12, color: const Color(0xFF5b21b6), fontWeight: FontWeight.w700, height: 1.4, fontVariations: ggWght(FontWeight.w700)),
                     )),
                   ]),
                 ),
@@ -344,8 +344,8 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
                   child: OutlinedButton.icon(
                     onPressed: _reparse,
                     icon: const Icon(Icons.auto_fix_high, size: 18, color: Color(0xFF15803d)),
-                    label: const Text('Re-parse with Guac-AI',
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF15803d))),
+                    label: Text('Re-parse with Guac-AI',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF15803d), fontVariations: ggWght(FontWeight.w700))),
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: Color(0xFF15803d), width: 1.5),
                       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
@@ -364,8 +364,8 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
                   child: OutlinedButton.icon(
                     onPressed: _viewEmail,
                     icon: const Icon(Icons.mail_outline, size: 18, color: Color(0xFF15803d)),
-                    label: const Text('View email',
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF15803d))),
+                    label: Text('View email',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF15803d), fontVariations: ggWght(FontWeight.w700))),
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: Color(0xFF15803d), width: 1.5),
                       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
@@ -413,7 +413,7 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
                 borderRadius: BorderRadius.circular(99),
               ),
               child: Text('${idx + 1} / $total',
-                style: const TextStyle(color: Color(0xFF374151), fontSize: 11, fontWeight: FontWeight.w800)),
+                style: TextStyle(color: const Color(0xFF374151), fontSize: 11, fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800))),
             ),
           const SizedBox(width: 6),
           _heroIconButton(icon: Icons.chevron_left, onTap: hasPrev ? _goPrev : null, tooltip: 'Previous'),
@@ -437,9 +437,9 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
         const SizedBox(height: 10),
         Text(r.storeName,
           textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: Color(0xFF111827), fontSize: 20, fontWeight: FontWeight.w900,
-            letterSpacing: -0.4,
+          style: TextStyle(
+            color: const Color(0xFF111827), fontSize: 20, fontWeight: FontWeight.w900,
+            letterSpacing: -0.4, fontVariations: ggWght(FontWeight.w900),
           ),
           maxLines: 1, overflow: TextOverflow.ellipsis,
         ),
@@ -456,17 +456,17 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
             style: ggAmount(size: 13, weight: FontWeight.w600, color: const Color(0xFF6b7280)),
           ),
           Text('  •  ${formatDateShort(r.date)}',
-            style: const TextStyle(
-              color: Color(0xFF6b7280), fontSize: 13,
-              fontWeight: FontWeight.w600,
+            style: TextStyle(
+              color: const Color(0xFF6b7280), fontSize: 13,
+              fontWeight: FontWeight.w600, fontVariations: ggWght(FontWeight.w600),
             ),
           ),
         ]),
         if (ratedItemCount > 0 && r.rating == null) ...[
           const SizedBox(height: 6),
           Text('$ratedItemCount items · tap a star below to rate',
-            style: const TextStyle(
-              color: Color(0xFF9ca3af), fontSize: 11, fontWeight: FontWeight.w600,
+            style: TextStyle(
+              color: const Color(0xFF9ca3af), fontSize: 11, fontWeight: FontWeight.w600, fontVariations: ggWght(FontWeight.w600),
             ),
           ),
         ],
@@ -509,7 +509,7 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
         child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(item.itemName,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF0f172a)),
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: const Color(0xFF0f172a), fontVariations: ggWght(FontWeight.w700)),
               maxLines: 1, overflow: TextOverflow.ellipsis,
             ),
             if (item.qty > 1 || item.rating != null) ...[
@@ -517,7 +517,7 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
               Row(children: [
                 if (item.qty > 1)
                   Text('Qty ${item.qty}',
-                    style: const TextStyle(fontSize: 11, color: Color(0xFF94a3b8), fontWeight: FontWeight.w600),
+                    style: TextStyle(fontSize: 11, color: const Color(0xFF94a3b8), fontWeight: FontWeight.w600, fontVariations: ggWght(FontWeight.w600)),
                   ),
                 if (item.qty > 1 && item.rating != null) const SizedBox(width: 8),
                 if (item.rating != null) Row(children: [
@@ -560,7 +560,7 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
             decoration: BoxDecoration(color: Colors.black26, borderRadius: BorderRadius.circular(2)),
           ),
           const SizedBox(height: 14),
-          const Text('Worth it?', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
+          Text('Worth it?', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, fontVariations: ggWght(FontWeight.w900))),
           const SizedBox(height: 4),
           Text(item.itemName,
             style: const TextStyle(fontSize: 13, color: Color(0xFF64748b)),
@@ -627,7 +627,7 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
         Text(emoji, style: const TextStyle(fontSize: 22)),
         const SizedBox(width: 10),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(title, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: titleColor)),
+          Text(title, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: titleColor, fontVariations: ggWght(FontWeight.w800))),
           const SizedBox(height: 2),
           Text(body, style: TextStyle(fontSize: 11, color: bodyColor, height: 1.4)),
         ])),
@@ -782,7 +782,7 @@ class _ImageViewerState extends State<_ImageViewer> {
         foregroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.of(context).pop()),
-        title: const Text('Receipt image', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+        title: Text('Receipt image', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, fontVariations: ggWght(FontWeight.w600))),
         actions: [
           IconButton(
             icon: const Icon(Icons.download),

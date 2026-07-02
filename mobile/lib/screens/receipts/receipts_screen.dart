@@ -292,18 +292,18 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           const SizedBox(height: 14),
           Text('$doneCount receipt${doneCount == 1 ? '' : 's'} captured',
-              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+              style: ggHeading(size: 16, weight: FontWeight.w800)),
           const SizedBox(height: 4),
           const Text('Snap another, or finish up.', style: TextStyle(color: Colors.black54)),
           const SizedBox(height: 12),
           ListTile(
             leading: const Icon(Icons.add_a_photo, color: Color(0xFF064e3b)),
-            title: const Text('Scan another receipt', style: TextStyle(fontWeight: FontWeight.w700)),
+            title: Text('Scan another receipt', style: TextStyle(fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700))),
             onTap: () => Navigator.of(ctx).pop(true),
           ),
           ListTile(
             leading: const Icon(Icons.check_circle_outline, color: Color(0xFF059669)),
-            title: const Text('Done', style: TextStyle(fontWeight: FontWeight.w700)),
+            title: Text('Done', style: TextStyle(fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700))),
             onTap: () => Navigator.of(ctx).pop(false),
           ),
           const SizedBox(height: 8),
@@ -383,19 +383,19 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
           const SizedBox(height: 8),
           ListTile(
             leading: const Icon(Icons.camera_alt, color: Color(0xFF064e3b)),
-            title: const Text('Take photos', style: TextStyle(fontWeight: FontWeight.w700)),
+            title: Text('Take photos', style: TextStyle(fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700))),
             subtitle: const Text('Snap several paper receipts in a row'),
             onTap: () { Navigator.of(ctx).pop(); _captureFromCamera(); },
           ),
           ListTile(
             leading: const Icon(Icons.photo_library_outlined, color: Color(0xFF064e3b)),
-            title: const Text('Pick from gallery', style: TextStyle(fontWeight: FontWeight.w700)),
+            title: Text('Pick from gallery', style: TextStyle(fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700))),
             subtitle: const Text('Select one or many — Amazon, Doordash, screenshots'),
             onTap: () { Navigator.of(ctx).pop(); _captureFromGallery(); },
           ),
           ListTile(
             leading: const Icon(Icons.mic_none, color: Color(0xFF064e3b)),
-            title: const Text('Voice', style: TextStyle(fontWeight: FontWeight.w700)),
+            title: Text('Voice', style: TextStyle(fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700))),
             subtitle: const Text('Dictate a receipt — e.g. "thirty bucks at Costco"'),
             onTap: () { Navigator.of(ctx).pop(); _captureVoice(); },
           ),
@@ -418,12 +418,12 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
-              const Expanded(child: Text('Categorize receipt',
-                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: Color(0xFF064e3b)))),
+              Expanded(child: Text('Categorize receipt',
+                style: ggHeading(size: 16, weight: FontWeight.w900, color: const Color(0xFF064e3b)))),
               IconButton(icon: const Icon(Icons.close, size: 20), onPressed: () => Navigator.of(ctx).pop()),
             ]),
             const SizedBox(height: 4),
-            Text(r.storeName, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.black87)),
+            Text(r.storeName, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.black87, fontVariations: ggWght(FontWeight.w600))),
             const SizedBox(height: 12),
             Wrap(spacing: 6, runSpacing: 6, children: [
               ActionChip(
@@ -434,7 +434,7 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
               for (final c in cat.kPresetCategories)
                 ActionChip(
                   avatar: Text(c.emoji, style: const TextStyle(fontSize: 14)),
-                  label: Text(c.label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                  label: Text(c.label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700))),
                   backgroundColor: r.category == c.slug ? cat.tintFor(c.color).withValues(alpha: 0.18) : null,
                   onPressed: () => Navigator.of(ctx).pop(c.slug),
                 ),
@@ -563,15 +563,15 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(children: [
-              const Padding(
-                padding: EdgeInsets.only(right: 6),
-                child: Text('Show:', style: TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w700)),
+              Padding(
+                padding: const EdgeInsets.only(right: 6),
+                child: Text('Show:', style: TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700))),
               ),
               for (final p in ReceiptPeriod.values)
                 Padding(
                   padding: const EdgeInsets.only(right: 6),
                   child: ChoiceChip(
-                    label: Text(p.label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800)),
+                    label: Text(p.label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800))),
                     selected: _selectedPeriod == p,
                     onSelected: (_) => _selectPeriod(p),
                     selectedColor: const Color(0xFFd1fae5),
@@ -625,20 +625,20 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
                 ),
               )
             : filtered.isEmpty
-              ? ListView(children: const [
-                  SizedBox(height: 100),
+              ? ListView(children: [
+                  const SizedBox(height: 100),
                   Center(child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 28),
+                    padding: const EdgeInsets.symmetric(horizontal: 28),
                     child: Column(children: [
-                      Icon(Icons.receipt_long, size: 40, color: Color(0xFF9ca3af)),
-                      SizedBox(height: 10),
+                      const Icon(Icons.receipt_long, size: 40, color: Color(0xFF9ca3af)),
+                      const SizedBox(height: 10),
                       Text(
                         'No receipts yet',
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: Color(0xFF374151), fontWeight: FontWeight.w800, fontSize: 15),
+                        style: ggHeading(size: 15, weight: FontWeight.w800, color: const Color(0xFF374151)),
                       ),
-                      SizedBox(height: 6),
-                      Text(
+                      const SizedBox(height: 6),
+                      const Text(
                         'Tap the camera to scan a paper receipt — or pick a screenshot of an Amazon, Doordash, Uber Eats, Instacart, or Walmart order from your gallery. Guac-AI reads them all.',
                         textAlign: TextAlign.center,
                         style: TextStyle(color: Colors.grey, fontSize: 12.5, height: 1.4),
@@ -667,7 +667,7 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
                           ? Checkbox(value: isSelected, onChanged: (_) => _toggle(r.id))
                           : null,
                         title: Row(children: [
-                          Expanded(child: Text(r.storeName, style: const TextStyle(fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)),
+                          Expanded(child: Text(r.storeName, style: TextStyle(fontWeight: FontWeight.w500, fontVariations: ggWght(FontWeight.w500)), overflow: TextOverflow.ellipsis)),
                           if (r.fromStatement) Container(
                             margin: const EdgeInsets.only(left: 4),
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -676,10 +676,10 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
                               borderRadius: BorderRadius.circular(99),
                               border: Border.all(color: const Color(0xFFd1d5db)),
                             ),
-                            child: const Row(mainAxisSize: MainAxisSize.min, children: [
-                              Icon(Icons.account_balance_wallet_outlined, size: 9, color: Color(0xFF6b7280)),
-                              SizedBox(width: 2),
-                              Text('Statement', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: Color(0xFF374151))),
+                            child: Row(mainAxisSize: MainAxisSize.min, children: [
+                              const Icon(Icons.account_balance_wallet_outlined, size: 9, color: Color(0xFF6b7280)),
+                              const SizedBox(width: 2),
+                              Text('Statement', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: const Color(0xFF374151), fontVariations: ggWght(FontWeight.w800))),
                             ]),
                           ),
                           if (r.isReturn) Container(
@@ -689,13 +689,13 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
                               color: const Color(0xFFfee2e2),
                               borderRadius: BorderRadius.circular(99),
                             ),
-                            child: const Text('Return', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: Color(0xFF991b1b))),
+                            child: Text('Return', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: const Color(0xFF991b1b), fontVariations: ggWght(FontWeight.w800))),
                           ),
                           if (r.rating != null) ...[
                             const SizedBox(width: 4),
                             Icon(Icons.star, size: 13, color: _ratingColor(r.rating!)),
                             const SizedBox(width: 1),
-                            Text('${r.rating}', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: _ratingColor(r.rating!))),
+                            Text('${r.rating}', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: _ratingColor(r.rating!), fontVariations: ggWght(FontWeight.w800))),
                           ],
                         ]),
                         subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
@@ -919,10 +919,10 @@ class _AddReceiptDialogState extends State<_AddReceiptDialog> {
                     color: Colors.black.withValues(alpha: 0.55),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Row(mainAxisSize: MainAxisSize.min, children: [
-                    Icon(Icons.zoom_in, size: 13, color: Colors.white),
-                    SizedBox(width: 3),
-                    Text('Tap to zoom', style: TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.w700)),
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    const Icon(Icons.zoom_in, size: 13, color: Colors.white),
+                    const SizedBox(width: 3),
+                    Text('Tap to zoom', style: TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700))),
                   ]),
                 ),
               ]),
@@ -941,10 +941,10 @@ class _AddReceiptDialogState extends State<_AddReceiptDialog> {
                 border: Border.all(color: const Color(0xFFd1fae5)),
               ),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const Row(children: [
-                  Icon(Icons.mic, size: 14, color: Color(0xFF065f46)),
-                  SizedBox(width: 6),
-                  Text('Heard:', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF065f46))),
+                Row(children: [
+                  const Icon(Icons.mic, size: 14, color: Color(0xFF065f46)),
+                  const SizedBox(width: 6),
+                  Text('Heard:', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: const Color(0xFF065f46), fontVariations: ggWght(FontWeight.w800))),
                 ]),
                 const SizedBox(height: 4),
                 Text(widget.voiceTranscript!,
@@ -1012,10 +1012,10 @@ class _CategoryChip extends StatelessWidget {
           borderRadius: BorderRadius.circular(99),
           border: Border.all(color: const Color(0xFFcbd5e1), width: 1, style: BorderStyle.solid),
         ),
-        child: const Row(mainAxisSize: MainAxisSize.min, children: [
-          Icon(Icons.add, size: 11, color: Color(0xFF64748b)),
-          SizedBox(width: 3),
-          Text('Category', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: Color(0xFF64748b))),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          const Icon(Icons.add, size: 11, color: Color(0xFF64748b)),
+          const SizedBox(width: 3),
+          Text('Category', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: const Color(0xFF64748b), fontVariations: ggWght(FontWeight.w700))),
         ]),
       );
     }
@@ -1030,7 +1030,7 @@ class _CategoryChip extends StatelessWidget {
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         Text(preset.emoji, style: const TextStyle(fontSize: 11)),
         const SizedBox(width: 4),
-        Text(preset.label, style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: tint)),
+        Text(preset.label, style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: tint, fontVariations: ggWght(FontWeight.w800))),
       ]),
     );
   }
@@ -1132,7 +1132,7 @@ class _VoiceCaptureDialogState extends State<_VoiceCaptureDialog>
           Center(
             child: Text(
               _listening ? 'Listening… tap to stop' : 'Tap mic to start',
-              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.black54),
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.black54, fontVariations: ggWght(FontWeight.w700)),
             ),
           ),
           const SizedBox(height: 12),

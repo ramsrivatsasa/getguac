@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/gg_design.dart';
 
 /// Section heading + horizontally-scrolling row of cards. Used on the
 /// dashboard to group features (Score & Insights / Shop Smart /
@@ -41,12 +42,12 @@ class HorizontalSection extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(title,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF111827)),
+                      style: ggHeading(size: 16, weight: FontWeight.w900, color: const Color(0xFF111827)),
                     ),
                     if (subtitle != null) ...[
                       const SizedBox(height: 2),
                       Text(subtitle!,
-                        style: const TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w500),
+                        style: TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w500, fontVariations: ggWght(FontWeight.w500)),
                       ),
                     ],
                   ],

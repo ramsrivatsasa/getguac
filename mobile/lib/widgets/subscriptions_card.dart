@@ -10,6 +10,7 @@
 import 'package:flutter/material.dart';
 import '../models/receipt_model.dart';
 import '../services/subscription_tracker_service.dart';
+import '../theme/gg_design.dart';
 
 class SubscriptionsCard extends StatefulWidget {
   final List<Receipt> receipts;
@@ -47,7 +48,7 @@ class _SubscriptionsCardState extends State<SubscriptionsCard> {
                 Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
                   Text(
                     '\$${summary.monthlyTotal.toStringAsFixed(2)}/mo across ${summary.count} subscription${summary.count == 1 ? '' : 's'}',
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF4c1d95)),
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF4c1d95), fontVariations: ggWght(FontWeight.w800)),
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -67,13 +68,13 @@ class _SubscriptionsCardState extends State<SubscriptionsCard> {
               padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
               child: Row(children: [
                 Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                  Text(s.merchant, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                  Text(s.merchant, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700))),
                   Text('${s.intervalLabel} · last ${s.lastDate}',
                     style: const TextStyle(fontSize: 10, color: Colors.black54)),
                 ])),
                 Column(crossAxisAlignment: CrossAxisAlignment.end, mainAxisSize: MainAxisSize.min, children: [
                   Text('\$${s.lastAmount.toStringAsFixed(2)}',
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+                    style: ggAmount(size: 12, weight: FontWeight.w800)),
                   if (s.priceChanged && (s.priceChangePct ?? 0) > 0)
                     Container(
                       margin: const EdgeInsets.only(top: 2),
@@ -84,7 +85,7 @@ class _SubscriptionsCardState extends State<SubscriptionsCard> {
                       ),
                       child: Text(
                         '+${s.priceChangePct!.round()}%',
-                        style: const TextStyle(fontSize: 9, color: Color(0xFFb91c1c), fontWeight: FontWeight.w800),
+                        style: TextStyle(fontSize: 9, color: Color(0xFFb91c1c), fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800)),
                       ),
                     ),
                 ]),

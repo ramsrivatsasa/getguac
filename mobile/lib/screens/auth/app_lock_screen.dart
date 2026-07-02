@@ -17,6 +17,7 @@ import '../../services/app_lock_service.dart';
 import '../../services/biometric_service.dart';
 import '../../services/debug_log.dart';
 import '../../widgets/guac_mascot.dart';
+import '../../theme/gg_design.dart';
 
 class AppLockScreen extends StatefulWidget {
   final String? returnTo;
@@ -101,8 +102,8 @@ class _AppLockScreenState extends State<AppLockScreen> {
               children: [
                 const GuacMascot(size: 96),
                 const SizedBox(height: 16),
-                const Text('GetGuac is locked',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Color(0xFF064e3b))),
+                Text('GetGuac is locked',
+                  style: ggHeading(size: 22, weight: FontWeight.w800, color: const Color(0xFF064e3b))),
                 const SizedBox(height: 4),
                 const Text('Unlock with fingerprint or face',
                   style: TextStyle(fontSize: 13, color: Color(0xFF4b5563))),

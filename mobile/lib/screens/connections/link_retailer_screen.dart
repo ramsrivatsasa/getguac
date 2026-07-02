@@ -25,6 +25,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import '../../data/retailers.dart';
 import '../../data/retailer_extractors.dart';
 import '../../widgets/top_app_bar_actions.dart';
+import '../../theme/gg_design.dart';
 
 class LinkRetailerScreen extends StatefulWidget {
   final String retailerId;
@@ -109,8 +110,8 @@ class _LinkRetailerScreenState extends State<LinkRetailerScreen> {
           padding: const EdgeInsets.all(24),
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             const SizedBox(height: 12),
-            const Text('⚠️ Account linking not yet available for this retailer',
-              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+            Text('⚠️ Account linking not yet available for this retailer',
+              style: TextStyle(fontWeight: FontWeight.w900, fontVariations: ggWght(FontWeight.w900), fontSize: 16)),
             const SizedBox(height: 8),
             Text(
               "We don't have a custom order-page extractor for ${_retailer!.name} yet. "
@@ -139,8 +140,8 @@ class _LinkRetailerScreenState extends State<LinkRetailerScreen> {
               color: const Color(0xFFfef3c7),
               borderRadius: BorderRadius.circular(4),
             ),
-            child: const Text('BETA',
-              style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Color(0xFF92400e)),
+            child: Text('BETA',
+              style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, fontVariations: ggWght(FontWeight.w900), color: Color(0xFF92400e)),
             ),
           ),
         ]),
@@ -158,9 +159,9 @@ class _LinkRetailerScreenState extends State<LinkRetailerScreen> {
           width: double.infinity,
           color: const Color(0xFFfef3c7),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: const Text(
+          child: Text(
             '⚠️  Beta feature — may break without notice. Reach out to support if a pull fails.',
-            style: TextStyle(fontSize: 11, color: Color(0xFF92400e), fontWeight: FontWeight.w700),
+            style: TextStyle(fontSize: 11, color: Color(0xFF92400e), fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700)),
           ),
         ),
         Container(
@@ -170,7 +171,7 @@ class _LinkRetailerScreenState extends State<LinkRetailerScreen> {
             const Icon(Icons.lock_outline, size: 14, color: Color(0xFF065f46)),
             const SizedBox(width: 6),
             Expanded(child: Text(_status,
-              style: const TextStyle(fontSize: 11, color: Color(0xFF065f46), fontWeight: FontWeight.w700),
+              style: TextStyle(fontSize: 11, color: Color(0xFF065f46), fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700)),
               maxLines: 2, overflow: TextOverflow.ellipsis,
             )),
           ]),

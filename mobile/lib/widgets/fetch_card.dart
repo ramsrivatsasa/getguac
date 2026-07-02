@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/gg_design.dart';
 
 /// Fetch-style item card — the big image tile carries the category
 /// tint, the card itself stays white. Matches the visual rhythm the
@@ -159,14 +160,14 @@ class FetchCard extends StatelessWidget {
                       const SizedBox(width: 1),
                     ],
                     Text(urgency!,
-                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: urgencyFg)),
+                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: urgencyFg, fontVariations: ggWght(FontWeight.w900))),
                   ]),
                 ),
               ),
               // Title row: title left-flex, amount chip top-right
               Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Expanded(child: Text(title,
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF0f172a), height: 1.2),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: const Color(0xFF0f172a), height: 1.2, fontVariations: ggWght(FontWeight.w800)),
                   maxLines: 2, overflow: TextOverflow.ellipsis,
                 )),
                 if (value != null) ...[
@@ -190,13 +191,13 @@ class FetchCard extends StatelessWidget {
                       const SizedBox(width: 4),
                       Text(
                         valueIsPrefix ? '$valueLabel${_fmt(value!)}' : '${_fmt(value!)}$valueLabel',
-                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: Color(0xFF0f172a)),
+                        style: ggAmount(size: 14, weight: FontWeight.w900, color: const Color(0xFF0f172a)),
                       ),
                     ]),
                     if (frequency != null && frequency!.isNotEmpty) ...[
                       const SizedBox(height: 2),
                       Text(frequency!,
-                        style: const TextStyle(fontSize: 10, color: Color(0xFF64748b), fontWeight: FontWeight.w700),
+                        style: TextStyle(fontSize: 10, color: const Color(0xFF64748b), fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700)),
                       ),
                     ],
                   ]),
@@ -205,7 +206,7 @@ class FetchCard extends StatelessWidget {
               if (subtitle != null) ...[
                 const SizedBox(height: 2),
                 Text(subtitle!,
-                  style: const TextStyle(fontSize: 11.5, color: Color(0xFF64748b), fontWeight: FontWeight.w500, height: 1.3),
+                  style: TextStyle(fontSize: 11.5, color: const Color(0xFF64748b), fontWeight: FontWeight.w500, height: 1.3, fontVariations: ggWght(FontWeight.w500)),
                   maxLines: 2, overflow: TextOverflow.ellipsis,
                 ),
               ],
@@ -228,11 +229,11 @@ class FetchCard extends StatelessWidget {
                         color: storeColor ?? const Color(0xFF6b7280),
                       ),
                       child: Text(storeEmoji ?? '·',
-                        style: const TextStyle(fontSize: 9, color: Colors.white, fontWeight: FontWeight.w900)),
+                        style: TextStyle(fontSize: 9, color: Colors.white, fontWeight: FontWeight.w900, fontVariations: ggWght(FontWeight.w900))),
                     ),
                     const SizedBox(width: 5),
                     Flexible(child: Text(storeName!,
-                      style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: Color(0xFF334155)),
+                      style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: const Color(0xFF334155), fontVariations: ggWght(FontWeight.w800)),
                       maxLines: 1, overflow: TextOverflow.ellipsis,
                     )),
                   ]),
@@ -276,9 +277,10 @@ class FetchCard extends StatelessWidget {
                       if (loveCount != null && loveCount! > 0) ...[
                         const SizedBox(width: 3),
                         Text(_fmt(loveCount!),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 11, fontWeight: FontWeight.w800,
-                            color: Color(0xFF64748b),
+                            color: const Color(0xFF64748b),
+                            fontVariations: ggWght(FontWeight.w800),
                           ),
                         ),
                       ],
@@ -400,12 +402,13 @@ class _RatingChip extends StatelessWidget {
           style: TextStyle(
             fontSize: 11, fontWeight: FontWeight.w900,
             color: unrated ? const Color(0xFF64748b) : tone,
+            fontVariations: ggWght(FontWeight.w900),
           ),
         ),
         if (countSuffix != null && !unrated) ...[
           const SizedBox(width: 4),
           Text('· ${_fmtCount(countSuffix!)}',
-            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: tone.withValues(alpha: 0.7)),
+            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: tone.withValues(alpha: 0.7), fontVariations: ggWght(FontWeight.w700)),
           ),
         ],
       ]),
@@ -454,8 +457,8 @@ class _RatingPickerSheetState extends State<_RatingPickerSheet> {
           decoration: BoxDecoration(color: Colors.black26, borderRadius: BorderRadius.circular(2)),
         )),
         const SizedBox(height: 16),
-        const Text('How worth it?',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+        Text('How worth it?',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, fontVariations: ggWght(FontWeight.w900)),
         ),
         const SizedBox(height: 4),
         Text(widget.title,

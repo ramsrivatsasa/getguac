@@ -6,6 +6,7 @@ import '../../providers/reward_provider.dart';
 import '../../models/reward_model.dart';
 import '../../utils/date_format.dart';
 import '../../widgets/animated_primitives.dart';
+import '../../theme/gg_design.dart';
 
 class RewardsScreen extends StatefulWidget {
   const RewardsScreen({super.key});
@@ -225,14 +226,14 @@ class _RewardsScreenState extends State<RewardsScreen> {
                           backgroundColor: r.isExpired ? Colors.red.shade100 : Colors.purple.shade100,
                           child: Icon(Icons.card_giftcard, color: r.isExpired ? Colors.red : Colors.purple, size: 20),
                         ),
-                    title: Text(r.rewardTitle, style: const TextStyle(fontWeight: FontWeight.w500)),
+                    title: Text(r.rewardTitle, style: TextStyle(fontWeight: FontWeight.w500, fontVariations: ggWght(FontWeight.w500))),
                     subtitle: Text('${r.storeName} • ${r.rewardType}\nExpires ${formatDateShort(r.expiryDate)}'),
                     isThreeLine: true,
                     trailing: _selectionMode
                       ? null
                       : Row(mainAxisSize: MainAxisSize.min, children: [
                           Text(r.isExpired ? 'Expired' : 'Active',
-                            style: TextStyle(color: r.isExpired ? Colors.red : Colors.green, fontSize: 12, fontWeight: FontWeight.w500)),
+                            style: TextStyle(color: r.isExpired ? Colors.red : Colors.green, fontSize: 12, fontWeight: FontWeight.w500, fontVariations: ggWght(FontWeight.w500))),
                           IconButton(
                             icon: const Icon(Icons.edit, size: 18),
                             onPressed: () => _editReward(r),

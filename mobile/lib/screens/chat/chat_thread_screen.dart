@@ -11,6 +11,7 @@ import '../../services/dms_service.dart';
 import '../../services/display_names_service.dart';
 import '../../widgets/animated_primitives.dart';
 import '../../widgets/top_app_bar_actions.dart';
+import '../../theme/gg_design.dart';
 
 const _kBrand = Color(0xFF15803d);
 
@@ -264,7 +265,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/chat'),
         ),
-        title: Text(_peerName, style: const TextStyle(fontWeight: FontWeight.w900, color: Colors.white)),
+        title: Text(_peerName, style: TextStyle(fontWeight: FontWeight.w900, fontVariations: ggWght(FontWeight.w900), color: Colors.white)),
         elevation: 0.5,
         actions: [
           // Safety menu — block / report (Google Play UGC requirement).

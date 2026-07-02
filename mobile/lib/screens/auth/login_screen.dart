@@ -158,7 +158,7 @@ class _LoginScreenState extends State<LoginScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
               minimumSize: const Size(0, 32),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-              textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+              textStyle: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, fontVariations: ggWght(FontWeight.w700)),
             ),
             onPressed: () async {
               Navigator.pop(ctx);
@@ -586,16 +586,16 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               child: _loading
                                   ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
-                                  : const Text('Sign In', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                                  : Text('Sign In', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700))),
                             ),
                             if (_bioEnabled) ...[
                               const SizedBox(height: 6),
                               OutlinedButton.icon(
                                 onPressed: _loading ? null : _unlockWithBio,
                                 icon: const Icon(Icons.fingerprint, color: ggLime, size: 18),
-                                label: const Text(
+                                label: Text(
                                   'Unlock with fingerprint',
-                                  style: TextStyle(color: ggLime, fontWeight: FontWeight.w700, fontSize: 13),
+                                  style: TextStyle(color: ggLime, fontWeight: FontWeight.w700, fontSize: 13, fontVariations: ggWght(FontWeight.w700)),
                                 ),
                                 style: OutlinedButton.styleFrom(
                                   side: const BorderSide(color: ggLime, width: 1.5),
@@ -612,9 +612,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 padding: const EdgeInsets.symmetric(vertical: 4),
                                 minimumSize: const Size(0, 30),
                               ),
-                              child: const Text(
+                              child: Text(
                                 'Forgot password?',
-                                style: TextStyle(color: Color(0xFF6b7280), fontWeight: FontWeight.w600, fontSize: 13),
+                                style: TextStyle(color: Color(0xFF6b7280), fontWeight: FontWeight.w600, fontSize: 13, fontVariations: ggWght(FontWeight.w600)),
                               ),
                             ),
                             TextButton(
@@ -623,28 +623,28 @@ class _LoginScreenState extends State<LoginScreen> {
                                 padding: const EdgeInsets.symmetric(vertical: 4),
                                 minimumSize: const Size(0, 30),
                               ),
-                              child: const Text(
+                              child: Text(
                                 "New here? Create an account 🥑",
-                                style: TextStyle(color: ggLime, fontWeight: FontWeight.w600, fontSize: 13),
+                                style: TextStyle(color: ggLime, fontWeight: FontWeight.w600, fontSize: 13, fontVariations: ggWght(FontWeight.w600)),
                               ),
                             ),
                             const SizedBox(height: 2),
-                            Row(children: const [
-                              Expanded(child: Divider(color: Color(0xFFe5e7eb))),
+                            Row(children: [
+                              const Expanded(child: Divider(color: Color(0xFFe5e7eb))),
                               Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 8),
+                                padding: const EdgeInsets.symmetric(horizontal: 8),
                                 child: Text('or',
-                                  style: TextStyle(fontSize: 10, color: Color(0xFF9ca3af), fontWeight: FontWeight.w600)),
+                                  style: TextStyle(fontSize: 10, color: Color(0xFF9ca3af), fontWeight: FontWeight.w600, fontVariations: ggWght(FontWeight.w600))),
                               ),
-                              Expanded(child: Divider(color: Color(0xFFe5e7eb))),
+                              const Expanded(child: Divider(color: Color(0xFFe5e7eb))),
                             ]),
                             const SizedBox(height: 4),
                             OutlinedButton.icon(
                               onPressed: () => UpdateService.openDownload('https://getguac.app/how-it-works'),
                               icon: const Icon(Icons.play_circle_outline, color: ggLime, size: 16),
-                              label: const Text(
+                              label: Text(
                                 "See how it works · 7-min tour",
-                                style: TextStyle(color: ggLime, fontWeight: FontWeight.w700, fontSize: 12),
+                                style: TextStyle(color: ggLime, fontWeight: FontWeight.w700, fontSize: 12, fontVariations: ggWght(FontWeight.w700)),
                               ),
                               style: OutlinedButton.styleFrom(
                                 side: const BorderSide(color: ggBorderLime, width: 1.2),

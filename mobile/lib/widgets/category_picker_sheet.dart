@@ -16,6 +16,7 @@
 import 'package:flutter/material.dart';
 import '../categories.dart';
 import '../services/categories_service.dart';
+import '../theme/gg_design.dart';
 import 'emoji_catalog_widget.dart';
 
 Future<String?> showCategoryPickerSheet(
@@ -89,9 +90,9 @@ class _CategoryPickerSheetState extends State<_CategoryPickerSheet> {
                 width: 40, height: 4, margin: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)),
               ),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: Text('Pick a category', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text('Pick a category', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800))),
               ),
               const SizedBox(height: 8),
               Padding(
@@ -154,7 +155,7 @@ class _SectionHeader extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(4, 8, 4, 4),
       child: Text(label.toUpperCase(),
-          style: const TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
+          style: TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w700, letterSpacing: 0.5, fontVariations: ggWght(FontWeight.w700))),
     );
   }
 }
@@ -181,7 +182,7 @@ class _CategoryTile extends StatelessWidget {
           backgroundColor: tint.withValues(alpha: 0.15),
           child: Text(cat.emoji, style: const TextStyle(fontSize: 20)),
         ),
-        title: Text(cat.label, style: const TextStyle(fontWeight: FontWeight.w700)),
+        title: Text(cat.label, style: TextStyle(fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700))),
         subtitle: cat.desc.isEmpty ? null : Text(cat.desc, style: const TextStyle(fontSize: 11)),
         trailing: selected ? Icon(Icons.check_circle, color: tint) : null,
         onTap: onTap,
@@ -209,7 +210,7 @@ class _NewCategoryTile extends StatelessWidget {
           backgroundColor: Color(0xFFD1FAE5),
           child: Icon(Icons.add, color: Color(0xFF15803D)),
         ),
-        title: const Text('New category', style: TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF15803D))),
+        title: Text('New category', style: TextStyle(fontWeight: FontWeight.w700, color: const Color(0xFF15803D), fontVariations: ggWght(FontWeight.w700))),
         subtitle: const Text('Make your own — emoji, color, health tier', style: TextStyle(fontSize: 11)),
         onTap: () async {
           final slug = await showModalBottomSheet<String?>(
@@ -296,7 +297,7 @@ class _CreateCategorySheetState extends State<_CreateCategorySheet> {
                 child: Row(children: [
                   Text(_emoji, style: const TextStyle(fontSize: 24)),
                   const SizedBox(width: 8),
-                  const Text('New category', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+                  Text('New category', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800))),
                 ]),
               ),
               const SizedBox(height: 12),
@@ -307,7 +308,7 @@ class _CreateCategorySheetState extends State<_CreateCategorySheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Name', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                      Text('Name', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, fontVariations: ggWght(FontWeight.w700))),
                       const SizedBox(height: 4),
                       TextField(
                         controller: _labelCtrl,
@@ -321,11 +322,11 @@ class _CreateCategorySheetState extends State<_CreateCategorySheet> {
                         maxLength: 40,
                       ),
                       const SizedBox(height: 6),
-                      const Text('Emoji', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                      Text('Emoji', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, fontVariations: ggWght(FontWeight.w700))),
                       const SizedBox(height: 4),
                       EmojiCatalogWidget(value: _emoji, onPick: (e) => setState(() => _emoji = e)),
                       const SizedBox(height: 14),
-                      const Text('Color', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                      Text('Color', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, fontVariations: ggWght(FontWeight.w700))),
                       const SizedBox(height: 6),
                       Wrap(
                         spacing: 8, runSpacing: 8,
@@ -348,7 +349,7 @@ class _CreateCategorySheetState extends State<_CreateCategorySheet> {
                         }).toList(),
                       ),
                       const SizedBox(height: 16),
-                      const Text('Health tier', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                      Text('Health tier', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, fontVariations: ggWght(FontWeight.w700))),
                       const Text('(for the future Guac Health Score)', style: TextStyle(fontSize: 11, color: Colors.black54)),
                       const SizedBox(height: 6),
                       DropdownButtonFormField<String>(
@@ -379,7 +380,7 @@ class _CreateCategorySheetState extends State<_CreateCategorySheet> {
                           onPressed: _saving ? null : _save,
                           child: _saving
                               ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                              : const Text('Create', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                              : Text('Create', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, fontVariations: ggWght(FontWeight.w700))),
                         ),
                       ),
                       const SizedBox(height: 8),

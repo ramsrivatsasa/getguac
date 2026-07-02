@@ -11,6 +11,7 @@ import '../../widgets/guac_mascot.dart';
 import '../../widgets/animated_mascot.dart';
 import '../../widgets/animated_primitives.dart';
 import '../../widgets/top_app_bar_actions.dart';
+import '../../theme/gg_design.dart';
 
 const _kBrand = Color(0xFF15803d);
 const _kBrandLight = Color(0xFFd1fae5);
@@ -230,6 +231,7 @@ class _InboxScreenState extends State<InboxScreen> {
                     labelStyle: TextStyle(
                       fontSize: 12, fontWeight: FontWeight.w700,
                       color: _folder == f ? Colors.white : Colors.black87,
+                      fontVariations: ggWght(FontWeight.w700),
                     ),
                   ),
                 ),
@@ -245,6 +247,7 @@ class _InboxScreenState extends State<InboxScreen> {
                     labelStyle: TextStyle(
                       fontSize: 11, fontWeight: FontWeight.w700,
                       color: _filter == f ? const Color(0xFFb45309) : Colors.black54,
+                      fontVariations: ggWght(FontWeight.w700),
                     ),
                   ),
                 ),
@@ -321,7 +324,7 @@ class _InboxScreenState extends State<InboxScreen> {
         : _folder == 'trash' ? 'Trash is empty.'
         : _folder == 'sent' ? "You haven't sent anything yet."
         : 'Your inbox is empty.',
-        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16))),
+        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, fontVariations: ggWght(FontWeight.w800)))),
       const SizedBox(height: 8),
       const Padding(
         padding: EdgeInsets.symmetric(horizontal: 40),
@@ -389,14 +392,14 @@ class _MessageTile extends StatelessWidget {
             Row(children: [
               Expanded(child: Text(
                 _trimAddr(m.fromAddr),
-                style: TextStyle(fontWeight: unread ? FontWeight.w900 : FontWeight.w600, fontSize: 13),
+                style: TextStyle(fontWeight: unread ? FontWeight.w900 : FontWeight.w600, fontSize: 13, fontVariations: ggWght(unread ? FontWeight.w900 : FontWeight.w600)),
                 overflow: TextOverflow.ellipsis,
               )),
               if (m.isReceiptsHook) Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 margin: const EdgeInsets.only(left: 6),
                 decoration: BoxDecoration(color: _kBrandLight, borderRadius: BorderRadius.circular(99)),
-                child: const Text('+g', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: _kBrand)),
+                child: Text('+g', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: _kBrand, fontVariations: ggWght(FontWeight.w800))),
               ),
               if (m.processed && m.receiptId != null) Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -405,10 +408,10 @@ class _MessageTile extends StatelessWidget {
                   gradient: const LinearGradient(colors: [Color(0xFFa3e635), Color(0xFF15803d)]),
                   borderRadius: BorderRadius.circular(99),
                 ),
-                child: const Row(mainAxisSize: MainAxisSize.min, children: [
-                  Icon(Icons.check_circle, color: Colors.white, size: 10),
-                  SizedBox(width: 3),
-                  Text('Receipt', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Colors.white)),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  const Icon(Icons.check_circle, color: Colors.white, size: 10),
+                  const SizedBox(width: 3),
+                  Text('Receipt', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Colors.white, fontVariations: ggWght(FontWeight.w900))),
                 ]),
               ),
               const SizedBox(width: 6),
@@ -417,7 +420,7 @@ class _MessageTile extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               m.subject.isEmpty ? '(no subject)' : m.subject,
-              style: TextStyle(fontSize: 13, fontWeight: unread ? FontWeight.w800 : FontWeight.w500),
+              style: TextStyle(fontSize: 13, fontWeight: unread ? FontWeight.w800 : FontWeight.w500, fontVariations: ggWght(unread ? FontWeight.w800 : FontWeight.w500)),
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 2),
@@ -503,7 +506,7 @@ class _ComposeSheetState extends State<_ComposeSheet> {
             decoration: BoxDecoration(color: Colors.black12, borderRadius: BorderRadius.circular(2))),
           Row(children: [
             Text(widget.prefill != null && (widget.prefill!['to']?.isNotEmpty ?? false) ? 'Reply' : 'New message',
-              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800))),
             const Spacer(),
             IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.of(context).pop()),
           ]),
@@ -524,7 +527,7 @@ class _ComposeSheetState extends State<_ComposeSheet> {
             style: FilledButton.styleFrom(backgroundColor: _kBrand, padding: const EdgeInsets.symmetric(vertical: 14)),
             child: _sending
               ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
-              : const Text('Send', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+              : Text('Send', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700))),
           ),
           const SizedBox(height: 8),
           const Text('Sent from your GetGuac Mail · TLS',

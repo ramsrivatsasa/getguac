@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/gg_design.dart';
 
 /// Fetch-style feature card — square-ish, gradient-filled, with a
 /// large emoji/icon up top and a title + subtitle stack below.
@@ -77,12 +78,12 @@ class FeatureCard extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(title,
-                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: Colors.white, height: 1.1),
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, fontVariations: ggWght(FontWeight.w900), color: Colors.white, height: 1.1),
                         maxLines: 1, overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 2),
                       Text(subtitle,
-                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.white.withValues(alpha: 0.85)),
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, fontVariations: ggWght(FontWeight.w600), color: Colors.white.withValues(alpha: 0.85)),
                         maxLines: 1, overflow: TextOverflow.ellipsis,
                       ),
                     ],

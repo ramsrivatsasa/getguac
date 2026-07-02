@@ -250,9 +250,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   style: const TextStyle(fontSize: 13.5, height: 1.45, color: Colors.black87),
                   children: [
                     const TextSpan(text: 'We sent a confirmation link to '),
-                    TextSpan(text: email, style: const TextStyle(fontWeight: FontWeight.w800, color: _kBrand)),
+                    TextSpan(text: email, style: TextStyle(fontWeight: FontWeight.w800, color: _kBrand, fontVariations: ggWght(FontWeight.w800))),
                     const TextSpan(text: '. Tap it on this device and your handle '),
-                    TextSpan(text: '@$username', style: const TextStyle(fontFamily: 'monospace', fontWeight: FontWeight.w800, color: _kBrand)),
+                    TextSpan(text: '@$username', style: TextStyle(fontFamily: 'monospace', fontWeight: FontWeight.w800, color: _kBrand, fontVariations: ggWght(FontWeight.w800))),
                     const TextSpan(text: ' will be reserved.'),
                   ],
                 )),
@@ -284,7 +284,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       shape: const StadiumBorder(),
                     ),
                     onPressed: () => context.go('/login'),
-                    child: const Text('Sign in', style: TextStyle(color: _kBrand, fontWeight: FontWeight.w700)),
+                    child: Text('Sign in', style: TextStyle(color: _kBrand, fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700))),
                   ),
                 ]),
               ],
@@ -389,13 +389,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   const TextSpan(text: 'I agree to the '),
                   TextSpan(
                     text: 'Terms of Service',
-                    style: const TextStyle(color: _kBrand, fontWeight: FontWeight.w700, decoration: TextDecoration.underline),
+                    style: TextStyle(color: _kBrand, fontWeight: FontWeight.w700, decoration: TextDecoration.underline, fontVariations: ggWght(FontWeight.w700)),
                     recognizer: (TapGestureRecognizer()..onTap = () => _openUrl('https://getguac.app/terms')),
                   ),
                   const TextSpan(text: ' and '),
                   TextSpan(
                     text: 'Privacy Policy',
-                    style: const TextStyle(color: _kBrand, fontWeight: FontWeight.w700, decoration: TextDecoration.underline),
+                    style: TextStyle(color: _kBrand, fontWeight: FontWeight.w700, decoration: TextDecoration.underline, fontVariations: ggWght(FontWeight.w700)),
                     recognizer: (TapGestureRecognizer()..onTap = () => _openUrl('https://getguac.app/privacy')),
                   ),
                   const TextSpan(text: '.'),
@@ -456,11 +456,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
         border: Border.all(color: const Color(0xFFa7f3d0), width: 1.5),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: const [
-          Icon(Icons.alternate_email, size: 14, color: _kBrandDk),
-          SizedBox(width: 6),
+        Row(children: [
+          const Icon(Icons.alternate_email, size: 14, color: _kBrandDk),
+          const SizedBox(width: 6),
           Text('PICK YOUR GETGUAC HANDLE',
-            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: _kBrandDk, letterSpacing: 1)),
+            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: _kBrandDk, letterSpacing: 1, fontVariations: ggWght(FontWeight.w800))),
         ]),
         const SizedBox(height: 2),
         const Text(
@@ -501,7 +501,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           Row(children: [
             if (hintIcon != null) Icon(hintIcon, size: 12, color: hintColor),
             if (hintIcon != null) const SizedBox(width: 4),
-            Expanded(child: Text(hint, style: TextStyle(fontSize: 11, color: hintColor, fontWeight: FontWeight.w600))),
+            Expanded(child: Text(hint, style: TextStyle(fontSize: 11, color: hintColor, fontWeight: FontWeight.w600, fontVariations: ggWght(FontWeight.w600)))),
           ]),
         ],
       ]),
@@ -520,17 +520,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const Icon(Icons.shield, size: 18, color: _kBrand),
         const SizedBox(width: 10),
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: const [
-          Text('Your guac. Your rules.', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12, color: _kBrandDk)),
-          SizedBox(height: 4),
-          Text('• Row-level security on every table — only you can see your data.',
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('Your guac. Your rules.', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12, color: _kBrandDk, fontVariations: ggWght(FontWeight.w900))),
+          const SizedBox(height: 4),
+          const Text('• Row-level security on every table — only you can see your data.',
             style: TextStyle(fontSize: 10.5, color: Color(0xFF065f46), height: 1.4)),
-          Text('• No selling, no ads, no third-party sharing.',
+          const Text('• No selling, no ads, no third-party sharing.',
             style: TextStyle(fontSize: 10.5, color: Color(0xFF065f46), height: 1.4)),
-          Text('• Receipts inbox is OPT-IN — your personal mailbox is never read.',
+          const Text('• Receipts inbox is OPT-IN — your personal mailbox is never read.',
             style: TextStyle(fontSize: 10.5, color: Color(0xFF065f46), height: 1.4)),
           Text('• One-tap account + data deletion from your Profile.',
-            style: TextStyle(fontSize: 10.5, color: Color(0xFF065f46), height: 1.4, fontWeight: FontWeight.w700)),
+            style: TextStyle(fontSize: 10.5, color: Color(0xFF065f46), height: 1.4, fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700))),
         ])),
       ]),
     );
@@ -611,13 +611,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                             child: _loading
                                 ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
-                                : const Text('Create Account', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                                : Text('Create Account', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700))),
                           ),
                           TextButton(
                             onPressed: () => context.go('/login'),
-                            child: const Text(
+                            child: Text(
                               'Already have an account? Sign in',
-                              style: TextStyle(color: _kBrand, fontWeight: FontWeight.w600),
+                              style: TextStyle(color: _kBrand, fontWeight: FontWeight.w600, fontVariations: ggWght(FontWeight.w600)),
                             ),
                           ),
                           const SizedBox(height: 4),

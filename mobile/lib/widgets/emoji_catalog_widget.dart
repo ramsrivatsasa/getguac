@@ -3,6 +3,7 @@
 // platforms. Emits onPick(emoji) up to the parent.
 
 import 'package:flutter/material.dart';
+import '../theme/gg_design.dart';
 
 class EmojiSection {
   final String id;
@@ -188,7 +189,7 @@ class _EmojiCatalogWidgetState extends State<EmojiCatalogWidget> {
                         padding: const EdgeInsets.only(left: 2, top: 4, bottom: 4),
                         child: Text(
                           s.label.toUpperCase(),
-                          style: const TextStyle(fontSize: 10, color: Colors.black54, fontWeight: FontWeight.w700, letterSpacing: 0.5),
+                          style: TextStyle(fontSize: 10, color: Colors.black54, fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700), letterSpacing: 0.5),
                         ),
                       ),
                       _grid(s.emojis),

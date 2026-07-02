@@ -17,6 +17,7 @@ import 'package:go_router/go_router.dart';
 import '../../widgets/guac_mascot.dart';
 import '../../widgets/animated_primitives.dart';
 import '../../widgets/top_app_bar_actions.dart';
+import '../../theme/gg_design.dart';
 
 const _kEmerald700 = Color(0xFF15803d);
 const _kEmerald800 = Color(0xFF166534);
@@ -75,21 +76,22 @@ class _Hero extends StatelessWidget {
         ],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: const [
-          GuacMascot(size: 56),
-          SizedBox(width: 12),
+        Row(children: [
+          const GuacMascot(size: 56),
+          const SizedBox(width: 12),
           Expanded(child: Text(
             "Hey, I'm Guac-AI.",
             style: TextStyle(
               color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900,
+              fontVariations: ggWght(FontWeight.w900),
               letterSpacing: -0.5,
             ),
           )),
         ]),
         const SizedBox(height: 14),
-        const Text(
+        Text(
           "Your money's wingman.",
-          style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w900, height: 1.1),
+          style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w900, fontVariations: ggWght(FontWeight.w900), height: 1.1),
         ),
         const SizedBox(height: 10),
         const Text(
@@ -103,11 +105,11 @@ class _Hero extends StatelessWidget {
             color: Colors.white.withValues(alpha: 0.18),
             borderRadius: BorderRadius.circular(999),
           ),
-          child: const Row(mainAxisSize: MainAxisSize.min, children: [
-            Icon(Icons.swipe_down_rounded, color: Colors.white, size: 16),
-            SizedBox(width: 6),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            const Icon(Icons.swipe_down_rounded, color: Colors.white, size: 16),
+            const SizedBox(width: 6),
             Text('Scroll for the whole flow',
-              style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w800)),
+              style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800))),
           ]),
         ),
       ]),
@@ -272,7 +274,7 @@ class _ChapterCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text('${chapter.step}',
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 11)),
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontVariations: ggWght(FontWeight.w900), fontSize: 11)),
                   ),
                 ],
               ),
@@ -283,10 +285,10 @@ class _ChapterCard extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(chapter.title,
-                    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: _kEmerald900, height: 1.15)),
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900, fontVariations: ggWght(FontWeight.w900), color: _kEmerald900, height: 1.15)),
                   const SizedBox(height: 3),
                   Text(chapter.subtitle,
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF6b7280))),
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, fontVariations: ggWght(FontWeight.w600), color: const Color(0xFF6b7280))),
                   const SizedBox(height: 10),
                   ...chapter.bullets.map((b) => Padding(
                     padding: const EdgeInsets.only(bottom: 6),
@@ -294,9 +296,9 @@ class _ChapterCard extends StatelessWidget {
                       text: TextSpan(
                         style: const TextStyle(fontSize: 13, color: Color(0xFF374151), height: 1.35),
                         children: [
-                          const TextSpan(text: '• ', style: TextStyle(fontWeight: FontWeight.w900, color: _kEmerald700)),
+                          TextSpan(text: '• ', style: TextStyle(fontWeight: FontWeight.w900, fontVariations: ggWght(FontWeight.w900), color: _kEmerald700)),
                           TextSpan(text: '${b.label}. ',
-                            style: const TextStyle(fontWeight: FontWeight.w800, color: _kEmerald900)),
+                            style: TextStyle(fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800), color: _kEmerald900)),
                           TextSpan(text: b.body),
                         ],
                       ),
@@ -351,12 +353,12 @@ class _ClosingCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: const [
-          GuacMascot(size: 36),
-          SizedBox(width: 10),
+        Row(children: [
+          const GuacMascot(size: 36),
+          const SizedBox(width: 10),
           Expanded(child: Text(
             "That's the whole flow.",
-            style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900),
+            style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900, fontVariations: ggWght(FontWeight.w900)),
           )),
         ]),
         const SizedBox(height: 12),
@@ -375,7 +377,7 @@ class _ClosingCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
               icon: const Icon(Icons.camera_alt, size: 18),
-              label: const Text("Let's snap one", style: TextStyle(fontWeight: FontWeight.w900)),
+              label: Text("Let's snap one", style: TextStyle(fontWeight: FontWeight.w900, fontVariations: ggWght(FontWeight.w900))),
             ),
           ),
         ]),

@@ -441,17 +441,17 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
         _statusPill(buys90),
         const SizedBox(height: 12),
         Text(itemName.isEmpty ? 'Item' : itemName,
-          style: const TextStyle(
-            fontSize: 22, fontWeight: FontWeight.w900,
-            color: Color(0xFF0f172a), letterSpacing: -0.3, height: 1.15,
+          style: ggHeading(
+            size: 22, weight: FontWeight.w900,
+            color: const Color(0xFF0f172a), letterSpacing: -0.3, height: 1.15,
           ),
         ),
         if (subtitle.isNotEmpty) ...[
           const SizedBox(height: 6),
           Text(subtitle,
-            style: const TextStyle(
-              fontSize: 13, color: Color(0xFF6b7280),
-              fontWeight: FontWeight.w500,
+            style: TextStyle(
+              fontSize: 13, color: const Color(0xFF6b7280),
+              fontWeight: FontWeight.w500, fontVariations: ggWght(FontWeight.w500),
             ),
           ),
         ],
@@ -479,8 +479,8 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
           Expanded(
             child: Text(
               _moneyCaption(buys: buys, totalQty: totalQty),
-              style: const TextStyle(
-                fontSize: 12, color: Color(0xFF6b7280), fontWeight: FontWeight.w600,
+              style: TextStyle(
+                fontSize: 12, color: const Color(0xFF6b7280), fontWeight: FontWeight.w600, fontVariations: ggWght(FontWeight.w600),
               ),
               maxLines: 2, overflow: TextOverflow.ellipsis,
             ),
@@ -510,9 +510,10 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
           borderRadius: BorderRadius.circular(99),
         ),
         child: Text('BUY $buys90',
-          style: const TextStyle(
-            color: Color(0xFF6d28d9), fontSize: 10,
+          style: TextStyle(
+            color: const Color(0xFF6d28d9), fontSize: 10,
             fontWeight: FontWeight.w900, letterSpacing: 0.8,
+            fontVariations: ggWght(FontWeight.w900),
           ),
         ),
       );
@@ -523,10 +524,11 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
         color: const Color(0xFFecfdf5),
         borderRadius: BorderRadius.circular(99),
       ),
-      child: const Text('IN YOUR KITCHEN',
+      child: Text('IN YOUR KITCHEN',
         style: TextStyle(
-          color: Color(0xFF047857), fontSize: 10,
+          color: const Color(0xFF047857), fontSize: 10,
           fontWeight: FontWeight.w900, letterSpacing: 0.8,
+          fontVariations: ggWght(FontWeight.w900),
         ),
       ),
     );
@@ -571,11 +573,11 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
         ],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Row(children: [
-          Icon(Icons.place, size: 16, color: Color(0xFF059669)),
-          SizedBox(width: 6),
+        Row(children: [
+          const Icon(Icons.place, size: 16, color: Color(0xFF059669)),
+          const SizedBox(width: 6),
           Text("Where you've bought it",
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF0f172a)),
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: const Color(0xFF0f172a), fontVariations: ggWght(FontWeight.w800)),
           ),
         ]),
         const SizedBox(height: 8),
@@ -594,13 +596,13 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
               const SizedBox(width: 10),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(stores[i]['name'] as String,
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF111827)),
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF111827), fontVariations: ggWght(FontWeight.w700)),
                   maxLines: 1, overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 2),
                 Text(
                   '${stores[i]['count']} buy${(stores[i]['count'] as int) == 1 ? '' : 's'} · \$${(stores[i]['spent'] as double).toStringAsFixed(2)}',
-                  style: const TextStyle(fontSize: 11, color: Color(0xFF6b7280), fontWeight: FontWeight.w600),
+                  style: TextStyle(fontSize: 11, color: const Color(0xFF6b7280), fontWeight: FontWeight.w600, fontVariations: ggWght(FontWeight.w600)),
                 ),
               ])),
             ]),
@@ -626,11 +628,11 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
         ],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Row(children: [
-          Icon(Icons.receipt_long, size: 16, color: Color(0xFF0284c7)),
-          SizedBox(width: 6),
+        Row(children: [
+          const Icon(Icons.receipt_long, size: 16, color: Color(0xFF0284c7)),
+          const SizedBox(width: 6),
           Text('Recent receipts',
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF0f172a)),
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: const Color(0xFF0f172a), fontVariations: ggWght(FontWeight.w800)),
           ),
         ]),
         const SizedBox(height: 6),
@@ -644,8 +646,9 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                 SizedBox(
                   width: 56,
                   child: Text(_friendlyDate(rows[i].date),
-                    style: const TextStyle(
-                      fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF6b7280),
+                    style: TextStyle(
+                      fontSize: 11, fontWeight: FontWeight.w800, color: const Color(0xFF6b7280),
+                      fontVariations: ggWght(FontWeight.w800),
                     ),
                   ),
                 ),
@@ -654,17 +657,19 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                     Flexible(
                       child: Text(
                         rows[i].storeName.isEmpty ? '—' : rows[i].storeName,
-                        style: const TextStyle(
-                          fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF111827),
+                        style: TextStyle(
+                          fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF111827),
+                          fontVariations: ggWght(FontWeight.w700),
                         ),
                         maxLines: 1, overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     if (rows[i].isCurrent) ...[
                       const SizedBox(width: 6),
-                      const Text('· this',
+                      Text('· this',
                         style: TextStyle(
-                          fontSize: 10, fontWeight: FontWeight.w900, color: Color(0xFF047857),
+                          fontSize: 10, fontWeight: FontWeight.w900, color: const Color(0xFF047857),
+                          fontVariations: ggWght(FontWeight.w900),
                         ),
                       ),
                     ],
@@ -677,6 +682,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                       fontSize: 11,
                       color: rows[i].returned ? const Color(0xFFb91c1c) : const Color(0xFF6b7280),
                       fontWeight: FontWeight.w600,
+                      fontVariations: ggWght(FontWeight.w600),
                     ),
                   ),
                 ])),

@@ -127,11 +127,12 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
                         child: Text('${r.daysLeft}d',
                           style: TextStyle(
                             fontWeight: FontWeight.w900, fontSize: 14,
+                            fontVariations: ggWght(FontWeight.w900),
                             color: urgent ? const Color(0xFFb91c1c) : soon ? const Color(0xFFb45309) : const Color(0xFF065f46),
                           ),
                         ),
                       ),
-                      title: Text(r.storeName, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
+                      title: Text(r.storeName, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, fontVariations: ggWght(FontWeight.w800))),
                       subtitle: Text('Bought ${r.date} · expires ${r.expiryDate}',
                         style: const TextStyle(fontSize: 11, color: Colors.black54)),
                       trailing: Text('\$${r.totalAmount.toStringAsFixed(2)}',

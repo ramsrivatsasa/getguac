@@ -2,6 +2,7 @@
 // pretty enough for the receipt header. Tap a star to set the rating;
 // tap the active star again to clear.
 import 'package:flutter/material.dart';
+import '../theme/gg_design.dart';
 
 class WorthItRating extends StatelessWidget {
   final int? value;            // current rating (1-5 or null)
@@ -67,6 +68,7 @@ class WorthItRating extends StatelessWidget {
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w700,
+              fontVariations: ggWght(FontWeight.w700),
               color: _starColor(value!, value),
             ),
           ),

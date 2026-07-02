@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../services/error_report_service.dart';
 import '../../widgets/top_app_bar_actions.dart';
+import '../../theme/gg_design.dart';
 
 class ReportProblemScreen extends StatefulWidget {
   /// Optional pre-fill from a caller (e.g., the batch-capture failure
@@ -69,12 +70,12 @@ class _ReportProblemScreenState extends State<ReportProblemScreen> {
       // the screen was opened from the batch-failure dialog vs Profile.
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         backgroundColor: const Color(0xFF15803d),
-        content: const Row(children: [
-          Icon(Icons.check_circle_outline, color: Colors.white),
-          SizedBox(width: 10),
+        content: Row(children: [
+          const Icon(Icons.check_circle_outline, color: Colors.white),
+          const SizedBox(width: 10),
           Expanded(child: Text(
             'Report sent — thanks. We have the recent log and will dig in.',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700)),
           )),
         ]),
         duration: const Duration(seconds: 4),
@@ -147,6 +148,7 @@ class _ReportProblemScreenState extends State<ReportProblemScreen> {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
+                      fontVariations: ggWght(FontWeight.w700),
                       color: _ok ? const Color(0xFF065f46) : const Color(0xFF991b1b),
                     ),
                   ),
@@ -159,7 +161,7 @@ class _ReportProblemScreenState extends State<ReportProblemScreen> {
                     ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                     : const Icon(Icons.send_rounded),
                 label: Text(_sending ? 'Sending…' : 'Send report',
-                  style: const TextStyle(fontWeight: FontWeight.w800)),
+                  style: TextStyle(fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800))),
                 style: FilledButton.styleFrom(
                   backgroundColor: const Color(0xFF15803d),
                   padding: const EdgeInsets.symmetric(vertical: 14),

@@ -14,6 +14,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../services/mascot_event_bus.dart';
 import '../../widgets/top_app_bar_actions.dart';
+import '../../theme/gg_design.dart';
 
 class InviteScreen extends StatefulWidget {
   const InviteScreen({super.key});
@@ -129,12 +130,13 @@ class _InviteScreenState extends State<InviteScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'YOUR INVITE CODE',
                           style: TextStyle(
-                            color: Color(0xFFd1fae5),
+                            color: const Color(0xFFd1fae5),
                             fontSize: 11,
                             fontWeight: FontWeight.w800,
+                            fontVariations: ggWght(FontWeight.w800),
                             letterSpacing: 2,
                           ),
                         ),
@@ -144,12 +146,13 @@ class _InviteScreenState extends State<InviteScreen> {
                             Expanded(
                               child: SelectableText(
                                 _code ?? '——————',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 34,
                                   fontWeight: FontWeight.w900,
+                                  fontVariations: ggWght(FontWeight.w900),
                                   letterSpacing: 8,
-                                  fontFeatures: [FontFeature.tabularFigures()],
+                                  fontFeatures: const [FontFeature.tabularFigures()],
                                 ),
                               ),
                             ),
@@ -177,10 +180,11 @@ class _InviteScreenState extends State<InviteScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('SHAREABLE LINK',
+                        Text('SHAREABLE LINK',
                             style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w800,
+                                fontVariations: ggWght(FontWeight.w800),
                                 color: Colors.black54,
                                 letterSpacing: 1.5)),
                         const SizedBox(height: 6),
@@ -236,15 +240,16 @@ class _InviteScreenState extends State<InviteScreen> {
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(color: const Color(0xFFa7f3d0)),
                     ),
-                    child: const Column(
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('How the reward works',
                             style: TextStyle(
                                 fontWeight: FontWeight.w800,
+                                fontVariations: ggWght(FontWeight.w800),
                                 fontSize: 14,
-                                color: Color(0xFF064e3b))),
-                        SizedBox(height: 6),
+                                color: const Color(0xFF064e3b))),
+                        const SizedBox(height: 6),
                         Text(
                           '• Share your code with a friend.\n'
                           '• They sign up at getguac.app and the code goes with them.\n'
@@ -263,10 +268,11 @@ class _InviteScreenState extends State<InviteScreen> {
                   const SizedBox(height: 20),
 
                   // Past invites
-                  const Text('PEOPLE YOU\'VE INVITED',
+                  Text('PEOPLE YOU\'VE INVITED',
                       style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w800,
+                          fontVariations: ggWght(FontWeight.w800),
                           color: Colors.black54,
                           letterSpacing: 1.5)),
                   const SizedBox(height: 8),
@@ -336,8 +342,8 @@ class _InviteScreenState extends State<InviteScreen> {
                 children: [
                   Text(
                     'Friend signed up with ${r['code']}',
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w800, fontSize: 13),
+                    style: TextStyle(
+                        fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800), fontSize: 13),
                   ),
                   const SizedBox(height: 2),
                   Text(

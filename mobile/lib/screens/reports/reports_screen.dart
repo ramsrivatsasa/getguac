@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../widgets/animated_primitives.dart';
+import '../../theme/gg_design.dart';
 
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});
@@ -104,18 +105,18 @@ class _ReportsScreenState extends State<ReportsScreen> {
                       borderRadius: BorderRadius.circular(18),
                     ),
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      const Text('LIFETIME TOTAL',
-                        style: TextStyle(fontSize: 11, color: Colors.white70, fontWeight: FontWeight.w900, letterSpacing: 1.4)),
+                      Text('LIFETIME TOTAL',
+                        style: TextStyle(fontSize: 11, color: Colors.white70, fontWeight: FontWeight.w900, fontVariations: ggWght(FontWeight.w900), letterSpacing: 1.4)),
                       const SizedBox(height: 4),
                       CountUp(
                         value: _grandTotal,
                         duration: const Duration(milliseconds: 700),
                         formatter: (v) => '\$${v.toStringAsFixed(2)}',
-                        style: const TextStyle(fontSize: 32, color: Colors.white, fontWeight: FontWeight.w900),
+                        style: ggAmount(size: 32, weight: FontWeight.w900, color: Colors.white),
                       ),
                       const SizedBox(height: 2),
                       Text('${_buckets.length} month${_buckets.length == 1 ? '' : 's'} of data',
-                        style: const TextStyle(fontSize: 12, color: Colors.white70, fontWeight: FontWeight.w700)),
+                        style: TextStyle(fontSize: 12, color: Colors.white70, fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700))),
                     ]),
                   ),
                   const SizedBox(height: 16),
@@ -134,11 +135,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
-        title: Text(b.label, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+        title: Text(b.label, style: ggHeading(size: 15, weight: FontWeight.w800)),
         subtitle: Text('${b.count} receipt${b.count == 1 ? '' : 's'}',
           style: const TextStyle(fontSize: 11, color: Colors.black54)),
         trailing: Text('\$${b.total.toStringAsFixed(2)}',
-          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: Color(0xFF065f46))),
+          style: ggAmount(size: 16, weight: FontWeight.w900, color: const Color(0xFF065f46))),
         onTap: () {
           // Open /receipts filtered to this month
           final end = _lastDayOfMonth(b.ym);

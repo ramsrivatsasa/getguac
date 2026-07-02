@@ -17,6 +17,7 @@ import '../../services/timeframe_store.dart';
 import '../../services/guacoscore.dart' as engine;
 import '../../payment_rows.dart';
 import '../../widgets/animated_primitives.dart';
+import '../../theme/gg_design.dart';
 
 const _kBrand = Color(0xFF15803d);
 
@@ -212,14 +213,14 @@ class _GuacScoreScreenState extends State<GuacScoreScreen> {
                       value: r.score!.toDouble(),
                       duration: const Duration(milliseconds: 700),
                       formatter: (v) => v.round().toString(),
-                      style: TextStyle(fontSize: 44, fontWeight: FontWeight.w900, color: tone),
+                      style: ggHeading(size: 44, weight: FontWeight.w900, color: tone),
                     ),
-                    const Text('/ 100', style: TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w700)),
+                    Text('/ 100', style: TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700))),
                   ]),
                 ]),
                 const SizedBox(width: 16),
                 Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(r.grade.emoji + '  ' + r.grade.label, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: tone)),
+                  Text(r.grade.emoji + '  ' + r.grade.label, style: ggHeading(size: 20, weight: FontWeight.w900, color: tone)),
                   const SizedBox(height: 6),
                   Text(r.grade.desc, style: const TextStyle(fontSize: 13, color: Colors.black87, height: 1.3)),
                   const SizedBox(height: 8),
@@ -229,7 +230,7 @@ class _GuacScoreScreenState extends State<GuacScoreScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(color: const Color(0xFFfee2e2), borderRadius: BorderRadius.circular(99)),
-                      child: Text('🦷 Bank Bite −${r.bankPenalty}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF991b1b))),
+                      child: Text('🦷 Bank Bite −${r.bankPenalty}', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF991b1b), fontVariations: ggWght(FontWeight.w800))),
                     ),
                   ],
                 ])),
@@ -295,7 +296,7 @@ class _GuacScoreScreenState extends State<GuacScoreScreen> {
                   const SizedBox(width: 12),
                   Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Text('\$${(_biteInterest + _biteFees).toStringAsFixed(2)} lost to interest + fees',
-                      style: const TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF7c2d12), fontSize: 13)),
+                      style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF7c2d12), fontSize: 13, fontVariations: ggWght(FontWeight.w800))),
                     Text(
                       _biteInterest > 0 && _biteFees > 0
                         ? '\$${_biteInterest.toStringAsFixed(2)} interest · \$${_biteFees.toStringAsFixed(2)} fees'
@@ -325,7 +326,7 @@ class _GuacScoreScreenState extends State<GuacScoreScreen> {
                     TextButton(
                       onPressed: () { setState(() => _loadingBite = true); _loadBankBite(); },
                       style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
-                      child: const Text('Retry', style: TextStyle(color: Color(0xFFb91c1c), fontSize: 11, fontWeight: FontWeight.w700)),
+                      child: Text('Retry', style: TextStyle(color: Color(0xFFb91c1c), fontSize: 11, fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700))),
                     ),
                   ]),
                 ),
@@ -344,7 +345,7 @@ class _GuacScoreScreenState extends State<GuacScoreScreen> {
             // palette. Auto-hides when no rated purchases exist.
             _worthItDonut(purchases),
             const SizedBox(height: 24),
-            const Text('How the score works', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
+            Text('How the score works', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, fontVariations: ggWght(FontWeight.w800))),
             const SizedBox(height: 8),
             const Text(
               'Each rated purchase contributes a value (1★ = -50, 5★ = +50), weighted by amount spent. '
@@ -490,14 +491,14 @@ class _GuacScoreScreenState extends State<GuacScoreScreen> {
         value: v, color: colors[n]!, radius: 26,
         showTitle: pct >= 10,
         title: '${pct.toStringAsFixed(0)}%',
-        titleStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.white),
+        titleStyle: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.white, fontVariations: ggWght(FontWeight.w800)),
       ));
       legend.add(Padding(
         padding: const EdgeInsets.symmetric(vertical: 2),
         child: Row(children: [
           Container(width: 10, height: 10, decoration: BoxDecoration(color: colors[n], borderRadius: BorderRadius.circular(2))),
           const SizedBox(width: 6),
-          Expanded(child: Text(labels[n]!, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700))),
+          Expanded(child: Text(labels[n]!, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700)))),
           Text('\$${v.toStringAsFixed(0)}', style: const TextStyle(fontSize: 11, color: Colors.black54)),
         ]),
       ));
@@ -519,7 +520,7 @@ class _GuacScoreScreenState extends State<GuacScoreScreen> {
               )),
               Column(mainAxisSize: MainAxisSize.min, children: [
                 Text('\$${total.toStringAsFixed(0)}',
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
+                  style: ggAmount(size: 16, weight: FontWeight.w900)),
                 const Text('rated', style: TextStyle(fontSize: 10, color: Colors.black54)),
               ]),
             ]),
@@ -542,7 +543,7 @@ class _GuacScoreScreenState extends State<GuacScoreScreen> {
         border: Border.all(color: const Color(0xFFe5e7eb)),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
+        Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800))),
         const SizedBox(height: 2),
         Text(subtitle, style: const TextStyle(fontSize: 11, color: Colors.black54)),
         const SizedBox(height: 12),
@@ -574,15 +575,15 @@ class _GuacScoreScreenState extends State<GuacScoreScreen> {
         ),
         const SizedBox(width: 10),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-          Text(label, style: const TextStyle(fontSize: 10, color: Colors.black54, fontWeight: FontWeight.w700)),
+          Text(label, style: TextStyle(fontSize: 10, color: Colors.black54, fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700))),
           const SizedBox(height: 2),
           Text(value,
-            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: Color(0xFF111827)),
+            style: ggAmount(size: 15, weight: FontWeight.w900, color: Color(0xFF111827)),
             maxLines: 1, overflow: TextOverflow.ellipsis,
           ),
           if (sub != null) ...[
             const SizedBox(height: 1),
-            Text(sub, style: const TextStyle(fontSize: 9, color: Colors.black45, fontWeight: FontWeight.w600),
+            Text(sub, style: TextStyle(fontSize: 9, color: Colors.black45, fontWeight: FontWeight.w600, fontVariations: ggWght(FontWeight.w600)),
               maxLines: 1, overflow: TextOverflow.ellipsis,
             ),
           ],
@@ -598,12 +599,12 @@ class _GuacScoreScreenState extends State<GuacScoreScreen> {
         color: const Color(0xFFf0fdf4),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Column(children: const [
-        GuacMascot(mood: MascotMood.relaxing, size: 120),
-        SizedBox(height: 16),
-        Text('Rate to unlock your score', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-        SizedBox(height: 8),
-        Text('Open any receipt, give it 1–5 stars based on how worth-it the purchase felt.', textAlign: TextAlign.center, style: TextStyle(color: Colors.black87)),
+      child: Column(children: [
+        const GuacMascot(mood: MascotMood.relaxing, size: 120),
+        const SizedBox(height: 16),
+        Text('Rate to unlock your score', style: ggHeading(size: 18, weight: FontWeight.w800)),
+        const SizedBox(height: 8),
+        const Text('Open any receipt, give it 1–5 stars based on how worth-it the purchase felt.', textAlign: TextAlign.center, style: TextStyle(color: Colors.black87)),
       ]),
     );
   }

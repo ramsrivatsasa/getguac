@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../services/guac_money_service.dart';
+import '../theme/gg_design.dart';
 
 /// Fetch-style coin pill showing the GuacMoney balance. The number counts
 /// up (animates) each time it builds, so it reads as "increasing". Tap → the
@@ -44,7 +45,7 @@ class GuacMoneyPill extends StatelessWidget {
             curve: Curves.easeOutCubic,
             builder: (_, v, __) => Text(
               formatGm(v),
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: textColor, height: 1),
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: textColor, height: 1, fontVariations: ggWght(FontWeight.w900)),
             ),
           ),
         ]),

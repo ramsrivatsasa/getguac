@@ -8,6 +8,7 @@ import '../../services/location_distance_service.dart';
 import '../../utils/date_format.dart';
 import '../../widgets/animated_primitives.dart';
 import '../../widgets/top_app_bar_actions.dart';
+import '../../theme/gg_design.dart';
 
 const _kBrand = Color(0xFF15803d);
 const _kTripCols = 'id, start_date, end_date, total_miles, description, category, from_address, to_address';
@@ -196,10 +197,10 @@ class _CarMilesScreenState extends State<CarMilesScreen> {
               CheckboxListTile(
                 value: category == 'Charity',
                 onChanged: (v) => setSt(() => category = (v == true) ? 'Charity' : 'Personal'),
-                title: const Row(children: [
-                  Icon(Icons.volunteer_activism, size: 16, color: Color(0xFFe11d48)),
-                  SizedBox(width: 6),
-                  Text('Charity trip', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                title: Row(children: [
+                  const Icon(Icons.volunteer_activism, size: 16, color: Color(0xFFe11d48)),
+                  const SizedBox(width: 6),
+                  Text('Charity trip', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700))),
                 ]),
                 subtitle: const Text(r'IRS volunteer mileage rate ($0.14/mi)',
                   style: TextStyle(fontSize: 10, color: Colors.black54)),
@@ -337,7 +338,7 @@ class _CarMilesScreenState extends State<CarMilesScreen> {
                           _categoryIcon(t.category),
                           color: _categoryColor(t.category),
                         ),
-                        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        title: Text(title, style: TextStyle(fontWeight: FontWeight.w600, fontVariations: ggWght(FontWeight.w600)), maxLines: 1, overflow: TextOverflow.ellipsis),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -357,7 +358,7 @@ class _CarMilesScreenState extends State<CarMilesScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text('${t.totalMiles.toStringAsFixed(1)} mi',
-                              style: const TextStyle(fontWeight: FontWeight.w800)),
+                              style: TextStyle(fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800))),
                             if (canNavigate)
                               IconButton(
                                 onPressed: () => _openDirections(t.fromAddress, t.toAddress),
@@ -388,9 +389,9 @@ class _CarMilesScreenState extends State<CarMilesScreen> {
       border: Border.all(color: _kBrand.withValues(alpha: 0.2)),
     ),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(label, style: const TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w700)),
+      Text(label, style: TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700))),
       const SizedBox(height: 4),
-      Text('${miles.toStringAsFixed(1)} mi', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: _kBrand)),
+      Text('${miles.toStringAsFixed(1)} mi', style: ggAmount(size: 22, weight: FontWeight.w900, color: _kBrand)),
     ]),
   ));
 

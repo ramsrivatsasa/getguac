@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../models/receipt_model.dart';
 import '../services/spending_anomalies_service.dart';
+import '../theme/gg_design.dart';
 
 class AnomaliesCard extends StatefulWidget {
   final List<Receipt> receipts;
@@ -81,11 +82,11 @@ class _AnomaliesCardState extends State<AnomaliesCard> {
                       TextSpan(
                         text: '${visible.length} spending '
                             '${visible.length == 1 ? "anomaly" : "anomalies"}',
-                        style: TextStyle(fontWeight: FontWeight.w800, color: tone.heading, fontSize: 13),
+                        style: TextStyle(fontWeight: FontWeight.w800, color: tone.heading, fontSize: 13, fontVariations: ggWght(FontWeight.w800)),
                       ),
                       if (preview.isNotEmpty) TextSpan(
                         text: '  ·  $preview',
-                        style: TextStyle(fontWeight: FontWeight.w500, color: tone.body, fontSize: 11),
+                        style: TextStyle(fontWeight: FontWeight.w500, color: tone.body, fontSize: 11, fontVariations: ggWght(FontWeight.w500)),
                       ),
                     ]),
                     overflow: TextOverflow.ellipsis,
@@ -180,7 +181,7 @@ class _AnomalyRow extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
               Text(anomaly.title,
-                style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: tone.heading, height: 1.2)),
+                style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: tone.heading, height: 1.2, fontVariations: ggWght(FontWeight.w800))),
               const SizedBox(height: 2),
               Text(anomaly.body,
                 style: TextStyle(fontSize: 11, color: tone.body, height: 1.3)),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/gg_design.dart';
 
 /// Horizontal gradient pill — icon/emoji on the left, title +
 /// subtitle stacked in the middle, ← arrow on the right. Used in
@@ -43,7 +44,7 @@ class FeaturePill extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 14, height: 1.0)),
+              Text(title, style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontVariations: ggWght(FontWeight.w900), fontSize: 14, height: 1.0)),
               const SizedBox(height: 2),
               Text(subtitle,
                 style: TextStyle(color: Colors.white.withValues(alpha: 0.92), fontSize: 10, height: 1.0),

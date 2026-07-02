@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/guac_money_service.dart';
+import '../theme/gg_design.dart';
 
 /// Fetch-style "+N GuacMoney" flash. Pops a celebratory pill in the centre of
 /// the screen that scales in, holds, then floats up + fades — shown right
@@ -82,8 +83,8 @@ class _GuacMoneyEarnedFlashState extends State<_GuacMoneyEarnedFlash> with Singl
           const SizedBox(width: 10),
           Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('+${formatGm(widget.points)} GuacMoney',
-              style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w900, color: Colors.white)),
-            const Text('added to your balance', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.white)),
+              style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900, color: Colors.white, fontVariations: ggWght(FontWeight.w900))),
+            Text('added to your balance', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.white, fontVariations: ggWght(FontWeight.w600))),
           ]),
         ]),
       );

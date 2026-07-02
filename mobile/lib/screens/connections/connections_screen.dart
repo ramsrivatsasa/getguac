@@ -12,6 +12,7 @@ import '../../services/mascot_event_bus.dart';
 import '../../widgets/store_logo.dart';
 import '../../widgets/animated_primitives.dart';
 import '../../widgets/top_app_bar_actions.dart';
+import '../../theme/gg_design.dart';
 import 'link_retailer_screen.dart' show LinkRetailerScreen;
 
 /// Thin wrapper to keep the import name semantic-stable when this
@@ -191,9 +192,9 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
                       ]),
                     ),
                     const SizedBox(height: 14),
-                    const Text('Connect for easy e-Receipt uploads',
+                    Text('Connect for easy e-Receipt uploads',
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900, color: Colors.white, height: 1.2)),
+                      style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900, fontVariations: ggWght(FontWeight.w900), color: Colors.white, height: 1.2)),
                     const SizedBox(height: 6),
                     Text('Forward receipts straight to GetGuac — auto-imported, and you earn GuacMoney for every one.',
                       textAlign: TextAlign.center,
@@ -220,11 +221,11 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
                   ),
                   const SizedBox(width: 12),
                   Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                    const Text('YOUR GETGUAC INBOX',
-                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Color(0xFF065f46), letterSpacing: 1.0)),
+                    Text('YOUR GETGUAC INBOX',
+                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, fontVariations: ggWght(FontWeight.w900), color: Color(0xFF065f46), letterSpacing: 1.0)),
                     const SizedBox(height: 3),
                     Text(_aliasEmail ?? 'No alias yet — set one in Profile',
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800)),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ])),
@@ -238,14 +239,14 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
               ),
               if (active.isNotEmpty) ...[
                 const SizedBox(height: 20),
-                const Text('ACTIVE',
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Color(0xFF64748b), letterSpacing: 1.0)),
+                Text('ACTIVE',
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, fontVariations: ggWght(FontWeight.w900), color: Color(0xFF64748b), letterSpacing: 1.0)),
                 const SizedBox(height: 8),
                 ...active.map((r) => _retailerRow(r, isActive: true)),
               ],
               const SizedBox(height: 20),
-              const Text('AVAILABLE',
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Color(0xFF64748b), letterSpacing: 1.0)),
+              Text('AVAILABLE',
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, fontVariations: ggWght(FontWeight.w900), color: Color(0xFF64748b), letterSpacing: 1.0)),
               const SizedBox(height: 8),
               ...available.map((r) => _retailerRow(r, isActive: false)),
             ],
@@ -280,7 +281,7 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
               ),
               const SizedBox(width: 12),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                Text(r.name, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+                Text(r.name, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800))),
                 const SizedBox(height: 2),
                 Text(
                   r.captureOnly ? 'Camera-only — no email setup' : r.category.replaceAll('-', ' '),
@@ -362,7 +363,7 @@ class _RetailerSetupSheet extends StatelessWidget {
           StoreLogo(storeName: retailer.name, size: 44, fallbackEmoji: '🏪'),
           const SizedBox(width: 12),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-            Text(retailer.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+            Text(retailer.name, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, fontVariations: ggWght(FontWeight.w900))),
             const SizedBox(height: 2),
             Text(retailer.category.replaceAll('-', ' '),
               style: const TextStyle(fontSize: 11, color: Colors.black54)),
@@ -373,8 +374,8 @@ class _RetailerSetupSheet extends StatelessWidget {
         controller: scrollController,
         padding: const EdgeInsets.fromLTRB(18, 8, 18, 20),
         children: [
-          const Text('SETUP STEPS',
-            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Color(0xFF64748b), letterSpacing: 1.0)),
+          Text('SETUP STEPS',
+            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, fontVariations: ggWght(FontWeight.w900), color: Color(0xFF64748b), letterSpacing: 1.0)),
           const SizedBox(height: 10),
           for (var i = 0; i < retailer.setupSteps.length; i++) Padding(
             padding: const EdgeInsets.only(bottom: 12),
@@ -383,7 +384,7 @@ class _RetailerSetupSheet extends StatelessWidget {
                 width: 24, height: 24, alignment: Alignment.center,
                 decoration: const BoxDecoration(color: Color(0xFFdcfce7), shape: BoxShape.circle),
                 child: Text('${i + 1}',
-                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Color(0xFF065f46))),
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, fontVariations: ggWght(FontWeight.w900), color: Color(0xFF065f46))),
               ),
               const SizedBox(width: 10),
               Expanded(child: Text(retailer.setupSteps[i],
@@ -401,11 +402,11 @@ class _RetailerSetupSheet extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const Text('YOUR ALIAS TO USE',
-                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Color(0xFFb45309), letterSpacing: 1.0)),
+                Text('YOUR ALIAS TO USE',
+                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, fontVariations: ggWght(FontWeight.w900), color: Color(0xFFb45309), letterSpacing: 1.0)),
                 const SizedBox(height: 4),
                 SelectableText(alias!,
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF78350f), fontFamily: 'monospace'),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800), color: Color(0xFF78350f), fontFamily: 'monospace'),
                 ),
               ]),
             ),

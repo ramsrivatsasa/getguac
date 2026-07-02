@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 import '../../widgets/top_app_bar_actions.dart';
+import '../../theme/gg_design.dart';
 import 'inbox_screen.dart' show openInboxComposer;
 
 const _kBrand = Color(0xFF15803d);
@@ -185,12 +186,12 @@ class _InboxDetailScreenState extends State<InboxDetailScreen> {
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: const Color(0xFFfed7aa)),
                   ),
-                  child: const Row(children: [
-                    Icon(Icons.hourglass_top, color: Color(0xFFc2410c), size: 18),
-                    SizedBox(width: 8),
+                  child: Row(children: [
+                    const Icon(Icons.hourglass_top, color: Color(0xFFc2410c), size: 18),
+                    const SizedBox(width: 8),
                     Expanded(child: Text(
                       'Sent to +g — Guac-AI is processing this. Receipt will appear in /receipts shortly.',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF9a3412)),
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF9a3412), fontVariations: ggWght(FontWeight.w700)),
                     )),
                   ]),
                 ),
@@ -216,7 +217,7 @@ class _InboxDetailScreenState extends State<InboxDetailScreen> {
               // Expandable "show more headers" section
               ExpansionTile(
                 tilePadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
-                title: const Text('Email headers', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF6b7280))),
+                title: Text('Email headers', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF6b7280), fontVariations: ggWght(FontWeight.w700))),
                 childrenPadding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
                 children: [
                   Container(
@@ -251,7 +252,7 @@ class _InboxDetailScreenState extends State<InboxDetailScreen> {
                 Expanded(child: OutlinedButton.icon(
                   onPressed: _reply,
                   icon: const Icon(Icons.reply, size: 18, color: _kBrand),
-                  label: const Text('Reply', style: TextStyle(color: _kBrand, fontWeight: FontWeight.w700)),
+                  label: Text('Reply', style: TextStyle(color: _kBrand, fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700))),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: _kBrand, width: 1.5),
                     padding: const EdgeInsets.symmetric(vertical: 12),
@@ -261,7 +262,7 @@ class _InboxDetailScreenState extends State<InboxDetailScreen> {
                 Expanded(child: OutlinedButton.icon(
                   onPressed: _trash,
                   icon: const Icon(Icons.delete_outline, size: 18, color: Color(0xFFdc2626)),
-                  label: const Text('Trash', style: TextStyle(color: Color(0xFFdc2626), fontWeight: FontWeight.w700)),
+                  label: Text('Trash', style: TextStyle(color: const Color(0xFFdc2626), fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700))),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: Color(0xFFdc2626), width: 1.5),
                     padding: const EdgeInsets.symmetric(vertical: 12),
@@ -304,17 +305,17 @@ class _ReceiptFiledBanner extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           boxShadow: const [BoxShadow(color: Color(0x4015803d), blurRadius: 8, offset: Offset(0, 3))],
         ),
-        child: Row(children: const [
-          Icon(Icons.check_circle, color: Colors.white, size: 22),
-          SizedBox(width: 10),
+        child: Row(children: [
+          const Icon(Icons.check_circle, color: Colors.white, size: 22),
+          const SizedBox(width: 10),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
             Text('Receipt filed by Guac-AI 🥑',
-              style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w900)),
-            SizedBox(height: 2),
-            Text('Tap to open the parsed receipt',
+              style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w900, fontVariations: ggWght(FontWeight.w900))),
+            const SizedBox(height: 2),
+            const Text('Tap to open the parsed receipt',
               style: TextStyle(color: Colors.white70, fontSize: 11)),
           ])),
-          Icon(Icons.arrow_forward, color: Colors.white, size: 18),
+          const Icon(Icons.arrow_forward, color: Colors.white, size: 18),
         ]),
       ),
     );
@@ -336,10 +337,10 @@ class _HeaderRow extends StatelessWidget {
           width: 90,
           child: Text(label.toUpperCase(),
             style: TextStyle(fontSize: 9, color: Colors.black.withValues(alpha: 0.5),
-              fontWeight: FontWeight.w800, letterSpacing: 1)),
+              fontWeight: FontWeight.w800, letterSpacing: 1, fontVariations: ggWght(FontWeight.w800))),
         ),
         Expanded(child: SelectableText(value,
-          style: TextStyle(fontSize: 12, fontWeight: bold ? FontWeight.w700 : FontWeight.w500))),
+          style: TextStyle(fontSize: 12, fontWeight: bold ? FontWeight.w700 : FontWeight.w500, fontVariations: ggWght(bold ? FontWeight.w700 : FontWeight.w500)))),
       ]),
     );
   }
@@ -443,7 +444,7 @@ class _MessageBodyState extends State<_MessageBody> {
       Padding(
         padding: const EdgeInsets.only(bottom: 8),
         child: Row(children: [
-          const Text('View:', style: TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w700)),
+          Text('View:', style: TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700))),
           const SizedBox(width: 6),
           if (canImage) ...[
             _modeChip('Image', _mode == 'image', () { setState(() => _mode = 'image'); _loadImage(); }),
@@ -525,6 +526,7 @@ class _MessageBodyState extends State<_MessageBody> {
           fontSize: 11,
           fontWeight: FontWeight.w800,
           color: active ? _kBrand : Colors.black54,
+          fontVariations: ggWght(FontWeight.w800),
         )),
       ),
     );

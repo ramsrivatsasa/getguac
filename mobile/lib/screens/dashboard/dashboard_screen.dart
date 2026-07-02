@@ -530,9 +530,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const SizedBox(width: 10),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
             Text('$_freshSteals new Steal${_freshSteals == 1 ? '' : 's'} found',
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 15)),
-            const Text('on your saved searches — tap to see them',
-              style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
+              style: ggHeading(size: 15, weight: FontWeight.w900, color: Colors.white)),
+            Text('on your saved searches — tap to see them',
+              style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600, fontVariations: ggWght(FontWeight.w600))),
           ])),
           const Icon(Icons.chevron_right_rounded, color: Colors.white),
         ]),
@@ -582,7 +582,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(it.label, maxLines: 1, overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700, color: it.color)),
+                  style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700, color: it.color, fontVariations: ggWght(FontWeight.w700))),
               ]),
             ),
           );
@@ -667,6 +667,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
+                fontVariations: ggWght(FontWeight.w700),
                 color: active ? _kEmerald900 : _kEmerald700.withValues(alpha: 0.7),
               )),
           ),
@@ -687,17 +688,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
           boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 4)],
         ),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
-          const Text('Last ', style: TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w700)),
+          Text('Last ', style: TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700))),
           DropdownButton<int>(
             value: opts.contains(_periodCount) ? _periodCount : opts.first,
             underline: const SizedBox.shrink(),
             isDense: true,
-            style: const TextStyle(fontSize: 13, color: _kEmerald800, fontWeight: FontWeight.w900),
+            style: TextStyle(fontSize: 13, color: _kEmerald800, fontWeight: FontWeight.w900, fontVariations: ggWght(FontWeight.w900)),
             items: opts.map((n) => DropdownMenuItem(value: n, child: Text('$n'))).toList(),
             onChanged: (n) { if (n != null) _setPeriodCount(n); },
           ),
           Text(' ${_kUnitLabel[_period]}${_periodCount == 1 ? '' : 's'}',
-            style: const TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w700)),
+            style: TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700))),
         ]),
       ),
       const SizedBox(width: 10),
@@ -816,6 +817,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             formatter: (v) => v.round().toString(),
             style: TextStyle(
               fontSize: 18, fontWeight: FontWeight.w900,
+              fontVariations: ggWght(FontWeight.w900),
               color: tone.value, height: 1.05,
             ),
           );
@@ -884,6 +886,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 formatter: (v) => formatGuacMoney(v),
                 style: TextStyle(
                   fontSize: 18, fontWeight: FontWeight.w900,
+                  fontVariations: ggWght(FontWeight.w900),
                   color: tone.value, height: 1.05,
                 ),
               );
@@ -917,6 +920,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         formatter: (v) => v.round().toString(),
         style: TextStyle(
           fontSize: 18, fontWeight: FontWeight.w900,
+          fontVariations: ggWght(FontWeight.w900),
           color: tone.value, height: 1.05,
         ),
       ),
@@ -1220,7 +1224,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ...filtered.take(5).map((r) => ListTile(
           contentPadding: EdgeInsets.zero,
           dense: true,
-          title: Text(r.storeName, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+          title: Text(r.storeName, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, fontVariations: ggWght(FontWeight.w600))),
           subtitle: Text(formatDateShort(r.date), style: const TextStyle(fontSize: 11, color: Colors.black45)),
           trailing: Text('\$${r.totalAmount.toStringAsFixed(2)}',
             style: ggAmount(size: 14)),
@@ -1246,7 +1250,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ...rewards.take(4).map((r) => ListTile(
           contentPadding: EdgeInsets.zero,
           dense: true,
-          title: Text(r.rewardTitle, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+          title: Text(r.rewardTitle, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, fontVariations: ggWght(FontWeight.w600))),
           subtitle: Text(r.storeName, style: const TextStyle(fontSize: 11, color: Colors.black45)),
           trailing: Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -1256,6 +1260,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             child: Text(r.isExpired ? 'Expired' : formatDateShort(r.expiryDate),
               style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800,
+                fontVariations: ggWght(FontWeight.w800),
                 color: r.isExpired ? const Color(0xFF991b1b) : _kEmerald800)),
           ),
           onTap: () => context.push('/rewards/${r.id}'),
@@ -1311,12 +1316,13 @@ class _StatTile extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-            Text(label, style: const TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w600)),
+            Text(label, style: TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w600, fontVariations: ggWght(FontWeight.w600))),
             const SizedBox(height: 2),
             Text(value,
               style: TextStyle(
                 fontSize: isLeader ? 13 : 17,
                 fontWeight: FontWeight.w900,
+                fontVariations: ggWght(FontWeight.w900),
                 color: valueColor ?? const Color(0xFF111827),
               ),
               maxLines: 1, overflow: TextOverflow.ellipsis,
@@ -1328,6 +1334,7 @@ class _StatTile extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 9.5,
                   fontWeight: FontWeight.w800,
+                  fontVariations: ggWght(FontWeight.w800),
                   color: trendTone == 'up'
                     ? const Color(0xFFb91c1c)   // red — spending more
                     : trendTone == 'down'
@@ -1376,12 +1383,12 @@ class _SectionHeader extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(title,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF111827)),
+            style: ggHeading(size: 16, weight: FontWeight.w900, color: Color(0xFF111827)),
           ),
           if (subtitle != null) ...[
             const SizedBox(height: 2),
             Text(subtitle!,
-              style: const TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w500),
+              style: TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w500, fontVariations: ggWght(FontWeight.w500)),
             ),
           ],
         ],

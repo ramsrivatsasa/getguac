@@ -24,6 +24,7 @@ import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import '../theme/gg_design.dart';
 
 /// Static API for popping the scan overlay above the whole app.
 ///
@@ -135,9 +136,9 @@ class _ReceiptScanOverlayBodyState extends State<_ReceiptScanOverlayBody> {
           child: Semantics(
             liveRegion: true,
             label: 'Parsing receipt',
-            child: const Text(
+            child: Text(
               'Parsing receipt…',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _kEmerald900),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700), color: _kEmerald900),
             ),
           ),
         ),
@@ -225,7 +226,7 @@ class _SpeechBubble extends StatelessWidget {
                 child: Text(
                   text,
                   key: ValueKey(text),
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: _kEmerald900),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800), color: _kEmerald900),
                 ),
               ),
             ),
@@ -239,7 +240,7 @@ class _SpeechBubble extends StatelessWidget {
                 ),
                 child: Text(
                   '$count receipts',
-                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: _kEmerald700),
+                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800), color: _kEmerald700),
                 ),
               ),
             ],

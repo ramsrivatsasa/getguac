@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/reward_provider.dart';
 import '../../utils/date_format.dart';
 import '../../widgets/top_app_bar_actions.dart';
+import '../../theme/gg_design.dart';
 
 class RewardDetailScreen extends StatelessWidget {
   final String id;
@@ -29,7 +30,7 @@ class RewardDetailScreen extends StatelessWidget {
               _row('Expiry Date', formatDateShort(reward.expiryDate)),
               _row('Status', reward.isExpired ? 'Expired' : 'Active'),
               const Divider(height: 24),
-              const Text('Description', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey)),
+              Text('Description', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey, fontVariations: ggWght(FontWeight.bold))),
               const SizedBox(height: 6),
               Text(reward.description.isEmpty ? 'No description' : reward.description),
             ]),
@@ -45,7 +46,7 @@ class RewardDetailScreen extends StatelessWidget {
       child: Row(
         children: [
           SizedBox(width: 110, child: Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13))),
-          Expanded(child: Text(value, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13))),
+          Expanded(child: Text(value, style: TextStyle(fontWeight: FontWeight.w500, fontSize: 13, fontVariations: ggWght(FontWeight.w500)))),
         ],
       ),
     );

@@ -12,6 +12,7 @@ import '../../services/purchase_service.dart';
 import '../../widgets/animated_mascot.dart';
 import '../../widgets/animated_primitives.dart';
 import '../../widgets/top_app_bar_actions.dart';
+import '../../theme/gg_design.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -207,7 +208,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 12),
           if (firstName.toString().isNotEmpty)
             Center(child: Text('$firstName $lastName'.trim(),
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800))),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800)))),
           const SizedBox(height: 16),
           _Row(label: 'Email', value: email),
           const Divider(),
@@ -239,7 +240,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Card(
               child: ListTile(
                 leading: const Icon(Icons.alternate_email, color: Color(0xFF15803d)),
-                title: const Text('Pick your @getguac.app email', style: TextStyle(fontWeight: FontWeight.w700)),
+                title: Text('Pick your @getguac.app email', style: TextStyle(fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700))),
                 subtitle: const Text('Open the picker on getguac.app'),
                 trailing: const Icon(Icons.open_in_new),
                 onTap: () => UpdateService.openDownload('https://getguac.app/profile'),
@@ -372,7 +373,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(width: 12),
                 Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  const Text('Biometric unlock', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
+                  Text('Biometric unlock', style: TextStyle(fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800), fontSize: 14)),
                   Text(
                     _bioEnabled ? 'Active — sign in with fingerprint / face' : 'Tap to enable fingerprint / face login',
                     style: const TextStyle(fontSize: 11, color: Colors.black54),
@@ -409,8 +410,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const SizedBox(height: 14),
                       const Divider(height: 1),
                       const SizedBox(height: 10),
-                      const Text('Account match',
-                        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: Color(0xFF065f46))),
+                      Text('Account match',
+                        style: TextStyle(fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800), fontSize: 13, color: const Color(0xFF065f46))),
                       const SizedBox(height: 6),
                       _kv('Signed in as', current ?? '(no session)'),
                       _kv('Biometric stored for', stored ?? '(none stored)'),
@@ -431,6 +432,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             fontSize: 11,
                             color: matches ? const Color(0xFF065f46) : const Color(0xFF991b1b),
                             fontWeight: FontWeight.w700,
+                            fontVariations: ggWght(FontWeight.w700),
                           ),
                         ),
                       ),
@@ -474,11 +476,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               border: Border.all(color: const Color(0xFFa7f3d0)),
             ),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Row(children: [
-                Icon(Icons.mail_outline, size: 18, color: Color(0xFF065f46)),
-                SizedBox(width: 8),
+              Row(children: [
+                const Icon(Icons.mail_outline, size: 18, color: Color(0xFF065f46)),
+                const SizedBox(width: 8),
                 Text('Mailbox',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF064e3b))),
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800), color: const Color(0xFF064e3b))),
               ]),
               const SizedBox(height: 6),
               const Text(
@@ -496,8 +498,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     value: _autoDelete,
                     onChanged: _setAutoDelete,
                     activeColor: const Color(0xFFb91c1c),
-                    title: const Text('Auto-delete from mail server after import',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF064e3b))),
+                    title: Text('Auto-delete from mail server after import',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700), color: const Color(0xFF064e3b))),
                     subtitle: Text(
                       _autoDelete
                           ? 'Imports are permanently removed from your mailbox after we save them.'
@@ -539,8 +541,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             OutlinedButton.icon(
               onPressed: () => _checkForUpdate(context),
               icon: const Icon(Icons.system_update_alt, size: 12),
-              label: const Text('Check for update',
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 11)),
+              label: Text('Check for update',
+                style: TextStyle(fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700), fontSize: 11)),
               style: OutlinedButton.styleFrom(
                 foregroundColor: const Color(0xFF15803d),
                 side: const BorderSide(color: Color(0xFFA7F3D0), width: 1),
@@ -555,8 +557,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             OutlinedButton.icon(
               onPressed: () => _signOut(context),
               icon: const Icon(Icons.logout, size: 12),
-              label: const Text('Sign out',
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 11)),
+              label: Text('Sign out',
+                style: TextStyle(fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700), fontSize: 11)),
               style: OutlinedButton.styleFrom(
                 foregroundColor: const Color(0xFF991b1b),
                 side: const BorderSide(color: Color(0xFFFCA5A5), width: 1),
@@ -662,6 +664,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   fontSize: 11,
                   color: upload.ok ? const Color(0xFF065f46) : const Color(0xFF991b1b),
                   fontWeight: FontWeight.w700,
+                  fontVariations: ggWght(FontWeight.w700),
                 ),
               ),
             ),
@@ -717,11 +720,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       SizedBox(
         width: 110,
         child: Text(label,
-          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.black54)),
+          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, fontVariations: ggWght(FontWeight.w600), color: Colors.black54)),
       ),
       Expanded(
         child: Text(value,
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF064e3b))),
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700), color: const Color(0xFF064e3b))),
       ),
     ]),
   );
@@ -740,7 +743,7 @@ class _Row extends StatelessWidget {
         children: [
           Text(label, style: const TextStyle(color: Colors.black54)),
           const Spacer(),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
+          Text(value, style: TextStyle(fontWeight: FontWeight.w600, fontVariations: ggWght(FontWeight.w600))),
         ],
       ),
     );
@@ -763,8 +766,8 @@ class _PremiumCard extends StatelessWidget {
         color: const Color(0xFFecfdf5),
         child: ListTile(
           leading: const Icon(Icons.workspace_premium, color: Color(0xFF15803d)),
-          title: const Text('GetGuac Premium — active',
-              style: TextStyle(fontWeight: FontWeight.w800)),
+          title: Text('GetGuac Premium — active',
+              style: TextStyle(fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800))),
           subtitle: Text(renew.isEmpty ? 'Extra ads removed. Thank you!' : 'Extra ads removed · renews $renew'),
         ),
       );
@@ -781,9 +784,9 @@ class _PremiumCard extends StatelessWidget {
             Row(children: [
               const Icon(Icons.workspace_premium, color: Color(0xFFca8a04)),
               const SizedBox(width: 8),
-              const Expanded(
+              Expanded(
                 child: Text('GetGuac Premium',
-                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+                    style: TextStyle(fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800), fontSize: 16)),
               ),
             ]),
             const SizedBox(height: 4),
@@ -821,7 +824,7 @@ class _PremiumCard extends StatelessWidget {
                       padding: const EdgeInsets.only(top: 10),
                       child: Text(
                         msg,
-                        style: const TextStyle(fontSize: 12, color: Color(0xFF047857), fontWeight: FontWeight.w600),
+                        style: TextStyle(fontSize: 12, color: const Color(0xFF047857), fontWeight: FontWeight.w600, fontVariations: ggWght(FontWeight.w600)),
                       ),
                     ),
             ),
@@ -840,8 +843,9 @@ class _SectionHeader extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(left: 4, top: 4, bottom: 6),
       child: Text(label,
-        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800,
-          color: Color(0xFF15803d), letterSpacing: 1.2)),
+        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800,
+          fontVariations: ggWght(FontWeight.w800),
+          color: const Color(0xFF15803d), letterSpacing: 1.2)),
     );
   }
 }
@@ -893,7 +897,7 @@ class _VRow extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+                Text(title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800))),
                 const SizedBox(height: 2),
                 Text(subtitle,
                   style: const TextStyle(fontSize: 12, color: Colors.black54, height: 1.35),
@@ -945,7 +949,7 @@ class _Pill extends StatelessWidget {
           if (icon != null) Icon(icon, size: 22, color: Colors.white),
           const SizedBox(width: 8),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-            Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 14, height: 1.0)),
+            Text(title, style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontVariations: ggWght(FontWeight.w900), fontSize: 14, height: 1.0)),
             const SizedBox(height: 2),
             Text(subtitle, style: TextStyle(color: Colors.white.withValues(alpha: 0.92), fontSize: 10, height: 1.0), overflow: TextOverflow.ellipsis),
           ])),
@@ -994,7 +998,7 @@ class _MenuTile extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
+                Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800))),
                 if (subtitle != null) Text(subtitle!, style: const TextStyle(fontSize: 11, color: Colors.black54)),
               ])),
               trailing ?? const Icon(Icons.chevron_right, color: Colors.black26),
@@ -1032,9 +1036,9 @@ class _MailCard extends StatelessWidget {
         ),
         const SizedBox(width: 12),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(header, style: TextStyle(fontSize: 10, color: iconColor, fontWeight: FontWeight.w800, letterSpacing: 1)),
+          Text(header, style: TextStyle(fontSize: 10, color: iconColor, fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800), letterSpacing: 1)),
           const SizedBox(height: 4),
-          Text(address, style: const TextStyle(fontFamily: 'monospace', fontWeight: FontWeight.w800, fontSize: 13)),
+          Text(address, style: TextStyle(fontFamily: 'monospace', fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800), fontSize: 13)),
           const SizedBox(height: 4),
           Text(hint, style: const TextStyle(fontSize: 11, color: Colors.black54, height: 1.3)),
         ])),

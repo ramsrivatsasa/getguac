@@ -24,6 +24,7 @@ import '../../services/product_image_service.dart';
 import '../../categories.dart';
 import '../../widgets/animated_primitives.dart';
 import '../../widgets/top_app_bar_actions.dart';
+import '../../theme/gg_design.dart';
 
 const _kBrand = Color(0xFFca8a04);
 
@@ -243,7 +244,7 @@ class _StashScreenState extends State<StashScreen> {
                                 const Text('📦', style: TextStyle(fontSize: 40)),
                                 const SizedBox(width: 12),
                                 Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                  Text('${filtered.length} unique items', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: _kBrand)),
+                                  Text('${filtered.length} unique items', style: ggHeading(size: 14, weight: FontWeight.w800, color: _kBrand)),
                                   Text('$totalItems units  •  \$${totalSpent.toStringAsFixed(2)} total', style: const TextStyle(fontSize: 12, color: Colors.black54)),
                                 ])),
                               ]),
@@ -272,7 +273,7 @@ class _StashScreenState extends State<StashScreen> {
                                   value: _sort,
                                   underline: const SizedBox.shrink(),
                                   isDense: true,
-                                  style: const TextStyle(fontSize: 12, color: Color(0xFF111827), fontWeight: FontWeight.w700),
+                                  style: TextStyle(fontSize: 12, color: const Color(0xFF111827), fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700)),
                                   items: const [
                                     DropdownMenuItem(value: _Sort.recent, child: Text('Recent')),
                                     DropdownMenuItem(value: _Sort.alpha,  child: Text('A–Z')),
@@ -506,14 +507,14 @@ class _StashScreenState extends State<StashScreen> {
     } catch (_) {/* user cancelled, ignore */}
   }
 
-  Widget _emptyState() => ListView(children: const [
-    SizedBox(height: 60),
+  Widget _emptyState() => ListView(children: [
+    const SizedBox(height: 60),
     Center(child: Column(children: [
-      GuacMascot(mood: MascotMood.relaxing, size: 130),
-      SizedBox(height: 16),
-      Text('Your stash is empty', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-      SizedBox(height: 8),
-      Padding(
+      const GuacMascot(mood: MascotMood.relaxing, size: 130),
+      const SizedBox(height: 16),
+      Text('Your stash is empty', style: ggHeading(size: 18, weight: FontWeight.w800)),
+      const SizedBox(height: 8),
+      const Padding(
         padding: EdgeInsets.symmetric(horizontal: 40),
         child: Text('Items extracted from your receipts will show up here. Upload some receipts to get started.',
           textAlign: TextAlign.center, style: TextStyle(color: Colors.black54)),
@@ -581,6 +582,7 @@ class _CatPill extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w800,
+              fontVariations: ggWght(FontWeight.w800),
               color: active ? Colors.white : const Color(0xFF374151),
               letterSpacing: 0.1,
             )),
@@ -594,6 +596,7 @@ class _CatPill extends StatelessWidget {
             child: Text('$count',
               style: TextStyle(
                 fontSize: 10, fontWeight: FontWeight.w900,
+                fontVariations: ggWght(FontWeight.w900),
                 color: active ? Colors.white : const Color(0xFF6b7280),
               )),
           ),

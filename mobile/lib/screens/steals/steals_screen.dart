@@ -11,6 +11,7 @@ import '../../widgets/guac_mascot.dart';
 import '../../widgets/animated_mascot.dart';
 import '../../widgets/animated_primitives.dart';
 import '../../utils/date_format.dart';
+import '../../theme/gg_design.dart';
 
 const _kBrand = Color(0xFFdb2777);
 
@@ -73,7 +74,7 @@ class _StealsScreenState extends State<StealsScreen> {
               const AnimatedMascot(mood: MascotMood.rich, size: 60, idle: true),
               const SizedBox(width: 12),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const Text('Find a Steal', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: _kBrand)),
+                Text('Find a Steal', style: ggHeading(size: 16, weight: FontWeight.w900, color: _kBrand)),
                 const Text('AI-powered price hunt across the web. Type anything.',
                   style: TextStyle(fontSize: 11, color: Colors.black54)),
               ])),
@@ -104,7 +105,7 @@ class _StealsScreenState extends State<StealsScreen> {
 
           // Rewards expiring soon
           if (expiring.isNotEmpty) ...[
-            const Text('Rewards expiring in 30 days', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
+            Text('Rewards expiring in 30 days', style: TextStyle(fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800), fontSize: 14)),
             const SizedBox(height: 8),
             ...expiring.take(6).toList().asMap().entries.map((entry) => FadeUpOnMount(
               key: ValueKey('steals-row-${entry.value.id}'),
@@ -112,7 +113,7 @@ class _StealsScreenState extends State<StealsScreen> {
               child: Card(
                 child: ListTile(
                   leading: const Text('🎁', style: TextStyle(fontSize: 24)),
-                  title: Text(entry.value.rewardTitle, style: const TextStyle(fontWeight: FontWeight.w700)),
+                  title: Text(entry.value.rewardTitle, style: TextStyle(fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700))),
                   subtitle: Text('${entry.value.storeName}  •  expires ${formatDateShort(entry.value.expiryDate)}',
                     style: const TextStyle(fontSize: 11)),
                   trailing: const Icon(Icons.chevron_right),

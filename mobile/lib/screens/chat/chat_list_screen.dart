@@ -11,6 +11,7 @@ import '../../services/dms_service.dart';
 import '../../services/display_names_service.dart';
 import '../../widgets/animated_primitives.dart';
 import '../../widgets/top_app_bar_actions.dart';
+import '../../theme/gg_design.dart';
 
 const _kBrand = Color(0xFF15803d);
 
@@ -101,8 +102,8 @@ class _ChatListScreenState extends State<ChatListScreen> {
                 border: Border.all(color: const Color(0xFFa7f3d0)),
               ),
               child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                const Text('START CHAT',
-                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1, color: _kBrand)),
+                Text('START CHAT',
+                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800), letterSpacing: 1, color: _kBrand)),
                 const SizedBox(height: 6),
                 Row(children: [
                   Expanded(child: TextField(
@@ -133,10 +134,10 @@ class _ChatListScreenState extends State<ChatListScreen> {
             const SizedBox(height: 14),
 
             // Threads
-            const Padding(
-              padding: EdgeInsets.only(left: 4, bottom: 6),
+            Padding(
+              padding: const EdgeInsets.only(left: 4, bottom: 6),
               child: Text('CONVERSATIONS',
-                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1, color: Colors.black54)),
+                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800), letterSpacing: 1, color: Colors.black54)),
             ),
             if (_loading)
               const Padding(
@@ -174,11 +175,11 @@ class _ChatListScreenState extends State<ChatListScreen> {
                         CircleAvatar(
                           radius: 18,
                           backgroundColor: const Color(0xFFd1fae5),
-                          child: Text(initial, style: const TextStyle(color: _kBrand, fontWeight: FontWeight.w800)),
+                          child: Text(initial, style: TextStyle(color: _kBrand, fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800))),
                         ),
                         const SizedBox(width: 12),
                         Expanded(child: Text(name,
-                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, fontVariations: ggWght(FontWeight.w700)),
                           overflow: TextOverflow.ellipsis,
                         )),
                         const SizedBox(width: 8),

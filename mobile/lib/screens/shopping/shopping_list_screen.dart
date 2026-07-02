@@ -424,7 +424,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                   ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                   : const Icon(Icons.savings_outlined),
                 label: Text(_autoAdding ? 'Adding…' : '💰 Auto-Add ${buyAgain.length} via cheapest store',
-                  style: const TextStyle(fontWeight: FontWeight.w800)),
+                  style: TextStyle(fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800))),
               ),
             ),
           ),
@@ -524,34 +524,24 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
         // Per-card checkbox only shows for Buy Again rows. Lets the user
         // hand-pick which suggestions get routed to one specific store
         // via the bottom action bar (Compare Stores flow).
+        // No per-item store image — each store's logo already sits in the
+        // card header, so repeating it on every line was redundant. Buy Again
+        // rows keep just the selection checkbox for the Compare-Stores flow.
         leading: isPredicted
-          ? Row(mainAxisSize: MainAxisSize.min, children: [
-              Checkbox(
-                value: picked,
-                onChanged: (v) => setState(() {
-                  if (v == true) {
-                    _selectedBuyAgain.add(it.id);
-                  } else {
-                    _selectedBuyAgain.remove(it.id);
-                  }
-                }),
-                activeColor: const Color(0xFF7c3aed),
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                visualDensity: VisualDensity.compact,
-              ),
-              StoreLogo(
-                storeName: it.storeNameDisplay,
-                fallbackEmoji: '🪄',
-                size: 32,
-                emojiBg: const Color(0xFF7c3aed),
-              ),
-            ])
-          : StoreLogo(
-              storeName: it.storeNameDisplay,
-              fallbackEmoji: '🛒',
-              size: 36,
-              emojiBg: _kBrand,
-            ),
+          ? Checkbox(
+              value: picked,
+              onChanged: (v) => setState(() {
+                if (v == true) {
+                  _selectedBuyAgain.add(it.id);
+                } else {
+                  _selectedBuyAgain.remove(it.id);
+                }
+              }),
+              activeColor: const Color(0xFF7c3aed),
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              visualDensity: VisualDensity.compact,
+            )
+          : null,
         title: AnimatedDefaultTextStyle(
           duration: const Duration(milliseconds: 220),
           curve: Curves.easeOutCubic,
@@ -610,7 +600,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
         ),
         child: Row(children: [
           Text('$count selected',
-            style: const TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF5b21b6))),
+            style: TextStyle(fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800), color: Color(0xFF5b21b6))),
           const SizedBox(width: 10),
           Expanded(
             child: FilledButton.icon(
@@ -620,8 +610,8 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
               icon: const Icon(Icons.store_outlined, size: 18),
-              label: const Text('Send to store…',
-                style: TextStyle(fontWeight: FontWeight.w800)),
+              label: Text('Send to store…',
+                style: TextStyle(fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800))),
             ),
           ),
           const SizedBox(width: 8),
@@ -644,9 +634,9 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
         child: ListView(
           shrinkWrap: true,
           children: [
-            const Padding(
-              padding: EdgeInsets.fromLTRB(20, 16, 20, 4),
-              child: Text('Send to store', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+              child: Text('Send to store', style: TextStyle(fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800), fontSize: 16)),
             ),
             const Divider(height: 1),
             ..._knownStores.map((s) => ListTile(

@@ -6,6 +6,7 @@
 
 import 'package:flutter/material.dart';
 import '../services/stash_service.dart';
+import '../theme/gg_design.dart';
 
 class StashActionsSheet extends StatefulWidget {
   final String itemName;
@@ -74,7 +75,7 @@ class _StashActionsSheetState extends State<StashActionsSheet> {
           )),
           const SizedBox(height: 14),
           Text(widget.itemName,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+            style: ggHeading(size: 16, weight: FontWeight.w900),
             maxLines: 2, overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 14),
@@ -88,13 +89,14 @@ class _StashActionsSheetState extends State<StashActionsSheet> {
               borderRadius: BorderRadius.circular(14),
             ),
             child: Row(children: [
-              const Text('📦  On hand', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
+              Text('📦  On hand', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800))),
               const Spacer(),
               _StepperButton(icon: Icons.remove, onTap: _onHand == 0 ? null : () => _setOnHand(_onHand - 1)),
               SizedBox(width: 32, child: Text('$_onHand',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 18, fontWeight: FontWeight.w900,
+                  fontVariations: ggWght(FontWeight.w900),
                   color: _onHand == 0 ? const Color(0xFFb91c1c)
                     : _onHand <= 1 ? const Color(0xFFb45309)
                     : const Color(0xFF065f46),
@@ -123,13 +125,13 @@ class _StashActionsSheetState extends State<StashActionsSheet> {
                   _huntingPrices
                     ? 'Scanning the web…'
                     : _prices == null ? 'Hunt web prices' : 'Refresh web prices',
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: Color(0xFF78350f)),
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, fontVariations: ggWght(FontWeight.w900), color: const Color(0xFF78350f)),
                 ),
                 const Spacer(),
                 if (_prices != null) Container(
                   padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                   decoration: BoxDecoration(color: const Color(0xFFfacc15), borderRadius: BorderRadius.circular(8)),
-                  child: Text('${_prices!.length}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900)),
+                  child: Text('${_prices!.length}', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, fontVariations: ggWght(FontWeight.w900))),
                 ),
               ]),
             ),
@@ -147,7 +149,7 @@ class _StashActionsSheetState extends State<StashActionsSheet> {
                 const SizedBox(width: 8),
                 Expanded(child: Text(
                   '${p['store'] ?? 'Store'} — \$${(p['price'] as num?)?.toStringAsFixed(2) ?? '—'}',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700)),
                   maxLines: 1, overflow: TextOverflow.ellipsis,
                 )),
               ]),

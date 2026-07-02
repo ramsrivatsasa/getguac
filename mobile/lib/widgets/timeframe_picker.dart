@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/timeframe_store.dart';
+import '../theme/gg_design.dart';
 
 /// Shared time-frame picker — the green Daily/Weekly/Monthly/Yearly
 /// pill bar + "Last N <unit>" dropdown + optional trailing label
@@ -129,6 +130,7 @@ class TimeframePicker extends StatelessWidget {
                 style: TextStyle(
                   color: active ? _kEmerald800 : const Color(0xFF15803d).withValues(alpha: 0.65),
                   fontWeight: FontWeight.w800,
+                  fontVariations: ggWght(FontWeight.w800),
                   fontSize: 13,
                 ),
               ),
@@ -148,18 +150,18 @@ class TimeframePicker extends StatelessWidget {
             boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 3)],
           ),
           child: Row(mainAxisSize: MainAxisSize.min, children: [
-            const Text('Last', style: TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w700)),
+            Text('Last', style: TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700))),
             const SizedBox(width: 6),
             DropdownButton<int>(
               value: effectiveCount,
               underline: const SizedBox.shrink(),
               isDense: true,
-              style: const TextStyle(fontSize: 13, color: _kEmerald800, fontWeight: FontWeight.w900),
+              style: TextStyle(fontSize: 13, color: _kEmerald800, fontWeight: FontWeight.w900, fontVariations: ggWght(FontWeight.w900)),
               items: opts.map((n) => DropdownMenuItem(value: n, child: Text('$n'))).toList(),
               onChanged: (n) { if (n != null) _emit(period, n); },
             ),
             Text(' $unit${effectiveCount == 1 ? '' : 's'}',
-              style: const TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w700)),
+              style: TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700))),
           ]),
         ),
         if (trailing != null) ...[

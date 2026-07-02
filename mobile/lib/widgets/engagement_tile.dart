@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/gg_design.dart';
 
 /// Engagement-strip tile — mirrors the web dashboard's four
 /// premium tiles (GuacScore / GuacWizard / GuacMoney / Rewards).
@@ -103,18 +104,18 @@ class EngagementTile extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(label,
-                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 0.5, color: labelColor),
+                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 0.5, color: labelColor, fontVariations: ggWght(FontWeight.w800)),
                           maxLines: 1, overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 2),
                         valueOverlay ?? Text(value,
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: valueColor, height: 1.05),
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: valueColor, height: 1.05, fontVariations: ggWght(FontWeight.w900)),
                           maxLines: 1, overflow: TextOverflow.ellipsis,
                         ),
                         if (subtext != null) ...[
                           const SizedBox(height: 2),
                           Text(subtext!,
-                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: subColor),
+                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: subColor, fontVariations: ggWght(FontWeight.w600)),
                             maxLines: 1, overflow: TextOverflow.ellipsis,
                           ),
                         ],

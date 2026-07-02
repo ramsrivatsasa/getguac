@@ -12,6 +12,7 @@ import '../../services/wizard_score.dart';
 import '../../services/analysis_engine.dart';
 import '../../widgets/timeframe_picker.dart';
 import '../../widgets/animated_primitives.dart';
+import '../../theme/gg_design.dart';
 
 const _kBrand = Color(0xFF7c3aed);
 
@@ -143,7 +144,7 @@ class _GuacWizardScreenState extends State<GuacWizardScreen> {
         const SizedBox(width: 14),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
           Row(children: [
-            Text('GuacWizard', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: tone.text, height: 1.05)),
+            Text('GuacWizard', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: tone.text, height: 1.05, fontVariations: ggWght(FontWeight.w900))),
             const SizedBox(width: 6),
             const Text('✨', style: TextStyle(fontSize: 16)),
           ]),
@@ -152,29 +153,29 @@ class _GuacWizardScreenState extends State<GuacWizardScreen> {
             style: TextStyle(fontSize: 12, color: tone.sub, height: 1.3)),
         ])),
         Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-          Text('WIZARD SCORE', style: TextStyle(fontSize: 9, letterSpacing: 0.5, fontWeight: FontWeight.w800, color: tone.sub)),
+          Text('WIZARD SCORE', style: TextStyle(fontSize: 9, letterSpacing: 0.5, fontWeight: FontWeight.w800, color: tone.sub, fontVariations: ggWght(FontWeight.w800))),
           const SizedBox(height: 4),
           // Score number tweens on every period change so flipping
           // the timeframe pill reads as a retally — same easing the
           // GuacScore arc uses.
           Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
             score == null
-              ? Text('—', style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: tone.text, height: 1))
+              ? Text('—', style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: tone.text, height: 1, fontVariations: ggWght(FontWeight.w900)))
               : CountUp(
                   value: score.toDouble(),
                   duration: const Duration(milliseconds: 600),
                   formatter: (v) => v.round().toString(),
-                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: tone.text, height: 1),
+                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: tone.text, height: 1, fontVariations: ggWght(FontWeight.w900)),
                 ),
             Padding(
               padding: const EdgeInsets.only(bottom: 4),
               child: Text(' / 100',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: tone.sub)),
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: tone.sub, fontVariations: ggWght(FontWeight.w800))),
             ),
           ]),
           const SizedBox(height: 2),
           Text(_periodLabel(),
-            style: TextStyle(fontSize: 9, color: tone.sub, fontWeight: FontWeight.w600)),
+            style: TextStyle(fontSize: 9, color: tone.sub, fontWeight: FontWeight.w600, fontVariations: ggWght(FontWeight.w600))),
         ]),
       ]),
     );
@@ -278,9 +279,9 @@ class _GuacWizardScreenState extends State<GuacWizardScreen> {
                 ),
                 const SizedBox(width: 14),
                 Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  const Text('Bank Bite', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.black54)),
+                  Text('Bank Bite', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.black54, fontVariations: ggWght(FontWeight.w700))),
                   Text('\$${bite.toStringAsFixed(2)}',
-                    style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w900, color: _kBrand)),
+                    style: ggAmount(size: 30, weight: FontWeight.w900, color: _kBrand)),
                   Text(_periodLabel(),
                     style: const TextStyle(fontSize: 11, color: Colors.black54)),
                 ])),
@@ -297,20 +298,20 @@ class _GuacWizardScreenState extends State<GuacWizardScreen> {
             ]),
             const SizedBox(height: 24),
             // Insights
-            const Text('Insights', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
+            Text('Insights', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, fontVariations: ggWght(FontWeight.w800))),
             const SizedBox(height: 8),
             ..._buildInsights(bite, interest, fees, topRegrets.length),
             const SizedBox(height: 24),
             if (topRegrets.isNotEmpty) ...[
-              const Text('Top regrets', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
+              Text('Top regrets', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, fontVariations: ggWght(FontWeight.w800))),
               const SizedBox(height: 8),
               ...topRegrets.map((r) => Card(
                 child: ListTile(
                   leading: const Text('🙈', style: TextStyle(fontSize: 24)),
-                  title: Text(r.storeName, style: const TextStyle(fontWeight: FontWeight.w700)),
+                  title: Text(r.storeName, style: TextStyle(fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700))),
                   subtitle: Text('${formatDateShort(r.date)}  •  ${r.rating}★'),
                   trailing: Text('\$${r.totalAmount.toStringAsFixed(2)}',
-                    style: const TextStyle(fontWeight: FontWeight.w800, color: Color(0xFFdc2626))),
+                    style: ggAmount(weight: FontWeight.w800, color: Color(0xFFdc2626))),
                 ),
               )),
             ],
@@ -331,10 +332,10 @@ class _GuacWizardScreenState extends State<GuacWizardScreen> {
         border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(label, style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w700)),
+        Text(label, style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700))),
         const SizedBox(height: 2),
         Text('\$${amount.toStringAsFixed(0)}',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: color)),
+          style: ggAmount(size: 18, weight: FontWeight.w900, color: color)),
       ]),
     ));
   }
@@ -364,7 +365,7 @@ class _GuacWizardScreenState extends State<GuacWizardScreen> {
           Text(t.emoji, style: const TextStyle(fontSize: 24)),
           const SizedBox(width: 12),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(t.title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+            Text(t.title, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, fontVariations: ggWght(FontWeight.w800))),
             const SizedBox(height: 4),
             Text(t.body, style: const TextStyle(fontSize: 12, color: Colors.black87, height: 1.4)),
           ])),

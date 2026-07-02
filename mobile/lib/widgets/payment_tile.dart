@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/gg_design.dart';
 
 /// Standard stat tile — gradient-filled icon chip on the left, then
 /// label / big bold value / optional delta subtext on the right.
@@ -103,18 +104,18 @@ class PaymentTile extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(label,
-                      style: const TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w600),
+                      style: TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w600, fontVariations: ggWght(FontWeight.w600)),
                       maxLines: 1, overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
                     Text(value,
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF111827)),
+                      style: ggAmount(size: 18, weight: FontWeight.w900, color: const Color(0xFF111827)),
                       maxLines: 1, overflow: TextOverflow.ellipsis,
                     ),
                     if (deltaLabel != null && deltaLabel != '—') ...[
                       const SizedBox(height: 2),
                       Text('$deltaLabel vs prior',
-                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: _deltaColor()),
+                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700), color: _deltaColor()),
                         maxLines: 1, overflow: TextOverflow.ellipsis,
                       ),
                     ],

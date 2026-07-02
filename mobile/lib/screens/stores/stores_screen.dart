@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../widgets/store_logo.dart';
 import '../../widgets/animated_primitives.dart';
+import '../../theme/gg_design.dart';
 
 class StoresScreen extends StatefulWidget {
   const StoresScreen({super.key});
@@ -117,13 +118,13 @@ class _StoresScreenState extends State<StoresScreen> {
                         child: ListTile(
                           leading: StoreLogo(storeName: r.name, size: 40),
                           title: Text(r.name,
-                            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                            style: TextStyle(fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800), fontSize: 14),
                             maxLines: 1, overflow: TextOverflow.ellipsis,
                           ),
                           subtitle: Text('${r.count} receipt${r.count == 1 ? '' : 's'} · last ${r.lastDate}',
                             style: const TextStyle(fontSize: 11, color: Colors.black54)),
                           trailing: Text('\$${r.total.toStringAsFixed(2)}',
-                            style: const TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF065f46))),
+                            style: TextStyle(fontWeight: FontWeight.w900, fontVariations: ggWght(FontWeight.w900), color: Color(0xFF065f46))),
                           onTap: () => context.push('/receipts?store=${Uri.encodeComponent(r.name)}'),
                         ),
                       ),

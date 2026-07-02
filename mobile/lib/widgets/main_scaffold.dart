@@ -167,7 +167,7 @@ class _MainScaffoldState extends State<MainScaffold> with WidgetsBindingObserver
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
                   Text('Update available — ${upd.tag}',
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF064e3b))),
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800), color: const Color(0xFF064e3b))),
                   const Text('Tap to install',
                     style: TextStyle(fontSize: 10, color: Color(0xFF065f46))),
                 ]),
@@ -179,7 +179,7 @@ class _MainScaffoldState extends State<MainScaffold> with WidgetsBindingObserver
                   visualDensity: VisualDensity.compact,
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                 ),
-                child: const Text('Install', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12)),
+                child: Text('Install', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12, fontVariations: ggWght(FontWeight.w800))),
               ),
               IconButton(
                 icon: const Icon(Icons.close, size: 16, color: Colors.black54),
@@ -419,7 +419,7 @@ class _NavButton extends StatelessWidget {
               // the old w600↔w800 swap made the row jitter ("flutter").
               Text(
                 item.label,
-                style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: color),
+                style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700), color: color),
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 3),
@@ -508,7 +508,7 @@ class _ProfileQuickMenu extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                        Text(a.label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: a.color), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        Text(a.label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, fontVariations: ggWght(FontWeight.w900), color: a.color), maxLines: 1, overflow: TextOverflow.ellipsis),
                         Text(a.sub, style: const TextStyle(fontSize: 10, color: Colors.black54), maxLines: 1, overflow: TextOverflow.ellipsis),
                       ])),
                     ]),
@@ -523,8 +523,8 @@ class _ProfileQuickMenu extends StatelessWidget {
               child: OutlinedButton.icon(
                 onPressed: onSignOut,
                 icon: const Icon(Icons.logout_rounded, size: 18, color: Color(0xFFb91c1c)),
-                label: const Text('Sign out',
-                  style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFFb91c1c))),
+                label: Text('Sign out',
+                  style: TextStyle(fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800), color: const Color(0xFFb91c1c))),
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(color: Color(0xFFfecaca)),
                   padding: const EdgeInsets.symmetric(vertical: 12),

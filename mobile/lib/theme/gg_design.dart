@@ -60,7 +60,8 @@ ButtonStyle ggPillButton({Color bg = ggLime, EdgeInsetsGeometry? padding}) {
     elevation: 0,
     padding: padding ?? const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
     shape: const StadiumBorder(),
-    textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+    textStyle: TextStyle(
+      fontWeight: FontWeight.w700, fontSize: 15, fontVariations: ggWght(FontWeight.w700)),
   );
 }
 
@@ -79,13 +80,24 @@ BoxDecoration ggChip() => BoxDecoration(
 // TextStyle(fontFamily: ...) so fonts stay consistent across the board.
 
 /// Bundled font families (declared in pubspec.yaml → flutter/fonts). Both are
-/// variable fonts with a `wght` axis; Flutter maps [TextStyle.fontWeight] onto
-/// that axis automatically, so a plain `fontWeight:` renders the right weight
-/// with NO runtime download. (The old google_fonts path fetched from
-/// fonts.gstatic.com at runtime and silently fell back to the system font
-/// whenever that wasn't reachable — which hid the whole type system.)
+/// VARIABLE fonts exposing a `wght` axis. IMPORTANT: Flutter does NOT reliably
+/// move a variable font's `wght` axis from [TextStyle.fontWeight] alone — the
+/// axis stays at the file's default instance (~400), so headings render thin no
+/// matter what `fontWeight:` you pass. The weight only applies when you also set
+/// [TextStyle.fontVariations] with a `wght` axis. So every helper below pairs
+/// `fontWeight` with a matching `FontVariation('wght', …)` via [ggWght]; that is
+/// what actually makes Bricolage 800 look like 800. Do the same at any ad-hoc
+/// call site (or just use these helpers). No runtime download — the fonts are
+/// bundled. (The old google_fonts path fetched from fonts.gstatic.com at runtime
+/// and silently fell back to the system font when unreachable — which hid the
+/// whole type system.)
 const kDisplayFont = 'Bricolage Grotesque';
 const kBodyFont    = 'Plus Jakarta Sans';
+
+/// The `wght`-axis variation for a [FontWeight], so variable fonts actually
+/// render at that weight. FontWeight.w800 → wght 800, w500 → 500, etc.
+List<FontVariation> ggWght(FontWeight weight) =>
+    [FontVariation('wght', weight.value.toDouble())];
 
 /// Website heading / display font — Bricolage Grotesque.
 TextStyle ggHeading({
@@ -97,8 +109,8 @@ TextStyle ggHeading({
 }) =>
     TextStyle(
       fontFamily: kDisplayFont,
-      fontSize: size, fontWeight: weight, color: color,
-      letterSpacing: letterSpacing, height: height,
+      fontSize: size, fontWeight: weight, fontVariations: ggWght(weight),
+      color: color, letterSpacing: letterSpacing, height: height,
     );
 
 /// Dollar-amount font — Bricolage (never monospace), per the typography spec.
@@ -109,7 +121,8 @@ TextStyle ggAmount({
 }) =>
     TextStyle(
       fontFamily: kDisplayFont,
-      fontSize: size, fontWeight: weight, color: color, letterSpacing: -0.3,
+      fontSize: size, fontWeight: weight, fontVariations: ggWght(weight),
+      color: color, letterSpacing: -0.3,
     );
 
 /// Website body font — Plus Jakarta Sans.
@@ -121,7 +134,8 @@ TextStyle ggBody({
 }) =>
     TextStyle(
       fontFamily: kBodyFont,
-      fontSize: size, fontWeight: weight, color: color, height: height,
+      fontSize: size, fontWeight: weight, fontVariations: ggWght(weight),
+      color: color, height: height,
     );
 
 /// The app-wide [TextTheme]: Jakarta body + Bricolage display/headline/title.
@@ -130,9 +144,15 @@ TextStyle ggBody({
 TextTheme ggTextTheme() {
   // Standard Material text theme, re-fonted to the bundled Jakarta for body.
   final body = Typography.blackMountainView.apply(fontFamily: kBodyFont);
+  // Bricolage headings: pair fontWeight with a matching wght variation so the
+  // variable font actually renders bold (see [ggWght]). Body styles are left
+  // WITHOUT fontVariations on purpose — hundreds of ad-hoc `TextStyle` overrides
+  // set fontWeight without variations, and a base variation would win the merge
+  // and pin them all to one weight.
   TextStyle head(TextStyle? s, FontWeight w) =>
       (s ?? const TextStyle()).copyWith(
-        fontFamily: kDisplayFont, fontWeight: w, letterSpacing: -0.5);
+        fontFamily: kDisplayFont, fontWeight: w,
+        fontVariations: ggWght(w), letterSpacing: -0.5);
   return body.copyWith(
     displayLarge:   head(body.displayLarge,   FontWeight.w800),
     displayMedium:  head(body.displayMedium,  FontWeight.w800),

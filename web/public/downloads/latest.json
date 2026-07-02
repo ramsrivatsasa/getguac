@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.92",
-  "name": "v0.3.92 — Tap to zoom a receipt when scanning",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.92/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Add Receipt: tap the receipt photo to zoom in (pinch to enlarge) — so when the scan misses the total, you can read it off the receipt and type it in.\n• Save now tells you exactly what's missing instead of silently doing nothing."
+  "version": "v0.3.93",
+  "name": "v0.3.93 — Fresh new look",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.93/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Fresh new design across Home, Sign in and Create account — cleaner, lighter layout with the new avocado look.\n• Consistent fonts and colors across the whole app, now driven by one shared stylesheet."
 }

@@ -5,6 +5,7 @@
 // display headings + Plus Jakarta Sans body (scoped to .gg-marketing so the
 // app/dashboard default font is untouched), avocado-green accents, pill CTAs.
 // The fonts come from CSS variables defined in app/layout.jsx.
+import { cookies } from 'next/headers'
 import Link from 'next/link'
 import HeaderSearch from './HeaderSearch'
 import MarketingAuthButtons from './MarketingAuthButtons'
@@ -53,6 +54,11 @@ const FOOTER = [
 const DISPLAY = { fontFamily: 'var(--font-bricolage), sans-serif' }
 
 export default function MarketingShell({ subtitle, hideSearch = false, headerTitle, children }) {
+  // In-app (mobile WebView) the native shell already provides the top app bar +
+  // logo, so rendering the marketing nav here stacks a SECOND avocado logo/header
+  // under it. The /embed handshake drops guac_embedded=1 — when set, drop the
+  // sticky nav (and footer) so the page sits cleanly inside the native shell.
+  const embedded = cookies().get('guac_embedded')?.value === '1'
   return (
     <div className="gg-marketing min-h-screen" style={{ fontFamily: 'var(--font-jakarta), system-ui, sans-serif', color: '#1A2E22', background: '#fff' }}>
       {/* Scope the new typography + accents to marketing pages only. */}
@@ -62,7 +68,8 @@ export default function MarketingShell({ subtitle, hideSearch = false, headerTit
         @media (max-width: 1024px) { .gg-navlinks { display: none !important; } }
       `}</style>
 
-      {/* Nav */}
+      {/* Nav — hidden in-app so it doesn't duplicate the native app bar/logo. */}
+      {!embedded && (
       <header style={{ position: 'sticky', top: 0, zIndex: 30, backdropFilter: 'blur(12px)', background: 'rgba(255,255,255,0.88)', borderBottom: '1px solid rgba(20,83,45,0.08)' }}>
         <div style={{ maxWidth: 1180, margin: '0 auto', padding: '0 28px', height: 64, display: 'flex', alignItems: 'center', gap: 18 }}>
           <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 9, flexShrink: 0, textDecoration: 'none' }}>
@@ -87,10 +94,11 @@ export default function MarketingShell({ subtitle, hideSearch = false, headerTit
           </nav>
         </div>
       </header>
+      )}
 
       <main>{children}</main>
 
-      <MarketingFooter />
+      {!embedded && <MarketingFooter />}
     </div>
   )
 }

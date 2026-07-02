@@ -294,9 +294,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
 
     return Scaffold(
-      // Neutral off-white page (was ggBgTint, a green-tinted surface) so the
-      // dashboard background reads neutral — matching the de-greened tiles.
-      backgroundColor: const Color(0xFFF5F5F4),
+      // Plain white page (was ggBgTint, a green-tinted surface) per user
+      // request — matches the white app bar + de-greened tiles.
+      backgroundColor: Colors.white,
       appBar: _buildAppBar(),
       // Add Receipt now lives in the bottom-bar centre camera button.
       body: RefreshIndicator(

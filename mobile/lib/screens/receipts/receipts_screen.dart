@@ -14,6 +14,7 @@ import '../../widgets/animated_primitives.dart';
 import '../../widgets/receipt_scan_overlay.dart';
 import '../../widgets/top_app_bar_actions.dart';
 import '../../services/mascot_event_bus.dart';
+import '../../theme/gg_design.dart';
 
 class ReceiptsScreen extends StatefulWidget {
   /// Optional initial store filter from a deep-link like
@@ -709,13 +710,13 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
                           ),
                         ]),
                         trailing: _selectionMode
-                          ? Text('\$${r.totalAmount.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold))
+                          ? Text('\$${r.totalAmount.toStringAsFixed(2)}', style: ggAmount(size: 14))
                           : Row(mainAxisSize: MainAxisSize.min, children: [
                               Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
-                                  Text('\$${r.totalAmount.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                                  Text('\$${r.totalAmount.toStringAsFixed(2)}', style: ggAmount(size: 15)),
                                   if (r.businessPurchase)
                                     const Text('Business', style: TextStyle(fontSize: 11, color: Colors.blue)),
                                 ],

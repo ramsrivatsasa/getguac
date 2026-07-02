@@ -1109,10 +1109,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ]);
   }
 
-  // One horizontal spending bar: store name · rounded green-gradient track
+  // One horizontal spending bar: store name · rounded gradient track
   // (length ∝ spend) · dollar amount. Tapping opens that store's receipts.
+  // Auto-detected "heat" limit: stores past 40% of the top spender switch
+  // from green→lime to a green→pink gradient so the biggest chunks of spend
+  // stand out. Scales with the window (swap for a fixed dollar value here).
   Widget _storeBar(_StoreSpend s, double maxAmount) {
     final frac = maxAmount > 0 ? (s.amount / maxAmount).clamp(0.08, 1.0) : 0.0;
+    final hot = maxAmount > 0 && s.amount >= maxAmount * 0.4;
     return InkWell(
       onTap: () => context.push(_receiptsDeepLink(store: s.name)),
       borderRadius: BorderRadius.circular(10),
@@ -1133,9 +1137,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: FractionallySizedBox(
                 alignment: Alignment.centerLeft,
                 widthFactor: frac,
-                child: const DecoratedBox(
+                child: DecoratedBox(
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: [Color(0xFF15803D), Color(0xFF84CC16)]),
+                    gradient: LinearGradient(colors: hot
+                      ? const [Color(0xFF15803D), Color(0xFFEC4899)]
+                      : const [Color(0xFF15803D), Color(0xFF84CC16)]),
                   ),
                 ),
               ),

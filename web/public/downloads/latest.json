@@ -1,6 +1,6 @@
 {
-  "version": "v0.3.94",
-  "name": "v0.3.94 — Cleaner, consistent app",
-  "downloadUrl": "https://getguac.app/downloads/v0.3.94/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Consistent look across every screen — one shared header with the logo + actions, cleaner white bars, website fonts.\n• Redesigned bottom bar and a new horizontal Spending-by-Store chart on Home.\n• Smoother scrolling on the dashboard (fixed a jitter)."
+  "version": "v0.3.95",
+  "name": "v0.3.95 — Simpler greeting + spend heat bars",
+  "downloadUrl": "https://getguac.app/downloads/v0.3.95/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Simpler dashboard greeting — a friendly \"Hello!!\" (dropped the time-of-day text and waving hand).\n• Spending-by-Store chart now flags your biggest stores with a green→pink heat gradient."
 }

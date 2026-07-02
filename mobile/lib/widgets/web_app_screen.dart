@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'guac_mascot.dart';
 import 'top_app_bar_actions.dart';
 import '../providers/receipt_provider.dart';
+import '../theme/gg_design.dart';
 
 const _kWebBase = 'https://getguac.app';
 
@@ -135,21 +136,22 @@ class _WebAppScreenState extends State<WebAppScreen> with SingleTickerProviderSt
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFF166534),
-        foregroundColor: Colors.white,
-        iconTheme: const IconThemeData(color: Colors.white),
+        // Clean light bar — matches the native screens' new-design app bar so
+        // the embedded (WebView) pages don't jump to a dark header. Inherits
+        // surface + hairline divider from the global AppBarTheme.
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        foregroundColor: ggInk,
+        iconTheme: const IconThemeData(color: ggInk),
         automaticallyImplyLeading: false,
         titleSpacing: 16,
-        // Branded logo (same 🥑 box as the dashboard) + white title — the
-        // app's global AppBarTheme.titleTextStyle is dark and would otherwise
-        // win over foregroundColor.
         title: Row(mainAxisSize: MainAxisSize.min, children: [
-          // App mascot (replaces the old green-box 🥑 logo).
+          // App mascot (locked — the branded avocado).
           const Padding(
             padding: EdgeInsets.only(right: 8),
             child: GuacMascot(size: 28),
           ),
-          Text(widget.title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+          Text(widget.title, style: ggHeading(size: 18, color: ggInk)),
         ]),
         actions: [
           signOutAction(context),

@@ -30,12 +30,15 @@ import '../../services/mascot_event_bus.dart';
 import '../../services/wizard_score.dart';
 import '../../services/guacoscore.dart' as guac_engine;
 import '../../services/timeframe_store.dart';
+import '../../theme/gg_design.dart';
 
-const _kEmerald700 = Color(0xFF15803d);
-const _kEmerald800 = Color(0xFF166534);
-const _kEmerald900 = Color(0xFF064e3b);
-const _kEmerald50  = Color(0xFFf0fdf4);
-const _kEmerald100 = Color(0xFFdcfce7);
+// Retained for the multicolor data tiles / chart accents that keep their own
+// brand colours. Greeting + chrome now use the central gg_design tokens.
+const _kEmerald700 = ggLime;
+const _kEmerald800 = ggInk;
+const _kEmerald900 = ggInk;
+const _kEmerald50  = ggChipBg;
+const _kEmerald100 = ggBorderLime;
 
 enum _Period { daily, weekly, monthly, yearly }
 
@@ -291,7 +294,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFf9fafb),
+      backgroundColor: ggBgTint,
       appBar: _buildAppBar(),
       // Add Receipt now lives in the bottom-bar centre camera button.
       body: RefreshIndicator(
@@ -311,16 +314,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text('$_salutation, $greeting 👋',
-                  style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: _kEmerald900, height: 1.1)),
+                  style: ggHeading(size: 26, weight: FontWeight.w800, color: ggInk, height: 1.1)),
                 const SizedBox(height: 6),
                 Row(children: [
-                  Text(_money(_periodSpend(filtered)),
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: _kEmerald700)),
+                  Text(_money(_periodSpend(filtered)), style: ggAmount(size: 18, color: ggLime)),
                   Text('  spent · ${filtered.length} receipt${filtered.length == 1 ? '' : 's'}',
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black54)),
+                    style: ggBody(size: 13, weight: FontWeight.w600, color: ggMuted)),
                 ]),
                 Text(rangeLabel.toLowerCase(),
-                  style: const TextStyle(fontSize: 11, color: Colors.black38)),
+                  style: ggBody(size: 11, color: ggFaint)),
               ])),
               // GuacMoney (saved $ + scan/refer points) — coin pill, counts up.
               GuacMoneyPill(points: guacMoneyPoints(
@@ -394,12 +396,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: _kEmerald800,
-      foregroundColor: Colors.white,
+      // Clean light bar — the new home-page look. Pulls its surface, ink
+      // foreground, and hairline divider from the central AppBarTheme.
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.transparent,
+      foregroundColor: ggInk,
       elevation: 0,
-      titleSpacing: 0,
-      systemOverlayStyle: SystemUiOverlayStyle.light,
-      iconTheme: const IconThemeData(color: Colors.white),
+      titleSpacing: 16,
+      systemOverlayStyle: SystemUiOverlayStyle.dark,
+      iconTheme: const IconThemeData(color: ggInk),
       title: Row(children: [
         // 🔒 DO NOT CHANGE — app-bar logo is the 🥑 emoji in the emerald
         // rounded-square, locked forever per user (never swap to GuacMascot/
@@ -418,7 +423,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           alignment: Alignment.center,
           child: const Text('🥑', style: TextStyle(fontSize: 22)),
         ),
-        const Text('GetGuac', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 18)),
+        Text('GetGuac', style: ggHeading(size: 20, weight: FontWeight.w800, color: ggInk)),
         // Tagline "MONEY'S WINGMAN" lives only on the login screen now — kept
         // off the app bar to free space for the action icons.
       ]),
@@ -1146,15 +1151,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final topData = data.take(8).toList();
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6)],
-      ),
+      decoration: ggCard(radius: 20),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Text('Spending by Store', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: Color(0xFF111827))),
-        const Text('Tap a bar to see that store’s receipts.',
-          style: TextStyle(fontSize: 11, color: Colors.black54)),
+        Text('Spending by Store', style: ggHeading(size: 15, color: ggInk)),
+        Text('Tap a bar to see that store’s receipts.', style: ggBody(size: 11, color: ggMuted)),
         const SizedBox(height: 12),
         if (topData.isEmpty)
           const SizedBox(height: 160, child: Center(child: Text('No transactions for this period', style: TextStyle(color: Colors.black38, fontSize: 13))))
@@ -1225,14 +1225,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _recentTransactions(List<Receipt> filtered) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6)],
-      ),
+      decoration: ggCard(radius: 20),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          const Expanded(child: Text('Recent Transactions', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14))),
+          Expanded(child: Text('Recent Transactions', style: ggHeading(size: 15, color: ggInk))),
           InkWell(
             onTap: () => context.push(_receiptsDeepLink()),
             child: const Padding(padding: EdgeInsets.all(4), child: Icon(Icons.arrow_forward, size: 16, color: _kEmerald700)),
@@ -1255,14 +1251,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _recentRewards(List rewards) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6)],
-      ),
+      decoration: ggCard(radius: 20),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          const Expanded(child: Text('Rewards', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14))),
+          Expanded(child: Text('Rewards', style: ggHeading(size: 15, color: ggInk))),
           InkWell(
             onTap: () => context.push('/rewards'),
             child: const Padding(padding: EdgeInsets.all(4), child: Icon(Icons.arrow_forward, size: 16, color: _kEmerald700)),

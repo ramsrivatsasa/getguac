@@ -18,6 +18,7 @@ import '../../widgets/guac_mascot.dart';
 import '../../widgets/animated_mascot.dart';
 import '../../widgets/animated_primitives.dart';
 import '../../services/mascot_event_bus.dart';
+import '../../theme/gg_design.dart';
 
 /// Login mascot — picks a RANDOM avocado once per mount so the welcome
 /// screen varies: the Mexican maracas dancer + sombrero avocado (Lottie),
@@ -153,7 +154,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           FilledButton(
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF15803d),
+              backgroundColor: ggLime,
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
               minimumSize: const Size(0, 32),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
@@ -440,12 +441,16 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: ggBg,
       body: Container(
+        // Clean, airy backdrop — a soft lime wash fading to white, echoing the
+        // website hero (was a heavy full-bleed emerald→lime gradient).
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF065f46), Color(0xFF15803d), Color(0xFF65a30d)], // emerald-800 → green-700 → lime-600
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [ggChipBg, ggBg],
+            stops: [0.0, 0.5],
           ),
         ),
         child: SafeArea(
@@ -459,28 +464,25 @@ class _LoginScreenState extends State<LoginScreen> {
                   // happy / rich / relaxing moods) so the welcome feels alive.
                   const _LoginMascot(size: 96),
                   const SizedBox(height: 8),
-                  const Text(
-                    'GetGuac',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
+                  Text('GetGuac', style: ggHeading(size: 30, weight: FontWeight.w800, color: ggInk)),
                   const SizedBox(height: 2),
-                  const Text(
+                  Text(
                     'Your Guac-AI personal finance sidekick.',
-                    style: TextStyle(color: Colors.white70, fontSize: 12),
+                    style: ggBody(size: 12.5, color: ggMuted),
                   ),
                   const SizedBox(height: 16),
                   ShakeOnError(
                     trigger: _shakeTrigger,
                     child: SlideInFromBottom(
                       child: Card(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                    elevation: 10,
-                    shadowColor: Colors.black54,
+                    color: Colors.white,
+                    surfaceTintColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(22),
+                      side: const BorderSide(color: ggBorder),
+                    ),
+                    elevation: 0,
+                    shadowColor: ggShadow,
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
                       child: Form(
@@ -488,10 +490,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            const Text(
-                              'Sign In',
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF064e3b)),
-                            ),
+                            Text('Sign In', style: ggHeading(size: 20, color: ggInk)),
                             const SizedBox(height: 12),
                             TextFormField(
                               controller: _identifierCtrl,
@@ -500,13 +499,13 @@ class _LoginScreenState extends State<LoginScreen> {
                               decoration: InputDecoration(
                                 labelText: 'Username or email',
                                 hintText: 'john   or   john@email.com',
-                                prefixIcon: const Icon(Icons.person_outline, color: Color(0xFF15803d), size: 20),
+                                prefixIcon: const Icon(Icons.person_outline, color: ggLime, size: 20),
                                 isDense: true,
                                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: const BorderSide(color: Color(0xFF15803d), width: 2),
+                                  borderSide: const BorderSide(color: ggLime, width: 2),
                                 ),
                               ),
                               validator: (v) => v == null || v.isEmpty ? 'Required' : null,
@@ -517,7 +516,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               obscureText: !_showPassword,
                               decoration: InputDecoration(
                                 labelText: 'Password',
-                                prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF15803d), size: 20),
+                                prefixIcon: const Icon(Icons.lock_outline, color: ggLime, size: 20),
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     _showPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
@@ -531,7 +530,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: const BorderSide(color: Color(0xFF15803d), width: 2),
+                                  borderSide: const BorderSide(color: ggLime, width: 2),
                                 ),
                               ),
                               validator: (v) => v == null || v.isEmpty ? 'Required' : null,
@@ -543,7 +542,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               children: [
                                 Checkbox(
                                   value: _keepSignedIn,
-                                  activeColor: const Color(0xFF15803d),
+                                  activeColor: ggLime,
                                   visualDensity: VisualDensity.compact,
                                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                   onChanged: (v) => setState(() => _keepSignedIn = v ?? false),
@@ -562,7 +561,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 children: [
                                   Checkbox(
                                     value: _rememberWithBio,
-                                    activeColor: const Color(0xFF15803d),
+                                    activeColor: ggLime,
                                     visualDensity: VisualDensity.compact,
                                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                     onChanged: (v) => setState(() => _rememberWithBio = v ?? false),
@@ -580,10 +579,10 @@ class _LoginScreenState extends State<LoginScreen> {
                             FilledButton(
                               onPressed: _loading ? null : _login,
                               style: FilledButton.styleFrom(
-                                backgroundColor: const Color(0xFF15803d),
+                                backgroundColor: ggLime,
                                 foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 11),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                padding: const EdgeInsets.symmetric(vertical: 13),
+                                shape: const StadiumBorder(),
                               ),
                               child: _loading
                                   ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
@@ -593,15 +592,15 @@ class _LoginScreenState extends State<LoginScreen> {
                               const SizedBox(height: 6),
                               OutlinedButton.icon(
                                 onPressed: _loading ? null : _unlockWithBio,
-                                icon: const Icon(Icons.fingerprint, color: Color(0xFF15803d), size: 18),
+                                icon: const Icon(Icons.fingerprint, color: ggLime, size: 18),
                                 label: const Text(
                                   'Unlock with fingerprint',
-                                  style: TextStyle(color: Color(0xFF15803d), fontWeight: FontWeight.w700, fontSize: 13),
+                                  style: TextStyle(color: ggLime, fontWeight: FontWeight.w700, fontSize: 13),
                                 ),
                                 style: OutlinedButton.styleFrom(
-                                  side: const BorderSide(color: Color(0xFF15803d), width: 1.5),
-                                  padding: const EdgeInsets.symmetric(vertical: 8),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  side: const BorderSide(color: ggLime, width: 1.5),
+                                  padding: const EdgeInsets.symmetric(vertical: 9),
+                                  shape: const StadiumBorder(),
                                   minimumSize: const Size(0, 36),
                                 ),
                               ),
@@ -626,7 +625,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               child: const Text(
                                 "New here? Create an account 🥑",
-                                style: TextStyle(color: Color(0xFF15803d), fontWeight: FontWeight.w600, fontSize: 13),
+                                style: TextStyle(color: ggLime, fontWeight: FontWeight.w600, fontSize: 13),
                               ),
                             ),
                             const SizedBox(height: 2),
@@ -642,15 +641,15 @@ class _LoginScreenState extends State<LoginScreen> {
                             const SizedBox(height: 4),
                             OutlinedButton.icon(
                               onPressed: () => UpdateService.openDownload('https://getguac.app/how-it-works'),
-                              icon: const Icon(Icons.play_circle_outline, color: Color(0xFF15803d), size: 16),
+                              icon: const Icon(Icons.play_circle_outline, color: ggLime, size: 16),
                               label: const Text(
                                 "See how it works · 7-min tour",
-                                style: TextStyle(color: Color(0xFF15803d), fontWeight: FontWeight.w700, fontSize: 12),
+                                style: TextStyle(color: ggLime, fontWeight: FontWeight.w700, fontSize: 12),
                               ),
                               style: OutlinedButton.styleFrom(
-                                side: const BorderSide(color: Color(0xFFa7f3d0), width: 1.2),
-                                padding: const EdgeInsets.symmetric(vertical: 6),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                side: const BorderSide(color: ggBorderLime, width: 1.2),
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                shape: const StadiumBorder(),
                                 minimumSize: const Size(0, 32),
                               ),
                             ),
@@ -664,7 +663,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 8),
                   Text(
                     'getguac.app${_versionLabel.isEmpty ? '' : ' · $_versionLabel'}',
-                    style: const TextStyle(color: Colors.white54, fontSize: 10, letterSpacing: 0.5),
+                    style: ggBody(size: 10, color: ggFaint).copyWith(letterSpacing: 0.5),
                   ),
                 ],
               ),

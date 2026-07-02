@@ -20,17 +20,20 @@ import 'services/referral_apply_service.dart';
 import 'services/premium_service.dart';
 import 'services/purchase_service.dart';
 import 'services/ads_service.dart';
+import 'theme/gg_design.dart';
 
 // Env-var-gated DSN/keys. Empty string = service disabled. Passed via
 // --dart-define=SENTRY_DSN=... and --dart-define=POSTHOG_KEY=... at build.
 // sentry_flutter SDK pulled — Gradle compile error. Re-add when sorted.
 
 
-// Brand palette — matches the web app (emerald + lime).
-const kBrandPrimary    = Color(0xFF15803d); // emerald-700 — main brand
-const kBrandPrimaryDk  = Color(0xFF064e3b); // emerald-900 — accents
-const kBrandAccent     = Color(0xFF84cc16); // lime-500   — pop
-const kBrandSurface    = Color(0xFFf0fdf4); // emerald-50 — soft background
+// Brand palette — the clean "new design" avocado look (see theme/gg_design.dart).
+// Repointed from the old emerald tones to the lime-forward home-page palette so
+// every screen inheriting the theme picks up the refreshed accent in one place.
+const kBrandPrimary    = ggLime;   // lime-600 — main brand
+const kBrandPrimaryDk  = ggInk;    // deep forest green — accents
+const kBrandAccent     = ggAccent; // lime-500 — pop
+const kBrandSurface    = ggBgTint; // soft green — tinted surface
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -168,6 +171,11 @@ class GetGuacApp extends StatelessWidget {
           // colors; this just keeps the page background neutral so
           // brand chrome reads cleanly.
           scaffoldBackgroundColor: Colors.white,
+          // Central type system — Plus Jakarta Sans body + Bricolage Grotesque
+          // headings, exactly like the website. Defined once in
+          // theme/gg_design.dart and inherited by every screen so fonts stay
+          // consistent across the board (no per-screen fontFamily drift).
+          textTheme: ggTextTheme(),
           // Edge-swipe-to-go-back on EVERY platform. Cupertino's
           // page-transition builder ships the iOS-style drag-from-
           // left-edge gesture (drag right, screen behind slides
@@ -189,20 +197,25 @@ class GetGuacApp extends StatelessWidget {
           // being odd, plays well with the emerald/lime palette, and
           // reads cleanly at large AppBar sizes. Body text stays on
           // the system default (legibility for receipts data).
-          // Green top bar on every native screen to match the WebView header
-          // (web_app_screen.dart uses 0xFF166534 + white). Keeps the app bar
-          // consistent across native + embedded pages.
+          // Clean light top bar on every native screen — the "new design"
+          // home-page look (white surface, deep-green title, hairline divider)
+          // instead of the old dark-emerald bar. web_app_screen.dart matches
+          // this so native + embedded pages stay consistent. Fonts unchanged
+          // (still Plus Jakarta Sans on the title).
           appBarTheme: AppBarTheme(
-            backgroundColor: const Color(0xFF166534),
-            foregroundColor: Colors.white,
-            iconTheme: const IconThemeData(color: Colors.white),
-            actionsIconTheme: const IconThemeData(color: Colors.white),
+            backgroundColor: Colors.white,
+            surfaceTintColor: Colors.transparent,
+            foregroundColor: ggInk,
+            iconTheme: const IconThemeData(color: ggInk),
+            actionsIconTheme: const IconThemeData(color: ggInk),
             elevation: 0,
-            scrolledUnderElevation: 1,
+            scrolledUnderElevation: 0.5,
+            shadowColor: ggShadow,
             centerTitle: false,
-            titleTextStyle: GoogleFonts.plusJakartaSans(
-              color: Colors.white,
-              fontSize: 22,
+            shape: const Border(bottom: BorderSide(color: ggBorder, width: 1)),
+            titleTextStyle: GoogleFonts.bricolageGrotesque(
+              color: ggInk,
+              fontSize: 21,
               fontWeight: FontWeight.w800,
               letterSpacing: -0.5,
             ),
@@ -218,12 +231,13 @@ class GetGuacApp extends StatelessWidget {
             ),
             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           ),
+          // Pill-shaped buttons in brand lime — the home-page CTA style.
           elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
               backgroundColor: kBrandPrimary,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 18),
+              shape: const StadiumBorder(),
+              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 22),
               elevation: 0,
             ),
           ),
@@ -231,17 +245,25 @@ class GetGuacApp extends StatelessWidget {
             style: FilledButton.styleFrom(
               backgroundColor: kBrandPrimary,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: const StadiumBorder(),
+              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 22),
+              elevation: 0,
             ),
           ),
           textButtonTheme: TextButtonThemeData(
             style: TextButton.styleFrom(foregroundColor: kBrandPrimary),
           ),
+          // Cleaner cards: softer radius + whisper-light shadow, matching the
+          // airy home-page surfaces.
           cardTheme: CardThemeData(
-            elevation: 1,
-            shadowColor: Colors.black12,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            elevation: 0,
+            color: Colors.white,
+            surfaceTintColor: Colors.transparent,
+            shadowColor: ggShadow,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: const BorderSide(color: ggBorder),
+            ),
           ),
           navigationBarTheme: NavigationBarThemeData(
             backgroundColor: Colors.white,

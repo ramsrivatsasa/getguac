@@ -8,9 +8,11 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../widgets/guac_mascot.dart';
 import '../../services/mascot_event_bus.dart';
 import '../../services/referral_apply_service.dart';
+import '../../theme/gg_design.dart';
 
-const _kBrand = Color(0xFF15803d);
-const _kBrandDk = Color(0xFF064e3b);
+// Accents pull from the central stylesheet so the auth screens match the app.
+const _kBrand = ggLime;
+const _kBrandDk = ggInk;
 final _usernameRe = RegExp(r'^[a-z0-9][a-z0-9._-]{1,30}[a-z0-9]$');
 
 class RegisterScreen extends StatefulWidget {
@@ -216,9 +218,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-          elevation: 10,
-          shadowColor: Colors.black54,
+          color: Colors.white,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(22),
+            side: const BorderSide(color: ggBorder),
+          ),
+          elevation: 0,
+          shadowColor: ggShadow,
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -231,9 +238,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text('Check your email', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: _kBrandDk)),
-                        Text("Verify it's really you before we activate the account.", style: TextStyle(fontSize: 11, color: Colors.black54)),
+                      children: [
+                        Text('Check your email', style: ggHeading(size: 18, color: ggInk)),
+                        Text("Verify it's really you before we activate the account.", style: ggBody(size: 11, color: ggMuted)),
                       ],
                     ),
                   ),
@@ -259,8 +266,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       style: FilledButton.styleFrom(
                         backgroundColor: _kBrand,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: const StadiumBorder(),
                       ),
                       onPressed: _resending ? null : _resendConfirmation,
                       icon: _resending
@@ -273,8 +280,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   OutlinedButton(
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: _kBrand, width: 1.2),
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      shape: const StadiumBorder(),
                     ),
                     onPressed: () => context.go('/login'),
                     child: const Text('Sign in', style: TextStyle(color: _kBrand, fontWeight: FontWeight.w700)),
@@ -532,12 +539,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: ggBg,
       body: Container(
+        // Clean light backdrop — soft lime wash → white, matching login + web.
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF065f46), Color(0xFF15803d), Color(0xFF65a30d)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [ggChipBg, ggBg],
+            stops: [0.0, 0.5],
           ),
         ),
         child: SafeArea(
@@ -550,20 +560,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 16),
                 const GuacMascot(size: 100),
                 const SizedBox(height: 12),
-                const Text(
-                  'Join GetGuac',
-                  style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w900),
-                ),
+                Text('Join GetGuac', style: ggHeading(size: 30, weight: FontWeight.w800, color: ggInk)),
                 const SizedBox(height: 2),
-                const Text(
+                Text(
                   'Your Guac-AI personal finance sidekick.',
-                  style: TextStyle(color: Colors.white70, fontSize: 13),
+                  style: ggBody(size: 13, color: ggMuted),
                 ),
                 const SizedBox(height: 24),
                 Card(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                  elevation: 12,
-                  shadowColor: Colors.black54,
+                  color: Colors.white,
+                  surfaceTintColor: Colors.transparent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(22),
+                    side: const BorderSide(color: ggBorder),
+                  ),
+                  elevation: 0,
+                  shadowColor: ggShadow,
                   child: Padding(
                     padding: const EdgeInsets.all(20),
                     child: Form(
@@ -571,10 +583,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          const Text(
-                            'Create Account',
-                            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: _kBrandDk),
-                          ),
+                          Text('Create Account', style: ggHeading(size: 22, color: ggInk)),
                           const SizedBox(height: 12),
                           _privacyNote(),
                           _usernameField(),
@@ -597,8 +606,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             style: FilledButton.styleFrom(
                               backgroundColor: _kBrand,
                               foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              padding: const EdgeInsets.symmetric(vertical: 15),
+                              shape: const StadiumBorder(),
                             ),
                             child: _loading
                                 ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))

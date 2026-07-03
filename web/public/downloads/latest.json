@@ -1,6 +1,6 @@
 {
-  "version": "v0.4.6",
-  "name": "v0.4.6 — Fonts render fix",
-  "downloadUrl": "https://getguac.app/downloads/v0.4.6/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Fixes the custom Bricolage + Jakarta fonts not rendering on some Samsung/Adreno phones (they were showing the system font). The fonts loaded fine — it was a GPU text-rendering issue, now corrected.\n\nUninstall the old app first, then install this one fresh."
+  "version": "v0.4.7",
+  "name": "v0.4.7 — Fonts render (Skia)",
+  "downloadUrl": "https://getguac.app/downloads/v0.4.7/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Fixes the custom Bricolage + Jakarta fonts rendering as the system font on some Samsung/Adreno phones. Switched the renderer so the bundled fonts actually draw.\n\nUninstall the old app first, then install this one fresh."
 }

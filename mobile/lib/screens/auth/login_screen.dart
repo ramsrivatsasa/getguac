@@ -443,16 +443,8 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       backgroundColor: ggBg,
       body: Container(
-        // Clean, airy backdrop — a soft lime wash fading to white, echoing the
-        // website hero (was a heavy full-bleed emerald→lime gradient).
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [ggChipBg, ggBg],
-            stops: [0.0, 0.5],
-          ),
-        ),
+        // Neutral: solid white backdrop (no gradient) so the mascot reads clearly.
+        color: ggBg,
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(

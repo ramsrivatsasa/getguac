@@ -541,15 +541,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Scaffold(
       backgroundColor: ggBg,
       body: Container(
-        // Clean light backdrop — soft lime wash → white, matching login + web.
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [ggChipBg, ggBg],
-            stops: [0.0, 0.5],
-          ),
-        ),
+        // Neutral: solid white backdrop (no gradient), matching login + web.
+        color: ggBg,
         child: SafeArea(
           child: _confirmEmail != null
             ? _confirmEmailPanel()

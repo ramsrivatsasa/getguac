@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart' show FontLoader, rootBundle;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
@@ -37,7 +38,40 @@ const kBrandSurface    = ggBgTint; // soft green — tinted surface
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  await _loadBundledFonts();
   await _bootstrap();
+}
+
+/// Force-register the bundled static fonts from asset bytes. Some devices don't
+/// pick up pubspec-declared fonts and silently fall back to the system font
+/// (Roboto); loading them explicitly via [FontLoader] guarantees Bricolage +
+/// Jakarta are available regardless. Each static instance's own usWeightClass
+/// lets Flutter match the requested fontWeight. Best-effort — never blocks boot.
+Future<void> _loadBundledFonts() async {
+  const families = <String, List<String>>{
+    'Bricolage Grotesque': [
+      'assets/fonts/static/BricolageGrotesque-700.ttf',
+      'assets/fonts/static/BricolageGrotesque-800.ttf',
+    ],
+    'Plus Jakarta Sans': [
+      'assets/fonts/static/PlusJakartaSans-400.ttf',
+      'assets/fonts/static/PlusJakartaSans-500.ttf',
+      'assets/fonts/static/PlusJakartaSans-600.ttf',
+      'assets/fonts/static/PlusJakartaSans-700.ttf',
+      'assets/fonts/static/PlusJakartaSans-800.ttf',
+    ],
+  };
+  for (final entry in families.entries) {
+    try {
+      final loader = FontLoader(entry.key);
+      for (final asset in entry.value) {
+        loader.addFont(rootBundle.load(asset));
+      }
+      await loader.load();
+    } catch (e) {
+      debugPrint('Font force-load failed for ${entry.key}: $e');
+    }
+  }
 }
 
 Future<void> _bootstrap() async {

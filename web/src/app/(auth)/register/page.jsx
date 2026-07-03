@@ -183,7 +183,7 @@ export default function RegisterPage() {
   const usernameNorm = form.username.toLowerCase().trim()
 
   return (
-    <div className="min-h-screen lg:grid lg:grid-cols-[1.05fr_1fr] bg-gradient-to-br from-emerald-900 via-green-800 to-lime-700 font-sans">
+    <div className="min-h-screen lg:grid lg:grid-cols-[1.05fr_1fr] bg-white lg:bg-gradient-to-br lg:from-emerald-900 lg:via-green-800 lg:to-lime-700 font-sans">
       {/* Capture ?ref=<CODE> on register too — direct deep-links to
           /register?ref=ABC123 should also seed localStorage so the
           post-signup hook on the dashboard credits both sides. */}
@@ -232,8 +232,8 @@ export default function RegisterPage() {
           <div className="inline-flex justify-center">
             <GuacMascot expression="celebrating" size={96} />
           </div>
-          <h1 className="text-2xl font-black text-white mt-2">GetGuac</h1>
-          <p className="text-emerald-100 text-sm mt-1">Create your account — money&apos;s wingman</p>
+          <h1 className="text-2xl font-black text-gray-900 mt-2">GetGuac</h1>
+          <p className="text-gray-500 text-sm mt-1">Create your account — money&apos;s wingman</p>
         </div>
 
         {confirmation && (

@@ -37,6 +37,16 @@
         android:label="GetGuac"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <!-- Force Impeller's OpenGLES backend. On the Galaxy S22 Ultra (Adreno
+             GPU) Impeller defaults to Vulkan, which laid text out with the
+             correct bundled font (metrics resolved — verified via device
+             diagnostics) but rasterized system-font glyphs, so Bricolage/
+             Jakarta rendered as the Samsung system font (Google Sans). The
+             OpenGLES backend renders the bundled fonts correctly (verified on
+             the Pixel emulator). -->
+        <meta-data
+            android:name="io.flutter.embedding.android.ImpellerBackend"
+            android:value="opengles" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

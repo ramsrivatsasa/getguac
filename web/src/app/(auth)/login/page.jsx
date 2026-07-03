@@ -171,7 +171,7 @@ function LoginPageInner() {
   }
 
   return (
-    <div className="min-h-screen lg:grid lg:grid-cols-[1.05fr_1fr] bg-gradient-to-br from-emerald-900 via-green-800 to-lime-700 font-sans">
+    <div className="min-h-screen lg:grid lg:grid-cols-[1.05fr_1fr] bg-white lg:bg-gradient-to-br lg:from-emerald-900 lg:via-green-800 lg:to-lime-700 font-sans">
       {/* LEFT — brand panel (desktop only). Mobile shows a compact header. */}
       <aside className="hidden lg:flex flex-col justify-center gap-9 px-12 xl:px-20 py-12 text-white relative overflow-hidden">
         <div className="absolute -top-28 -right-28 w-96 h-96 rounded-full bg-white/5 pointer-events-none" />
@@ -213,8 +213,8 @@ function LoginPageInner() {
           <div className="inline-flex items-center justify-center mb-2">
             <GuacMascot expression="angel" size={112} />
           </div>
-          <h1 className="text-3xl font-black text-white tracking-tight">GetGuac</h1>
-          <p className="text-emerald-100 mt-1 text-sm">Money's wingman — every dollar earns its smash.</p>
+          <h1 className="text-3xl font-black text-gray-900 tracking-tight">GetGuac</h1>
+          <p className="text-gray-500 mt-1 text-sm">Money's wingman — every dollar earns its smash.</p>
         </div>
 
         {/* ShakeOnError fires a 260ms three-wiggle whenever the

@@ -229,7 +229,7 @@ export default function RegisterPage() {
         {/* MOBILE ONLY brand header (desktop uses the left panel). */}
         <div className="lg:hidden text-center anim-logo-in">
           {/* anim-logo-in entrance — first impression on signup. */}
-          <div className="inline-flex justify-center">
+          <div className="inline-flex justify-center rounded-full bg-gray-100 ring-1 ring-gray-200 p-3 lg:bg-transparent lg:ring-0 lg:p-0">
             <GuacMascot expression="celebrating" size={96} />
           </div>
           <h1 className="text-2xl font-black text-gray-900 mt-2">GetGuac</h1>

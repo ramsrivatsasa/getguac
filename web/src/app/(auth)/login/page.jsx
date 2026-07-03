@@ -210,7 +210,7 @@ function LoginPageInner() {
         <div className="lg:hidden text-center anim-logo-in">
           {/* anim-logo-in: 360ms scale 0.92→1.04→1 with a slight
               overshoot. Tasteful entrance for the brand mark. */}
-          <div className="inline-flex items-center justify-center mb-2">
+          <div className="inline-flex items-center justify-center mb-2 rounded-full bg-gray-100 ring-1 ring-gray-200 p-3 lg:bg-transparent lg:ring-0 lg:p-0">
             <GuacMascot expression="angel" size={112} />
           </div>
           <h1 className="text-3xl font-black text-gray-900 tracking-tight">GetGuac</h1>

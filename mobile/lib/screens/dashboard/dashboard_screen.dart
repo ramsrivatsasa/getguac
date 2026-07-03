@@ -31,43 +31,6 @@ import '../../services/guacoscore.dart' as guac_engine;
 import '../../services/timeframe_store.dart';
 import '../../theme/gg_design.dart';
 
-// ── TEMP font diagnostic ───────────────────────────────────────────────────
-// Set false (or delete) once we've confirmed on-device which fonts render.
-// Renders the two brand families + the system font side by side so we can SEE
-// whether the custom fonts load, instead of guessing from full-screen text.
-const bool kFontDebug = true;
-
-class _FontDebugStrip extends StatelessWidget {
-  static const _sample = 'Guac 800 — \$39.00';
-  Widget _row(String label, TextStyle style) => Padding(
-        padding: const EdgeInsets.only(bottom: 2),
-        child: Row(children: [
-          SizedBox(width: 96, child: Text(label, style: const TextStyle(fontSize: 10, color: Colors.black54))),
-          Expanded(child: Text(_sample, style: style)),
-        ]),
-      );
-  @override
-  Widget build(BuildContext context) => Container(
-        margin: const EdgeInsets.only(bottom: 14),
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: const Color(0xFFFFFDE7),
-          border: Border.all(color: const Color(0xFFFFD54F)),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('FONT DEBUG · v0.4.2+195 · fonts=static',
-              style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFF8D6E00))),
-          const SizedBox(height: 6),
-          _row('Bricolage 800', const TextStyle(fontFamily: 'Bricolage Grotesque', fontWeight: FontWeight.w800, fontSize: 20)),
-          _row('Bricolage 700', const TextStyle(fontFamily: 'Bricolage Grotesque', fontWeight: FontWeight.w700, fontSize: 20)),
-          _row('Jakarta 400',   const TextStyle(fontFamily: 'Plus Jakarta Sans', fontWeight: FontWeight.w400, fontSize: 20)),
-          _row('Jakarta 700',   const TextStyle(fontFamily: 'Plus Jakarta Sans', fontWeight: FontWeight.w700, fontSize: 20)),
-          _row('System (none)', const TextStyle(fontSize: 20)),
-        ]),
-      );
-}
-
 // De-greened dashboard chrome: these former lime/emerald aliases now map to
 // neutral slate so the dashboard reads neutral (no green highlights). ggInk is
 // near-black, so the *800/*900 text aliases stay put as the dark text colour.
@@ -348,8 +311,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
           children: [
-            // TEMP font diagnostic — flip kFontDebug=false once confirmed.
-            if (kFontDebug) _FontDebugStrip(),
             // Greeting + live snapshot — deliver on "financial snapshot" with
             // real numbers for the selected window instead of dead subtitle.
             Row(crossAxisAlignment: CrossAxisAlignment.start, children: [

@@ -1,6 +1,6 @@
 {
-  "version": "v0.4.2",
-  "name": "v0.4.2 — Real font fix",
-  "downloadUrl": "https://getguac.app/downloads/v0.4.2/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Fixed the app fonts for real — the custom Bricolage + Jakarta type now actually renders on Android instead of falling back to the system font. (Switched to static font files, which the Android engine renders reliably.)\n• This build shows a small font-check strip on the Home screen; it will be removed in the next update once confirmed."
+  "version": "v0.4.3",
+  "name": "v0.4.3 — Fonts",
+  "downloadUrl": "https://getguac.app/downloads/v0.4.3/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Custom Bricolage + Jakarta fonts now render reliably across the app (shipped as static font files).\n• Removed the temporary font-check strip from the Home screen."
 }

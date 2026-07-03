@@ -38,8 +38,44 @@ const kBrandSurface    = ggBgTint; // soft green — tinted surface
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  await DebugLog.init();
   await _loadBundledFonts();
+  _fontDiag('post-load');
   await _bootstrap();
+  // Second probe once the app is up, in case font availability is delayed.
+  Future.delayed(const Duration(seconds: 5), () => _fontDiag('delayed-5s'));
+}
+
+/// TEMP device diagnostic (v0.4.5): measure whether the custom fonts actually
+/// resolve on THIS device by comparing TextPainter widths vs the system font.
+/// Uploaded to client_logs via DebugLog so we can read the real cause on a
+/// device we can't reproduce locally (Samsung One UI). Remove once solved.
+void _fontDiag(String phase) {
+  try {
+    double w(String? fam) {
+      final tp = TextPainter(
+        text: TextSpan(
+          text: 'Guac WHOLESALE \$39 illil',
+          style: TextStyle(fontFamily: fam, fontWeight: FontWeight.w800, fontSize: 24),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      return tp.width;
+    }
+    final sys = w(null);
+    final bri = w('Bricolage Grotesque');
+    final jak = w('Plus Jakarta Sans');
+    DebugLog.event('font-diag', 'width probe ($phase)', level: 'warn', meta: {
+      'phase': phase,
+      'sys': sys.toStringAsFixed(1),
+      'bricolage': bri.toStringAsFixed(1),
+      'jakarta': jak.toStringAsFixed(1),
+      'bricolage_resolved': (bri - sys).abs() > 0.5,
+      'jakarta_resolved': (jak - sys).abs() > 0.5,
+    });
+  } catch (e) {
+    DebugLog.event('font-diag', 'probe failed ($phase): $e', level: 'error');
+  }
 }
 
 /// Force-register the bundled static fonts from asset bytes. Some devices don't
@@ -64,12 +100,17 @@ Future<void> _loadBundledFonts() async {
   for (final entry in families.entries) {
     try {
       final loader = FontLoader(entry.key);
+      var bytesOk = 0;
       for (final asset in entry.value) {
-        loader.addFont(rootBundle.load(asset));
+        final data = await rootBundle.load(asset); // throws if asset missing
+        bytesOk += data.lengthInBytes;
+        loader.addFont(Future.value(data));
       }
       await loader.load();
+      DebugLog.event('font-load', 'FontLoader OK: ${entry.key}', level: 'warn',
+          meta: {'weights': entry.value.length, 'bytes': bytesOk});
     } catch (e) {
-      debugPrint('Font force-load failed for ${entry.key}: $e');
+      DebugLog.event('font-load', 'FontLoader FAILED: ${entry.key}: $e', level: 'error');
     }
   }
 }

@@ -1,6 +1,6 @@
 {
-  "version": "v0.4.4",
-  "name": "v0.4.4 — Fonts + neutral auth",
-  "downloadUrl": "https://getguac.app/downloads/v0.4.4/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Fonts now force-load at startup so the custom Bricolage + Jakarta type renders reliably on every device (fixes the fallback to the system font).\n• Sign In / Register screens are now a clean solid-white background (no green gradient) so the mascot stands out.\n\nTip: for best results, uninstall the old app and install this one fresh."
+  "version": "v0.4.5",
+  "name": "v0.4.5 — Font diagnostics",
+  "downloadUrl": "https://getguac.app/downloads/v0.4.5/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Diagnostic build to pin down the font rendering on your device. No visible changes — just install fresh, open the app, and stay signed in for a few seconds.\n\nUninstall the old app first, then install this one."
 }

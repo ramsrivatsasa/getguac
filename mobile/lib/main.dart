@@ -234,6 +234,15 @@ class GetGuacApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           useMaterial3: true,
+          // App-wide default font = Plus Jakarta Sans. Body text (store names,
+          // dates, "Tax:") uses raw TextStyle with NO fontFamily and relied on
+          // inheriting Jakarta from textTheme — but that inherited path fell
+          // back to the system font on some devices, while EXPLICIT-fontFamily
+          // text (Bricolage headings/amounts) rendered fine. Setting fontFamily
+          // here bakes Jakarta into every default text style so un-styled text
+          // is explicit; Bricolage is still applied explicitly via ggHeading/
+          // ggAmount, which override this.
+          fontFamily: kBodyFont,
           colorScheme: ColorScheme.fromSeed(
             seedColor: kBrandPrimary,
             primary: kBrandPrimary,

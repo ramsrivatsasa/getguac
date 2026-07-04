@@ -1,6 +1,6 @@
 {
-  "version": "v0.4.10",
-  "name": "v0.4.10 — Receipt cleanup tools",
-  "downloadUrl": "https://getguac.app/downloads/v0.4.10/app-arm64-v8a-release.apk",
-  "releaseNotes": "• New on the Receipts screen: tap the ⋮ menu → “Find duplicates” to merge repeat receipts, or “Auto-categorize” to label uncategorized ones.\n• Under the hood: a diagnostic to finally pin down the receipt-font rendering on some phones.\n\nUninstall the old app first, then install this one fresh."
+  "version": "v0.4.11",
+  "name": "v0.4.11 — Receipts font fix",
+  "downloadUrl": "https://getguac.app/downloads/v0.4.11/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Receipts list now uses one consistent font — store name and amount both in Plus Jakarta Sans (the amount was in a different font before, which looked off).\n\nUninstall the old app first, then install this one fresh."
 }

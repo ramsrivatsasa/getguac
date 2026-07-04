@@ -845,7 +845,7 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
                           ? Checkbox(value: isSelected, onChanged: (_) => _toggle(r.id))
                           : null,
                         title: Row(children: [
-                          Expanded(child: Text(r.storeName, style: TextStyle(fontFamily: kBodyFont, fontWeight: FontWeight.w500, fontVariations: ggWght(FontWeight.w500)), overflow: TextOverflow.ellipsis)),
+                          Expanded(child: Text(r.storeName, style: TextStyle(fontFamily: kBodyFont, fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700)), overflow: TextOverflow.ellipsis)),
                           if (r.fromStatement) Container(
                             margin: const EdgeInsets.only(left: 4),
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -889,13 +889,13 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
                           ),
                         ]),
                         trailing: _selectionMode
-                          ? Text('\$${r.totalAmount.toStringAsFixed(2)}', style: ggAmount(size: 14))
+                          ? Text('\$${r.totalAmount.toStringAsFixed(2)}', style: TextStyle(fontFamily: kBodyFont, fontSize: 14, fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800), color: ggInk, letterSpacing: -0.3))
                           : Row(mainAxisSize: MainAxisSize.min, children: [
                               Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
-                                  Text('\$${r.totalAmount.toStringAsFixed(2)}', style: ggAmount(size: 15)),
+                                  Text('\$${r.totalAmount.toStringAsFixed(2)}', style: TextStyle(fontFamily: kBodyFont, fontSize: 15, fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800), color: ggInk, letterSpacing: -0.3)),
                                   if (r.businessPurchase)
                                     const Text('Business', style: TextStyle(fontSize: 11, color: Colors.blue)),
                                 ],

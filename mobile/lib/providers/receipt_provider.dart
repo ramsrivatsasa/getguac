@@ -113,11 +113,20 @@ class ReceiptProvider extends ChangeNotifier {
   Future<void> addReceipt(Receipt receipt, {File? imageFile}) async {
     String link = receipt.receiptLink;
     if (imageFile != null) link = await uploadImage(imageFile);
-    await _sb.from('receipts').insert({
-      ...receipt.toMap(),
-      'receipt_link': link,
-      'user_id': _sb.auth.currentUser!.id,
-    });
+    try {
+      await _sb.from('receipts').insert({
+        ...receipt.toMap(),
+        'receipt_link': link,
+        'user_id': _sb.auth.currentUser!.id,
+      });
+    } on PostgrestException catch (e) {
+      // 23505 = the (user_id, dedup_key) partial unique index (migration_077)
+      // rejected an exact duplicate of an existing receipt (same store/date/
+      // total/sign). This is the DB backstop doing its job — the row the user
+      // was adding already exists, so treat it as a no-op success rather than
+      // surfacing a scary error. Any other DB error still propagates.
+      if (e.code != '23505') rethrow;
+    }
     _lastLoaded = null;       // bust cache
     await loadReceipts(force: true);
   }

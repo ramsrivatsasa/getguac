@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:io';
+import 'dart:convert';
 import '../../providers/auth_provider.dart';
 import '../../providers/receipt_provider.dart';
 import '../../models/receipt_model.dart';
@@ -56,6 +59,14 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
   String _filter = '';
   final Set<String> _selected = {};
   bool get _selectionMode => _selected.isNotEmpty;
+
+  /// Busy flags for the two housekeeping tools in the app-bar overflow —
+  /// mirror the web /receipts "Find duplicates" + "Auto-categorize" buttons,
+  /// calling the SAME server routes with the mobile Bearer token so behaviour
+  /// stays identical across platforms.
+  bool _dedupBusy = false;
+  bool _autocatBusy = false;
+  static const _kApiBase = 'https://getguac.app';
 
   /// Period chip selection is LOCAL to this screen, not driven by the
   /// provider. The provider holds whatever was most recently fetched
@@ -526,6 +537,173 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
     showDialog(context: context, builder: (_) => _AddReceiptDialog(uid: uid, existing: r));
   }
 
+  /// Pull a readable error message out of a failed API response body.
+  String _apiErr(http.Response r, String fallback) {
+    try {
+      final m = jsonDecode(r.body);
+      if (m is Map && m['error'] is String) return m['error'] as String;
+    } catch (_) {}
+    return '$fallback (${r.statusCode})';
+  }
+
+  /// Find & merge duplicate receipts — same store/date/total. Mirrors the web
+  /// "Find duplicates" button: a dry-run scan first (so we can show the count
+  /// and confirm), then execute with { confirm:true }. The server keeps the
+  /// richest row of each group (parsed receipt > has tax > has image > newest)
+  /// and relinks emails before deleting the rest.
+  Future<void> _findDuplicates() async {
+    if (_dedupBusy) return;
+    setState(() => _dedupBusy = true);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final token = Supabase.instance.client.auth.currentSession?.accessToken;
+      if (token == null) throw Exception('Not signed in');
+      final headers = {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      };
+      // 1. Dry run (default when { confirm } is absent) — preview only.
+      final dry = await http.post(Uri.parse('$_kApiBase/api/receipts/dedup'),
+          headers: headers, body: '{}');
+      if (dry.statusCode != 200) throw Exception(_apiErr(dry, 'Scan failed'));
+      final data = jsonDecode(dry.body) as Map<String, dynamic>;
+      final groups = (data['groups'] as List?) ?? const [];
+      final toDelete = (data['receipts_to_delete'] as num?)?.toInt() ?? 0;
+      if (groups.isEmpty || toDelete == 0) {
+        messenger.showSnackBar(const SnackBar(content: Text('No duplicate receipts found 🎉')));
+        return;
+      }
+      if (!mounted) return;
+      // 2. Confirm before any deletion.
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text('Merge duplicates?'),
+          content: Text(
+            'Found ${groups.length} duplicate group${groups.length == 1 ? '' : 's'} — '
+            '$toDelete extra receipt${toDelete == 1 ? '' : 's'} will be merged into the '
+            'best copy of each and removed. This cannot be undone.'),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Merge')),
+          ],
+        ),
+      );
+      if (ok != true) return;
+      // 3. Execute using the server's auto-picked keepers.
+      final exec = await http.post(Uri.parse('$_kApiBase/api/receipts/dedup'),
+          headers: headers, body: jsonEncode({'confirm': true}));
+      if (exec.statusCode != 200) throw Exception(_apiErr(exec, 'Merge failed'));
+      final res = jsonDecode(exec.body) as Map<String, dynamic>;
+      final deleted = (res['receipts_deleted'] as num?)?.toInt() ?? 0;
+      if (mounted) {
+        await context.read<ReceiptProvider>().loadReceipts(period: _selectedPeriod, force: true);
+        mascotBus.bounce();
+      }
+      messenger.showSnackBar(SnackBar(
+          content: Text('Merged $deleted duplicate${deleted == 1 ? '' : 's'}')));
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text('Find duplicates failed: $e')));
+    } finally {
+      if (mounted) setState(() => _dedupBusy = false);
+    }
+  }
+
+  /// Auto-categorize receipts with no / "misc" category via the shared AI
+  /// route, then persist the returned slugs. Mirrors the web button (the web
+  /// runs a client-side rule pass first; here we send everything to the route,
+  /// which is fine — the AI covers the rule cases too).
+  Future<void> _autoCategorize() async {
+    if (_autocatBusy) return;
+    final provider = context.read<ReceiptProvider>();
+    final messenger = ScaffoldMessenger.of(context);
+    final targets = provider.receipts
+        .where((r) => r.category == null || r.category!.isEmpty || r.category == 'misc')
+        .toList();
+    if (targets.isEmpty) {
+      messenger.showSnackBar(const SnackBar(content: Text('Every receipt is already categorized ✓')));
+      return;
+    }
+    setState(() => _autocatBusy = true);
+    try {
+      final sb = Supabase.instance.client;
+      final token = sb.auth.currentSession?.accessToken;
+      if (token == null) throw Exception('Not signed in');
+      // Route caps at 200 receipts/call — chunk so large accounts still work.
+      final cats = <String, String>{};
+      for (var i = 0; i < targets.length; i += 200) {
+        final chunk = targets.sublist(i, (i + 200).clamp(0, targets.length));
+        final resp = await http.post(
+          Uri.parse('$_kApiBase/api/categorize'),
+          headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'receipts': chunk.map((r) => {
+              'id': r.id,
+              'store_name': r.storeName,
+              'total_amount': r.totalAmount,
+            }).toList(),
+          }),
+        );
+        if (resp.statusCode != 200) throw Exception(_apiErr(resp, 'Categorize failed'));
+        final data = jsonDecode(resp.body) as Map<String, dynamic>;
+        (data['categories'] as Map?)?.forEach((id, slug) {
+          if (slug is String && slug.isNotEmpty && slug != 'misc') cats[id as String] = slug;
+        });
+      }
+      if (cats.isEmpty) {
+        messenger.showSnackBar(const SnackBar(
+            content: Text("Couldn't confidently categorize any. Try labeling a few manually.")));
+        return;
+      }
+      // Persist directly (RLS scopes to the user); one reload at the end so we
+      // don't refetch per row.
+      var okCount = 0;
+      for (final e in cats.entries) {
+        try {
+          await sb.from('receipts').update({'category': e.value}).eq('id', e.key);
+          okCount++;
+        } catch (_) {/* skip the odd row, keep going */}
+      }
+      if (mounted) {
+        await provider.loadReceipts(period: _selectedPeriod, force: true);
+      }
+      messenger.showSnackBar(SnackBar(
+          content: Text('Categorized $okCount receipt${okCount == 1 ? '' : 's'}')));
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text('Auto-categorize failed: $e')));
+    } finally {
+      if (mounted) setState(() => _autocatBusy = false);
+    }
+  }
+
+  /// The app-bar overflow of housekeeping tools (Find duplicates /
+  /// Auto-categorize). Shows a spinner in place of the icon while either runs.
+  Widget _receiptToolsAction() {
+    final busy = _dedupBusy || _autocatBusy;
+    return PopupMenuButton<String>(
+      enabled: !busy,
+      tooltip: 'Clean up',
+      icon: busy
+          ? const SizedBox(
+              width: 18, height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2, color: ggInk))
+          : const Icon(Icons.cleaning_services_outlined, color: ggInk, size: 21),
+      onSelected: (v) {
+        if (v == 'dedup') _findDuplicates();
+        if (v == 'autocat') _autoCategorize();
+      },
+      itemBuilder: (_) => const [
+        PopupMenuItem(value: 'dedup', child: ListTile(
+          leading: Icon(Icons.copy_all_outlined), title: Text('Find duplicates'),
+          contentPadding: EdgeInsets.zero, dense: true)),
+        PopupMenuItem(value: 'autocat', child: ListTile(
+          leading: Icon(Icons.sell_outlined), title: Text('Auto-categorize'),
+          contentPadding: EdgeInsets.zero, dense: true)),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final receipts = context.watch<ReceiptProvider>().receipts;
@@ -552,7 +730,7 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
               IconButton(icon: const Icon(Icons.delete), onPressed: _deleteSelected, tooltip: 'Delete'),
             ],
           )
-        : ggAppBar(context, 'Receipts'),
+        : ggAppBar(context, 'Receipts', extraActions: [_receiptToolsAction()]),
       // Add Receipt now lives in the bottom-bar centre camera button — the
       // floating button here was removed to avoid duplication.
       body: Column(children: [

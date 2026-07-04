@@ -1121,9 +1121,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // Auto-detected "heat" limit: stores past 40% of the top spender use a
   // darker slate so the biggest chunks of spend stand out. Neutral, no green.
   // Scales with the window (swap for a fixed dollar value here).
-  Widget _storeBar(_StoreSpend s, double maxAmount) {
+  Widget _storeBar(_StoreSpend s, double maxAmount, int index) {
     final frac = maxAmount > 0 ? (s.amount / maxAmount).clamp(0.08, 1.0) : 0.0;
-    final hot = maxAmount > 0 && s.amount >= maxAmount * 0.4;
+    // Multicolor bars — each store gets its own vivid gradient from the
+    // palette, cycled by rank so the chart reads at a glance (biggest spender
+    // leads with the richest green). Replaces the flat slate bars.
+    const palette = <List<Color>>[
+      [Color(0xFF16a34a), Color(0xFF86efac)], // green
+      [Color(0xFF0ea5e9), Color(0xFF67e8f9)], // sky
+      [Color(0xFF22c55e), Color(0xFFec4899)], // green → pink
+      [Color(0xFF8b5cf6), Color(0xFFc4b5fd)], // violet
+      [Color(0xFFf59e0b), Color(0xFFfcd34d)], // amber
+      [Color(0xFF14b8a6), Color(0xFF5eead4)], // teal
+      [Color(0xFFef4444), Color(0xFFfca5a5)], // red
+      [Color(0xFFec4899), Color(0xFFf9a8d4)], // pink
+    ];
+    final grad = palette[index % palette.length];
     return InkWell(
       onTap: () => context.push(_receiptsDeepLink(store: s.name)),
       borderRadius: BorderRadius.circular(10),
@@ -1146,9 +1159,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 widthFactor: frac,
                 child: DecoratedBox(
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: hot
-                      ? const [Color(0xFF64748B), Color(0xFF334155)]
-                      : const [Color(0xFF94A3B8), Color(0xFF64748B)]),
+                    gradient: LinearGradient(colors: grad),
                   ),
                 ),
               ),
@@ -1202,7 +1213,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           // Horizontal gradient bars (store · bar · amount) — cleaner than the
           // old vertical fl_chart. Each row taps into that store's receipts.
           Column(children: [
-            for (final s in topData) _storeBar(s, topData.first.amount),
+            for (int i = 0; i < topData.length; i++) _storeBar(topData[i], topData.first.amount, i),
           ]),
       ]),
     );

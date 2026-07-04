@@ -1,6 +1,6 @@
 {
-  "version": "v0.4.12",
-  "name": "v0.4.12 — Smashlist cleanup + Receipts font",
-  "downloadUrl": "https://getguac.app/downloads/v0.4.12/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Smashlist: the store name now headlines each card (bigger than the items), and it's no longer repeated on every line — each item shows its estimated price instead. Item count reads \"2 items\".\n• Receipts: store name + amount now use one consistent font.\n\nUninstall the old app first, then install this one fresh."
+  "version": "v0.4.13",
+  "name": "v0.4.13 — Colorful spending chart",
+  "downloadUrl": "https://getguac.app/downloads/v0.4.13/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Dashboard \"Spending by Store\" bars are now multicolor — each store gets its own gradient so the chart pops.\n• Plus the Receipts font fix and Smashlist card cleanup from the last updates.\n\nUninstall the old app first, then install this one fresh."
 }

@@ -545,18 +545,22 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
         title: AnimatedDefaultTextStyle(
           duration: const Duration(milliseconds: 220),
           curve: Curves.easeOutCubic,
-          style: ggBody(size: 15.5, weight: FontWeight.w700, color: it.approved ? ggFaint : ggInk)
+          style: ggBody(size: 14, weight: FontWeight.w700, color: it.approved ? ggFaint : ggInk)
             .copyWith(decoration: it.approved ? TextDecoration.lineThrough : TextDecoration.none),
           child: Text(it.name),
         ),
         subtitle: Row(children: [
           Text('×${it.qty}', style: ggBody(size: 12, color: ggMuted)),
-          if (it.storeNameDisplay != null && it.storeNameDisplay!.isNotEmpty) ...[
+          // The store name is NOT repeated here — it already headlines the
+          // card above (that was the redundant "Lowe's / Costco Wholesale"
+          // on every row). Show the estimated price instead, like the web
+          // Smashlist's "est. $X".
+          if (it.price > 0) ...[
             const SizedBox(width: 6),
             Text('·', style: ggBody(size: 12, color: ggFaint)),
             const SizedBox(width: 6),
-            Flexible(child: Text(it.storeNameDisplay!, overflow: TextOverflow.ellipsis,
-              style: ggBody(size: 12, weight: FontWeight.w600, color: ggLimeDk))),
+            Text('est. \$${it.price.toStringAsFixed(it.price % 1 == 0 ? 0 : 2)}',
+              style: ggBody(size: 12, color: ggMuted)),
           ],
         ]),
         trailing: isPredicted
@@ -732,13 +736,17 @@ class _StoreAccordionState extends State<_StoreAccordion> {
               StoreLogo(
                 storeName: widget.storeName == 'Any Store' ? null : widget.storeName,
                 fallbackEmoji: '🏬',
-                size: 30,
+                size: 34,
                 emojiBg: ggLime,
               ),
               const SizedBox(width: 10),
               Expanded(
+                // Store header is the PRIMARY line of each card — larger than
+                // the item names below it so the hierarchy reads store → items
+                // (was 14.5, smaller than the 14px items, which read as
+                // backwards). All Plus Jakarta Sans (ggBody).
                 child: Text(widget.storeName,
-                  style: ggBody(size: 14.5, weight: FontWeight.w800, color: ggInk)),
+                  style: ggBody(size: 17, weight: FontWeight.w800, color: ggInk)),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
@@ -746,7 +754,7 @@ class _StoreAccordionState extends State<_StoreAccordion> {
                   color: ggChipBg,
                   borderRadius: BorderRadius.circular(999),
                 ),
-                child: Text('${widget.items.length}',
+                child: Text('${widget.items.length} item${widget.items.length == 1 ? "" : "s"}',
                   style: ggBody(size: 11.5, weight: FontWeight.w800, color: ggLimeDk)),
               ),
               const SizedBox(width: 4),

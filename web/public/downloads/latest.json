@@ -1,6 +1,6 @@
 {
-  "version": "v0.4.11",
-  "name": "v0.4.11 — Receipts font fix",
-  "downloadUrl": "https://getguac.app/downloads/v0.4.11/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Receipts list now uses one consistent font — store name and amount both in Plus Jakarta Sans (the amount was in a different font before, which looked off).\n\nUninstall the old app first, then install this one fresh."
+  "version": "v0.4.12",
+  "name": "v0.4.12 — Smashlist cleanup + Receipts font",
+  "downloadUrl": "https://getguac.app/downloads/v0.4.12/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Smashlist: the store name now headlines each card (bigger than the items), and it's no longer repeated on every line — each item shows its estimated price instead. Item count reads \"2 items\".\n• Receipts: store name + amount now use one consistent font.\n\nUninstall the old app first, then install this one fresh."
 }

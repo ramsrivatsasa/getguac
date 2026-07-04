@@ -12,9 +12,9 @@ import MarketingFooter from '../../components/MarketingFooter'
 // alerts; the /download page is for fresh installs + the manual update
 // path while CI release pipeline isn't wired up.
 const ANDROID_RELEASE = {
-  version: 'v0.4.11',
+  version: 'v0.4.12',
   releasedAt: '2026-07-04',
-  base: '/downloads/v0.4.11',
+  base: '/downloads/v0.4.12',
   apks: [
     { abi: 'arm64-v8a',   sizeMB: 26.2, label: 'Most modern Android phones (Samsung, Pixel, OnePlus, etc.)', file: 'app-arm64-v8a-release.apk',   primary: true  },
     { abi: 'armeabi-v7a', sizeMB: 24.3, label: 'Older 32-bit Android phones',                                   file: 'app-armeabi-v7a-release.apk', primary: false },

@@ -1,6 +1,6 @@
 {
-  "version": "v0.4.8",
-  "name": "v0.4.8 — All fonts render",
-  "downloadUrl": "https://getguac.app/downloads/v0.4.8/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Body text (store names, dates, tax) now renders in the correct app font instead of the system font — completes the font fix from the last update.\n\nUninstall the old app first, then install this one fresh."
+  "version": "v0.4.9",
+  "name": "v0.4.9 — Receipt text font",
+  "downloadUrl": "https://getguac.app/downloads/v0.4.9/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Store names and dates on the Receipts screen now render in the app font (they were falling back to the system font). Confirming this fix before rolling it out everywhere.\n\nUninstall the old app first, then install this one fresh."
 }

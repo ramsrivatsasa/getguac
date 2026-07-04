@@ -667,7 +667,7 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
                           ? Checkbox(value: isSelected, onChanged: (_) => _toggle(r.id))
                           : null,
                         title: Row(children: [
-                          Expanded(child: Text(r.storeName, style: TextStyle(fontWeight: FontWeight.w500, fontVariations: ggWght(FontWeight.w500)), overflow: TextOverflow.ellipsis)),
+                          Expanded(child: Text(r.storeName, style: TextStyle(fontFamily: kBodyFont, fontWeight: FontWeight.w500, fontVariations: ggWght(FontWeight.w500)), overflow: TextOverflow.ellipsis)),
                           if (r.fromStatement) Container(
                             margin: const EdgeInsets.only(left: 4),
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -702,6 +702,7 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
                           Text(
                             '${formatDateShort(r.date)} • Tax: \$${r.taxPaid.toStringAsFixed(2)}'
                             '${r.itemCount > 0 ? " • ${r.itemCount} ${r.itemCount == 1 ? "item" : "items"}" : ""}',
+                            style: const TextStyle(fontFamily: kBodyFont),
                           ),
                           const SizedBox(height: 4),
                           GestureDetector(

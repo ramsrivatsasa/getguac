@@ -8,7 +8,7 @@
 //   { categories: { <id>: 'grub' | 'eats' | ... | null } }
 
 import { rateLimit, rateKey, validate, v } from '../../../lib/apiGuard'
-import { createClient } from '../../../lib/supabase/server'
+import { createApiClient } from '../../../lib/supabase/server'
 export const runtime = 'nodejs'
 export const maxDuration = 60
 
@@ -92,7 +92,10 @@ export async function POST(request) {
     const rl = await rateLimit(rateKey(request, 'categorize'), { limit: 10, windowMs: 60_000 })
     if (!rl.ok) return Response.json({ error: 'rate limited' }, { status: 429 })
 
-    const sb = createClient()
+    // createApiClient accepts EITHER the web cookie session OR a mobile
+    // "Authorization: Bearer <token>" header, so the native Auto-categorize
+    // button can call this route too. Falls back to cookies for the web app.
+    const sb = createApiClient()
     const { data: { user } } = await sb.auth.getUser()
     if (!user) return Response.json({ error: 'Not signed in' }, { status: 401 })
 

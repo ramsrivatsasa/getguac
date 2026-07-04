@@ -125,53 +125,9 @@ export async function saveReceipt(sb, userId, parsed, opts = {}) {
   const existingId = await findExistingReceipt(sb, userId, candidate).catch(() => null)
 
   if (existingId) {
-    // Merge into existing row. Patch with anything richer the new parse
-    // produced, but NEVER overwrite a user-curated category.
-    const patch = {}
-    if (store_id)               patch.store_id          = store_id
-    if (store_location_id)      patch.store_location_id = store_location_id
-    if (flatParsed.tax_paid != null)       patch.tax_paid       = Number(flatParsed.tax_paid)
-    if (flatParsed.payment_method)         patch.payment_method = flatParsed.payment_method
-    if (flatParsed.payment_last4)          patch.payment_last4  = flatParsed.payment_last4
-    if (opts.receipt_link)                 patch.receipt_link   = opts.receipt_link
-    if (Array.isArray(opts.extra_page_urls) && opts.extra_page_urls.length > 0) {
-      patch.extra_page_urls = opts.extra_page_urls
-    }
-    // Category merge: re-set only if the existing row wasn't user-confirmed.
-    // The DB-side category_source on the existing row guards this: we look it
-    // up first and skip the category patch when it's 'user'.
-    const { data: existingRow } = await sb
-      .from('receipts')
-      .select('category_source')
-      .eq('id', existingId)
-      .eq('user_id', userId)
-      .maybeSingle()
-    const existingSource = existingRow?.category_source
-    if (existingSource !== 'user' && finalCategory) {
-      patch.category = finalCategory
-      patch.category_source = categorySource
-    }
-
-    if (Object.keys(patch).length > 0) {
-      await sb.from('receipts').update(patch).eq('id', existingId).eq('user_id', userId)
-    }
-
-    // Append items only if existing row had none (don't double-insert on
-    // re-upload of the same photo).
-    const items = Array.isArray(flatParsed.items) ? flatParsed.items : []
-    if (items.length > 0) {
-      const { data: hadItems } = await sb
-        .from('receipt_items').select('id').eq('receipt_id', existingId).limit(1)
-      if (!hadItems || hadItems.length === 0) {
-        const itemRows = items.map(it => normalizeItemRow(existingId, it, candidate.date))
-        await sb.from('receipt_items').insert(itemRows).then(
-          () => {},
-          (e) => console.warn('[save-receipt] merge item insert failed:', e.message),
-        )
-      }
-    }
-
-    return { receipt_id: existingId, merged: true }
+    return mergeIntoExisting(sb, userId, existingId, {
+      store_id, store_location_id, flatParsed, finalCategory, categorySource, opts, candidate,
+    })
   }
 
   // 4. Ensure a rewards row for this (user, store) so the receipt
@@ -222,7 +178,25 @@ export async function saveReceipt(sb, userId, parsed, opts = {}) {
     .insert(insertRow)
     .select('id')
     .single()
-  if (error) throw error
+  if (error) {
+    // 23505 = unique_violation on the (user_id, dedup_key) partial index
+    // (migration_076). Pre-insert findExistingReceipt above can't see a
+    // sibling save that's still in flight, so two concurrent forwards of the
+    // same purchase both passed the dedup check and raced to INSERT — this is
+    // exactly what produced the "4 identical Costco $1,218.99" rows. The DB
+    // index catches the loser; we recover by re-running the dedup lookup (the
+    // winner's row now exists) and MERGING into it, same as the pre-check path.
+    // No-op until the index exists, so this is safe to ship ahead of the migration.
+    if (error.code === '23505') {
+      const dupId = await findExistingReceipt(sb, userId, candidate).catch(() => null)
+      if (dupId) {
+        return mergeIntoExisting(sb, userId, dupId, {
+          store_id, store_location_id, flatParsed, finalCategory, categorySource, opts, candidate,
+        })
+      }
+    }
+    throw error
+  }
 
   const receiptId = rcpt.id
 
@@ -306,6 +280,65 @@ export async function saveReceipt(sb, userId, parsed, opts = {}) {
 // ─────────────────────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────────────────────
+
+/**
+ * Merge a freshly-parsed receipt into an existing duplicate row instead of
+ * inserting a second one. Patches the keeper with anything richer the new
+ * parse produced (store FKs, tax, payment, link, extra pages) but NEVER
+ * clobbers a user-curated category, and appends items only when the keeper
+ * had none. Shared by BOTH the pre-insert dedup check and the 23505
+ * race-recovery path so they behave identically.
+ *
+ * @returns {Promise<{ receipt_id: string, merged: true }>}
+ */
+async function mergeIntoExisting(sb, userId, existingId, ctx) {
+  const { store_id, store_location_id, flatParsed, finalCategory, categorySource, opts, candidate } = ctx
+  const patch = {}
+  if (store_id)               patch.store_id          = store_id
+  if (store_location_id)      patch.store_location_id = store_location_id
+  if (flatParsed.tax_paid != null)       patch.tax_paid       = Number(flatParsed.tax_paid)
+  if (flatParsed.payment_method)         patch.payment_method = flatParsed.payment_method
+  if (flatParsed.payment_last4)          patch.payment_last4  = flatParsed.payment_last4
+  if (opts.receipt_link)                 patch.receipt_link   = opts.receipt_link
+  if (Array.isArray(opts.extra_page_urls) && opts.extra_page_urls.length > 0) {
+    patch.extra_page_urls = opts.extra_page_urls
+  }
+  // Category merge: re-set only if the existing row wasn't user-confirmed.
+  // The DB-side category_source on the existing row guards this: we look it
+  // up first and skip the category patch when it's 'user'.
+  const { data: existingRow } = await sb
+    .from('receipts')
+    .select('category_source')
+    .eq('id', existingId)
+    .eq('user_id', userId)
+    .maybeSingle()
+  const existingSource = existingRow?.category_source
+  if (existingSource !== 'user' && finalCategory) {
+    patch.category = finalCategory
+    patch.category_source = categorySource
+  }
+
+  if (Object.keys(patch).length > 0) {
+    await sb.from('receipts').update(patch).eq('id', existingId).eq('user_id', userId)
+  }
+
+  // Append items only if existing row had none (don't double-insert on
+  // re-upload of the same photo).
+  const items = Array.isArray(flatParsed.items) ? flatParsed.items : []
+  if (items.length > 0) {
+    const { data: hadItems } = await sb
+      .from('receipt_items').select('id').eq('receipt_id', existingId).limit(1)
+    if (!hadItems || hadItems.length === 0) {
+      const itemRows = items.map(it => normalizeItemRow(existingId, it, candidate.date))
+      await sb.from('receipt_items').insert(itemRows).then(
+        () => {},
+        (e) => console.warn('[save-receipt] merge item insert failed:', e.message),
+      )
+    }
+  }
+
+  return { receipt_id: existingId, merged: true }
+}
 
 function flattenParsed(p) {
   // Accept either nested (engine output) or flat (legacy form posts).

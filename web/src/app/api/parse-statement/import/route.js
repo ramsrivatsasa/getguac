@@ -149,11 +149,40 @@ export async function POST(request) {
     let receiptIds = []
     if (receiptInserts.length > 0) {
       const { data, error } = await sb.from('receipts').insert(receiptInserts).select('id')
-      if (error) {
+      if (!error) {
+        receiptIds = data.map(r => r.id)
+      } else if (error.code === '23505') {
+        // The (user_id, dedup_key) partial unique index (migration_077) rejected
+        // a duplicate — typically re-importing the same statement. A bulk insert
+        // is all-or-nothing, so fall back to row-by-row, resolving each conflict
+        // to the EXISTING receipt's id. This keeps `receiptIds` aligned 1:1 (and
+        // in order) with `receiptInserts` so the bank_transactions linking below
+        // still points at the right rows.
+        receiptIds = []
+        for (const row of receiptInserts) {
+          const { data: one, error: e1 } = await sb.from('receipts').insert(row).select('id').single()
+          if (!e1) { receiptIds.push(one.id); continue }
+          if (e1.code === '23505') {
+            const { data: existing } = await sb.from('receipts')
+              .select('id')
+              .eq('user_id', user.id)
+              .eq('store_name', row.store_name)
+              .eq('date', row.date)
+              .eq('total_amount', row.total_amount)
+              .eq('from_statement', true)
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .maybeSingle()
+            receiptIds.push(existing?.id || null)  // null slot → tx just won't relink
+            continue
+          }
+          console.error('[statement/import] receipts insert failed:', e1.message)
+          return Response.json({ error: `Receipts insert failed: ${e1.message}` }, { status: 500 })
+        }
+      } else {
         console.error('[statement/import] receipts insert failed:', error.message)
         return Response.json({ error: `Receipts insert failed: ${error.message}` }, { status: 500 })
       }
-      receiptIds = data.map(r => r.id)
     }
 
     // Build an optedRow-index -> receiptId map so the bank_transactions

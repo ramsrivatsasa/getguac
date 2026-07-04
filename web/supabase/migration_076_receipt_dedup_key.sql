@@ -34,11 +34,18 @@
 -- Safe to apply anytime: adding a generated column doesn't touch existing data
 -- semantics, and nothing enforces uniqueness yet.
 
+-- NOTE: every function here MUST be IMMUTABLE (Postgres requirement for a
+-- generated column). The obvious `date::text` is NOT immutable — casting a
+-- date to text depends on the DateStyle session GUC, so Postgres marks it
+-- STABLE and rejects it ("generation expression is not immutable"). Instead we
+-- encode the date as its integer day-offset from a fixed epoch (date − date is
+-- the immutable date_mi operator), which is DateStyle-independent and still a
+-- unique, deterministic per-day token.
 alter table public.receipts
   add column if not exists dedup_key text
   generated always as (
     regexp_replace(lower(btrim(coalesce(store_name, ''))), '[^a-z0-9]', '', 'g')
-      || '|' || coalesce(date::text, '')
+      || '|' || coalesce((date - DATE '2000-01-01')::text, '')
       || '|' || (case when coalesce(total_amount, 0) < 0 then '-' else '+' end)
       || '|' || (round(abs(coalesce(total_amount, 0)) * 100))::bigint::text
       || '|' || (case when from_statement then 's' else 'r' end)

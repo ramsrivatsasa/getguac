@@ -40,111 +40,7 @@ void main() async {
 
   await DebugLog.init();
   await _loadBundledFonts();
-  _fontDiag('post-load');
   await _bootstrap();
-  // Second probe once the app is up, in case font availability is delayed.
-  Future.delayed(const Duration(seconds: 5), () {
-    _fontDiag('delayed-5s');
-    _fontRasterProbe('delayed-5s');
-  });
-}
-
-/// TEMP device diagnostic (v0.4.10): the DEFINITIVE render test.
-///
-/// [_fontDiag] only measures TextPainter WIDTH — a LAYOUT-time signal. On the
-/// S22 Ultra it reports the custom fonts "resolved" (jakarta 302 ≠ sys 285),
-/// yet the user still sees the system font. That's the classic split-brain the
-/// old Impeller-Vulkan bug had: correct metrics, system-font GLYPHS. Width
-/// can't catch that; only comparing actual RASTERIZED PIXELS can.
-///
-/// So: rasterize the same string with fontFamily=null (system), 'Plus Jakarta
-/// Sans', and 'Bricolage Grotesque' to offscreen bitmaps and compare their
-/// pixel signatures. If jakarta's pixels are IDENTICAL to system → it's really
-/// falling back at the render layer (a genuine bug to chase). If they DIFFER →
-/// Jakarta IS rendering and the remaining gap is perception/expectation, not a
-/// missing font. Bricolage is the positive control (user confirmed it renders,
-/// so it MUST read differ=true — if it doesn't, the probe itself is wrong).
-Future<void> _fontRasterProbe(String phase) async {
-  try {
-    Future<List<int>> sig(String? fam) async {
-      final recorder = PictureRecorder();
-      final canvas = Canvas(recorder);
-      final tp = TextPainter(
-        text: TextSpan(
-          text: 'Guacamole WHOLESALE 39',
-          style: TextStyle(
-            fontFamily: fam, fontSize: 40, color: const Color(0xFF000000)),
-        ),
-        textDirection: TextDirection.ltr,
-      )..layout();
-      tp.paint(canvas, Offset.zero);
-      final img = await recorder.endRecording().toImage(480, 60);
-      final bd = await img.toByteData(format: ImageByteFormat.rawRgba);
-      final data = bd!.buffer.asUint8List();
-      // Signature: count of inked (non-transparent) pixels + a cheap FNV-1a
-      // hash over the alpha channel. Two renders of the SAME glyphs at the same
-      // size produce identical signatures; different typefaces do not.
-      var inked = 0;
-      var h = 0x811c9dc5;
-      for (var i = 3; i < data.length; i += 4) {
-        final a = data[i];
-        if (a != 0) {
-          inked++;
-          h = ((h ^ a) * 0x01000193) & 0xffffffff;
-        }
-      }
-      return [inked, h];
-    }
-
-    final sys = await sig(null);
-    final jak = await sig('Plus Jakarta Sans');
-    final bri = await sig('Bricolage Grotesque');
-    final jakRenders = jak[0] != sys[0] || jak[1] != sys[1];
-    final briRenders = bri[0] != sys[0] || bri[1] != sys[1];
-    DebugLog.event('font-raster', 'pixel probe ($phase)', level: 'warn', meta: {
-      'phase': phase,
-      'sys_inked': sys[0], 'sys_hash': sys[1],
-      'jakarta_inked': jak[0], 'jakarta_hash': jak[1],
-      'bricolage_inked': bri[0], 'bricolage_hash': bri[1],
-      // The real answer:
-      'jakarta_renders_distinct': jakRenders,
-      'bricolage_renders_distinct': briRenders,
-    });
-  } catch (e) {
-    DebugLog.event('font-raster', 'probe failed ($phase): $e', level: 'error');
-  }
-}
-
-/// TEMP device diagnostic (v0.4.5): measure whether the custom fonts actually
-/// resolve on THIS device by comparing TextPainter widths vs the system font.
-/// Uploaded to client_logs via DebugLog so we can read the real cause on a
-/// device we can't reproduce locally (Samsung One UI). Remove once solved.
-void _fontDiag(String phase) {
-  try {
-    double w(String? fam) {
-      final tp = TextPainter(
-        text: TextSpan(
-          text: 'Guac WHOLESALE \$39 illil',
-          style: TextStyle(fontFamily: fam, fontWeight: FontWeight.w800, fontSize: 24),
-        ),
-        textDirection: TextDirection.ltr,
-      )..layout();
-      return tp.width;
-    }
-    final sys = w(null);
-    final bri = w('Bricolage Grotesque');
-    final jak = w('Plus Jakarta Sans');
-    DebugLog.event('font-diag', 'width probe ($phase)', level: 'warn', meta: {
-      'phase': phase,
-      'sys': sys.toStringAsFixed(1),
-      'bricolage': bri.toStringAsFixed(1),
-      'jakarta': jak.toStringAsFixed(1),
-      'bricolage_resolved': (bri - sys).abs() > 0.5,
-      'jakarta_resolved': (jak - sys).abs() > 0.5,
-    });
-  } catch (e) {
-    DebugLog.event('font-diag', 'probe failed ($phase): $e', level: 'error');
-  }
 }
 
 /// Force-register the bundled static fonts from asset bytes. Some devices don't
@@ -169,15 +65,11 @@ Future<void> _loadBundledFonts() async {
   for (final entry in families.entries) {
     try {
       final loader = FontLoader(entry.key);
-      var bytesOk = 0;
       for (final asset in entry.value) {
         final data = await rootBundle.load(asset); // throws if asset missing
-        bytesOk += data.lengthInBytes;
         loader.addFont(Future.value(data));
       }
       await loader.load();
-      DebugLog.event('font-load', 'FontLoader OK: ${entry.key}', level: 'warn',
-          meta: {'weights': entry.value.length, 'bytes': bytesOk});
     } catch (e) {
       DebugLog.event('font-load', 'FontLoader FAILED: ${entry.key}: $e', level: 'error');
     }

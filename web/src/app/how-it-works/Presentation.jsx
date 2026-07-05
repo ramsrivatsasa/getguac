@@ -13,7 +13,7 @@ import GuacMascot from '../../components/GuacMascot'
 import {
   Sparkles, Copy, BarChart3, ThumbsUp, ShieldCheck, ArrowRight,
   Smartphone, Globe, Receipt, Tag, Play, Pause, Volume2, VolumeX,
-  ChevronLeft, ChevronRight,
+  ChevronLeft, ChevronRight, ShoppingCart, BadgePercent, Coins,
 } from 'lucide-react'
 
 // ─── Slide content ────────────────────────────────────────────────────────
@@ -126,6 +126,40 @@ const SLIDES = [
     durationMs: 32000,
   },
   {
+    n: '5b',
+    accent: 'lime',
+    icon: <ShoppingCart size={26} className="text-lime-700" />,
+    title: 'Smashlist — your list writes itself',
+    subtitle: 'Predictive shopping list',
+    bullets: [
+      ['Predicted from your receipts', "GetGuac learns what you rebuy and how often — milk every week, detergent every six weeks — and queues it up before you run out."],
+      ['Grouped by store', 'Items sort under the store you usually buy them from, with brand logos and an estimated price per item, so each trip plans itself.'],
+      ['Share it in one tap', 'Send the list to family over WhatsApp, text, or email — everyone shops from the same list.'],
+      ['Smash as you shop', 'Tap an item in the aisle to smash it off the list. Cart full, list clear, nothing forgotten.'],
+    ],
+    art: 'smashlist',
+    narration: "Now for the feature families end up fighting over — the Smashlist. Here's the problem with every shopping-list app ever made: you still have to write the list. GetGuac doesn't ask you to. Because it has already read your receipts, it knows what you buy and how often you buy it. Milk every week. Dog food every three weeks. Laundry detergent every six. So the Smashlist quietly fills itself with the things you're about to run out of — before you run out. Open it, and everything is grouped by the store you usually buy it from, with the brand logo and an estimated price next to each item, and a count of what's waiting at each store. Your Costco run and your grocery run basically plan themselves. Heading out? Share the list with your family in one tap — WhatsApp, text message, whatever you use — so everyone works from the same list. And in the aisle, when something lands in your cart, you smash it off the list. That part's more satisfying than it has any right to be.",
+    aiPeople: ['predictor'],
+    durationMs: 34000,
+  },
+  {
+    n: '5c',
+    accent: 'amber',
+    icon: <BadgePercent size={26} className="text-amber-700" />,
+    title: 'Steals — pay less for what you rebuy',
+    subtitle: 'Live price hunting',
+    bullets: [
+      ['Live shopping search', 'Steals runs a real, current shopping search across stores for the things you buy — today’s prices, not last month’s.'],
+      ['Starts from your receipts', 'Tap Find deals on any item you’ve bought — GetGuac already knows the exact brand and size from your receipt.'],
+      ['Dial in the specifics', 'Size, count, flavor — quick dropdowns make sure a 12-pack is compared against 12-packs, not a single can.'],
+      ['Instant when it matters', 'Popular searches are cached, so results often come back in a blink.'],
+    ],
+    art: 'steals',
+    narration: "And once the Smashlist tells you what you need, Steals makes sure you don't overpay for it. Steals is GetGuac's deal hunter. Pick anything you rebuy — your coffee, your protein powder, your dog's food — and Steals runs a live shopping search across the internet, lining up real prices from real stores, right now. Not last month's prices. Today's. It starts from your own receipts, so it already knows the exact brand and the exact size you buy. And you can dial in the specifics with quick dropdowns — size, count, flavor — so a twelve-pack gets compared against twelve-packs, not against a single can. Found a better price? That's a Steal. The savings go straight back into your pocket — and into your GuacMoney tally, which we'll get to in a moment. Stop hoping you got a good price. Know it.",
+    aiPeople: ['deals'],
+    durationMs: 32000,
+  },
+  {
     n: 6,
     accent: 'rose',
     icon: <ThumbsUp size={26} className="text-rose-700" />,
@@ -196,6 +230,23 @@ const SLIDES = [
     durationMs: 32000,
   },
   {
+    n: '6e',
+    accent: 'emerald',
+    icon: <Coins size={26} className="text-emerald-700" />,
+    title: 'GuacMoney — watch your wins add up',
+    subtitle: '1,000 GM = $1 of value',
+    bullets: [
+      ['Every receipt counts', 'Each receipt you capture adds 100 GuacMoney to your tally.'],
+      ['Savings become GuacMoney', 'Every dollar that stays in your pocket — refunds you claim in time, not-worth-it purchases you flag and cut — counts as 1,000 GM.'],
+      ['Referrals too', 'Invite a friend who joins and 1,000 GM lands on your tally.'],
+      ['A scoreboard, not a gimmick', 'GuacMoney measures real value: 1,000 GM represents $1 you kept. The money was always yours — GuacMoney just makes the wins visible.'],
+    ],
+    art: 'guacmoney',
+    narration: "Let's talk about GuacMoney — the scoreboard for every win GetGuac helps you land. Here's how it adds up. Every receipt you capture? One hundred GuacMoney. Every dollar that comes back to you or stays with you — a refund you claimed before the window closed, a not-worth-it purchase you flagged and cut from your life — one thousand GuacMoney per dollar. Invite a friend who joins? One thousand more. And here's the honest part — the part we're genuinely proud of. One thousand GuacMoney represents one dollar of real value. Not a coupon. Not a gift card you have to unlock. The money was yours all along — GetGuac just helped you keep it, and GuacMoney makes that visible. So when you watch the tally climb, you're literally watching your own good decisions pay off. It turns saving money — which usually feels like deprivation — into something that feels like winning. Because it is.",
+    aiPeople: ['tally'],
+    durationMs: 34000,
+  },
+  {
     n: 7,
     accent: 'emerald',
     icon: <ShieldCheck size={26} className="text-emerald-700" />,
@@ -236,7 +287,7 @@ const SLIDES = [
     accent: 'emerald',
     type: 'closing',
     title: 'Every receipt stays in your account.',
-    narration: "So here's the short version. GetGuac captures every receipt from camera, email, or statement. Guac-AI parses it in seconds. Duplicates collapse automatically. Categories assign themselves. Your dashboard reveals exactly where your money goes. Worth-It ratings turn it into smarter decisions. And your bank fees stop bleeding you. All while your data stays yours, locked behind row-level security, deletable any time. So... ready to take control? Tap Get Started, snap your first receipt, and watch your finances finally make sense. Welcome to GetGuac. Welcome to spending smarter.",
+    narration: "So here's the short version. GetGuac captures every receipt from camera, email, or statement. Guac-AI parses it in seconds. Duplicates collapse automatically. Categories assign themselves. Your dashboard reveals exactly where your money goes. Worth-It ratings turn it into smarter decisions. And your bank fees stop bleeding you. The Smashlist writes your next shopping list before you run out, Steals hunts down a better price on it, and GuacMoney keeps score of every dollar you keep. All while your data stays yours, locked behind row-level security, deletable any time. So... ready to take control? Tap Get Started, snap your first receipt, and watch your finances finally make sense. Welcome to GetGuac. Welcome to spending smarter.",
     durationMs: 26000,
   },
 ]
@@ -625,6 +676,9 @@ const SHOTS = {
   'Duplicates get caught': '/showcase/receipts.png',
   'Auto-categorize': '/showcase/reports.png',
   'See where it all went': '/showcase/dashboard.png',
+  'Smashlist — your list writes itself': '/showcase/shopping.png',
+  'Steals — pay less for what you rebuy': '/showcase/steals.png',
+  'GuacMoney — watch your wins add up': '/showcase/dashboard.png',
   'Worth it?': '/showcase/bites.png',
   'Returns & refunds, finally tracked': '/showcase/returns.png',
   'GuacWizard — magically protects your money': '/showcase/guacwizard.png',
@@ -667,6 +721,9 @@ function AiPeopleStrip({ people }) {
     wizard:    { emoji: '🧙', label: 'GuacWizard coach' },
     shield:    { emoji: '🛡️', label: 'Privacy guard' },
     car:       { emoji: '🚗', label: 'Trip logger' },
+    predictor: { emoji: '🛒', label: 'Smashlist predictor' },
+    deals:     { emoji: '💸', label: 'Steals hunter' },
+    tally:     { emoji: '💰', label: 'GuacMoney tally' },
   }
   return (
     <div className="mt-5 flex gap-3 flex-wrap items-center">
@@ -702,6 +759,9 @@ function Art({ name }) {
     case 'miles':      return <ArtMiles />
     case 'security':   return <ArtSecurity />
     case 'data':       return <ArtData />
+    case 'smashlist':  return <ArtSmashlist />
+    case 'steals':     return <ArtSteals />
+    case 'guacmoney':  return <ArtGuacMoney />
     default: return null
   }
 }
@@ -1067,6 +1127,112 @@ function ArtWorthIt() {
         <text x="88"  y="12" fontSize="16" opacity="0.4">⭐</text>
       </g>
       <text x="100" y="160" fontSize="10" fontWeight="700" fill="#9f1239" textAnchor="middle">Worth-It · per receipt</text>
+    </svg>
+  )
+}
+
+function ArtSmashlist() {
+  return (
+    <svg viewBox="0 0 200 180" width="220" height="200" aria-hidden="true">
+      <defs><linearGradient id="smash-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#ecfccb" /><stop offset="1" stopColor="#a3e635" /></linearGradient></defs>
+      <rect width="200" height="180" rx="20" fill="url(#smash-bg)" />
+      {/* list card */}
+      <g transform="translate(35 22)">
+        <rect x="0" y="0" width="130" height="126" rx="10" fill="#fff" stroke="#65a30d" strokeWidth="2" />
+        {/* store header */}
+        <rect x="8" y="8" width="114" height="18" rx="5" fill="#f7fee7" />
+        <circle cx="19" cy="17" r="6" fill="#65a30d" />
+        <text x="19" y="20" fontSize="8" fontWeight="800" fill="#fff" textAnchor="middle">K</text>
+        <text x="32" y="20" fontSize="9" fontWeight="800" fill="#3f6212">KROGER · 3 items</text>
+        {/* item rows */}
+        <g transform="translate(12 36)">
+          {/* smashed item */}
+          <rect x="0" y="0" width="12" height="12" rx="3" fill="#65a30d" />
+          <path d="M2.5 6 L5 8.5 L9.5 3.5" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+          <text x="20" y="10" fontSize="9" fontWeight="600" fill="#9ca3af">Milk 2%</text>
+          <line x1="18" y1="7" x2="60" y2="7" stroke="#9ca3af" strokeWidth="1.5" />
+          <text x="106" y="10" fontSize="8" fontWeight="700" fill="#9ca3af" textAnchor="end">est. $4</text>
+        </g>
+        <g transform="translate(12 58)">
+          <rect x="0" y="0" width="12" height="12" rx="3" fill="#fff" stroke="#a3a3a3" strokeWidth="1.5" />
+          <text x="20" y="10" fontSize="9" fontWeight="700" fill="#1f2937">Dog food</text>
+          <text x="106" y="10" fontSize="8" fontWeight="700" fill="#4d7c0f" textAnchor="end">est. $23</text>
+        </g>
+        <g transform="translate(12 80)">
+          <rect x="0" y="0" width="12" height="12" rx="3" fill="#fff" stroke="#a3a3a3" strokeWidth="1.5" />
+          <text x="20" y="10" fontSize="9" fontWeight="700" fill="#1f2937">Detergent</text>
+          <text x="106" y="10" fontSize="8" fontWeight="700" fill="#4d7c0f" textAnchor="end">est. $12</text>
+        </g>
+        {/* predicted badge */}
+        <g transform="translate(8 102)">
+          <rect x="0" y="0" width="114" height="16" rx="8" fill="#ecfccb" stroke="#a3e635" />
+          <text x="57" y="11" fontSize="8" fontWeight="800" fill="#3f6212" textAnchor="middle">✨ predicted — due this week</text>
+        </g>
+      </g>
+      <text x="100" y="168" fontSize="10" fontWeight="700" fill="#3f6212" textAnchor="middle">it fills itself, from your receipts</text>
+    </svg>
+  )
+}
+
+function ArtSteals() {
+  return (
+    <svg viewBox="0 0 200 180" width="220" height="200" aria-hidden="true">
+      <defs><linearGradient id="steal-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#fef3c7" /><stop offset="1" stopColor="#fbbf24" /></linearGradient></defs>
+      <rect width="200" height="180" rx="20" fill="url(#steal-bg)" />
+      {/* old price tag */}
+      <g transform="translate(24 40) rotate(-8)">
+        <path d="M14 0 H64 a8 8 0 0 1 8 8 V40 a8 8 0 0 1 -8 8 H14 L0 24 Z" fill="#fff" stroke="#b45309" strokeWidth="2" />
+        <circle cx="16" cy="24" r="4" fill="#fde68a" stroke="#b45309" strokeWidth="1.5" />
+        <text x="44" y="29" fontSize="13" fontWeight="800" fill="#6b7280" textAnchor="middle">$8.99</text>
+        <line x1="26" y1="24" x2="64" y2="24" stroke="#dc2626" strokeWidth="2.5" strokeLinecap="round" />
+      </g>
+      {/* new price tag */}
+      <g transform="translate(102 66) rotate(6)">
+        <path d="M14 0 H70 a8 8 0 0 1 8 8 V44 a8 8 0 0 1 -8 8 H14 L0 26 Z" fill="#15803d" />
+        <circle cx="16" cy="26" r="4" fill="#ecfdf5" />
+        <text x="48" y="33" fontSize="15" fontWeight="900" fill="#fff" textAnchor="middle">$6.49</text>
+      </g>
+      {/* STEAL badge */}
+      <g transform="translate(124 36)">
+        <rect x="0" y="0" width="52" height="20" rx="10" fill="#dc2626" />
+        <text x="26" y="14" fontSize="10" fontWeight="900" fill="#fff" textAnchor="middle">STEAL</text>
+      </g>
+      {/* magnifier */}
+      <g transform="translate(40 108)">
+        <circle cx="20" cy="20" r="16" fill="#fff" fillOpacity="0.85" stroke="#92400e" strokeWidth="4" />
+        <line x1="32" y1="32" x2="46" y2="46" stroke="#92400e" strokeWidth="6" strokeLinecap="round" />
+      </g>
+      <text x="100" y="170" fontSize="10" fontWeight="700" fill="#92400e" textAnchor="middle">same item · better price</text>
+    </svg>
+  )
+}
+
+function ArtGuacMoney() {
+  return (
+    <svg viewBox="0 0 200 180" width="220" height="200" aria-hidden="true">
+      <defs><linearGradient id="gm-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#d1fae5" /><stop offset="1" stopColor="#fde68a" /></linearGradient></defs>
+      <rect width="200" height="180" rx="20" fill="url(#gm-bg)" />
+      {/* coin */}
+      <g transform="translate(58 26)">
+        <circle cx="42" cy="42" r="40" fill="#fbbf24" stroke="#b45309" strokeWidth="3" />
+        <circle cx="42" cy="42" r="31" fill="#fde68a" stroke="#b45309" strokeWidth="1.5" />
+        <text x="42" y="55" fontSize="34" textAnchor="middle">🥑</text>
+      </g>
+      {/* earning chips */}
+      <g transform="translate(14 114)">
+        <rect x="0" y="0" width="82" height="18" rx="9" fill="#fff" stroke="#15803d" strokeWidth="1.5" />
+        <text x="41" y="13" fontSize="8.5" fontWeight="800" fill="#065f46" textAnchor="middle">+100 · receipt</text>
+      </g>
+      <g transform="translate(104 114)">
+        <rect x="0" y="0" width="82" height="18" rx="9" fill="#fff" stroke="#b45309" strokeWidth="1.5" />
+        <text x="41" y="13" fontSize="8.5" fontWeight="800" fill="#92400e" textAnchor="middle">+1,000 · $1 saved</text>
+      </g>
+      {/* tally */}
+      <g transform="translate(40 140)">
+        <rect x="0" y="0" width="120" height="20" rx="10" fill="#064e3b" />
+        <text x="60" y="14" fontSize="10" fontWeight="900" fill="#fde68a" textAnchor="middle">12,400 GM = $12.40</text>
+      </g>
+      <text x="100" y="174" fontSize="10" fontWeight="700" fill="#065f46" textAnchor="middle">1,000 GM = $1 of value you kept</text>
     </svg>
   )
 }

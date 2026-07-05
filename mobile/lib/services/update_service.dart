@@ -56,9 +56,11 @@ class UpdateService {
 
   /// Fetches latest.json. Returns null if there's no newer version than what's
   /// running, if the check failed (offline, 404, JSON parse error — never
-  /// throws), or always on Play builds.
+  /// throws), or always on Play builds and on non-Android platforms (the
+  /// manifest points at an APK — meaningless on iOS, and Apple prohibits
+  /// self-updating anyway).
   static Future<AvailableUpdate?> checkForUpdate() async {
-    if (_isPlayBuild) return null;
+    if (_isPlayBuild || !Platform.isAndroid) return null;
     try {
       final info = await PackageInfo.fromPlatform();
       final currentTag = 'v${info.version}';  // pubspec is "0.3.5+97" → "v0.3.5+97"

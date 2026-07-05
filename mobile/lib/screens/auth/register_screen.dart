@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import '../../widgets/guac_mascot.dart';
+import '../../widgets/turnstile_check.dart';
 import '../../services/mascot_event_bus.dart';
 import '../../services/referral_apply_service.dart';
 import '../../theme/gg_design.dart';
@@ -162,6 +163,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (RegExp(r'^[A-Z0-9]{6}$').hasMatch(ref)) {
       await ReferralApplyService.stash(ref);
     }
+    // CAPTCHA — the server rejects token-less signups, so run the same
+    // Turnstile check the website uses (tiny webview, usually instant).
+    final captchaToken = await runTurnstileCheck(context);
+    if (captchaToken == null || captchaToken.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          backgroundColor: Color(0xFFb91c1c),
+          content: Text('Security check not completed — please try again.')));
+      }
+      return;
+    }
+    if (!mounted) return;
     setState(() => _loading = true);
     try {
       // Route through the web API so the username is claimed atomically and
@@ -178,6 +191,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           'birth_date': _ctrls['birthDate']!.text,
           'age': _ctrls['age']!.text,
           'mobile_no': _ctrls['mobile']!.text.trim(),
+          'turnstile_token': captchaToken,
         }),
       );
       final body = json.decode(res.body) as Map<String, dynamic>;

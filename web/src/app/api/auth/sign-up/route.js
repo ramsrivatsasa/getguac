@@ -107,6 +107,24 @@ export async function POST(request) {
       return Response.json({ error: pwCheck.error, status: 'weak_password' }, { status: 400 })
     }
 
+    // ── Age gate: adults (18+) only. Enforced server-side so the mobile app
+    //    and any direct API caller hit the same wall as the web form. ──
+    const birthRaw = String(body.birth_date || '').trim()
+    const dob = birthRaw ? new Date(birthRaw) : null
+    if (!dob || Number.isNaN(dob.getTime())) {
+      return Response.json({ error: 'Please enter your birth date — GetGuac is for adults 18 and older.', status: 'birth_date_required' }, { status: 400 })
+    }
+    const today = new Date()
+    let years = today.getFullYear() - dob.getFullYear()
+    const mDiff = today.getMonth() - dob.getMonth()
+    if (mDiff < 0 || (mDiff === 0 && today.getDate() < dob.getDate())) years--
+    if (years < 18) {
+      return Response.json({ error: 'You must be at least 18 years old to create a GetGuac account.', status: 'underage' }, { status: 400 })
+    }
+    if (years > 120) {
+      return Response.json({ error: 'That birth date doesn’t look right — please check it.', status: 'invalid_birth_date' }, { status: 400 })
+    }
+
     const sbAdmin = admin()
 
     // ── Pre-flight: username availability ──

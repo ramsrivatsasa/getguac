@@ -63,7 +63,6 @@ export default async function Home() {
 
   return (
     <div style={{ fontFamily: 'var(--font-jakarta), system-ui, sans-serif', color: '#1A2E22', background: '#fff', overflowX: 'hidden' }}>
-      <ReferralCapture />
 
       {/* NAV */}
       <header style={{ position: 'sticky', top: 0, zIndex: 50, backdropFilter: 'blur(12px)', background: 'rgba(255,255,255,0.88)', borderBottom: '1px solid rgba(20,83,45,0.08)' }}>
@@ -87,6 +86,10 @@ export default async function Home() {
       </header>
 
       <main>
+        {/* Invited-friend welcome strip — visible only when the visitor
+            arrived via a ?ref=<CODE> referral link. Tells them exactly
+            what to do next (Get started) + links /how-it-works. */}
+        <ReferralCapture banner />
         {/* HERO */}
         <section className="gg-hero" style={{ maxWidth: 1180, margin: '0 auto', padding: '72px 28px 56px', display: 'grid', gridTemplateColumns: '1.05fr 0.95fr', gap: 56, alignItems: 'center' }}>
           <div>

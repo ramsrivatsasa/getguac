@@ -137,6 +137,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
       return;
     }
+    // Age gate — adults (18+) only. The API enforces this too; checking here
+    // gives instant red feedback without a round trip.
+    final bd = DateTime.tryParse(_ctrls['birthDate']!.text.trim());
+    if (bd == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        backgroundColor: Color(0xFFb91c1c),
+        content: Text('Please enter your birth date — GetGuac is for adults 18 and older.')));
+      return;
+    }
+    final today = DateTime.now();
+    var years = today.year - bd.year;
+    if (today.month < bd.month || (today.month == bd.month && today.day < bd.day)) years--;
+    if (years < 18) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        backgroundColor: Color(0xFFb91c1c),
+        content: Text('You must be at least 18 years old to create a GetGuac account.')));
+      return;
+    }
+
     // Stash an optional referral code so ReferralApplyService applies it once
     // the user signs in (mirrors the web register's referral field).
     final ref = _ctrls['referral']!.text.toUpperCase().trim();

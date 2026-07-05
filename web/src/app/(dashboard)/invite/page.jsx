@@ -100,7 +100,7 @@ export default function InvitePage() {
       if (typeof navigator !== 'undefined' && navigator.share) {
         await navigator.share({
           title: 'Join me on GetGuac',
-          text: `I'm tracking my spending with GetGuac. Use my code ${code} and we both get ${REWARD_DAYS} Smash days.`,
+          text: `I'm tracking my spending with GetGuac. See how it works: https://getguac.app/how-it-works — then tap "Get started" and sign up with my code ${code}, and we both get ${REWARD_DAYS} Smash days.`,
           url: shareUrl,
         })
       } else {

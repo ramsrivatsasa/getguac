@@ -63,6 +63,9 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const [acceptTerms, setAcceptTerms] = useState(false)
+  // In-page error, rendered as a red banner above the submit button —
+  // more visible than a transient toast, per product ask.
+  const [errorMsg, setErrorMsg] = useState('')
   // Referral code (optional). Synced with the pending_referral_code stash so a
   // manually typed code applies exactly like one captured from a ?ref= link.
   const [referralCode, setReferralCode] = useState('')
@@ -134,11 +137,16 @@ export default function RegisterPage() {
     return () => clearTimeout(debounceRef.current)
   }, [form.username])
 
+  const underage = form.age !== '' && Number(form.age) < 18
+
   async function handleSubmit(e) {
     e.preventDefault()
-    if (form.password !== form.confirmPassword) { toast.error('Passwords do not match'); return }
-    if (usernameStatus !== 'available') { toast.error('Pick an available username first'); return }
-    if (!acceptTerms) { toast.error('Please accept the Terms & Privacy Policy'); return }
+    setErrorMsg('')
+    if (form.password !== form.confirmPassword) { setErrorMsg('Passwords do not match.'); return }
+    if (usernameStatus !== 'available') { setErrorMsg('Pick an available username first.'); return }
+    if (!form.birthDate) { setErrorMsg('Please enter your birth date — GetGuac is for adults 18 and older.'); return }
+    if (underage) { setErrorMsg('You must be at least 18 years old to create a GetGuac account.'); return }
+    if (!acceptTerms) { setErrorMsg('Please accept the Terms & Privacy Policy.'); return }
     setLoading(true)
     try {
       const res = await fetch('/api/auth/sign-up', {
@@ -161,7 +169,7 @@ export default function RegisterPage() {
       })
       const data = await res.json()
       if (!res.ok) {
-        toast.error(data.error || 'Sign-up failed')
+        setErrorMsg(data.error || 'Sign-up failed')
         setLoading(false)
         return
       }
@@ -173,7 +181,7 @@ export default function RegisterPage() {
         router.push('/login')
       }
     } catch (err) {
-      toast.error(err.message || 'Sign-up failed')
+      setErrorMsg(err.message || 'Sign-up failed')
     } finally {
       setLoading(false)
     }
@@ -407,11 +415,18 @@ export default function RegisterPage() {
                 <label className="label">Birth Date</label>
                 <input
                   type="date"
-                  className="input"
+                  required
+                  aria-invalid={underage}
+                  className={`input ${underage ? 'border-rose-400 ring-2 ring-rose-200 focus:border-rose-400' : ''}`}
                   max={new Date().toISOString().slice(0, 10)}
                   value={form.birthDate}
                   onChange={s('birthDate')}
                 />
+                {underage && (
+                  <p className="text-[11px] text-rose-600 font-semibold mt-1 flex items-center gap-1">
+                    <X size={12} /> You must be 18 or older to join GetGuac
+                  </p>
+                )}
               </div>
               <div>
                 <label className="label">Age <span className="text-gray-400 normal-case font-normal">(auto)</span></label>
@@ -521,9 +536,17 @@ export default function RegisterPage() {
               </>
             )}
 
+            {/* In-page error — red, persistent, right where the user is looking. */}
+            {errorMsg && (
+              <div role="alert" className="rounded-xl bg-rose-50 border-2 border-rose-300 px-3 py-2.5 text-sm font-semibold text-rose-700 flex items-start gap-2">
+                <AlertCircle size={16} className="mt-0.5 flex-shrink-0" />
+                <span>{errorMsg}</span>
+              </div>
+            )}
+
             <button
               type="submit"
-              disabled={loading || usernameStatus !== 'available' || !acceptTerms || (TURNSTILE_SITE_KEY && !turnstileToken)}
+              disabled={loading || usernameStatus !== 'available' || !acceptTerms || underage || (TURNSTILE_SITE_KEY && !turnstileToken)}
               className="btn-primary w-full justify-center py-2.5 mt-1"
             >
               {loading ? 'Creating account…' : 'Create my free account'}

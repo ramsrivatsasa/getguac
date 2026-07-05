@@ -1121,27 +1121,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ]);
   }
 
-  // One horizontal spending bar: store name · rounded slate track
-  // (length ∝ spend) · dollar amount. Tapping opens that store's receipts.
-  // Auto-detected "heat" limit: stores past 40% of the top spender use a
-  // darker slate so the biggest chunks of spend stand out. Neutral, no green.
-  // Scales with the window (swap for a fixed dollar value here).
-  Widget _storeBar(_StoreSpend s, double maxAmount, int index) {
+  // One horizontal spending bar: store name · rounded track (length ∝ spend)
+  // · dollar amount. Tapping opens that store's receipts.
+  // Heat coloring: the bar's color interpolates green → amber → red by the
+  // store's share of the top spend, so cheap stores read cool and the biggest
+  // expenses read hot at a glance. Mirrors the web dashboard's bars.
+  Widget _storeBar(_StoreSpend s, double maxAmount) {
     final frac = maxAmount > 0 ? (s.amount / maxAmount).clamp(0.08, 1.0) : 0.0;
-    // Multicolor bars — each store gets its own vivid gradient from the
-    // palette, cycled by rank so the chart reads at a glance (biggest spender
-    // leads with the richest green). Replaces the flat slate bars.
-    const palette = <List<Color>>[
-      [Color(0xFF16a34a), Color(0xFF86efac)], // green
-      [Color(0xFF0ea5e9), Color(0xFF67e8f9)], // sky
-      [Color(0xFF22c55e), Color(0xFFec4899)], // green → pink
-      [Color(0xFF8b5cf6), Color(0xFFc4b5fd)], // violet
-      [Color(0xFFf59e0b), Color(0xFFfcd34d)], // amber
-      [Color(0xFF14b8a6), Color(0xFF5eead4)], // teal
-      [Color(0xFFef4444), Color(0xFFfca5a5)], // red
-      [Color(0xFFec4899), Color(0xFFf9a8d4)], // pink
-    ];
-    final grad = palette[index % palette.length];
+    final heat = maxAmount > 0 ? (s.amount / maxAmount).clamp(0.0, 1.0) : 0.0;
+    const cool = Color(0xFF16a34a); // green-600 — low spend
+    const mid  = Color(0xFFf59e0b); // amber-500 — midway
+    const hot  = Color(0xFFdc2626); // red-600 — top spender
+    final barColor = heat < 0.5
+        ? Color.lerp(cool, mid, heat * 2)!
+        : Color.lerp(mid, hot, (heat - 0.5) * 2)!;
+    // Subtle same-hue gradient (lighter → full) keeps the pill's depth.
+    final grad = [Color.lerp(barColor, Colors.white, 0.35)!, barColor];
     return InkWell(
       onTap: () => context.push(_receiptsDeepLink(store: s.name)),
       borderRadius: BorderRadius.circular(10),
@@ -1218,7 +1213,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           // Horizontal gradient bars (store · bar · amount) — cleaner than the
           // old vertical fl_chart. Each row taps into that store's receipts.
           Column(children: [
-            for (int i = 0; i < topData.length; i++) _storeBar(topData[i], topData.first.amount, i),
+            for (final s in topData) _storeBar(s, topData.first.amount),
           ]),
       ]),
     );

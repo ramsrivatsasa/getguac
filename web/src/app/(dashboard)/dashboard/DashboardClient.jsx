@@ -32,9 +32,9 @@ import mascotBus from '../../../lib/mascotEventBus'
 import { CountUp, FadeUpStagger } from '../../../components/animated'
 const PERIODS = ['daily', 'weekly', 'monthly', 'yearly']
 // Spending-by-Store bars sit on a pale gray track; bar length encodes each
-// store's share of spend. Bars below the auto "heat" limit use a light slate
-// fill (#94A3B8); bars at/above it (top spenders) switch to a darker slate
-// (#475569) so the biggest chunks of spend stand out — neutral, no green.
+// store's share of spend. Bar COLOR is a heat scale — green → amber → red
+// with that share — so cheap stores read cool and the biggest expenses read
+// hot at a glance. Mirrors the mobile dashboard's _storeBar.
 
 // Dropdown options for "how many <period>s back to include"
 const COUNT_OPTIONS = {
@@ -306,21 +306,22 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
               No transactions for this period
             </div>
           ) : (
-            // Horizontal bars: each store's solid brand-green bar is sized to
-            // its share of the top spender's total. Click → that store's
-            // receipts (same deep-link as before).
+            // Horizontal bars sized to each store's share of the top
+            // spender's total. Heat coloring: bar color interpolates
+            // green → amber → red with that share, so cheap stores read
+            // cool and the biggest expenses read hot at a glance.
+            // Click → that store's receipts (same deep-link as before).
             <div className="space-y-3 mt-1">
               {(() => {
                 const max = Math.max(...chartData.map(d => d.amount)) || 1
-                // Auto-detected "heat" limit: stores past 40% of the top
-                // spender get a green→pink gradient bar so the biggest chunks
-                // of spend stand out. Scales with the window; swap to a fixed
-                // dollar value here (e.g. `const heatLimit = 300`) if desired.
-                const heatLimit = max * 0.4
+                const heatColor = (t) => {
+                  const mix = (c1, c2, u) => `rgb(${c1.map((v, k) => Math.round(v + (c2[k] - v) * u)).join(',')})`
+                  const green = [22, 163, 74], amber = [245, 158, 11], red = [220, 38, 38]
+                  return t < 0.5 ? mix(green, amber, t * 2) : mix(amber, red, (t - 0.5) * 2)
+                }
                 return chartData.map((d, i) => {
                   const t = d.amount / max
                   const pct = Math.max(5, t * 100)
-                  const hot = d.amount >= heatLimit
                   return (
                     <button
                       key={i}
@@ -333,7 +334,7 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
                     >
                       <span className="w-28 shrink-0 text-left text-[13px] font-semibold text-guac-ink truncate group-hover:text-gray-900 transition-colors">{d.fullName}</span>
                       <span className="flex-1 h-3 rounded-full bg-gray-100 overflow-hidden">
-                        <span className="block h-full rounded-full transition-[width] duration-500" style={{ width: pct + '%', background: hot ? '#475569' : '#94A3B8' }} />
+                        <span className="block h-full rounded-full transition-[width] duration-500" style={{ width: pct + '%', background: heatColor(t) }} />
                       </span>
                       <span className="w-20 shrink-0 text-right text-[13px] gg-num font-extrabold text-guac-ink">${Math.round(d.amount).toLocaleString('en-US')}</span>
                     </button>

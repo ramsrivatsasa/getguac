@@ -80,6 +80,10 @@ export default function RegisterPage() {
   // Server-side verify treats a missing token as a failed CAPTCHA
   // (unless TURNSTILE_SECRET_KEY isn't set, in which case it skips).
   const [turnstileToken, setTurnstileToken] = useState('')
+  // True when the Turnstile script itself failed to load (ad-blocker,
+  // network). Without this the submit button just sits disabled with no
+  // explanation — the exact bug we shipped when CSP blocked the script.
+  const [turnstileBlocked, setTurnstileBlocked] = useState(false)
 
   // Auto-derive age from birth date so the two fields can't disagree.
   // Years between today and birthDate, rounded down at the month/day boundary.
@@ -512,7 +516,14 @@ export default function RegisterPage() {
                 local-dev signups still work. */}
             {TURNSTILE_SITE_KEY && (
               <>
-                <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" strategy="lazyOnload" />
+                {/* afterInteractive (not lazyOnload): the CAPTCHA gates the
+                    submit button, so it must load as early as possible.
+                    onError → visible feedback instead of a dead button. */}
+                <Script
+                  src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+                  strategy="afterInteractive"
+                  onError={() => setTurnstileBlocked(true)}
+                />
                 <div
                   className="cf-turnstile flex justify-center"
                   data-sitekey={TURNSTILE_SITE_KEY}
@@ -520,7 +531,17 @@ export default function RegisterPage() {
                   data-error-callback="onTurnstileError"
                   data-expired-callback="onTurnstileExpired"
                 />
-                <Script id="turnstile-callbacks" strategy="lazyOnload">
+                {turnstileBlocked && !turnstileToken && (
+                  <div className="rounded-xl bg-amber-50 border-2 border-amber-300 px-3 py-2.5 text-xs font-semibold text-amber-800 flex items-start gap-2">
+                    <AlertCircle size={14} className="mt-0.5 flex-shrink-0" />
+                    <span>
+                      The security check couldn&apos;t load — an ad-blocker or network filter may be
+                      blocking <span className="font-mono">challenges.cloudflare.com</span>. Allow it (or pause the
+                      blocker for getguac.app) and reload this page to finish signing up.
+                    </span>
+                  </div>
+                )}
+                <Script id="turnstile-callbacks" strategy="afterInteractive">
                   {`
                     window.onTurnstileSuccess = function(token) {
                       window.dispatchEvent(new CustomEvent('turnstile-token', { detail: token }))

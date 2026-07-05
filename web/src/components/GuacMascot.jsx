@@ -1,4 +1,5 @@
 'use client'
+import { useId } from 'react'
 
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  🔒 DO NOT CHANGE — the GetGuac brand mascot SVG.                ║
@@ -39,6 +40,13 @@
 // drawing is preserved below as GuacMascotLegacy (revert = make it default).
 export default function GuacMascot({ expression = 'happy', size = 140, className = '' }) {
   const laying = expression === 'sleeping' // lie the avocado on its side
+  // Gradient ids must be unique PER INSTANCE. Pages often render two mascots
+  // (e.g. auth pages: desktop brand panel + mobile header, one always
+  // display:none). url(#id) resolves to the FIRST id in the DOM, and Chromium
+  // won't paint gradients that live inside a display:none subtree — so the
+  // visible mascot's body/flesh/pit rendered invisible on mobile. Scoping the
+  // ids makes every mascot self-contained. Artwork is unchanged.
+  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '')
   return (
     <svg
       viewBox={laying ? '-35 35 290 220' : '0 0 220 290'}
@@ -48,9 +56,9 @@ export default function GuacMascot({ expression = 'happy', size = 140, className
       aria-hidden="true"
     >
       <defs>
-        <radialGradient id="gmBody" cx="35%" cy="30%" r="80%"><stop offset="0%" stopColor="#10b981" /><stop offset="100%" stopColor="#064e3b" /></radialGradient>
-        <radialGradient id="gmFlesh" cx="50%" cy="44%" r="68%"><stop offset="0%" stopColor="#f6ed8a" /><stop offset="38%" stopColor="#e7ec8e" /><stop offset="72%" stopColor="#b4d35f" /><stop offset="100%" stopColor="#84cc16" /></radialGradient>
-        <radialGradient id="gmPit" cx="38%" cy="34%" r="78%"><stop offset="0%" stopColor="#dca838" /><stop offset="48%" stopColor="#a8590a" /><stop offset="100%" stopColor="#54260c" /></radialGradient>
+        <radialGradient id={`gmBody-${uid}`} cx="35%" cy="30%" r="80%"><stop offset="0%" stopColor="#10b981" /><stop offset="100%" stopColor="#064e3b" /></radialGradient>
+        <radialGradient id={`gmFlesh-${uid}`} cx="50%" cy="44%" r="68%"><stop offset="0%" stopColor="#f6ed8a" /><stop offset="38%" stopColor="#e7ec8e" /><stop offset="72%" stopColor="#b4d35f" /><stop offset="100%" stopColor="#84cc16" /></radialGradient>
+        <radialGradient id={`gmPit-${uid}`} cx="38%" cy="34%" r="78%"><stop offset="0%" stopColor="#dca838" /><stop offset="48%" stopColor="#a8590a" /><stop offset="100%" stopColor="#54260c" /></radialGradient>
       </defs>
       <g transform={laying ? 'rotate(-90 110 145)' : ''}>
         {/* limbs / held props BEHIND the body */}
@@ -60,10 +68,10 @@ export default function GuacMascot({ expression = 'happy', size = 140, className
         <path d="M 109 41 C 99 27, 80 24, 71 33 C 78 45, 98 47, 109 41 Z" fill="#5cbf6f" />
         <path d="M 105 41 Q 88 38, 73 33" stroke="#3f9a52" strokeWidth="1.4" fill="none" opacity="0.7" />
         {/* body + flesh + seed */}
-        <path d="M 110 42 C 84 42, 76 58, 74 82 C 72 103, 62 118, 52 142.2 C 38 172.6, 40 208.7, 74 231.5 C 92 246.7, 128 246.7, 146 231.5 C 180 208.7, 182 172.6, 168 142.2 C 158 118, 148 103, 146 82 C 144 58, 136 42, 110 42 Z" fill="url(#gmBody)" />
+        <path d="M 110 42 C 84 42, 76 58, 74 82 C 72 103, 62 118, 52 142.2 C 38 172.6, 40 208.7, 74 231.5 C 92 246.7, 128 246.7, 146 231.5 C 180 208.7, 182 172.6, 168 142.2 C 158 118, 148 103, 146 82 C 144 58, 136 42, 110 42 Z" fill={`url(#gmBody-${uid})`} />
         <path d="M 78 70 C 70 96, 62 124, 58 152" stroke="white" strokeWidth="6" strokeLinecap="round" fill="none" opacity="0.16" />
-        <path d="M 110 52 C 87 52, 80 66, 78 88 C 76 107, 66 120.5, 57.8 142.7 C 45.2 170.1, 47 202.6, 77.6 223.3 C 93.8 236.9, 126.2 236.9, 142.4 223.3 C 173 202.6, 174.8 170.1, 162.2 142.7 C 154 120.5, 144 107, 142 88 C 140 66, 133 52, 110 52 Z" fill="url(#gmFlesh)" />
-        <ellipse cx="110" cy="178" rx="38" ry="40" fill="url(#gmPit)" />
+        <path d="M 110 52 C 87 52, 80 66, 78 88 C 76 107, 66 120.5, 57.8 142.7 C 45.2 170.1, 47 202.6, 77.6 223.3 C 93.8 236.9, 126.2 236.9, 142.4 223.3 C 173 202.6, 174.8 170.1, 162.2 142.7 C 154 120.5, 144 107, 142 88 C 140 66, 133 52, 110 52 Z" fill={`url(#gmFlesh-${uid})`} />
+        <ellipse cx="110" cy="178" rx="38" ry="40" fill={`url(#gmPit-${uid})`} />
         <ellipse cx="96" cy="166" rx="9" ry="5" fill="#f3e0ad" opacity="0.32" />
         {/* cheeks */}
         <circle cx="75" cy="106" r="5.5" fill="#fb7185" opacity="0.5" />

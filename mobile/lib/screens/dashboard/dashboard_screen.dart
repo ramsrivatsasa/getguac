@@ -101,9 +101,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
     TimeframeStore.notifier.addListener(_onTimeframeChanged);
     // Dashboard needs FULL history for cross-period analytics
     // (year-over-year totals, month-by-month bars). The list-screen
-    // default (1-month, 10-cap) is too narrow.
-    context.read<ReceiptProvider>().loadReceipts(period: ReceiptPeriod.all);
-    context.read<RewardProvider>().loadRewards();
+    // default (1-month, 10-cap) is too narrow. Deferred one frame:
+    // loadReceipts notifies synchronously, which is illegal while this
+    // widget is still mounting (setState-during-build assertion).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<ReceiptProvider>().loadReceipts(period: ReceiptPeriod.all);
+      context.read<RewardProvider>().loadRewards();
+    });
   }
 
   // New Steals found overnight = seen_steals rows newer than the last time the

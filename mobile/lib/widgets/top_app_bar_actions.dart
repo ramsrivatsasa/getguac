@@ -55,6 +55,25 @@ PreferredSizeWidget ggAppBar(
   );
 }
 
+/// Icon + tiny caption, stacked — every app-bar action carries a small label
+/// so first-time users don't have to guess what each icon does. Sized to fit
+/// the standard 56px bar: 19px icon + 8px caption ≈ 30px tall.
+Widget barActionChild(IconData icon, String label, {Color? color}) {
+  return Column(
+    mainAxisSize: MainAxisSize.min,
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      Icon(icon, color: color, size: 19),
+      const SizedBox(height: 1),
+      Text(label,
+        maxLines: 1,
+        style: TextStyle(
+          fontSize: 8, fontWeight: FontWeight.w700, color: color,
+          height: 1.1, letterSpacing: 0)),
+    ],
+  );
+}
+
 /// Single Sign-Out icon button for the top-right of any screen that doesn't
 /// want the full action row — confirms, then signs out. Used so EVERY screen
 /// (native + WebView) carries Sign Out in the same top-right spot.
@@ -69,13 +88,13 @@ Widget signOutAction(BuildContext context, {bool whiteIcons = true, Color? color
   // Google Play's data-deletion policy and kept prominent per product ask.
   return Row(mainAxisSize: MainAxisSize.min, children: [
     IconButton(
-      icon: Icon(Icons.delete_forever_outlined, color: color, size: 21),
+      icon: barActionChild(Icons.delete_forever_outlined, 'Delete', color: color),
       tooltip: 'Delete my data',
       visualDensity: VisualDensity.compact,
       onPressed: () => confirmAndDeleteData(context),
     ),
     IconButton(
-      icon: Icon(Icons.logout_rounded, color: color, size: 21),
+      icon: barActionChild(Icons.logout_rounded, 'Sign out', color: color),
       tooltip: 'Sign out',
       visualDensity: VisualDensity.compact,
       onPressed: () => confirmAndSignOut(context),
@@ -94,7 +113,7 @@ List<Widget> topAppBarActions(BuildContext context, {bool whiteIcons = true}) {
     // overflows on narrow phones — which used to clip the LAST icon (Sign Out),
     // making it invisible on Receipts / Smashlist.
     PopupMenuButton<String>(
-      icon: Icon(Icons.more_vert, color: iconColor, size: 21),
+      icon: barActionChild(Icons.more_vert, 'More', color: iconColor),
       tooltip: 'More',
       onSelected: (v) {
         switch (v) {
@@ -166,7 +185,7 @@ class _StealsActionState extends State<_StealsAction> {
   Widget build(BuildContext context) {
     return Stack(clipBehavior: Clip.none, children: [
       IconButton(
-        icon: Icon(Icons.local_offer_rounded, color: widget.iconColor, size: 21),
+        icon: barActionChild(Icons.local_offer_rounded, 'Steals', color: widget.iconColor),
         tooltip: 'Steals',
         visualDensity: VisualDensity.compact,
         padding: EdgeInsets.zero,

@@ -688,7 +688,7 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
           ? const SizedBox(
               width: 18, height: 18,
               child: CircularProgressIndicator(strokeWidth: 2, color: ggInk))
-          : const Icon(Icons.cleaning_services_outlined, color: ggInk, size: 21),
+          : barActionChild(Icons.cleaning_services_outlined, 'Clean up', color: ggInk),
       onSelected: (v) {
         if (v == 'dedup') _findDuplicates();
         if (v == 'autocat') _autoCategorize();

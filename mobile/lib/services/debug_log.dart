@@ -114,7 +114,15 @@ class DebugLog {
   }
 
   static Future<UploadResult> uploadPending() async {
-    final session = Supabase.instance.client.auth.currentSession;
+    // Font-load / diag events fire from main() BEFORE Supabase.initialize()
+    // — touching Supabase.instance then throws an assertion. Skip the upload;
+    // the events stay buffered and go out on the first post-init call.
+    final Session? session;
+    try {
+      session = Supabase.instance.client.auth.currentSession;
+    } catch (_) {
+      return UploadResult(uploaded: 0, skipped: _buffer.length, error: 'supabase not initialized yet');
+    }
     if (session == null) {
       return UploadResult(uploaded: 0, skipped: _buffer.length, error: 'no session');
     }

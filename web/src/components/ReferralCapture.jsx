@@ -45,12 +45,23 @@ export default function ReferralCapture({ banner = false }) {
   if (!banner || !code) return null
   return (
     <div className="mx-auto max-w-3xl mt-4 px-4">
-      <div className="rounded-2xl bg-emerald-50 ring-1 ring-emerald-200 px-4 py-3 text-sm text-emerald-900 text-center space-y-1">
+      <div className="rounded-2xl bg-emerald-50 ring-1 ring-emerald-200 px-4 py-3 text-sm text-emerald-900 text-center space-y-2">
         <p>
           <span className="mr-1.5">🎁</span>
           <strong>You&apos;ve been invited to GetGuac!</strong>{' '}
-          Tap <strong>Get started</strong> to create your free account — invite code{' '}
+          Create your free account — invite code{' '}
           <span className="font-mono font-bold">{code}</span> applies automatically and you&apos;ll both earn Smash days.
+        </p>
+        {/* Real button, not just instructions — on phones the header's own
+            Get started hides behind the hamburger menu, so the invited
+            friend needs a tappable CTA right here in the banner. */}
+        <p>
+          <Link
+            href="/register"
+            className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 text-white font-bold px-5 py-2 hover:bg-emerald-700 transition shadow-sm"
+          >
+            Get started →
+          </Link>
         </p>
         <p>
           <Link href="/how-it-works" className="font-bold text-emerald-700 underline underline-offset-2">

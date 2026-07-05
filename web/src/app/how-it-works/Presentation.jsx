@@ -619,6 +619,23 @@ function ClosingSlide({ slide }) {
                 Download mobile app
               </Link>
             </div>
+            {/* Try-before-you-register: a shared demo account pre-loaded with
+                the John Doe data, so the curious can poke around the real app
+                without creating anything. */}
+            <div className="mt-5 rounded-2xl bg-white/10 ring-1 ring-white/25 px-4 py-3 max-w-xl">
+              <p className="text-sm font-bold text-white">
+                🔎 Want to try it first? Use the shared demo account:
+              </p>
+              <p className="mt-1.5 text-sm text-emerald-50">
+                Email <span className="font-mono font-bold bg-white/15 rounded px-1.5 py-0.5">demo@getguac.app</span>
+                {' '}· Password <span className="font-mono font-bold bg-white/15 rounded px-1.5 py-0.5">Guac!Demo2026</span>
+              </p>
+              <p className="mt-1.5 text-xs text-emerald-100/80">
+                It&apos;s a shared, pre-loaded account — look around, then{' '}
+                <Link href="/login" className="font-bold text-white underline underline-offset-2">sign in here</Link>{' '}
+                or create your own when you&apos;re ready.
+              </p>
+            </div>
           </div>
         </div>
       </div>

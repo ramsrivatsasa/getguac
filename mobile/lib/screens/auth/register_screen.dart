@@ -165,6 +165,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
     // CAPTCHA — the server rejects token-less signups, so run the same
     // Turnstile check the website uses (tiny webview, usually instant).
+    if (!mounted) return;
     final captchaToken = await runTurnstileCheck(context);
     if (captchaToken == null || captchaToken.isEmpty) {
       if (mounted) {

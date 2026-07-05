@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'guac_mascot.dart';
 import 'top_app_bar_actions.dart';
 import '../providers/receipt_provider.dart';
+import '../services/debug_log.dart';
 import '../theme/gg_design.dart';
 
 const _kWebBase = 'https://getguac.app';
@@ -90,11 +91,21 @@ class _WebAppScreenState extends State<WebAppScreen> with SingleTickerProviderSt
           }
         },
         onNavigationRequest: (req) {
+          // iOS (WKWebView) fires this for EVERY frame — iframes included —
+          // while Android only fires it for the main frame. Bouncing subframe
+          // loads (ad/consent/analytics iframes) to the system browser threw
+          // iOS users out of the app into random ad pages the moment an
+          // embedded page loaded. Only ever intercept MAIN-frame navigations.
+          if (!req.isMainFrame) return NavigationDecision.navigate;
           final host = Uri.tryParse(req.url)?.host ?? '';
           // Keep our own pages in the WebView; send everything else out.
           if (host.isEmpty || host.endsWith('getguac.app')) {
             return NavigationDecision.navigate;
           }
+          // Ground truth for the iOS "Steals opens an ad" report — record
+          // exactly which URL we bounced out and from which screen.
+          DebugLog.event('webview-nav', 'external open from ${widget.path}',
+              meta: {'url': req.url});
           _openExternal(req.url);
           return NavigationDecision.prevent;
         },

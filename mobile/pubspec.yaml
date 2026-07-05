@@ -132,6 +132,14 @@ flutter_launcher_icons:
   adaptive_icon_foreground: "assets/icon/icon-fg.png"
 
 flutter:
+  # Swift Package Manager off for this project: google_mobile_ads 6.x is
+  # CocoaPods-only and conflicts with SPM-capable plugins (webview_flutter)
+  # under Flutter 3.44+'s SPM-by-default. Remove once google_mobile_ads is
+  # upgraded to an SPM-adopting version (blocked today — newer versions demand
+  # a newer AGP than the Android build allows, see the google_mobile_ads note
+  # in dependencies).
+  config:
+    enable-swift-package-manager: false
   uses-material-design: true
   assets:
     - assets/mascot/

@@ -230,6 +230,140 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
     }
   }
 
+  // Manual add — the mobile Smashlist previously had NO way to create an
+  // item (the form was web-only; the empty state even pointed users at the
+  // website). FAB → bottom sheet → insert, mirroring web addToShoppingList()
+  // defaults: approved=false, frequency Monthly, order_date today.
+  Future<void> _addItemSheet() async {
+    final nameCtrl = TextEditingController();
+    final qtyCtrl = TextEditingController(text: '1');
+    final priceCtrl = TextEditingController();
+    String listName = _activeList;
+    _StoreLite? store;
+    bool saving = false;
+    final added = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => StatefulBuilder(builder: (ctx, setSheet) {
+        Future<void> save() async {
+          final name = nameCtrl.text.trim();
+          if (name.isEmpty) return;
+          setSheet(() => saving = true);
+          try {
+            await _sb.from('shopping_list').insert({
+              'user_id': _sb.auth.currentUser?.id,
+              'item_name': name,
+              'qty': int.tryParse(qtyCtrl.text.trim()) ?? 1,
+              'price': double.tryParse(priceCtrl.text.trim()),
+              'store_name_id': store?.id,
+              'frequency': 'Monthly',
+              'list_name': listName,
+              'order_date': DateTime.now().toIso8601String().substring(0, 10),
+              'approved': false,
+              'sent_to_store': false,
+            });
+            if (ctx.mounted) Navigator.pop(ctx, true);
+          } catch (e) {
+            setSheet(() => saving = false);
+            if (ctx.mounted) {
+              ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text('Could not add: $e')));
+            }
+          }
+        }
+
+        return Padding(
+          padding: EdgeInsets.fromLTRB(20, 16, 20, MediaQuery.of(ctx).viewInsets.bottom + 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text('Add to Smashlist', style: ggHeading(size: 18, color: ggInk)),
+              const SizedBox(height: 12),
+              TextField(
+                controller: nameCtrl,
+                autofocus: true,
+                textCapitalization: TextCapitalization.sentences,
+                decoration: const InputDecoration(labelText: 'Item', hintText: 'e.g. Whole milk'),
+                onSubmitted: (_) => save(),
+              ),
+              const SizedBox(height: 10),
+              Row(children: [
+                SizedBox(
+                  width: 90,
+                  child: TextField(
+                    controller: qtyCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: 'Qty'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: TextField(
+                    controller: priceCtrl,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    decoration: const InputDecoration(labelText: 'Est. price (optional)', prefixText: '\$'),
+                  ),
+                ),
+              ]),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                children: _kLists.map((l) => ChoiceChip(
+                  label: Text('${_kListEmoji[l] ?? ''} $l'),
+                  selected: listName == l,
+                  selectedColor: ggChipBg,
+                  onSelected: (_) => setSheet(() => listName = l),
+                )).toList(),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<_StoreLite?>(
+                initialValue: store,
+                decoration: const InputDecoration(labelText: 'Store (optional)'),
+                items: [
+                  const DropdownMenuItem<_StoreLite?>(value: null, child: Text('Any store')),
+                  ..._knownStores.map((s) => DropdownMenuItem<_StoreLite?>(
+                        value: s,
+                        child: Text(s.name, overflow: TextOverflow.ellipsis),
+                      )),
+                ],
+                onChanged: (v) => setSheet(() => store = v),
+              ),
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                onPressed: saving ? null : save,
+                style: FilledButton.styleFrom(
+                  backgroundColor: ggLime,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 13),
+                  shape: const StadiumBorder(),
+                ),
+                icon: saving
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : const Icon(Icons.add),
+                label: Text('Add item',
+                    style: TextStyle(fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800))),
+              ),
+            ],
+          ),
+        );
+      }),
+    );
+    if (added == true) {
+      // Land the user on the tab the item went to so they SEE it appear.
+      if (mounted && listName != _activeList) setState(() => _activeList = listName);
+      mascotBus.wiggle();
+      await _load();
+    }
+    nameCtrl.dispose();
+    qtyCtrl.dispose();
+    priceCtrl.dispose();
+  }
+
   // Mint a /share/<token> link via the web API and pop the OS share
   // sheet. The web endpoint handles GuacMoney-total + smash-day
   // enrichment, so the landing page renders the same on web and mobile.
@@ -368,6 +502,15 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
         ),
       ]),
       bottomNavigationBar: _selectedBuyAgain.isEmpty ? null : _compareStoresBar(),
+      // Manual add — parity with the web Smashlist's add form.
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _loading ? null : _addItemSheet,
+        backgroundColor: ggLime,
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.add),
+        label: Text('Add item',
+            style: TextStyle(fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800))),
+      ),
       body: Column(children: [
         // List tabs
         Container(
@@ -578,11 +721,25 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                 onPressed: () => _toggle(it),
               ),
             ])
-          : Checkbox(
-              value: it.approved,
-              onChanged: (_) => _toggle(it),
-              activeColor: _kBrand,
-            ),
+          : Row(mainAxisSize: MainAxisSize.min, children: [
+              Checkbox(
+                value: it.approved,
+                onChanged: (_) => _toggle(it),
+                activeColor: _kBrand,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              // Visible delete — the swipe-to-delete gesture exists but is
+              // undiscoverable; users reported "no way to delete items".
+              // Same smart semantics as the swipe: predicted rows round-trip
+              // to Buy Again, hand-added rows are deleted for real.
+              IconButton(
+                icon: const Icon(Icons.delete_outline, size: 20, color: ggFaint),
+                tooltip: 'Remove from Smashlist',
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                constraints: const BoxConstraints(),
+                onPressed: () => _delete(it),
+              ),
+            ]),
       ),
       ),
     );
@@ -679,8 +836,8 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
     const SizedBox(height: 4),
     Text(
       _items.isEmpty
-        ? 'No items yet. Add some via web or by parsing a receipt.'
-        : 'Nothing in $_activeList. Check the other tabs.',
+        ? 'No items yet. Tap "Add item" below, or scan a receipt and they build themselves.'
+        : 'Nothing in $_activeList. Tap "Add item" below or check the other tabs.',
       textAlign: TextAlign.center,
       style: ggBody(size: 13, color: ggMuted),
     ),

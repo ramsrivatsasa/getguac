@@ -307,11 +307,15 @@ class FetchCard extends StatelessWidget {
                   ),
                 ],
                 if (onMenu != null) ...[
-                  const SizedBox(width: 2),
+                  // Bigger icon + a padded hit area (was size 18 / radius 14 —
+                  // too small to tap reliably) and a darker tone so it reads.
                   InkResponse(
                     onTap: onMenu,
-                    radius: 14,
-                    child: const Icon(Icons.more_horiz, size: 18, color: Color(0xFF94a3b8)),
+                    radius: 24,
+                    child: const Padding(
+                      padding: EdgeInsets.all(8),
+                      child: Icon(Icons.more_vert, size: 22, color: Color(0xFF475569)),
+                    ),
                   ),
                 ],
               ]),

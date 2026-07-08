@@ -485,13 +485,43 @@ class _StashScreenState extends State<StashScreen> {
         // Surface the category picker inside the actions sheet now
         // that we removed the inline category pill from the card.
         onChangeCategory: () { Navigator.of(context).pop(); _openPicker(item); },
-        onAddToSmashlist: null,  // TODO: wire mobile add-to-smashlist
+        onAddToSmashlist: () => _addToSmashlist(item),
       ),
     );
     // Re-pull inventory so the subtitle reflects any stepper changes
     // made inside the sheet.
     final fresh = await StashService.fetchInventoryMap();
     if (mounted) setState(() => _onHand = fresh);
+  }
+
+  /// Add a stash item to the Smashlist. Inserts an un-approved Pantry row in
+  /// the SAME shape as the shopping-list Add-item form (approved:false →
+  /// shows under "Your Smashlist" since it isn't a predicted row). The actions
+  /// sheet dismisses itself before this runs, so we don't pop here.
+  Future<void> _addToSmashlist(_StashItem item) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final sb = Supabase.instance.client;
+      final uid = sb.auth.currentUser?.id;
+      if (uid == null) throw Exception('Not signed in');
+      await sb.from('shopping_list').insert({
+        'user_id': uid,
+        'item_name': item.name,
+        'qty': 1,
+        'frequency': 'Monthly',
+        'list_name': 'Pantry',
+        'order_date': DateTime.now().toIso8601String().substring(0, 10),
+        'approved': false,
+      });
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(
+        content: Text('Added ${item.name} to Smashlist'),
+        action: SnackBarAction(label: 'View', onPressed: () => context.go('/shopping')),
+      ));
+    } catch (e) {
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text('Could not add to Smashlist: $e')));
+    }
   }
 
   /// OS share-sheet handoff. Drops the user's item name + last-bought

@@ -1,6 +1,6 @@
 {
-  "version": "v0.4.17",
-  "name": "v0.4.17 — Latest build",
-  "downloadUrl": "https://getguac.app/downloads/v0.4.17/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Smashlist: cleaner cards (store name headlines each card, no repeated store per item) plus a quick Add-item button and per-row delete.\n• Receipts list uses one consistent font.\n• In-app sign-up fixed (Turnstile step) and other stability fixes.\n\nUninstall the old app first, then install this one fresh."
+  "version": "v0.4.18",
+  "name": "v0.4.18 — Stash fixes",
+  "downloadUrl": "https://getguac.app/downloads/v0.4.18/app-arm64-v8a-release.apk",
+  "releaseNotes": "• Stash: \"Add to Smashlist\" now works (it was greyed out before) — adds the item to your Pantry list with a quick View link.\n• Stash: the ⋮ menu button is bigger and easier to tap.\n\nUninstall the old app first, then install this one fresh."
 }

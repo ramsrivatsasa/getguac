@@ -38,7 +38,9 @@ const securityHeaders = [
       "connect-src 'self' https://*.supabase.co https://*.supabase.in wss://*.supabase.co wss://*.supabase.in https://api.migadu.com https://dns.google https://pagead2.googlesyndication.com https://*.googlesyndication.com https://googleads.g.doubleclick.net https://*.google.com",
       // Ad creatives render inside Google ad iframes; Turnstile renders its
       // challenge in a challenges.cloudflare.com iframe.
-      "frame-src 'self' https://challenges.cloudflare.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://*.googlesyndication.com https://www.google.com",
+      // youtube-nocookie.com / youtube.com = the how-it-works video embed;
+      // like Turnstile, a missing frame-src entry silently renders an empty box.
+      "frame-src 'self' https://challenges.cloudflare.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://*.googlesyndication.com https://www.google.com https://www.youtube-nocookie.com https://www.youtube.com",
       "frame-ancestors 'self'",
       "base-uri 'self'",
       "form-action 'self'",

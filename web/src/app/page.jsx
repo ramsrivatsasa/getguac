@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '../lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import ReferralCapture from '../components/ReferralCapture'
-import MarketingFooter from '../components/MarketingFooter'
+import MarketingShell from '../components/MarketingShell'
 
 // Real, live aggregate numbers for the landing page — pulled from the database
 // with the service-role client (server-only). No fabricated "as seen in" /
@@ -62,30 +62,8 @@ export default async function Home() {
   }
 
   return (
-    <div style={{ fontFamily: 'var(--font-jakarta), system-ui, sans-serif', color: '#1A2E22', background: '#fff', overflowX: 'hidden' }}>
-
-      {/* NAV */}
-      <header style={{ position: 'sticky', top: 0, zIndex: 50, backdropFilter: 'blur(12px)', background: 'rgba(255,255,255,0.88)', borderBottom: '1px solid rgba(20,83,45,0.08)' }}>
-        <nav style={{ maxWidth: 1180, margin: '0 auto', padding: '15px 28px', display: 'flex', alignItems: 'center', gap: 26 }}>
-          <Link href="/" style={{ ...DISPLAY, display: 'flex', alignItems: 'center', gap: 9, color: '#1A2E22', fontWeight: 800, fontSize: 20, letterSpacing: '-0.02em', textDecoration: 'none' }}>
-            <span style={{ fontSize: 22 }}>🥑</span> GetGuac
-          </Link>
-          <div className="gg-navlinks" style={{ display: 'flex', gap: 22, marginLeft: 12 }}>
-            <Link href="/marketplace" style={{ color: '#5C6B60', fontWeight: 500, fontSize: 15, textDecoration: 'none' }}>🛒 Marketplace</Link>
-            <Link href="/coupons" style={{ color: '#5C6B60', fontWeight: 500, fontSize: 15, textDecoration: 'none' }}>Coupons</Link>
-            <Link href="/resources" style={{ color: '#5C6B60', fontWeight: 500, fontSize: 15, textDecoration: 'none' }}>Resources</Link>
-            <Link href="/plan" style={{ color: '#5C6B60', fontWeight: 500, fontSize: 15, textDecoration: 'none' }}>Plan</Link>
-            <Link href="/how-it-works" style={{ color: '#5C6B60', fontWeight: 500, fontSize: 15, textDecoration: 'none' }}>How it works</Link>
-            <Link href="/features" style={{ color: '#5C6B60', fontWeight: 500, fontSize: 15, textDecoration: 'none' }}>Features</Link>
-          </div>
-          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 14 }}>
-            <Link href="/login" style={{ color: '#1A2E22', fontWeight: 600, fontSize: 15, textDecoration: 'none' }}>Sign in</Link>
-            <Link href="/register" style={{ background: '#65A30D', color: '#fff', fontWeight: 700, fontSize: 15, padding: '11px 20px', borderRadius: 999, textDecoration: 'none' }}>Get started</Link>
-          </div>
-        </nav>
-      </header>
-
-      <main>
+    <MarketingShell>
+      <div style={{ overflowX: 'hidden' }}>
         {/* Invited-friend welcome strip — visible only when the visitor
             arrived via a ?ref=<CODE> referral link. Tells them exactly
             what to do next (Get started) + links /how-it-works. */}
@@ -244,10 +222,7 @@ export default async function Home() {
             </div>
           </div>
         </section>
-      </main>
-
-      {/* FOOTER */}
-      <MarketingFooter />
+      </div>
 
       {/* Hero float animations + responsive: stack grids, hide nav on small screens.
           Rendered via dangerouslySetInnerHTML so React doesn't HTML-escape the
@@ -271,7 +246,7 @@ export default async function Home() {
           .gg-h1 { font-size: 40px !important; }
         }
       ` }} />
-    </div>
+    </MarketingShell>
   )
 }
 

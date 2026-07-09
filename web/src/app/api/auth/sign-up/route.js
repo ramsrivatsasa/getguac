@@ -173,8 +173,19 @@ export async function POST(request) {
 
     const userId = data?.user?.id
     if (!userId) {
-      // Should not normally happen — signUp without error always returns a user.
-      return Response.json({ error: 'Sign-up returned no user id' }, { status: 500 })
+      // Some GoTrue/SDK combinations return { user: null, session: null }
+      // with no error when "Confirm email" is on, even though the user WAS
+      // created and the confirmation email sent (observed in prod 2026-07-09
+      // right after enabling confirmations). Treat it as confirmation-pending
+      // instead of failing a signup that actually succeeded.
+      console.warn('[auth/sign-up] signUp returned no user object — assuming confirmation email sent for', email)
+      return Response.json({
+        ok: true,
+        needs_email_confirmation: true,
+        email,
+        pending_username: username,
+        message: `We've sent a confirmation email to ${email}. Click the link to activate your account — your @getguac.app handle "${username}" is reserved while you confirm.`,
+      })
     }
 
     // ── Confirmation required? (Supabase returns session=null when "Confirm

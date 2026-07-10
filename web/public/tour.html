@@ -88,6 +88,14 @@ ul.bullets li:nth-child(5){animation-delay:.73s}
 .row .val{font-family:'Bricolage',sans-serif;font-weight:800;font-size:14px}
 .chipline{display:flex;flex-wrap:wrap;gap:7px}
 .chip{padding:6px 11px;border-radius:999px;font-size:12px;font-weight:700;background:#f0f7ee;color:var(--emerald-deep);opacity:0;animation:up .4s ease forwards}
+
+/* categorize — video-exact floating pills */
+.catCloud{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;align-items:center;max-width:400px;margin:0 auto}
+.catPill{background:#fff;border-radius:999px;padding:12px 22px;font-weight:700;font-size:15px;color:var(--ink);
+  box-shadow:0 10px 26px rgba(21,40,28,.10);display:inline-flex;gap:9px;align-items:center;white-space:nowrap;
+  opacity:0;animation:catIn .5s ease forwards}
+.catPill.custom{background:#fdf3dd;border:1px solid #f5e3ba;color:#8a5a17}
+@keyframes catIn{from{opacity:0;transform:translateY(16px) scale(.85)}to{opacity:1;transform:none}}
 .bigNum{font-family:'Bricolage',sans-serif;font-weight:800;font-size:44px;color:var(--ink);letter-spacing:-.02em}
 .badge{display:inline-flex;align-items:center;gap:6px;background:#e8f7ec;color:#116b3f;border-radius:999px;padding:6px 12px;font-size:12px;font-weight:800}
 .badge.warn{background:#fdeeee;color:#b3261e}
@@ -305,12 +313,14 @@ dedup:`<div class="dedupStage">
   <div class="rcpt r2"><span class="store">Glory Days Grill</span><span class="amt">$24.74</span></div>
   <div class="keeperChip"><span class="box">✓</span> 2 duplicates → 1 keeper</div>
 </div>`,
-categorize:`<div class="card"><h4>Categories <span class="sub">rules + AI</span></h4><div class="chipline">
-  <span class="chip" style="animation-delay:.5s">🛒 Groceries</span><span class="chip" style="animation-delay:.62s">🍜 Dining</span>
-  <span class="chip" style="animation-delay:.74s">⛽ Gas</span><span class="chip" style="animation-delay:.86s">📺 Electronics</span>
-  <span class="chip" style="animation-delay:.98s">🏠 Home</span><span class="chip" style="animation-delay:1.1s">❤️ Charity</span>
-  <span class="chip" style="animation-delay:1.22s">🐕 Pet (yours)</span><span class="chip" style="animation-delay:1.34s">🧘 Yoga (yours)</span></div>
-  <div class="badge" style="margin-top:12px;animation:up .5s 1.6s ease both">✨ Auto-categorize — done in seconds</div></div>`,
+categorize:`<div class="catCloud">
+  <span class="catPill" style="animation-delay:.35s">🛒 Groceries</span>
+  <span class="catPill" style="animation-delay:.55s">🍽️ Dining</span>
+  <span class="catPill" style="animation-delay:.75s">⛽ Gas</span>
+  <span class="catPill" style="animation-delay:.95s">💻 Electronics</span>
+  <span class="catPill" style="animation-delay:1.15s">🏠 Home</span>
+  <span class="catPill custom" style="animation-delay:1.5s">🐕 Pet (custom)</span>
+</div>`,
 dashboard:`<div class="card"><h4>Spending by Store <span class="sub">last 3 months</span></h4>
   <div class="row"><span class="grow">Target</span><span class="bar p85"><i></i></span><span class="val">$522</span></div>
   <div class="row"><span class="grow">Costco</span><span class="bar p60"><i style="animation-delay:.75s"></i></span><span class="val">$299</span></div>

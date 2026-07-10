@@ -352,8 +352,16 @@ wizard:`<div class="card"><h4>GuacWizard <span class="sub">Bank Bite</span></h4>
   <div class="row"><span class="ico">⚠️</span><span class="grow">NSF fee — checking<span class="sub">avoidable</span></span><span class="val" style="color:#b3261e">$35</span></div>
   <div class="badge">💡 calm, specific, never preachy</div></div>`,
 miles:`<div class="card"><h4>Car Miles <span class="sub">share-to-track</span></h4>
-  <svg viewBox="0 0 240 90" style="width:100%;height:84px"><path class="routeline" d="M14 72 C 60 70, 70 22, 120 24 S 200 60, 226 26" fill="none" stroke="#059669" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="4 7"/><circle cx="14" cy="72" r="6" fill="#059669"/><text x="222" y="20" font-size="16">📍</text></svg>
-  <div class="row"><span class="ico">🚗</span><span class="grow">Home → Client site<span class="sub">Business · 18.4 mi</span></span><span class="val">✓</span></div></div>`,
+  <svg viewBox="0 0 240 90" style="width:100%;height:84px;overflow:visible">
+    <path id="carPath" class="routeline" d="M14 72 C 60 70, 70 22, 120 24 S 200 60, 226 26" fill="none" stroke="#059669" stroke-width="3.5" stroke-linecap="round"/>
+    <circle cx="14" cy="72" r="6" fill="#059669"/>
+    <text x="222" y="20" font-size="16">📍</text>
+    <g>
+      <g transform="scale(-1,1)"><text x="0" y="6" font-size="19" text-anchor="middle">🚗</text></g>
+      <animateMotion dur="4.5s" repeatCount="indefinite" rotate="auto"><mpath href="#carPath"/></animateMotion>
+    </g>
+  </svg>
+  <div class="row"><span class="ico" style="transform:scaleX(-1)">🚗</span><span class="grow">Home → Client site<span class="sub">Business · 18.4 mi</span></span><span class="val">✓</span></div></div>`,
 guacmoney:`<div class="card" style="text-align:center"><h4 style="justify-content:center">GuacMoney</h4>
   <div class="bigNum" id="gmNum">0</div>
   <div class="sub" style="font-size:12px;color:var(--soft);font-weight:700;margin-bottom:10px">🪙 ≈ $17.68 of value</div>

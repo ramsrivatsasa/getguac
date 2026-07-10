@@ -31,7 +31,12 @@ export default function HowItWorksPage() {
         <p className="text-lg text-gray-600 mt-4 max-w-2xl mx-auto">
           Step through the animated tour — press play and it narrates itself — then flip through the app screen by screen below.
         </p>
-        <div className="relative mt-8 overflow-hidden rounded-3xl border border-emerald-900/10 shadow-2xl" style={{ paddingTop: '56.25%' }}>
+      </section>
+
+      {/* Full-bleed tour embed — full viewport width and near-full height so it
+          renders exactly like the fullscreen /tour.html experience. */}
+      <section className="w-full">
+        <div className="relative w-full overflow-hidden border-y border-emerald-900/10 shadow-2xl" style={{ height: '88vh' }}>
           <iframe
             className="absolute inset-0 h-full w-full"
             src="/tour.html"
@@ -39,7 +44,7 @@ export default function HowItWorksPage() {
             loading="lazy"
           />
         </div>
-        <p className="mt-3 text-sm">
+        <p className="mt-3 text-sm text-center">
           <a href="/tour.html" target="_blank" rel="noopener" className="font-bold text-emerald-700 hover:text-emerald-900 hover:underline">
             Open the tour fullscreen ↗
           </a>

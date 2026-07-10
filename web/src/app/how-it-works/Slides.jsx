@@ -85,9 +85,11 @@ export default function Slides() {
 
   const s = SLIDES[i]
   return (
-    <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-14">
+    <section className="pb-14">
+      {/* Full-bleed panel — the tinted background stretches across the whole
+          viewport (border-y instead of a rounded card); content stays centered. */}
       <div
-        className="rounded-3xl border border-emerald-900/10 bg-[#F7FAF2] p-6 sm:p-10"
+        className="w-full border-y border-emerald-900/10 bg-[#F7FAF2]"
         onTouchStart={(e) => { touchX.current = e.touches[0].clientX }}
         onTouchEnd={(e) => {
           if (touchX.current == null) return
@@ -96,6 +98,7 @@ export default function Slides() {
           touchX.current = null
         }}
       >
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <div className="grid md:grid-cols-[1.1fr_0.9fr] gap-8 items-center">
           {/* Copy */}
           <div>
@@ -138,6 +141,7 @@ export default function Slides() {
             ))}
           </div>
         </div>
+      </div>
       </div>
 
       <div className="text-center mt-6">

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import GenieAvocado from '../../components/GenieAvocado'
+import MarketingShell from '../../components/MarketingShell'
 
 // Public marketing showcase — hero video + real-screenshot feature sections.
 // Screenshots live in /public/showcase (captured from the live app on the
@@ -35,15 +36,7 @@ const FEATURES = [
 
 export default function DemoPage() {
   return (
-    <div className="min-h-screen bg-white font-sans">
-      {/* Top bar */}
-      <div className="bg-emerald-900/95 text-white">
-        <div className="max-w-5xl mx-auto px-4 h-12 flex items-center justify-between">
-          <Link href="/" className="font-black tracking-tight">🥑 GetGuac</Link>
-          <Link href="/register" className="text-sm font-bold bg-white/15 hover:bg-white/25 rounded-full px-4 py-1.5">Get started</Link>
-        </div>
-      </div>
-
+    <MarketingShell subtitle="demo">
       {/* Hero */}
       <section className="bg-gradient-to-br from-emerald-900 via-green-800 to-lime-700 text-white">
         <div className="max-w-5xl mx-auto px-4 py-14 sm:py-20 grid lg:grid-cols-2 gap-10 items-center">
@@ -105,6 +98,6 @@ export default function DemoPage() {
           </p>
         </div>
       </section>
-    </div>
+    </MarketingShell>
   )
 }

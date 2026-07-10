@@ -87,3 +87,5 @@ test/*.apk
 
 # ── Generated marketing assets (screenshots/video; regen via scripts) ─
 web/marketing-assets/
+
+.vercel

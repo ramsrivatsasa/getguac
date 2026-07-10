@@ -3,6 +3,7 @@
 
 import Link from 'next/link'
 import GuacMascot from '../../components/GuacMascot'
+import MarketingShell from '../../components/MarketingShell'
 import { Mail, Inbox, Forward, Sparkles, ShieldOff, ShoppingBag, Clock, EyeOff, CheckCircle2, ArrowRight } from 'lucide-react'
 
 export const metadata = {
@@ -10,29 +11,9 @@ export const metadata = {
   description: 'Use you@getguac.app for online shopping signups, you+g@getguac.app for auto-receipt processing. Personal mail stays untouched.',
 }
 
-import MarketingFooter from '../../components/MarketingFooter'
-
 export default function HowEmailWorksPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-lime-50 text-gray-800 font-sans">
-      {/* Nav */}
-      <header className="sticky top-0 z-30 backdrop-blur bg-white/70 border-b border-emerald-100">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-lime-300 via-emerald-400 to-emerald-700 shadow-md ring-2 ring-white flex items-center justify-center text-lg">🥑</div>
-            <div className="leading-none">
-              <div className="text-base font-black tracking-tight text-emerald-900">GetGuac</div>
-              <div className="text-[9px] text-emerald-600 font-semibold uppercase tracking-wider mt-0.5">how email works</div>
-            </div>
-          </Link>
-          <nav className="flex items-center gap-3 text-sm">
-            <Link href="/" className="font-semibold text-gray-600 hover:text-emerald-800">Home</Link>
-            <Link href="/security" className="hidden sm:inline font-semibold text-gray-600 hover:text-emerald-800">Security</Link>
-            <Link href="/register" className="btn-primary">Get started</Link>
-          </nav>
-        </div>
-      </header>
-
+    <MarketingShell subtitle="how email works">
       {/* Hero */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 pt-12 pb-8">
         <div className="flex items-start gap-5 flex-wrap">
@@ -193,9 +174,7 @@ export default function HowEmailWorksPage() {
           <Link href="/security" className="btn-secondary text-base px-6 py-3">Security details</Link>
         </div>
       </section>
-
-      <MarketingFooter />
-    </div>
+    </MarketingShell>
   )
 }
 

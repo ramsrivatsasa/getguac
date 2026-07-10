@@ -5,6 +5,7 @@
 
 import Link from 'next/link'
 import GuacMascot from '../../components/GuacMascot'
+import MarketingShell from '../../components/MarketingShell'
 import { FileText, ShieldCheck } from 'lucide-react'
 
 export const metadata = {
@@ -14,29 +15,10 @@ export const metadata = {
 
 const LAST_UPDATED = 'June 3, 2026'
 
-import MarketingFooter from '../../components/MarketingFooter'
-
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-lime-50 text-gray-800 font-sans">
-      <header className="sticky top-0 z-30 backdrop-blur bg-white/70 border-b border-emerald-100">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-lime-300 via-emerald-400 to-emerald-700 shadow-md ring-2 ring-white flex items-center justify-center text-lg">🥑</div>
-            <div className="leading-none">
-              <div className="text-base font-black tracking-tight text-emerald-900">GetGuac</div>
-              <div className="text-[9px] text-emerald-600 font-semibold uppercase tracking-wider mt-0.5">Terms of Service</div>
-            </div>
-          </Link>
-          <nav className="flex items-center gap-3 text-sm">
-            <Link href="/privacy" className="font-semibold text-gray-600 hover:text-emerald-800">Privacy</Link>
-            <Link href="/security" className="font-semibold text-gray-600 hover:text-emerald-800">Security</Link>
-            <Link href="/login" className="btn-secondary">Sign in</Link>
-          </nav>
-        </div>
-      </header>
-
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-10 space-y-8">
+    <MarketingShell subtitle="terms of service">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 space-y-8">
         <section className="flex items-start gap-4 flex-wrap">
           <GuacMascot expression="thumbsup" size={84} />
           <div className="flex-1 min-w-[240px]">
@@ -116,9 +98,8 @@ export default function TermsPage() {
             <Link href="/" className="hover:text-emerald-700 font-semibold">Home</Link>
           </p>
         </div>
-      </main>
-      <MarketingFooter />
-    </div>
+      </div>
+    </MarketingShell>
   )
 }
 

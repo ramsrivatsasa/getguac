@@ -34,7 +34,9 @@ export default function HowItWorksPage() {
           renders exactly like the fullscreen /tour.html experience. The
           "open fullscreen" link lives INSIDE the deck (shown only when framed). */}
       <section className="w-full">
-        <div className="relative w-full overflow-hidden border-y border-emerald-900/10" style={{ height: '88vh' }}>
+        {/* Height matched to the slideshow band below (~650px) so the two
+            full-bleed sections read as equal siblings. */}
+        <div className="relative w-full overflow-hidden border-y border-emerald-900/10" style={{ height: 'min(650px, 80vh)' }}>
           <iframe
             className="absolute inset-0 h-full w-full"
             src="/tour.html"

@@ -482,7 +482,7 @@ function CadenceStrip({ rows, within90 }) {
             key={i}
             className={`h-2 rounded-full ${
               filled
-                ? 'bg-gradient-to-r from-emerald-400 to-lime-500'
+                ? 'bg-gradient-to-r from-green-600 via-amber-500 to-red-600'
                 : present
                   ? 'bg-gray-300'
                   : 'bg-gray-100'

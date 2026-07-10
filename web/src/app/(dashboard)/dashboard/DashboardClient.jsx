@@ -307,18 +307,12 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
             </div>
           ) : (
             // Horizontal bars sized to each store's share of the top
-            // spender's total. Heat coloring: bar color interpolates
-            // green → amber → red with that share, so cheap stores read
-            // cool and the biggest expenses read hot at a glance.
+            // spender's total. Each bar carries the full green → amber → red
+            // heat gradient along its own length (site-wide chart style).
             // Click → that store's receipts (same deep-link as before).
             <div className="space-y-3 mt-1">
               {(() => {
                 const max = Math.max(...chartData.map(d => d.amount)) || 1
-                const heatColor = (t) => {
-                  const mix = (c1, c2, u) => `rgb(${c1.map((v, k) => Math.round(v + (c2[k] - v) * u)).join(',')})`
-                  const green = [22, 163, 74], amber = [245, 158, 11], red = [220, 38, 38]
-                  return t < 0.5 ? mix(green, amber, t * 2) : mix(amber, red, (t - 0.5) * 2)
-                }
                 return chartData.map((d, i) => {
                   const t = d.amount / max
                   const pct = Math.max(5, t * 100)
@@ -334,7 +328,7 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
                     >
                       <span className="w-28 shrink-0 text-left text-[13px] font-semibold text-guac-ink truncate group-hover:text-gray-900 transition-colors">{d.fullName}</span>
                       <span className="flex-1 h-3 rounded-full bg-gray-100 overflow-hidden">
-                        <span className="block h-full rounded-full transition-[width] duration-500" style={{ width: pct + '%', background: heatColor(t) }} />
+                        <span className="block h-full rounded-full transition-[width] duration-500" style={{ width: pct + '%', background: 'linear-gradient(90deg,#16a34a,#f59e0b,#dc2626)' }} />
                       </span>
                       <span className="w-20 shrink-0 text-right text-[13px] gg-num font-extrabold text-guac-ink">${Math.round(d.amount).toLocaleString('en-US')}</span>
                     </button>

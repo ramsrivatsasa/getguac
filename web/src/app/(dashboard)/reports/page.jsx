@@ -323,7 +323,7 @@ export default function ReportsPage() {
                         <span className="truncate">{meta?.label || c.slug}</span>
                       </span>
                       <span className="h-2 rounded-full bg-guac-50 overflow-hidden">
-                        <span className="block h-full rounded-full transition-all" style={{ width: `${Math.max(pct, 1.5)}%`, background: color }} />
+                        <span className="block h-full rounded-full transition-all" style={{ width: `${Math.max(pct, 1.5)}%`, background: 'linear-gradient(90deg,#16a34a,#f59e0b,#dc2626)' }} />
                       </span>
                       <span className="text-right whitespace-nowrap">
                         <span className="gg-num font-semibold text-[13px] text-guac-ink">{money(c.amount)}</span>

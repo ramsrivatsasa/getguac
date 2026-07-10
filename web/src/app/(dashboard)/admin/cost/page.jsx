@@ -127,10 +127,6 @@ export default function AdminCostPage() {
             const row = latest.get(metric)
             const v = Number(row?.value || 0)
             const pct = Math.min(100, (v / c.hard) * 100)
-            const tone =
-              v >= c.hard ? 'bg-rose-500' :
-              v >= c.soft ? 'bg-amber-400' :
-              'bg-guac-600'
             return (
               <div key={metric} className="bg-white border border-gray-200 rounded-2xl p-4">
                 <div className="flex items-baseline justify-between gap-3 mb-2">
@@ -140,7 +136,7 @@ export default function AdminCostPage() {
                   </p>
                 </div>
                 <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
-                  <div className={`h-full ${tone} transition-all`} style={{ width: `${pct}%` }} />
+                  <div className="h-full transition-all" style={{ width: `${pct}%`, background: 'linear-gradient(90deg,#16a34a,#f59e0b,#dc2626)' }} />
                 </div>
                 <p className="text-[11px] text-gray-500 mt-1.5">{c.why} · {pct.toFixed(1)}% used</p>
               </div>

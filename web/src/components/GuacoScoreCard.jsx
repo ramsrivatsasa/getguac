@@ -87,11 +87,20 @@ export default function GuacoScoreCard({ receipts = [], bankBite = null, size = 
       <div className="flex items-center gap-4">
         <div className="relative shrink-0" style={{ width: svgSize, height: svgSize }}>
           <svg viewBox={`0 0 ${svgSize} ${svgSize}`} width={svgSize} height={svgSize}>
+            {/* Multicolor ring — same green→lime→amber sweep as the tour deck
+                donut (site-wide chart style); grade tint stays on the number. */}
+            <defs>
+              <linearGradient id="guacoRingGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stopColor="#16a34a" />
+                <stop offset="0.55" stopColor="#a8c414" />
+                <stop offset="1" stopColor="#f59e0b" />
+              </linearGradient>
+            </defs>
             <circle cx={svgSize / 2} cy={svgSize / 2} r={R} fill="white" />
             <circle cx={svgSize / 2} cy={svgSize / 2} r={R}
               fill="none" stroke="#e5e7eb" strokeWidth={STROKE} />
             <circle cx={svgSize / 2} cy={svgSize / 2} r={R}
-              fill="none" stroke={tint.stroke} strokeWidth={STROKE} strokeLinecap="round"
+              fill="none" stroke="url(#guacoRingGrad)" strokeWidth={STROKE} strokeLinecap="round"
               strokeDasharray={C} strokeDashoffset={offset}
               transform={`rotate(-90 ${svgSize / 2} ${svgSize / 2})`}
               style={{ transition: 'stroke-dashoffset 0.6s ease-out' }}

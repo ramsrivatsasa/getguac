@@ -125,9 +125,25 @@ class _GuacMoneyScreenState extends State<GuacMoneyScreen> {
             _card(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text('Your progress', style: TextStyle(fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800))),
               const SizedBox(height: 10),
+              // App-wide chart style: the fill carries the full green→amber→red
+              // heat gradient along its own length (matches the dashboard bars).
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: LinearProgressIndicator(value: progress, minHeight: 10, backgroundColor: const Color(0xFFf1f5f9), color: const Color(0xFFf59e0b)),
+                child: Container(
+                  height: 10,
+                  color: const Color(0xFFf1f5f9),
+                  child: FractionallySizedBox(
+                    alignment: Alignment.centerLeft,
+                    widthFactor: progress.clamp(0.0, 1.0).toDouble(),
+                    child: const DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(colors: [
+                          Color(0xFF16a34a), Color(0xFFf59e0b), Color(0xFFdc2626),
+                        ]),
+                      ),
+                    ),
+                  ),
+                ),
               ),
               const SizedBox(height: 8),
               Text('${formatGm(toNext)} more GuacMoney to your next milestone 🥑', style: const TextStyle(fontSize: 12, color: Colors.black54)),

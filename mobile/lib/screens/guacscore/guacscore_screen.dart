@@ -6,6 +6,8 @@
 // JS implementation runs. This screen only handles the UI surface +
 // the bank-fee fetch.
 
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:provider/provider.dart';
@@ -200,12 +202,10 @@ class _GuacScoreScreenState extends State<GuacScoreScreen> {
                     curve: Curves.easeOutCubic,
                     builder: (ctx, v, _) => SizedBox(
                       width: 140, height: 140,
-                      child: CircularProgressIndicator(
-                        value: v,
-                        strokeWidth: 12,
-                        backgroundColor: Colors.white,
-                        valueColor: AlwaysStoppedAnimation(tone),
-                      ),
+                      // App-wide chart style: multicolor sweep ring (green →
+                      // lime → amber) like the web score ring + tour donut;
+                      // the grade tone stays on the number and label.
+                      child: CustomPaint(painter: _GradientRingPainter(fraction: v)),
                     ),
                   ),
                   Column(mainAxisSize: MainAxisSize.min, children: [
@@ -634,4 +634,36 @@ _Grade _gradeFor(int? score) {
   if (score >= 60) return _Grade('Steady Guac',   '🙂', 'Doing fine. Some room to tighten.',     const Color(0xFFca8a04));
   if (score >= 40) return _Grade('Splurgy',       '🍿', 'Treat-yourself mode. Watch the drift.', const Color(0xFFea580c));
   return                _Grade('Mushy',         '🙈', 'Lots of regret. Reset incoming.',       const Color(0xFFdc2626));
+}
+
+// Multicolor score ring — sweeps green → lime → amber around the arc,
+// matching the web GuacoScoreCard ring and the tour-deck donut.
+class _GradientRingPainter extends CustomPainter {
+  _GradientRingPainter({required this.fraction});
+  final double fraction;
+  static const _stroke = 12.0;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = size.center(Offset.zero);
+    final radius = (size.shortestSide - _stroke) / 2;
+    final rect = Rect.fromCircle(center: center, radius: radius);
+    canvas.drawCircle(center, radius, Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = _stroke
+      ..color = Colors.white);
+    if (fraction <= 0) return;
+    final prog = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = _stroke
+      ..strokeCap = StrokeCap.round
+      ..shader = const SweepGradient(
+        colors: [Color(0xFF16a34a), Color(0xFFa8c414), Color(0xFFf59e0b)],
+        transform: GradientRotation(-math.pi / 2),
+      ).createShader(rect);
+    canvas.drawArc(rect, -math.pi / 2, fraction * 2 * math.pi, false, prog);
+  }
+
+  @override
+  bool shouldRepaint(covariant _GradientRingPainter old) => old.fraction != fraction;
 }

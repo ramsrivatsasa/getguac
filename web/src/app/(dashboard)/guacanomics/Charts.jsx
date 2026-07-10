@@ -17,17 +17,9 @@ const money0 = (n) => Number(n || 0).toLocaleString('en-US', { maximumFractionDi
 const formatDateSpaced = (input) => formatDateShort(input).replace(/-/g, ' ')
 
 const PIE_COLORS = ['#e11d48', '#10b981']
-// Green→amber→red heat for the Top-Stores bars: the more a store's spend
-// approaches the top spender's, the redder the bar (green = low, red = high).
-function spendHeatHex(t) {
-  t = Math.max(0, Math.min(1, t))
-  const g = [34, 197, 94], a = [245, 158, 11], r = [220, 38, 38]
-  const mix = (x, y, k) => Math.round(x + (y - x) * k)
-  const c = t < 0.5
-    ? [mix(g[0], a[0], t / 0.5), mix(g[1], a[1], t / 0.5), mix(g[2], a[2], t / 0.5)]
-    : [mix(a[0], r[0], (t - 0.5) / 0.5), mix(a[1], r[1], (t - 0.5) / 0.5), mix(a[2], r[2], (t - 0.5) / 0.5)]
-  return `rgb(${c[0]},${c[1]},${c[2]})`
-}
+// Site-wide bar style: every bar carries the full green→amber→red heat
+// gradient along its own length (matches the dashboard + tour deck).
+const HEAT_GRADIENT = 'linear-gradient(90deg,#16a34a,#f59e0b,#dc2626)'
 
 export default function Charts({ insights }) {
   return (
@@ -142,7 +134,7 @@ export default function Charts({ insights }) {
                         <div key={i} className="flex items-center gap-3">
                           <span className="w-[132px] shrink-0 truncate text-right text-[13px] font-semibold text-guac-ink" title={s.store}>{s.store}</span>
                           <div className="flex-1 h-[15px] rounded-[5px] bg-[#F0F4EA] overflow-hidden">
-                            <div className="h-full rounded-[5px]" style={{ width: `${pct}%`, background: spendHeatHex((s.spent || 0) / max) }} />
+                            <div className="h-full rounded-[5px]" style={{ width: `${pct}%`, background: HEAT_GRADIENT }} />
                           </div>
                           <span className="gg-num w-20 shrink-0 text-right text-[13px] font-extrabold text-guac-ink">${money0(s.spent)}</span>
                         </div>
@@ -313,7 +305,7 @@ export default function Charts({ insights }) {
                         <span className="text-[10px] text-guac-label">({b.count})</span>
                       </div>
                       <div className="flex-1 h-[9px] rounded-[5px] bg-[#F0F4EA] overflow-hidden">
-                        <div className="h-full rounded-[5px] transition-all" style={{ width: `${pct}%`, backgroundColor: b.color }} />
+                        <div className="h-full rounded-[5px] transition-all" style={{ width: `${pct}%`, background: HEAT_GRADIENT }} />
                       </div>
                       <span className="gg-num text-[11px] font-semibold text-guac-ink w-16 text-right">${money0(b.spend)}</span>
                     </div>

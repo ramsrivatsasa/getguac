@@ -1123,20 +1123,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   // One horizontal spending bar: store name · rounded track (length ∝ spend)
   // · dollar amount. Tapping opens that store's receipts.
-  // Heat coloring: the bar's color interpolates green → amber → red by the
-  // store's share of the top spend, so cheap stores read cool and the biggest
-  // expenses read hot at a glance. Mirrors the web dashboard's bars.
+  // Each bar carries the full green → amber → red heat gradient along its
+  // own length — the app-wide chart style, mirroring the web dashboard and
+  // the marketing tour deck.
   Widget _storeBar(_StoreSpend s, double maxAmount) {
     final frac = maxAmount > 0 ? (s.amount / maxAmount).clamp(0.08, 1.0) : 0.0;
-    final heat = maxAmount > 0 ? (s.amount / maxAmount).clamp(0.0, 1.0) : 0.0;
-    const cool = Color(0xFF16a34a); // green-600 — low spend
-    const mid  = Color(0xFFf59e0b); // amber-500 — midway
-    const hot  = Color(0xFFdc2626); // red-600 — top spender
-    final barColor = heat < 0.5
-        ? Color.lerp(cool, mid, heat * 2)!
-        : Color.lerp(mid, hot, (heat - 0.5) * 2)!;
-    // Subtle same-hue gradient (lighter → full) keeps the pill's depth.
-    final grad = [Color.lerp(barColor, Colors.white, 0.35)!, barColor];
+    const grad = [
+      Color(0xFF16a34a), // green-600
+      Color(0xFFf59e0b), // amber-500
+      Color(0xFFdc2626), // red-600
+    ];
     return InkWell(
       onTap: () => context.push(_receiptsDeepLink(store: s.name)),
       borderRadius: BorderRadius.circular(10),
@@ -1157,7 +1153,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: FractionallySizedBox(
                 alignment: Alignment.centerLeft,
                 widthFactor: frac,
-                child: DecoratedBox(
+                child: const DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(colors: grad),
                   ),

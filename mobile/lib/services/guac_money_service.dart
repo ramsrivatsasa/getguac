@@ -116,12 +116,14 @@ String formatGuacMoney(double amount) {
   return '\$${amount.toStringAsFixed(2)}';
 }
 
-// ── GuacMoney (1000 GM = $1; redeemable — coming soon) ──────────────
+// ── GuacMoney (1000 GM = $1 of VALUE — never a redeem claim) ─────────
 // One umbrella balance combining:
 //   • Money our Guac-AI saved you ($-for-$): purchases rated "not worth it"
 //     (rating ≤ 2, you won't re-buy) + refunds recovered.  → ×1000 GM per $1
 //   • Engagement: scan a receipt (+100), refer a friend (+1,000).
-const int kGmPerDollar   = 1000;  // 1000 GuacMoney = $1 (redeemable later)
+// The saved $ is the user's OWN money, so the balance is presented as
+// value kept, matching the web dashboard tile.
+const int kGmPerDollar   = 1000;  // 1000 GuacMoney = $1 of value
 const int kGmPerReceipt  = 100;   // every receipt scanned
 const int kGmPerReferral = 1000;  // every friend who joins
 const int kGmRewardStep  = 5000;  // next milestone (= $5)
@@ -130,12 +132,6 @@ const String kGmTagline = 'Saved by our Guac-AI + earned by you 🥑';
 /// Total GuacMoney = saved $ (×1000) + receipts (×100) + referrals (×1000).
 int guacMoneyPoints({required int receipts, required int referrals, required double savedDollars}) =>
     receipts * kGmPerReceipt + referrals * kGmPerReferral + gmPointsFromSaved(savedDollars);
-
-/// REDEEMABLE slice (gift cards — coming soon): only what we award you —
-/// scanning, referrals, and affiliate commission. The "saved $" portion is
-/// YOUR own money, so it's shown as value, not redeemable.
-int guacMoneyRedeemable({required int receipts, required int referrals, int affiliatePoints = 0}) =>
-    receipts * kGmPerReceipt + referrals * kGmPerReferral + affiliatePoints;
 
 /// Count of the user's successful referrals (rows in `referrals`).
 Future<int> fetchReferralCount() async {

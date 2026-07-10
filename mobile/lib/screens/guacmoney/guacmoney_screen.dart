@@ -7,7 +7,8 @@ import '../../theme/gg_design.dart';
 
 /// GuacMoney — one balance combining the money our Guac-AI saved you
 /// (not-worth-it ratings + refunds, $-for-$) plus engagement (scan +100,
-/// refer +1,000). 1,000 GuacMoney = $1, redeemable — coming soon.
+/// refer +1,000). 1,000 GuacMoney = $1 of VALUE — never a redeem claim
+/// (the saved $ is the user's own money); wording mirrors the web tile.
 class GuacMoneyScreen extends StatefulWidget {
   const GuacMoneyScreen({super.key});
   @override
@@ -62,7 +63,7 @@ class _GuacMoneyScreenState extends State<GuacMoneyScreen> {
           final d = snap.data ?? const _Gm(notWorth: 0, refunds: 0, rated: 0, receipts: 0, referrals: 0);
           final saved = d.notWorth + d.refunds;
           final points = guacMoneyPoints(receipts: d.receipts, referrals: d.referrals, savedDollars: saved);
-          final redeemableUsd = gmToUsd(guacMoneyRedeemable(receipts: d.receipts, referrals: d.referrals));
+          final valueUsd = gmToUsd(points);
           final into = points % kGmRewardStep;
           final toNext = kGmRewardStep - into;
           final progress = kGmRewardStep == 0 ? 0.0 : into / kGmRewardStep;
@@ -90,7 +91,7 @@ class _GuacMoneyScreenState extends State<GuacMoneyScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.22), borderRadius: BorderRadius.circular(20)),
-                  child: Text('🎁 Redeem ≈ \$${redeemableUsd.toStringAsFixed(2)} · coming soon',
+                  child: Text('🪙 ≈ \$${valueUsd.toStringAsFixed(2)} of value',
                     style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13, fontVariations: ggWght(FontWeight.w900))),
                 ),
               ]),
@@ -144,7 +145,7 @@ class _GuacMoneyScreenState extends State<GuacMoneyScreen> {
             _card(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text('How you earn', style: TextStyle(fontWeight: FontWeight.w800, fontVariations: ggWght(FontWeight.w800))),
               const SizedBox(height: 6),
-              const Text('• Scan a receipt (+100), refer a friend (+1,000), and shop via our links (commission — soon) are REDEEMABLE for gift cards, coming soon.\n• Rate purchases "not worth it" + refunds you recover are money our Guac-AI saved you — yours to keep, shown as value.\n• 1,000 GuacMoney = \$1.',
+              const Text('• Scan a receipt (+100) and refer a friend (+1,000) to grow your balance.\n• Rate purchases "not worth it" + refunds you recover are money our Guac-AI saved you — yours to keep.\n• 1,000 GuacMoney = \$1 of value.',
                 style: TextStyle(fontSize: 12.5, color: Colors.black54, height: 1.5)),
             ])),
             const SizedBox(height: 16),

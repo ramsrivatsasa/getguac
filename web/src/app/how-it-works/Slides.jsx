@@ -86,10 +86,10 @@ export default function Slides() {
   const s = SLIDES[i]
   return (
     <section className="pb-14">
-      {/* Full-bleed panel — the tinted background stretches across the whole
-          viewport (border-y instead of a rounded card); content stays centered. */}
+      {/* Full-bleed panel — deck-style background (soft green + big blob
+          circles, same look as the tour video); content stays centered. */}
       <div
-        className="w-full border-y border-emerald-900/10 bg-[#F7FAF2]"
+        className="relative w-full border-y border-emerald-900/10 overflow-hidden bg-[#f2f7ee]"
         onTouchStart={(e) => { touchX.current = e.touches[0].clientX }}
         onTouchEnd={(e) => {
           if (touchX.current == null) return
@@ -98,7 +98,10 @@ export default function Slides() {
           touchX.current = null
         }}
       >
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      <div aria-hidden className="absolute rounded-full pointer-events-none" style={{ width: '44vmax', height: '44vmax', top: '-18vmax', right: '-14vmax', opacity: 0.55, background: 'radial-gradient(circle at 35% 35%, #dcefc8, #cfe8b6)' }} />
+      <div aria-hidden className="absolute rounded-full pointer-events-none" style={{ width: '34vmax', height: '34vmax', bottom: '-14vmax', left: '-10vmax', opacity: 0.55, background: 'radial-gradient(circle at 35% 35%, #dcefc8, #cfe8b6)' }} />
+      <div aria-hidden className="absolute rounded-full pointer-events-none" style={{ width: '16vmax', height: '16vmax', top: '52%', right: '22%', opacity: 0.35, background: 'radial-gradient(circle at 35% 35%, #dcefc8, #cfe8b6)' }} />
+      <div className="relative max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <div className="grid md:grid-cols-[1.1fr_0.9fr] gap-8 items-center">
           {/* Copy */}
           <div>

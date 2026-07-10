@@ -21,10 +21,7 @@ export default function HowItWorksPage() {
     <MarketingShell subtitle="how-it-works">
       {/* HERO — the interactive animated tour (served from public/tour.html) */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 pt-12 sm:pt-16 pb-10 text-center">
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider">
-          ▶ Take the tour
-        </span>
-        <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-gray-900 mt-4 leading-tight" style={DISPLAY}>
+        <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-gray-900 leading-tight" style={DISPLAY}>
           From a receipt to
           <span className="block bg-gradient-to-br from-emerald-500 via-lime-500 to-amber-500 bg-clip-text text-transparent">real clarity about your money.</span>
         </h1>
@@ -34,9 +31,10 @@ export default function HowItWorksPage() {
       </section>
 
       {/* Full-bleed tour embed — full viewport width and near-full height so it
-          renders exactly like the fullscreen /tour.html experience. */}
+          renders exactly like the fullscreen /tour.html experience. The
+          "open fullscreen" link lives INSIDE the deck (shown only when framed). */}
       <section className="w-full">
-        <div className="relative w-full overflow-hidden border-y border-emerald-900/10 shadow-2xl" style={{ height: '88vh' }}>
+        <div className="relative w-full overflow-hidden border-y border-emerald-900/10" style={{ height: '88vh' }}>
           <iframe
             className="absolute inset-0 h-full w-full"
             src="/tour.html"
@@ -44,11 +42,6 @@ export default function HowItWorksPage() {
             loading="lazy"
           />
         </div>
-        <p className="mt-3 text-sm text-center">
-          <a href="/tour.html" target="_blank" rel="noopener" className="font-bold text-emerald-700 hover:text-emerald-900 hover:underline">
-            Open the tour fullscreen ↗
-          </a>
-        </p>
       </section>
 
       {/* SCREENSHOT SLIDESHOW — real app screens, manual navigation */}

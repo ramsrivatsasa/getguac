@@ -46,7 +46,10 @@ body{
   transition:transform .12s ease, background .12s}
 .controls button:hover{transform:translateY(-2px);background:#f2fbf3}
 .controls .play{background:var(--emerald);color:#fff;border-color:var(--emerald)}
-.dots{bottom:30px;left:50%;transform:translateX(-50%);display:flex;gap:7px}
+.dots{bottom:34px;left:50%;transform:translateX(-50%);display:flex;gap:7px}
+.fsLink{display:none;bottom:9px;left:50%;transform:translateX(-50%);font-size:12.5px;font-weight:800;
+  color:var(--emerald);text-decoration:none;white-space:nowrap}
+.fsLink:hover{text-decoration:underline}
 .dots i{width:8px;height:8px;border-radius:50%;background:#cfdccf;cursor:pointer;transition:all .25s}
 .dots i.on{background:var(--emerald);width:22px;border-radius:5px}
 .brand{bottom:24px;left:22px;font-family:'Bricolage',sans-serif;font-weight:800;color:var(--ink);font-size:15px;
@@ -144,7 +147,7 @@ ul.bullets li:nth-child(5){animation-delay:.73s}
 .donutHost{position:relative;display:inline-block}
 .donut{width:min(230px,58vw);display:block;transform:rotate(-90deg)}
 .donut .track{fill:none;stroke:#e7ece3;stroke-width:13}
-.donut .prog{fill:none;stroke:#57a30d;stroke-width:13;stroke-linecap:round;stroke-dasharray:314.16;stroke-dashoffset:314.16;
+.donut .prog{fill:none;stroke:url(#donutGrad);stroke-width:13;stroke-linecap:round;stroke-dasharray:314.16;stroke-dashoffset:314.16;
   animation:donutDraw 1.5s .6s cubic-bezier(.3,.8,.3,1) forwards}
 @keyframes donutDraw{to{stroke-dashoffset:56.5}}
 .donutCenter{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
@@ -184,6 +187,7 @@ ul.bullets li:nth-child(5){animation-delay:.73s}
 <div class="chrome counter" id="counter">1 / 17</div>
 <div class="chrome brand"><span>🥑</span> GetGuac</div>
 <div class="chrome dots" id="dots"></div>
+<a class="chrome fsLink" id="fsLink" href="/tour.html" target="_blank" rel="noopener">Open the tour fullscreen ↗</a>
 <div class="chrome controls">
   <button id="prev" title="Previous (←)">‹</button>
   <button id="play" class="play" title="Play / pause (space)">▶</button>
@@ -337,7 +341,11 @@ steals:`<div class="card"><h4>Fresh Steals <span class="sub">live prices</span><
   <div class="badge">🏷️ 6 NEW on your saved searches</div></div>`,
 worthIt:`<div class="donutWrap">
   <div class="donutHost">
-    <svg class="donut" viewBox="0 0 120 120"><circle class="track" cx="60" cy="60" r="50"/><circle class="prog" cx="60" cy="60" r="50"/></svg>
+    <svg class="donut" viewBox="0 0 120 120">
+      <defs><linearGradient id="donutGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#57a30d"/><stop offset=".55" stop-color="#a8c414"/><stop offset="1" stop-color="#f2b036"/>
+      </linearGradient></defs>
+      <circle class="track" cx="60" cy="60" r="50"/><circle class="prog" cx="60" cy="60" r="50"/></svg>
     <div class="donutCenter"><div class="score">82</div><div class="lbl2">GUACSCORE</div></div>
   </div>
   <div class="stars"><b>★</b><b>★</b><b>★</b><b>★</b><b>★</b></div>
@@ -345,7 +353,7 @@ worthIt:`<div class="donutWrap">
 </div>`,
 returns:`<div class="card"><h4>Target · #4821 <span class="sub">returns</span></h4>
   <div class="row"><span class="ico">🔌</span><span class="grow">USB-C Cable<span class="sub">$9.49 · Tech</span></span><span class="val" style="color:#b3261e">8d left</span></div>
-  <div class="bar p40" style="margin:4px 0 10px"><i style="background:linear-gradient(90deg,#e05252,#e05252)"></i></div>
+  <div class="bar p40" style="margin:4px 0 10px"><i></i></div>
   <div class="badge">↩️ $312 recovered this year</div></div>`,
 wizard:`<div class="card"><h4>GuacWizard <span class="sub">Bank Bite</span></h4>
   <div class="row"><span class="ico">🧙</span><span class="grow">Interest — Visa …4821<span class="sub">avoidable · pay in full</span></span><span class="val" style="color:#b3261e">$187</span></div>
@@ -500,6 +508,10 @@ addEventListener('touchend',e=>{
   if(Math.abs(dx)>48)go(cur+(dx<0?1:-1),true)
   tx=null
 },{passive:true})
+
+// When embedded (how-it-works hero iframe), surface the fullscreen link
+// under the dots; on the standalone page it stays hidden.
+if(window.self!==window.top)document.getElementById('fsLink').style.display='block'
 
 // boot — render first slide; voice starts on first interaction (browser policy)
 stage.innerHTML=slideHTML(S[0])

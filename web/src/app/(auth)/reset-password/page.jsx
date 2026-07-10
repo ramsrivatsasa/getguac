@@ -28,8 +28,8 @@ import GuacMascot from '../../../components/GuacMascot'
 export default function ResetPasswordPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-900 via-green-800 to-lime-700">
-        <Loader2 className="animate-spin text-white" size={32} />
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <Loader2 className="animate-spin text-emerald-600" size={32} />
       </div>
     }>
       <ResetPasswordInner />
@@ -94,15 +94,15 @@ function ResetPasswordInner() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-900 via-green-800 to-lime-700 p-4 font-sans">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50/80 via-white to-lime-50/70 p-4 font-sans">
       <div className="w-full max-w-md space-y-6">
         <div className="text-center">
           <GuacMascot expression={stage === 'error' ? 'sad' : 'happy'} size={80} />
-          <h1 className="text-3xl font-black text-white mt-2">Reset your password</h1>
-          <p className="text-emerald-100 text-sm mt-1">Pick a new password for your GetGuac account.</p>
+          <h1 className="text-3xl font-black text-gray-900 mt-2 tracking-tight">Reset your password</h1>
+          <p className="text-gray-600 text-sm mt-1">Pick a new password for your GetGuac account.</p>
         </div>
 
-        <div className="bg-white rounded-3xl p-6 shadow-2xl">
+        <div className="bg-white rounded-3xl p-6 shadow-lg border border-emerald-100/70">
           {stage === 'verifying' && (
             <div className="flex flex-col items-center py-8 text-emerald-700">
               <Loader2 className="animate-spin" size={32} />

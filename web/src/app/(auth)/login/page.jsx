@@ -22,8 +22,8 @@ const LOGIN_HIGHLIGHTS = [
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-900 via-green-800 to-lime-700 font-sans">
-        <div className="text-white">Loading…</div>
+      <div className="min-h-screen flex items-center justify-center bg-white font-sans">
+        <div className="text-gray-500">Loading…</div>
       </div>
     }>
       <LoginPageInner />
@@ -171,33 +171,33 @@ function LoginPageInner() {
   }
 
   return (
-    <div className="min-h-screen lg:grid lg:grid-cols-[1.05fr_1fr] bg-white lg:bg-gradient-to-br lg:from-emerald-900 lg:via-green-800 lg:to-lime-700 font-sans">
+    <div className="min-h-screen lg:grid lg:grid-cols-[1.05fr_1fr] bg-white font-sans">
       {/* LEFT — brand panel (desktop only). Mobile shows a compact header. */}
-      <aside className="hidden lg:flex flex-col justify-center gap-9 px-12 xl:px-20 py-12 text-white relative overflow-hidden">
-        <div className="absolute -top-28 -right-28 w-96 h-96 rounded-full bg-white/5 pointer-events-none" />
-        <div className="absolute -bottom-32 -left-20 w-80 h-80 rounded-full bg-lime-300/5 pointer-events-none" />
+      <aside className="hidden lg:flex flex-col justify-center gap-9 px-12 xl:px-20 py-12 relative overflow-hidden bg-gradient-to-br from-emerald-50/80 via-white to-lime-50/70 border-r border-emerald-100/70">
+        <div className="absolute -top-28 -right-28 w-96 h-96 rounded-full bg-emerald-100/40 pointer-events-none" />
+        <div className="absolute -bottom-32 -left-20 w-80 h-80 rounded-full bg-lime-200/30 pointer-events-none" />
         <div className="relative">
           <div className="flex items-center gap-3">
             <GuacMascot expression="angel" size={84} />
             <div>
-              <div className="text-2xl font-black leading-none">GetGuac</div>
-              <div className="text-emerald-200 text-sm font-semibold mt-1">your money&apos;s wingman</div>
+              <div className="text-2xl font-black leading-none text-gray-900">GetGuac</div>
+              <div className="text-emerald-700 text-sm font-semibold mt-1">your money&apos;s wingman</div>
             </div>
           </div>
-          <h2 className="text-4xl xl:text-5xl font-black mt-9 leading-[1.05]">Welcome back.</h2>
-          <p className="text-emerald-100/90 mt-4 max-w-md text-lg">
+          <h2 className="text-4xl xl:text-5xl font-black mt-9 leading-[1.05] text-gray-900 tracking-tight">Welcome back.</h2>
+          <p className="text-gray-600 mt-4 max-w-md text-lg">
             Your money&apos;s wingman is right where you left it.
           </p>
         </div>
         <ul className="relative space-y-3.5 max-w-md">
           {LOGIN_HIGHLIGHTS.map((b) => (
-            <li key={b.text} className="flex items-center gap-3 text-emerald-50">
-              <span className="w-9 h-9 rounded-xl bg-white/10 ring-1 ring-white/15 flex items-center justify-center text-lg flex-shrink-0">{b.icon}</span>
+            <li key={b.text} className="flex items-center gap-3 text-gray-800">
+              <span className="w-9 h-9 rounded-xl bg-emerald-100 ring-1 ring-emerald-200 flex items-center justify-center text-lg flex-shrink-0">{b.icon}</span>
               <span className="font-semibold">{b.text}</span>
             </li>
           ))}
         </ul>
-        <div className="relative flex flex-wrap gap-x-5 gap-y-2 text-sm text-emerald-100/90 font-semibold">
+        <div className="relative flex flex-wrap gap-x-5 gap-y-2 text-sm text-emerald-800 font-semibold">
           <span className="inline-flex items-center gap-1.5"><Check size={15} /> Free forever</span>
           <span className="inline-flex items-center gap-1.5"><Check size={15} /> We never sell your data</span>
         </div>

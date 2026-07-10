@@ -195,7 +195,7 @@ export default function RegisterPage() {
   const usernameNorm = form.username.toLowerCase().trim()
 
   return (
-    <div className="min-h-screen lg:grid lg:grid-cols-[1.05fr_1fr] bg-white lg:bg-gradient-to-br lg:from-emerald-900 lg:via-green-800 lg:to-lime-700 font-sans">
+    <div className="min-h-screen lg:grid lg:grid-cols-[1.05fr_1fr] bg-white font-sans">
       {/* Capture ?ref=<CODE> on register too — direct deep-links to
           /register?ref=ABC123 should also seed localStorage so the
           post-signup hook on the dashboard credits both sides. */}
@@ -203,31 +203,31 @@ export default function RegisterPage() {
 
       {/* LEFT — brand & benefits panel. DESKTOP ONLY: the mobile layout drops
           this entirely and shows a compact header above the form instead. */}
-      <aside className="hidden lg:flex flex-col justify-center gap-9 px-12 xl:px-20 py-12 text-white relative overflow-hidden">
-        <div className="absolute -top-28 -right-28 w-96 h-96 rounded-full bg-white/5 pointer-events-none" />
-        <div className="absolute -bottom-32 -left-20 w-80 h-80 rounded-full bg-lime-300/5 pointer-events-none" />
+      <aside className="hidden lg:flex flex-col justify-center gap-9 px-12 xl:px-20 py-12 relative overflow-hidden bg-gradient-to-br from-emerald-50/80 via-white to-lime-50/70 border-r border-emerald-100/70">
+        <div className="absolute -top-28 -right-28 w-96 h-96 rounded-full bg-emerald-100/40 pointer-events-none" />
+        <div className="absolute -bottom-32 -left-20 w-80 h-80 rounded-full bg-lime-200/30 pointer-events-none" />
         <div className="relative">
           <div className="flex items-center gap-3">
             <GuacMascot expression="celebrating" size={76} />
             <div>
-              <div className="text-2xl font-black leading-none">GetGuac</div>
-              <div className="text-emerald-200 text-sm font-semibold mt-1">your money&apos;s wingman</div>
+              <div className="text-2xl font-black leading-none text-gray-900">GetGuac</div>
+              <div className="text-emerald-700 text-sm font-semibold mt-1">your money&apos;s wingman</div>
             </div>
           </div>
-          <h2 className="text-4xl xl:text-5xl font-black mt-9 leading-[1.05]">Take control<br />of your money.</h2>
-          <p className="text-emerald-100/90 mt-4 max-w-md text-lg">
+          <h2 className="text-4xl xl:text-5xl font-black mt-9 leading-[1.05] text-gray-900 tracking-tight">Take control<br />of your money.</h2>
+          <p className="text-gray-600 mt-4 max-w-md text-lg">
             Create your free account and start seeing exactly where your money goes — in about a minute.
           </p>
         </div>
         <ul className="relative space-y-3.5 max-w-md">
           {SIGNUP_BENEFITS.map((b) => (
-            <li key={b.text} className="flex items-center gap-3 text-emerald-50">
-              <span className="w-9 h-9 rounded-xl bg-white/10 ring-1 ring-white/15 flex items-center justify-center text-lg flex-shrink-0">{b.icon}</span>
+            <li key={b.text} className="flex items-center gap-3 text-gray-800">
+              <span className="w-9 h-9 rounded-xl bg-emerald-100 ring-1 ring-emerald-200 flex items-center justify-center text-lg flex-shrink-0">{b.icon}</span>
               <span className="font-semibold">{b.text}</span>
             </li>
           ))}
         </ul>
-        <div className="relative flex flex-wrap gap-x-5 gap-y-2 text-sm text-emerald-100/90 font-semibold">
+        <div className="relative flex flex-wrap gap-x-5 gap-y-2 text-sm text-emerald-800 font-semibold">
           <span className="inline-flex items-center gap-1.5"><Check size={15} /> Free forever</span>
           <span className="inline-flex items-center gap-1.5"><Check size={15} /> No card required</span>
           <span className="inline-flex items-center gap-1.5"><Check size={15} /> We never sell your data</span>

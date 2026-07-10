@@ -113,13 +113,45 @@ ul.bullets li:nth-child(5){animation-delay:.73s}
   font-weight:800;font-size:16px;padding:15px 30px;border-radius:999px;box-shadow:0 12px 30px rgba(5,150,105,.35);
   opacity:0;animation:up .5s .5s ease forwards;transition:transform .15s}
 .cta:hover{transform:translateY(-2px)}
-.dupwrap{position:relative;height:120px}
-.dupwrap .dcard{position:absolute;inset:auto 0 0 0;background:#fff;border:1px solid #eef2ec;border-radius:14px;padding:12px 14px;
-  font-weight:700;color:var(--ink);font-size:13px;box-shadow:0 8px 22px rgba(21,40,28,.08)}
-.dupwrap .d1{transform:translate(-8px,-52px) rotate(-3deg);animation:merge1 1.4s 1s ease forwards}
-.dupwrap .d2{transform:translate(10px,-26px) rotate(2deg);animation:merge2 1.4s 1s ease forwards}
-@keyframes merge1{to{transform:translate(0,0) rotate(0);opacity:0}}
-@keyframes merge2{to{transform:translate(0,0) rotate(0)}}
+/* dedup — video-exact: two tilted duplicates fly in, merge to one, keeper chip pops */
+.dedupStage{position:relative;height:240px}
+.rcpt{position:absolute;left:50%;top:36px;width:200px;margin-left:-100px;background:#fff;border-radius:14px;
+  box-shadow:0 14px 34px rgba(21,40,28,.14);padding:14px 18px 16px}
+.rcpt .store{display:block;font-size:10.5px;font-weight:700;color:#7d8a80;letter-spacing:.05em;margin-bottom:4px}
+.rcpt .amt{font-family:'Bricolage',sans-serif;font-weight:800;font-size:24px;color:var(--ink)}
+.rcpt.r1{opacity:0;animation:dIn1 .7s .3s ease forwards, dMerge1 .9s 2s ease forwards}
+.rcpt.r2{opacity:0;animation:dIn2 .7s .5s ease forwards, dMerge2 .9s 2s ease forwards}
+@keyframes dIn1{from{opacity:0;transform:translate(-74px,-72px) rotate(-9deg)}to{opacity:1;transform:translate(-74px,-14px) rotate(-5deg)}}
+@keyframes dIn2{from{opacity:0;transform:translate(66px,-52px) rotate(8deg)}to{opacity:1;transform:translate(66px,6px) rotate(3.5deg)}}
+@keyframes dMerge1{from{opacity:1;transform:translate(-74px,-14px) rotate(-5deg)}to{opacity:0;transform:translate(0,0) rotate(0)}}
+@keyframes dMerge2{from{opacity:1;transform:translate(66px,6px) rotate(3.5deg)}to{opacity:1;transform:translate(0,0) rotate(0)}}
+.keeperChip{position:absolute;left:50%;bottom:10px;display:flex;align-items:center;gap:9px;
+  background:#eaf6e6;border:1px solid #cde8c4;border-radius:12px;padding:9px 16px;font-size:13px;font-weight:700;color:#2f6b1f;
+  opacity:0;transform:translateX(-50%) translateY(24px);animation:chipIn .6s 3s ease forwards;white-space:nowrap}
+.keeperChip .box{width:17px;height:17px;border-radius:4px;background:#4d9a26;color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+@keyframes chipIn{to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+/* worth-it — video-exact GuacScore donut */
+.donutWrap{text-align:center}
+.donutHost{position:relative;display:inline-block}
+.donut{width:min(230px,58vw);display:block;transform:rotate(-90deg)}
+.donut .track{fill:none;stroke:#e7ece3;stroke-width:13}
+.donut .prog{fill:none;stroke:#57a30d;stroke-width:13;stroke-linecap:round;stroke-dasharray:314.16;stroke-dashoffset:314.16;
+  animation:donutDraw 1.5s .6s cubic-bezier(.3,.8,.3,1) forwards}
+@keyframes donutDraw{to{stroke-dashoffset:56.5}}
+.donutCenter{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.donutCenter .score{font-family:'Bricolage',sans-serif;font-weight:800;font-size:54px;color:var(--ink);line-height:1;opacity:0;animation:up .6s 1s ease forwards}
+.donutCenter .lbl2{font-size:10px;font-weight:800;letter-spacing:.16em;color:#57a30d;margin-top:5px;opacity:0;animation:up .5s 1.2s ease forwards}
+.starsCap{font-size:11px;font-weight:700;color:var(--soft);margin-top:4px;opacity:0;animation:up .5s 1.6s ease forwards}
+
+/* under-the-hood AI avatar chips (every content slide, like the deck) */
+.hood{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:22px;opacity:0;animation:up .5s .85s ease forwards}
+.hood .lbl{font-size:10px;font-weight:800;letter-spacing:.1em;color:var(--soft);text-transform:uppercase}
+.person{display:flex;align-items:center;gap:7px;background:#fff;border:1px solid #e4eae2;border-radius:999px;padding:3px 12px 3px 4px;
+  box-shadow:0 1px 5px rgba(21,40,28,.06);font-size:11.5px;font-weight:700;color:#3d4a42}
+.person .av{position:relative;width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#bef264,#34d399,#065f46);
+  display:flex;align-items:center;justify-content:center;font-size:13px}
+.person .av i{position:absolute;top:-4px;right:-5px;font-style:normal;font-size:10px}
 .routeline{stroke-dasharray:220;stroke-dashoffset:220;animation:draw 1.6s .8s ease forwards}
 @keyframes draw{to{stroke-dashoffset:0}}
 
@@ -262,18 +294,17 @@ inbox:`<div class="card"><h4>you@getguac.app <span class="sub">inbox</span></h4>
   <div class="row"><span class="ico">🧾</span><span class="grow">Uber receipt<span class="sub">auto-filed ✓</span></span></div>
   <div class="row"><span class="ico">🛡️</span><span class="grow">Promo spam<span class="sub">stays out of your real inbox</span></span></div>
   <div class="badge">✓ parsed within 10 minutes</div></div>`,
-parse:`<div class="card"><h4>Guac-AI parsing <span class="sub">5–15 s</span></h4>
+parse:`<div class="card"><h4>Target · #4821 <span style="font-family:'Bricolage',sans-serif;font-weight:800;font-size:16px;color:#116b3f">$42.78</span></h4>
   <div class="scanline">
-  <div class="row"><span class="ico">🏬</span><span class="grow">Store<span class="sub">Costco Wholesale</span></span><span class="val">✓</span></div>
-  <div class="row"><span class="ico">📅</span><span class="grow">Date · total · tax<span class="sub">Jun 9 · $285.00 · $23.37</span></span><span class="val">✓</span></div>
-  <div class="row"><span class="ico">🧾</span><span class="grow">Line items<span class="sub">14 items → searchable</span></span><span class="val">✓</span></div>
-  <div class="row"><span class="ico">↩️</span><span class="grow">Refund policy<span class="sub">90 days</span></span><span class="val">✓</span></div></div></div>`,
-dedup:`<div class="card"><h4>Duplicates <span class="sub">smart match</span></h4>
-  <div class="dupwrap">
-    <div class="dcard d1">GLORY DAYS GRILL — $24.74</div>
-    <div class="dcard d2">Glory Days Grill — $24.74</div>
-  </div>
-  <div class="badge" style="animation:up .5s 2s ease both">✓ 2 duplicates → 1 keeper</div></div>`,
+  <div class="row"><span class="ico">🧴</span><span class="grow">Tide Detergent<span class="sub">Home</span></span><span class="val">$12.99</span></div>
+  <div class="row"><span class="ico">🔌</span><span class="grow">USB-C Cable<span class="sub">Tech</span></span><span class="val">$9.49</span></div>
+  <div class="row"><span class="ico">🍌</span><span class="grow">Bananas<span class="sub">Groceries</span></span><span class="val">$2.10</span></div>
+  <div class="row"><span class="ico">☕</span><span class="grow">Coffee Beans<span class="sub">Groceries</span></span><span class="val">$18.20</span></div></div></div>`,
+dedup:`<div class="dedupStage">
+  <div class="rcpt r1"><span class="store">GLORY DAYS GRILL</span><span class="amt">$24.74</span></div>
+  <div class="rcpt r2"><span class="store">Glory Days Grill</span><span class="amt">$24.74</span></div>
+  <div class="keeperChip"><span class="box">✓</span> 2 duplicates → 1 keeper</div>
+</div>`,
 categorize:`<div class="card"><h4>Categories <span class="sub">rules + AI</span></h4><div class="chipline">
   <span class="chip" style="animation-delay:.5s">🛒 Groceries</span><span class="chip" style="animation-delay:.62s">🍜 Dining</span>
   <span class="chip" style="animation-delay:.74s">⛽ Gas</span><span class="chip" style="animation-delay:.86s">📺 Electronics</span>
@@ -294,9 +325,14 @@ steals:`<div class="card"><h4>Fresh Steals <span class="sub">live prices</span><
   <div class="row"><span class="ico">🎧</span><span class="grow">AirPods Pro<span class="sub">Poshmark · today</span></span><span class="val" style="color:#116b3f">$148</span></div>
   <div class="row"><span class="ico">🎧</span><span class="grow">Sony WH-1000XM5<span class="sub">was $249</span></span><span class="val" style="color:#116b3f">$175</span></div>
   <div class="badge">🏷️ 6 NEW on your saved searches</div></div>`,
-worthIt:`<div class="card" style="text-align:center"><h4 style="justify-content:center">Worth it?</h4>
+worthIt:`<div class="donutWrap">
+  <div class="donutHost">
+    <svg class="donut" viewBox="0 0 120 120"><circle class="track" cx="60" cy="60" r="50"/><circle class="prog" cx="60" cy="60" r="50"/></svg>
+    <div class="donutCenter"><div class="score">82</div><div class="lbl2">GUACSCORE</div></div>
+  </div>
   <div class="stars"><b>★</b><b>★</b><b>★</b><b>★</b><b>★</b></div>
-  <div style="margin-top:14px"><span class="bigNum">80</span><div class="sub" style="font-size:12px;color:var(--soft);font-weight:700">GUACSCORE · beating ~72%</div></div></div>`,
+  <div class="starsCap">Worth-It · per receipt</div>
+</div>`,
 returns:`<div class="card"><h4>Target · #4821 <span class="sub">returns</span></h4>
   <div class="row"><span class="ico">🔌</span><span class="grow">USB-C Cable<span class="sub">$9.49 · Tech</span></span><span class="val" style="color:#b3261e">8d left</span></div>
   <div class="bar p40" style="margin:4px 0 10px"><i style="background:linear-gradient(90deg,#e05252,#e05252)"></i></div>
@@ -324,6 +360,29 @@ data:`<div class="card"><h4>Privacy sweep <span class="sub">one tap</span></h4>
   <div class="badge">📦 full JSON export — take it anywhere</div></div>`,
 }
 
+// AI-helper avatar chips per slide ("Under the hood"), mirroring the deck's AiPeopleStrip
+const ROLES = {
+  camera:['📷','Camera scout'], email:['📬','Email watcher'], statement:['🏦','Statement reader'],
+  gemini:['✨','Gemini vision'], groq:['⚡','Groq fallback'], ocr:['🔠','OCR cleanup'],
+  sleuth:['🔍','Dedup sleuth'], tagger:['🏷️','Auto-tagger'], analyst:['📊','Insight analyst'],
+  judge:['⚖️','Worth-It judge'], refund:['↩️','Refund tracker'], wizard:['🧙','GuacWizard coach'],
+  shield:['🛡️','Privacy guard'], car:['🚗','Trip logger'], predictor:['🛒','Smashlist predictor'],
+  deals:['💸','Steals hunter'], tally:['💰','GuacMoney tally'],
+}
+const AI = {
+  capture:['camera','email','statement'], inbox:['email'], parse:['gemini','groq','ocr'],
+  dedup:['sleuth'], categorize:['tagger'], dashboard:['analyst'], smashlist:['predictor'],
+  steals:['deals'], worthIt:['judge'], returns:['refund'], wizard:['wizard'], miles:['car'],
+  guacmoney:['tally'], security:['shield'], data:['shield'],
+}
+function hoodHTML(art){
+  const people = AI[art]; if(!people) return ''
+  return `<div class="hood"><span class="lbl">Under the hood</span>${people.map(p=>{
+    const r = ROLES[p]
+    return `<span class="person"><span class="av">🥑<i>${r[0]}</i></span>${r[1]}</span>`
+  }).join('')}</div>`
+}
+
 // ─── Deck engine ───
 const stage=document.getElementById('stage'),dots=document.getElementById('dots'),
 counter=document.getElementById('counter'),playBtn=document.getElementById('play'),
@@ -346,7 +405,7 @@ function slideHTML(s){
   const bullets=s.bullets.map(b=>`<li><b>${esc(b[0])}.</b> ${esc(b[1])}</li>`).join('')
   return `<div class="slide" style="--accent:${ac};--accent-soft:${acSoft}">
     <div><div class="kicker">Step ${s.n} · ${esc(s.kick)}</div>
-    <h1>${esc(s.title)}</h1><ul class="bullets">${bullets}</ul></div>
+    <h1>${esc(s.title)}</h1><ul class="bullets">${bullets}</ul>${hoodHTML(s.art)}</div>
     <div class="viz">${VIZ[s.art]||''}</div></div>`
 }
 

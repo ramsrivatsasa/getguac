@@ -6,7 +6,11 @@
 // board to level up, lose when the wall crosses the danger line.
 // Whole sim lives in refs + rAF; React state is only the HUD/status layer.
 // Sound is synthesized WebAudio (no assets) with a persisted mute toggle.
+// The playfield is full-bleed: column count adapts to the screen width at
+// game start so bubbles stay finger-sized on phones and sane on monitors.
 import { useCallback, useEffect, useRef, useState } from 'react'
+import AdSlot from '../AdSlot'
+import { saveGameScore } from '../../lib/gameScores'
 
 const INK = '#15281C'
 const BODY = '#3d4a42'
@@ -29,8 +33,10 @@ const KINDS = [
   { color: '#0D9488', dark: '#0a5c53', emoji: '💎' }, // splurges
 ]
 
-const COLS = 12
 const START_ROWS = 6
+// Columns adapt to screen width at game start (bubble diameter ≈ 64px,
+// clamped so phones get chunky bubbles and monitors don't get beach balls).
+const colsForWidth = (w) => Math.max(8, Math.min(24, Math.round(w / 64)))
 const FLY_SPEED = 1500
 const MAX_ANG = 1.25 // radians off vertical
 const TIPS = [
@@ -47,8 +53,8 @@ const key = (r, c) => `${r},${c}`
 // ─── geometry (odd rows shift right by R; parityOff flips on row insert) ───
 const TOP_PAD = 46 // clears the HUD strip
 
-function makeGeo(w) {
-  const R = w / (2 * COLS + 1)
+function makeGeo(w, cols) {
+  const R = w / (2 * cols + 1)
   return { R, rowH: R * Math.sqrt(3) }
 }
 function cellXY(geo, parityOff, r, c) {
@@ -73,14 +79,14 @@ function buildBoard(sim) {
   sim.parityOff = 0
   const palette = [...Array(sim.colors).keys()]
   for (let r = 0; r < START_ROWS; r++)
-    for (let c = 0; c < COLS; c++)
+    for (let c = 0; c < sim.cols; c++)
       sim.grid.set(key(r, c), randOf(palette))
   sim.cur = randOf(palette)
   sim.nxt = randOf(palette)
 }
 
 const freshSim = () => ({
-  grid: new Map(), parityOff: 0,
+  grid: new Map(), parityOff: 0, cols: 12,
   cur: 0, nxt: 0, fly: null,
   falls: [], parts: [],
   aim: { on: false, ang: 0 },
@@ -107,6 +113,7 @@ export default function BubbleBudget() {
   const [best, setBest] = useState(0)
   const [newBest, setNewBest] = useState(false)
   const [muted, setMuted] = useState(false)
+  const [saveState, setSaveState] = useState(null) // saveGameScore result: { signedIn, saved, gm }
   const [tipIdx, setTipIdx] = useState(0)
   const [toast, setToast] = useState('')
   const [, bumpHud] = useState(0) // re-render for next-bubble preview
@@ -169,12 +176,12 @@ export default function BubbleBudget() {
     const r = Math.max(0, Math.round((y - TOP_PAD - geo.R) / geo.rowH))
     const shift = (r + sim.parityOff) % 2
     let c = Math.round((x - geo.R - shift * geo.R) / (2 * geo.R))
-    c = Math.max(0, Math.min(COLS - 1, c))
+    c = Math.max(0, Math.min(sim.cols - 1, c))
     if (!sim.grid.has(key(r, c))) return [r, c]
     // occupied — pick the nearest free neighbor cell
     let bestCell = null, bestD = Infinity
     for (const [nr, nc] of neighbors(sim.parityOff, r, c)) {
-      if (nr < 0 || nc < 0 || nc > COLS - 1 || sim.grid.has(key(nr, nc))) continue
+      if (nr < 0 || nc < 0 || nc > sim.cols - 1 || sim.grid.has(key(nr, nc))) continue
       const p = cellXY(geo, sim.parityOff, nr, nc)
       const d = (p.x - x) ** 2 + (p.y - y) ** 2
       if (d < bestD) { bestD = d; bestCell = [nr, nc] }
@@ -207,7 +214,7 @@ export default function BubbleBudget() {
   function dropOrphans(sim, geo) {
     const seen = new Set()
     const stack = []
-    for (let c = 0; c < COLS; c++) if (sim.grid.has(key(0, c))) { seen.add(key(0, c)); stack.push([0, c]) }
+    for (let c = 0; c < sim.cols; c++) if (sim.grid.has(key(0, c))) { seen.add(key(0, c)); stack.push([0, c]) }
     while (stack.length) {
       const [cr, cc] = stack.pop()
       for (const [nr, nc] of neighbors(sim.parityOff, cr, cc)) {
@@ -237,7 +244,7 @@ export default function BubbleBudget() {
     sim.grid = next
     sim.parityOff ^= 1
     const palette = [...Array(sim.colors).keys()]
-    for (let c = 0; c < COLS; c++) if (Math.random() < 0.92) sim.grid.set(key(0, c), randOf(palette))
+    for (let c = 0; c < sim.cols; c++) if (Math.random() < 0.92) sim.grid.set(key(0, c), randOf(palette))
     sfx('row')
   }
 
@@ -254,6 +261,9 @@ export default function BubbleBudget() {
   const endGame = (sim, won) => {
     cancelAnimationFrame(rafRef.current)
     sfx(won ? 'win' : 'lose')
+    // Signed-in players get the score on their account (migration_078) and
+    // the first game each day earns GuacMoney; best-effort — never blocks.
+    saveGameScore('bubbles', sim.score, sim.level).then(setSaveState)
     if (sim.score > bestRef.current) {
       bestRef.current = sim.score
       setBest(sim.score)
@@ -332,7 +342,7 @@ export default function BubbleBudget() {
     const cvs = canvasRef.current
     if (!cvs) return
     const { w, h } = sizeRef.current
-    const geo = makeGeo(w)
+    const geo = makeGeo(w, sim.cols)
     const ctx = cvs.getContext('2d')
     ctx.clearRect(0, 0, w, h)
 
@@ -405,7 +415,7 @@ export default function BubbleBudget() {
 
   function step(sim, dt) {
     const { w, h } = sizeRef.current
-    const geo = makeGeo(w)
+    const geo = makeGeo(w, sim.cols)
     if (sim.fly) {
       const f = sim.fly
       f.x += f.vx * dt; f.y += f.vy * dt
@@ -450,9 +460,10 @@ export default function BubbleBudget() {
 
   const start = () => {
     const sim = freshSim()
+    sim.cols = colsForWidth(sizeRef.current.w || 800)
     buildBoard(sim)
     simRef.current = sim
-    setScore(0); setLevel(1)
+    setScore(0); setLevel(1); setSaveState(null)
     playsRef.current += 1
     setPhase('playing')
     lastRef.current = performance.now()
@@ -573,11 +584,11 @@ export default function BubbleBudget() {
   const shotsLeft = sim && status !== 'idle' ? sim.shots : null
 
   return (
-    <div className="mx-auto w-full px-4 select-none" style={{ maxWidth: 860 }}>
+    <div className="w-full select-none">
       <div
         ref={wrapRef}
-        className="relative overflow-hidden rounded-2xl"
-        style={{ height: 'min(82vh, 900px)', minHeight: 480, background: 'linear-gradient(180deg, #f2fbf3 0%, #eaf6ec 100%)', border: CARD_BORDER }}
+        className="relative overflow-hidden"
+        style={{ height: 'min(84vh, 1000px)', minHeight: 480, background: 'linear-gradient(180deg, #f2fbf3 0%, #eaf6ec 100%)', borderTop: CARD_BORDER, borderBottom: CARD_BORDER }}
       >
         <canvas
           ref={canvasRef}
@@ -641,7 +652,7 @@ export default function BubbleBudget() {
         {/* Idle start overlay */}
         {status === 'idle' && (
           <div className="absolute inset-0 flex items-center justify-center p-4" style={{ background: 'rgba(242,251,243,0.9)' }}>
-            <div className="rounded-2xl bg-white p-5 text-center w-full" style={{ border: CARD_BORDER, maxWidth: 360 }}>
+            <div className="rounded-2xl bg-white p-5 text-center w-full max-h-full overflow-y-auto" style={{ border: CARD_BORDER, maxWidth: 400 }}>
               <div className="text-4xl mb-1">🫧</div>
               <div className="font-display font-extrabold text-xl mb-2" style={{ color: INK }}>Bubble Pop</div>
               <p className="text-sm mb-1" style={{ color: BODY }}>
@@ -654,6 +665,7 @@ export default function BubbleBudget() {
                 <div className="text-xs font-bold mb-3" style={{ color: AMBER }}>Best game: ${fmt(best)} banked</div>
               )}
               <button onClick={start} className="text-sm font-bold px-6 py-2.5 rounded-full text-white" style={{ background: GREEN }}>Start popping</button>
+              <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_INGRID || '1890940391'} minHeight={250} className="mt-4" />
             </div>
           </div>
         )}
@@ -675,7 +687,7 @@ export default function BubbleBudget() {
         {/* Game-over card */}
         {status === 'over' && (
           <div className="absolute inset-0 flex items-center justify-center p-4" style={{ background: 'rgba(242,251,243,0.9)' }}>
-            <div className="rounded-2xl bg-white p-5 text-center w-full" style={{ border: CARD_BORDER, maxWidth: 340 }}>
+            <div className="rounded-2xl bg-white p-5 text-center w-full max-h-full overflow-y-auto" style={{ border: CARD_BORDER, maxWidth: 400 }}>
               <div className="text-3xl mb-1">🫧💥</div>
               <div className="font-display font-extrabold text-lg" style={{ color: INK }}>The wall got you!</div>
               <div className="font-display font-extrabold text-4xl mt-2" style={{ color: GREEN }}>${fmt(score)}</div>
@@ -691,8 +703,22 @@ export default function BubbleBudget() {
                 </div>
               </div>
               {newBest && <div className="text-xs font-bold mt-2" style={{ color: AMBER }}>New best! 🥑</div>}
+              {saveState?.gm > 0 && (
+                <div className="text-xs font-bold mt-2 inline-block px-3 py-1 rounded-full" style={{ background: '#f2fbf3', color: '#065f46' }}>
+                  🥑 +{saveState.gm} GuacMoney — first game today
+                </div>
+              )}
+              {saveState?.saved && !saveState?.gm && (
+                <div className="text-xs font-bold mt-2" style={{ color: GREEN }}>✓ Score saved to your account</div>
+              )}
+              {saveState?.signedIn === false && (
+                <div className="text-xs mt-2" style={{ color: MUTED }}>
+                  <a href="/login" className="font-bold" style={{ color: '#065f46' }}>Sign in</a> to earn GuacMoney for playing and keep your scores.
+                </div>
+              )}
               <p className="text-xs mt-3" style={{ color: BODY }}>💡 {TIPS[tipIdx]}</p>
               <button onClick={start} className="mt-4 text-sm font-bold px-6 py-2.5 rounded-full text-white" style={{ background: GREEN }}>Play again</button>
+              <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_INGRID || '1890940391'} minHeight={250} className="mt-4" />
             </div>
           </div>
         )}

@@ -173,8 +173,22 @@ export async function fetchGuacMoneySaved() {
   return saved
 }
 
+// Arcade GuacMoney: first finished round of each game each day = +50
+// (GM_PER_FIRST_PLAY in gameScores.js). arcade_gm_days() (migration_078)
+// counts those (game, day) firsts server-side so we never pull score rows.
+export const GM_PER_ARCADE_DAY = 50
+
+export async function fetchArcadeGmDays() {
+  const sb = createClient()
+  const { data, error } = await sb.rpc('arcade_gm_days')
+  if (error) return 0 // migration not applied yet → degrade to 0
+  return Number(data) || 0
+}
+
 // Combined GuacMoney balance (points): saved $ (×1000) + receipts (×100) +
-// referrals (×1000). 1000 GuacMoney = $1. Matches mobile guacMoneyPoints().
+// referrals (×1000) + arcade first-plays (×50). 1000 GuacMoney = $1.
+// Matches mobile guacMoneyPoints() (mobile lacks the arcade term until its
+// next release — the arcade lives on the web/webview side).
 export async function fetchGuacMoneyPoints() {
   const sb = createClient()
   const { data: { user } } = await sb.auth.getUser()
@@ -195,7 +209,8 @@ export async function fetchGuacMoneyPoints() {
     const { data: refs } = await sb.from('referrals').select('id').eq('referrer_id', user.id)
     referrals = (refs || []).length
   } catch {}
-  return Math.round(saved * 1000) + receipts * 100 + referrals * 1000
+  const arcadeDays = await fetchArcadeGmDays()
+  return Math.round(saved * 1000) + receipts * 100 + referrals * 1000 + arcadeDays * GM_PER_ARCADE_DAY
 }
 
 export function sourceLabel(source) {

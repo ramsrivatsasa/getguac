@@ -4,6 +4,7 @@
 // way across to balance it and bank the savings — four rows at once is a
 // GUAC SMASH. Best run persists in localStorage. Just for fun.
 import { useEffect, useRef, useState } from 'react'
+import { useScoreSaver, SaveScoreLine } from './arcadeKit'
 
 const INK = '#15281C'
 const BODY = '#3d4a42'
@@ -95,6 +96,7 @@ export default function ReceiptStacker() {
   const [hud, setHud] = useState({ score: 0, lines: 0, level: 1, best: 0, next: null })
   const [smash, setSmash] = useState(false)
   const [newBest, setNewBest] = useState(false)
+  const { saveRes, save, resetSave } = useScoreSaver('stacker')
 
   function setStatusBoth(s) { statusRef.current = s; setStatus(s) }
 
@@ -119,6 +121,7 @@ export default function ReceiptStacker() {
   function endGame() {
     const g = game.current
     g.active = null
+    save(g.score, g.level)
     const beat = g.score > bestRef.current
     if (beat) {
       bestRef.current = g.score
@@ -191,7 +194,7 @@ export default function ReceiptStacker() {
     const g = { board: Array.from({ length: ROWS }, () => Array(COLS).fill(null)), bag: [], active: null, next: null, score: 0, lines: 0, level: 1, acc: 0, last: 0 }
     game.current = g
     spawn(g)
-    setSmash(false); setNewBest(false); setStatusBoth('running'); syncHud()
+    setSmash(false); setNewBest(false); resetSave(); setStatusBoth('running'); syncHud()
   }
 
   function togglePause() {
@@ -387,6 +390,7 @@ export default function ReceiptStacker() {
                   <span className="font-display font-extrabold" style={{ color: GREEN }}>${hud.score.toLocaleString()}</span>.
                 </p>
                 {newBest && <p className="text-sm font-bold mt-1" style={{ color: AMBER }}>New personal best! 🥑</p>}
+                <SaveScoreLine res={saveRes} />
                 <button onClick={start} className="text-sm font-bold px-6 py-2.5 rounded-full text-white mt-3" style={{ background: GREEN }}>Play again</button>
               </div>
             </div>

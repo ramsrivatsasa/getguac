@@ -4,6 +4,7 @@
 // Sudden death: one wrong call ends the run. Trains exactly the instinct the
 // app is about — knowing what things actually cost.
 import { useEffect, useRef, useState } from 'react'
+import { useScoreSaver, SaveScoreLine } from './arcadeKit'
 
 const GREEN = '#65A30D'
 const INK = '#15281C'
@@ -61,6 +62,7 @@ export default function PriceCheck() {
   const [lastGuess, setLastGuess] = useState(null) // 'higher' | 'lower'
   const [shownPrice, setShownPrice] = useState(0)  // count-up display for the reveal
   const revealTimer = useRef(null)
+  const { saveRes, save, resetSave } = useScoreSaver('price')
 
   useEffect(() => {
     try { setBest(Number(localStorage.getItem('gg-pricecheck-best-v1')) || 0) } catch {}
@@ -69,7 +71,7 @@ export default function PriceCheck() {
 
   const start = () => {
     const a = draw(-1)
-    setKnown(a); setMystery(draw(a)); setRun(0); setLastGuess(null); setPhase('guessing')
+    setKnown(a); setMystery(draw(a)); setRun(0); setLastGuess(null); resetSave(); setPhase('guessing')
   }
 
   const guess = (dir) => {
@@ -93,7 +95,10 @@ export default function PriceCheck() {
             setRun(r)
             if (r > best) { setBest(r); try { localStorage.setItem('gg-pricecheck-best-v1', String(r)) } catch {} }
             setKnown(mystery); setMystery(draw(mystery)); setPhase('guessing')
-          } else setPhase('over')
+          } else {
+            save(run, null) // run length is the score
+            setPhase('over')
+          }
         }, 900)
       }
     }, 16)
@@ -154,6 +159,7 @@ export default function PriceCheck() {
                 {ITEMS[mystery].label} runs about <b>{money(ITEMS[mystery].price)}</b> — you called {lastGuess}.
                 Run of <b>{run}</b>{run === best && run > 0 ? ' — a new best!' : ''}.
               </p>
+              <SaveScoreLine res={saveRes} />
               <button onClick={start} className="mt-3 font-bold px-6 py-2.5 rounded-full text-white" style={{ background: GREEN }}>Play again</button>
             </div>
           )}

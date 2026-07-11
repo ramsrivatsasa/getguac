@@ -1,5 +1,4 @@
-import Link from 'next/link'
-import MarketingShell from '../../../components/MarketingShell'
+import GamePageShell from '../../../components/games/GamePageShell'
 import PriceCheck from '../../../components/games/PriceCheck'
 
 export const metadata = {
@@ -11,13 +10,24 @@ export const metadata = {
 
 export default function Page() {
   return (
-    <MarketingShell subtitle="money's wingman" hideSearch headerTitle="🏷️ Price Check">
-      <div className="pb-16 pt-5">
-        <div className="mx-auto max-w-lg px-4 mb-3">
-          <Link href="/games" className="text-sm font-bold no-underline" style={{ color: '#065f46' }}>← All games</Link>
-        </div>
-        <PriceCheck />
-      </div>
-    </MarketingShell>
+    <GamePageShell
+      href="/games/price-check"
+      headerTitle="🏷️ Price Check"
+      title="Price Check"
+      blurb="Higher or lower? Trust your receipts"
+      how={[
+        'You’re shown an everyday item and a price. Is the typical price higher or lower than the number on screen? Call it right and the run continues; miss and it’s over.',
+        'The items are real everyday US stuff — groceries, streaming plans, oil changes, concert tickets — so your own receipts are the study guide.',
+        'Runs are scored by length. One wrong call ends it, so every guess past ten is pure nerve.',
+      ]}
+      tips={[
+        'Anchor to what YOU paid last time — your memory of real receipts beats “feels expensive” instincts.',
+        'Services and tickets run higher than most people guess; pantry staples run lower.',
+        'Beware round numbers: a $19.99 anchor usually means the true price sits just past it.',
+        'Long runs die on confidence — when a price looks obviously wrong, slow down and re-read the item.',
+      ]}
+    >
+      <PriceCheck />
+    </GamePageShell>
   )
 }

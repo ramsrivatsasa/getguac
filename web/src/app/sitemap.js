@@ -2,6 +2,7 @@
 // auth/api routes are excluded (private), and the thin auto-generated tool pages
 // (/coupons, /marketplace) are deliberately left out — they're noindexed.
 import { ARTICLES } from '../lib/articles'
+import { GAMES } from '../components/games/gamesList'
 
 const SITE_URL = 'https://getguac.app'
 
@@ -14,15 +15,9 @@ export default function sitemap() {
     { path: '/features', priority: 0.9, changeFrequency: 'monthly' },
     { path: '/articles', priority: 0.9, changeFrequency: 'weekly' },
     { path: '/resources', priority: 0.8, changeFrequency: 'monthly' },
-    { path: '/games', priority: 0.7, changeFrequency: 'monthly' },
-    { path: '/games/guacdle', priority: 0.6, changeFrequency: 'monthly' },
-    { path: '/games/price-check', priority: 0.6, changeFrequency: 'monthly' },
-    { path: '/games/merge', priority: 0.6, changeFrequency: 'monthly' },
-    { path: '/games/bubbles', priority: 0.6, changeFrequency: 'monthly' },
-    { path: '/games/slicer', priority: 0.6, changeFrequency: 'monthly' },
-    { path: '/games/stacker', priority: 0.6, changeFrequency: 'monthly' },
-    { path: '/games/rope', priority: 0.6, changeFrequency: 'monthly' },
-    { path: '/games/chess', priority: 0.6, changeFrequency: 'monthly' },
+    { path: '/games', priority: 0.7, changeFrequency: 'weekly' },
+    // every arcade game page — the catalog is the single source of truth
+    ...GAMES.map((g) => ({ path: g.href, priority: 0.6, changeFrequency: 'monthly' })),
     { path: '/faq', priority: 0.8, changeFrequency: 'monthly' },
     { path: '/pricing', priority: 0.8, changeFrequency: 'monthly' },
     { path: '/security', priority: 0.7, changeFrequency: 'monthly' },

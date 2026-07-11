@@ -1,5 +1,4 @@
-import Link from 'next/link'
-import MarketingShell from '../../../components/MarketingShell'
+import GamePageShell from '../../../components/games/GamePageShell'
 import GuacDrop from '../../../components/games/GuacDrop'
 
 export const metadata = {
@@ -11,13 +10,24 @@ export const metadata = {
 
 export default function Page() {
   return (
-    <MarketingShell subtitle="money's wingman" hideSearch headerTitle="🪢 Guac Drop">
-      <div className="pb-16 pt-5">
-        <div className="mx-auto max-w-xl px-4 mb-3">
-          <Link href="/games" className="text-sm font-bold no-underline" style={{ color: '#065f46' }}>← All games</Link>
-        </div>
-        <GuacDrop />
-      </div>
-    </MarketingShell>
+    <GamePageShell
+      href="/games/rope"
+      headerTitle="🪢 Guac Drop"
+      title="Guac Drop"
+      blurb="Cut the ropes, catch the swing"
+      how={[
+        'Your paycheck avocado hangs from ropes over a savings jar. Swipe or click a rope to cut it — the avocado swings and falls under real physics.',
+        'The trick is order and timing: cut one rope to start a swing, then cut the rest at the top of the arc to sling the avocado where you want it.',
+        'Twelve levels of traps and angles stand between the paycheck and the jar. Sparkles along the way are worth grabbing, but the jar is what counts.',
+      ]}
+      tips={[
+        'Watch the swing twice before cutting the final rope — the release point is a beat earlier than it looks.',
+        'A short pendulum swings faster: cutting the higher rope first often gives you a more controllable arc.',
+        'If a level looks impossible, the answer is almost always “let it swing one more time”.',
+        'Free-falling straight down is rarely right; nearly every level wants sideways momentum first.',
+      ]}
+    >
+      <GuacDrop />
+    </GamePageShell>
   )
 }

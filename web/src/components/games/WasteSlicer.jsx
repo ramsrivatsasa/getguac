@@ -3,9 +3,10 @@
 // expenses get tossed up in arcs; swipe to slice them and bank the dollars as
 // "Saved". Never cut the essentials — rent and groceries cost you an avocado.
 // All simulation lives in refs and runs inside requestAnimationFrame; React
-// state only drives the HUD and overlays. Dollars are for fun only — this game
-// never awards real GuacMoney.
+// state only drives the HUD and overlays. In-game dollars are for fun, but the
+// first finished round each day earns GuacMoney via saveGameScore.
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useScoreSaver, SaveScoreLine } from './arcadeKit'
 
 const INK = '#15281C'
 const BODY = '#3d4a42'
@@ -79,6 +80,7 @@ export default function WasteSlicer() {
   const [hud, setHud] = useState({ saved: 0, missed: 0, lives: 3 })
   const [best, setBest] = useState(0)
   const [newBest, setNewBest] = useState(false)
+  const { saveRes, save, resetSave } = useScoreSaver('slicer')
 
   const setStatus = useCallback((s) => { statusRef.current = s; setStatusState(s) }, [])
 
@@ -130,6 +132,7 @@ export default function WasteSlicer() {
     const endGame = () => {
       setStatus('over')
       const st = sim.current
+      save(st.saved, null)
       if (st.saved > bestRef.current) {
         bestRef.current = st.saved
         setBest(st.saved)
@@ -353,6 +356,7 @@ export default function WasteSlicer() {
     Object.assign(sim.current, freshSim())
     setHud({ saved: 0, missed: 0, lives: 3 })
     setNewBest(false)
+    resetSave()
     setStatus('playing')
   }
   const resume = () => { sim.current.lastT = null; sim.current.down = false; setStatus('playing') }
@@ -433,6 +437,7 @@ export default function WasteSlicer() {
                 <span>Missed <span className="font-display font-extrabold" style={{ color: AMBER }}>${hud.missed}</span></span>
                 <span>Best <span className="font-display font-extrabold" style={{ color: INK }}>${best}</span></span>
               </div>
+              <SaveScoreLine res={saveRes} />
               <button onClick={start} className={`mt-4 ${pillGreen}`} style={{ background: GREEN }}>Play again</button>
             </div>
           </div>
@@ -441,7 +446,7 @@ export default function WasteSlicer() {
 
       <p className="text-xs text-center mt-3 mb-2" style={{ color: FAINT }}>
         ⚠ rose rim = wasteful, slice it · ✓ green rim = essential, let it fall.
-        Missed waste tallies up but never costs a life. Dollars here are just for fun — no real GuacMoney is awarded.
+        Missed waste tallies up but never costs a life. Signed-in players earn +50 GuacMoney for their first game each day.
       </p>
     </div>
   )

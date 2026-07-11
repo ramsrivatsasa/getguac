@@ -1,5 +1,4 @@
-import Link from 'next/link'
-import MarketingShell from '../../../components/MarketingShell'
+import GamePageShell from '../../../components/games/GamePageShell'
 import BubbleBudget from '../../../components/games/BubbleBudget'
 
 export const metadata = {
@@ -11,13 +10,24 @@ export const metadata = {
 
 export default function Page() {
   return (
-    <MarketingShell subtitle="money's wingman" hideSearch headerTitle="🫧 Bubble Pop">
-      <div className="pb-16 pt-5">
-        <div className="mx-auto max-w-xl px-4 mb-3">
-          <Link href="/games" className="text-sm font-bold no-underline" style={{ color: '#065f46' }}>← All games</Link>
-        </div>
-        <BubbleBudget />
-      </div>
-    </MarketingShell>
+    <GamePageShell
+      href="/games/bubbles"
+      headerTitle="🫧 Bubble Pop"
+      title="Bubble Pop"
+      blurb="Match three, pop the wall"
+      how={[
+        'A wall of spending bubbles hangs from the top of the board. Aim the launcher with your mouse or finger, release to fire, and match three or more of the same color to pop them and bank the dollars.',
+        'Pop the bubbles holding a cluster to the ceiling and the whole thing falls for bonus cash. Every few shots the wall pushes down a row — if it crosses the dashed line, the game is over.',
+        'Clear the whole board to level up: more colors, fewer shots per row. Tap the Next pill to swap your current bubble with the one on deck.',
+      ]}
+      tips={[
+        'Bank shots off the side walls reach pockets a straight shot never could — the dotted guide shows the bounce.',
+        'Hunt the hangers: popping the two bubbles holding up a big cluster scores the entire cluster as falls (25 each).',
+        'Don’t waste shots when nothing matches — park bubbles on an existing color so the next shot pops both.',
+        'Watch the "next row in" counter: with 1 shot left, make it a safe one, not a gamble at the ceiling.',
+      ]}
+    >
+      <BubbleBudget />
+    </GamePageShell>
   )
 }

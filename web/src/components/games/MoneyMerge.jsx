@@ -3,6 +3,7 @@
 // merge and double. Turn scattered $1 tiles into one $2,048 — a tactile little
 // lesson in compounding. Arrow keys / WASD or swipe.
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useScoreSaver, SaveScoreLine } from './arcadeKit'
 
 const GREEN = '#65A30D'
 const INK = '#15281C'
@@ -89,6 +90,7 @@ export default function MoneyMerge() {
   const swipeRef = useRef(null)
   const stateRef = useRef({ tiles: [], score: 0, keepGoing: false, status: 'idle' })
   stateRef.current = { tiles, score, keepGoing, status }
+  const { saveRes, save, resetSave } = useScoreSaver('merge')
 
   useEffect(() => {
     try { setBest(Number(localStorage.getItem('gg-merge-best-v1')) || 0) } catch {}
@@ -97,7 +99,7 @@ export default function MoneyMerge() {
   const start = () => {
     let t = spawnInto([])
     t = spawnInto(t)
-    setTiles(t); setScore(0); setBiggest(0); setKeepGoing(false); setStatus('running')
+    setTiles(t); setScore(0); setBiggest(0); setKeepGoing(false); resetSave(); setStatus('running')
   }
 
   const move = useCallback((dir) => {
@@ -127,8 +129,8 @@ export default function MoneyMerge() {
         if (nb !== b) try { localStorage.setItem('gg-merge-best-v1', String(nb)) } catch {}
         return nb
       })
-      if (maxMerged >= 2048 && !kg) setStatus('won')
-      else if (!hasMoves(next)) setStatus('over')
+      if (maxMerged >= 2048 && !kg) { save(newScore, null); setStatus('won') }
+      else if (!hasMoves(next)) { save(newScore, null); setStatus('over') }
       lockRef.current = false
     }, 130)
   }, [])
@@ -157,6 +159,7 @@ export default function MoneyMerge() {
     <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-2xl text-center px-6" style={{ background: 'rgba(255,255,255,0.92)' }}>
       <div className="font-display font-extrabold text-2xl" style={{ color: INK }}>{title}</div>
       <p className="text-sm mt-2 mb-4" style={{ color: '#3d4a42' }}>{sub}</p>
+      {(status === 'won' || status === 'over') && <div className="-mt-2 mb-3"><SaveScoreLine res={saveRes} /></div>}
       <div className="flex gap-2">
         <button onClick={onBtn} className="font-bold px-6 py-2.5 rounded-full text-white" style={{ background: GREEN }}>{btnLabel}</button>
         {extraBtn}

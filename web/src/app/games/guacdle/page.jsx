@@ -1,5 +1,4 @@
-import Link from 'next/link'
-import MarketingShell from '../../../components/MarketingShell'
+import GamePageShell from '../../../components/games/GamePageShell'
 import Guacdle from '../../../components/games/Guacdle'
 
 export const metadata = {
@@ -11,13 +10,24 @@ export const metadata = {
 
 export default function Page() {
   return (
-    <MarketingShell subtitle="money's wingman" hideSearch headerTitle="🟩 Guacdle">
-      <div className="pb-16 pt-5">
-        <div className="mx-auto max-w-lg px-4 mb-3">
-          <Link href="/games" className="text-sm font-bold no-underline" style={{ color: '#065f46' }}>← All games</Link>
-        </div>
-        <Guacdle />
-      </div>
-    </MarketingShell>
+    <GamePageShell
+      href="/games/guacdle"
+      headerTitle="🟩 Guacdle"
+      title="Guacdle"
+      blurb="One money word a day, six tries"
+      how={[
+        'Every day there’s one hidden 5-letter word, and it’s always about money — saving, spending, receipts, taxes. You get six guesses.',
+        'After each guess the tiles grade themselves: green means right letter in the right spot, yellow means the letter is in the word but somewhere else, gray means it isn’t in the word at all.',
+        'Solve it and the day’s money tip appears behind the word. One puzzle per day — your Smash run tracks how many days straight you’ve solved it.',
+      ]}
+      tips={[
+        'Open with a vowel-heavy money word like RAISE or AUDIT to test the most common letters in one throw.',
+        'Work the yellows first: relocating a yellow letter tests two facts at once — where it isn’t, and where it might be.',
+        'Never reuse a gray letter; under pressure that’s the guess everyone wastes.',
+        'The answers lean financial — stuck between two words? Pick the one that sounds like your bank app.',
+      ]}
+    >
+      <Guacdle />
+    </GamePageShell>
   )
 }

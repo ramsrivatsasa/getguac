@@ -1,5 +1,4 @@
-import Link from 'next/link'
-import MarketingShell from '../../../components/MarketingShell'
+import GamePageShell from '../../../components/games/GamePageShell'
 import GuacChess from '../../../components/games/GuacChess'
 
 export const metadata = {
@@ -11,13 +10,24 @@ export const metadata = {
 
 export default function Page() {
   return (
-    <MarketingShell subtitle="money's wingman" hideSearch headerTitle="♟️ Guac Chess">
-      <div className="pb-16 pt-5">
-        <div className="mx-auto max-w-2xl px-4 mb-3">
-          <Link href="/games" className="text-sm font-bold no-underline" style={{ color: '#065f46' }}>← All games</Link>
-        </div>
-        <GuacChess />
-      </div>
-    </MarketingShell>
+    <GamePageShell
+      href="/games/chess"
+      headerTitle="♟️ Guac Chess"
+      title="Guac Chess"
+      blurb="Savers vs. Spenders, full rules"
+      how={[
+        'Full chess, no shortcuts: castling, en passant, promotion, the lot. You play the Savers against the Spender AI — pick from three difficulties, or hand the phone to a friend for pass-and-play.',
+        'Every piece carries a price tag, so each capture shows exactly what the exchange was worth. The running total keeps the material count honest.',
+        'Tap a piece to see its legal moves, tap the square to move. The AI answers quickly on easy and thinks a few plies deep on hard.',
+      ]}
+      tips={[
+        'Develop knights and bishops before pushing side pawns — the Spenders punish slow openings.',
+        'Check the price tags before trading: a bishop for three pawns is usually a losing deal early on.',
+        'Castle early. The AI hunts uncastled kings down the middle files.',
+        'On hard difficulty, trade pieces when ahead on material — a simplified board converts an edge into a win.',
+      ]}
+    >
+      <GuacChess />
+    </GamePageShell>
   )
 }

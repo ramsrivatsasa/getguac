@@ -4,6 +4,7 @@
 // the savings jar. Impulse-buy spike balls splat it. 12 hand-built levels,
 // progress (levels + pretend dollars banked + sparkles) lives in localStorage.
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useScoreSaver, SaveScoreLine } from './arcadeKit'
 
 const INK = '#15281C'
 const BODY = '#3d4a42'
@@ -238,14 +239,16 @@ export default function GuacDrop() {
   const [got, setGot] = useState(0)
   const [bankedNow, setBankedNow] = useState(0)
   const [failWhy, setFailWhy] = useState('away')
+  const { saveRes, save, resetSave } = useScoreSaver('rope')
 
   const gotoLevel = useCallback((idx, play) => {
     levelRef.current = idx; setLevel(idx)
     simRef.current = makeSim(idx)
     setGot(0); setBankedNow(0)
+    resetSave()
     statusRef.current = play ? 'playing' : 'idle'
     setStatus(play ? 'playing' : 'idle')
-  }, [])
+  }, [resetSave])
 
   // Hydrate saved progress once, then land on the highest unlocked level.
   useEffect(() => {
@@ -282,6 +285,7 @@ export default function GuacDrop() {
         progRef.current = next; setProg(next)
         try { localStorage.setItem(KEY, JSON.stringify(next)) } catch {}
         setBankedNow(first ? L.reward : 0)
+        save((idx + 1) * 50 + n * 10, idx + 1) // level weight + sparkles
         statusRef.current = 'won'; setStatus('won')
       } else {
         puff(sim, sim.avo.x, Math.min(sim.avo.y, H - 10), 26, ['#c2410c', AMBER, '#8a978d'])
@@ -394,6 +398,7 @@ export default function GuacDrop() {
               <p className="text-sm mt-1" style={{ color: BODY }}>
                 Sparkles {got}/3{bankedNow === 0 ? ' · this level already paid out' : ''}
               </p>
+              <SaveScoreLine res={saveRes} />
               <div className="flex justify-center gap-2 mt-3 flex-wrap">
                 <button onClick={() => gotoLevel(level, true)} className="text-sm font-bold px-4 py-2 rounded-full border" style={{ borderColor: 'rgba(20,83,45,0.18)', color: INK, background: '#fff' }}>Retry</button>
                 {level < LEVELS.length - 1 ? (

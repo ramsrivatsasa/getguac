@@ -5,6 +5,7 @@
 // board + stats persist in localStorage. A free-play practice mode unlocks
 // after (or alongside) the daily.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useScoreSaver, SaveScoreLine } from './arcadeKit'
 
 const GREEN = '#65A30D'
 const AMBER = '#D9A514'
@@ -113,6 +114,7 @@ export default function Guacdle() {
   const [shake, setShake] = useState(false)
   const [copied, setCopied] = useState(false)
   const toastTimer = useRef(null)
+  const { saveRes, save } = useScoreSaver('guacdle')
 
   const answerEntry = mode === 'daily' ? answerForDay(dayNum) : practiceWord
   const answer = answerEntry?.w || ''
@@ -139,6 +141,8 @@ export default function Guacdle() {
 
   const finishGame = useCallback((won, tries) => {
     if (mode !== 'daily') return
+    // finished daily board = the day's play; wins score by speed, losses a token 5
+    save(won ? (7 - tries) * 10 : 5, tries)
     setStats((prev) => {
       const next = { ...prev, played: prev.played + 1 }
       if (won) {
@@ -153,7 +157,7 @@ export default function Guacdle() {
       try { localStorage.setItem('guacdle-stats-v1', JSON.stringify(next)) } catch {}
       return next
     })
-  }, [mode, dayNum])
+  }, [mode, dayNum, save])
 
   const submit = useCallback(() => {
     if (status !== 'playing') return
@@ -272,6 +276,7 @@ export default function Guacdle() {
             {status === 'won' ? `Smashed it in ${guesses.length}! 🥑` : `The word was ${answer}`}
           </div>
           <p className="text-sm mt-1" style={{ color: '#3d4a42' }}>💡 {answerEntry?.tip}</p>
+          {mode === 'daily' && <SaveScoreLine res={saveRes} />}
           <div className="flex justify-center gap-2 mt-3">
             {mode === 'daily' && (
               <button onClick={share} className="text-sm font-bold px-4 py-2 rounded-full text-white" style={{ background: GREEN }}>

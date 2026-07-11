@@ -7,6 +7,7 @@
 // with alpha-beta and capture-first (MVV-LVA) ordering; Easy/Medium/Hard =
 // search depth 1/2/3, with a node cap so Hard stays snappy.
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useScoreSaver, SaveScoreLine } from './arcadeKit'
 
 const GREEN = '#65A30D'
 const AMBER = '#D9A514'
@@ -305,6 +306,18 @@ export default function GuacChess() {
   const bVal = trays.b.reduce((s, p) => s + TAG[p.type], 0)
   const net = wVal - bVal
 
+  // Account score save (vs the AI only): win = 100 + material edge, draw = 20.
+  const { saveRes, save, resetSave } = useScoreSaver('chess')
+  const savedRef = useRef(false)
+  useEffect(() => {
+    if (!over) { savedRef.current = false; return }
+    if (savedRef.current || twoP) return
+    savedRef.current = true
+    const win = status === 'mate' && cur.turn === 'b'
+    const draw = status !== 'mate'
+    save(win ? 100 + Math.max(0, net) : draw ? 20 : 0, null)
+  }, [over, status, twoP, cur, net, save])
+
   const rows = useMemo(() => {
     const out = []
     for (let i = 1; i < hist.length; i += 2) out.push({ n: (i + 1) / 2, w: hist[i].note, b: hist[i + 1] ? hist[i + 1].note : '' })
@@ -350,7 +363,7 @@ export default function GuacChess() {
     })
   }
 
-  const newGame = () => { setHist([{ state: initialState(), move: null, note: null, captured: null }]); setSel(null) }
+  const newGame = () => { setHist([{ state: initialState(), move: null, note: null, captured: null }]); setSel(null); resetSave() }
 
   let statusText
   if (over) statusText = 'Game over'
@@ -390,6 +403,7 @@ export default function GuacChess() {
           <p className="text-sm mt-1" style={{ color: BODY }}>
             {banner.sub} Final ledger: Savers ${wVal} — Spenders ${bVal} in captured material.
           </p>
+          {!twoP && <SaveScoreLine res={saveRes} />}
           <button onClick={newGame} className="text-sm font-bold px-4 py-2 rounded-full text-white mt-3" style={{ background: GREEN }}>
             New game
           </button>

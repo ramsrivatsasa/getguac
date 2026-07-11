@@ -12,7 +12,7 @@ const GAMES = [
   { href: '/games/guacdle', emoji: '🟩', name: 'Guacdle', tag: 'Daily word', desc: 'Guess the 5-letter money word in 6 tries. One new word every day.' },
   { href: '/games/price-check', emoji: '🏷️', name: 'Price Check', tag: 'Quick play', desc: 'Higher or lower? Call the typical price of everyday stuff and keep the run alive.' },
   { href: '/games/merge', emoji: '💰', name: 'Money Merge', tag: 'Puzzle', desc: 'Equal dollars merge and double. Compound a single $1 into $2,048.' },
-  { href: '/games/bubbles', emoji: '🫧', name: 'Bubble Budget', tag: 'Arcade', desc: 'Pop wasteful spending before it floats away — and never, ever pop the rent.' },
+  { href: '/games/bubbles', emoji: '🫧', name: 'Bubble Pop', tag: 'Arcade', desc: 'Aim, shoot, match three — pop the spending bubbles before the wall reaches your wallet.' },
   { href: '/games/slicer', emoji: '🥷', name: 'Waste Slicer', tag: 'Arcade', desc: 'Fees and impulse buys fly — slice them mid-air. Spare the essentials.' },
   { href: '/games/stacker', emoji: '🧾', name: 'Receipt Stacker', tag: 'Arcade', desc: 'Falling expenses, classic stacking rules. Balance the receipt line by line.' },
   { href: '/games/rope', emoji: '🪢', name: 'Guac Drop', tag: 'Physics puzzle', desc: 'Cut the ropes at the right moment and swing the avocado into the savings jar.' },

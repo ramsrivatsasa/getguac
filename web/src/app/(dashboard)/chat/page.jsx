@@ -5,25 +5,33 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { MessageSquare, Send, Plus, Mail } from 'lucide-react'
 import FeatureHeader from '../../../components/FeatureHeader'
+import GuacMascot from '../../../components/GuacMascot'
+import GuacAiThread from '../../../components/GuacAiThread'
 import { createClient } from '../../../lib/supabase/client'
 import {
   listMyThreads, openThreadByEmail, listMessages, postMessage,
 } from '../../../lib/dms'
 import { getDisplayNames, formatName, initialFor } from '../../../lib/displayNames'
 
-// /chat — direct-message UI between any two GetGuac users. Mirrors the
-// shape of HouseholdPanel.jsx's chat section (oldest-first scroll,
-// optimistic append, realtime invalidation) but scoped to one peer at a
-// time. Every read/write goes through lib/dms.js.
+// /chat — two kinds of conversation on one surface:
+//   • Guac (AI) — a pinned assistant thread (GuacAiThread → /api/chat) that
+//     answers questions about the user's own spending + how the app works.
+//     Selected by default so "Chat" delivers the assistant immediately.
+//   • Direct messages between any two GetGuac users. Mirrors the shape of
+//     HouseholdPanel.jsx's chat section (oldest-first scroll, optimistic
+//     append, realtime invalidation) but scoped to one peer at a time.
+//     Every DM read/write goes through lib/dms.js.
 //
 // Layout: two-column on desktop (thread list + selected thread), stacked
-// on mobile (you tap a thread to drill in; an X returns to the list).
+// on mobile (you tap a thread to drill in; ← Back returns to the list).
+
+const AI_ID = 'guac-ai' // sentinel activeId for the pinned assistant thread
 
 export default function ChatPage() {
   const sb = createClient()
   const qc = useQueryClient()
   const sp = useSearchParams()
-  const [activeId, setActiveId] = useState(null)
+  const [activeId, setActiveId] = useState(AI_ID)
   const [newEmail, setNewEmail] = useState('')
   const [opening, setOpening] = useState(false)
 
@@ -120,6 +128,24 @@ export default function ChatPage() {
       <div className="grid lg:grid-cols-[260px_1fr] gap-3">
         {/* Thread list */}
         <aside className={`card p-3 space-y-3 ${activeId ? 'hidden lg:block' : ''}`}>
+          {/* Pinned assistant thread — always first, above the DM plumbing. */}
+          <button
+            type="button"
+            onClick={() => setActiveId(AI_ID)}
+            className={`w-full flex items-center gap-2 px-2 py-2 rounded-xl text-xs text-left transition-colors ${
+              activeId === AI_ID
+                ? 'bg-guac-100 text-guac-ink font-semibold'
+                : 'hover:bg-guac-50 text-gray-700'
+            }`}
+          >
+            <GuacMascot expression="happy" size={26} className="shrink-0" />
+            <span className="flex-1 min-w-0">
+              <span className="block truncate font-semibold">Guac</span>
+              <span className="block text-[10px] text-gray-400">AI assistant — ask about your money</span>
+            </span>
+            <span className="text-[9px] uppercase tracking-wider font-extrabold text-guac-700 bg-guac-100/70 px-1.5 py-0.5 rounded-full shrink-0">AI</span>
+          </button>
+
           <form onSubmit={startNew} className="space-y-2">
             <label className="label text-[10px]">Start chat by handle or email</label>
             <div className="flex gap-2">
@@ -179,7 +205,9 @@ export default function ChatPage() {
 
         {/* Selected thread */}
         <section className={`card p-0 ${activeId ? '' : 'hidden lg:block'}`}>
-          {activeId ? (
+          {activeId === AI_ID ? (
+            <GuacAiThread onBack={() => setActiveId(null)} />
+          ) : activeId ? (
             <Thread
               threadId={activeId}
               peerName={formatName(names.get(threads.find(t => t.id === activeId)?.peer_id), threads.find(t => t.id === activeId)?.peer_id)}

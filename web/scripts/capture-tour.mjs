@@ -43,7 +43,11 @@ const doVideo = !onlyShots
 const SCENES = [
   { key: 'landing', route: '/', caption: 'Stop leaving money on the table', public: true },
   { key: 'receipts', route: '/receipts', caption: 'Snap any receipt' },
-  { key: 'items', route: '/items', caption: 'AI reads every line — no typing' },
+  // /items is not a route — the "items" scene is a receipt DETAIL page and is
+  // captured by scripts/recapture-items.mjs (login -> /receipts -> All window
+  // -> grocery receipt -> Line Items section). skip:true keeps its 03- slot in
+  // the numbering without overwriting 03-items.png with a 404 screenshot.
+  { key: 'items', route: '/items', caption: 'AI reads every line — no typing', skip: true },
   { key: 'dashboard', route: '/dashboard', caption: 'Your GuacScore + spending anomalies' },
   { key: 'steals', route: '/steals', caption: 'Find a cheaper price before you buy' },
   { key: 'returns', route: '/returns', caption: 'Claw back refunds you are owed' },
@@ -114,14 +118,18 @@ async function captureShots() {
     const authed = SCENES.filter(s => !s.public)
     let n = 0
     for (const s of pub) {
+      ++n
+      if (s.skip) continue
       await gotoScene(page, s)
-      await page.screenshot({ path: resolve(dir, `${String(++n).padStart(2, '0')}-${s.key}.png`) })
+      await page.screenshot({ path: resolve(dir, `${String(n).padStart(2, '0')}-${s.key}.png`) })
       console.log(`  [${p.name}] ${s.key}`)
     }
     await login(page)
     for (const s of authed) {
+      ++n
+      if (s.skip) continue
       await gotoScene(page, s)
-      await page.screenshot({ path: resolve(dir, `${String(++n).padStart(2, '0')}-${s.key}.png`) })
+      await page.screenshot({ path: resolve(dir, `${String(n).padStart(2, '0')}-${s.key}.png`) })
       console.log(`  [${p.name}] ${s.key}`)
     }
     await browser.close()
@@ -152,7 +160,7 @@ async function captureVideo() {
 
   await login(page)
 
-  for (const s of SCENES.filter(x => !x.public && x.video !== false)) {
+  for (const s of SCENES.filter(x => !x.public && x.video !== false && !x.skip)) {
     await gotoScene(page, s)
     await showCaption(page, s.caption)
     await sleep(2900)

@@ -1,8 +1,8 @@
 'use client'
 // Manual slideshow for /how-it-works — real app screenshots + feature copy.
-// Replaces the auto-narrated Presentation: no SpeechSynthesis, no auto-scroll,
-// just ‹ › navigation (buttons, arrow keys, swipe). Screenshots live in
-// public/marketing/slides (webp, generated from the Play-store framed set).
+// One slide per feature, images built from the validated raw captures in
+// marketing-assets/screens by scripts/make-howitworks-slides.mjs (webp in
+// public/marketing/slides/v2). Navigation: ‹ › buttons, arrow keys, swipe.
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
@@ -12,55 +12,73 @@ const DISPLAY = { fontFamily: 'var(--font-bricolage), sans-serif' }
 
 const SLIDES = [
   {
-    img: '/marketing/slides/01-receipts.webp',
+    key: 'receipts',
     tag: 'CAPTURE',
     title: 'Snap or email any receipt',
     body: 'Photograph a paper receipt, forward an email receipt, or drop in a PDF. Long grocery receipts and faded ink included.',
   },
   {
-    img: '/marketing/slides/02-items.webp',
+    key: 'items',
     tag: 'GUAC-AI',
     title: 'Guac-AI reads every line',
     body: 'In seconds the AI pulls the store, date, total, and every item — no typing, no spreadsheets, no sorting.',
   },
   {
-    img: '/marketing/slides/03-dashboard.webp',
+    key: 'dashboard',
     tag: 'SEE CLEARLY',
     title: 'See where it all went',
-    body: 'A dashboard of your top stores plus a spending-flow report you can zoom from a full year to a single category.',
+    body: 'Your GuacScore, spending anomalies, saved searches, and fresh Steals — the whole money picture on one screen.',
   },
   {
-    img: '/marketing/slides/08-guacwizard.webp',
+    key: 'guacwizard',
     tag: 'KEEP MORE',
     title: 'GuacWizard finds bank bites',
     body: 'Reads your statements and surfaces avoidable interest, fees, and penalties — plain-spoken, never a guilt trip.',
   },
   {
-    img: '/marketing/slides/04-steals.webp',
+    key: 'bank',
+    tag: 'KEEP MORE',
+    title: 'Every statement, every fee',
+    body: 'Drop in a bank or card statement and GetGuac tallies every fee and interest charge they slipped in.',
+  },
+  {
+    key: 'steals',
     tag: 'KEEP MORE',
     title: 'Steals — a better price',
     body: 'On the things you rebuy, Steals scouts for a cheaper price so you pay less for the very same item next time.',
   },
   {
-    img: '/marketing/slides/05-shopping.webp',
+    key: 'shopping',
     tag: 'PLAN AHEAD',
     title: 'A Smashlist that builds itself',
-    body: 'Your shopping list grows from what you actually buy — shareable with family in a single tap.',
+    body: 'Your shopping list grows from what you actually buy — with restock heads-ups and store comparisons built in.',
   },
   {
-    img: '/marketing/slides/06-returns.webp',
+    key: 'stash',
+    tag: 'SEE CLEARLY',
+    title: 'Your Stash, all in one place',
+    body: 'Every product you have ever bought, how often you rebuy it, and the best store to grab it next time.',
+  },
+  {
+    key: 'bites',
+    tag: 'PLAN AHEAD',
+    title: 'Bites remembers every dish',
+    body: 'Every restaurant dish you have tried — like it or pass on it, then send the winners straight to a reorder list.',
+  },
+  {
+    key: 'returns',
     tag: 'KEEP MORE',
     title: 'Returns & refunds, tracked',
     body: 'A countdown on every return window and price-drop deadline, with 25+ store policies built in.',
   },
   {
-    img: '/marketing/slides/07-reports.webp',
+    key: 'reports',
     tag: 'WATCH IT GROW',
     title: 'Tax-ready reports',
-    body: 'Clean breakdowns for business and charity, ready whenever you need them.',
+    body: 'Clean breakdowns for business and charity, subscriptions spotted automatically, CSV export whenever you need it.',
   },
   {
-    img: '/marketing/slides/06-guacanomics.webp',
+    key: 'guacanomics',
     tag: 'WATCH IT GROW',
     title: 'Guacanomics',
     body: 'The trends that turn a pile of receipts into real insight about your money.',
@@ -86,10 +104,9 @@ export default function Slides() {
   const s = SLIDES[i]
   return (
     <section className="pb-14">
-      {/* Full-bleed panel — deck-style background (soft green + big blob
-          circles, same look as the tour video); content stays centered. */}
+      {/* Full-bleed panel — plain light green, same tone as the footer. */}
       <div
-        className="relative w-full border-y border-emerald-900/10 overflow-hidden bg-[#f2f7ee]"
+        className="relative w-full border-y border-emerald-900/10 bg-[#FCFDFA]"
         onTouchStart={(e) => { touchX.current = e.touches[0].clientX }}
         onTouchEnd={(e) => {
           if (touchX.current == null) return
@@ -98,11 +115,8 @@ export default function Slides() {
           touchX.current = null
         }}
       >
-      <div aria-hidden className="absolute rounded-full pointer-events-none" style={{ width: '44vmax', height: '44vmax', top: '-18vmax', right: '-14vmax', opacity: 0.55, background: 'radial-gradient(circle at 35% 35%, #dcefc8, #cfe8b6)' }} />
-      <div aria-hidden className="absolute rounded-full pointer-events-none" style={{ width: '34vmax', height: '34vmax', bottom: '-14vmax', left: '-10vmax', opacity: 0.55, background: 'radial-gradient(circle at 35% 35%, #dcefc8, #cfe8b6)' }} />
-      <div aria-hidden className="absolute rounded-full pointer-events-none" style={{ width: '16vmax', height: '16vmax', top: '52%', right: '22%', opacity: 0.35, background: 'radial-gradient(circle at 35% 35%, #dcefc8, #cfe8b6)' }} />
-      <div className="relative max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-        <div className="grid md:grid-cols-[1.1fr_0.9fr] gap-8 items-center">
+      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+        <div className="grid md:grid-cols-[0.85fr_1.15fr] gap-8 items-center">
           {/* Copy */}
           <div>
             <div className="flex items-center gap-3 mb-4">
@@ -112,16 +126,21 @@ export default function Slides() {
             <h2 className="text-3xl sm:text-4xl font-extrabold text-[#15281C] mb-4" style={DISPLAY}>{s.title}</h2>
             <p className="text-base sm:text-lg leading-relaxed text-[#56655B] max-w-lg">{s.body}</p>
           </div>
-          {/* Real app screenshot */}
-          <div className="flex justify-center">
+          {/* Real app screenshot in a browser-style card */}
+          <div className="rounded-2xl border border-emerald-900/10 bg-white shadow-[0_30px_60px_-24px_rgba(20,40,28,0.35)] overflow-hidden">
+            <div className="flex items-center gap-1.5 px-3.5 h-7 bg-[#F2F5F0] border-b border-emerald-900/10">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#F87171]" />
+              <span className="w-2.5 h-2.5 rounded-full bg-[#FBBF24]" />
+              <span className="w-2.5 h-2.5 rounded-full bg-[#34D399]" />
+            </div>
             <img
-              key={s.img}
-              src={s.img}
+              key={s.key}
+              src={`/marketing/slides/v2/${s.key}-web.webp`}
               alt={s.title}
-              width={270}
-              height={480}
+              width={1200}
+              height={750}
               loading={i === 0 ? 'eager' : 'lazy'}
-              className="w-[230px] sm:w-[270px] rounded-[26px] border border-emerald-900/10 shadow-[0_30px_60px_-24px_rgba(20,40,28,0.35)]"
+              className="w-full block"
             />
           </div>
         </div>

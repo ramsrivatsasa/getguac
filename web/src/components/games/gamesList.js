@@ -90,3 +90,7 @@ export const CATEGORIES = [
 ]
 
 export const FEATURED_HREF = '/games/muncher'
+
+// game_scores/leaderboard id for a catalog entry — the href slug, with the
+// one legacy exception (price-check saves as 'price').
+export const gameIdFor = (href) => (href === '/games/price-check' ? 'price' : href.split('/').pop())

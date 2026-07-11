@@ -587,8 +587,8 @@ export default function BubbleBudget() {
     <div className="w-full select-none">
       <div
         ref={wrapRef}
-        className="relative overflow-hidden"
-        style={{ height: 'min(84vh, 1000px)', minHeight: 480, background: 'linear-gradient(180deg, #f2fbf3 0%, #eaf6ec 100%)', borderTop: CARD_BORDER, borderBottom: CARD_BORDER }}
+        className="relative overflow-hidden rounded-2xl"
+        style={{ height: 'min(84vh, 1000px)', minHeight: 480, background: 'linear-gradient(180deg, #f2fbf3 0%, #eaf6ec 100%)', border: CARD_BORDER }}
       >
         <canvas
           ref={canvasRef}

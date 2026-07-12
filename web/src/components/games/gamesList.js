@@ -5,6 +5,22 @@
 // `bestKey` is the game's own localStorage key (best score / saved progress);
 // the hub's "Pick up where you left off" row is driven by its presence.
 export const GAMES = [
+  // ── your money (personalized — plays with your REAL spending) ──────────────
+  {
+    href: '/games/splurge', emoji: '🔪', name: 'Splurge Slicer', tag: 'Your spending', cat: 'money', isNew: true,
+    g1: '#F97316', g2: '#7C2D12', motifs: ['💸', '🥑'], bestKey: 'gg-splurge-best-v1',
+    desc: 'Your real purchases fly up — slice the splurges, spare the essentials, bank the savings.',
+  },
+  {
+    href: '/games/invaders', emoji: '👾', name: 'Expense Invaders', tag: 'Your spending', cat: 'money', isNew: true,
+    g1: '#6366F1', g2: '#1E1B4B', motifs: ['💸', '🛡️'], bestKey: 'gg-invaders-best-v1',
+    desc: 'Your top spending categories descend as armored invaders — blast down the biggest overspend.',
+  },
+  {
+    href: '/games/budget', emoji: '🧱', name: 'Budget Tetris', tag: 'Your spending', cat: 'money', isNew: true,
+    g1: '#22C55E', g2: '#14532D', motifs: ['🧾', '📊'], bestKey: 'gg-budget-best-v1',
+    desc: 'Your expenses fall as blocks sized by price — fill a row to bank it, stay under the budget line.',
+  },
   // ── arcade ────────────────────────────────────────────────────────────────
   {
     href: '/games/fling', emoji: '🏹', name: 'Guac Fling', tag: 'Physics arcade', cat: 'arcade', isNew: true,
@@ -158,6 +174,7 @@ export const GAMES = [
 ]
 
 export const CATEGORIES = [
+  { id: 'money', title: 'Your Money games', emoji: '🥑', blurb: 'Play against your own spending — real purchases, real categories, real time. Sign in and the games rebuild from your receipts.' },
   { id: 'arcade', title: 'Arcade classics', emoji: '🕹️', blurb: 'Mazes, asteroids, slingshots, bubbles — the greats, free in your browser.' },
   { id: 'sports', title: 'Sports', emoji: '⚽', blurb: 'Penalties and free throws — quick-fire sports for a coffee break.' },
   { id: 'classic', title: 'Classic favorites', emoji: '🃏', blurb: 'Solitaire, minesweeper, snake, pong — the timeless desk games.' },
@@ -165,13 +182,13 @@ export const CATEGORIES = [
   { id: 'puzzle', title: 'Puzzle, word & strategy', emoji: '🧩', blurb: 'Daily words, sudoku, match-3 and slow-burn strategy.' },
 ]
 
-export const FEATURED_HREF = '/games/fling'
+export const FEATURED_HREF = '/games/splurge'
 
 // Hub hero: the featured 2×2 tile + these covers = "Jump into our most
 // popular games". Hand-ordered, not data-driven (no analytics yet).
 export const POPULAR_HREFS = [
-  '/games/penalty', '/games/muncher', '/games/solitaire', '/games/bubbles',
-  '/games/snake', '/games/sweeper', '/games/hoops', '/games/darts',
+  '/games/invaders', '/games/budget', '/games/penalty', '/games/muncher',
+  '/games/solitaire', '/games/bubbles', '/games/snake', '/games/hoops',
 ]
 
 // game_scores/leaderboard id for a catalog entry — the href slug, with the

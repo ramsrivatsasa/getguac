@@ -388,7 +388,7 @@ export default function WasteSlicer() {
       </div>
 
       {/* Arena */}
-      <div className="relative rounded-2xl overflow-hidden" style={{ border: CARD_BORDER, height: 'clamp(430px, calc(100svh - 240px), 720px)', minHeight: 430, background: LIGHT }}>
+      <div className="relative rounded-2xl overflow-hidden" style={{ border: CARD_BORDER, height: 'clamp(470px, calc(100svh - 170px), 900px)', minHeight: 430, background: LIGHT }}>
         <canvas
           ref={canvasRef}
           onPointerDown={onDown}

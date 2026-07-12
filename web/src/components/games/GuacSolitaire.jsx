@@ -283,7 +283,7 @@ export default function GuacSolitaire() {
     <div
       className="w-full select-none rounded-2xl"
       style={{
-        minHeight: 'clamp(430px, calc(100svh - 240px), 720px)',
+        minHeight: 'clamp(470px, calc(100svh - 170px), 900px)',
         padding: '20px 12px 28px',
         background: 'radial-gradient(120% 120% at 50% 0%, #17925c 0%, #0b6e42 55%, #085633 100%)',
         border: '1px solid rgba(20,83,45,0.15)',

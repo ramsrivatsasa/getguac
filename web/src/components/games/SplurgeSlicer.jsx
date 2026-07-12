@@ -23,7 +23,7 @@ const CARD_BORDER = '1px solid rgba(20,83,45,0.10)'
 const BODY_FONT = "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif"
 const DISPLAY_FONT = "'Bricolage Grotesque', 'Plus Jakarta Sans', ui-sans-serif, sans-serif"
 
-const GRAVITY = 900
+const GRAVITY = 680          // gentler arc — items hang longer, easier to read + slice
 const MIN_CUT_SPEED = 0.45
 const TRAIL_MS = 120
 const COMBO_MS = 350
@@ -373,7 +373,7 @@ export default function SplurgeSlicer() {
       </div>
 
       {/* Arena */}
-      <div className="relative rounded-2xl overflow-hidden" style={{ border: CARD_BORDER, height: 'clamp(430px, calc(100svh - 300px), 720px)', minHeight: 430, background: LIGHT }}>
+      <div className="relative rounded-2xl overflow-hidden" style={{ border: CARD_BORDER, height: 'clamp(450px, calc(100svh - 230px), 840px)', minHeight: 430, background: LIGHT }}>
         <canvas
           ref={canvasRef}
           onPointerDown={onDown}

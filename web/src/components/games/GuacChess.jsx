@@ -324,9 +324,12 @@ export default function GuacChess() {
     return out
   }, [hist])
 
-  // The Spenders move: give React 50ms to paint "thinking…", then search.
+  // The Spenders move: pause first so the opponent feels like it's actually
+  // thinking, then search. A near-instant reply (the old 50ms) read as jarringly
+  // fast — this gives a human-like beat that scales with difficulty.
   useEffect(() => {
     if (twoP || over || cur.turn !== 'b') return
+    const thinkMs = ({ easy: 550, medium: 800, hard: 1050 }[diff] || 700) + Math.floor(Math.random() * 250)
     const t = setTimeout(() => {
       const moves = allLegal(cur)
       if (!moves.length) return
@@ -334,7 +337,7 @@ export default function GuacChess() {
         ? moves[Math.floor(Math.random() * moves.length)]
         : bestMove(cur, DEPTH[diff]) || moves[0]
       setHist((h) => (h[h.length - 1].state === cur ? [...h, makeEntry(cur, mv)] : h))
-    }, 50)
+    }, thinkMs)
     return () => clearTimeout(t)
   }, [cur, twoP, diff, over])
 

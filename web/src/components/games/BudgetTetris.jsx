@@ -171,7 +171,7 @@ export default function BudgetTetris() {
     }
 
     const update = (st, dt) => {
-      const speed = (2 + st.level * 0.6) * (st.dropFast ? 6 : 1) // cells/sec
+      const speed = (1.3 + st.level * 0.42) * (st.dropFast ? 6 : 1) // cells/sec — gentler fall (was 2 + level*0.6)
       st.fallY += speed * dt
       const bottomRest = restBottomRow(st, st.block.col, st.block.h)
       if (st.fallY >= bottomRest) {
@@ -343,7 +343,7 @@ export default function BudgetTetris() {
         </div>
       </div>
 
-      <div className="relative rounded-2xl overflow-hidden" style={{ border: CARD_BORDER, height: 'clamp(430px, calc(100svh - 340px), 720px)', minHeight: 430, background: BG }}>
+      <div className="relative rounded-2xl overflow-hidden" style={{ border: CARD_BORDER, height: 'clamp(440px, calc(100svh - 270px), 820px)', minHeight: 430, background: BG }}>
         <canvas
           ref={canvasRef}
           onPointerDown={onDown}

@@ -292,7 +292,7 @@ export default function FlappyGuac() {
       <div
         ref={wrapRef}
         className="relative overflow-hidden"
-        style={{ height: 'clamp(430px, calc(100svh - 240px), 720px)', minHeight: 430, background: '#7dd3fc', borderTop: '1px solid rgba(20,83,45,0.12)', borderBottom: '1px solid rgba(20,83,45,0.12)' }}
+        style={{ height: 'clamp(470px, calc(100svh - 170px), 900px)', minHeight: 430, background: '#7dd3fc', borderTop: '1px solid rgba(20,83,45,0.12)', borderBottom: '1px solid rgba(20,83,45,0.12)' }}
       >
         <canvas
           ref={canvasRef}

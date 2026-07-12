@@ -175,7 +175,7 @@ export default function ExpenseInvaders() {
         return
       }
       const frac = 1 - alive.length / st.enemies.length
-      const speed = (18 + st.wave * 6 + frac * 60)
+      const speed = (11 + st.wave * 4 + frac * 40) // gentler march (was 18 + wave*6 + frac*60)
       st.marchX = (st.marchX || 0) + st.dir * speed * dt
       // Find current horizontal extent.
       let minX = Infinity, maxX = -Infinity, maxY = -Infinity
@@ -358,7 +358,7 @@ export default function ExpenseInvaders() {
         </div>
       </div>
 
-      <div className="relative rounded-2xl overflow-hidden" style={{ border: CARD_BORDER, height: 'clamp(430px, calc(100svh - 300px), 720px)', minHeight: 430, background: BG }}>
+      <div className="relative rounded-2xl overflow-hidden" style={{ border: CARD_BORDER, height: 'clamp(450px, calc(100svh - 230px), 840px)', minHeight: 430, background: BG }}>
         <canvas
           ref={canvasRef}
           onPointerMove={onMove}

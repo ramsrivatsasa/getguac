@@ -33,10 +33,12 @@ const KINDS = [
   { color: '#0D9488', dark: '#0a5c53', emoji: '💎' }, // splurges
 ]
 
-const START_ROWS = 6
-// Columns adapt to screen width at game start (bubble diameter ≈ 64px,
-// clamped so phones get chunky bubbles and monitors don't get beach balls).
-const colsForWidth = (w) => Math.max(8, Math.min(24, Math.round(w / 64)))
+const START_ROWS = 7
+// Columns adapt to screen width at game start. Smaller bubbles ≈ 42px so the
+// board reads like a real bubble-shooter grid (bubbleshooter.com-style): many
+// small bubbles up top, launcher clearly visible below. Phones still get a
+// finger-friendly floor via the min; monitors get a wide grid via the max.
+const colsForWidth = (w) => Math.max(10, Math.min(34, Math.round(w / 42)))
 const FLY_SPEED = 1500
 const MAX_ANG = 1.25 // radians off vertical
 const TIPS = [
@@ -588,7 +590,7 @@ export default function BubbleBudget() {
       <div
         ref={wrapRef}
         className="relative overflow-hidden rounded-2xl"
-        style={{ height: 'clamp(430px, calc(100svh - 240px), 720px)', minHeight: 430, background: 'linear-gradient(180deg, #f2fbf3 0%, #eaf6ec 100%)', border: CARD_BORDER }}
+        style={{ height: 'clamp(470px, calc(100svh - 170px), 900px)', minHeight: 430, background: 'linear-gradient(180deg, #f2fbf3 0%, #eaf6ec 100%)', border: CARD_BORDER }}
       >
         <canvas
           ref={canvasRef}

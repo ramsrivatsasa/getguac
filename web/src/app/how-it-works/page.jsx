@@ -1,13 +1,13 @@
 // Public /how-it-works — interactive animated tour (tour.html, the standalone
-// deck) embedded in the hero + a manual screenshot slideshow (Slides.jsx)
-// below it. Uses the shared MarketingShell so the header/logo/menu/footer
-// match every other marketing page. The YouTube video hero was replaced by
-// the tour embed 2026-07-10; the old auto-narrated Presentation is retired
-// (snapshot: web/backups/how-it-works-2026-07-09).
+// deck) embedded in the hero + the /tour illustrated slide deck below it
+// (Presentation in embedded+compact mode: one slide at a time, ‹ › nav,
+// optional narration). Uses the shared MarketingShell so the header/logo/
+// menu/footer match every other marketing page. The old screenshot slideshow
+// (Slides.jsx) is retired from this page as of 2026-07-11.
 
 import Link from 'next/link'
 import MarketingShell from '../../components/MarketingShell'
-import Slides from './Slides'
+import Presentation from './Presentation'
 
 export const metadata = {
   title: 'How GetGuac works — capture, parse, learn from every receipt',
@@ -26,7 +26,7 @@ export default function HowItWorksPage() {
           <span className="block bg-gradient-to-br from-emerald-500 via-lime-500 to-amber-500 bg-clip-text text-transparent">real clarity about your money.</span>
         </h1>
         <p className="text-lg text-gray-600 mt-4 max-w-2xl mx-auto">
-          Step through the animated tour — press play and it narrates itself — then flip through the app screen by screen below.
+          Step through the animated tour — press play and it narrates itself — then flip through the full feature deck slide by slide below.
         </p>
       </section>
 
@@ -46,8 +46,9 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
-      {/* SCREENSHOT SLIDESHOW — real app screens, manual navigation */}
-      <Slides />
+      {/* SLIDE DECK — the /tour illustrated slides, one at a time with ‹ ›
+          nav and optional play/narration (same deck getguac.app/tour shows). */}
+      <Presentation embedded compact />
 
       {/* CTA */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 pb-16 text-center">

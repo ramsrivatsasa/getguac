@@ -418,7 +418,9 @@ export default function HowItWorksPage({ embedded = false, compact = false }) {
   }
   const skip = (dir) => {
     const next = Math.max(0, Math.min(SLIDES.length - 1, current + dir))
-    scrollTo(next, true)
+    // Narrate the new slide only mid-playback — browsing with ‹ › while
+    // paused stays silent (matters most when the deck is embedded compact).
+    scrollTo(next, playing)
   }
 
   // Cleanup speech on unmount
@@ -482,8 +484,11 @@ export default function HowItWorksPage({ embedded = false, compact = false }) {
         ))}
       </main>
 
-      {/* Floating presentation controls (hidden on print) */}
-      <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 print:hidden">
+      {/* Presentation controls (hidden on print). Full-page mode floats them
+          bottom-center; compact mode (deck embedded inside another page)
+          renders them inline under the slide so they never hover over the
+          host page's other sections. */}
+      <div className={compact ? 'flex justify-center pb-8 print:hidden' : 'fixed bottom-5 left-1/2 -translate-x-1/2 z-40 print:hidden'}>
         <div className="flex flex-col items-center gap-2">
           {/* Voice picker — opens above the control bar */}
           {voicePickerOpen && voices.length > 0 && (

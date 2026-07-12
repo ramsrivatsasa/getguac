@@ -7,7 +7,7 @@
 // with alpha-beta and capture-first (MVV-LVA) ordering; Easy/Medium/Hard =
 // search depth 1/2/3, with a node cap so Hard stays snappy.
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useScoreSaver, SaveScoreLine } from './arcadeKit'
+import { useScoreSaver, SaveScoreLine, GameFrame } from './arcadeKit'
 
 const GREEN = '#65A30D'
 const AMBER = '#D9A514'
@@ -386,7 +386,8 @@ export default function GuacChess() {
   const pill = { border: '1px solid rgba(20,83,45,0.18)', color: INK }
 
   return (
-    <div className="mx-auto max-w-lg px-4 select-none">
+    <GameFrame inner={560}>
+    <div className="mx-auto select-none">
       {/* Status + two-player toggle */}
       <div className="flex items-center justify-between gap-2 mb-3">
         <div className="text-sm font-semibold" style={{ color: MUTED }}>{statusText}</div>
@@ -411,7 +412,7 @@ export default function GuacChess() {
       )}
 
       {/* Board */}
-      <div style={{ maxWidth: 480, minWidth: 320, margin: '0 auto', touchAction: 'manipulation' }}>
+      <div style={{ maxWidth: 560, minWidth: 320, margin: '0 auto', touchAction: 'manipulation' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', borderRadius: 14, overflow: 'hidden', border: '1px solid rgba(20,83,45,0.15)' }}>
           {cur.board.map((p, i) => {
             const t = targets.find((m) => m.to === i)
@@ -486,5 +487,6 @@ export default function GuacChess() {
         Price tags: pawn $1 · knight $3 · bishop $3 · rook $5 · queen $9. Grab their material, guard your own.
       </p>
     </div>
+    </GameFrame>
   )
 }

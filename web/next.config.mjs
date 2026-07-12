@@ -27,7 +27,10 @@ const securityHeaders = [
       // it needs BOTH script-src (api.js) and frame-src (the challenge iframe) —
       // without them CSP silently kills the widget and signups dead-end on a
       // permanently disabled submit button.
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.googleadservices.com https://adservice.google.com https://*.google.com",   // 'unsafe-eval' needed by some Next.js dev features; safe in prod
+      // *.adtrafficquality.google = AdSense's invalid-traffic checks (sodar).
+      // Google won't reliably serve ads while these are CSP-blocked, so it
+      // must be in script-src + connect-src + frame-src per Google's CSP docs.
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.googleadservices.com https://adservice.google.com https://*.google.com https://*.adtrafficquality.google",   // 'unsafe-eval' needed by some Next.js dev features; safe in prod
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
@@ -35,12 +38,12 @@ const securityHeaders = [
       // (households realtime in HouseholdPanel.jsx). CSP treats wss: as
       // a distinct scheme from https:, so the wildcard https entry above
       // does not cover it — must be listed explicitly.
-      "connect-src 'self' https://*.supabase.co https://*.supabase.in wss://*.supabase.co wss://*.supabase.in https://api.migadu.com https://dns.google https://pagead2.googlesyndication.com https://*.googlesyndication.com https://googleads.g.doubleclick.net https://*.google.com",
+      "connect-src 'self' https://*.supabase.co https://*.supabase.in wss://*.supabase.co wss://*.supabase.in https://api.migadu.com https://dns.google https://pagead2.googlesyndication.com https://*.googlesyndication.com https://googleads.g.doubleclick.net https://*.google.com https://*.adtrafficquality.google",
       // Ad creatives render inside Google ad iframes; Turnstile renders its
       // challenge in a challenges.cloudflare.com iframe.
       // youtube-nocookie.com / youtube.com = the how-it-works video embed;
       // like Turnstile, a missing frame-src entry silently renders an empty box.
-      "frame-src 'self' https://challenges.cloudflare.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://*.googlesyndication.com https://www.google.com https://www.youtube-nocookie.com https://www.youtube.com",
+      "frame-src 'self' https://challenges.cloudflare.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://*.googlesyndication.com https://www.google.com https://www.youtube-nocookie.com https://www.youtube.com https://*.adtrafficquality.google",
       "frame-ancestors 'self'",
       "base-uri 'self'",
       "form-action 'self'",

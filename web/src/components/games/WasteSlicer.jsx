@@ -365,7 +365,7 @@ export default function WasteSlicer() {
   const pillGreen = 'text-sm font-bold px-6 py-2.5 rounded-full text-white'
 
   return (
-    <div className="mx-auto w-full select-none" style={{ maxWidth: 640 }}>
+    <div className="mx-auto w-full select-none">
       {/* HUD */}
       <div className="flex items-end justify-between mb-3 px-1">
         <div>
@@ -388,7 +388,7 @@ export default function WasteSlicer() {
       </div>
 
       {/* Arena */}
-      <div className="relative rounded-2xl overflow-hidden" style={{ border: CARD_BORDER, height: 'min(65vh, 560px)', background: LIGHT }}>
+      <div className="relative rounded-2xl overflow-hidden" style={{ border: CARD_BORDER, height: 'min(84vh, 900px)', minHeight: 480, background: LIGHT }}>
         <canvas
           ref={canvasRef}
           onPointerDown={onDown}

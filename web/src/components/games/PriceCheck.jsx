@@ -4,7 +4,7 @@
 // Sudden death: one wrong call ends the run. Trains exactly the instinct the
 // app is about — knowing what things actually cost.
 import { useEffect, useRef, useState } from 'react'
-import { useScoreSaver, SaveScoreLine } from './arcadeKit'
+import { useScoreSaver, SaveScoreLine, GameFrame } from './arcadeKit'
 
 const GREEN = '#65A30D'
 const INK = '#15281C'
@@ -118,7 +118,8 @@ export default function PriceCheck() {
   )
 
   return (
-    <div className="mx-auto max-w-lg px-4 select-none">
+    <GameFrame inner={560}>
+    <div className="mx-auto select-none">
       {/* HUD */}
       <div className="flex items-center justify-between mb-3 text-sm font-semibold" style={{ color: '#5C6B60' }}>
         <span>Run: <span className="font-display font-extrabold" style={{ color: INK }}>{run}</span></span>
@@ -171,5 +172,6 @@ export default function PriceCheck() {
         GetGuac users get the real thing — price history from their own receipts.
       </p>
     </div>
+    </GameFrame>
   )
 }

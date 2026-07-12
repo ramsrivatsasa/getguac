@@ -162,3 +162,24 @@ export function HudButton({ onClick, label, children }) {
     </button>
   )
 }
+
+// Full-width play-area panel (bubbleshooter-style) for games whose UI is
+// intrinsically narrow (word grid, 2048 board, chess…). The panel spans the
+// whole game column at the same height as the full-bleed canvas games, with
+// the game centered inside — so every game page presents the same big play
+// area. `inner` caps the game's own width.
+export function GameFrame({ inner = 560, children }) {
+  return (
+    <div
+      className="w-full select-none rounded-2xl grid place-items-center"
+      style={{
+        minHeight: 'min(84vh, 900px)',
+        padding: '28px 16px',
+        background: 'linear-gradient(180deg, #f2fbf3 0%, #eaf6ec 100%)',
+        border: CARD_BORDER,
+      }}
+    >
+      <div className="w-full" style={{ maxWidth: inner }}>{children}</div>
+    </div>
+  )
+}

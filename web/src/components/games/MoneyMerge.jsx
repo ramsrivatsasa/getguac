@@ -3,7 +3,7 @@
 // merge and double. Turn scattered $1 tiles into one $2,048 — a tactile little
 // lesson in compounding. Arrow keys / WASD or swipe.
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useScoreSaver, SaveScoreLine } from './arcadeKit'
+import { useScoreSaver, SaveScoreLine, GameFrame } from './arcadeKit'
 
 const GREEN = '#65A30D'
 const INK = '#15281C'
@@ -168,7 +168,8 @@ export default function MoneyMerge() {
   )
 
   return (
-    <div className="mx-auto max-w-md px-4 select-none">
+    <GameFrame inner={480}>
+    <div className="mx-auto select-none">
       {/* HUD */}
       <div className="grid grid-cols-3 gap-2 mb-3 text-center">
         {[[fmt(score), 'Compounded'], [fmt(best), 'Best'], [biggest ? fmt(biggest) : '—', 'Biggest tile']].map(([v, l]) => (
@@ -223,5 +224,6 @@ export default function MoneyMerge() {
 
       <style>{`@keyframes ggpop { 0%{transform:scale(.4)} 80%{transform:scale(1.08)} 100%{transform:scale(1)} }`}</style>
     </div>
+    </GameFrame>
   )
 }

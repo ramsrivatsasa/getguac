@@ -5,7 +5,7 @@
 // board + stats persist in localStorage. A free-play practice mode unlocks
 // after (or alongside) the daily.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useScoreSaver, SaveScoreLine } from './arcadeKit'
+import { useScoreSaver, SaveScoreLine, GameFrame } from './arcadeKit'
 
 const GREEN = '#65A30D'
 const AMBER = '#D9A514'
@@ -226,7 +226,8 @@ export default function Guacdle() {
   const maxDist = Math.max(1, ...stats.dist)
 
   return (
-    <div className="mx-auto max-w-lg px-4 select-none">
+    <GameFrame inner={512}>
+    <div className="mx-auto select-none">
       {/* Mode + day header */}
       <div className="flex items-center justify-between mb-3">
         <div className="text-sm font-semibold" style={{ color: '#5C6B60' }}>
@@ -342,5 +343,6 @@ export default function Guacdle() {
         @keyframes ggshake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-7px)} 40%{transform:translateX(7px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(5px)} }
       `}</style>
     </div>
+    </GameFrame>
   )
 }

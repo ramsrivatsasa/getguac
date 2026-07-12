@@ -4,7 +4,7 @@
 // the savings jar. Impulse-buy spike balls splat it. 12 hand-built levels,
 // progress (levels + pretend dollars banked + sparkles) lives in localStorage.
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useScoreSaver, SaveScoreLine } from './arcadeKit'
+import { useScoreSaver, SaveScoreLine, GameFrame } from './arcadeKit'
 
 const INK = '#15281C'
 const BODY = '#3d4a42'
@@ -343,7 +343,8 @@ export default function GuacDrop() {
   const L = LEVELS[level]
   const cleared = (i) => prog.stars[i] !== undefined
   return (
-    <div className="mx-auto w-full px-4 select-none" style={{ maxWidth: 560 }}>
+    <GameFrame inner={560}>
+    <div className="mx-auto w-full select-none">
       {/* HUD */}
       <div className="flex items-center justify-between mb-2 flex-wrap gap-1">
         <div className="text-sm font-semibold" style={{ color: MUTED }}>
@@ -433,5 +434,6 @@ export default function GuacDrop() {
         Dollars banked here are pretend; the habit is real.
       </p>
     </div>
+    </GameFrame>
   )
 }

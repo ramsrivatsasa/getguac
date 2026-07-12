@@ -4,7 +4,7 @@
 // way across to balance it and bank the savings — four rows at once is a
 // GUAC SMASH. Best run persists in localStorage. Just for fun.
 import { useEffect, useRef, useState } from 'react'
-import { useScoreSaver, SaveScoreLine } from './arcadeKit'
+import { useScoreSaver, SaveScoreLine, GameFrame } from './arcadeKit'
 
 const INK = '#15281C'
 const BODY = '#3d4a42'
@@ -331,7 +331,8 @@ export default function ReceiptStacker() {
   const nextRows = hud.next ? PIECES[hud.next].m.filter((r) => r.some(Boolean)) : []
 
   return (
-    <div className="mx-auto px-4 select-none" style={{ maxWidth: 560 }}>
+    <GameFrame inner={560}>
+    <div className="mx-auto select-none">
       <div className="flex items-center justify-between mb-3">
         <div className="text-sm font-semibold" style={{ color: MUTED }}>
           {status === 'running' ? 'Stacking…' : status === 'paused' ? 'Paused' : status === 'over' ? 'Receipt closed' : 'Ready when you are'}
@@ -444,5 +445,6 @@ export default function ReceiptStacker() {
         @keyframes ggsmash { 0%{transform:scale(.6);opacity:0} 15%{transform:scale(1.08);opacity:1} 30%{transform:scale(1)} 85%{opacity:1} 100%{opacity:0} }
       `}</style>
     </div>
+    </GameFrame>
   )
 }

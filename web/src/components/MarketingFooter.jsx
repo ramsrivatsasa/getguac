@@ -12,6 +12,7 @@ const COLS = [
   { heading: 'Product', links: [
     { href: '/marketplace', label: 'Marketplace' },
     { href: '/coupons', label: 'Coupons' },
+    { href: '/games', label: 'Games' },
     { href: '/features', label: 'Features' },
     { href: '/how-it-works', label: 'How it works' },
     { href: '/tour', label: 'Watch the tour' },

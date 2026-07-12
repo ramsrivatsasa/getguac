@@ -83,6 +83,10 @@ export default async function Home() {
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginBottom: 24 }}>
               <Link href="/register" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#65A30D', color: '#fff', fontWeight: 700, fontSize: 16, padding: '15px 26px', borderRadius: 999, textDecoration: 'none', boxShadow: '0 10px 24px -10px rgba(101,163,13,0.6)' }}>🥑 Meet your sidekick</Link>
               <Link href="/download" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#fff', color: '#1A2E22', fontWeight: 700, fontSize: 16, padding: '15px 26px', borderRadius: 999, textDecoration: 'none', border: '1.5px solid rgba(20,83,45,0.16)' }}>📱 Get the app</Link>
+              {/* Try-before-you-register: /login?demo=1 prefills the shared
+                  demo account (captcha-gated) so the curious can poke around
+                  real pre-loaded data without creating anything. */}
+              <Link href="/login?demo=1" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#fff', color: '#1A2E22', fontWeight: 700, fontSize: 16, padding: '15px 26px', borderRadius: 999, textDecoration: 'none', border: '1.5px solid rgba(20,83,45,0.16)' }}>🔎 Try the demo</Link>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap', fontSize: 14, color: '#56655B', fontWeight: 600 }}>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>🔒 Private — RLS-locked, yours to wipe</span>
@@ -218,6 +222,7 @@ export default async function Home() {
             <p style={{ fontSize: 18, lineHeight: 1.5, color: 'rgba(255,255,255,0.9)', margin: '0 auto 30px', maxWidth: 520, position: 'relative' }}>Free, private, and on your side. No fees, no card, no spam.</p>
             <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap', position: 'relative' }}>
               <Link href="/register" style={{ background: '#fff', color: '#15281C', fontWeight: 700, fontSize: 16, padding: '16px 30px', borderRadius: 999, textDecoration: 'none' }}>🥑 Hire your sidekick</Link>
+              <Link href="/login?demo=1" style={{ background: 'rgba(255,255,255,0.18)', color: '#fff', fontWeight: 700, fontSize: 16, padding: '16px 30px', borderRadius: 999, textDecoration: 'none', border: '1px solid rgba(255,255,255,0.4)' }}>🔎 Try the demo</Link>
               <Link href="/login" style={{ background: 'rgba(255,255,255,0.18)', color: '#fff', fontWeight: 700, fontSize: 16, padding: '16px 30px', borderRadius: 999, textDecoration: 'none', border: '1px solid rgba(255,255,255,0.4)' }}>Sign in</Link>
             </div>
           </div>

@@ -32,11 +32,11 @@ const NAV = [
 const NAV_TOP = [
   { href: '/marketplace', label: 'Marketplace' },
   { href: '/coupons', label: 'Coupons' },
+  { href: '/games', label: 'Games' },
   { href: '/resources', label: 'Resources', children: [
     { href: '/resources', label: 'Resources hub' },
     { href: '/articles', label: 'Articles' },
     { href: '/plan', label: 'Calculators' },
-    { href: '/games', label: 'Games' },
   ]},
   { href: '/how-it-works', label: 'How it works' },
   { href: '/features', label: 'Features' },

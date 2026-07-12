@@ -2,11 +2,22 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import Script from 'next/script'
 import { createClient } from '../../../lib/supabase/client'
 import toast from 'react-hot-toast'
 import GuacMascot from '../../../components/GuacMascot'
 import { Eye, EyeOff, Check } from 'lucide-react'
 import { ShakeOnError } from '../../../components/animated'
+
+// Cloudflare Turnstile site key — public, safe to ship in the client.
+// On /login the CAPTCHA renders ONLY for the demo-account flow (?demo=1):
+// the demo credentials are published on the site, so the widget (verified
+// server-side in /api/auth/sign-in) keeps bots off the shared account.
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ''
+
+// The shared try-before-you-register account. Intentionally public —
+// also shown on /how-it-works and the tour deck's closing slide.
+const DEMO_CREDS = { identifier: 'demo@getguac.app', password: 'Guac!Demo2026' }
 
 // Reminders shown on the desktop split-screen brand panel.
 const LOGIN_HIGHLIGHTS = [
@@ -62,6 +73,21 @@ function LoginPageInner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // ?demo=1 — "try before you sign up": prefill the shared demo account and
+  // gate the sign-in behind Turnstile (see DEMO_CREDS note above).
+  const isDemo = search?.get('demo') === '1'
+  const [turnstileToken, setTurnstileToken] = useState('')
+  const [turnstileBlocked, setTurnstileBlocked] = useState(false)
+  useEffect(() => {
+    if (isDemo) setForm(DEMO_CREDS)
+  }, [isDemo])
+  useEffect(() => {
+    if (!isDemo || !TURNSTILE_SITE_KEY) return
+    function onToken(e) { setTurnstileToken(e?.detail || '') }
+    window.addEventListener('turnstile-token', onToken)
+    return () => window.removeEventListener('turnstile-token', onToken)
+  }, [isDemo])
+
   async function signInWithGoogle() {
     setGoogleLoading(true)
     try {
@@ -90,7 +116,7 @@ function LoginPageInner() {
       const res = await fetch('/api/auth/sign-in', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, turnstile_token: turnstileToken || undefined }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -220,8 +246,20 @@ function LoginPageInner() {
         {/* ShakeOnError fires a 260ms three-wiggle whenever the
             sign-in attempt fails so the user gets motion feedback
             on top of the toast. */}
+        {/* Demo-mode banner — the fields below arrive prefilled. */}
+        {isDemo && (
+          <div className="rounded-2xl bg-emerald-50 ring-1 ring-emerald-200 px-4 py-3">
+            <p className="text-sm font-bold text-emerald-900">🔎 You&apos;re trying the shared demo account</p>
+            <p className="text-xs text-emerald-800 mt-1">
+              We filled in the demo credentials for you — just pass the quick captcha and sign in.
+              Look around with real pre-loaded data, then{' '}
+              <Link href="/register" className="font-bold underline underline-offset-2">create your own account</Link> when ready.
+            </p>
+          </div>
+        )}
+
         <ShakeOnError trigger={errorShake} className="card shadow-2xl">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">Sign In</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-6">{isDemo ? 'Try the demo' : 'Sign In'}</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="label">Username or email</label>
@@ -271,8 +309,49 @@ function LoginPageInner() {
                 </p>
               )}
             </div>
-            <button type="submit" disabled={loading} className="btn-primary w-full justify-center py-2.5 mt-1">
-              {loading ? 'Signing in…' : 'Sign In'}
+            {/* Turnstile CAPTCHA — demo flow only. The shared demo password is
+                public, so the widget (verified server-side) keeps bots out.
+                Same widget + global-callback pattern as /register. */}
+            {isDemo && TURNSTILE_SITE_KEY && (
+              <div>
+                <Script
+                  src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+                  strategy="afterInteractive"
+                  onError={() => setTurnstileBlocked(true)}
+                />
+                <div
+                  className="cf-turnstile flex justify-center"
+                  data-sitekey={TURNSTILE_SITE_KEY}
+                  data-callback="onTurnstileSuccess"
+                  data-error-callback="onTurnstileError"
+                  data-expired-callback="onTurnstileExpired"
+                />
+                {turnstileBlocked && !turnstileToken && (
+                  <p className="text-[11px] text-rose-600 font-semibold mt-1 text-center">
+                    The captcha couldn&apos;t load (ad-blocker?). Allow challenges.cloudflare.com and reload.
+                  </p>
+                )}
+                <Script id="turnstile-callbacks" strategy="afterInteractive">
+                  {`
+                    window.onTurnstileSuccess = function(token) {
+                      window.dispatchEvent(new CustomEvent('turnstile-token', { detail: token }))
+                    }
+                    window.onTurnstileError = function() {
+                      window.dispatchEvent(new CustomEvent('turnstile-token', { detail: '' }))
+                    }
+                    window.onTurnstileExpired = function() {
+                      window.dispatchEvent(new CustomEvent('turnstile-token', { detail: '' }))
+                    }
+                  `}
+                </Script>
+              </div>
+            )}
+            <button
+              type="submit"
+              disabled={loading || (isDemo && TURNSTILE_SITE_KEY && !turnstileToken)}
+              className="btn-primary w-full justify-center py-2.5 mt-1"
+            >
+              {loading ? 'Signing in…' : isDemo ? 'Enter the demo' : 'Sign In'}
             </button>
           </form>
 

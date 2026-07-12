@@ -11,9 +11,16 @@
 import { createClient } from '../../../../lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { rateLimit, rateKey } from '../../../../lib/apiGuard'
+import { verifyTurnstile } from '../../../../lib/turnstile'
 export const runtime = 'nodejs'
 
 const VALID_USERNAME_RE = /^[a-z0-9][a-z0-9._-]{1,30}[a-z0-9]$/
+
+// The shared try-before-you-register account (its credentials are published
+// on the site). CAPTCHA is mandatory for it — the password being public makes
+// it a magnet for bots, and Turnstile keeps automated abuse off the shared
+// data. Enforced here server-side so a crafted request can't skip the widget.
+const DEMO_EMAIL = 'demo@getguac.app'
 
 function admin() {
   return createAdminClient(
@@ -57,6 +64,21 @@ export async function POST(request) {
       const { data: userRes, error: userErr } = await sb.auth.admin.getUserById(profile.id)
       if (userErr || !userRes?.user?.email) return Response.json(GENERIC_INVALID, { status: 401 })
       email = userRes.user.email
+    }
+
+    // Demo account → require a Turnstile token (skips gracefully in local
+    // dev when TURNSTILE_SECRET_KEY isn't configured, same as sign-up).
+    if (email.toLowerCase() === DEMO_EMAIL) {
+      const remoteIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+                    || request.headers.get('x-real-ip')
+                    || null
+      const turnstile = await verifyTurnstile(body?.turnstile_token, remoteIp)
+      if (!turnstile.ok) {
+        return Response.json({
+          error: 'CAPTCHA verification failed. Please try again.',
+          captcha_required: true,
+        }, { status: 403 })
+      }
     }
 
     // Sign in via the cookie-bound SSR client — this sets the auth cookies on

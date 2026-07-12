@@ -14,6 +14,7 @@ import {
   Sparkles, Copy, BarChart3, ThumbsUp, ShieldCheck, ArrowRight,
   Smartphone, Globe, Receipt, Tag, Play, Pause, Volume2, VolumeX,
   ChevronLeft, ChevronRight, ShoppingCart, BadgePercent, Coins,
+  MessageCircle, CalendarDays, Store, Gamepad2, Package,
 } from 'lucide-react'
 
 // ─── Slide content ────────────────────────────────────────────────────────
@@ -160,6 +161,23 @@ const SLIDES = [
     durationMs: 32000,
   },
   {
+    n: '5d',
+    accent: 'sky',
+    icon: <Package size={26} className="text-sky-700" />,
+    title: 'Your Stash — every product you own',
+    subtitle: 'A living product library',
+    bullets: [
+      ['Built automatically', 'Every item from every receipt files itself into your Stash — one card per product, across every store you bought it from.'],
+      ['Rebuy smarter', 'See how often you repurchase something and what you paid each time, so price creep never sneaks past you.'],
+      ['Rate what you own', 'Star the products themselves — the keepers and the regrets — and your future shopping gets sharper.'],
+      ['One tap to act', 'From any Stash card, send the item to your Smashlist for the next trip or fire off a Steals search for a better price.'],
+    ],
+    art: 'stash',
+    narration: "Here's a question you've probably never had a good answer to: what do you actually own? The Stash answers it. Every item from every receipt files itself into your Stash automatically — one card per product, no matter which store you bought it from or how the receipt spelled it. Open a card and you see your whole history with that product. How often you rebuy it. What you paid each time. Whether the price has been creeping up while you weren't looking. You can rate the products themselves — mark the keepers, flag the regrets — and every rating makes your future shopping a little sharper. And each card is a launchpad: one tap sends the item to your Smashlist for the next trip, another fires off a Steals search to see if someone's selling it cheaper right now. Your Stash isn't a list you maintain. It's a library that builds itself.",
+    aiPeople: ['librarian'],
+    durationMs: 32000,
+  },
+  {
     n: 6,
     accent: 'rose',
     icon: <ThumbsUp size={26} className="text-rose-700" />,
@@ -247,6 +265,72 @@ const SLIDES = [
     durationMs: 34000,
   },
   {
+    n: '6f',
+    accent: 'emerald',
+    icon: <MessageCircle size={26} className="text-emerald-700" />,
+    title: 'Guac AI — ask your receipts anything',
+    subtitle: 'Your money, conversational',
+    bullets: [
+      ['A chat that knows your data', 'A pinned Guac AI thread lives right in your chat — ask about your own spending in plain English.'],
+      ['Grounded in your receipts', 'Answers come from a snapshot of your actual receipts, stores, and totals — not generic money advice.'],
+      ['Instant recall', '“How much have I spent at Costco?” “When did I buy the blender?” Ask the question; get the answer.'],
+      ['Private like everything else', 'The conversation and the data behind it stay inside your account.'],
+    ],
+    art: 'guacai',
+    narration: "Now meet the newest member of the team — Guac AI. It's a chat thread, pinned right at the top of your messages, and it knows one thing better than any chatbot on the planet: your receipts. Because its answers are grounded in a snapshot of your actual data — your stores, your items, your totals — you can just... ask. How much have I spent at Costco this year? When did I buy the blender, and what did I pay? What's my biggest grocery item this month? Plain English in, straight answers out. No dashboards to dig through, no filters to configure. It's the difference between owning your data and being able to talk to it. And like everything else in GetGuac, the conversation stays inside your account — grounded in your data, visible only to you.",
+    aiPeople: ['assistant'],
+    durationMs: 30000,
+  },
+  {
+    n: '6g',
+    accent: 'amber',
+    icon: <CalendarDays size={26} className="text-amber-700" />,
+    title: 'Bills & planning, one calendar ahead',
+    subtitle: 'See what’s coming',
+    bullets: [
+      ['Bills calendar', 'Recurring subscriptions found in your spending get projected onto their next due dates — no more surprise renewals.'],
+      ['Plan the big stuff', 'Retirement, college, healthcare, and emergency-fund calculators — plain inputs, honest math, no jargon.'],
+      ['Resources hub', 'A free, public library of no-nonsense money guides — no account needed.'],
+    ],
+    art: 'bills',
+    narration: "GetGuac doesn't just explain where your money went — it looks ahead. The Bills calendar takes the recurring charges hiding in your spending — the streaming services, the memberships, the annual renewals you always forget — and projects them forward onto their next due dates. You see the month before it happens. No more surprise renewals the day after the refund window closes. And for the big-picture stuff, there's a full set of planning calculators: retirement, college, healthcare, emergency fund. Plain inputs, honest math, and answers in dollars — not jargon. There's also a free public Resources hub stocked with no-nonsense money guides — open to everyone, account or not. Clarity about last month is good. Clarity about next month is better.",
+    aiPeople: ['bills'],
+    durationMs: 30000,
+  },
+  {
+    n: '6h',
+    accent: 'lime',
+    icon: <Store size={26} className="text-lime-700" />,
+    title: 'Marketplace — deals for everyone',
+    subtitle: 'No account required',
+    bullets: [
+      ['Search live deals', 'The same price-hunting engine behind Steals, open to the public — search any product and compare stores side by side.'],
+      ['Stores directory + coupons', 'Browse major retailers with current coupons and promo codes one tap away.'],
+      ['Save your searches', 'Keep a saved search on anything you plan to buy and check back for a better price.'],
+    ],
+    art: 'market',
+    narration: "And some of GetGuac is simply free for the whole internet. The Marketplace takes the same live price-hunting engine that powers Steals and opens it to everyone — no account required. Search any product and it lines up real, current prices from real stores, side by side. Browse the Stores directory and every major retailer comes with its current coupons and promo codes one tap away — check before you check out, every time. Planning a bigger purchase? Save the search and come back to see where the price has moved. It's the front door to GetGuac: start saving money before you've even signed up.",
+    aiPeople: ['market'],
+    durationMs: 28000,
+  },
+  {
+    n: '6i',
+    accent: 'rose',
+    icon: <Gamepad2 size={26} className="text-rose-700" />,
+    title: 'Guac Arcade — 15 free games',
+    subtitle: 'Playing earns GuacMoney',
+    bullets: [
+      ['Classics, remade', 'A maze muncher, asteroids, darts, brick-breaker, invaders, a daily word puzzle, even full chess — free in your browser, no download.'],
+      ['Goal games', 'Debt-free, dream-house, college-fund and retirement games that turn your savings goals into something you can play.'],
+      ['+50 GuacMoney per game, per day', 'Your first finished round of each game every day adds 50 GuacMoney to your tally.'],
+      ['Leaderboards', 'Signed-in players save their scores and compete for the top spot.'],
+    ],
+    art: 'arcade',
+    narration: "And because money shouldn't always be homework — there's the Guac Arcade. Fifteen free games, right in your browser, no download, no coins needed. The classics are all here, remade with a money twist: a maze muncher, asteroids, darts, a brick-breaker, space invaders, a daily word puzzle, even full chess. And then there are the goal games — where the brick wall is your debt, the tower you're stacking is your dream house, and the platforms you're climbing lead to a one-million-dollar retirement. Here's the kicker: playing pays. Your first finished round of each game, every day, adds fifty GuacMoney to your tally. Sign in and your high scores hit the leaderboards, where the top spot is always up for grabs. Take a break. It counts.",
+    aiPeople: ['arcade'],
+    durationMs: 32000,
+  },
+  {
     n: 7,
     accent: 'emerald',
     icon: <ShieldCheck size={26} className="text-emerald-700" />,
@@ -287,7 +371,7 @@ const SLIDES = [
     accent: 'emerald',
     type: 'closing',
     title: 'Every receipt stays in your account.',
-    narration: "So here's the short version. GetGuac captures every receipt from camera, email, or statement. Guac-AI parses it in seconds. Duplicates collapse automatically. Categories assign themselves. Your dashboard reveals exactly where your money goes. Worth-It ratings turn it into smarter decisions. And your bank fees stop bleeding you. The Smashlist writes your next shopping list before you run out, Steals hunts down a better price on it, and GuacMoney keeps score of every dollar you keep. All while your data stays yours, locked behind row-level security, deletable any time. So... ready to take control? Tap Get Started, snap your first receipt, and watch your finances finally make sense. Welcome to GetGuac. Welcome to spending smarter.",
+    narration: "So here's the short version. GetGuac captures every receipt from camera, email, or statement. Guac-AI parses it in seconds. Duplicates collapse automatically. Categories assign themselves. Your dashboard reveals exactly where your money goes. Worth-It ratings turn it into smarter decisions. And your bank fees stop bleeding you. The Smashlist writes your next shopping list before you run out, Steals hunts down a better price on it, your Stash remembers every product you own, and GuacMoney keeps score of every dollar you keep. Ask Guac AI anything about your own spending, see next month's bills before they land, and unwind in the Guac Arcade — where even playing earns GuacMoney. All while your data stays yours, locked behind row-level security, deletable any time. So... ready to take control? Tap Get Started, snap your first receipt, and watch your finances finally make sense. Welcome to GetGuac. Welcome to spending smarter.",
     durationMs: 26000,
   },
 ]
@@ -637,8 +721,8 @@ function ClosingSlide({ slide }) {
               </p>
               <p className="mt-1.5 text-xs text-emerald-100/80">
                 It&apos;s a shared, pre-loaded account — look around, then{' '}
-                <Link href="/login" className="font-bold text-white underline underline-offset-2">sign in here</Link>{' '}
-                or create your own when you&apos;re ready.
+                <Link href="/login?demo=1" className="font-bold text-white underline underline-offset-2">sign in here</Link>{' '}
+                (we&apos;ll prefill it) or create your own when you&apos;re ready.
               </p>
             </div>
           </div>
@@ -700,6 +784,7 @@ const SHOTS = {
   'See where it all went': '/showcase/dashboard.png',
   'Smashlist — your list writes itself': '/showcase/shopping.png',
   'Steals — pay less for what you rebuy': '/showcase/steals.png',
+  'Your Stash — every product you own': '/showcase/stash.png',
   'GuacMoney — watch your wins add up': '/showcase/dashboard.png',
   'Worth it?': '/showcase/bites.png',
   'Returns & refunds, finally tracked': '/showcase/returns.png',
@@ -746,6 +831,11 @@ function AiPeopleStrip({ people }) {
     predictor: { emoji: '🛒', label: 'Smashlist predictor' },
     deals:     { emoji: '💸', label: 'Steals hunter' },
     tally:     { emoji: '💰', label: 'GuacMoney tally' },
+    librarian: { emoji: '🗃️', label: 'Stash librarian' },
+    assistant: { emoji: '💬', label: 'Guac AI' },
+    bills:     { emoji: '📅', label: 'Bills planner' },
+    market:    { emoji: '🛍️', label: 'Marketplace scout' },
+    arcade:    { emoji: '🕹️', label: 'Arcade cabinet' },
   }
   return (
     <div className="mt-5 flex gap-3 flex-wrap items-center">
@@ -784,8 +874,142 @@ function Art({ name }) {
     case 'smashlist':  return <ArtSmashlist />
     case 'steals':     return <ArtSteals />
     case 'guacmoney':  return <ArtGuacMoney />
+    case 'stash':      return <ArtStash />
+    case 'guacai':     return <ArtGuacAI />
+    case 'bills':      return <ArtBills />
+    case 'market':     return <ArtMarket />
+    case 'arcade':     return <ArtArcade />
     default: return null
   }
+}
+
+// ── New-feature slide illustrations (2026-07-11 additions) ──
+function ArtStash() {
+  return (
+    <svg viewBox="0 0 200 180" width="220" height="200" aria-hidden="true">
+      <defs><linearGradient id="stash-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#e0f2fe" /><stop offset="1" stopColor="#7dd3fc" /></linearGradient></defs>
+      <rect width="200" height="180" rx="20" fill="url(#stash-bg)" />
+      {/* shelves of product boxes */}
+      <g>
+        <rect x="26" y="46" width="148" height="4" rx="2" fill="#0369a1" opacity="0.5" />
+        <rect x="26" y="104" width="148" height="4" rx="2" fill="#0369a1" opacity="0.5" />
+      </g>
+      <g>
+        <rect x="34" y="20" width="30" height="26" rx="5" fill="#fff" stroke="#0284c7" strokeWidth="2" />
+        <rect x="72" y="14" width="34" height="32" rx="5" fill="#bae6fd" stroke="#0284c7" strokeWidth="2" />
+        <rect x="114" y="24" width="26" height="22" rx="5" fill="#fff" stroke="#0284c7" strokeWidth="2" />
+        <rect x="148" y="18" width="22" height="28" rx="5" fill="#bae6fd" stroke="#0284c7" strokeWidth="2" />
+        <rect x="38" y="76" width="34" height="28" rx="5" fill="#bae6fd" stroke="#0284c7" strokeWidth="2" />
+        <rect x="80" y="70" width="26" height="34" rx="5" fill="#fff" stroke="#0284c7" strokeWidth="2" />
+        <rect x="114" y="80" width="36" height="24" rx="5" fill="#fff" stroke="#0284c7" strokeWidth="2" />
+      </g>
+      {/* price-history tag on one box */}
+      <g transform="translate(56 120)">
+        <rect x="0" y="0" width="88" height="30" rx="8" fill="#fff" stroke="#0284c7" strokeWidth="2" />
+        <polyline points="10,20 28,14 46,17 64,8 78,11" fill="none" stroke="#0ea5e9" strokeWidth="3" strokeLinecap="round" />
+      </g>
+      <text x="100" y="170" fontSize="11" fontWeight="800" fill="#075985" textAnchor="middle">every product, one card</text>
+    </svg>
+  )
+}
+
+function ArtGuacAI() {
+  return (
+    <svg viewBox="0 0 200 180" width="220" height="200" aria-hidden="true">
+      <defs><linearGradient id="gai-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#d1fae5" /><stop offset="1" stopColor="#6ee7b7" /></linearGradient></defs>
+      <rect width="200" height="180" rx="20" fill="url(#gai-bg)" />
+      {/* question bubble */}
+      <g transform="translate(20 28)">
+        <rect x="0" y="0" width="104" height="34" rx="12" fill="#fff" stroke="#059669" strokeWidth="2" />
+        <path d="M18 34 L14 46 L30 34 Z" fill="#fff" stroke="#059669" strokeWidth="2" />
+        <text x="52" y="22" fontSize="12" fontWeight="700" fill="#065f46" textAnchor="middle">Costco total?</text>
+      </g>
+      {/* answer bubble */}
+      <g transform="translate(66 86)">
+        <rect x="0" y="0" width="112" height="34" rx="12" fill="#065f46" />
+        <path d="M94 34 L100 46 L82 34 Z" fill="#065f46" />
+        <text x="56" y="22" fontSize="13" fontWeight="800" fill="#a7f3d0" textAnchor="middle">$412 this year</text>
+      </g>
+      {/* sparkle */}
+      <path d="M162 30 l4 10 10 4 -10 4 -4 10 -4 -10 -10 -4 10 -4 z" fill="#059669" />
+      <text x="100" y="168" fontSize="11" fontWeight="800" fill="#065f46" textAnchor="middle">grounded in your receipts</text>
+    </svg>
+  )
+}
+
+function ArtBills() {
+  return (
+    <svg viewBox="0 0 200 180" width="220" height="200" aria-hidden="true">
+      <defs><linearGradient id="bills-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#fef3c7" /><stop offset="1" stopColor="#fcd34d" /></linearGradient></defs>
+      <rect width="200" height="180" rx="20" fill="url(#bills-bg)" />
+      {/* calendar */}
+      <g transform="translate(38 30)">
+        <rect x="0" y="0" width="124" height="104" rx="10" fill="#fff" stroke="#b45309" strokeWidth="2" />
+        <rect x="0" y="0" width="124" height="24" rx="10" fill="#b45309" />
+        <rect x="0" y="12" width="124" height="12" fill="#b45309" />
+        <circle cx="26" cy="12" r="4" fill="#fef3c7" />
+        <circle cx="98" cy="12" r="4" fill="#fef3c7" />
+        {/* day cells */}
+        {[0, 1, 2, 3].map((r) => [0, 1, 2, 3, 4].map((c) => (
+          <rect key={`${r}-${c}`} x={10 + c * 22} y={32 + r * 17} width="16" height="11" rx="3" fill="#fef9ec" stroke="#fde68a" />
+        )))}
+        {/* due-date markers */}
+        <rect x="54" y="49" width="16" height="11" rx="3" fill="#f59e0b" />
+        <rect x="98" y="83" width="16" height="11" rx="3" fill="#ef4444" />
+      </g>
+      <text x="100" y="160" fontSize="11" fontWeight="800" fill="#92400e" textAnchor="middle">renewals, seen coming</text>
+    </svg>
+  )
+}
+
+function ArtMarket() {
+  return (
+    <svg viewBox="0 0 200 180" width="220" height="200" aria-hidden="true">
+      <defs><linearGradient id="mkt-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#ecfccb" /><stop offset="1" stopColor="#bef264" /></linearGradient></defs>
+      <rect width="200" height="180" rx="20" fill="url(#mkt-bg)" />
+      {/* storefront awning */}
+      <g transform="translate(34 28)">
+        <rect x="0" y="18" width="132" height="76" rx="8" fill="#fff" stroke="#4d7c0f" strokeWidth="2" />
+        <g>
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <path key={i} d={`M${i * 22} 18 h22 v-8 a11 11 0 0 0 -22 0 z`} fill={i % 2 ? '#65a30d' : '#d9f99d'} stroke="#4d7c0f" strokeWidth="1.5" />
+          ))}
+        </g>
+        <rect x="14" y="40" width="42" height="38" rx="5" fill="#f7fee7" stroke="#65a30d" strokeWidth="2" />
+        <text x="35" y="64" fontSize="13" fontWeight="800" fill="#3f6212" textAnchor="middle">-30%</text>
+        <rect x="72" y="40" width="46" height="16" rx="8" fill="#65a30d" />
+        <text x="95" y="52" fontSize="10" fontWeight="800" fill="#f7fee7" textAnchor="middle">COUPON</text>
+        <rect x="72" y="62" width="46" height="16" rx="8" fill="#d9f99d" stroke="#65a30d" strokeWidth="1.5" />
+        <text x="95" y="74" fontSize="10" fontWeight="800" fill="#3f6212" textAnchor="middle">$9.97</text>
+      </g>
+      <text x="100" y="152" fontSize="11" fontWeight="800" fill="#3f6212" textAnchor="middle">open to everyone</text>
+    </svg>
+  )
+}
+
+function ArtArcade() {
+  return (
+    <svg viewBox="0 0 200 180" width="220" height="200" aria-hidden="true">
+      <defs><linearGradient id="arc-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#ffe4e6" /><stop offset="1" stopColor="#fda4af" /></linearGradient></defs>
+      <rect width="200" height="180" rx="20" fill="url(#arc-bg)" />
+      {/* cabinet */}
+      <g transform="translate(52 22)">
+        <path d="M0 14 Q0 0 14 0 H82 Q96 0 96 14 V116 H0 Z" fill="#9f1239" />
+        <rect x="10" y="12" width="76" height="52" rx="6" fill="#0f172a" />
+        {/* maze dots on screen */}
+        <g fill="#fde047"><circle cx="24" cy="30" r="3" /><circle cx="38" cy="30" r="3" /><circle cx="52" cy="30" r="3" /><circle cx="66" cy="30" r="3" /></g>
+        <circle cx="30" cy="48" r="7" fill="#a3e635" />
+        <path d="M30 48 L40 42 L40 54 Z" fill="#0f172a" />
+        <circle cx="66" cy="48" r="6" fill="#f472b6" />
+        {/* controls */}
+        <circle cx="30" cy="86" r="8" fill="#fff" />
+        <rect x="27" y="70" width="6" height="14" rx="3" fill="#fff" />
+        <circle cx="58" cy="88" r="6" fill="#fde047" />
+        <circle cx="76" cy="88" r="6" fill="#a3e635" />
+      </g>
+      <text x="100" y="162" fontSize="11" fontWeight="800" fill="#881337" textAnchor="middle">first play of the day = +50 GM</text>
+    </svg>
+  )
 }
 
 // ── Slide-specific illustrations (added so no slide reuses another's art) ──

@@ -176,6 +176,13 @@ export default function GamesHub() {
               <Link href="/login" className="font-bold" style={{ color: GREEN }}>Sign in</Link> so it counts.
             </p>
           </div>
+          <Link href="/chat" className="block rounded-2xl px-4 py-3.5 no-underline" style={{ background: 'linear-gradient(135deg, #0d3b2e, #15281C)', border: '1px solid rgba(20,83,45,0.2)' }}>
+            <div className="text-sm font-extrabold mb-1 text-white">💬 Guac AI is ready</div>
+            <p className="m-0 text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.8)' }}>
+              Game break? Ask the built-in AI assistant anything about your spending, receipts or the app.
+            </p>
+            <span className="inline-block mt-2 text-xs font-extrabold px-3 py-1.5 rounded-full" style={{ background: '#FDE047', color: '#3F3206' }}>Chat with Guac →</span>
+          </Link>
         </aside>
 
         {/* ── Mobile controls ── */}
@@ -240,6 +247,15 @@ export default function GamesHub() {
                   <Link href="/login" style={{ color: GREEN, fontWeight: 700 }}>Sign in</Link> so it counts.
                 </span>
               </div>
+
+              {/* Guac AI strip — the sidebar card covers lg+, this covers mobile */}
+              <Link href="/chat" className="lg:hidden mt-3 rounded-2xl px-5 py-4 flex items-center gap-3 no-underline" style={{ background: 'linear-gradient(135deg, #0d3b2e, #15281C)' }}>
+                <span style={{ fontSize: 26 }}>💬</span>
+                <span className="min-w-0 text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>
+                  <b className="text-white">Guac AI is ready</b> — ask the built-in assistant anything about your spending.
+                </span>
+                <span className="ml-auto shrink-0 text-xs font-extrabold px-3 py-1.5 rounded-full" style={{ background: '#FDE047', color: '#3F3206' }}>Chat →</span>
+              </Link>
 
               {/* Continue playing — only for browsers with saved games */}
               {resume.length > 0 && (

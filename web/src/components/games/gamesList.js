@@ -1,23 +1,38 @@
 // Single source of truth for the Guac Arcade catalog — the /games hub,
 // each game page's rails, and the sitemap all read from here.
 // g1/g2 are the cover-art gradient, `motifs` are the floating cover emoji,
-// `cat` groups the hub rows: arcade | goal | puzzle.
+// `cat` groups the hub rows: arcade | sports | classic | goal | puzzle.
 // `bestKey` is the game's own localStorage key (best score / saved progress);
 // the hub's "Pick up where you left off" row is driven by its presence.
 export const GAMES = [
-  // ── classics ──────────────────────────────────────────────────────────────
+  // ── arcade ────────────────────────────────────────────────────────────────
   {
-    href: '/games/muncher', emoji: '🥑', name: 'Guac Muncher', tag: 'Arcade classic', cat: 'arcade', isNew: true,
+    href: '/games/fling', emoji: '🏹', name: 'Guac Fling', tag: 'Physics arcade', cat: 'arcade', isNew: true,
+    g1: '#F43F5E', g2: '#7C2D12', motifs: ['🏰', '💥'], bestKey: 'gg-fling-best-v1',
+    desc: 'Slingshot avocados at the fee towers and topple every money-waster inside.',
+  },
+  {
+    href: '/games/flappy', emoji: '🐤', name: 'Flappy Guac', tag: 'One-tap arcade', cat: 'arcade', isNew: true,
+    g1: '#7DD3FC', g2: '#0369A1', motifs: ['🌵', '💸'], bestKey: 'gg-flappy-best-v1',
+    desc: 'Tap to flap the winged avocado through the fee pipes. One touch, endless rage.',
+  },
+  {
+    href: '/games/whack', emoji: '🔨', name: 'Whack-a-Fee', tag: 'Reflex arcade', cat: 'arcade', isNew: true,
+    g1: '#D97706', g2: '#451A03', motifs: ['🕳️', '💸'], bestKey: 'gg-whack-best-v1',
+    desc: 'Fees pop out of the holes — hammer them flat, but never bonk the piggy bank.',
+  },
+  {
+    href: '/games/muncher', emoji: '🥑', name: 'Guac Muncher', tag: 'Arcade classic', cat: 'arcade',
     g1: '#0F766E', g2: '#022C22', motifs: ['👻', '🪙'], bestKey: 'gg-muncher-best-v1',
     desc: 'Chomp every coin in the maze and dodge the ghosts — power coins let you bite back.',
   },
   {
-    href: '/games/rocks', emoji: '🚀', name: 'Space Rocks', tag: 'Arcade classic', cat: 'arcade', isNew: true,
+    href: '/games/rocks', emoji: '🚀', name: 'Space Rocks', tag: 'Arcade classic', cat: 'arcade',
     g1: '#6366F1', g2: '#1E1B4B', motifs: ['☄️', '🛸'], bestKey: 'gg-rocks-best-v1',
     desc: 'Rotate, thrust, fire — blast the asteroids before they crush your starship.',
   },
   {
-    href: '/games/darts', emoji: '🎯', name: 'Bullseye Darts', tag: 'Arcade classic', cat: 'arcade', isNew: true,
+    href: '/games/darts', emoji: '🎯', name: 'Bullseye Darts', tag: 'Arcade classic', cat: 'arcade',
     g1: '#EF4444', g2: '#7F1D1D', motifs: ['🎪', '✨'], bestKey: 'gg-darts-best-v1',
     desc: 'Time the swaying crosshair and hit trebles, doubles and the bullseye. Ten darts.',
   },
@@ -36,24 +51,66 @@ export const GAMES = [
     g1: '#FB7185', g2: '#9F1239', motifs: ['🧱', '📄'], bestKey: 'gg-stacker-best-v1',
     desc: 'Falling expenses, classic stacking rules. Balance the receipt line by line.',
   },
+  // ── sports ────────────────────────────────────────────────────────────────
+  {
+    href: '/games/penalty', emoji: '⚽', name: 'Penalty Shootout', tag: 'Soccer', cat: 'sports', isNew: true,
+    g1: '#22C55E', g2: '#14532D', motifs: ['🥅', '🧤'], bestKey: 'gg-penalty-best-v1',
+    desc: 'Ten penalties, one keeper with a grudge. Pick your corner, nail your timing, score.',
+  },
+  {
+    href: '/games/hoops', emoji: '🏀', name: 'Hoop Shot', tag: 'Basketball', cat: 'sports', isNew: true,
+    g1: '#FB923C', g2: '#7C2D12', motifs: ['🏆', '🔥'], bestKey: 'gg-hoops-best-v1',
+    desc: 'Drag, aim, swish. Sixty seconds on the clock — three in a row sets the ball on fire.',
+  },
+  // ── classic favorites ─────────────────────────────────────────────────────
+  {
+    href: '/games/solitaire', emoji: '🃏', name: 'Guac Solitaire', tag: 'Card classic', cat: 'classic', isNew: true,
+    g1: '#059669', g2: '#064E3B', motifs: ['♠️', '♥️'], bestKey: 'gg-solitaire-best-v1',
+    desc: 'Klondike on the green felt — tap to move, build the foundations, clear the deck.',
+  },
+  {
+    href: '/games/sweeper', emoji: '💣', name: 'Fee Sweeper', tag: 'Logic classic', cat: 'classic', isNew: true,
+    g1: '#64748B', g2: '#0F172A', motifs: ['🚩', '💥'], bestKey: 'gg-sweeper-best-v1',
+    desc: 'The board is seeded with hidden fees. Read the numbers, flag the traps, clear it.',
+  },
+  {
+    href: '/games/snake', emoji: '🐍', name: 'Coin Snake', tag: 'Arcade classic', cat: 'classic', isNew: true,
+    g1: '#84CC16', g2: '#365314', motifs: ['🪙', '💎'], bestKey: 'gg-snake-best-v1',
+    desc: 'Eat coins, grow long, don’t bite yourself. The classic, with a money twist.',
+  },
+  {
+    href: '/games/pong', emoji: '🏓', name: 'Penny Pong', tag: 'Retro classic', cat: 'classic', isNew: true,
+    g1: '#0EA5E9', g2: '#0C4A6E', motifs: ['🕹️', '⚡'], bestKey: 'gg-pong-best-v1',
+    desc: 'First to seven against a computer that never blinks. The original video game, remixed.',
+  },
+  {
+    href: '/games/pairs', emoji: '🎴', name: 'Money Match', tag: 'Memory classic', cat: 'classic', isNew: true,
+    g1: '#E879F9', g2: '#701A75', motifs: ['🧠', '✨'], bestKey: 'gg-pairs-best-v1',
+    desc: 'Flip two cards, find the pair, remember everything. Fewer moves, bigger score.',
+  },
+  {
+    href: '/games/simon', emoji: '🚦', name: 'Guac Says', tag: 'Memory classic', cat: 'classic', isNew: true,
+    g1: '#8B5CF6', g2: '#4C1D95', motifs: ['🎵', '💡'], bestKey: 'gg-simon-best-v1',
+    desc: 'Watch the pads light up, replay the sequence. Each round adds one more step.',
+  },
   // ── goal games ────────────────────────────────────────────────────────────
   {
-    href: '/games/breaker', emoji: '🧱', name: 'Debt Breaker', tag: 'Debt-free goal', cat: 'goal', isNew: true,
+    href: '/games/breaker', emoji: '🧱', name: 'Debt Breaker', tag: 'Debt-free goal', cat: 'goal',
     g1: '#F97316', g2: '#9A3412', motifs: ['💳', '💥'], bestKey: 'gg-breaker-best-v1',
     desc: 'The brick wall is your debt. Paddle, ball, power-ups — smash your way to debt-free.',
   },
   {
-    href: '/games/nestegg', emoji: '🪺', name: 'Nest Egg Climb', tag: 'Retirement goal', cat: 'goal', isNew: true,
+    href: '/games/nestegg', emoji: '🪺', name: 'Nest Egg Climb', tag: 'Retirement goal', cat: 'goal',
     g1: '#34D399', g2: '#0D9488', motifs: ['🏖️', '📈'], bestKey: 'gg-nestegg-best-v1',
     desc: 'Bounce from platform to platform and grow the nest egg from $0 to a $1M retirement.',
   },
   {
-    href: '/games/house', emoji: '🏡', name: 'Dream House Stack', tag: 'Home goal', cat: 'goal', isNew: true,
+    href: '/games/house', emoji: '🏡', name: 'Dream House Stack', tag: 'Home goal', cat: 'goal',
     g1: '#A78BFA', g2: '#6D28D9', motifs: ['🏗️', '🌇'], bestKey: 'gg-house-best-v1',
     desc: 'Drop the swinging floors dead-center and stack your way to the dream house.',
   },
   {
-    href: '/games/tuition', emoji: '🎓', name: 'Tuition Invaders', tag: 'College goal', cat: 'goal', isNew: true,
+    href: '/games/tuition', emoji: '🎓', name: 'Tuition Invaders', tag: 'College goal', cat: 'goal',
     g1: '#60A5FA', g2: '#1E40AF', motifs: ['📚', '🚌'], bestKey: 'gg-tuition-best-v1',
     desc: 'Waves of tuition bills descend on the college fund — clear each semester to graduate.',
   },
@@ -79,6 +136,21 @@ export const GAMES = [
     desc: 'Cut the ropes at the right moment and swing the avocado into the savings jar.',
   },
   {
+    href: '/games/crush', emoji: '💎', name: 'Guac Crush', tag: 'Match-3', cat: 'puzzle', isNew: true,
+    g1: '#F472B6', g2: '#831843', motifs: ['💰', '✨'], bestKey: 'gg-crush-best-v1',
+    desc: 'Swap, match three, chain the cascades. Twenty-five moves to crush your best.',
+  },
+  {
+    href: '/games/wordsearch', emoji: '🔎', name: 'Money Word Search', tag: 'Word puzzle', cat: 'puzzle', isNew: true,
+    g1: '#06B6D4', g2: '#164E63', motifs: ['🔤', '📖'], bestKey: 'gg-wordsearch-best-v1',
+    desc: 'Ten money words hide in the letter grid — drag to find them all, fast.',
+  },
+  {
+    href: '/games/sudoku', emoji: '🔢', name: 'Guac Sudoku', tag: 'Number puzzle', cat: 'puzzle', isNew: true,
+    g1: '#818CF8', g2: '#312E81', motifs: ['✏️', '🧮'], bestKey: 'gg-sudoku-best-v1',
+    desc: 'A fresh solvable grid every game, three difficulties. Nine rows, no guessing.',
+  },
+  {
     href: '/games/chess', emoji: '♟️', name: 'Guac Chess', tag: 'Strategy', cat: 'puzzle',
     g1: '#64748B', g2: '#1E293B', motifs: ['👑', '🏁'], // no local save — never in "continue playing"
     desc: 'Savers vs. Spenders. Full chess, three difficulties — every capture has a price tag.',
@@ -86,18 +158,20 @@ export const GAMES = [
 ]
 
 export const CATEGORIES = [
-  { id: 'arcade', title: 'Arcade classics', emoji: '🕹️', blurb: 'Mazes, asteroids, darts, bubbles — the greats, free in your browser.' },
+  { id: 'arcade', title: 'Arcade classics', emoji: '🕹️', blurb: 'Mazes, asteroids, slingshots, bubbles — the greats, free in your browser.' },
+  { id: 'sports', title: 'Sports', emoji: '⚽', blurb: 'Penalties and free throws — quick-fire sports for a coffee break.' },
+  { id: 'classic', title: 'Classic favorites', emoji: '🃏', blurb: 'Solitaire, minesweeper, snake, pong — the timeless desk games.' },
   { id: 'goal', title: 'Goal games', emoji: '🏁', blurb: 'Debt-free, dream house, college fund, retirement — play the goals you’re saving for.' },
-  { id: 'puzzle', title: 'Puzzle, word & strategy', emoji: '🧩', blurb: 'Daily words, price instincts and slow-burn strategy.' },
+  { id: 'puzzle', title: 'Puzzle, word & strategy', emoji: '🧩', blurb: 'Daily words, sudoku, match-3 and slow-burn strategy.' },
 ]
 
-export const FEATURED_HREF = '/games/muncher'
+export const FEATURED_HREF = '/games/fling'
 
 // Hub hero: the featured 2×2 tile + these covers = "Jump into our most
 // popular games". Hand-ordered, not data-driven (no analytics yet).
 export const POPULAR_HREFS = [
-  '/games/bubbles', '/games/rocks', '/games/breaker', '/games/darts',
-  '/games/merge', '/games/guacdle', '/games/slicer', '/games/nestegg',
+  '/games/penalty', '/games/muncher', '/games/solitaire', '/games/bubbles',
+  '/games/snake', '/games/sweeper', '/games/hoops', '/games/darts',
 ]
 
 // game_scores/leaderboard id for a catalog entry — the href slug, with the

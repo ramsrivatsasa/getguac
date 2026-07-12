@@ -596,7 +596,7 @@ export default function GuacFling() {
       <div
         ref={wrapRef}
         className="relative overflow-hidden"
-        style={{ height: 'min(84vh, 900px)', minHeight: 480, background: '#bae6fd', borderTop: '1px solid rgba(20,83,45,0.12)', borderBottom: '1px solid rgba(20,83,45,0.12)' }}
+        style={{ height: 'clamp(430px, calc(100dvh - 240px), 720px)', minHeight: 430, background: '#bae6fd', borderTop: '1px solid rgba(20,83,45,0.12)', borderBottom: '1px solid rgba(20,83,45,0.12)' }}
       >
         <canvas
           ref={canvasRef}

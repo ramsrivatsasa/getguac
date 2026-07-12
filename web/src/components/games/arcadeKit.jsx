@@ -5,6 +5,7 @@
 // use React state only for HUD, matching the BubbleBudget pattern.
 import { useCallback, useEffect, useRef, useState } from 'react'
 import AdSlot from '../AdSlot'
+import { usePremium } from '../../lib/usePremium'
 import { saveGameScore } from '../../lib/gameScores'
 
 export const INK = '#15281C'
@@ -118,9 +119,32 @@ export function SaveScoreLine({ res }) {
   )
 }
 
+// ─── fullscreen ad breaks (AdSense Ad Placement API / H5 Games Ads) ─────────
+// adBreak/adConfig are queue pushes on the same adsbygoogle array the display
+// units use; Google decides whether a vignette actually shows, throttled by
+// the data-ad-frequency-hint on the loader in layout.jsx. Never fires inside
+// the app WebView (guac_embedded cookie — AdSense-in-app is a policy strike).
+let adConfigSent = false
+export function adBreak(opts) {
+  try {
+    if (document.cookie.split('; ').some((c) => c === 'guac_embedded=1')) return
+    const q = (window.adsbygoogle = window.adsbygoogle || [])
+    if (!adConfigSent) { q.push({ preloadAdBreaks: 'on', sound: 'on' }); adConfigSent = true }
+    q.push(opts)
+  } catch { /* blocked / not loaded */ }
+}
+
 // ─── overlay chrome ─────────────────────────────────────────────────────────
 // Full-playfield veil + centered white card (start / pause / game-over).
+// Every overlay mount is a natural gameplay break, so it requests a fullscreen
+// ad break (type 'browse' — a menu is on screen, nothing to pause). Premium
+// subscribers are ad-free; Google frequency-caps how often one really shows.
 export function Overlay({ dark = false, maxWidth = 400, children }) {
+  const premium = usePremium()
+  useEffect(() => {
+    if (!premium) adBreak({ type: 'browse', name: 'arcade_overlay' })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   return (
     <div
       className="absolute inset-0 flex items-center justify-center p-4"
@@ -173,7 +197,7 @@ export function GameFrame({ inner = 560, children }) {
     <div
       className="w-full select-none rounded-2xl grid place-items-center"
       style={{
-        minHeight: 'min(84vh, 900px)',
+        minHeight: 'clamp(430px, calc(100dvh - 240px), 720px)',
         padding: '28px 16px',
         background: 'linear-gradient(180deg, #f2fbf3 0%, #eaf6ec 100%)',
         border: CARD_BORDER,

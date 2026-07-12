@@ -519,7 +519,7 @@ export default function TuitionInvaders() {
       <div
         ref={wrapRef}
         className="relative overflow-hidden"
-        style={{ height: 'min(84vh, 900px)', minHeight: 480, background: '#111c33', borderTop: '1px solid rgba(30,41,59,0.8)', borderBottom: '1px solid rgba(30,41,59,0.8)' }}
+        style={{ height: 'clamp(430px, calc(100dvh - 240px), 720px)', minHeight: 430, background: '#111c33', borderTop: '1px solid rgba(30,41,59,0.8)', borderBottom: '1px solid rgba(30,41,59,0.8)' }}
       >
         <canvas
           ref={canvasRef}

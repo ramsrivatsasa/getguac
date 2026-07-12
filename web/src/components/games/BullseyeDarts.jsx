@@ -384,7 +384,7 @@ export default function BullseyeDarts() {
       <div
         ref={wrapRef}
         className="relative overflow-hidden"
-        style={{ height: 'min(84vh, 900px)', minHeight: 480, background: '#191512', borderTop: '1px solid rgba(87,83,78,0.5)', borderBottom: '1px solid rgba(87,83,78,0.5)' }}
+        style={{ height: 'clamp(430px, calc(100dvh - 240px), 720px)', minHeight: 430, background: '#191512', borderTop: '1px solid rgba(87,83,78,0.5)', borderBottom: '1px solid rgba(87,83,78,0.5)' }}
       >
         <canvas
           ref={canvasRef}

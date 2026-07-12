@@ -123,13 +123,17 @@ export default function RootLayout({ children }) {
             root layout so every route gets it. */}
         <UpdatePrompt />
         {/* Google AdSense loader — only emitted when a publisher id is set.
-            Powers <AdSlot/>. afterInteractive so it never blocks first paint. */}
+            Powers <AdSlot/> and the arcade's fullscreen ad breaks (adBreak in
+            arcadeKit.jsx). data-ad-frequency-hint = minimum gap Google keeps
+            between fullscreen interstitials. afterInteractive so it never
+            blocks first paint. */}
         {ADSENSE_CLIENT && (
           <Script
             id="adsbygoogle-init"
             async
             strategy="afterInteractive"
             src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
+            data-ad-frequency-hint="120s"
             crossOrigin="anonymous"
           />
         )}

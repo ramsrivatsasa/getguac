@@ -400,7 +400,7 @@ export default function DreamHouseStack() {
       <div
         ref={wrapRef}
         className="relative overflow-hidden"
-        style={{ height: 'clamp(430px, calc(100dvh - 240px), 720px)', minHeight: 430, background: '#bae6fd', borderTop: '1px solid rgba(20,83,45,0.12)', borderBottom: '1px solid rgba(20,83,45,0.12)' }}
+        style={{ height: 'clamp(430px, calc(100svh - 240px), 720px)', minHeight: 430, background: '#bae6fd', borderTop: '1px solid rgba(20,83,45,0.12)', borderBottom: '1px solid rgba(20,83,45,0.12)' }}
       >
         <canvas
           ref={canvasRef}

@@ -51,16 +51,17 @@ export default function GamePageShell({ href, title, blurb, how = [], tips = [],
 
           {/* Center — everything aligned to the game column */}
           <div className="min-w-0">
-            {/* Compact how-to right above the game — the full article stays below */}
+            {children}
+
+            {/* Compact how-to just below the game — the full article stays lower */}
             {how.length > 0 && (
-              <div className="mb-3 rounded-2xl px-4 py-3 flex items-start gap-2.5" style={{ background: '#f2fbf3', border: '1px solid rgba(20,83,45,0.10)' }}>
+              <div className="mt-4 rounded-2xl px-4 py-3 flex items-start gap-2.5" style={{ background: '#f2fbf3', border: '1px solid rgba(20,83,45,0.10)' }}>
                 <span aria-hidden className="text-base leading-5">🎮</span>
                 <p className="m-0 text-sm leading-relaxed" style={{ color: BODY }}>
                   <b style={{ color: INK }}>How to play:</b> {how[0]}
                 </p>
               </div>
             )}
-            {children}
 
             {/* Ad: right below the game, where the eye lands after a round */}
             <div className="mx-auto mt-6" style={{ maxWidth: 900 }}>

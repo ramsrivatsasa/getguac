@@ -197,7 +197,7 @@ export function GameFrame({ inner = 560, children }) {
     <div
       className="w-full select-none rounded-2xl grid place-items-center"
       style={{
-        minHeight: 'clamp(430px, calc(100dvh - 240px), 720px)',
+        minHeight: 'clamp(430px, calc(100svh - 240px), 720px)',
         padding: '28px 16px',
         background: 'linear-gradient(180deg, #f2fbf3 0%, #eaf6ec 100%)',
         border: CARD_BORDER,

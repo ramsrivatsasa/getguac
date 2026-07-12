@@ -611,7 +611,7 @@ export default function GuacMuncher() {
       <div
         ref={wrapRef}
         className="relative overflow-hidden"
-        style={{ height: 'clamp(430px, calc(100dvh - 240px), 720px)', minHeight: 430, background: '#0b1712', borderTop: '1px solid rgba(20,83,45,0.25)', borderBottom: '1px solid rgba(20,83,45,0.25)' }}
+        style={{ height: 'clamp(430px, calc(100svh - 240px), 720px)', minHeight: 430, background: '#0b1712', borderTop: '1px solid rgba(20,83,45,0.25)', borderBottom: '1px solid rgba(20,83,45,0.25)' }}
       >
         <canvas
           ref={canvasRef}

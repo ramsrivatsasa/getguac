@@ -194,3 +194,17 @@ export const POPULAR_HREFS = [
 // game_scores/leaderboard id for a catalog entry — the href slug, with the
 // one legacy exception (price-check saves as 'price').
 export const gameIdFor = (href) => (href === '/games/price-check' ? 'price' : href.split('/').pop())
+
+// Games with a real gameplay screenshot in /public/game-shots/<slug>.jpg —
+// the canvas action games (captured via scripts, Playwright). GameCover uses
+// the shot as cover art; board/DOM games (solitaire, sudoku, whack, …) keep
+// their illustrated gradient tile.
+export const SHOT_SLUGS = new Set([
+  'splurge', 'invaders', 'budget', 'fling', 'flappy', 'muncher', 'rocks', 'darts',
+  'bubbles', 'penalty', 'hoops', 'pong', 'breaker', 'nestegg', 'house', 'tuition',
+  'rope',
+])
+export const shotFor = (href) => {
+  const slug = (href || '').split('/').pop()
+  return SHOT_SLUGS.has(slug) ? `/game-shots/${slug}.jpg` : null
+}

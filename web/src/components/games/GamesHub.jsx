@@ -7,7 +7,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import GameCover from './GameCover'
-import { GAMES, CATEGORIES, FEATURED_HREF, POPULAR_HREFS } from './gamesList'
+import { GAMES, CATEGORIES, FEATURED_HREF, POPULAR_HREFS, shotFor } from './gamesList'
 
 const INK = '#15281C'
 const BODY = '#3d4a42'
@@ -61,6 +61,7 @@ function MenuButton({ item, active, onClick }) {
 // Featured 2×2 tile in the "most popular" grid — fills whatever height the
 // neighbouring cover rows give it.
 function FeaturedTile({ game }) {
+  const shot = shotFor(game.href)
   return (
     <Link
       href={game.href}
@@ -71,9 +72,20 @@ function FeaturedTile({ game }) {
         boxShadow: '0 10px 28px rgba(21,40,28,0.22)',
       }}
     >
-      <span aria-hidden className="absolute -right-6 -top-8 opacity-20 select-none" style={{ fontSize: 190, transform: 'rotate(-12deg)' }}>{game.emoji}</span>
-      <span aria-hidden className="absolute left-5 top-5 opacity-60 select-none" style={{ fontSize: 30, transform: 'rotate(-10deg)' }}>{game.motifs?.[0]}</span>
-      <span aria-hidden className="absolute right-8 bottom-24 opacity-50 select-none" style={{ fontSize: 24, transform: 'rotate(12deg)' }}>{game.motifs?.[1]}</span>
+      {shot ? (
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={shot} alt={`${game.name} gameplay`} className="absolute inset-0 w-full h-full object-cover transition-transform duration-200 group-hover:scale-105" />
+          {/* bottom scrim keeps the title + copy legible over the screenshot */}
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(0deg, rgba(8,18,14,0.92) 0%, rgba(8,18,14,0.55) 34%, rgba(8,18,14,0) 62%)' }} />
+        </>
+      ) : (
+        <>
+          <span aria-hidden className="absolute -right-6 -top-8 opacity-20 select-none" style={{ fontSize: 190, transform: 'rotate(-12deg)' }}>{game.emoji}</span>
+          <span aria-hidden className="absolute left-5 top-5 opacity-60 select-none" style={{ fontSize: 30, transform: 'rotate(-10deg)' }}>{game.motifs?.[0]}</span>
+          <span aria-hidden className="absolute right-8 bottom-24 opacity-50 select-none" style={{ fontSize: 24, transform: 'rotate(12deg)' }}>{game.motifs?.[1]}</span>
+        </>
+      )}
       <div className="relative p-5 sm:p-6">
         <div className="text-[10px] font-extrabold tracking-widest mb-1.5" style={{ color: 'rgba(255,255,255,0.75)' }}>🕹️ FEATURED</div>
         <div className="flex items-center gap-3">

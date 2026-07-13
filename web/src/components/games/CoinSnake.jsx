@@ -155,13 +155,30 @@ export default function CoinSnake() {
     ctx.lineWidth = 2.5
     ctx.strokeRect(bx - 2, by - 2, bw + 4, bh + 4)
 
-    // food
+    // food — drawn as SHAPES (not emoji) so coins/gems are always visible.
+    // The old 🪙/💎 emoji rendered as nothing on devices/webviews without those
+    // glyphs, so players couldn't see the coins to steer toward them.
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
-    ctx.font = `${Math.round(cell * 0.82)}px serif`
-    if (sim.coin) ctx.fillText('🪙', bx + sim.coin.x * cell + cell / 2, by + sim.coin.y * cell + cell / 2 + 1)
+    if (sim.coin) {
+      const cx = bx + sim.coin.x * cell + cell / 2, cy = by + sim.coin.y * cell + cell / 2
+      const cr = cell * 0.34
+      const cg = ctx.createRadialGradient(cx - cr * 0.35, cy - cr * 0.35, cr * 0.15, cx, cy, cr)
+      cg.addColorStop(0, '#fef3c7'); cg.addColorStop(0.5, '#fbbf24'); cg.addColorStop(1, '#b45309')
+      ctx.beginPath(); ctx.arc(cx, cy, cr, 0, Math.PI * 2); ctx.fillStyle = cg; ctx.fill()
+      ctx.lineWidth = Math.max(1, cell * 0.05); ctx.strokeStyle = '#92400e'; ctx.stroke()
+      ctx.fillStyle = '#7c2d12'; ctx.font = `700 ${Math.round(cell * 0.44)}px system-ui, sans-serif`
+      ctx.fillText('$', cx, cy + cell * 0.03)
+    }
     if (sim.gem) {
+      const gx = bx + sim.gem.x * cell + cell / 2, gy = by + sim.gem.y * cell + cell / 2
+      const gr = cell * 0.36
       ctx.globalAlpha = sim.gemLife < 2 ? (Math.sin(sim.gemLife * 12) * 0.5 + 0.5) : 1
-      ctx.fillText('💎', bx + sim.gem.x * cell + cell / 2, by + sim.gem.y * cell + cell / 2 + 1)
+      ctx.beginPath()
+      ctx.moveTo(gx, gy - gr); ctx.lineTo(gx + gr, gy); ctx.lineTo(gx, gy + gr); ctx.lineTo(gx - gr, gy); ctx.closePath()
+      const gg = ctx.createLinearGradient(gx - gr, gy - gr, gx + gr, gy + gr)
+      gg.addColorStop(0, '#a5f3fc'); gg.addColorStop(0.5, '#22d3ee'); gg.addColorStop(1, '#0e7490')
+      ctx.fillStyle = gg; ctx.fill()
+      ctx.lineWidth = Math.max(1, cell * 0.045); ctx.strokeStyle = '#155e75'; ctx.stroke()
       ctx.globalAlpha = 1
     }
 

@@ -20,7 +20,7 @@ export default function GuacGamesPopup() {
     <>
       {open && (
         <div className="fixed z-[60] right-4 sm:right-5 bottom-40 w-[min(320px,calc(100vw-2rem))] rounded-2xl overflow-hidden bg-white shadow-2xl ring-1 ring-guac-700/15">
-          <div className="flex items-center justify-between px-3 py-2.5 text-white" style={{ background: RAINBOW, textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>
+          <div className="flex items-center justify-between px-3 py-2.5 text-white" style={{ background: '#166534' }}>
             <span className="flex items-center gap-2 text-sm font-extrabold"><Gamepad2 size={18} /> Guac Arcade</span>
             <button type="button" onClick={() => setOpen(false)} aria-label="Close" className="p-1 rounded-full hover:bg-white/15"><X size={16} /></button>
           </div>

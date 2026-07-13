@@ -51,7 +51,14 @@ export default function GamePageShell({ href, title, blurb, how = [], tips = [],
 
           {/* Center — everything aligned to the game column */}
           <div className="min-w-0">
-            {children}
+            {/* Framed playfield, bubbleshooter-style: the game sits inset inside
+                a soft tinted panel with padding, instead of edge-to-edge. */}
+            <div
+              className="rounded-3xl p-2.5 sm:p-3.5"
+              style={{ background: 'linear-gradient(180deg, #eceefb 0%, #e3e7f6 100%)', border: '1px solid rgba(70,80,150,0.16)', boxShadow: '0 14px 34px rgba(30,40,90,0.12)' }}
+            >
+              {children}
+            </div>
 
             {/* Compact how-to just below the game — the full article stays lower */}
             {how.length > 0 && (

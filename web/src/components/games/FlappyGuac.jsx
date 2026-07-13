@@ -171,28 +171,48 @@ export default function FlappyGuac() {
       ctx.fillRect(x - shift, GROUND, 18, 7)
     }
 
-    // bird — avocado with a wing
+    // bird — a round yellow chick that flaps its wings as it flies
     const bx = W * 0.32
     const b = sim.bird
     const rot = sim.started ? Math.max(-0.5, Math.min(1.1, b.vy / 600)) : 0
+    const wingUp = b.wing > 0.4
     ctx.save()
     ctx.translate(bx, b.y)
     ctx.rotate(rot)
-    ctx.fillStyle = '#4d7c0f'
-    ctx.beginPath(); ctx.ellipse(0, 0, 17, 20, 0, 0, Math.PI * 2); ctx.fill()
-    ctx.fillStyle = '#84cc16'
-    ctx.beginPath(); ctx.ellipse(0, 2.5, 11.5, 13.5, 0, 0, Math.PI * 2); ctx.fill()
-    ctx.fillStyle = '#78350f'
-    ctx.beginPath(); ctx.arc(0, 5, 5.5, 0, Math.PI * 2); ctx.fill()
-    // wing
-    ctx.fillStyle = '#fefce8'
+    // tail feathers
+    ctx.fillStyle = '#f59e0b'
+    ctx.beginPath(); ctx.moveTo(-14, -1); ctx.lineTo(-26, -8); ctx.lineTo(-23, 0); ctx.lineTo(-26, 8); ctx.closePath(); ctx.fill()
+    // body
+    ctx.fillStyle = '#fbbf24'
+    ctx.beginPath(); ctx.ellipse(0, 0, 18, 16, 0, 0, Math.PI * 2); ctx.fill()
+    // belly
+    ctx.fillStyle = '#fde68a'
+    ctx.beginPath(); ctx.ellipse(3, 5, 11, 9, 0, 0, Math.PI * 2); ctx.fill()
+    // wing — swings up on each flap, down between beats (the flying animation)
     ctx.save()
-    ctx.rotate(b.wing > 0.4 ? -0.9 : 0.15)
-    ctx.beginPath(); ctx.ellipse(-11, -2, 11, 6, 0, 0, Math.PI * 2); ctx.fill()
+    ctx.translate(-1, -1)
+    ctx.rotate(wingUp ? -0.85 : 0.3)
+    ctx.fillStyle = '#f59e0b'
+    ctx.beginPath(); ctx.ellipse(-3, 0, 13, 8, 0, 0, Math.PI * 2); ctx.fill()
+    ctx.fillStyle = '#fcd34d'
+    ctx.beginPath(); ctx.ellipse(-3, 0, 8, 5, 0, 0, Math.PI * 2); ctx.fill()
     ctx.restore()
-    // eye + beak-ish smile
-    ctx.fillStyle = '#15281C'
-    ctx.beginPath(); ctx.arc(6, -7, 2.6, 0, Math.PI * 2); ctx.fill()
+    // eye
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(9, -6, 5, 0, Math.PI * 2); ctx.fill()
+    ctx.fillStyle = '#1f2937'; ctx.beginPath(); ctx.arc(10.5, -6, 2.6, 0, Math.PI * 2); ctx.fill()
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(9.5, -7, 1, 0, Math.PI * 2); ctx.fill()
+    // beak — little orange triangle, slightly open
+    ctx.fillStyle = '#fb923c'
+    ctx.beginPath(); ctx.moveTo(16, -4); ctx.lineTo(28, -1.5); ctx.lineTo(16, 1); ctx.closePath(); ctx.fill()
+    ctx.fillStyle = '#ea580c'
+    ctx.beginPath(); ctx.moveTo(16, 1); ctx.lineTo(26, 2.5); ctx.lineTo(16, 4.5); ctx.closePath(); ctx.fill()
+    // head tuft
+    ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 2.4; ctx.lineCap = 'round'
+    ctx.beginPath()
+    ctx.moveTo(1, -15); ctx.lineTo(-2, -22)
+    ctx.moveTo(6, -15); ctx.lineTo(6, -23)
+    ctx.moveTo(10, -14); ctx.lineTo(13, -21)
+    ctx.stroke()
     ctx.restore()
 
     // in-world score

@@ -50,7 +50,7 @@ const sections = [
     items: [
       { href: '/inbox',       icon: Mail,          label: 'Inbox',       emoji: '📬', hoverMascot: 'eating' },
       { href: '/connections', icon: Link2,         label: 'Connections', emoji: '🔌', hoverMascot: 'thumbsup' },
-      { href: '/chat',        icon: MessageSquare, label: 'Chat',        emoji: '💬', hoverMascot: 'happy' },
+      { href: '/chat',        icon: MessageSquare, label: 'Guac AI',     emoji: '🥑💬', hoverMascot: 'happy' },
     ],
   },
   {

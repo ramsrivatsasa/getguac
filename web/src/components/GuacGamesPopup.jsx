@@ -1,0 +1,57 @@
+'use client'
+// Floating Guac Arcade launcher — a persistent 🎮 button in the dashboard's
+// bottom-right FAB stack (above the Guac AI popup + QuickAdd FAB) that pops open
+// a mini arcade: the daily-GuacMoney nudge, a grid of featured games to jump
+// straight into, and a link to the full hub. Keeps games one tap from any page.
+import { useState } from 'react'
+import Link from 'next/link'
+import { Gamepad2, X } from 'lucide-react'
+import { GAMES } from './games/gamesList'
+
+const FEATURED = ['/games/splurge', '/games/nitro', '/games/bubbles', '/games/climb', '/games/muncher', '/games/penalty']
+  .map((h) => GAMES.find((g) => g.href === h))
+  .filter(Boolean)
+
+export default function GuacGamesPopup() {
+  const [open, setOpen] = useState(false)
+  return (
+    <>
+      {open && (
+        <div className="fixed z-[60] right-4 sm:right-5 bottom-40 w-[min(320px,calc(100vw-2rem))] rounded-2xl overflow-hidden bg-white shadow-2xl ring-1 ring-guac-700/15">
+          <div className="flex items-center justify-between px-3 py-2.5 text-white" style={{ background: '#166534' }}>
+            <span className="flex items-center gap-2 text-sm font-extrabold"><Gamepad2 size={18} /> Guac Arcade</span>
+            <button type="button" onClick={() => setOpen(false)} aria-label="Close" className="p-1 rounded-full hover:bg-white/15"><X size={16} /></button>
+          </div>
+          <div className="p-3">
+            <p className="text-[11px] font-bold mb-2 inline-block px-2 py-1 rounded-full" style={{ background: '#f2fbf3', color: '#065f46' }}>🥑 +50 GuacMoney for your first game each day</p>
+            <div className="grid grid-cols-2 gap-2">
+              {FEATURED.map((g) => (
+                <Link
+                  key={g.href}
+                  href={g.href}
+                  onClick={() => setOpen(false)}
+                  className="relative rounded-xl overflow-hidden no-underline h-16 flex items-end"
+                  style={{ background: `radial-gradient(120% 120% at 20% 0%, ${g.g1} 0%, ${g.g2} 100%)` }}
+                >
+                  <span aria-hidden className="absolute right-1 top-0 text-2xl opacity-30 select-none">{g.emoji}</span>
+                  <span className="relative w-full px-2 py-1 text-[11px] font-bold text-white truncate" style={{ background: 'rgba(0,0,0,0.3)' }}>{g.name}</span>
+                </Link>
+              ))}
+            </div>
+            <Link href="/games" onClick={() => setOpen(false)} className="block mt-2.5 text-center text-xs font-extrabold no-underline hover:underline" style={{ color: '#166534' }}>See all 30+ games →</Link>
+          </div>
+        </div>
+      )}
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-label={open ? 'Close Guac Arcade' : 'Open Guac Arcade'}
+        className="fixed z-[60] right-4 sm:right-5 bottom-40 items-center gap-2 rounded-full text-white shadow-lg ring-1 ring-black/5 pl-3 pr-4 py-2.5 hover:-translate-y-0.5 transition-transform"
+        style={{ display: open ? 'none' : 'flex', background: '#166534' }}
+      >
+        <Gamepad2 size={20} />
+        <span className="text-sm font-extrabold">Games</span>
+      </button>
+    </>
+  )
+}

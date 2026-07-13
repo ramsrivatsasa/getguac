@@ -5,6 +5,7 @@ import Sidebar from '../../components/Sidebar'
 import TopBar from '../../components/TopBar'
 import QuickAddReceipt from '../../components/QuickAddReceipt'
 import GuacAiPopup from '../../components/GuacAiPopup'
+import GuacGamesPopup from '../../components/GuacGamesPopup'
 import OutboxFlusher from '../../components/OutboxFlusher'
 import EmbedErrorBoundary from '../../components/EmbedErrorBoundary'
 import { ConfirmProvider } from '../../components/ConfirmDialog'
@@ -52,6 +53,7 @@ export default async function DashboardLayout({ children }) {
         </div>
         <QuickAddReceipt />
         <GuacAiPopup />
+        <GuacGamesPopup />
         <OutboxFlusher />
         <CommandPalette />
       </div>

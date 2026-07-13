@@ -10,7 +10,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
-import { Send, Eraser } from 'lucide-react'
+import { Send, Eraser, X } from 'lucide-react'
 import GuacMascot from './GuacMascot'
 
 const STORE_KEY = 'gg-ai-chat-v1'
@@ -29,7 +29,7 @@ function loadThread() {
   } catch { return [] }
 }
 
-export default function GuacAiThread({ onBack }) {
+export default function GuacAiThread({ onBack, onClose, heightClass = 'h-[70vh]' }) {
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [busy, setBusy] = useState(false)
@@ -74,24 +74,33 @@ export default function GuacAiThread({ onBack }) {
   }
 
   return (
-    <div className="flex flex-col h-[70vh]">
+    <div className={`flex flex-col ${heightClass}`}>
       <header className="flex items-center gap-2 border-b border-gray-100 px-3 py-2.5 shrink-0">
-        <button
-          type="button"
-          onClick={onBack}
-          className="lg:hidden text-guac-700 text-xs font-semibold"
-        >← Back</button>
-        <GuacMascot expression="happy" size={22} className="shrink-0" />
-        <span className="font-semibold text-gray-800 text-sm truncate">Guac · AI assistant</span>
-        {messages.length > 0 && (
+        {onBack && (
           <button
             type="button"
-            onClick={clearThread}
-            className="ml-auto flex items-center gap-1 text-[11px] font-semibold text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <Eraser size={12} /> Clear
-          </button>
+            onClick={onBack}
+            className="lg:hidden text-guac-700 text-xs font-semibold"
+          >← Back</button>
         )}
+        <GuacMascot expression="happy" size={22} className="shrink-0" />
+        <span className="font-semibold text-gray-800 text-sm truncate">Guac · AI assistant</span>
+        <div className="ml-auto flex items-center gap-1.5">
+          {messages.length > 0 && (
+            <button
+              type="button"
+              onClick={clearThread}
+              className="flex items-center gap-1 text-[11px] font-semibold text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <Eraser size={12} /> Clear
+            </button>
+          )}
+          {onClose && (
+            <button type="button" onClick={onClose} aria-label="Close Guac AI" className="p-1 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+              <X size={16} />
+            </button>
+          )}
+        </div>
       </header>
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 space-y-2 bg-gray-50">

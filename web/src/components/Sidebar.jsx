@@ -22,6 +22,7 @@ const sections = [
       { href: '/dashboard',   icon: LayoutDashboard, label: 'Dashboard',   emoji: '🏠', hoverMascot: 'sitting' },
       { href: '/guacanomics', icon: Sparkles,        label: 'Guacanomics', emoji: '✨', hoverMascot: 'celebrating' },
       { href: '/validate',    icon: Receipt,         label: 'Worth It?',   emoji: '🥑', hoverMascot: 'thumbsup' },
+      { href: '/chat',        icon: MessageSquare,   label: 'Guac AI',     emoji: '🥑💬', hoverMascot: 'happy' },
       { href: '/guacwizard',  icon: Wand2,           label: 'GuacWizard',  emoji: '🧙‍♂️✨', hoverMascot: 'rich' },
     ],
   },
@@ -50,7 +51,6 @@ const sections = [
     items: [
       { href: '/inbox',       icon: Mail,          label: 'Inbox',       emoji: '📬', hoverMascot: 'eating' },
       { href: '/connections', icon: Link2,         label: 'Connections', emoji: '🔌', hoverMascot: 'thumbsup' },
-      { href: '/chat',        icon: MessageSquare, label: 'Guac AI',     emoji: '🥑💬', hoverMascot: 'happy' },
     ],
   },
   {

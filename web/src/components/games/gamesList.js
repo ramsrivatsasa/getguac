@@ -21,6 +21,12 @@ export const GAMES = [
     g1: '#22C55E', g2: '#14532D', motifs: ['🧾', '📊'], bestKey: 'gg-budget-best-v1',
     desc: 'Your expenses fall as blocks sized by price — fill a row to bank it, stay under the budget line.',
   },
+  // ── racing & wheels ───────────────────────────────────────────────────────
+  {
+    href: '/games/climb', emoji: '🚙', name: 'Guac Hill Climb', tag: 'Hill racer', cat: 'racing', isNew: true,
+    g1: '#7DD3FC', g2: '#166534', motifs: ['⛰️', '🪙'], bestKey: 'gg-climb-best-v1',
+    desc: 'Drive the avocado buggy over the hills, grab the cash and don’t run out of fuel or flip.',
+  },
   // ── arcade ────────────────────────────────────────────────────────────────
   {
     href: '/games/fling', emoji: '🏹', name: 'Guac Fling', tag: 'Physics arcade', cat: 'arcade', isNew: true,
@@ -175,6 +181,7 @@ export const GAMES = [
 
 export const CATEGORIES = [
   { id: 'money', title: 'Your Money games', emoji: '🥑', blurb: 'Play against your own spending — real purchases, real categories, real time. Sign in and the games rebuild from your receipts.' },
+  { id: 'racing', title: 'Racing & wheels', emoji: '🏎️', blurb: 'Climb hills, grab cash, don’t flip — physics driving with a money twist.' },
   { id: 'arcade', title: 'Arcade classics', emoji: '🕹️', blurb: 'Mazes, asteroids, slingshots, bubbles — the greats, free in your browser.' },
   { id: 'sports', title: 'Sports', emoji: '⚽', blurb: 'Penalties and free throws — quick-fire sports for a coffee break.' },
   { id: 'classic', title: 'Classic favorites', emoji: '🃏', blurb: 'Solitaire, minesweeper, snake, pong — the timeless desk games.' },

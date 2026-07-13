@@ -38,7 +38,14 @@ const START_ROWS = 7
 // board reads like a real bubble-shooter grid (bubbleshooter.com-style): many
 // small bubbles up top, launcher clearly visible below. Phones still get a
 // finger-friendly floor via the min; monitors get a wide grid via the max.
-const colsForWidth = (w) => Math.max(10, Math.min(34, Math.round(w / 42)))
+const colsForWidth = (w) => Math.max(10, Math.min(34, Math.round(playWidth(w) / 42)))
+// Reserve a right control column (bubbleshooter-style) so the bubble grid never
+// runs under the round control bubbles. playWidth = the grid's usable width.
+const rightGutter = (w) => (w < 520 ? 54 : 84)
+function playWidth(w) { return Math.max(220, w - rightGutter(w)) }
+// Glossy round control-bubble button (Restart / Sound / Pause) styling.
+const CTRL_CLS = 'w-10 h-10 sm:w-14 sm:h-14 rounded-full flex items-center justify-center text-white font-extrabold border-0 cursor-pointer'
+const ctrlBg = (c1, c2) => ({ background: `radial-gradient(circle at 32% 26%, #ffffff 0%, ${c1} 36%, ${c2} 100%)`, boxShadow: '0 3px 8px rgba(0,0,0,0.28), inset 0 -3px 7px rgba(0,0,0,0.22)' })
 const FLY_SPEED = 1500
 const MAX_ANG = 1.25 // radians off vertical
 const TIPS = [
@@ -170,7 +177,7 @@ export default function BubbleBudget() {
   // ─── board logic ─────────────────────────────────────────────────────────
   const shooterPos = () => {
     const { w, h } = sizeRef.current
-    return { x: w / 2, y: h - 78 }
+    return { x: playWidth(w) / 2, y: h - 78 }
   }
   const dangerY = () => sizeRef.current.h - 165
 
@@ -358,7 +365,8 @@ export default function BubbleBudget() {
     const cvs = canvasRef.current
     if (!cvs) return
     const { w, h } = sizeRef.current
-    const geo = makeGeo(w, sim.cols)
+    const pw = playWidth(w)
+    const geo = makeGeo(pw, sim.cols)
     const ctx = cvs.getContext('2d')
     ctx.clearRect(0, 0, w, h)
 
@@ -375,7 +383,7 @@ export default function BubbleBudget() {
     ctx.setLineDash([7, 7])
     ctx.lineWidth = 2
     ctx.strokeStyle = close ? 'rgba(225,29,72,0.55)' : 'rgba(20,83,45,0.18)'
-    ctx.beginPath(); ctx.moveTo(10, dy); ctx.lineTo(w - 10, dy); ctx.stroke()
+    ctx.beginPath(); ctx.moveTo(10, dy); ctx.lineTo(pw - 10, dy); ctx.stroke()
     ctx.setLineDash([])
 
     const S = shooterPos()
@@ -390,7 +398,7 @@ export default function BubbleBudget() {
       while (traveled < 1400 && py > TOP_PAD + geo.R) {
         px += dx * stepLen; py += dyy * stepLen; traveled += stepLen
         if (px < geo.R) { px = geo.R + (geo.R - px); dx = -dx }
-        if (px > w - geo.R) { px = (w - geo.R) - (px - (w - geo.R)); dx = -dx }
+        if (px > pw - geo.R) { px = (pw - geo.R) - (px - (pw - geo.R)); dx = -dx }
         let hit = false
         for (const [k] of sim.grid) {
           const [r, c] = k.split(',').map(Number)
@@ -431,12 +439,13 @@ export default function BubbleBudget() {
 
   function step(sim, dt) {
     const { w, h } = sizeRef.current
-    const geo = makeGeo(w, sim.cols)
+    const pw = playWidth(w)
+    const geo = makeGeo(pw, sim.cols)
     if (sim.fly) {
       const f = sim.fly
       f.x += f.vx * dt; f.y += f.vy * dt
       if (f.x < geo.R) { f.x = geo.R + (geo.R - f.x); f.vx = -f.vx; sfx('bounce') }
-      if (f.x > w - geo.R) { f.x = (w - geo.R) - (f.x - (w - geo.R)); f.vx = -f.vx; sfx('bounce') }
+      if (f.x > pw - geo.R) { f.x = (pw - geo.R) - (f.x - (pw - geo.R)); f.vx = -f.vx; sfx('bounce') }
       let hit = f.y <= TOP_PAD + geo.R
       if (!hit) {
         for (const [k] of sim.grid) {
@@ -615,6 +624,16 @@ export default function BubbleBudget() {
           style={{ touchAction: 'none', cursor: status === 'playing' ? 'crosshair' : 'default' }}
         />
 
+        {/* Right control column — bubbleshooter-style round glossy control
+            bubbles, sitting in the reserved right gutter beside the grid. */}
+        {(status === 'playing' || status === 'paused') && (
+          <div className="absolute flex flex-col items-center gap-2 sm:gap-2.5" style={{ right: 6, top: '15%', pointerEvents: 'auto' }}>
+            <button onClick={start} aria-label="Restart" className={CTRL_CLS} style={ctrlBg('#22c55e', '#15803d')}><span className="text-base leading-none">↻</span></button>
+            <button onClick={toggleMute} aria-label={muted ? 'Unmute' : 'Mute'} className={CTRL_CLS} style={ctrlBg('#22d3ee', '#0e7490')}><span className="text-sm leading-none">{muted ? '🔇' : '🔊'}</span></button>
+            <button onClick={status === 'playing' ? pause : resume} aria-label={status === 'playing' ? 'Pause' : 'Resume'} className={CTRL_CLS} style={ctrlBg('#818cf8', '#3730a3')}><span className="text-xs leading-none">{status === 'playing' ? '❙❙' : '▶'}</span></button>
+          </div>
+        )}
+
         {/* HUD */}
         <div className="absolute top-0 inset-x-0 flex items-center justify-between px-3 py-2" style={{ pointerEvents: 'none' }}>
           <div className="flex items-baseline gap-3">
@@ -631,14 +650,6 @@ export default function BubbleBudget() {
                 <span className="text-[11px] font-semibold" style={{ color: FAINT }}>Next row in </span>
                 <span className="font-display font-bold text-sm" style={{ color: shotsLeft <= 2 ? ROSE : MUTED }}>{shotsLeft}</span>
               </div>
-            )}
-          </div>
-          <div className="flex items-center gap-2" style={{ pointerEvents: 'auto' }}>
-            <button onClick={toggleMute} aria-label={muted ? 'Unmute sound' : 'Mute sound'} className="text-xs font-bold px-2.5 py-1.5 rounded-full border bg-white" style={{ borderColor: 'rgba(20,83,45,0.18)', color: INK }}>
-              {muted ? '🔇' : '🔊'}
-            </button>
-            {status === 'playing' && (
-              <button onClick={pause} className="text-xs font-bold px-3 py-1.5 rounded-full border bg-white" style={{ borderColor: 'rgba(20,83,45,0.18)', color: INK }}>⏸ Pause</button>
             )}
           </div>
         </div>
@@ -686,9 +697,9 @@ export default function BubbleBudget() {
           </div>
         )}
 
-        {/* Pause overlay */}
+        {/* Pause overlay — light veil so the vivid board still shows behind it */}
         {status === 'paused' && (
-          <div className="absolute inset-0 flex items-center justify-center p-4" style={{ background: 'rgba(242,251,243,0.9)' }}>
+          <div className="absolute inset-0 flex items-center justify-center p-4" style={{ background: 'rgba(226,224,247,0.42)' }}>
             <div className="rounded-2xl bg-white p-5 text-center w-full" style={{ border: CARD_BORDER, maxWidth: 300 }}>
               <div className="font-display font-extrabold text-lg mb-1" style={{ color: INK }}>Paused ⏸</div>
               <p className="text-xs mb-3" style={{ color: MUTED }}>${fmt(score)} banked so far — the bubbles will wait.</p>

@@ -328,16 +328,30 @@ export default function BubbleBudget() {
   // ─── render ──────────────────────────────────────────────────────────────
   function drawBubbleAt(ctx, x, y, R, ci) {
     const kind = KINDS[ci]
-    const g = ctx.createRadialGradient(x - R * 0.35, y - R * 0.35, R * 0.15, x, y, R)
-    g.addColorStop(0, '#ffffff')
-    g.addColorStop(0.25, kind.color)
+    // Glossy 3D ball (bubbleshooter-style): vivid saturated body that darkens
+    // toward the bottom rim, a crisp bright shine top-left, and just a small
+    // emoji cue so the colour stays dominant (not a washed-out white centre).
+    const g = ctx.createRadialGradient(x - R * 0.22, y - R * 0.28, R * 0.15, x, y + R * 0.2, R * 1.15)
+    g.addColorStop(0, kind.color)
+    g.addColorStop(0.55, kind.color)
     g.addColorStop(1, kind.dark)
     ctx.beginPath(); ctx.arc(x, y, R - 1, 0, Math.PI * 2)
     ctx.fillStyle = g; ctx.fill()
-    ctx.lineWidth = 1.5; ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.stroke()
+    ctx.lineWidth = 1.2; ctx.strokeStyle = kind.dark; ctx.stroke()
+    // bright glossy highlight, upper-left
+    const hl = ctx.createRadialGradient(x - R * 0.34, y - R * 0.4, 0, x - R * 0.34, y - R * 0.4, R * 0.7)
+    hl.addColorStop(0, 'rgba(255,255,255,0.95)')
+    hl.addColorStop(0.55, 'rgba(255,255,255,0.22)')
+    hl.addColorStop(1, 'rgba(255,255,255,0)')
+    ctx.save()
+    ctx.beginPath(); ctx.arc(x, y, R - 1, 0, Math.PI * 2); ctx.clip()
+    ctx.beginPath(); ctx.ellipse(x - R * 0.28, y - R * 0.34, R * 0.44, R * 0.52, -0.5, 0, Math.PI * 2)
+    ctx.fillStyle = hl; ctx.fill()
+    ctx.restore()
+    // small emoji category cue, seated toward the lower half
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
-    ctx.font = `${Math.round(R * 0.85)}px system-ui, sans-serif`
-    ctx.fillText(kind.emoji, x, y + 1)
+    ctx.font = `${Math.round(R * 0.58)}px system-ui, sans-serif`
+    ctx.fillText(kind.emoji, x, y + R * 0.26)
   }
 
   function draw(sim) {
@@ -590,7 +604,7 @@ export default function BubbleBudget() {
       <div
         ref={wrapRef}
         className="relative overflow-hidden rounded-2xl"
-        style={{ height: 'clamp(470px, calc(100svh - 170px), 900px)', minHeight: 430, background: 'linear-gradient(180deg, #f2fbf3 0%, #eaf6ec 100%)', border: CARD_BORDER }}
+        style={{ height: 'clamp(470px, calc(100svh - 170px), 900px)', minHeight: 430, background: 'linear-gradient(180deg, #e9e7fb 0%, #dcd8f6 100%)', border: CARD_BORDER }}
       >
         <canvas
           ref={canvasRef}

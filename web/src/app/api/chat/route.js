@@ -39,9 +39,18 @@ HARD RULES:
 - Never invent or estimate numbers that are not derivable from the snapshot. If the user asks for something the snapshot doesn't carry (per-item prices, a specific old receipt, bank fees detail), say what you CAN see and point them to the right page instead.
 - You are read-only: you cannot add, edit, or delete anything. If asked to, explain where in the app they can do it.
 - No lecturing, moralizing, or guilt about spending — GetGuac's voice is upbeat and on the user's side.
-- No investment, tax, or legal advice; you may describe their own numbers.
+- You CAN answer general personal-finance questions — how to build a retirement fund, pay down debt, raise a credit score, save, budget, and similar — with clear, practical, EDUCATIONAL guidance. Frame it as general information (not licensed financial, tax, or legal advice); avoid guarantees or pushing specific products, and tie it back to their own snapshot numbers when relevant.
 - Keep replies short: 1-3 sentences for simple questions, at most ~120 words with simple "-" bullets for breakdowns. Plain text only — no markdown headings, no tables, no emoji spam (one 🥑-style emoji now and then is fine).
 - Dollar figures like $1,234.56.
+
+SHOWING DATA — always give a clickable link when the user wants to SEE, FIND, SHOW, PULL UP, OPEN, or SEARCH their own records. Use this exact markdown link format so the app renders it as a button: [label](/path). ONLY these real in-app paths — never invent a URL, never link to an external site:
+- Receipts (this is a full-text SEARCH — the value matches store names AND line-item text, so it works for a store OR a product): "show me my Costco receipts" -> [See your Costco receipts](/receipts?store=Costco); "find where I bought milk" -> [Receipts with "milk"](/receipts?store=milk); all receipts -> [Open receipts](/receipts). Use the store/keyword as the user said it (URL-encode spaces as %20).
+- Reports & analytics (spending by category, tax/business summaries, CSV) -> [Open your reports](/reports); trends & GuacScore -> [Guacanomics](/guacanomics).
+- Products you own / rebuy -> [Open your Stash](/stash); restaurant dishes -> [Bites](/bites); cheaper prices -> [Find deals](/steals); return windows -> [Returns](/returns); statement fees -> [Bank](/bank); upcoming bills -> [Bills](/bills); shopping list -> [Smashlist](/shopping).
+- Money guides & tools for how-to topics: retirement -> [401(k) basics](/articles/401k-basics) + [Calculators](/plan); debt payoff -> [Avalanche vs snowball](/articles/avalanche-vs-snowball); credit score -> [Credit score guide](/articles/credit-score); emergency fund -> [Emergency fund size](/articles/emergency-fund-size); or the hub [All money guides](/articles).
+Answer the question in words first (with the numbers from the snapshot), THEN add the link on its own line. Always include the matching link when the user asks to see or search their data.
+
+CURRENT INFO: When a question needs up-to-date facts (current rates, rules, prices, news), use web search and answer from it — real source links are attached to your reply automatically, so you don't need to paste raw URLs.
 
 APP MAP (for "how do I…" questions):
 - Receipts: snap a photo, drop a PDF/screenshot, or forward email receipts to the address on the Inbox page; Guac-AI reads store, date, total, and every line item.
@@ -145,12 +154,23 @@ async function callGemini({ apiKey, system, history }) {
         role: m.role === 'assistant' ? 'model' : 'user',
         parts: [{ text: m.content }],
       })),
+      // Google Search grounding: lets Guac pull current facts (rates, rules,
+      // how-tos) from the web and return real source links. The model decides
+      // when to use it; "my money" questions still ground in the snapshot.
+      tools: [{ google_search: {} }],
       generationConfig: { temperature: 0.5, maxOutputTokens: 1024 },
     }),
   })
   const json = await res.json()
   if (!res.ok) throw new Error(json?.error?.message || `Gemini ${res.status}`)
-  return json?.candidates?.[0]?.content?.parts?.map(p => p.text).filter(Boolean).join('') || ''
+  const cand = json?.candidates?.[0]
+  const text = cand?.content?.parts?.map(p => p.text).filter(Boolean).join('') || ''
+  const sources = (cand?.groundingMetadata?.groundingChunks || [])
+    .map(c => c.web).filter(w => w && w.uri)
+    .map(w => ({ title: (w.title || w.uri).slice(0, 80), uri: w.uri }))
+    .filter((s, i, a) => a.findIndex(x => x.uri === s.uri) === i)
+    .slice(0, 4)
+  return { text, sources }
 }
 
 async function callGroq({ apiKey, system, history }) {
@@ -207,9 +227,10 @@ export async function POST(request) {
 
   const system = `${SYSTEM_PROMPT}\n\nSNAPSHOT (the signed-in user's data):\n${JSON.stringify(snapshot)}`
 
-  let reply = ''
-  try { if (apiKey) reply = await callGemini({ apiKey, system, history }) }
-  catch (e) { console.warn('[chat] Gemini failed:', e.message) }
+  let reply = '', sources = []
+  try {
+    if (apiKey) { const r = await callGemini({ apiKey, system, history }); reply = r.text; sources = r.sources || [] }
+  } catch (e) { console.warn('[chat] Gemini failed:', e.message) }
   if (!reply && groqKey) {
     try { reply = await callGroq({ apiKey: groqKey, system, history }) }
     catch (e) { console.warn('[chat] Groq failed:', e.message) }
@@ -217,5 +238,5 @@ export async function POST(request) {
   if (!reply) {
     return Response.json({ error: 'Guac had trouble answering — try again in a moment.' }, { status: 502 })
   }
-  return Response.json({ reply: reply.trim() })
+  return Response.json({ reply: reply.trim(), sources })
 }

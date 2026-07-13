@@ -10,7 +10,27 @@
 
 import { useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
+import Link from 'next/link'
 import { Send, Eraser, X } from 'lucide-react'
+
+// Render an assistant reply, turning [label](/in-app/path) markdown links into
+// clickable in-app links (Guac emits these for "show me my Costco receipts",
+// "open my reports", etc.). Only internal paths (starting with /) are linked —
+// external URLs are left as plain text, so the model can't smuggle links out.
+function renderRich(text) {
+  const out = []
+  const re = /\[([^\]]+)\]\((\/[^)\s]+)\)/g
+  let last = 0, m, key = 0
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) out.push(text.slice(last, m.index))
+    out.push(
+      <Link key={key++} href={m[2]} className="underline font-semibold text-guac-700 hover:text-guac-800">{m[1]}</Link>,
+    )
+    last = re.lastIndex
+  }
+  if (last < text.length) out.push(text.slice(last))
+  return out
+}
 import GuacMascot from './GuacMascot'
 
 const STORE_KEY = 'gg-ai-chat-v1'
@@ -57,7 +77,7 @@ export default function GuacAiThread({ onBack, onClose, heightClass = 'h-[70vh]'
       })
       const json = await res.json().catch(() => null)
       if (!res.ok) throw new Error(json?.error || `Request failed (${res.status})`)
-      setMessages(m => [...m, { role: 'assistant', content: json.reply }])
+      setMessages(m => [...m, { role: 'assistant', content: json.reply, sources: Array.isArray(json.sources) ? json.sources : [] }])
     } catch (e) {
       toast.error(e.message)
       // put the question back so a retry is one keystroke away
@@ -131,12 +151,24 @@ export default function GuacAiThread({ onBack, onClose, heightClass = 'h-[70vh]'
           const mine = m.role === 'user'
           return (
             <div key={idx} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
-              <div className={`anim-bubble-in max-w-[75%] rounded-2xl px-3 py-1.5 text-sm leading-snug whitespace-pre-wrap ${
-                mine
-                  ? 'bg-guac-700 text-white rounded-br-md'
-                  : 'bg-white text-gray-800 ring-1 ring-gray-100 rounded-bl-md'
-              }`}>
-                {m.content}
+              <div className={`flex flex-col gap-1 max-w-[78%] ${mine ? 'items-end' : 'items-start'}`}>
+                <div className={`anim-bubble-in rounded-2xl px-3 py-1.5 text-sm leading-snug whitespace-pre-wrap ${
+                  mine
+                    ? 'bg-guac-700 text-white rounded-br-md'
+                    : 'bg-white text-gray-800 ring-1 ring-gray-100 rounded-bl-md'
+                }`}>
+                  {mine ? m.content : renderRich(m.content)}
+                </div>
+                {!mine && m.sources?.length > 0 && (
+                  <div className="flex flex-wrap gap-1 px-1">
+                    {m.sources.map((s, i) => (
+                      <a key={i} href={s.uri} target="_blank" rel="noopener noreferrer" title={s.title}
+                        className="inline-flex items-center gap-1 text-[10px] max-w-[170px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 hover:text-guac-700 hover:bg-guac-50 transition-colors">
+                        🔗 <span className="truncate">{s.title}</span>
+                      </a>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )

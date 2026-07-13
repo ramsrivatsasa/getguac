@@ -12,13 +12,15 @@ const FEATURED = ['/games/splurge', '/games/nitro', '/games/bubbles', '/games/cl
   .map((h) => GAMES.find((g) => g.href === h))
   .filter(Boolean)
 
+const RAINBOW = 'linear-gradient(120deg,#f43f5e 0%,#fb923c 22%,#facc15 42%,#4ade80 62%,#38bdf8 82%,#a78bfa 100%)'
+
 export default function GuacGamesPopup() {
   const [open, setOpen] = useState(false)
   return (
     <>
       {open && (
         <div className="fixed z-[60] right-4 sm:right-5 bottom-40 w-[min(320px,calc(100vw-2rem))] rounded-2xl overflow-hidden bg-white shadow-2xl ring-1 ring-guac-700/15">
-          <div className="flex items-center justify-between px-3 py-2.5 text-white" style={{ background: '#166534' }}>
+          <div className="flex items-center justify-between px-3 py-2.5 text-white" style={{ background: RAINBOW, textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>
             <span className="flex items-center gap-2 text-sm font-extrabold"><Gamepad2 size={18} /> Guac Arcade</span>
             <button type="button" onClick={() => setOpen(false)} aria-label="Close" className="p-1 rounded-full hover:bg-white/15"><X size={16} /></button>
           </div>
@@ -46,10 +48,10 @@ export default function GuacGamesPopup() {
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-label={open ? 'Close Guac Arcade' : 'Open Guac Arcade'}
-        className="fixed z-[60] right-4 sm:right-5 bottom-40 items-center gap-2 rounded-full text-white shadow-lg ring-1 ring-black/5 pl-3 pr-4 py-2.5 hover:-translate-y-0.5 transition-transform"
-        style={{ display: open ? 'none' : 'flex', background: '#166534' }}
+        className="fixed z-[60] right-4 sm:right-5 bottom-40 h-11 items-center gap-2 rounded-full text-white shadow-lg ring-1 ring-black/5 pl-3.5 pr-4 hover:-translate-y-0.5 transition-transform"
+        style={{ display: open ? 'none' : 'flex', background: RAINBOW, textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
       >
-        <Gamepad2 size={20} />
+        <Gamepad2 size={22} />
         <span className="text-sm font-extrabold">Games</span>
       </button>
     </>

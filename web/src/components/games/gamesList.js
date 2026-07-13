@@ -32,6 +32,11 @@ export const GAMES = [
     g1: '#7DD3FC', g2: '#7C2D12', motifs: ['🏔️', '🪙'], bestKey: 'gg-bike-best-v1',
     desc: 'Wheelie the avocado motorbike over the hills — grab the cash and stick the landings.',
   },
+  {
+    href: '/games/nitro', emoji: '🏎️', name: 'Guac Nitro Run', tag: 'Street racer', cat: 'racing', isNew: true,
+    g1: '#334155', g2: '#0F172A', motifs: ['🚗', '🪙'], bestKey: 'gg-nitro-best-v1',
+    desc: 'Swerve between lanes, dodge the traffic and grab the cash as the speed keeps climbing.',
+  },
   // ── arcade ────────────────────────────────────────────────────────────────
   {
     href: '/games/fling', emoji: '🏹', name: 'Guac Fling', tag: 'Physics arcade', cat: 'arcade', isNew: true,

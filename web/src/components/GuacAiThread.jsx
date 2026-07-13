@@ -13,22 +13,41 @@ import toast from 'react-hot-toast'
 import Link from 'next/link'
 import { Send, Eraser, X } from 'lucide-react'
 
-// Render an assistant reply, turning [label](/in-app/path) markdown links into
-// clickable in-app links (Guac emits these for "show me my Costco receipts",
-// "open my reports", etc.). Only internal paths (starting with /) are linked —
-// external URLs are left as plain text, so the model can't smuggle links out.
-function renderRich(text) {
-  const out = []
-  const re = /\[([^\]]+)\]\((\/[^)\s]+)\)/g
-  let last = 0, m, key = 0
+const LINK_CLS = 'underline font-semibold text-guac-700 hover:text-guac-800 break-words'
+
+// One link element: internal paths (/…) use next/link, external (http/https)
+// open in a new tab.
+function linkEl(href, label, key) {
+  return href.startsWith('/')
+    ? <Link key={key} href={href} className={LINK_CLS}>{label}</Link>
+    : <a key={key} href={href} target="_blank" rel="noopener noreferrer" className={LINK_CLS}>{label}</a>
+}
+
+// Turn bare http(s) URLs inside a plain text run into clickable links.
+function linkifyPlain(text, startKey, out) {
+  const re = /(https?:\/\/[^\s)<>"']+)/g
+  let last = 0, m, key = startKey
   while ((m = re.exec(text)) !== null) {
     if (m.index > last) out.push(text.slice(last, m.index))
-    out.push(
-      <Link key={key++} href={m[2]} className="underline font-semibold text-guac-700 hover:text-guac-800">{m[1]}</Link>,
-    )
+    out.push(linkEl(m[1], m[1], `u${key++}`))
     last = re.lastIndex
   }
   if (last < text.length) out.push(text.slice(last))
+  return key
+}
+
+// Render an assistant reply with EVERY link clickable: [label](url) markdown
+// (both in-app /paths and external http(s) URLs) plus any bare web URLs.
+function renderRich(text) {
+  const out = []
+  const re = /\[([^\]]+)\]\((https?:\/\/[^)\s]+|\/[^)\s]+)\)/g
+  let last = 0, m, key = 0
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) key = linkifyPlain(text.slice(last, m.index), key, out)
+    out.push(linkEl(m[2], m[1], `l${key++}`))
+    last = re.lastIndex
+  }
+  if (last < text.length) linkifyPlain(text.slice(last), key, out)
   return out
 }
 import GuacMascot from './GuacMascot'

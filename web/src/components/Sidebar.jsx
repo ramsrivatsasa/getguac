@@ -6,7 +6,7 @@ import { createClient } from '../lib/supabase/client'
 import { useStore } from '../store'
 import {
   LayoutDashboard, Receipt, Gift, ShoppingCart, Car, User, X, Store, Undo2, Sparkles, ChevronsLeft, ChevronsRight, Package, Utensils, BadgeDollarSign, Banknote, Wand2, Mail, BarChart3,
-  Inbox as InboxIcon, Send, Trash2, Filter, ChevronDown, Home, MessageSquare, Link2, ShoppingBag, Ticket, CalendarDays, TrendingUp, BookOpen,
+  Inbox as InboxIcon, Send, Trash2, Filter, ChevronDown, Home, MessageSquare, Link2, ShoppingBag, Ticket, CalendarDays, TrendingUp, BookOpen, Gamepad2,
 } from 'lucide-react'
 import clsx from 'clsx'
 import GuacMascot from './GuacMascot'
@@ -67,6 +67,7 @@ const sections = [
   {
     title: 'More',
     items: [
+      { href: '/games',     icon: Gamepad2, label: 'Games',     emoji: '🎮', hoverMascot: 'celebrating' },
       { href: '/car-miles', icon: Car,   label: 'Car Miles', emoji: '🚗', hoverMascot: 'relaxing' },
       { href: '/profile',   icon: User,  label: 'Profile',   emoji: '👤', hoverMascot: 'sitting' },
       { href: '/profile#household', icon: Home, label: 'House', emoji: '🏡', hoverMascot: 'happy' },

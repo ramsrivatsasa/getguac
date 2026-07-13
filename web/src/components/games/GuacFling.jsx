@@ -337,21 +337,42 @@ export default function GuacFling() {
     return { x: (e.clientX - rect.left - ox) / s, y: (e.clientY - rect.top - oy) / s }
   }
 
+  // The GetGuac brand-mascot avocado, drawn on canvas (matches GuacMascot's
+  // palette: green body, buttery flesh, amber seed, white eyes + smile, stem).
   function drawAvocado(ctx, x, y, r, angle = 0) {
     ctx.save()
     ctx.translate(x, y)
     ctx.rotate(angle)
-    ctx.fillStyle = '#4d7c0f'
-    ctx.beginPath(); ctx.ellipse(0, 0, r * 0.92, r, 0, 0, Math.PI * 2); ctx.fill()
-    ctx.fillStyle = '#84cc16'
-    ctx.beginPath(); ctx.ellipse(0, r * 0.12, r * 0.62, r * 0.68, 0, 0, Math.PI * 2); ctx.fill()
-    ctx.fillStyle = '#78350f'
-    ctx.beginPath(); ctx.arc(0, r * 0.22, r * 0.3, 0, Math.PI * 2); ctx.fill()
-    ctx.fillStyle = '#15281C'
-    ctx.beginPath(); ctx.arc(-r * 0.28, -r * 0.34, r * 0.11, 0, Math.PI * 2); ctx.fill()
-    ctx.beginPath(); ctx.arc(r * 0.28, -r * 0.34, r * 0.11, 0, Math.PI * 2); ctx.fill()
-    ctx.strokeStyle = '#15281C'; ctx.lineWidth = Math.max(1.5, r * 0.09)
-    ctx.beginPath(); ctx.arc(0, -r * 0.18, r * 0.22, 0.25 * Math.PI, 0.75 * Math.PI); ctx.stroke()
+    // stem
+    ctx.strokeStyle = '#6b4226'; ctx.lineWidth = Math.max(1.5, r * 0.09); ctx.lineCap = 'round'
+    ctx.beginPath(); ctx.moveTo(0, -r * 0.96); ctx.lineTo(r * 0.06, -r * 1.14); ctx.stroke()
+    // body
+    const bg = ctx.createRadialGradient(-r * 0.3, -r * 0.32, r * 0.15, 0, 0, r * 1.15)
+    bg.addColorStop(0, '#10b981'); bg.addColorStop(1, '#064e3b')
+    ctx.beginPath(); ctx.ellipse(0, r * 0.05, r * 0.86, r, 0, 0, Math.PI * 2); ctx.fillStyle = bg; ctx.fill()
+    // flesh
+    const fg = ctx.createRadialGradient(0, r * 0.12, r * 0.08, 0, r * 0.12, r * 0.74)
+    fg.addColorStop(0, '#f6ed8a'); fg.addColorStop(0.42, '#e7ec8e'); fg.addColorStop(0.75, '#b4d35f'); fg.addColorStop(1, '#84cc16')
+    ctx.beginPath(); ctx.ellipse(0, r * 0.16, r * 0.6, r * 0.72, 0, 0, Math.PI * 2); ctx.fillStyle = fg; ctx.fill()
+    // pit / seed
+    const pg = ctx.createRadialGradient(-r * 0.08, r * 0.2, r * 0.04, 0, r * 0.3, r * 0.36)
+    pg.addColorStop(0, '#dca838'); pg.addColorStop(0.5, '#a8590a'); pg.addColorStop(1, '#54260c')
+    ctx.beginPath(); ctx.arc(0, r * 0.32, r * 0.3, 0, Math.PI * 2); ctx.fillStyle = pg; ctx.fill()
+    // cheeks
+    ctx.globalAlpha = 0.45; ctx.fillStyle = '#fb7185'
+    ctx.beginPath(); ctx.arc(-r * 0.42, -r * 0.06, r * 0.1, 0, Math.PI * 2); ctx.fill()
+    ctx.beginPath(); ctx.arc(r * 0.42, -r * 0.06, r * 0.1, 0, Math.PI * 2); ctx.fill()
+    ctx.globalAlpha = 1
+    // eyes — white sclera + dark pupil + sparkle
+    for (const s of [-1, 1]) {
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(s * r * 0.24, -r * 0.24, r * 0.15, 0, Math.PI * 2); ctx.fill()
+      ctx.lineWidth = Math.max(1, r * 0.03); ctx.strokeStyle = '#1f2937'; ctx.stroke()
+      ctx.fillStyle = '#1f2937'; ctx.beginPath(); ctx.arc(s * r * 0.24 + r * 0.02, -r * 0.22, r * 0.075, 0, Math.PI * 2); ctx.fill()
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(s * r * 0.24 - r * 0.02, -r * 0.28, r * 0.03, 0, Math.PI * 2); ctx.fill()
+    }
+    // smile
+    ctx.strokeStyle = '#1f2937'; ctx.lineWidth = Math.max(1.6, r * 0.08); ctx.lineCap = 'round'
+    ctx.beginPath(); ctx.arc(0, -r * 0.02, r * 0.17, 0.16 * Math.PI, 0.84 * Math.PI); ctx.stroke()
     ctx.restore()
   }
 

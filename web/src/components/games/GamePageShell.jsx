@@ -15,6 +15,7 @@ import AdSlot from '../AdSlot'
 import XlOnly from '../XlOnly'
 import GameCover from './GameCover'
 import Leaderboard from './Leaderboard'
+import ArrowKeyGuard from './ArrowKeyGuard'
 import { GAMES, gameIdFor } from './gamesList'
 
 const INK = '#15281C'
@@ -34,6 +35,7 @@ export default function GamePageShell({ href, title, blurb, how = [], tips = [],
   const gameId = gameIdFor(href)
   return (
     <MarketingShell subtitle="money's wingman">
+      <ArrowKeyGuard />
       <div className="pb-16 pt-4">
         <div className="mx-auto px-4 mb-2 flex items-baseline justify-between" style={{ maxWidth: 1560 }}>
           <Link href="/games" className="text-sm font-bold no-underline" style={{ color: '#065f46' }}>← All games</Link>

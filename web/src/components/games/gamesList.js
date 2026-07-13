@@ -27,6 +27,11 @@ export const GAMES = [
     g1: '#7DD3FC', g2: '#166534', motifs: ['⛰️', '🪙'], bestKey: 'gg-climb-best-v1',
     desc: 'Drive the avocado buggy over the hills, grab the cash and don’t run out of fuel or flip.',
   },
+  {
+    href: '/games/bike', emoji: '🏍️', name: 'Guac Bike Racing', tag: 'Hill bike', cat: 'racing', isNew: true,
+    g1: '#7DD3FC', g2: '#7C2D12', motifs: ['🏔️', '🪙'], bestKey: 'gg-bike-best-v1',
+    desc: 'Wheelie the avocado motorbike over the hills — grab the cash and stick the landings.',
+  },
   // ── arcade ────────────────────────────────────────────────────────────────
   {
     href: '/games/fling', emoji: '🏹', name: 'Guac Fling', tag: 'Physics arcade', cat: 'arcade', isNew: true,

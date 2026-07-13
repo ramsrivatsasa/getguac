@@ -274,9 +274,11 @@ export default function BudgetTetris() {
     const kd = (e) => {
       const st = sim.current
       if (statusRef.current !== 'playing' || !st.block) return
-      if (e.key === 'ArrowLeft' || e.key === 'a') st.block.col = Math.max(0, st.block.col - 1)
-      if (e.key === 'ArrowRight' || e.key === 'd') st.block.col = Math.min(COLS - 1, st.block.col + 1)
-      if (e.key === 'ArrowDown' || e.key === 's') st.dropFast = true
+      const k = e.key
+      if (['ArrowLeft', 'ArrowRight', 'ArrowDown', 'ArrowUp', 'a', 'd', 's', 'w', ' '].includes(k)) e.preventDefault()
+      if (k === 'ArrowLeft' || k === 'a') st.block.col = Math.max(0, st.block.col - 1)
+      if (k === 'ArrowRight' || k === 'd') st.block.col = Math.min(COLS - 1, st.block.col + 1)
+      if (k === 'ArrowDown' || k === 's') st.dropFast = true
     }
     const ku = (e) => { if (e.key === 'ArrowDown' || e.key === 's') sim.current.dropFast = false }
     window.addEventListener('keydown', kd)

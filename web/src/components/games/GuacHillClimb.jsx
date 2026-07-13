@@ -39,7 +39,7 @@ const freshSim = (h) => ({
   items: [], nextItemX: START_X + 260,
 })
 
-export default function GuacHillClimb() {
+export default function GuacHillClimb({ vehicle = 'buggy', gameId = 'climb', bestKey = BEST_KEY, title = 'Guac Hill Climb' } = {}) {
   const canvasRef = useRef(null)
   const sim = useRef(null)
   const sizeRef = useRef({ w: 800, h: 520 })
@@ -53,7 +53,7 @@ export default function GuacHillClimb() {
   const [hud, setHud] = useState({ money: 0, dist: 0, fuel: 1 })
   const [best, setBest] = useState(0)
   const [newBest, setNewBest] = useState(false)
-  const { saveRes, save, resetSave } = useScoreSaver('climb')
+  const { saveRes, save, resetSave } = useScoreSaver(gameId)
 
   const setStatus = useCallback((s) => { statusRef.current = s; setStatusState(s) }, [])
   const groundY = useCallback((x) => (sizeRef.current.h * 0.64) + terrainH(x), [])
@@ -188,32 +188,76 @@ export default function GuacHillClimb() {
       ctx.restore()
     }
 
+    const drawBuggy = (s) => {
+      drawWheel(-WHEELBASE / 2, 16, 15, s.wheelSpin)
+      drawWheel(WHEELBASE / 2, 16, 15, s.wheelSpin)
+      // sleek red car silhouette: low hood front, cabin, short trunk
+      const bg = ctx.createLinearGradient(0, -22, 0, 14)
+      bg.addColorStop(0, '#f87171'); bg.addColorStop(0.5, '#ef4444'); bg.addColorStop(1, '#b91c1c')
+      ctx.beginPath()
+      ctx.moveTo(-40, 8)
+      ctx.lineTo(-40, 1)
+      ctx.quadraticCurveTo(-40, -5, -33, -6)   // rounded rear
+      ctx.lineTo(-18, -7)
+      ctx.lineTo(-11, -22)                       // rear roof pillar
+      ctx.quadraticCurveTo(-9, -24, -5, -24)
+      ctx.lineTo(7, -24)
+      ctx.quadraticCurveTo(11, -24, 13, -21)     // roof to windshield
+      ctx.lineTo(21, -7)                          // windshield base
+      ctx.lineTo(37, -5)                          // hood
+      ctx.quadraticCurveTo(43, -4, 43, 3)         // rounded nose
+      ctx.lineTo(43, 8)
+      ctx.closePath()
+      ctx.fillStyle = bg; ctx.fill()
+      ctx.lineWidth = 2; ctx.strokeStyle = '#991b1b'; ctx.stroke()
+      // windows
+      ctx.beginPath(); ctx.moveTo(-9, -20); ctx.lineTo(8, -20); ctx.quadraticCurveTo(10, -20, 11, -18); ctx.lineTo(16, -8); ctx.lineTo(-14, -8); ctx.closePath()
+      ctx.fillStyle = '#bae6fd'; ctx.fill()
+      ctx.strokeStyle = '#991b1b'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, -20); ctx.lineTo(1, -8); ctx.stroke()
+      // driver — avocado head peeking through the window
+      ctx.beginPath(); ctx.arc(-6, -13, 5, 0, Math.PI * 2); ctx.fillStyle = '#65a30d'; ctx.fill()
+      ctx.beginPath(); ctx.arc(-5, -12, 2.1, 0, Math.PI * 2); ctx.fillStyle = '#78350f'; ctx.fill()
+      // trim line + lights
+      ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(-34, 3); ctx.lineTo(36, 3); ctx.stroke()
+      ctx.beginPath(); ctx.arc(41, 1, 3.2, 0, Math.PI * 2); ctx.fillStyle = '#fde047'; ctx.fill()   // headlight
+      ctx.beginPath(); ctx.arc(-39, -2, 2.4, 0, Math.PI * 2); ctx.fillStyle = '#fca5a5'; ctx.fill()  // taillight
+    }
+
+    const drawBike = (s) => {
+      drawWheel(-WHEELBASE / 2, 16, 15, s.wheelSpin)
+      drawWheel(WHEELBASE / 2, 16, 15, s.wheelSpin)
+      // frame + forks
+      ctx.strokeStyle = '#3f6212'; ctx.lineWidth = 5; ctx.lineCap = 'round'
+      ctx.beginPath()
+      ctx.moveTo(-WHEELBASE / 2, 16); ctx.lineTo(-4, 0); ctx.lineTo(WHEELBASE / 2, 16)
+      ctx.moveTo(-4, 0); ctx.lineTo(20, -8)   // fork up to handlebars
+      ctx.stroke()
+      // seat + tank
+      ctx.beginPath()
+      if (ctx.roundRect) ctx.roundRect(-20, -6, 30, 9, 4); else ctx.rect(-20, -6, 30, 9)
+      const bg = ctx.createLinearGradient(0, -8, 0, 6)
+      bg.addColorStop(0, '#84cc16'); bg.addColorStop(1, '#4d7c0f')
+      ctx.fillStyle = bg; ctx.fill()
+      // handlebar
+      ctx.strokeStyle = '#1f2937'; ctx.lineWidth = 3
+      ctx.beginPath(); ctx.moveTo(20, -8); ctx.lineTo(29, -15); ctx.stroke()
+      // headlight
+      ctx.beginPath(); ctx.arc(30, -13, 3.5, 0, Math.PI * 2); ctx.fillStyle = '#fde047'; ctx.fill()
+      // rider — leaning avocado
+      ctx.save(); ctx.translate(-2, -8)
+      ctx.beginPath(); ctx.ellipse(-2, -8, 8, 12, -0.25, 0, Math.PI * 2); ctx.fillStyle = '#4d7c0f'; ctx.fill()
+      ctx.beginPath(); ctx.ellipse(3, -18, 6.5, 7.5, 0, 0, Math.PI * 2); ctx.fillStyle = '#65a30d'; ctx.fill()  // head
+      ctx.beginPath(); ctx.arc(5, -17, 2.3, 0, Math.PI * 2); ctx.fillStyle = '#78350f'; ctx.fill()             // pit/eye
+      ctx.strokeStyle = '#4d7c0f'; ctx.lineWidth = 4; ctx.lineCap = 'round'
+      ctx.beginPath(); ctx.moveTo(0, -6); ctx.lineTo(22, 0); ctx.stroke()   // arm to bar
+      ctx.restore()
+    }
+
     const drawCar = (s, sx) => {
       ctx.save()
       ctx.translate(sx, s.y)
       ctx.rotate(s.angle)
-      // wheels (behind body)
-      drawWheel(-WHEELBASE / 2, 16, 15, s.wheelSpin)
-      drawWheel(WHEELBASE / 2, 16, 15, s.wheelSpin)
-      // chassis / body — rounded avocado-green buggy
-      ctx.beginPath()
-      if (ctx.roundRect) ctx.roundRect(-38, -6, 76, 26, 9); else ctx.rect(-38, -6, 76, 26)
-      const bg = ctx.createLinearGradient(0, -8, 0, 22)
-      bg.addColorStop(0, '#84cc16'); bg.addColorStop(1, '#4d7c0f')
-      ctx.fillStyle = bg; ctx.fill()
-      ctx.lineWidth = 2; ctx.strokeStyle = '#3f6212'; ctx.stroke()
-      // cabin
-      ctx.beginPath()
-      if (ctx.roundRect) ctx.roundRect(-14, -22, 30, 18, 6); else ctx.rect(-14, -22, 30, 18)
-      ctx.fillStyle = '#4d7c0f'; ctx.fill(); ctx.stroke()
-      // windshield
-      ctx.beginPath(); ctx.moveTo(-9, -20); ctx.lineTo(11, -20); ctx.lineTo(9, -8); ctx.lineTo(-9, -8); ctx.closePath()
-      ctx.fillStyle = '#bae6fd'; ctx.fill()
-      // driver — little avocado head
-      ctx.beginPath(); ctx.ellipse(1, -13, 6, 7, 0, 0, Math.PI * 2); ctx.fillStyle = '#65a30d'; ctx.fill()
-      ctx.beginPath(); ctx.arc(1, -11, 2.4, 0, Math.PI * 2); ctx.fillStyle = '#78350f'; ctx.fill()
-      // headlight
-      ctx.beginPath(); ctx.arc(36, 6, 4, 0, Math.PI * 2); ctx.fillStyle = '#fde047'; ctx.fill()
+      if (vehicle === 'bike') drawBike(s); else drawBuggy(s)
       ctx.restore()
     }
 
@@ -299,6 +343,8 @@ export default function GuacHillClimb() {
   const card = 'rounded-2xl bg-white p-5 text-center w-full'
   const pill = 'text-sm font-bold px-6 py-2.5 rounded-full text-white'
   const pedal = 'flex-1 py-4 rounded-2xl font-extrabold text-white text-lg select-none'
+  const emoji = vehicle === 'bike' ? '🏍️' : '🚙'
+  const ride = vehicle === 'bike' ? 'motorbike' : 'buggy'
 
   return (
     <div className="mx-auto w-full select-none">
@@ -336,9 +382,9 @@ export default function GuacHillClimb() {
         {status === 'idle' && (
           <div className={overlay} style={{ background: 'rgba(8,30,45,0.5)' }}>
             <div className={card} style={{ border: CARD_BORDER, maxWidth: 400 }}>
-              <div className="text-4xl mb-1">🚙</div>
-              <div className="font-display font-extrabold text-xl" style={{ color: INK }}>Guac Hill Climb</div>
-              <p className="text-sm mt-2" style={{ color: BODY }}>Drive the avocado buggy over the hills. Grab <b style={{ color: AMBER }}>$ cash</b> and don&apos;t run out of <b style={{ color: ROSE }}>fuel</b>.</p>
+              <div className="text-4xl mb-1">{emoji}</div>
+              <div className="font-display font-extrabold text-xl" style={{ color: INK }}>{title}</div>
+              <p className="text-sm mt-2" style={{ color: BODY }}>Ride the avocado {ride} over the hills. Grab <b style={{ color: AMBER }}>$ cash</b> and don&apos;t run out of <b style={{ color: ROSE }}>fuel</b>.</p>
               <p className="text-sm mt-1" style={{ color: BODY }}>Gas to go, brake to slow — in the air they tilt you for a clean landing. Flip over and it&apos;s done.</p>
               <button onClick={start} className={`mt-4 ${pill}`} style={{ background: GREEN }}>Start driving</button>
             </div>

@@ -1,6 +1,6 @@
 {
-  "version": "v0.4.18",
-  "name": "v0.4.18 — Stash fixes",
-  "downloadUrl": "https://getguac.app/downloads/v0.4.18/app-arm64-v8a-release.apk",
-  "releaseNotes": "• Stash: \"Add to Smashlist\" now works (it was greyed out before) — adds the item to your Pantry list with a quick View link.\n• Stash: the ⋮ menu button is bigger and easier to tap.\n\nUninstall the old app first, then install this one fresh."
+  "version": "v0.4.20",
+  "name": "v0.4.20 — Games & Guac AI on your dashboard",
+  "downloadUrl": "https://getguac.app/downloads/v0.4.20/app-arm64-v8a-release.apk",
+  "releaseNotes": "• New: Games and Guac AI shortcuts right on your dashboard — tap to play the arcade or ask the AI assistant.\n• Friendlier sign-in messages when a login fails.\n• Fixes and polish.\n\nIf the update won't install, uninstall the old app first, then install this one fresh."
 }

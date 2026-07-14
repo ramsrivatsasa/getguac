@@ -60,14 +60,39 @@ const p = await ctx.newPage()
 
 console.log('base:', BASE, '| logging in as', EMAIL)
 await p.goto(`${BASE}/login`, { waitUntil: 'domcontentloaded' })
-await p.fill('input[autocomplete="username"]', EMAIL)
-await p.fill('input[autocomplete="current-password"]', PASSWORD)
+// Wait for React to hydrate BEFORE typing. Filling on domcontentloaded lets
+// hydration reset the controlled inputs back to empty, so the submit sent no
+// credentials and every "logged-in" route silently captured the login page
+// (while still printing a misleading ✓). Type, then verify the value stuck.
+await p.waitForLoadState('networkidle').catch(() => {})
+const USER_SEL = 'input[autocomplete="username"]'
+const PASS_SEL = 'input[autocomplete="current-password"]'
+await p.waitForSelector(USER_SEL, { state: 'visible', timeout: 30000 })
+for (let attempt = 0; attempt < 3; attempt++) {
+  await p.fill(USER_SEL, '')
+  await p.fill(USER_SEL, EMAIL)
+  await p.fill(PASS_SEL, '')
+  await p.fill(PASS_SEL, PASSWORD)
+  await sleep(300)
+  if ((await p.inputValue(USER_SEL).catch(() => '')) === EMAIL) break
+  await sleep(700) // hydration still settling — let it finish, then retype
+}
 await Promise.all([
   p.waitForURL('**/dashboard', { timeout: 60000 }).catch(() => {}),
   p.click('button[type="submit"]'),
 ])
 await p.waitForLoadState('networkidle').catch(() => {})
-await sleep(2000)
+await sleep(1800)
+// Fail loudly if we never left /login — better than 22 login-page screenshots.
+if (/\/login/.test(p.url())) {
+  const toast = await p.locator('text=/invalid|incorrect|error|failed|confirm/i')
+    .first().textContent().catch(() => null)
+  await p.screenshot({ path: resolve(OUT, '_login-failed.png') }).catch(() => {})
+  console.error('LOGIN FAILED — still at', p.url(), toast ? `| page said: "${toast.trim()}"` : '')
+  await b.close()
+  process.exit(1)
+}
+console.log('login OK →', p.url())
 
 let ok = 0, fail = 0
 for (const [key, route] of ROUTES) {

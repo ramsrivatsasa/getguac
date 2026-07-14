@@ -303,6 +303,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       // request — matches the white app bar + de-greened tiles.
       backgroundColor: Colors.white,
       appBar: _buildAppBar(),
+      // Floating Games + Guac AI shortcuts (bottom-right), matching the web
+      // dashboard's floating buttons. They open the web-embedded arcade + AI
+      // assistant via the WebView routes.
+      floatingActionButton: _floatingShortcuts(),
       // Add Receipt now lives in the bottom-bar centre camera button.
       body: RefreshIndicator(
         onRefresh: () async {
@@ -592,6 +596,61 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  // Floating Games + Guac AI pills, stacked bottom-right like the web
+  // dashboard. Games on top, Guac AI below (closest to the thumb).
+  Widget _floatingShortcuts() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        _shortcutPill(
+          label: 'Games',
+          icon: Icons.sports_esports_rounded,
+          gradient: const [Color(0xFF22D3EE), Color(0xFF8B5CF6), Color(0xFFEC4899)],
+          onTap: () => context.push('/games'),
+        ),
+        const SizedBox(height: 10),
+        _shortcutPill(
+          label: 'Guac AI',
+          icon: Icons.smart_toy_rounded,
+          gradient: const [Color(0xFF34D399), Color(0xFF059669)],
+          onTap: () => context.push('/guac-ai'),
+        ),
+      ],
+    );
+  }
+
+  Widget _shortcutPill({
+    required String label,
+    required IconData icon,
+    required List<Color> gradient,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft, end: Alignment.bottomRight, colors: gradient),
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.18), blurRadius: 10, offset: const Offset(0, 4))],
+          ),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            Icon(icon, color: Colors.white, size: 18),
+            const SizedBox(width: 7),
+            Text(label, style: TextStyle(
+              color: Colors.white, fontWeight: FontWeight.w800, fontSize: 13,
+              fontVariations: ggWght(FontWeight.w800))),
+          ]),
+        ),
       ),
     );
   }

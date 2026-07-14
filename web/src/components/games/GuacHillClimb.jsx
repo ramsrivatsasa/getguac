@@ -4,7 +4,7 @@
 // as you can without running dry or flipping. Gas + brake also tilt the buggy in
 // mid-air for landings. Sim in refs + rAF; React state only for the HUD/overlays.
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useScoreSaver, SaveScoreLine, drawGuacAvocado } from './arcadeKit'
+import { useScoreSaver, SaveScoreLine } from './arcadeKit'
 
 const INK = '#15281C'
 const BODY = '#3d4a42'
@@ -192,6 +192,40 @@ export default function GuacHillClimb({ vehicle = 'buggy', gameId = 'climb', bes
       ctx.restore()
     }
 
+    // Helmeted avocado driver — a clean racing head (avocado-green dome, tinted
+    // visor facing the way we travel, stem nub, chin-guard hint) styled after
+    // arcade hill-climb racers. Replaces the busy front-facing mascot that looked
+    // cramped at cockpit size. `bob` nods the head a hair as the wheels roll.
+    const drawGuacDriver = (cx, cy, r, bob = 0) => {
+      ctx.save()
+      ctx.translate(cx, cy + bob)
+      // avocado stem nub on top of the helmet
+      ctx.strokeStyle = '#5a3a20'; ctx.lineWidth = Math.max(1, r * 0.18); ctx.lineCap = 'round'
+      ctx.beginPath(); ctx.moveTo(-r * 0.04, -r * 0.92); ctx.lineTo(r * 0.08, -r * 1.18); ctx.stroke()
+      // helmet shell — avocado-green dome
+      const hg = ctx.createRadialGradient(-r * 0.36, -r * 0.42, r * 0.1, 0, 0, r * 1.14)
+      hg.addColorStop(0, '#4ade80'); hg.addColorStop(0.5, '#10b981'); hg.addColorStop(1, '#065f46')
+      ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fillStyle = hg; ctx.fill()
+      // tinted racing visor, clipped to the front of the dome (car travels right)
+      ctx.save()
+      ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.clip()
+      const vg = ctx.createLinearGradient(0, -r * 0.36, 0, r * 0.22)
+      vg.addColorStop(0, '#bae6fd'); vg.addColorStop(0.5, '#38bdf8'); vg.addColorStop(1, '#0b1b2e')
+      ctx.fillStyle = vg
+      ctx.beginPath()
+      if (ctx.roundRect) ctx.roundRect(-r * 0.05, -r * 0.34, r * 1.25, r * 0.52, r * 0.2)
+      else ctx.rect(-r * 0.05, -r * 0.34, r * 1.25, r * 0.52)
+      ctx.fill()
+      // visor shine
+      ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = Math.max(0.8, r * 0.09); ctx.lineCap = 'round'
+      ctx.beginPath(); ctx.moveTo(r * 0.12, -r * 0.15); ctx.lineTo(r * 0.62, -r * 0.15); ctx.stroke()
+      ctx.restore()
+      // chin-guard hint below the visor
+      ctx.strokeStyle = '#065f46'; ctx.lineWidth = Math.max(1, r * 0.14); ctx.lineCap = 'round'
+      ctx.beginPath(); ctx.arc(0, 0, r * 0.92, Math.PI * 0.12, Math.PI * 0.46); ctx.stroke()
+      ctx.restore()
+    }
+
     const drawBuggy = (s) => {
       const R = 18
       drawWheel(-WHEELBASE / 2, 18, R, s.wheelSpin)
@@ -214,8 +248,9 @@ export default function GuacHillClimb({ vehicle = 'buggy', gameId = 'climb', bes
       // roll cage over the cockpit
       ctx.strokeStyle = '#334155'; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round'
       ctx.beginPath(); ctx.moveTo(-24, -19); ctx.lineTo(-20, -31); ctx.lineTo(-4, -31); ctx.lineTo(-2, -19); ctx.stroke()
-      // driver — GetGuac mascot in the cockpit
-      drawGuacAvocado(ctx, -13, -19, 9)
+      // driver — helmeted avocado in the cockpit, nodding as the wheels roll
+      const bob = s.onGround ? Math.sin(s.wheelSpin * 2) * 0.6 : 0
+      drawGuacDriver(-12, -20, 8.5, bob)
       // lights
       ctx.beginPath(); ctx.arc(44, 2, 3.4, 0, Math.PI * 2); ctx.fillStyle = '#fde047'; ctx.fill()
       ctx.beginPath(); ctx.arc(-41, -1, 2.6, 0, Math.PI * 2); ctx.fillStyle = '#fca5a5'; ctx.fill()
@@ -246,10 +281,11 @@ export default function GuacHillClimb({ vehicle = 'buggy', gameId = 'climb', bes
       ctx.strokeStyle = '#1f2937'; ctx.lineWidth = 3.5; ctx.lineCap = 'round'
       ctx.beginPath(); ctx.moveTo(16, -6); ctx.lineTo(24, -16); ctx.lineTo(31, -17); ctx.stroke()
       ctx.fillStyle = '#fde047'; ctx.beginPath(); ctx.arc(33, -16, 4, 0, Math.PI * 2); ctx.fill()
-      // rider — GetGuac mascot leaning to the bars
+      // rider — helmeted avocado leaning to the bars, nodding as the wheels roll
       ctx.strokeStyle = '#4d7c0f'; ctx.lineWidth = 5; ctx.lineCap = 'round'
       ctx.beginPath(); ctx.moveTo(-3, -14); ctx.lineTo(25, -15); ctx.stroke()   // arm reaching the bars
-      drawGuacAvocado(ctx, -4, -22, 11)
+      const bobB = s.onGround ? Math.sin(s.wheelSpin * 2) * 0.7 : 0
+      drawGuacDriver(-4, -23, 10, bobB)
     }
 
     const drawCar = (s, sx) => {

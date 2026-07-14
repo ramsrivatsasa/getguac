@@ -306,7 +306,7 @@ class _LoginScreenState extends State<LoginScreen> {
           'wipe_creds': looksLikeBadCreds,
         });
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Biometric sign-in failed: $e')),
+        SnackBar(content: Text(_friendlyAuthError(e))),
       );
       if (looksLikeBadCreds) {
         await BiometricService.disable();
@@ -316,6 +316,33 @@ class _LoginScreenState extends State<LoginScreen> {
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  /// Maps a raw sign-in error to a short, friendly message. We never show the
+  /// raw exception (e.g. "AuthApiException(message: Invalid login credentials,
+  /// statusCode: 400…)") to the user — they get plain language, while the real
+  /// error still goes to DebugLog for diagnosis.
+  String _friendlyAuthError(Object e) {
+    // gotrue's AuthException carries a clean `message`; only its toString() is
+    // ugly. Prefer message + known markers.
+    final raw = e is AuthException ? e.message : e.toString();
+    final lc = raw.toLowerCase();
+    if (lc.contains('invalid login') || lc.contains('invalid credentials') ||
+        lc.contains('invalid_credentials') || lc.contains('invalid_grant')) {
+      return 'Invalid username/email or password. Please try again.';
+    }
+    if (lc.contains('rate limit') || lc.contains('too many') || lc.contains('429')) {
+      return 'Too many attempts — please wait a minute and try again.';
+    }
+    if (lc.contains('socketexception') || lc.contains('failed host lookup') ||
+        lc.contains('clientexception') || lc.contains('connection') ||
+        lc.contains('timed out') || lc.contains('timeout') || lc.contains('network')) {
+      return 'No internet connection. Check your network and try again.';
+    }
+    // An AuthException with an already-friendly message (e.g. the "use your
+    // email" hint) — show it as-is. Anything else gets a safe generic line.
+    if (e is AuthException && raw.trim().isNotEmpty) return raw;
+    return 'Something went wrong signing in. Please try again.';
   }
 
   Future<void> _login() async {
@@ -390,6 +417,8 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) context.go('/dashboard');
     } catch (e) {
       if (!mounted) return;
+      DebugLog.event('login-screen', 'manual login failed',
+        level: 'error', meta: {'error': e.toString()});
       final msg = e.toString().toLowerCase();
       // Supabase raises AuthException with code 'email_not_confirmed' or a
       // message containing 'not confirmed' when the user hasn't clicked the
@@ -427,7 +456,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
         ));
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+        // Friendly message — never the raw AuthException. Most common case is
+        // a wrong username/email or password. Raw error is in DebugLog above.
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(_friendlyAuthError(e))),
+        );
       }
       // Wiggle the form + the mascot so the user immediately sees the
       // error in motion, not just a toast text.

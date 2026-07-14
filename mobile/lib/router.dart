@@ -116,6 +116,12 @@ final appRouter = GoRouter(
         GoRoute(path: '/how-it-works', builder: (_, __) => const HowItWorksScreen()),
         GoRoute(path: '/chat', builder: (_, __) => const ChatListScreen()),
         GoRoute(path: '/chat/:threadId', builder: (_, state) => ChatThreadScreen(threadId: state.pathParameters['threadId']!)),
+        // Guac AI assistant + the Guac Arcade live on the web (the AI thread and
+        // the canvas games are web-only), shown in-app via the WebView so the
+        // dashboard's Guac AI / Games shortcuts work on mobile. Web /chat opens
+        // the pinned Guac AI assistant by default; native /chat above stays DMs.
+        GoRoute(path: '/guac-ai', builder: (_, __) => const WebAppScreen(path: '/chat', title: 'Guac AI')),
+        GoRoute(path: '/games',   builder: (_, __) => const WebAppScreen(path: '/games', title: 'Games')),
       ],
     ),
   ],

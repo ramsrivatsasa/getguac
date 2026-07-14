@@ -119,10 +119,9 @@
 	</array>
 
 	<!-- AdMob (native Tier-2 ads). REQUIRED for the Mobile Ads SDK to start.
-	     This is Google's TEST app id — replace with your real AdMob iOS app id
-	     before production. -->
+	     Real GetGuac iOS app id under publisher ca-app-pub-5959691671441705. -->
 	<key>GADApplicationIdentifier</key>
-	<string>ca-app-pub-3940256099942544~1458002511</string>
+	<string>ca-app-pub-5959691671441705~2306457499</string>
 
 	<!-- App Tracking Transparency: iOS 14.5+ shows this when we request the
 	     tracking prompt (for personalized ads). Decline = non-personalized

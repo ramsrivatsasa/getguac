@@ -18,10 +18,9 @@ class AdsService {
   AdsService._();
 
   // Real AdMob NATIVE-advanced ad units. (App ids live in the Android manifest
-  // / iOS Info.plist, not here.) iOS is blank until a GetGuac iOS AdMob app
-  // exists.
+  // / iOS Info.plist, not here.)
   static const String androidNativeUnitId = 'ca-app-pub-5959691671441705/1259528771';
-  static const String iosNativeUnitId = '';
+  static const String iosNativeUnitId = 'ca-app-pub-5959691671441705/9906314136';
 
   // Google TEST native-advanced units — used in DEBUG so we never request or
   // click our own live ads (an AdMob policy violation / ban risk).

@@ -181,74 +181,75 @@ export default function GuacHillClimb({ vehicle = 'buggy', gameId = 'climb', bes
 
     const drawWheel = (wx, wy, r, spin) => {
       ctx.save(); ctx.translate(wx, wy); ctx.rotate(spin)
+      // knobby off-road tread lugs around the rim
+      ctx.fillStyle = '#0b1220'
+      for (let i = 0; i < 12; i++) { ctx.save(); ctx.rotate((i / 12) * Math.PI * 2); ctx.fillRect(-r * 0.15, -r - r * 0.12, r * 0.3, r * 0.28); ctx.restore() }
       ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fillStyle = '#1f2937'; ctx.fill()
-      ctx.beginPath(); ctx.arc(0, 0, r * 0.55, 0, Math.PI * 2); ctx.fillStyle = '#9ca3af'; ctx.fill()
-      ctx.beginPath(); ctx.arc(0, 0, r * 0.2, 0, Math.PI * 2); ctx.fillStyle = '#4b5563'; ctx.fill()
-      ctx.strokeStyle = '#4b5563'; ctx.lineWidth = 2
-      for (let i = 0; i < 4; i++) { ctx.rotate(Math.PI / 2); ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -r * 0.5); ctx.stroke() }
+      ctx.beginPath(); ctx.arc(0, 0, r * 0.58, 0, Math.PI * 2); ctx.fillStyle = '#d1d5db'; ctx.fill()   // rim
+      ctx.beginPath(); ctx.arc(0, 0, r * 0.22, 0, Math.PI * 2); ctx.fillStyle = '#6b7280'; ctx.fill()   // hub
+      ctx.strokeStyle = '#6b7280'; ctx.lineWidth = 2.5
+      for (let i = 0; i < 5; i++) { ctx.rotate((Math.PI * 2) / 5); ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -r * 0.52); ctx.stroke() }
       ctx.restore()
     }
 
     const drawBuggy = (s) => {
-      drawWheel(-WHEELBASE / 2, 16, 15, s.wheelSpin)
-      drawWheel(WHEELBASE / 2, 16, 15, s.wheelSpin)
-      // sleek red car silhouette: low hood front, cabin, short trunk
-      const bg = ctx.createLinearGradient(0, -22, 0, 14)
-      bg.addColorStop(0, '#f87171'); bg.addColorStop(0.5, '#ef4444'); bg.addColorStop(1, '#b91c1c')
+      const R = 18
+      drawWheel(-WHEELBASE / 2, 18, R, s.wheelSpin)
+      drawWheel(WHEELBASE / 2, 18, R, s.wheelSpin)
+      // fender flares over the wheels (behind the body)
+      ctx.strokeStyle = '#b91c1c'; ctx.lineWidth = 8; ctx.lineCap = 'round'
+      ctx.beginPath(); ctx.arc(-WHEELBASE / 2, 18, R + 4, Math.PI * 1.04, Math.PI * 1.96); ctx.stroke()
+      ctx.beginPath(); ctx.arc(WHEELBASE / 2, 18, R + 4, Math.PI * 1.04, Math.PI * 1.96); ctx.stroke()
+      // angular red off-road buggy tub (open cockpit, sloped hood, pointed nose)
+      const bg = ctx.createLinearGradient(0, -20, 0, 14)
+      bg.addColorStop(0, '#f87171'); bg.addColorStop(0.55, '#ef4444'); bg.addColorStop(1, '#b91c1c')
       ctx.beginPath()
-      ctx.moveTo(-40, 8)
-      ctx.lineTo(-40, 1)
-      ctx.quadraticCurveTo(-40, -5, -33, -6)   // rounded rear
-      ctx.lineTo(-18, -7)
-      ctx.lineTo(-11, -22)                       // rear roof pillar
-      ctx.quadraticCurveTo(-9, -24, -5, -24)
-      ctx.lineTo(7, -24)
-      ctx.quadraticCurveTo(11, -24, 13, -21)     // roof to windshield
-      ctx.lineTo(21, -7)                          // windshield base
-      ctx.lineTo(37, -5)                          // hood
-      ctx.quadraticCurveTo(43, -4, 43, 3)         // rounded nose
-      ctx.lineTo(43, 8)
-      ctx.closePath()
+      ctx.moveTo(-42, 12); ctx.lineTo(-43, -4); ctx.lineTo(-26, -6); ctx.lineTo(-24, -19)
+      ctx.lineTo(-6, -19); ctx.lineTo(-2, -6); ctx.lineTo(24, -9); ctx.lineTo(44, -1)
+      ctx.lineTo(46, 6); ctx.lineTo(30, 12); ctx.closePath()
       ctx.fillStyle = bg; ctx.fill()
       ctx.lineWidth = 2; ctx.strokeStyle = '#991b1b'; ctx.stroke()
-      // windows
-      ctx.beginPath(); ctx.moveTo(-9, -20); ctx.lineTo(8, -20); ctx.quadraticCurveTo(10, -20, 11, -18); ctx.lineTo(16, -8); ctx.lineTo(-14, -8); ctx.closePath()
-      ctx.fillStyle = '#bae6fd'; ctx.fill()
-      ctx.strokeStyle = '#991b1b'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, -20); ctx.lineTo(1, -8); ctx.stroke()
-      // driver — the GetGuac mascot peeking through the window
-      drawGuacAvocado(ctx, -5, -13, 7)
-      // trim line + lights
-      ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(-34, 3); ctx.lineTo(36, 3); ctx.stroke()
-      ctx.beginPath(); ctx.arc(41, 1, 3.2, 0, Math.PI * 2); ctx.fillStyle = '#fde047'; ctx.fill()   // headlight
-      ctx.beginPath(); ctx.arc(-39, -2, 2.4, 0, Math.PI * 2); ctx.fillStyle = '#fca5a5'; ctx.fill()  // taillight
+      // side trim
+      ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(-38, 4); ctx.lineTo(40, 4); ctx.stroke()
+      // roll cage over the cockpit
+      ctx.strokeStyle = '#334155'; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round'
+      ctx.beginPath(); ctx.moveTo(-24, -19); ctx.lineTo(-20, -31); ctx.lineTo(-4, -31); ctx.lineTo(-2, -19); ctx.stroke()
+      // driver — GetGuac mascot in the cockpit
+      drawGuacAvocado(ctx, -13, -19, 9)
+      // lights
+      ctx.beginPath(); ctx.arc(44, 2, 3.4, 0, Math.PI * 2); ctx.fillStyle = '#fde047'; ctx.fill()
+      ctx.beginPath(); ctx.arc(-41, -1, 2.6, 0, Math.PI * 2); ctx.fillStyle = '#fca5a5'; ctx.fill()
     }
 
     const drawBike = (s) => {
-      drawWheel(-WHEELBASE / 2, 16, 15, s.wheelSpin)
-      drawWheel(WHEELBASE / 2, 16, 15, s.wheelSpin)
-      // frame + forks
+      const R = 17, rear = -WHEELBASE / 2, frnt = WHEELBASE / 2, wy = 18
+      // knobby wheels
+      drawWheel(rear, wy, R, s.wheelSpin)
+      drawWheel(frnt, wy, R, s.wheelSpin)
+      // fenders (mudguards) over each wheel
       ctx.strokeStyle = '#3f6212'; ctx.lineWidth = 5; ctx.lineCap = 'round'
-      ctx.beginPath()
-      ctx.moveTo(-WHEELBASE / 2, 16); ctx.lineTo(-4, 0); ctx.lineTo(WHEELBASE / 2, 16)
-      ctx.moveTo(-4, 0); ctx.lineTo(20, -8)   // fork up to handlebars
-      ctx.stroke()
+      ctx.beginPath(); ctx.arc(rear, wy, R + 4, Math.PI * 1.15, Math.PI * 1.9); ctx.stroke()
+      ctx.beginPath(); ctx.arc(frnt, wy, R + 4, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke()
+      // swingarm + front fork
+      ctx.strokeStyle = '#4b5563'; ctx.lineWidth = 4
+      ctx.beginPath(); ctx.moveTo(rear, wy); ctx.lineTo(-4, 2); ctx.moveTo(22, -8); ctx.lineTo(frnt, wy); ctx.stroke()
+      // frame (bright lime)
+      ctx.strokeStyle = '#65a30d'; ctx.lineWidth = 6; ctx.lineJoin = 'round'
+      ctx.beginPath(); ctx.moveTo(-4, 2); ctx.lineTo(-14, -6); ctx.lineTo(8, -6); ctx.lineTo(-4, 2); ctx.moveTo(8, -6); ctx.lineTo(22, -8); ctx.stroke()
+      // exhaust pipe
+      ctx.strokeStyle = '#9ca3af'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(-2, 3); ctx.lineTo(rear + 4, 12); ctx.stroke()
       // seat + tank
-      ctx.beginPath()
-      if (ctx.roundRect) ctx.roundRect(-20, -6, 30, 9, 4); else ctx.rect(-20, -6, 30, 9)
-      const bg = ctx.createLinearGradient(0, -8, 0, 6)
-      bg.addColorStop(0, '#84cc16'); bg.addColorStop(1, '#4d7c0f')
-      ctx.fillStyle = bg; ctx.fill()
-      // handlebar
-      ctx.strokeStyle = '#1f2937'; ctx.lineWidth = 3
-      ctx.beginPath(); ctx.moveTo(20, -8); ctx.lineTo(29, -15); ctx.stroke()
-      // headlight
-      ctx.beginPath(); ctx.arc(30, -13, 3.5, 0, Math.PI * 2); ctx.fillStyle = '#fde047'; ctx.fill()
-      // rider — the GetGuac mascot leaning into the bars
-      ctx.save(); ctx.translate(-2, -8)
-      ctx.strokeStyle = '#4d7c0f'; ctx.lineWidth = 4; ctx.lineCap = 'round'
-      ctx.beginPath(); ctx.moveTo(0, -6); ctx.lineTo(22, 0); ctx.stroke()   // arm to bar
-      drawGuacAvocado(ctx, 1, -12, 9)
-      ctx.restore()
+      ctx.fillStyle = '#4d7c0f'; ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(-22, -10, 20, 7, 3); else ctx.rect(-22, -10, 20, 7); ctx.fill()
+      const tg = ctx.createLinearGradient(4, -12, 4, 0); tg.addColorStop(0, '#a3e635'); tg.addColorStop(1, '#4d7c0f')
+      ctx.fillStyle = tg; ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(-2, -11, 18, 11, 5); else ctx.rect(-2, -11, 18, 11); ctx.fill()
+      // handlebars + headlight
+      ctx.strokeStyle = '#1f2937'; ctx.lineWidth = 3.5; ctx.lineCap = 'round'
+      ctx.beginPath(); ctx.moveTo(16, -6); ctx.lineTo(24, -16); ctx.lineTo(31, -17); ctx.stroke()
+      ctx.fillStyle = '#fde047'; ctx.beginPath(); ctx.arc(33, -16, 4, 0, Math.PI * 2); ctx.fill()
+      // rider — GetGuac mascot leaning to the bars
+      ctx.strokeStyle = '#4d7c0f'; ctx.lineWidth = 5; ctx.lineCap = 'round'
+      ctx.beginPath(); ctx.moveTo(-3, -14); ctx.lineTo(25, -15); ctx.stroke()   // arm reaching the bars
+      drawGuacAvocado(ctx, -4, -22, 11)
     }
 
     const drawCar = (s, sx) => {
@@ -267,6 +268,20 @@ export default function GuacHillClimb({ vehicle = 'buggy', gameId = 'climb', bes
       sky.addColorStop(0, '#7dd3fc'); sky.addColorStop(1, '#e0f2fe')
       ctx.fillStyle = sky; ctx.fillRect(0, 0, w, h)
       const camX = s.x - w * 0.32
+      // distant mountain range (slow parallax, peaky ridge)
+      {
+        const mbase = h * 0.52
+        ctx.beginPath(); ctx.moveTo(-20, h)
+        for (let sxp = -20; sxp <= w + 20; sxp += 12) {
+          const wx = camX * 0.16 + sxp
+          const y = mbase - (Math.abs(Math.sin(wx * 0.0045)) * 92 + Math.abs(Math.sin(wx * 0.019 + 2)) * 34)
+          ctx.lineTo(sxp, y)
+        }
+        ctx.lineTo(w + 20, h); ctx.closePath()
+        const mg = ctx.createLinearGradient(0, mbase - 120, 0, mbase)
+        mg.addColorStop(0, '#9aa8c6'); mg.addColorStop(1, '#7686a6')
+        ctx.fillStyle = mg; ctx.fill()
+      }
       // parallax hills
       for (let layer = 0; layer < 2; layer++) {
         const k = layer === 0 ? 0.3 : 0.55

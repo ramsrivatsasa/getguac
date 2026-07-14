@@ -382,7 +382,7 @@ export default function BubbleBudget() {
     const close = lowestY(sim, geo) + geo.R > dy - geo.rowH * 1.5
     ctx.setLineDash([7, 7])
     ctx.lineWidth = 2
-    ctx.strokeStyle = close ? 'rgba(225,29,72,0.55)' : 'rgba(20,83,45,0.18)'
+    ctx.strokeStyle = close ? 'rgba(248,113,113,0.75)' : 'rgba(255,255,255,0.22)'
     ctx.beginPath(); ctx.moveTo(10, dy); ctx.lineTo(pw - 10, dy); ctx.stroke()
     ctx.setLineDash([])
 
@@ -392,7 +392,7 @@ export default function BubbleBudget() {
     if (sim.aim.on && statusRef.current === 'playing' && !sim.fly) {
       let px = S.x, py = S.y
       let dx = Math.sin(sim.aim.ang), dyy = -Math.cos(sim.aim.ang)
-      ctx.fillStyle = 'rgba(20,83,45,0.35)'
+      ctx.fillStyle = 'rgba(255,255,255,0.55)'
       let traveled = 0
       const stepLen = 22
       while (traveled < 1400 && py > TOP_PAD + geo.R) {
@@ -613,7 +613,7 @@ export default function BubbleBudget() {
       <div
         ref={wrapRef}
         className="relative overflow-hidden rounded-2xl"
-        style={{ height: 'clamp(470px, calc(100svh - 170px), 900px)', minHeight: 430, background: 'linear-gradient(180deg, #e9e7fb 0%, #dcd8f6 100%)', border: CARD_BORDER }}
+        style={{ height: 'clamp(470px, calc(100svh - 170px), 900px)', minHeight: 430, background: 'radial-gradient(120% 90% at 50% 0%, #413c72 0%, #2c2850 70%, #23204a 100%)', border: CARD_BORDER }}
       >
         <canvas
           ref={canvasRef}
@@ -636,19 +636,19 @@ export default function BubbleBudget() {
 
         {/* HUD */}
         <div className="absolute top-0 inset-x-0 flex items-center justify-between px-3 py-2" style={{ pointerEvents: 'none' }}>
-          <div className="flex items-baseline gap-3">
+          <div className="flex items-baseline gap-3" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.35)' }}>
             <div>
-              <span className="text-[11px] font-semibold" style={{ color: MUTED }}>Banked </span>
-              <span className="font-display font-extrabold text-lg" style={{ color: GREEN }}>${fmt(score)}</span>
+              <span className="text-[11px] font-semibold" style={{ color: 'rgba(255,255,255,0.6)' }}>Banked </span>
+              <span className="font-display font-extrabold text-lg" style={{ color: '#a3e635' }}>${fmt(score)}</span>
             </div>
             <div>
-              <span className="text-[11px] font-semibold" style={{ color: FAINT }}>Level </span>
-              <span className="font-display font-bold text-sm" style={{ color: MUTED }}>{level}</span>
+              <span className="text-[11px] font-semibold" style={{ color: 'rgba(255,255,255,0.55)' }}>Level </span>
+              <span className="font-display font-bold text-sm" style={{ color: '#fff' }}>{level}</span>
             </div>
             {shotsLeft != null && status !== 'over' && (
               <div>
-                <span className="text-[11px] font-semibold" style={{ color: FAINT }}>Next row in </span>
-                <span className="font-display font-bold text-sm" style={{ color: shotsLeft <= 2 ? ROSE : MUTED }}>{shotsLeft}</span>
+                <span className="text-[11px] font-semibold" style={{ color: 'rgba(255,255,255,0.55)' }}>Next row in </span>
+                <span className="font-display font-bold text-sm" style={{ color: shotsLeft <= 2 ? '#fca5a5' : '#fff' }}>{shotsLeft}</span>
               </div>
             )}
           </div>

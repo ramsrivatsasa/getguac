@@ -376,6 +376,64 @@ async function dispatchStealsFound() {
   return { attempted, sent }
 }
 
+// ── Trigger 7: re-engagement for inactive users ─────────────────────
+// Users who have a device token but haven't scanned a receipt in the
+// last INACTIVE_DAYS. One nudge per user per WEEK (the eventKey is
+// week-scoped, so the daily cron only fires this once per week per
+// user), with the message rotating deterministically so it stays
+// fresh: a scan reminder, a games break, a general come-back, or a
+// Smashlist peek.
+const INACTIVE_DAYS = 7
+const REENGAGE_VARIANTS = [
+  { title: '📸 Snap a receipt',       body: "It's been a minute — scan a receipt and see where your money's going.", route: '/receipts' },
+  { title: '🎮 Take a guac break',    body: 'Jump into the Guac Arcade and beat your best score.',                    route: '/dashboard' },
+  { title: '🥑 Your guac misses you', body: "Come see what's new — deals, rewards and your GuacScore.",               route: '/dashboard' },
+  { title: '🛒 Plan your next smash', body: 'Peek at your Smashlist before your next shop.',                          route: '/shopping' },
+]
+
+// Deterministic pick from (userId, week) — no randomness, so a same-day
+// re-run is stable and users get variety week to week.
+function reengagePick(userId, weekKey) {
+  const s = `${userId}:${weekKey}`
+  let h = 0
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0
+  return REENGAGE_VARIANTS[h % REENGAGE_VARIANTS.length]
+}
+
+async function dispatchReengagement() {
+  const db = sb()
+  // Only users with a device token can be reached — start there.
+  const { data: tokRows } = await db.from('push_tokens').select('user_id')
+  const tokenUsers = [...new Set((tokRows || []).map(t => t.user_id).filter(Boolean))]
+  if (tokenUsers.length === 0) return { attempted: 0, sent: 0, inactive: 0 }
+
+  // "Active" = scanned a receipt within the window.
+  const since = new Date(); since.setDate(since.getDate() - INACTIVE_DAYS)
+  const { data: recent } = await db
+    .from('receipts')
+    .select('user_id')
+    .gte('created_at', since.toISOString())
+    .limit(50000)
+  const active = new Set((recent || []).map(r => r.user_id).filter(Boolean))
+
+  const inactive = tokenUsers.filter(u => !active.has(u))
+  const weekKey = weekKeyFor(new Date())
+
+  let attempted = 0, sent = 0
+  for (const userId of inactive) {
+    const v = reengagePick(userId, weekKey)
+    attempted++
+    const res = await sendPushToUser(userId, {
+      title: v.title, body: v.body, route: v.route,
+    }, {
+      category: 'reengagement',
+      eventKey: `reengage:week-${weekKey}`,   // ≤ 1 re-engagement push per user per week
+    })
+    if (res.sent > 0) sent++
+  }
+  return { attempted, sent, inactive: inactive.length }
+}
+
 // ── Entry point ─────────────────────────────────────────────────────
 export async function GET(req) {
   if (!verifyCron(req)) return unauthorized()
@@ -389,6 +447,7 @@ export async function GET(req) {
   try { results.anomaly_alert     = await dispatchAnomalyAlert()    } catch (e) { results.anomaly_alert     = { error: e.message } }
   try { results.smashlist_day     = await dispatchSmashlistDay()    } catch (e) { results.smashlist_day     = { error: e.message } }
   try { results.steals_found      = await dispatchStealsFound()     } catch (e) { results.steals_found      = { error: e.message } }
+  try { results.reengagement      = await dispatchReengagement()    } catch (e) { results.reengagement      = { error: e.message } }
 
   return NextResponse.json({ ok: true, results })
 }

@@ -6,7 +6,7 @@
 // no Save button to forget.
 
 import { useEffect, useState } from 'react'
-import { Bell, Gift, Package, TrendingUp, AlertTriangle, ShoppingCart, MoonStar, Clock } from 'lucide-react'
+import { Bell, Gift, Package, TrendingUp, AlertTriangle, ShoppingCart, MoonStar, Clock, Tag } from 'lucide-react'
 import FeatureHeader from '../../../components/FeatureHeader'
 
 const CATEGORIES = [
@@ -15,6 +15,8 @@ const CATEGORIES = [
   { key: 'bank_bite_digest', icon: TrendingUp,     label: 'Weekly Bank Bite digest',  desc: 'Monday recap of interest + fees from the prior 7 days.' },
   { key: 'anomaly_alert',    icon: AlertTriangle,  label: 'Anomaly alert',            desc: 'When a spending category spikes above its baseline.' },
   { key: 'smashlist_day',    icon: ShoppingCart,   label: 'Smashlist day',            desc: 'Reminder on a predicted shopping day for a store.' },
+  { key: 'steals_found',     icon: Tag,            label: 'New Steals found',         desc: 'When fresh deals appear on your saved searches.' },
+  { key: 'reengagement',     icon: Bell,           label: 'Come-back nudges',         desc: "An occasional reminder to scan a receipt or play a game when you've been away." },
 ]
 
 export default function NotificationsPage() {

@@ -4,7 +4,7 @@
 // as you can without running dry or flipping. Gas + brake also tilt the buggy in
 // mid-air for landings. Sim in refs + rAF; React state only for the HUD/overlays.
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useScoreSaver, SaveScoreLine } from './arcadeKit'
+import { useScoreSaver, SaveScoreLine, drawGuacAvocado } from './arcadeKit'
 
 const INK = '#15281C'
 const BODY = '#3d4a42'
@@ -20,7 +20,8 @@ const BEST_KEY = 'gg-climb-best-v1'
 
 const GRAV = 1500
 const WHEELBASE = 52
-const CAR_H = 30
+const CAR_SCALE = 1.55   // draw the vehicle chunky like the MSN hill-climb games
+const CAR_H = 46         // sit height — tuned so the bigger wheels touch the ground
 const MAX_SPEED = 520
 const START_X = 140
 
@@ -214,9 +215,8 @@ export default function GuacHillClimb({ vehicle = 'buggy', gameId = 'climb', bes
       ctx.beginPath(); ctx.moveTo(-9, -20); ctx.lineTo(8, -20); ctx.quadraticCurveTo(10, -20, 11, -18); ctx.lineTo(16, -8); ctx.lineTo(-14, -8); ctx.closePath()
       ctx.fillStyle = '#bae6fd'; ctx.fill()
       ctx.strokeStyle = '#991b1b'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, -20); ctx.lineTo(1, -8); ctx.stroke()
-      // driver — avocado head peeking through the window
-      ctx.beginPath(); ctx.arc(-6, -13, 5, 0, Math.PI * 2); ctx.fillStyle = '#65a30d'; ctx.fill()
-      ctx.beginPath(); ctx.arc(-5, -12, 2.1, 0, Math.PI * 2); ctx.fillStyle = '#78350f'; ctx.fill()
+      // driver — the GetGuac mascot peeking through the window
+      drawGuacAvocado(ctx, -5, -13, 7)
       // trim line + lights
       ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(-34, 3); ctx.lineTo(36, 3); ctx.stroke()
       ctx.beginPath(); ctx.arc(41, 1, 3.2, 0, Math.PI * 2); ctx.fillStyle = '#fde047'; ctx.fill()   // headlight
@@ -243,13 +243,11 @@ export default function GuacHillClimb({ vehicle = 'buggy', gameId = 'climb', bes
       ctx.beginPath(); ctx.moveTo(20, -8); ctx.lineTo(29, -15); ctx.stroke()
       // headlight
       ctx.beginPath(); ctx.arc(30, -13, 3.5, 0, Math.PI * 2); ctx.fillStyle = '#fde047'; ctx.fill()
-      // rider — leaning avocado
+      // rider — the GetGuac mascot leaning into the bars
       ctx.save(); ctx.translate(-2, -8)
-      ctx.beginPath(); ctx.ellipse(-2, -8, 8, 12, -0.25, 0, Math.PI * 2); ctx.fillStyle = '#4d7c0f'; ctx.fill()
-      ctx.beginPath(); ctx.ellipse(3, -18, 6.5, 7.5, 0, 0, Math.PI * 2); ctx.fillStyle = '#65a30d'; ctx.fill()  // head
-      ctx.beginPath(); ctx.arc(5, -17, 2.3, 0, Math.PI * 2); ctx.fillStyle = '#78350f'; ctx.fill()             // pit/eye
       ctx.strokeStyle = '#4d7c0f'; ctx.lineWidth = 4; ctx.lineCap = 'round'
       ctx.beginPath(); ctx.moveTo(0, -6); ctx.lineTo(22, 0); ctx.stroke()   // arm to bar
+      drawGuacAvocado(ctx, 1, -12, 9)
       ctx.restore()
     }
 
@@ -257,6 +255,7 @@ export default function GuacHillClimb({ vehicle = 'buggy', gameId = 'climb', bes
       ctx.save()
       ctx.translate(sx, s.y)
       ctx.rotate(s.angle)
+      ctx.scale(CAR_SCALE, CAR_SCALE)
       if (vehicle === 'bike') drawBike(s); else drawBuggy(s)
       ctx.restore()
     }

@@ -5,7 +5,7 @@
 // Sim in refs + rAF; React state only for HUD/overlays. Arrows / A-D / swipe /
 // on-screen buttons all steer.
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useScoreSaver, SaveScoreLine } from './arcadeKit'
+import { useScoreSaver, SaveScoreLine, drawGuacAvocado } from './arcadeKit'
 
 const INK = '#15281C'
 const BODY = '#3d4a42'
@@ -139,26 +139,32 @@ export default function GuacNitroRun() {
       syncHud()
     }
 
+    const rrPath = (x, y, w, h, r) => { ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(x, y, w, h, r); else ctx.rect(x, y, w, h) }
     const drawCar = (x, y, ww, hh, color, isPlayer) => {
       ctx.save(); ctx.translate(x, y)
+      const front = isPlayer ? -1 : 1 // player faces up (-y); traffic faces down (+y)
       // shadow
-      ctx.fillStyle = 'rgba(0,0,0,0.18)'; ctx.beginPath(); ctx.ellipse(0, hh * 0.5, ww * 0.55, 6, 0, 0, Math.PI * 2); ctx.fill()
-      // body (top-down)
-      const g = ctx.createLinearGradient(-ww / 2, 0, ww / 2, 0)
-      g.addColorStop(0, color); g.addColorStop(0.5, isPlayer ? '#84cc16' : shade(color, 1.15)); g.addColorStop(1, color)
-      ctx.fillStyle = isPlayer ? '#ef4444' : color
-      ctx.beginPath()
-      if (ctx.roundRect) ctx.roundRect(-ww / 2, -hh / 2, ww, hh, 8); else ctx.rect(-ww / 2, -hh / 2, ww, hh)
-      ctx.fill()
-      ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(0,0,0,0.2)'; ctx.stroke()
-      // windows
+      ctx.fillStyle = 'rgba(0,0,0,0.22)'; ctx.beginPath(); ctx.ellipse(1, 2, ww * 0.5, hh * 0.5, 0, 0, Math.PI * 2); ctx.fill()
+      // wheels — dark rounded rects poking out both sides
       ctx.fillStyle = '#0f172a'
-      ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(-ww * 0.32, -hh * 0.32, ww * 0.64, hh * 0.22, 4); else ctx.rect(-ww * 0.32, -hh * 0.32, ww * 0.64, hh * 0.22); ctx.fill()
-      ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(-ww * 0.32, hh * 0.1, ww * 0.64, hh * 0.2, 4); else ctx.rect(-ww * 0.32, hh * 0.1, ww * 0.64, hh * 0.2); ctx.fill()
-      // roof stripe
-      ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.fillRect(-ww * 0.06, -hh * 0.1, ww * 0.12, hh * 0.2)
-      // player: little avocado in the windshield
-      if (isPlayer) { ctx.fillStyle = '#65a30d'; ctx.beginPath(); ctx.arc(0, -hh * 0.2, ww * 0.16, 0, Math.PI * 2); ctx.fill() }
+      const tw = ww * 0.15, th = hh * 0.22, ax = ww * 0.5 - tw * 0.3, ay = hh * 0.27
+      for (const sx of [-1, 1]) for (const sy of [-1, 1]) { rrPath(sx * ax - tw / 2, sy * ay - th / 2, tw, th, 3); ctx.fill() }
+      // body (a touch narrower than the wheels so they show)
+      rrPath(-ww * 0.44, -hh / 2, ww * 0.88, hh, ww * 0.24)
+      ctx.fillStyle = color; ctx.fill()
+      ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.stroke()
+      // hood/trunk highlight panel down the middle
+      ctx.fillStyle = 'rgba(255,255,255,0.13)'; rrPath(-ww * 0.3, -hh * 0.44, ww * 0.6, hh * 0.88, ww * 0.14); ctx.fill()
+      // windshield (front) + rear window
+      ctx.fillStyle = '#bae6fd'; rrPath(-ww * 0.27, front < 0 ? -hh * 0.36 : hh * 0.14, ww * 0.54, hh * 0.22, 4); ctx.fill()
+      ctx.fillStyle = '#93c5fd'; rrPath(-ww * 0.23, front < 0 ? hh * 0.16 : -hh * 0.34, ww * 0.46, hh * 0.15, 4); ctx.fill()
+      // headlights (front, pale) + taillights (rear, red)
+      ctx.fillStyle = '#fef08a'
+      ctx.beginPath(); ctx.arc(-ww * 0.3, front * hh * 0.46, ww * 0.07, 0, Math.PI * 2); ctx.arc(ww * 0.3, front * hh * 0.46, ww * 0.07, 0, Math.PI * 2); ctx.fill()
+      ctx.fillStyle = '#f87171'
+      ctx.beginPath(); ctx.arc(-ww * 0.3, -front * hh * 0.46, ww * 0.055, 0, Math.PI * 2); ctx.arc(ww * 0.3, -front * hh * 0.46, ww * 0.055, 0, Math.PI * 2); ctx.fill()
+      // player: the GetGuac mascot at the wheel
+      if (isPlayer) drawGuacAvocado(ctx, 0, -hh * 0.14, ww * 0.19)
       ctx.restore()
     }
 

@@ -20,6 +20,33 @@ export const SOUND_KEY = 'gg-arcade-sound'
 
 export const fmt = (n) => Math.round(n).toLocaleString()
 
+// The GetGuac brand-mascot avocado, drawn on canvas at radius r (matches
+// GuacMascot's palette). Shared so every game shows the SAME avocado instead
+// of ad-hoc shapes/emoji. Whole-mascot draw (allowed by the mascot lock).
+export function drawGuacAvocado(ctx, x, y, r, angle = 0) {
+  ctx.save()
+  ctx.translate(x, y)
+  ctx.rotate(angle)
+  ctx.strokeStyle = '#6b4226'; ctx.lineWidth = Math.max(1, r * 0.09); ctx.lineCap = 'round'
+  ctx.beginPath(); ctx.moveTo(0, -r * 0.96); ctx.lineTo(r * 0.06, -r * 1.14); ctx.stroke()
+  const bg = ctx.createRadialGradient(-r * 0.3, -r * 0.32, r * 0.15, 0, 0, r * 1.15)
+  bg.addColorStop(0, '#10b981'); bg.addColorStop(1, '#064e3b')
+  ctx.beginPath(); ctx.ellipse(0, r * 0.05, r * 0.86, r, 0, 0, Math.PI * 2); ctx.fillStyle = bg; ctx.fill()
+  const fg = ctx.createRadialGradient(0, r * 0.12, r * 0.08, 0, r * 0.12, r * 0.74)
+  fg.addColorStop(0, '#f6ed8a'); fg.addColorStop(0.42, '#e7ec8e'); fg.addColorStop(0.75, '#b4d35f'); fg.addColorStop(1, '#84cc16')
+  ctx.beginPath(); ctx.ellipse(0, r * 0.16, r * 0.6, r * 0.72, 0, 0, Math.PI * 2); ctx.fillStyle = fg; ctx.fill()
+  const pg = ctx.createRadialGradient(-r * 0.08, r * 0.2, r * 0.04, 0, r * 0.3, r * 0.36)
+  pg.addColorStop(0, '#dca838'); pg.addColorStop(0.5, '#a8590a'); pg.addColorStop(1, '#54260c')
+  ctx.beginPath(); ctx.arc(0, r * 0.32, r * 0.3, 0, Math.PI * 2); ctx.fillStyle = pg; ctx.fill()
+  for (const s of [-1, 1]) {
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(s * r * 0.24, -r * 0.24, r * 0.15, 0, Math.PI * 2); ctx.fill()
+    ctx.fillStyle = '#1f2937'; ctx.beginPath(); ctx.arc(s * r * 0.24 + r * 0.02, -r * 0.22, r * 0.075, 0, Math.PI * 2); ctx.fill()
+  }
+  ctx.strokeStyle = '#1f2937'; ctx.lineWidth = Math.max(1.2, r * 0.08); ctx.lineCap = 'round'
+  ctx.beginPath(); ctx.arc(0, -r * 0.02, r * 0.17, 0.16 * Math.PI, 0.84 * Math.PI); ctx.stroke()
+  ctx.restore()
+}
+
 // ─── sound: tiny WebAudio synth, context created on first gesture ──────────
 // tone({f0, f1, t, type, g, at}) — same contract as BubbleBudget's synth.
 export function useArcadeSound() {

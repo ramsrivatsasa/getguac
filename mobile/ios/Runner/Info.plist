@@ -130,6 +130,12 @@
 	<key>NSUserTrackingUsageDescription</key>
 	<string>GetGuac uses this to show more relevant ads. You can keep ads non-personalized — they'll still work.</string>
 
+	<!-- Export compliance: GetGuac only uses HTTPS/TLS provided by the OS, which
+	     is exempt. Declaring it here stops App Store Connect from holding every
+	     build in "Missing Compliance" until the question is answered by hand. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+
 	<!-- SKAdNetwork — Google's primary id. Paste the full AdMob list before
 	     production for complete ad-attribution coverage. -->
 	<key>SKAdNetworkItems</key>

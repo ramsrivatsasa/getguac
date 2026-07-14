@@ -42,13 +42,48 @@ there and not committed.
   `iosNativeUnitId`. Until you do, release iOS builds simply show no ads
   (safe, not a blocker).
 
-### 3. Signing + build (on the Mac)
-- Xcode → Runner target → Signing & Capabilities → Team = your new team;
-  automatic signing is fine.
-- `flutter build ipa --release` (add `--dart-define` flags only if we ever
-  gate iOS features; IS_PLAY is Android-only).
-- Upload: Xcode Organizer or `xcrun altool`/Transporter with the generated
-  `build/ios/ipa/*.ipa`.
+### 3. Signing + build + upload (on the Mac) — runbook
+
+Current shipping version: **v0.4.20+214** (from `mobile/pubspec.yaml`; the iOS
+build number comes from the `+214` half, and App Store Connect rejects a build
+number it has already seen — bump `+N` for every re-upload).
+
+**a. Register the app once (web, before the first upload)**
+- https://developer.apple.com/account → Certificates, IDs & Profiles →
+  Identifiers → **+** → App IDs → App → bundle id `app.getguac.getguac`
+  (explicit, not wildcard). Capabilities: none needed beyond the defaults.
+- https://appstoreconnect.apple.com → Apps → **+** → New App:
+  platform iOS, name "GetGuac", primary language English (U.S.),
+  bundle id `app.getguac.getguac`, SKU `getguac-ios`, full access.
+  *Without this app record the upload succeeds but the build has nowhere to
+  land.*
+
+**b. Build the archive (Mac terminal, repo root)**
+```sh
+cd mobile
+flutter clean && flutter pub get
+cd ios && pod install && cd ..          # Podfile is Mac-generated, not committed
+open ios/Runner.xcworkspace              # Runner target → Signing & Capabilities
+                                         # → Team = Yathis Corporation, automatic
+flutter build ipa --release              # ~10 min; IS_PLAY is Android-only, omit it
+```
+
+**c. Upload**
+- Easiest: `open build/ios/archive/Runner.xcarchive` → Xcode **Organizer** →
+  Distribute App → App Store Connect → Upload → let Xcode manage signing.
+- Or CLI with an App Store Connect API key:
+  `xcrun altool --upload-app -f build/ios/ipa/*.ipa -t ios --apiKey <KEY_ID> --apiIssuer <ISSUER_ID>`
+- Processing takes 5–30 min, then the build appears under TestFlight.
+
+**Known upload snags**
+- *"Missing Compliance"* — fixed: `ITSAppUsesNonExemptEncryption=false` is now
+  in `Info.plist` (GetGuac only uses OS-provided HTTPS, which is exempt).
+- *"No profiles for 'app.getguac.getguac' were found"* — the App ID in step (a)
+  wasn't created, or Xcode's Team is still Personal. Re-pick the team.
+- *"The bundle version must be higher than the previously uploaded version"* —
+  bump `+214` in `pubspec.yaml`, rebuild.
+- *Invalid bitcode / arm64 sim slice* — `flutter build ipa` already excludes
+  simulator slices; never upload an `.app` from `build/ios/iphonesimulator`.
 
 ### 4. App Store Connect listing
 - Screenshots: ready-made in `web/marketing-assets/store/ios-6.7-1290x2796/`

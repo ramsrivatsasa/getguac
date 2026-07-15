@@ -15,6 +15,7 @@ import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { pollMailbox, isReceiptsAddress, deleteImapMessage, moveImapMessage } from '../../../../lib/imap-poll'
 import { decryptSecret } from '../../../../lib/crypto'
 import { draftReceiptFromEmail } from '../../../../lib/email-to-receipt'
+import { reportServerError } from '../../../../lib/report-error'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -60,6 +61,7 @@ export async function POST(request) {
 
   if (error) {
     console.error('[email/poll] profiles fetch failed:', error.message)
+    await reportServerError({ tag: 'email_poll', action: 'email_failure', level: 'error', platform: 'server', message: `profiles fetch: ${error.message}` }, sb)
     return Response.json({ error: error.message }, { status: 500 })
   }
 
@@ -145,6 +147,7 @@ export async function POST(request) {
           } catch (e) {
             console.warn('[email/poll] draft from email failed:', e.message)
             summary.errors.push({ user: u.id, uid: m.uid, error: `draft: ${e.message}` })
+            await reportServerError({ tag: 'email_draft', action: 'email_failure', level: 'warn', userId: u.id, platform: 'server', message: `draft: ${e.message}`, meta: { uid: m.uid, subject: m.subject } }, sb)
           }
         }
 
@@ -189,6 +192,7 @@ export async function POST(request) {
         .eq('id', u.id)
     } catch (e) {
       summary.errors.push({ user: u.id, error: e.message })
+      await reportServerError({ tag: 'email_poll', action: 'email_failure', level: 'error', userId: u.id, platform: 'server', message: e.message }, sb)
     }
   }
 

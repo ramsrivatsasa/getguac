@@ -22,6 +22,7 @@ import { rateLimit, userRateKey } from '../../../../lib/apiGuard'
 import { decryptSecret } from '../../../../lib/crypto'
 import { pollMailbox, isReceiptsAddress } from '../../../../lib/imap-poll'
 import { draftReceiptFromEmail } from '../../../../lib/email-to-receipt'
+import { reportServerError } from '../../../../lib/report-error'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -83,7 +84,9 @@ export async function POST() {
     result = await pollMailbox({ localPart: prof.email_alias, password, lastUidByFolder })
   } catch (e) {
     // IMAP login/connection failure — most often a mailbox-password desync.
-    // Surface it so the UI can nudge the user to Reconnect.
+    // Surface it so the UI can nudge the user to Reconnect, and record it so
+    // it shows in the admin crash dashboard as an email failure.
+    await reportServerError({ tag: 'email_sync', action: 'email_failure', level: 'error', userId: user.id, platform: 'server', message: `imap: ${e.message}` }, admin)
     return Response.json({ error: 'imap', detail: e.message, hint: 'reconnect' }, { status: 502 })
   }
 
@@ -129,6 +132,7 @@ export async function POST() {
         }
       } catch (e) {
         summary.errors.push({ uid: m.uid, error: `draft: ${e.message}` })
+        await reportServerError({ tag: 'email_draft', action: 'email_failure', level: 'warn', userId: user.id, platform: 'server', message: `draft: ${e.message}`, meta: { uid: m.uid } }, admin)
       }
     }
   }

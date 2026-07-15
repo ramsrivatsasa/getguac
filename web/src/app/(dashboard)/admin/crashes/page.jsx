@@ -9,7 +9,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '../../../../lib/supabase/client'
-import { Bug, AlertCircle, AlertTriangle, RefreshCw, ChevronDown, ChevronRight, Smartphone, Globe, Users } from 'lucide-react'
+import { Bug, AlertCircle, AlertTriangle, RefreshCw, ChevronDown, ChevronRight, Smartphone, Globe, Server, Users } from 'lucide-react'
 
 const LEVELS = [
   { value: 'all', label: 'Errors + warnings' },
@@ -37,7 +37,7 @@ function fmt(iso) {
 }
 
 function PlatformBadge({ p }) {
-  const Icon = p === 'web' ? Globe : Smartphone
+  const Icon = p === 'web' ? Globe : p === 'server' ? Server : Smartphone
   return (
     <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600 capitalize">
       <Icon size={10} /> {p}

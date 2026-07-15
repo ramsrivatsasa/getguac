@@ -9,6 +9,22 @@ import { useEffect } from 'react'
 export default function GlobalError({ error, reset }) {
   useEffect(() => {
     Sentry.captureException(error)
+    // Also mirror into audit_log so it shows in the admin crash dashboard,
+    // not just Sentry. keepalive lets it flush even as the page tears down.
+    try {
+      fetch('/api/report-error', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        keepalive: true,
+        body: JSON.stringify({
+          tag: 'react-render',
+          message: error?.message || String(error),
+          stack: error?.stack || '',
+          digest: error?.digest || null,
+          url: typeof window !== 'undefined' ? window.location.href : '',
+        }),
+      }).catch(() => {})
+    } catch (_) { /* never let reporting crash the boundary */ }
   }, [error])
 
   return (

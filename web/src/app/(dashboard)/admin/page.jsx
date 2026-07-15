@@ -1,8 +1,9 @@
 'use client'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
+import Link from 'next/link'
 import { createClient } from '../../../lib/supabase/client'
-import { ShieldCheck, Search, Upload, Trash2 } from 'lucide-react'
+import { ShieldCheck, Search, Upload, Trash2, Bug, TrendingUp } from 'lucide-react'
 import { displayStoreName } from '../../../lib/store-name-normalize'
 import { useConfirm } from '../../../components/ConfirmDialog'
 export default function AdminPage() {
@@ -44,6 +45,23 @@ export default function AdminPage() {
           <h1 className="page-title">Admin Panel</h1>
           <p className="text-sm text-gray-400">admin@getguac.app</p>
         </div>
+      </div>
+
+      <div className="grid sm:grid-cols-2 gap-2">
+        <Link href="/admin/crashes" className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white border border-gray-200 hover:border-rose-200 hover:shadow-sm">
+          <div className="w-9 h-9 rounded-lg bg-rose-50 flex items-center justify-center shrink-0"><Bug size={18} className="text-rose-600" /></div>
+          <div className="min-w-0">
+            <p className="font-bold text-gray-900">Crash dashboard</p>
+            <p className="text-[11px] text-gray-500">Errors &amp; warnings, grouped · email digest</p>
+          </div>
+        </Link>
+        <Link href="/admin/cost" className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white border border-gray-200 hover:border-guac-line2 hover:shadow-sm">
+          <div className="w-9 h-9 rounded-lg bg-guac-50 flex items-center justify-center shrink-0"><TrendingUp size={18} className="text-guac-700" /></div>
+          <div className="min-w-0">
+            <p className="font-bold text-gray-900">Cost monitoring</p>
+            <p className="text-[11px] text-gray-500">Distance to free-tier ceilings</p>
+          </div>
+        </Link>
       </div>
 
       <div className="card">

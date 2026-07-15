@@ -108,6 +108,10 @@
 		<dict>
 			<key>CFBundleTypeName</key>
 			<string>Image / PDF / Text</string>
+			<!-- GetGuac is not the primary owner of these types (Photos/Files are),
+			     so it handles them as an Alternate. Required by App Store validation. -->
+			<key>LSHandlerRank</key>
+			<string>Alternate</string>
 			<key>LSItemContentTypes</key>
 			<array>
 				<string>public.image</string>
@@ -117,6 +121,12 @@
 			</array>
 		</dict>
 	</array>
+
+	<!-- Document-based-app configuration required by App Store validation (90737).
+	     GetGuac imports shared files (receive_sharing_intent copies them into the
+	     app) rather than editing them in place, so opening-in-place is NO. -->
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<false/>
 
 	<!-- AdMob (native Tier-2 ads). REQUIRED for the Mobile Ads SDK to start.
 	     Real GetGuac iOS app id under publisher ca-app-pub-5959691671441705. -->

@@ -6,7 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { PanelGroup, Panel, PanelResizeHandle } from 'react-resizable-panels'
 import toast from 'react-hot-toast'
 import {
-  Mail, Search, Inbox as InboxIcon, Star, Archive, Trash2, Reply, Send, Loader2, X, Sparkles, Filter, Edit3, RefreshCw, ChevronsLeft, ChevronsRight, ChevronDown, DownloadCloud, Link2,
+  Mail, Search, Inbox as InboxIcon, Star, Archive, Trash2, Reply, Send, Loader2, X, Sparkles, Filter, Edit3, RefreshCw, ChevronsLeft, ChevronsRight, ChevronDown, Link2,
 } from 'lucide-react'
 import FeatureHeader from '../../../components/FeatureHeader'
 import { StoreLogo } from '../../../components/StoreLogo'
@@ -64,7 +64,9 @@ export default function InboxPage() {
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || `Reconnect failed (${res.status})`)
       setNewMailboxPw(data.password || '')
-      toast.success('Mailbox reconnected — click Backfill to pull now', { id: t, duration: 5000 })
+      toast.success('Mailbox reconnected — pulling your latest mail…', { id: t, duration: 5000 })
+      // Full re-pull with the fresh credentials so nothing is missed.
+      backfill.mutate()
     } catch (e) {
       toast.error(e.message || 'Reconnect failed', { id: t })
     } finally {
@@ -190,10 +192,14 @@ export default function InboxPage() {
       if (!res.ok) return { skipped: true, inserted: 0 }
       return res.json()
     },
-    onSuccess: (data) => {
+    onSuccess: (data, vars) => {
       if (data?.inserted > 0) {
         qc.invalidateQueries({ queryKey: ['inbox'] })
         toast.success(`Pulled ${data.inserted} new message${data.inserted === 1 ? '' : 's'}`)
+      } else if (vars?.manual) {
+        // Only announce "nothing new" when the user explicitly asked (button),
+        // never on the silent mount pull.
+        toast.success('You’re all caught up')
       }
     },
   })
@@ -202,6 +208,13 @@ export default function InboxPage() {
     // Mount-only: fire one pull when the inbox opens.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // One button, one job: pull any new mail from IMAP AND reload the list.
+  // Replaces the old separate Refresh + Backfill buttons.
+  function handleRefresh() {
+    list.refetch()
+    sync.mutate({ manual: true })
+  }
 
   const messages = list.data?.messages || []
   const total = list.data?.total || 0
@@ -214,7 +227,7 @@ export default function InboxPage() {
           <div className="flex-1 min-w-0">
             <p className="text-sm font-bold text-guac-ink">Mailbox reconnected ✅</p>
             <p className="text-xs text-guac-700 mt-0.5">
-              Your latest emails will sync on the next poll — or click <strong>Backfill</strong> to pull them in now.
+              We&apos;re pulling your latest emails in now — they&apos;ll appear here in a moment.
               {newMailboxPw ? ' If you sign in to webmail directly, your new mailbox password is:' : ''}
             </p>
             {newMailboxPw && (
@@ -269,20 +282,13 @@ export default function InboxPage() {
               <Link2 size={14} /> Connect retailers
             </Link>
             <button
-              onClick={() => list.refetch()}
+              onClick={handleRefresh}
+              disabled={sync.isPending}
               className="btn-secondary flex items-center gap-2"
-              title="Refresh"
+              title="Pull new mail from your inbox and refresh"
             >
-              <RefreshCw size={14} className={list.isFetching ? 'animate-spin' : ''} /> Refresh
-            </button>
-            <button
-              onClick={() => backfill.mutate()}
-              disabled={backfill.isPending}
-              className="btn-secondary flex items-center gap-2"
-              title="Force-pull from IMAP (1/5 min). Use this when a forwarded receipt isn't showing up."
-            >
-              <DownloadCloud size={14} className={backfill.isPending ? 'animate-pulse' : ''} />
-              {backfill.isPending ? 'Pulling…' : 'Backfill'}
+              <RefreshCw size={14} className={(list.isFetching || sync.isPending) ? 'animate-spin' : ''} />
+              {sync.isPending ? 'Refreshing…' : 'Refresh'}
             </button>
             <button
               onClick={handleReconnect}

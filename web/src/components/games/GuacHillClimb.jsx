@@ -40,6 +40,182 @@ const freshSim = (h) => ({
   items: [], nextItemX: START_X + 260,
 })
 
+// ── The Guac garage — six GetGuac-branded rides the player can pick from.
+// Each is drawn as canvas shapes (not emoji — those vanish in the Flutter
+// WebView) so the money/avocado emblem stays visible. `style` swaps the
+// silhouette; the colours + emblem give each bike its own money theme.
+export const BIKES = [
+  { id: 'cash-cruiser',  name: 'Cash Cruiser',  tag: 'Laid-back chopper',  style: 'chopper', body: '#ef4444', hi: '#f87171', lo: '#991b1b', tank: '#dc2626', seat: '#7f1d1d', emblem: 'cash' },
+  { id: 'guac-classic',  name: 'Guac Classic',  tag: 'Vintage avo ride',   style: 'classic', body: '#22c55e', hi: '#4ade80', lo: '#15803d', tank: '#16a34a', seat: '#14532d', emblem: 'avo'  },
+  { id: 'penny-chopper', name: 'Penny Chopper', tag: 'Copper coin cruiser', style: 'chopper', body: '#f97316', hi: '#fb923c', lo: '#9a3412', tank: '#ea580c', seat: '#7c2d12', emblem: 'coin' },
+  { id: 'budget-blitz',  name: 'Budget Blitz',  tag: 'Aero sportbike',     style: 'sport',   body: '#3b82f6', hi: '#60a5fa', lo: '#1e40af', tank: '#2563eb', seat: '#1e293b', emblem: 'cash' },
+  { id: 'nest-egg',      name: 'Nest-Egg Scoot', tag: 'Nippy step-through', style: 'scooter', body: '#facc15', hi: '#fde047', lo: '#a16207', tank: '#1f2937', seat: '#111827', emblem: 'coin' },
+  { id: 'sidecar-saver', name: 'Sidecar Saver', tag: 'Bring a buddy',      style: 'sidecar', body: '#eab308', hi: '#fde047', lo: '#a16207', tank: '#ca8a04', seat: '#713f12', emblem: 'avo'  },
+]
+export const bikeById = (id) => BIKES.find((b) => b.id === id) || BIKES[0]
+
+// Knobby off-road wheel. Lifted to module scope so the garage thumbnails and
+// the in-game render share one painter (ctx passed in explicitly).
+function drawWheel(ctx, wx, wy, r, spin) {
+  ctx.save(); ctx.translate(wx, wy); ctx.rotate(spin)
+  ctx.fillStyle = '#0b1220'
+  for (let i = 0; i < 12; i++) { ctx.save(); ctx.rotate((i / 12) * Math.PI * 2); ctx.fillRect(-r * 0.15, -r - r * 0.12, r * 0.3, r * 0.28); ctx.restore() }
+  ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fillStyle = '#1f2937'; ctx.fill()
+  ctx.beginPath(); ctx.arc(0, 0, r * 0.58, 0, Math.PI * 2); ctx.fillStyle = '#d1d5db'; ctx.fill()
+  ctx.beginPath(); ctx.arc(0, 0, r * 0.22, 0, Math.PI * 2); ctx.fillStyle = '#6b7280'; ctx.fill()
+  ctx.strokeStyle = '#6b7280'; ctx.lineWidth = 2.5
+  for (let i = 0; i < 5; i++) { ctx.rotate((Math.PI * 2) / 5); ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -r * 0.52); ctx.stroke() }
+  ctx.restore()
+}
+
+// Helmeted avocado rider — avocado-green dome, tinted visor facing travel,
+// stem nub, chin-guard hint. `bob` nods the head as the wheels roll.
+function drawGuacDriver(ctx, cx, cy, r, bob = 0) {
+  ctx.save()
+  ctx.translate(cx, cy + bob)
+  ctx.strokeStyle = '#5a3a20'; ctx.lineWidth = Math.max(1, r * 0.18); ctx.lineCap = 'round'
+  ctx.beginPath(); ctx.moveTo(-r * 0.04, -r * 0.92); ctx.lineTo(r * 0.08, -r * 1.18); ctx.stroke()
+  const hg = ctx.createRadialGradient(-r * 0.36, -r * 0.42, r * 0.1, 0, 0, r * 1.14)
+  hg.addColorStop(0, '#4ade80'); hg.addColorStop(0.5, '#10b981'); hg.addColorStop(1, '#065f46')
+  ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fillStyle = hg; ctx.fill()
+  ctx.save()
+  ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.clip()
+  const vg = ctx.createLinearGradient(0, -r * 0.36, 0, r * 0.22)
+  vg.addColorStop(0, '#bae6fd'); vg.addColorStop(0.5, '#38bdf8'); vg.addColorStop(1, '#0b1b2e')
+  ctx.fillStyle = vg
+  ctx.beginPath()
+  if (ctx.roundRect) ctx.roundRect(-r * 0.05, -r * 0.34, r * 1.25, r * 0.52, r * 0.2)
+  else ctx.rect(-r * 0.05, -r * 0.34, r * 1.25, r * 0.52)
+  ctx.fill()
+  ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = Math.max(0.8, r * 0.09); ctx.lineCap = 'round'
+  ctx.beginPath(); ctx.moveTo(r * 0.12, -r * 0.15); ctx.lineTo(r * 0.62, -r * 0.15); ctx.stroke()
+  ctx.restore()
+  ctx.strokeStyle = '#065f46'; ctx.lineWidth = Math.max(1, r * 0.14); ctx.lineCap = 'round'
+  ctx.beginPath(); ctx.arc(0, 0, r * 0.92, Math.PI * 0.12, Math.PI * 0.46); ctx.stroke()
+  ctx.restore()
+}
+
+// Money/avocado emblem on the fuel tank — all canvas shapes (WebView-safe).
+function drawEmblem(ctx, kind, x, y, r) {
+  ctx.save(); ctx.translate(x, y)
+  if (kind === 'avo') {
+    ctx.beginPath(); ctx.ellipse(0, r * 0.12, r * 0.66, r * 0.9, 0, 0, Math.PI * 2); ctx.fillStyle = '#14532d'; ctx.fill()
+    ctx.beginPath(); ctx.ellipse(0, r * 0.12, r * 0.44, r * 0.66, 0, 0, Math.PI * 2); ctx.fillStyle = '#a3e635'; ctx.fill()
+    ctx.beginPath(); ctx.arc(0, r * 0.28, r * 0.28, 0, Math.PI * 2); ctx.fillStyle = '#7c4a1e'; ctx.fill()
+  } else if (kind === 'coin') {
+    ctx.beginPath(); ctx.arc(0, 0, r * 0.9, 0, Math.PI * 2); ctx.fillStyle = '#fbbf24'; ctx.fill()
+    ctx.lineWidth = Math.max(1, r * 0.16); ctx.strokeStyle = '#b45309'; ctx.stroke()
+    ctx.fillStyle = '#7c2d12'; ctx.font = `800 ${r}px ${BODY_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('$', 0, r * 0.06)
+  } else { // cash — white $ on a rounded badge
+    ctx.fillStyle = 'rgba(255,255,255,0.94)'
+    if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(-r * 0.85, -r * 0.85, r * 1.7, r * 1.7, r * 0.45); ctx.fill() }
+    else ctx.fillRect(-r * 0.85, -r * 0.85, r * 1.7, r * 1.7)
+    ctx.fillStyle = '#166534'; ctx.font = `800 ${r * 1.25}px ${BODY_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('$', 0, r * 0.08)
+  }
+  ctx.restore()
+}
+
+// Paint a bike from its spec at the local origin (wheels near y=18). Shared by
+// the in-game render and the garage thumbnails. Built on the proven base bike
+// shape; `style` adds the distinctive bits (long fork, fairing, sidecar…).
+export function paintBike(ctx, spec, { wheelSpin = 0, bob = 0 } = {}) {
+  const chopper = spec.style === 'chopper'
+  const scooter = spec.style === 'scooter'
+  const sport = spec.style === 'sport'
+  const sidecar = spec.style === 'sidecar'
+  const R = scooter ? 14 : 17
+  const rear = -WHEELBASE / 2
+  const frnt = chopper ? WHEELBASE / 2 + 12 : WHEELBASE / 2
+  const wy = scooter ? 20 : 18
+
+  // Sidecar — drawn first so the bike overlaps it.
+  if (sidecar) {
+    drawWheel(ctx, rear - 20, wy + 2, R * 0.82, wheelSpin)
+    const sg = ctx.createLinearGradient(0, -8, 0, 12); sg.addColorStop(0, spec.hi); sg.addColorStop(1, spec.lo)
+    ctx.fillStyle = sg; ctx.beginPath()
+    if (ctx.roundRect) ctx.roundRect(rear - 34, -9, 32, 21, 6); else ctx.rect(rear - 34, -9, 32, 21)
+    ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = spec.lo; ctx.stroke()
+    drawEmblem(ctx, 'avo', rear - 18, -1, 8)
+    ctx.strokeStyle = '#4b5563'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(rear - 4, 9); ctx.lineTo(rear + 4, 4); ctx.stroke()
+  }
+
+  // Wheels + fenders.
+  drawWheel(ctx, rear, wy, R, wheelSpin)
+  drawWheel(ctx, frnt, wy, R, wheelSpin)
+  ctx.strokeStyle = spec.lo; ctx.lineWidth = 5; ctx.lineCap = 'round'
+  ctx.beginPath(); ctx.arc(rear, wy, R + 4, Math.PI * 1.15, Math.PI * 1.9); ctx.stroke()
+  ctx.beginPath(); ctx.arc(frnt, wy, R + 4, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke()
+
+  // Scooter floorboard + leg shield.
+  if (scooter) {
+    ctx.fillStyle = spec.tank
+    if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(-20, 5, 34, 6, 3); ctx.fill() } else ctx.fillRect(-20, 5, 34, 6)
+    ctx.beginPath(); ctx.moveTo(14, 7); ctx.lineTo(20, -16); ctx.lineTo(27, -16); ctx.lineTo(23, 7); ctx.closePath(); ctx.fill()
+  }
+
+  // Swingarm + front fork (choppers rake the fork way out front).
+  ctx.strokeStyle = '#4b5563'; ctx.lineWidth = 4
+  ctx.beginPath(); ctx.moveTo(rear, wy); ctx.lineTo(-4, 2)
+  if (chopper) { ctx.moveTo(6, -10); ctx.lineTo(frnt, wy) } else { ctx.moveTo(22, -8); ctx.lineTo(frnt, wy) }
+  ctx.stroke()
+
+  // Frame.
+  ctx.strokeStyle = spec.body; ctx.lineWidth = 6; ctx.lineJoin = 'round'
+  ctx.beginPath(); ctx.moveTo(-4, 2); ctx.lineTo(-14, -6); ctx.lineTo(8, -6); ctx.lineTo(-4, 2)
+  ctx.moveTo(8, -6); ctx.lineTo(chopper ? 6 : 22, chopper ? -10 : -8); ctx.stroke()
+
+  // Exhaust.
+  ctx.strokeStyle = '#9ca3af'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(-2, 3); ctx.lineTo(rear + 4, 12); ctx.stroke()
+
+  // Seat + tank + tank emblem.
+  ctx.fillStyle = spec.seat; ctx.beginPath()
+  if (ctx.roundRect) ctx.roundRect(-22, -10, 20, 7, 3); else ctx.rect(-22, -10, 20, 7); ctx.fill()
+  const tg = ctx.createLinearGradient(4, -12, 4, 0); tg.addColorStop(0, spec.hi); tg.addColorStop(1, spec.lo)
+  ctx.fillStyle = tg; ctx.beginPath()
+  if (ctx.roundRect) ctx.roundRect(-2, -11, 18, 11, 5); else ctx.rect(-2, -11, 18, 11); ctx.fill()
+  drawEmblem(ctx, spec.emblem, 7, -5, 5)
+
+  // Sport fairing + windscreen.
+  if (sport) {
+    ctx.fillStyle = spec.hi; ctx.globalAlpha = 0.92
+    ctx.beginPath(); ctx.moveTo(16, -8); ctx.lineTo(30, -6); ctx.lineTo(35, 3); ctx.lineTo(18, 3); ctx.closePath(); ctx.fill()
+    ctx.globalAlpha = 1
+    ctx.strokeStyle = 'rgba(186,230,253,0.85)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(30, -6); ctx.lineTo(37, -13); ctx.stroke()
+  }
+
+  // Handlebars + headlight.
+  ctx.strokeStyle = '#1f2937'; ctx.lineWidth = 3.5; ctx.lineCap = 'round'
+  if (chopper) {
+    ctx.beginPath(); ctx.moveTo(10, -8); ctx.lineTo(30, -24); ctx.lineTo(40, -24); ctx.stroke()
+    ctx.fillStyle = '#fde047'; ctx.beginPath(); ctx.arc(frnt - 4, -4, 4, 0, Math.PI * 2); ctx.fill()
+  } else {
+    ctx.beginPath(); ctx.moveTo(16, -6); ctx.lineTo(24, -16); ctx.lineTo(31, -17); ctx.stroke()
+    ctx.fillStyle = '#fde047'; ctx.beginPath(); ctx.arc(33, -16, 4, 0, Math.PI * 2); ctx.fill()
+  }
+
+  // Rider reaching for the bars.
+  ctx.strokeStyle = spec.seat; ctx.lineWidth = 5; ctx.lineCap = 'round'
+  ctx.beginPath(); ctx.moveTo(-3, -14); ctx.lineTo(chopper ? 30 : 25, chopper ? -22 : -15); ctx.stroke()
+  drawGuacDriver(ctx, chopper ? -6 : -4, -23, 10, bob)
+}
+
+// Small static preview of a bike for the garage picker.
+function BikeThumb({ spec }) {
+  const ref = useRef(null)
+  useEffect(() => {
+    const cvs = ref.current; if (!cvs) return
+    const W = cvs.clientWidth || 150, H = cvs.clientHeight || 64
+    const dpr = Math.min(2, window.devicePixelRatio || 1)
+    cvs.width = Math.round(W * dpr); cvs.height = Math.round(H * dpr)
+    const ctx = cvs.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+    ctx.clearRect(0, 0, W, H)
+    ctx.save(); ctx.translate(W * 0.5, H * 0.62); ctx.scale(1.15, 1.15)
+    paintBike(ctx, spec, { wheelSpin: 0, bob: 0 })
+    ctx.restore()
+  }, [spec])
+  return <canvas ref={ref} className="block w-full" style={{ height: 64 }} aria-hidden />
+}
+
 export default function GuacHillClimb({ vehicle = 'buggy', gameId = 'climb', bestKey = BEST_KEY, title = 'Guac Hill Climb' } = {}) {
   const canvasRef = useRef(null)
   const sim = useRef(null)
@@ -54,9 +230,21 @@ export default function GuacHillClimb({ vehicle = 'buggy', gameId = 'climb', bes
   const [hud, setHud] = useState({ money: 0, dist: 0, fuel: 1 })
   const [best, setBest] = useState(0)
   const [newBest, setNewBest] = useState(false)
+  const [bikeId, setBikeId] = useState(BIKES[0].id)
+  const bikeSpecRef = useRef(BIKES[0])
   const { saveRes, save, resetSave } = useScoreSaver(gameId)
 
   const setStatus = useCallback((s) => { statusRef.current = s; setStatusState(s) }, [])
+
+  // Remember the player's chosen ride across sessions (bike variant only).
+  useEffect(() => {
+    if (vehicle !== 'bike') return
+    try { const v = localStorage.getItem('gg-bike-choice-v1'); if (v && BIKES.some((b) => b.id === v)) setBikeId(v) } catch {}
+  }, [vehicle])
+  useEffect(() => {
+    bikeSpecRef.current = bikeById(bikeId)
+    if (vehicle === 'bike') { try { localStorage.setItem('gg-bike-choice-v1', bikeId) } catch {} }
+  }, [bikeId, vehicle])
   const groundY = useCallback((x) => (sizeRef.current.h * 0.64) + terrainH(x), [])
 
   useEffect(() => {
@@ -179,57 +367,10 @@ export default function GuacHillClimb({ vehicle = 'buggy', gameId = 'climb', bes
       syncHud()
     }
 
-    const drawWheel = (wx, wy, r, spin) => {
-      ctx.save(); ctx.translate(wx, wy); ctx.rotate(spin)
-      // knobby off-road tread lugs around the rim
-      ctx.fillStyle = '#0b1220'
-      for (let i = 0; i < 12; i++) { ctx.save(); ctx.rotate((i / 12) * Math.PI * 2); ctx.fillRect(-r * 0.15, -r - r * 0.12, r * 0.3, r * 0.28); ctx.restore() }
-      ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fillStyle = '#1f2937'; ctx.fill()
-      ctx.beginPath(); ctx.arc(0, 0, r * 0.58, 0, Math.PI * 2); ctx.fillStyle = '#d1d5db'; ctx.fill()   // rim
-      ctx.beginPath(); ctx.arc(0, 0, r * 0.22, 0, Math.PI * 2); ctx.fillStyle = '#6b7280'; ctx.fill()   // hub
-      ctx.strokeStyle = '#6b7280'; ctx.lineWidth = 2.5
-      for (let i = 0; i < 5; i++) { ctx.rotate((Math.PI * 2) / 5); ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -r * 0.52); ctx.stroke() }
-      ctx.restore()
-    }
-
-    // Helmeted avocado driver — a clean racing head (avocado-green dome, tinted
-    // visor facing the way we travel, stem nub, chin-guard hint) styled after
-    // arcade hill-climb racers. Replaces the busy front-facing mascot that looked
-    // cramped at cockpit size. `bob` nods the head a hair as the wheels roll.
-    const drawGuacDriver = (cx, cy, r, bob = 0) => {
-      ctx.save()
-      ctx.translate(cx, cy + bob)
-      // avocado stem nub on top of the helmet
-      ctx.strokeStyle = '#5a3a20'; ctx.lineWidth = Math.max(1, r * 0.18); ctx.lineCap = 'round'
-      ctx.beginPath(); ctx.moveTo(-r * 0.04, -r * 0.92); ctx.lineTo(r * 0.08, -r * 1.18); ctx.stroke()
-      // helmet shell — avocado-green dome
-      const hg = ctx.createRadialGradient(-r * 0.36, -r * 0.42, r * 0.1, 0, 0, r * 1.14)
-      hg.addColorStop(0, '#4ade80'); hg.addColorStop(0.5, '#10b981'); hg.addColorStop(1, '#065f46')
-      ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fillStyle = hg; ctx.fill()
-      // tinted racing visor, clipped to the front of the dome (car travels right)
-      ctx.save()
-      ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.clip()
-      const vg = ctx.createLinearGradient(0, -r * 0.36, 0, r * 0.22)
-      vg.addColorStop(0, '#bae6fd'); vg.addColorStop(0.5, '#38bdf8'); vg.addColorStop(1, '#0b1b2e')
-      ctx.fillStyle = vg
-      ctx.beginPath()
-      if (ctx.roundRect) ctx.roundRect(-r * 0.05, -r * 0.34, r * 1.25, r * 0.52, r * 0.2)
-      else ctx.rect(-r * 0.05, -r * 0.34, r * 1.25, r * 0.52)
-      ctx.fill()
-      // visor shine
-      ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = Math.max(0.8, r * 0.09); ctx.lineCap = 'round'
-      ctx.beginPath(); ctx.moveTo(r * 0.12, -r * 0.15); ctx.lineTo(r * 0.62, -r * 0.15); ctx.stroke()
-      ctx.restore()
-      // chin-guard hint below the visor
-      ctx.strokeStyle = '#065f46'; ctx.lineWidth = Math.max(1, r * 0.14); ctx.lineCap = 'round'
-      ctx.beginPath(); ctx.arc(0, 0, r * 0.92, Math.PI * 0.12, Math.PI * 0.46); ctx.stroke()
-      ctx.restore()
-    }
-
     const drawBuggy = (s) => {
       const R = 18
-      drawWheel(-WHEELBASE / 2, 18, R, s.wheelSpin)
-      drawWheel(WHEELBASE / 2, 18, R, s.wheelSpin)
+      drawWheel(ctx, -WHEELBASE / 2, 18, R, s.wheelSpin)
+      drawWheel(ctx, WHEELBASE / 2, 18, R, s.wheelSpin)
       // fender flares over the wheels (behind the body)
       ctx.strokeStyle = '#b91c1c'; ctx.lineWidth = 8; ctx.lineCap = 'round'
       ctx.beginPath(); ctx.arc(-WHEELBASE / 2, 18, R + 4, Math.PI * 1.04, Math.PI * 1.96); ctx.stroke()
@@ -250,42 +391,10 @@ export default function GuacHillClimb({ vehicle = 'buggy', gameId = 'climb', bes
       ctx.beginPath(); ctx.moveTo(-24, -19); ctx.lineTo(-20, -31); ctx.lineTo(-4, -31); ctx.lineTo(-2, -19); ctx.stroke()
       // driver — helmeted avocado in the cockpit, nodding as the wheels roll
       const bob = s.onGround ? Math.sin(s.wheelSpin * 2) * 0.6 : 0
-      drawGuacDriver(-12, -20, 8.5, bob)
+      drawGuacDriver(ctx, -12, -20, 8.5, bob)
       // lights
       ctx.beginPath(); ctx.arc(44, 2, 3.4, 0, Math.PI * 2); ctx.fillStyle = '#fde047'; ctx.fill()
       ctx.beginPath(); ctx.arc(-41, -1, 2.6, 0, Math.PI * 2); ctx.fillStyle = '#fca5a5'; ctx.fill()
-    }
-
-    const drawBike = (s) => {
-      const R = 17, rear = -WHEELBASE / 2, frnt = WHEELBASE / 2, wy = 18
-      // knobby wheels
-      drawWheel(rear, wy, R, s.wheelSpin)
-      drawWheel(frnt, wy, R, s.wheelSpin)
-      // fenders (mudguards) over each wheel
-      ctx.strokeStyle = '#3f6212'; ctx.lineWidth = 5; ctx.lineCap = 'round'
-      ctx.beginPath(); ctx.arc(rear, wy, R + 4, Math.PI * 1.15, Math.PI * 1.9); ctx.stroke()
-      ctx.beginPath(); ctx.arc(frnt, wy, R + 4, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke()
-      // swingarm + front fork
-      ctx.strokeStyle = '#4b5563'; ctx.lineWidth = 4
-      ctx.beginPath(); ctx.moveTo(rear, wy); ctx.lineTo(-4, 2); ctx.moveTo(22, -8); ctx.lineTo(frnt, wy); ctx.stroke()
-      // frame (bright lime)
-      ctx.strokeStyle = '#65a30d'; ctx.lineWidth = 6; ctx.lineJoin = 'round'
-      ctx.beginPath(); ctx.moveTo(-4, 2); ctx.lineTo(-14, -6); ctx.lineTo(8, -6); ctx.lineTo(-4, 2); ctx.moveTo(8, -6); ctx.lineTo(22, -8); ctx.stroke()
-      // exhaust pipe
-      ctx.strokeStyle = '#9ca3af'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(-2, 3); ctx.lineTo(rear + 4, 12); ctx.stroke()
-      // seat + tank
-      ctx.fillStyle = '#4d7c0f'; ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(-22, -10, 20, 7, 3); else ctx.rect(-22, -10, 20, 7); ctx.fill()
-      const tg = ctx.createLinearGradient(4, -12, 4, 0); tg.addColorStop(0, '#a3e635'); tg.addColorStop(1, '#4d7c0f')
-      ctx.fillStyle = tg; ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(-2, -11, 18, 11, 5); else ctx.rect(-2, -11, 18, 11); ctx.fill()
-      // handlebars + headlight
-      ctx.strokeStyle = '#1f2937'; ctx.lineWidth = 3.5; ctx.lineCap = 'round'
-      ctx.beginPath(); ctx.moveTo(16, -6); ctx.lineTo(24, -16); ctx.lineTo(31, -17); ctx.stroke()
-      ctx.fillStyle = '#fde047'; ctx.beginPath(); ctx.arc(33, -16, 4, 0, Math.PI * 2); ctx.fill()
-      // rider — helmeted avocado leaning to the bars, nodding as the wheels roll
-      ctx.strokeStyle = '#4d7c0f'; ctx.lineWidth = 5; ctx.lineCap = 'round'
-      ctx.beginPath(); ctx.moveTo(-3, -14); ctx.lineTo(25, -15); ctx.stroke()   // arm reaching the bars
-      const bobB = s.onGround ? Math.sin(s.wheelSpin * 2) * 0.7 : 0
-      drawGuacDriver(-4, -23, 10, bobB)
     }
 
     const drawCar = (s, sx) => {
@@ -293,7 +402,10 @@ export default function GuacHillClimb({ vehicle = 'buggy', gameId = 'climb', bes
       ctx.translate(sx, s.y)
       ctx.rotate(s.angle)
       ctx.scale(CAR_SCALE, CAR_SCALE)
-      if (vehicle === 'bike') drawBike(s); else drawBuggy(s)
+      if (vehicle === 'bike') {
+        const bobB = s.onGround ? Math.sin(s.wheelSpin * 2) * 0.7 : 0
+        paintBike(ctx, bikeSpecRef.current, { wheelSpin: s.wheelSpin, bob: bobB })
+      } else drawBuggy(s)
       ctx.restore()
     }
 
@@ -429,7 +541,39 @@ export default function GuacHillClimb({ vehicle = 'buggy', gameId = 'climb', bes
           <button onClick={() => setStatus('paused')} className="absolute top-2 right-2 text-xs font-bold px-3 py-1.5 rounded-full border bg-white" style={{ borderColor: 'rgba(20,83,45,0.18)', color: INK }}>⏸ Pause</button>
         )}
 
-        {status === 'idle' && (
+        {status === 'idle' && vehicle === 'bike' && (
+          <div className={overlay} style={{ background: 'rgba(8,30,45,0.55)' }}>
+            <div className="rounded-2xl bg-white p-5 w-full" style={{ border: CARD_BORDER, maxWidth: 620 }}>
+              <div className="text-center">
+                <div className="text-3xl mb-1">🏍️</div>
+                <div className="font-display font-extrabold text-xl" style={{ color: INK }}>{title}</div>
+                <p className="text-sm mt-1" style={{ color: BODY }}>Pick your ride, then hit the hills for <b style={{ color: AMBER }}>$ cash</b> — don&apos;t run out of <b style={{ color: ROSE }}>fuel</b>.</p>
+              </div>
+              <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                {BIKES.map((b) => {
+                  const on = b.id === bikeId
+                  return (
+                    <button
+                      key={b.id} type="button" onClick={() => setBikeId(b.id)}
+                      aria-pressed={on}
+                      className="rounded-xl p-2 text-left transition-transform duration-150 hover:-translate-y-0.5"
+                      style={{ border: on ? `2px solid ${GREEN}` : '2px solid transparent', background: on ? '#f2fbf3' : '#f7faf6', boxShadow: on ? '0 6px 16px rgba(101,163,13,0.22)' : 'none' }}
+                    >
+                      <BikeThumb spec={b} />
+                      <div className="mt-0.5 font-display font-extrabold text-[13px] leading-tight" style={{ color: INK }}>{b.name}</div>
+                      <div className="text-[11px]" style={{ color: FAINT }}>{b.tag}</div>
+                    </button>
+                  )
+                })}
+              </div>
+              <div className="text-center">
+                <button onClick={start} className={`mt-4 ${pill}`} style={{ background: GREEN }}>Start driving</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {status === 'idle' && vehicle !== 'bike' && (
           <div className={overlay} style={{ background: 'rgba(8,30,45,0.5)' }}>
             <div className={card} style={{ border: CARD_BORDER, maxWidth: 400 }}>
               <div className="text-4xl mb-1">{emoji}</div>
@@ -459,7 +603,12 @@ export default function GuacHillClimb({ vehicle = 'buggy', gameId = 'climb', bes
               <div className="mt-1 text-sm" style={{ color: BODY }}>reached <span className="font-display font-extrabold" style={{ color: INK }}>{hud.dist}m</span></div>
               {newBest && <div className="inline-block mt-2 text-xs font-bold px-3 py-1 rounded-full text-white" style={{ background: AMBER }}>New best! 🥑</div>}
               <SaveScoreLine res={saveRes} />
-              <button onClick={start} className={`mt-4 ${pill}`} style={{ background: GREEN }}>Drive again</button>
+              <div className="mt-4 flex items-center justify-center gap-2">
+                <button onClick={start} className={pill} style={{ background: GREEN }}>Drive again</button>
+                {vehicle === 'bike' && (
+                  <button onClick={() => setStatus('idle')} className="text-sm font-bold px-5 py-2.5 rounded-full border bg-white" style={{ borderColor: 'rgba(20,83,45,0.18)', color: INK }}>🏍️ Change bike</button>
+                )}
+              </div>
             </div>
           </div>
         )}

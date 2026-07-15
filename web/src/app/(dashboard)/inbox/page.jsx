@@ -180,6 +180,29 @@ export default function InboxPage() {
     onError: (e) => toast.error(e.message),
   })
 
+  // Opportunistic per-user pull on mount. Keeps the inbox fresh even if the
+  // server-side cron (GitHub Actions -> /api/email/poll) is down: an active
+  // user pulls their own new mail directly. Server-side rate-limited to 1/90s,
+  // so remounting is cheap and safe. Silent unless it actually pulls something.
+  const sync = useMutation({
+    mutationFn: async () => {
+      const res = await fetch('/api/email/sync', { method: 'POST' })
+      if (!res.ok) return { skipped: true, inserted: 0 }
+      return res.json()
+    },
+    onSuccess: (data) => {
+      if (data?.inserted > 0) {
+        qc.invalidateQueries({ queryKey: ['inbox'] })
+        toast.success(`Pulled ${data.inserted} new message${data.inserted === 1 ? '' : 's'}`)
+      }
+    },
+  })
+  useEffect(() => {
+    sync.mutate()
+    // Mount-only: fire one pull when the inbox opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const messages = list.data?.messages || []
   const total = list.data?.total || 0
 

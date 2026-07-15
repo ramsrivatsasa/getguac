@@ -1,0 +1,88 @@
+name: Email Pull Health Check
+
+# Watchdog for the receipt-email pipeline. Every 30 min it hits
+# /api/email/health, which stamps profiles.email_last_poll_at as a heartbeat.
+#
+# Two layers of alerting so a failure can't go unnoticed:
+#   1. App-side: when the endpoint is REACHABLE but polling is stale, the
+#      endpoint itself emails the admin (see src/app/api/email/health/route.js).
+#   2. Workflow backstop (below): when the endpoint is UNREACHABLE or returns
+#      non-2xx — including the CRON_SECRET 401 that also breaks the poll — the
+#      app can't email, so this job sends the alert directly over SMTP.
+#
+# Required repo Secrets:
+#   APP_URL           https://getguac.app
+#   CRON_SECRET       must match Vercel's CRON_SECRET
+#   ALERT_SMTP_PASS   password for the no-reply sender mailbox (backstop email)
+# Optional repo Secrets (have sensible defaults):
+#   ALERT_SMTP_USER   sender mailbox      (default noreply@getguac.app)
+#   ADMIN_ALERT_EMAIL alert recipient     (default admin@getguac.app)
+on:
+  schedule:
+    - cron: '5,35 * * * *'   # every 30 min, offset from the :00/:10/:20 poll
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check email-pull health
+        id: health
+        run: |
+          if [ -z "${{ secrets.APP_URL }}" ]; then
+            echo "::error::APP_URL repo secret is not set."
+            exit 1
+          fi
+          code=$(curl --silent --show-error --max-time 45 \
+            -o /tmp/health.json -w "%{http_code}" \
+            -X POST -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.APP_URL }}/api/email/health" || echo "000")
+          echo "HTTP status: $code"
+          echo "Body: $(cat /tmp/health.json 2>/dev/null)"
+          # 2xx = the app handled health (and self-alerted if it was stale).
+          # Anything else (000 no-connect, 401 secret mismatch, 5xx) means the
+          # app could NOT report -> the backstop step below must email.
+          if echo "$code" | grep -qE '^2'; then
+            echo "alert=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "alert=true" >> "$GITHUB_OUTPUT"
+            echo "code=$code" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Send backstop alert email (endpoint could not self-report)
+        if: steps.health.outputs.alert == 'true'
+        env:
+          SMTP_USER: ${{ secrets.ALERT_SMTP_USER || 'noreply@getguac.app' }}
+          SMTP_PASS: ${{ secrets.ALERT_SMTP_PASS }}
+          ADMIN: ${{ secrets.ADMIN_ALERT_EMAIL || 'admin@getguac.app' }}
+          CODE: ${{ steps.health.outputs.code }}
+        run: |
+          if [ -z "$SMTP_PASS" ]; then
+            echo "::error::/api/email/health returned HTTP ${CODE}, and ALERT_SMTP_PASS is not set so no backstop alert email could be sent. Add ALERT_SMTP_PASS to repo Secrets."
+            exit 1
+          fi
+          {
+            printf 'From: GetGuac Ops <%s>\r\n' "$SMTP_USER"
+            printf 'To: %s\r\n' "$ADMIN"
+            printf 'Subject: [ALERT] GetGuac email pulling DOWN (health endpoint HTTP %s)\r\n' "$CODE"
+            printf 'Date: %s\r\n' "$(date -R)"
+            printf 'Content-Type: text/plain; charset=UTF-8\r\n'
+            printf '\r\n'
+            printf 'The email-pull health endpoint (/api/email/health) returned HTTP %s,\r\n' "$CODE"
+            printf 'so the app could not self-report. This is the GitHub Actions backstop.\r\n\r\n'
+            printf 'HTTP 401 -> CRON_SECRET mismatch (GitHub repo Secrets vs Vercel env). Re-sync + redeploy.\r\n'
+            printf 'HTTP 000 -> could not connect. Check APP_URL and that the site is up.\r\n'
+            printf 'HTTP 5xx -> endpoint error. Check Vercel logs for /api/email/health.\r\n\r\n'
+            printf 'This almost certainly means the receipt-email poll is NOT running either.\r\n'
+            printf 'Meanwhile, any user can hit "Backfill" in their Inbox to pull immediately.\r\n'
+          } > /tmp/mail.txt
+          curl --silent --show-error --ssl-reqd \
+            --url "smtps://smtp.migadu.com:465" \
+            --user "$SMTP_USER:$SMTP_PASS" \
+            --mail-from "$SMTP_USER" \
+            --mail-rcpt "$ADMIN" \
+            --upload-file /tmp/mail.txt
+          echo "Backstop alert email sent to $ADMIN."

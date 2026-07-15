@@ -1,0 +1,44 @@
+name: Crash Digest
+
+# Emails the admin a digest of NEW crash (error-level) events since the last
+# digest. Hits /api/admin/crash-digest every 30 min; the endpoint groups the
+# new crashes and sends one tidy email (needs ALERT_SMTP_PASS set in Vercel).
+#
+# Required repo Secrets: APP_URL, CRON_SECRET.
+on:
+  schedule:
+    - cron: '15,45 * * * *'   # every 30 min, offset from poll (:00) and health (:05)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger crash digest
+        run: |
+          if [ -z "${{ secrets.APP_URL }}" ]; then
+            echo "::error::APP_URL repo secret is not set."
+            exit 1
+          fi
+          code=$(curl --silent --show-error --max-time 45 \
+            -o /tmp/digest.json -w "%{http_code}" \
+            -X POST -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.APP_URL }}/api/admin/crash-digest" || echo "000")
+          echo "HTTP status: $code"
+          echo "Body: $(cat /tmp/digest.json 2>/dev/null)"
+          if [ "$code" = "401" ]; then
+            echo "::error::Crash digest auth failed (401) — CRON_SECRET mismatch (GitHub vs Vercel)."
+            exit 1
+          fi
+          if [ "$code" = "503" ]; then
+            echo "::warning::Crash digest could not email (ALERT_SMTP_PASS not set in Vercel). New crashes were detected but not sent."
+            exit 0
+          fi
+          if [ -z "$code" ] || [ "$code" = "000" ] || [ "$code" -ge 400 ]; then
+            echo "::error::Crash digest failed (HTTP ${code:-<none>})."
+            exit 1
+          fi
+          echo "Crash digest OK (HTTP $code)."

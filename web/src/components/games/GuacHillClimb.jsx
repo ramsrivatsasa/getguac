@@ -4,7 +4,7 @@
 // as you can without running dry or flipping. Gas + brake also tilt the buggy in
 // mid-air for landings. Sim in refs + rAF; React state only for the HUD/overlays.
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useScoreSaver, SaveScoreLine } from './arcadeKit'
+import { useScoreSaver, SaveScoreLine, surfaceBg } from './arcadeKit'
 
 const INK = '#15281C'
 const BODY = '#3d4a42'
@@ -421,7 +421,7 @@ export default function GuacHillClimb({ vehicle = 'buggy', gameId = 'climb', bes
       </div>
 
       {/* Arena */}
-      <div className="relative rounded-2xl overflow-hidden" style={{ height: 'clamp(430px, calc(100svh - 260px), 760px)', minHeight: 400, border: CARD_BORDER, background: '#7dd3fc' }}>
+      <div className="relative rounded-2xl overflow-hidden" style={{ height: 'clamp(430px, calc(100svh - 260px), 760px)', minHeight: 400, border: CARD_BORDER, background: surfaceBg('sky') }}>
         <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" style={{ touchAction: 'none' }} />
 
         {/* pause button */}

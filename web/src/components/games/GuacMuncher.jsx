@@ -9,7 +9,7 @@ import { useEffect, useRef, useState } from 'react'
 import {
   useArcadeSound, useBestScore, useScoreSaver,
   Overlay, OverlayAd, SaveScoreLine, PrimaryButton, GhostButton, HudButton,
-  INK, BODY, MUTED, FAINT, GREEN, AMBER, ROSE, fmt,
+  INK, BODY, MUTED, FAINT, GREEN, AMBER, ROSE, fmt, surfaceBg,
 } from './arcadeKit'
 
 const BEST_KEY = 'gg-muncher-best-v1'
@@ -611,7 +611,7 @@ export default function GuacMuncher() {
       <div
         ref={wrapRef}
         className="relative overflow-hidden"
-        style={{ height: 'clamp(470px, calc(100svh - 170px), 900px)', minHeight: 430, background: '#0b1712', borderTop: '1px solid rgba(20,83,45,0.25)', borderBottom: '1px solid rgba(20,83,45,0.25)' }}
+        style={{ height: 'clamp(470px, calc(100svh - 170px), 900px)', minHeight: 430, background: surfaceBg('field'), borderTop: '1px solid rgba(20,83,45,0.25)', borderBottom: '1px solid rgba(20,83,45,0.25)' }}
       >
         <canvas
           ref={canvasRef}

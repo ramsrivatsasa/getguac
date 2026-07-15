@@ -8,7 +8,7 @@
 // (demo set when signed out). SCORE IS GAME-ONLY — slicing never changes the
 // real rating or GuacScore. First finished round each day earns GuacMoney.
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useScoreSaver, SaveScoreLine } from './arcadeKit'
+import { useScoreSaver, SaveScoreLine, ArcadeHud, surfaceBg } from './arcadeKit'
 import { usePlayerSpending } from '../../lib/playerSpending'
 
 const INK = '#15281C'
@@ -351,29 +351,8 @@ export default function SplurgeSlicer() {
             : <span><a href="/register" className="underline font-bold">Sign in</a> to play with your real spending. Showing a demo for now.</span>}
       </div>
 
-      {/* HUD */}
-      <div className="flex items-end justify-between mb-3 px-1">
-        <div>
-          <div className="text-[11px] font-semibold" style={{ color: MUTED }}>Saved</div>
-          <div className="font-display font-extrabold text-2xl leading-none" style={{ color: GREEN }}>${hud.saved}</div>
-        </div>
-        <div>
-          <div className="text-[11px] font-semibold" style={{ color: MUTED }}>Missed</div>
-          <div className="font-display font-extrabold text-lg leading-none" style={{ color: AMBER }}>${hud.missed}</div>
-        </div>
-        <div>
-          <div className="text-[11px] font-semibold" style={{ color: MUTED }}>Best</div>
-          <div className="font-display font-extrabold text-lg leading-none" style={{ color: INK }}>${best}</div>
-        </div>
-        <div className="text-xl" aria-label={`${hud.lives} lives left`}>
-          {[0, 1, 2].map((i) => (
-            <span key={i} style={{ opacity: i < hud.lives ? 1 : 0.18, filter: i < hud.lives ? 'none' : 'grayscale(1)' }}>🥑</span>
-          ))}
-        </div>
-      </div>
-
       {/* Arena */}
-      <div className="relative rounded-2xl overflow-hidden" style={{ border: CARD_BORDER, height: 'clamp(450px, calc(100svh - 230px), 840px)', minHeight: 430, background: LIGHT }}>
+      <div className="relative rounded-2xl overflow-hidden" style={{ border: CARD_BORDER, height: 'clamp(450px, calc(100svh - 230px), 840px)', minHeight: 430, background: surfaceBg('paper') }}>
         <canvas
           ref={canvasRef}
           onPointerDown={onDown}
@@ -382,6 +361,17 @@ export default function SplurgeSlicer() {
           onPointerCancel={onUp}
           style={{ width: '100%', height: '100%', display: 'block', touchAction: 'none', cursor: status === 'playing' ? 'crosshair' : 'default' }}
         />
+
+        {status === 'playing' && (
+          <ArcadeHud
+            dark={false}
+            score={hud.saved} scorePrefix="$" scoreLabel="SAVED" best={best}
+            status={`Missed $${hud.missed}`} statusTone="neutral"
+            lives={hud.lives}
+            hint="Swipe to slice ⚠ splurges · let ✓ essentials fall"
+            onPause={() => setStatus('paused')}
+          />
+        )}
 
         {status === 'idle' && (
           <div className="absolute inset-0 flex items-center justify-center p-4" style={{ background: 'rgba(21,40,28,0.25)' }}>

@@ -7,7 +7,7 @@
 // Data via usePlayerSpending (demo when signed out). SCORE IS GAME-ONLY. First
 // finished round each day earns GuacMoney.
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useScoreSaver, SaveScoreLine } from './arcadeKit'
+import { useScoreSaver, SaveScoreLine, ArcadeHud, surfaceBg } from './arcadeKit'
 import { usePlayerSpending } from '../../lib/playerSpending'
 
 const INK = '#15281C'
@@ -17,7 +17,7 @@ const FAINT = '#8a978d'
 const GREEN = '#65A30D'
 const AMBER = '#D9A514'
 const ROSE = '#E11D48'
-const BG = '#0b1220'
+const BG = '#052e16'          // guac field — matches surfaceBg('field')
 const CARD_BORDER = '1px solid rgba(20,83,45,0.12)'
 const BODY_FONT = "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif"
 const DISPLAY_FONT = "'Bricolage Grotesque', 'Plus Jakarta Sans', ui-sans-serif, sans-serif"
@@ -338,33 +338,23 @@ export default function ExpenseInvaders() {
             : <span><a href="/register" className="underline font-bold">Sign in</a> to fight your real spending. Showing a demo for now.</span>}
       </div>
 
-      <div className="flex items-end justify-between mb-3 px-1">
-        <div>
-          <div className="text-[11px] font-semibold" style={{ color: MUTED }}>Cleared</div>
-          <div className="font-display font-extrabold text-2xl leading-none" style={{ color: GREEN }}>${hud.score}</div>
-        </div>
-        <div>
-          <div className="text-[11px] font-semibold" style={{ color: MUTED }}>Month</div>
-          <div className="font-display font-extrabold text-lg leading-none" style={{ color: AMBER }}>{hud.wave}</div>
-        </div>
-        <div>
-          <div className="text-[11px] font-semibold" style={{ color: MUTED }}>Best</div>
-          <div className="font-display font-extrabold text-lg leading-none" style={{ color: INK }}>${best}</div>
-        </div>
-        <div className="text-xl" aria-label={`${hud.lives} lives left`}>
-          {[0, 1, 2].map((i) => (
-            <span key={i} style={{ opacity: i < hud.lives ? 1 : 0.18, filter: i < hud.lives ? 'none' : 'grayscale(1)' }}>🥑</span>
-          ))}
-        </div>
-      </div>
-
-      <div className="relative rounded-2xl overflow-hidden" style={{ border: CARD_BORDER, height: 'clamp(450px, calc(100svh - 230px), 840px)', minHeight: 430, background: BG }}>
+      <div className="relative rounded-2xl overflow-hidden" style={{ border: CARD_BORDER, height: 'clamp(450px, calc(100svh - 230px), 840px)', minHeight: 430, background: surfaceBg('field') }}>
         <canvas
           ref={canvasRef}
           onPointerMove={onMove}
           onPointerDown={onMove}
           style={{ width: '100%', height: '100%', display: 'block', touchAction: 'none', cursor: status === 'playing' ? 'none' : 'default' }}
         />
+
+        {status === 'playing' && (
+          <ArcadeHud
+            score={hud.score} scorePrefix="$" scoreLabel="CLEARED" best={best}
+            status={`Month ${hud.wave}`}
+            lives={hud.lives}
+            hint="Move with finger / mouse · ← → or A-D · fire is automatic"
+            onPause={() => setStatus('paused')}
+          />
+        )}
 
         {status === 'idle' && (
           <div className="absolute inset-0 flex items-center justify-center p-4" style={{ background: 'rgba(11,18,32,0.55)' }}>

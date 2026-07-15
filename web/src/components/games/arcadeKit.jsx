@@ -18,6 +18,11 @@ export const ROSE = '#E11D48'
 export const CARD_BORDER = '1px solid rgba(20,83,45,0.10)'
 export const SOUND_KEY = 'gg-arcade-sound'
 
+// Brand type stacks — reused so canvas text matches the site (Bricolage on
+// numbers/amounts, Jakarta on body). Never introduce a new game-only font.
+export const DISPLAY_FONT = "'Bricolage Grotesque', 'Plus Jakarta Sans', ui-sans-serif, sans-serif"
+export const BODY_FONT = "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif"
+
 export const fmt = (n) => Math.round(n).toLocaleString()
 
 // The GetGuac brand-mascot avocado, drawn on canvas at radius r (matches
@@ -234,3 +239,175 @@ export function GameFrame({ inner = 560, children }) {
     </div>
   )
 }
+
+// ─── shared play surfaces ───────────────────────────────────────────────────
+// One place decides what each game field looks like, so the arcade stops
+// drifting (lavender here, navy there). `field` = dark guac for action games,
+// `felt` = card table, `paper` = light puzzle, `sky` = outdoor / racing.
+export const SURFACES = {
+  field: 'radial-gradient(120% 100% at 50% 0%, #0b3d20 0%, #052e16 100%)',
+  felt: 'radial-gradient(ellipse at 50% 30%, #15803d, #14532d)',
+  paper: 'linear-gradient(180deg, #f6f8f4 0%, #eef3ec 100%)',
+  sky: 'linear-gradient(180deg, #7dd3fc 0%, #bae6fd 100%)',
+}
+export const surfaceBg = (name) => SURFACES[name] || SURFACES.field
+// Dark surfaces want light HUD text; light ones (paper, sky) want ink text.
+export const isDarkSurface = (name) => name === 'field' || name === 'felt'
+
+// ─── unified in-game HUD (Guac Arcade design system) ────────────────────────
+// Overlays the play field: score pill top-left, status/combo top-center,
+// lives + mute + pause top-right, hint bar bottom. Container is click-through
+// (pointer-events:none) so canvas drag/slice input still lands; only the
+// buttons capture clicks. Pass `dark` for dark fields (light pills) — the
+// default — or `dark={false}` for paper/felt-light fields (ink pills).
+export function ArcadeHud({
+  score, scoreLabel = 'SCORE', scorePrefix = '', best,
+  status, statusTone = 'neutral',
+  lives, livesMax = 3, livesIcon = '🥑',
+  hint, dark = true,
+  onPause, muted, onMute, children,
+}) {
+  const pillBg = dark ? 'rgba(255,255,255,0.12)' : 'rgba(21,40,28,0.06)'
+  const scoreColor = dark ? '#bbf7d0' : GREEN
+  const labelColor = dark ? '#86a893' : MUTED
+  const btnColor = dark ? '#ffffff' : INK
+  const toneBg = statusTone === 'gold' ? AMBER : statusTone === 'danger' ? ROSE : pillBg
+  const toneColor = statusTone === 'neutral' ? (dark ? '#e6f4ea' : INK) : '#052e16'
+  const num = { fontFamily: DISPLAY_FONT, fontWeight: 800 }
+  const btn = {
+    pointerEvents: 'auto', border: 'none', cursor: 'pointer',
+    background: pillBg, color: btnColor, fontSize: 18, lineHeight: 1,
+    width: 40, height: 40, borderRadius: 999, display: 'grid', placeItems: 'center',
+  }
+  return (
+    <div className="absolute inset-0 flex flex-col justify-between p-3" style={{ pointerEvents: 'none' }}>
+      <div className="flex items-start justify-between gap-2">
+        {/* score */}
+        <div style={{ background: pillBg, borderRadius: 999, padding: '7px 16px' }}>
+          <div style={{ color: labelColor, fontSize: 10, fontWeight: 800, letterSpacing: '0.1em' }}>{scoreLabel}</div>
+          <div style={{ ...num, color: scoreColor, fontSize: 22, lineHeight: 1 }}>{scorePrefix}{typeof score === 'number' ? score.toLocaleString() : score}</div>
+          {best != null && <div style={{ color: labelColor, fontSize: 11, fontWeight: 700, marginTop: 2 }}>BEST {scorePrefix}{typeof best === 'number' ? best.toLocaleString() : best}</div>}
+        </div>
+        {/* status / combo */}
+        {status != null && (
+          <div style={{ background: toneBg, color: toneColor, borderRadius: 999, padding: '8px 16px', ...num, fontSize: 15, alignSelf: 'flex-start' }}>{status}</div>
+        )}
+        {/* lives + controls */}
+        <div className="flex items-center gap-2" style={{ alignSelf: 'flex-start' }}>
+          {lives != null && (
+            <div aria-label={`${lives} lives left`} style={{ fontSize: 18, letterSpacing: 1 }}>
+              {Array.from({ length: livesMax }).map((_, i) => (
+                <span key={i} style={{ opacity: i < lives ? 1 : 0.2, filter: i < lives ? 'none' : 'grayscale(1)' }}>{livesIcon}</span>
+              ))}
+            </div>
+          )}
+          {onMute && <button onClick={onMute} aria-label={muted ? 'Unmute' : 'Mute'} style={btn}>{muted ? '🔇' : '🔊'}</button>}
+          {onPause && <button onClick={onPause} aria-label="Pause" style={btn}>⏸</button>}
+        </div>
+      </div>
+      {children}
+      {hint && (
+        <div className="mx-auto" style={{ background: dark ? 'rgba(0,0,0,0.35)' : 'rgba(21,40,28,0.06)', color: dark ? 'rgba(255,255,255,0.8)' : MUTED, fontSize: 13, fontWeight: 600, padding: '6px 16px', borderRadius: 999, maxWidth: '92%', textAlign: 'center' }}>{hint}</div>
+      )}
+    </div>
+  )
+}
+
+// ─── canvas "juice" kit ─────────────────────────────────────────────────────
+// Drop-in feedback for games that don't already have it. Each keeps a plain
+// array on the sim; call spawn* on events, update* every frame with dt
+// (seconds), draw* after the scene. Shapes match the ad-hoc floats already used
+// in SplurgeSlicer / ExpenseInvaders so retrofits stay consistent.
+export function spawnBurst(list, x, y, opts = {}) {
+  const { count = 10, color = AMBER, speed = 170, life = 0.5, size = 3.5, gravity = 480, spread = Math.PI * 2, dir = -Math.PI / 2 } = opts
+  for (let i = 0; i < count; i++) {
+    const a = dir + (Math.random() - 0.5) * spread
+    const sp = speed * (0.35 + Math.random() * 0.9)
+    list.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life, age: 0, size: size * (0.6 + Math.random() * 0.8), color, gravity })
+  }
+}
+export function updateBurst(list, dt) {
+  for (let i = list.length - 1; i >= 0; i--) {
+    const p = list[i]
+    p.age += dt
+    if (p.age >= p.life) { list.splice(i, 1); continue }
+    p.vy += (p.gravity || 0) * dt; p.x += p.vx * dt; p.y += p.vy * dt
+  }
+}
+export function drawBurst(ctx, list) {
+  for (const p of list) {
+    ctx.globalAlpha = Math.max(0, 1 - p.age / p.life)
+    ctx.fillStyle = p.color
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill()
+  }
+  ctx.globalAlpha = 1
+}
+export function spawnFloater(list, x, y, text, opts = {}) {
+  const { color = GREEN, size = 18, life = 0.85, vy = -46, banner = false } = opts
+  list.push({ x, y, text, color, size, life, age: 0, vy, banner })
+}
+export function updateFloaters(list, dt) {
+  for (let i = list.length - 1; i >= 0; i--) {
+    const f = list[i]
+    f.age += dt; f.y += f.vy * dt
+    if (f.age >= f.life) list.splice(i, 1)
+  }
+}
+export function drawFloaters(ctx, list, font = DISPLAY_FONT) {
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+  for (const f of list) {
+    ctx.globalAlpha = Math.max(0, 1 - f.age / f.life)
+    ctx.font = `800 ${f.size}px ${font}`
+    if (f.banner) {
+      const tw = ctx.measureText(f.text).width
+      ctx.fillStyle = 'rgba(255,255,255,0.92)'
+      ctx.beginPath()
+      if (ctx.roundRect) ctx.roundRect(f.x - tw / 2 - 14, f.y - 18, tw + 28, 34, 17)
+      else ctx.rect(f.x - tw / 2 - 14, f.y - 18, tw + 28, 34)
+      ctx.fill()
+    }
+    ctx.fillStyle = f.color
+    ctx.fillText(f.text, f.x, f.y)
+  }
+  ctx.globalAlpha = 1
+}
+// Screen shake: kick() on impact, wrap the scene in ctx.translate(shake.x,y).
+export function makeShake() { return { x: 0, y: 0, mag: 0 } }
+export function kick(shake, mag) { shake.mag = Math.max(shake.mag, mag) }
+export function stepShake(shake, dt) {
+  shake.mag = Math.max(0, shake.mag - (shake.mag * 6 + 24) * dt)
+  shake.x = (Math.random() - 0.5) * shake.mag
+  shake.y = (Math.random() - 0.5) * shake.mag
+  return shake
+}
+// Game-over confetti.
+export function confettiBurst(list, w, opts = {}) {
+  const { count = 60, colors = ['#65A30D', '#D9A514', '#22c55e', '#4ade80', '#fbbf24', '#f472b6'] } = opts
+  for (let i = 0; i < count; i++) list.push({
+    x: Math.random() * w, y: -10 - Math.random() * 60,
+    vx: (Math.random() - 0.5) * 70, vy: 70 + Math.random() * 130,
+    rot: Math.random() * Math.PI, spin: (Math.random() - 0.5) * 9,
+    w: 5 + Math.random() * 5, h: 8 + Math.random() * 6,
+    color: colors[i % colors.length], age: 0, life: 2.4,
+  })
+}
+export function updateConfetti(list, dt, h) {
+  for (let i = list.length - 1; i >= 0; i--) {
+    const c = list[i]
+    c.age += dt; c.vy += 60 * dt; c.x += c.vx * dt; c.y += c.vy * dt; c.rot += c.spin * dt
+    if (c.age >= c.life || c.y > h + 20) list.splice(i, 1)
+  }
+}
+export function drawConfetti(ctx, list) {
+  for (const c of list) {
+    ctx.save()
+    ctx.globalAlpha = Math.max(0, 1 - c.age / c.life)
+    ctx.translate(c.x, c.y); ctx.rotate(c.rot)
+    ctx.fillStyle = c.color
+    ctx.fillRect(-c.w / 2, -c.h / 2, c.w, c.h)
+    ctx.restore()
+  }
+  ctx.globalAlpha = 1
+}
+export const easeOutBack = (t) => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2) }
+export const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3)

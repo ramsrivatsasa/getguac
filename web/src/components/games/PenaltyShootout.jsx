@@ -452,7 +452,7 @@ export default function PenaltyShootout() {
             </p>
             <p className="text-sm mb-3" style={{ color: BODY }}>
               The keeper reads soft shots — corners and pace beat the gloves, but over 90 power can sail over the bar.
-              Ten shots; goals build a streak bonus.
+              Ten shots; back-to-back goals build a hot-run bonus.
             </p>
             {best > 0 && <div className="text-xs font-bold mb-3" style={{ color: AMBER }}>Best shootout: {fmt(best)}</div>}
             <PrimaryButton onClick={start}>Step up</PrimaryButton>
@@ -494,7 +494,7 @@ export default function PenaltyShootout() {
       </div>
 
       <p className="text-xs text-center mt-3 mb-2" style={{ color: FAINT }}>
-        Tap once to lock your aim, again to set power (space works too) · corners + pace beat the keeper · 10 shots, streaks pay extra.
+        Tap once to lock your aim, again to set power (space works too) · corners + pace beat the keeper · 10 shots, hot runs pay extra.
       </p>
     </div>
   )

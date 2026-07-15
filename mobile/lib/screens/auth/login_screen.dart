@@ -17,6 +17,7 @@ import '../../services/app_lock_service.dart';
 import '../../widgets/guac_mascot.dart';
 import '../../widgets/animated_mascot.dart';
 import '../../widgets/animated_primitives.dart';
+import '../../widgets/social_auth_buttons.dart';
 import '../../services/mascot_event_bus.dart';
 import '../../theme/gg_design.dart';
 
@@ -663,7 +664,10 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               const Expanded(child: Divider(color: Color(0xFFe5e7eb))),
                             ]),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: 8),
+                            // Google (all platforms) + Apple (iOS only) sign-in.
+                            const SocialAuthButtons(),
+                            const SizedBox(height: 8),
                             OutlinedButton.icon(
                               onPressed: () => UpdateService.openDownload('https://getguac.app/how-it-works'),
                               icon: const Icon(Icons.play_circle_outline, color: ggLime, size: 16),

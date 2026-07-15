@@ -48,7 +48,8 @@ class _GuacMoneyScreenState extends State<GuacMoneyScreen> {
       } catch (_) {/* offline / RLS — show 0 */}
     }
     final referrals = await fetchReferralCount();
-    return _Gm(notWorth: notWorth, refunds: refunds, rated: rated, receipts: receipts, referrals: referrals);
+    final arcadeGm = (await fetchArcadeGmDays()) * kGmPerFirstPlay;
+    return _Gm(notWorth: notWorth, refunds: refunds, rated: rated, receipts: receipts, referrals: referrals, arcadeGm: arcadeGm);
   }
 
   @override
@@ -62,7 +63,7 @@ class _GuacMoneyScreenState extends State<GuacMoneyScreen> {
         builder: (ctx, snap) {
           final d = snap.data ?? const _Gm(notWorth: 0, refunds: 0, rated: 0, receipts: 0, referrals: 0);
           final saved = d.notWorth + d.refunds;
-          final points = guacMoneyPoints(receipts: d.receipts, referrals: d.referrals, savedDollars: saved);
+          final points = guacMoneyPoints(receipts: d.receipts, referrals: d.referrals, savedDollars: saved) + d.arcadeGm;
           final valueUsd = gmToUsd(points);
           final into = points % kGmRewardStep;
           final toNext = kGmRewardStep - into;
@@ -213,5 +214,6 @@ class _Gm {
   final int rated;
   final int receipts;
   final int referrals;
-  const _Gm({required this.notWorth, required this.refunds, required this.rated, required this.receipts, required this.referrals});
+  final int arcadeGm; // already ×50; parity with web's arcade GM term
+  const _Gm({required this.notWorth, required this.refunds, required this.rated, required this.receipts, required this.referrals, this.arcadeGm = 0});
 }

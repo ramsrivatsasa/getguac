@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import '../../widgets/guac_mascot.dart';
+import '../../widgets/social_auth_buttons.dart';
 import '../../widgets/turnstile_check.dart';
 import '../../services/mascot_event_bus.dart';
 import '../../services/referral_apply_service.dart';
@@ -640,6 +641,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
                                 : Text('Create Account', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700))),
                           ),
+                          const SizedBox(height: 8),
+                          Row(children: [
+                            const Expanded(child: Divider(color: Color(0xFFe5e7eb))),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              child: Text('or',
+                                style: TextStyle(fontSize: 10, color: const Color(0xFF9ca3af), fontWeight: FontWeight.w600, fontVariations: ggWght(FontWeight.w600))),
+                            ),
+                            const Expanded(child: Divider(color: Color(0xFFe5e7eb))),
+                          ]),
+                          const SizedBox(height: 8),
+                          // Google (all platforms) + Apple (iOS only) sign-up.
+                          const SocialAuthButtons(),
+                          const SizedBox(height: 4),
                           TextButton(
                             onPressed: () => context.go('/login'),
                             child: Text(

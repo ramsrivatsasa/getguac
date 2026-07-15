@@ -72,6 +72,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // Loaded once per mount and passed to every computeSmashDays call.
   int _smashDaysBonus = 0;
   int _referralCount = 0;  // for the GuacMoney balance (referral bonus)
+  int _arcadeGmDays = 0;   // arcade GM days (×50) — parity with web's arcade_gm_days
   int _freshSteals = 0;    // new Steals found overnight (unread on saved searches)
 
   @override
@@ -80,6 +81,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _bankDataFuture = fetchBankData();
     _loadSmashDaysBonus();
     fetchReferralCount().then((n) { if (mounted) setState(() => _referralCount = n); });
+    fetchArcadeGmDays().then((d) { if (mounted) setState(() => _arcadeGmDays = d); });
     _loadFreshSteals();
     // Hydrate the persisted time-frame from SharedPreferences so the
     // mobile dashboard remembers the user's last selection across
@@ -339,7 +341,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               GuacMoneyPill(points: guacMoneyPoints(
                 receipts: receipts.length,
                 referrals: _referralCount,
-                savedDollars: guacMoneySaved(receipts))),
+                savedDollars: guacMoneySaved(receipts)) + _arcadeGmDays * kGmPerFirstPlay),
             ]),
             if (_freshSteals > 0) ...[
               const SizedBox(height: 12),

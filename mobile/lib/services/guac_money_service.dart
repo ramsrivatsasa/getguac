@@ -126,7 +126,25 @@ String formatGuacMoney(double amount) {
 const int kGmPerDollar   = 1000;  // 1000 GuacMoney = $1 of value
 const int kGmPerReceipt  = 100;   // every receipt scanned
 const int kGmPerReferral = 1000;  // every friend who joins
+const int kGmPerFirstPlay = 50;   // first finished arcade round per game per UTC day
 const int kGmRewardStep  = 5000;  // next milestone (= $5)
+
+/// Arcade GuacMoney days for the signed-in user (one per game per UTC day that
+/// they finished a round). Mirrors web's `arcade_gm_days()` RPC. Multiply by
+/// [kGmPerFirstPlay] for the GM contribution. Returns 0 on any failure so the
+/// balance never breaks when the RPC/migration isn't present.
+Future<int> fetchArcadeGmDays() async {
+  final sb = Supabase.instance.client;
+  final user = sb.auth.currentUser;
+  if (user == null) return 0;
+  try {
+    final data = await sb.rpc('arcade_gm_days');
+    if (data == null) return 0;
+    return int.tryParse(data.toString()) ?? 0;
+  } catch (_) {
+    return 0;
+  }
+}
 const String kGmTagline = 'Saved by our Guac-AI + earned by you 🥑';
 
 /// Total GuacMoney = saved $ (×1000) + receipts (×100) + referrals (×1000).

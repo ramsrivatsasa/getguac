@@ -8,11 +8,11 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '../../lib/supabase/client'
 
-const INK = '#15281C'
-const MUTED = '#5C6B60'
-const FAINT = '#8a978d'
-const GREEN = '#65A30D'
-const MEDALS = ['🥇', '🥈', '🥉']
+const INK = '#15201a'
+const MUTED = '#5a6a60'
+const FAINT = '#8a988f'
+const GREEN = '#166534'
+const AV_BG = ['#dcfce7', '#fef3c7', '#dbeafe', '#ecfdf5', '#fee2e2', '#f3e8ff']
 
 const fmt = (n) => Number(n || 0).toLocaleString()
 
@@ -43,16 +43,17 @@ export default function Leaderboard({ game, className = '' }) {
   if (rows === null || rows === false) return null // loading or RPC not deployed
 
   return (
-    <div className={`rounded-2xl bg-white p-4 ${className}`} style={{ border: '1px solid rgba(20,83,45,0.10)' }}>
-      <div className="font-display font-extrabold text-base mb-2" style={{ color: INK }}>🏆 Leaderboard</div>
+    <div className={`rounded-2xl bg-white p-4 ${className}`} style={{ border: '1px solid #e4ebe2' }}>
+      <div className="font-display font-extrabold text-base mb-3" style={{ color: INK }}>🏆 Top players</div>
       {rows.length === 0 ? (
         <p className="text-xs" style={{ color: MUTED }}>No scores on the board yet — finish a round and claim the top spot.</p>
       ) : (
-        <ol className="space-y-1.5">
+        <ol className="space-y-2.5">
           {rows.map((r, i) => (
-            <li key={`${r.handle}-${i}`} className="flex items-center gap-2 text-sm">
-              <span className="w-6 text-center shrink-0">{MEDALS[i] || <span className="text-[11px] font-bold" style={{ color: FAINT }}>{i + 1}</span>}</span>
-              <span className="flex-1 min-w-0 truncate font-semibold" style={{ color: INK }}>{r.handle}</span>
+            <li key={`${r.handle}-${i}`} className="flex items-center gap-3 text-sm">
+              <span className="w-4 text-center text-[11px] font-bold shrink-0" style={{ color: FAINT }}>{i + 1}</span>
+              <span className="flex items-center justify-center rounded-full font-extrabold text-xs shrink-0" style={{ width: 30, height: 30, background: AV_BG[i % AV_BG.length], color: GREEN }}>{(r.handle || '?').trim().slice(0, 1).toUpperCase()}</span>
+              <span className="flex-1 min-w-0 truncate font-bold" style={{ color: INK }}>{r.handle}</span>
               <span className="font-display font-extrabold shrink-0" style={{ color: GREEN }}>${fmt(r.best)}</span>
             </li>
           ))}

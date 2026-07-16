@@ -1,0 +1,281 @@
+name: Crash Auto-Fix
+
+# AI crash auto-fix engine.
+#
+#   detect  -> /api/admin/autofix-queue hands back the next un-triaged, auto-fixable
+#              production crash (web/server only; native + money/auth issues are
+#              excluded server-side).
+#   fix     -> Claude (anthropics/claude-code-action) reads the crash + stack trace
+#              and writes the smallest correct fix, running `npm run lint` locally.
+#   ship    -> the workflow opens a PR labelled `ai-autofix`. If the diff is SAFE
+#              (small, and only touches non-payment/non-auth files under web/) it
+#              enables auto-merge so Vercel's PR build gates the merge. Otherwise it
+#              labels `ai-autofix:needs-human` and waits for you.
+#
+# Nothing merges without Vercel's preview build passing (see AUTOFIX-SETUP.md for
+# the required repo settings). Native/mobile and money/auth code are never touched.
+#
+# Required repo Secrets: ANTHROPIC_API_KEY, APP_URL, CRON_SECRET.
+# Recommended: AUTOFIX_PAT (a PAT so the PR triggers CI + can be auto-merged;
+#              falls back to GITHUB_TOKEN if unset).
+
+on:
+  schedule:
+    - cron: '25 * * * *'      # hourly, offset from the email/crash crons
+  workflow_dispatch:
+
+# Never run two auto-fixes at once (they'd race on branches / the queue cursor).
+concurrency:
+  group: crash-autofix
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  id-token: write
+
+# How risky a change may be before a human must look. Tune in AUTOFIX-SETUP.md.
+env:
+  MAX_CHANGED_LINES: '150'
+  # Paths the agent must never auto-merge (money / auth / infra / native).
+  DENYLIST_REGEX: '^web/src/app/api/(iap|account|admin)/|^web/src/lib/supabase/|^web/src/middleware|^web/supabase/migrations/|^web/vercel\.json$|guac[-_]?money|\.env|^mobile/|^\.github/'
+
+jobs:
+  autofix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Preflight — queue secrets
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          miss=""
+          [ -z "$APP_URL" ] && miss="$miss APP_URL"
+          [ -z "$CRON_SECRET" ] && miss="$miss CRON_SECRET"
+          if [ -n "$miss" ]; then
+            echo "::error::Missing repo secret(s):$miss — see .github/AUTOFIX-SETUP.md"
+            exit 1
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.AUTOFIX_PAT || secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Pick the next crash to fix
+        id: pick
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          resp=$(curl -s --max-time 45 -X GET \
+            -H "x-cron-secret: $CRON_SECRET" \
+            "$APP_URL/api/admin/autofix-queue?max=1")
+          count=$(echo "$resp" | jq -r '(.issues // []) | length' 2>/dev/null || echo 0)
+          if [ "$count" != "1" ]; then
+            echo "No auto-fixable crash in the queue (count=$count)."
+            echo "has_crash=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "$resp" | jq '.issues[0]' > crash-report.json
+          jq -r '.fingerprint'      crash-report.json > "$RUNNER_TEMP/fingerprint.txt"
+          echo "has_crash=true" >> "$GITHUB_OUTPUT"
+          echo "hash=$(jq -r '.fingerprint_hash' crash-report.json)" >> "$GITHUB_OUTPUT"
+          echo "tag=$(jq -r '.tag' crash-report.json)"               >> "$GITHUB_OUTPUT"
+          echo "Picked crash: $(jq -r '.tag + " — " + .title' crash-report.json)"
+
+      - name: Require Anthropic key (only when there's a crash to fix)
+        if: steps.pick.outputs.has_crash == 'true'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "::error::A fixable crash is queued but ANTHROPIC_API_KEY is not set — see .github/AUTOFIX-SETUP.md"
+            exit 1
+          fi
+
+      - name: Set up Node
+        if: steps.pick.outputs.has_crash == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install web deps (so the agent can lint its fix)
+        if: steps.pick.outputs.has_crash == 'true'
+        working-directory: web
+        run: npm ci --prefer-offline --no-audit --no-fund
+
+      - name: Claude — write the fix
+        if: steps.pick.outputs.has_crash == 'true'
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            You are an automated bug-fix agent running in CI for GetGuac
+            (a Next.js app in ./web, Flutter app in ./mobile).
+
+            A production crash needs fixing. Read ./crash-report.json — it has the
+            tag, message, stack trace, affected route and platform.
+
+            Your job:
+            1. Find the ROOT CAUSE of THIS specific crash in ./web and fix it with
+               the smallest correct change. Favour obviously-correct defensive fixes
+               (null/undefined guards, a missing await, a bad array/optional access,
+               an unhandled rejection, a wrong type).
+            2. If a regression test fits an existing harness (web/scripts/*.mjs),
+               extend it. Do NOT invent a new test framework.
+            3. Verify locally: run `cd web && npm run lint` and make sure the files
+               you changed have no new lint errors.
+
+            Hard rules — follow exactly:
+            - Change ONLY files under ./web. NEVER touch: web/src/app/api/iap,
+              web/src/app/api/account, web/src/app/api/admin, web/src/lib/supabase,
+              web/src/middleware*, web/supabase/migrations, web/vercel.json, any
+              GuacMoney balance math, any .env file, or ./mobile or ./.github.
+              Those are money / auth / infra — a human must review them.
+            - Keep the diff small and specific to this one crash. No drive-by refactors.
+            - Do NOT git commit, git push, or open a PR — the workflow does that.
+            - If you cannot fix it safely and confidently within these rules
+              (unclear root cause, or the fix would need a forbidden path), make NO
+              code changes and instead write ./AUTOFIX_NOTE.md saying why, then stop.
+          claude_args: |
+            --model claude-sonnet-5
+            --allowedTools Edit,Write,Read,Grep,Glob,Bash
+            --max-turns 30
+
+      - name: Classify the change (safe / needs-human / no-fix)
+        id: classify
+        if: steps.pick.outputs.has_crash == 'true'
+        run: |
+          rm -f crash-report.json                      # workspace artifact, never commit
+          NOTE=""
+          if [ -f AUTOFIX_NOTE.md ]; then
+            NOTE=$(head -c 800 AUTOFIX_NOTE.md)
+            rm -f AUTOFIX_NOTE.md
+          fi
+          CHANGED=$(git status --porcelain --untracked-files=all | cut -c4- | grep -v -x 'AUTOFIX_NOTE.md' || true)
+
+          if [ -z "$CHANGED" ]; then
+            echo "outcome=no_fix" >> "$GITHUB_OUTPUT"
+            { echo "note<<EOF"; echo "${NOTE:-Agent made no changes.}"; echo "EOF"; } >> "$GITHUB_OUTPUT"
+            echo "Agent produced no code change."
+            exit 0
+          fi
+
+          echo "Changed files:"; echo "$CHANGED"
+          git add -A
+          LINES=$(git diff --cached --numstat | awk '{a+=$1; d+=$2} END {print a+d+0}')
+          echo "Changed lines: $LINES"
+
+          SAFE=true; REASON=""
+          if echo "$CHANGED" | grep -Eq "$DENYLIST_REGEX"; then
+            SAFE=false; REASON="touches a protected path (money/auth/infra/native)"
+          elif echo "$CHANGED" | grep -qv '^web/'; then
+            SAFE=false; REASON="changes files outside ./web"
+          elif [ "$LINES" -gt "$MAX_CHANGED_LINES" ]; then
+            SAFE=false; REASON="diff too large ($LINES > $MAX_CHANGED_LINES lines)"
+          fi
+
+          echo "outcome=change" >> "$GITHUB_OUTPUT"
+          echo "safe=$SAFE" >> "$GITHUB_OUTPUT"
+          echo "reason=$REASON" >> "$GITHUB_OUTPUT"
+          { echo "files<<EOF"; echo "$CHANGED"; echo "EOF"; } >> "$GITHUB_OUTPUT"
+
+      - name: Open PR (+ auto-merge if safe)
+        if: steps.pick.outputs.has_crash == 'true' && steps.classify.outputs.outcome == 'change'
+        env:
+          GH_TOKEN: ${{ secrets.AUTOFIX_PAT || secrets.GITHUB_TOKEN }}
+          HASH: ${{ steps.pick.outputs.hash }}
+          TAG: ${{ steps.pick.outputs.tag }}
+          SAFE: ${{ steps.classify.outputs.safe }}
+          REASON: ${{ steps.classify.outputs.reason }}
+          FILES: ${{ steps.classify.outputs.files }}
+          RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          set -e
+          BRANCH="autofix/${HASH}-${RUN_NUMBER}"
+          git config user.name  "getguac-autofix[bot]"
+          git config user.email "autofix@getguac.app"
+          git checkout -b "$BRANCH"
+          git commit -m "fix: auto-patch crash ${TAG} (${HASH})" \
+                     -m "AI-generated fix via Crash Auto-Fix. See PR body." \
+                     -m "[ai-autofix]"
+          git push -u origin "$BRANCH"
+
+          # Labels (idempotent).
+          gh label create "ai-autofix"              -c "#5319e7" -d "AI crash auto-fix" --force >/dev/null 2>&1 || true
+          gh label create "ai-autofix:safe"         -c "#0e8a16" -d "AI fix classified safe" --force >/dev/null 2>&1 || true
+          gh label create "ai-autofix:needs-human"  -c "#d93f0b" -d "AI fix needs human review" --force >/dev/null 2>&1 || true
+
+          if [ "$SAFE" = "true" ]; then
+            VERDICT="✅ **Classified SAFE** — auto-merge enabled; Vercel's PR build gates the merge."
+            LABELS="ai-autofix,ai-autofix:safe"
+          else
+            VERDICT="🛑 **Needs human review** — $REASON."
+            LABELS="ai-autofix,ai-autofix:needs-human"
+          fi
+
+          BODY=$(cat <<EOF
+          ## 🤖 Automated crash fix
+
+          This PR was written by the Crash Auto-Fix engine in response to a
+          production crash (\`${TAG}\`, fingerprint \`${HASH}\`).
+
+          $VERDICT
+
+          **Files changed:**
+          \`\`\`
+          ${FILES}
+          \`\`\`
+
+          > ⚠️ AI-generated. Even "safe" fixes only merge after Vercel's preview
+          > build passes. Review before trusting.
+          EOF
+          )
+
+          PR_URL=$(gh pr create --base main --head "$BRANCH" \
+            --title "fix: auto-patch crash ${TAG} (${HASH})" \
+            --label "$LABELS" \
+            --body "$BODY")
+          echo "PR: $PR_URL"
+          echo "PR_URL=$PR_URL" >> "$GITHUB_ENV"
+
+          if [ "$SAFE" = "true" ]; then
+            # --auto: GitHub merges once required checks (Vercel build) pass.
+            gh pr merge "$PR_URL" --squash --auto --delete-branch || \
+              echo "::warning::Could not enable auto-merge — enable 'Allow auto-merge' in repo settings and require the Vercel check (see AUTOFIX-SETUP.md)."
+          fi
+
+      # Mark the crash handled ONLY when a real outcome was reached, so a run that
+      # died early (missing key, failed push) leaves it in the queue to retry
+      # instead of silently burying an unfixed crash.
+      - name: Mark crash handled
+        if: always() && (steps.classify.outputs.outcome == 'change' || steps.classify.outputs.outcome == 'no_fix')
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          OUTCOME: ${{ steps.classify.outputs.outcome }}
+          SAFE: ${{ steps.classify.outputs.safe }}
+          NOTE: ${{ steps.classify.outputs.note }}
+        run: |
+          FP=$(cat "$RUNNER_TEMP/fingerprint.txt" 2>/dev/null || echo "")
+          [ -z "$FP" ] && { echo "No fingerprint recorded; nothing to mark."; exit 0; }
+          # A 'change' outcome with no PR means the PR step failed — don't mark; retry later.
+          if [ "$OUTCOME" = "change" ] && [ -z "${PR_URL:-}" ]; then
+            echo "No PR was created; leaving crash unmarked for retry."; exit 0
+          fi
+          if [ "$OUTCOME" = "no_fix" ]; then RESULT="no_fix";
+          elif [ "$SAFE" = "true" ]; then RESULT="auto_merged";
+          else RESULT="needs_human"; fi
+          jq -n --arg fp "$FP" --arg outcome "$RESULT" --arg note "${NOTE:-}" \
+            '{fingerprint:$fp, outcome:$outcome, note:$note, pr_url:env.PR_URL}' \
+            | curl -s --max-time 30 -X POST \
+                -H "x-cron-secret: $CRON_SECRET" \
+                -H "content-type: application/json" \
+                --data @- \
+                "$APP_URL/api/admin/autofix-queue" >/dev/null
+          echo "Marked $FP as $RESULT."

@@ -1,36 +1,10 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '../lib/supabase/server'
-import { createClient as createAdminClient } from '@supabase/supabase-js'
 import ReferralCapture from '../components/ReferralCapture'
 import MarketingShell from '../components/MarketingShell'
-
-// Aggregate numbers for the landing page — pulled live from the database with
-// the service-role client (server-only). Only the avg Worth-It rating is shown
-// (a true, data-backed number); no fabricated member/spend counts and no
-// marketing floors. Never throws — degrades gracefully if the DB is unreachable.
-async function getStats() {
-  try {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY
-    if (!url || !key) return null
-    const a = createAdminClient(url, key, { auth: { persistSession: false } })
-    const [rc, members, amounts, ratings] = await Promise.all([
-      a.from('receipts').select('id', { count: 'exact', head: true }),
-      a.from('profiles').select('id', { count: 'exact', head: true }),
-      a.from('receipts').select('total_amount, is_return'),
-      a.from('receipts').select('rating').not('rating', 'is', null),
-    ])
-    const receipts = rc.count || 0
-    const memberCount = members.count || 0
-    const spend = (amounts.data || []).reduce((s, r) => s + (r.is_return ? 0 : Number(r.total_amount) || 0), 0)
-    const rated = (ratings.data || []).map((r) => Number(r.rating)).filter((n) => n > 0)
-    const avgRating = rated.length ? rated.reduce((x, y) => x + y, 0) / rated.length : null
-    return { receipts, members: memberCount, spend, avgRating, ratingCount: rated.length }
-  } catch {
-    return null
-  }
-}
+import GoalsShowcase from '../components/GoalsShowcase'
+import HeroScoreCard from '../components/HeroScoreCard'
 
 const DISPLAY = { fontFamily: 'var(--font-bricolage), sans-serif' }
 
@@ -39,16 +13,6 @@ export default async function Home() {
   const sb = createClient()
   const { data: { user } } = await sb.auth.getUser()
   if (user) redirect('/dashboard')
-
-  const stats = (await getStats()) || { receipts: 0, members: 0, spend: 0, avgRating: null, ratingCount: 0 }
-  // Confidence strip — capability claims (what GetGuac covers 100%, true by design,
-  // no member/spend counts to expose) plus the one real, data-backed number: the
-  // average Worth-It score. Reads as an established product regardless of size.
-  const tiles = [
-    { v: '100%', l: 'refunds, returns & subscriptions tracked' },
-    { v: '100%', l: 'receipts captured — photo + email' },
-  ]
-  if (stats.avgRating) tiles.push({ v: Math.round((stats.avgRating / 5) * 100) + '%', l: 'avg Worth-It score' })
 
   return (
     <MarketingShell>
@@ -69,13 +33,24 @@ export default async function Home() {
             <p style={{ fontSize: 19, lineHeight: 1.55, color: '#56655B', margin: '0 0 30px', maxWidth: 520 }}>
               GetGuac reads your receipts and bank statements, scores every purchase, sniffs out hidden fees, and shows you exactly where your money gets eaten. Money&apos;s wingman. Keep your guac.
             </p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginBottom: 24 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginBottom: 16 }}>
               <Link href="/register" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#65A30D', color: '#fff', fontWeight: 700, fontSize: 16, padding: '15px 26px', borderRadius: 999, textDecoration: 'none', boxShadow: '0 10px 24px -10px rgba(101,163,13,0.6)' }}>🥑 Meet your sidekick</Link>
-              <Link href="/download" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#fff', color: '#1A2E22', fontWeight: 700, fontSize: 16, padding: '15px 26px', borderRadius: 999, textDecoration: 'none', border: '1.5px solid rgba(20,83,45,0.16)' }}>📱 Get the app</Link>
               {/* Try-before-you-register: /login?demo=1 prefills the shared
                   demo account (captcha-gated) so the curious can poke around
                   real pre-loaded data without creating anything. */}
               <Link href="/login?demo=1" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#fff', color: '#1A2E22', fontWeight: 700, fontSize: 16, padding: '15px 26px', borderRadius: 999, textDecoration: 'none', border: '1.5px solid rgba(20,83,45,0.16)' }}>🔎 Try the demo</Link>
+            </div>
+            {/* Store badges. iOS: swap href to https://apps.apple.com/app/id6790993237
+                once the App Store listing is approved & live — until then /download. */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 24 }}>
+              <Link href="/download" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: '#0B1410', color: '#fff', padding: '9px 18px 9px 14px', borderRadius: 12, textDecoration: 'none' }}>
+                <svg viewBox="0 0 384 512" width="22" height="22" fill="#fff" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.7-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
+                <span><span style={{ display: 'block', fontSize: 10.5, opacity: 0.8, lineHeight: 1.2 }}>Coming soon on the</span><span style={{ display: 'block', fontSize: 17, fontWeight: 700, lineHeight: 1.15 }}>App Store</span></span>
+              </Link>
+              <a href="https://play.google.com/store/apps/details?id=app.getguac.getguac" target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: '#0B1410', color: '#fff', padding: '9px 18px 9px 14px', borderRadius: 12, textDecoration: 'none' }}>
+                <svg viewBox="0 0 512 512" width="20" height="20" aria-hidden="true"><path fill="#4285F4" d="M48 32 288 256 48 480c-10-6-16-17-16-30V62c0-13 6-24 16-30z"/><path fill="#34A853" d="M48 32c5-3 11-5 17-5 6 0 12 2 18 5l260 148-55 76z"/><path fill="#FBBC04" d="M288 256l55-76 92 52c30 17 30 51 0 68l-92 52z"/><path fill="#EA4335" d="M288 256l55 76L83 480c-6 3-12 5-18 5-6 0-12-2-17-5z"/></svg>
+                <span><span style={{ display: 'block', fontSize: 10.5, opacity: 0.8, lineHeight: 1.2 }}>Get it on</span><span style={{ display: 'block', fontSize: 17, fontWeight: 700, lineHeight: 1.15 }}>Google Play</span></span>
+              </a>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap', fontSize: 14, color: '#56655B', fontWeight: 600 }}>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>🔒 Private — RLS-locked, yours to wipe</span>
@@ -85,53 +60,14 @@ export default async function Home() {
           </div>
           <div className="gg-hero-visual" style={{ position: 'relative', display: 'flex', justifyContent: 'center', animation: 'guacRise 0.8s cubic-bezier(0.22,1,0.36,1) both' }}>
             <div style={{ position: 'absolute', inset: '20px 30px', background: 'radial-gradient(circle at 60% 40%, rgba(132,204,22,0.16), transparent 65%)', borderRadius: '50%' }} />
-            <div style={{ position: 'relative', width: 290, background: '#fff', borderRadius: 34, padding: 18, boxShadow: '0 40px 80px -30px rgba(20,40,28,0.32)', border: '1px solid rgba(20,83,45,0.08)', animation: 'guacFloat 6s ease-in-out infinite' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, padding: '0 4px' }}>
-                <span style={{ ...DISPLAY, fontWeight: 800, color: '#15281C' }}>🥑 GuacScore</span>
-                <span style={{ fontSize: 12, color: '#8A988E' }}>This month</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
-                <div className="gg-ring" style={{ position: 'relative', width: 150, height: 150, borderRadius: '50%', background: 'conic-gradient(#65A30D var(--gg-deg, 313deg), rgba(101,163,13,0.12) 0deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'guacRing 1.3s 0.35s cubic-bezier(0.22,1,0.36,1) both' }}>
-                  <div style={{ width: 118, height: 118, borderRadius: '50%', background: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                    <span style={{ ...DISPLAY, fontWeight: 800, fontSize: 42, lineHeight: 1, color: '#15281C' }}>87</span>
-                    <span style={{ fontSize: 11, color: '#65A30D', fontWeight: 700, letterSpacing: '0.04em' }}>SOLID GUAC</span>
-                  </div>
-                </div>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 11, background: '#F7FAF2', borderRadius: 13, padding: '11px 13px' }}>
-                  <span style={{ fontSize: 18 }}>🛒</span>
-                  <div style={{ flex: 1 }}><div style={{ fontWeight: 700, fontSize: 13.5, color: '#16241C' }}>Whole Foods</div><div style={{ fontSize: 11.5, color: '#8A988E' }}>Grub · 18 items</div></div>
-                  <span style={{ fontWeight: 800, fontSize: 14, color: '#16241C' }}>$94.20</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 11, background: '#FBF3EC', borderRadius: 13, padding: '11px 13px' }}>
-                  <span style={{ fontSize: 18 }}>⚠️</span>
-                  <div style={{ flex: 1 }}><div style={{ fontWeight: 700, fontSize: 13.5, color: '#16241C' }}>Hidden fee found</div><div style={{ fontSize: 11.5, color: '#8A988E' }}>$12 / mo · Cancel?</div></div>
-                  <span style={{ fontWeight: 800, fontSize: 14, color: '#C2410C' }}>−$12</span>
-                </div>
-              </div>
-            </div>
-            {/* Floating callout — illustrative product UI, animated. */}
-            <div style={{ position: 'absolute', top: 24, left: -6, background: '#fff', borderRadius: 16, padding: '12px 15px', boxShadow: '0 18px 40px -16px rgba(20,40,28,0.35)', border: '1px solid rgba(20,83,45,0.08)', display: 'flex', alignItems: 'center', gap: 10, animation: 'guacFloatB 5s ease-in-out infinite' }}>
-              <span style={{ width: 32, height: 32, borderRadius: 10, background: '#F0F7E8', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>💰</span>
-              <div><div style={{ fontSize: 11, color: '#8A988E', fontWeight: 600 }}>Refund caught</div><div style={{ ...DISPLAY, fontWeight: 800, fontSize: 16, color: '#4D7C0F' }}>before the deadline</div></div>
-            </div>
+            {/* Animated mockup card — cycles GuacScore → GuacWizard → Returns. */}
+            <HeroScoreCard />
           </div>
         </section>
 
-        {/* REAL STATS — only rendered when there's actual data */}
-        {tiles.length > 0 && (
-          <section style={{ maxWidth: 1180, margin: '0 auto', padding: '8px 28px 16px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${tiles.length}, 1fr)`, gap: 20, textAlign: 'center' }}>
-              {tiles.map((t) => (
-                <div key={t.l}>
-                  <div style={{ ...DISPLAY, fontWeight: 800, fontSize: 42, letterSpacing: '-0.03em', color: '#15281C' }}>{t.v}</div>
-                  <div style={{ fontSize: 14, color: '#5C6B60', fontWeight: 500 }}>{t.l}</div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
+        {/* GOALS — "I want to…" mockup cards + click-a-card showcase of the
+            real web + phone screens for each option (client component). */}
+        <GoalsShowcase />
 
         {/* FEATURES */}
         <section style={{ maxWidth: 1180, margin: '0 auto', padding: '72px 28px' }}>

@@ -1,12 +1,12 @@
-@tailwind base;
+﻿@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ───────────────────────────────────────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    GetGuac avocado design tokens. Twin of the `guac` palette in
-   tailwind.config.js — exposed as CSS vars for inline styles, the
+   tailwind.config.js â€” exposed as CSS vars for inline styles, the
    design-preview, and any non-Tailwind consumer. Edit both together.
-   ─────────────────────────────────────────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 :root {
   --gg-bg:        #EEF1EC;
   --gg-panel:     #FFFFFF;
@@ -48,7 +48,7 @@
 }
 
 @layer components {
-  /* Buttons — rounded-rect (12px) like the mockup, not full pills. */
+  /* Buttons â€” rounded-rect (12px) like the mockup, not full pills. */
   .btn           { @apply inline-flex items-center gap-1.5 px-3.5 py-2 sm:px-4 rounded-xl font-bold text-[13px] sm:text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed; }
   .btn-primary   { @apply btn bg-guac-700 hover:bg-guac-ink text-white shadow-sm hover:shadow; }
   .btn-secondary { @apply btn bg-white text-guac-body border border-guac-line2 hover:bg-guac-50 hover:text-guac-700; }
@@ -57,7 +57,7 @@
   /* Amber "Worth It?" call-to-action. */
   .btn-cta       { @apply btn text-white shadow-guac-cta; background-image: linear-gradient(135deg, #FBB040, #E8870E); }
 
-  /* Cards — white, 20px radius, avocado hairline border. Light & airy:
+  /* Cards â€” white, 20px radius, avocado hairline border. Light & airy:
      no heavy drop shadow (just a hairline + whisper of depth) and roomier
      padding so pages breathe. */
   .card { @apply bg-white rounded-guac border border-guac-line p-5 sm:p-6; box-shadow: 0 1px 2px rgba(16,40,26,0.04); }
@@ -75,10 +75,10 @@
   .stat-card  { @apply bg-white rounded-xl border border-guac-line flex items-center gap-2 p-2.5 sm:p-3 transition-shadow; box-shadow: 0 1px 2px rgba(16,40,26,0.04); }
   .page-title { @apply text-xl sm:text-2xl font-extrabold text-guac-ink tracking-tight; font-family: var(--font-bricolage), var(--font-jakarta), system-ui, sans-serif; }
 
-  /* ── Reusable mockup primitives (opt-in `gg-*`) ──────────────────── */
+  /* â”€â”€ Reusable mockup primitives (opt-in `gg-*`) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   /* Uppercase section label (OVERVIEW / MONEY / SHOP). */
   .gg-eyebrow { @apply text-[10px] font-extrabold uppercase tracking-[0.12em] text-guac-label; }
-  /* Segmented range toggle track (1M / 3M / …). */
+  /* Segmented range toggle track (1M / 3M / â€¦). */
   .gg-segment      { @apply inline-flex bg-gray-100 rounded-xl p-1 gap-1; }
   .gg-segment-item { @apply px-3.5 py-1.5 rounded-lg text-sm font-semibold text-gray-500 cursor-pointer transition-all hover:text-gray-800; }
   .gg-segment-item.is-active { @apply bg-white text-guac-ink shadow-sm; }
@@ -86,36 +86,36 @@
   .gg-pill { @apply inline-flex items-center gap-1.5 text-[12px] font-bold px-2.5 py-1.5 rounded-lg; }
   /* Letter / brand avatar chip. */
   .gg-avatar { @apply w-9 h-9 rounded-xl bg-guac-50 text-guac-600 flex items-center justify-center font-extrabold text-sm shrink-0; }
-  /* Money figure — display font. */
+  /* Money figure â€” display font. */
   .gg-amount { @apply font-extrabold text-guac-ink; font-family: var(--font-bricolage), var(--font-jakarta), system-ui, sans-serif; }
   /* Data table shell + hoverable rows. */
   .gg-table { @apply bg-white rounded-guac border border-guac-line overflow-hidden; }
   .gg-row   { @apply transition-colors; }
   .gg-row:hover { background: var(--gg-row); }
 
-  /* ── Typography scale (opt-in `gg-*`) — the ONE place fonts live ────
+  /* â”€â”€ Typography scale (opt-in `gg-*`) â€” the ONE place fonts live â”€â”€â”€â”€
      Every page composes THESE classes instead of re-declaring
      font-display / text-* / text-guac-* inline, so section headings,
      stat figures, table headers and numbers render identically across
      the whole app. Change a size / weight / colour here and it updates
-     everywhere — no per-page font maintenance. */
+     everywhere â€” no per-page font maintenance. */
   .gg-h1      { @apply font-display font-extrabold text-2xl sm:text-3xl text-guac-ink tracking-tight leading-tight; }   /* page title */
   .gg-h2      { @apply font-display font-extrabold text-lg text-guac-ink tracking-tight leading-none; }                 /* card / section heading */
   .gg-h3      { @apply font-display font-bold text-[15px] text-guac-ink tracking-tight; }                               /* sub-heading inside a card */
   .gg-stat    { @apply font-display font-extrabold text-2xl text-guac-ink leading-none; }                              /* KPI / money figure */
   .gg-colhead { @apply text-[10.5px] font-extrabold uppercase tracking-[0.05em] text-guac-label; }                     /* the ONE table <thead> style */
   /* Numeric cells (amounts, KPIs, dates). The mockups render EVERY money
-     figure in Bricolage Grotesque (font-display) — NOT a monospace face — so
+     figure in Bricolage Grotesque (font-display) â€” NOT a monospace face â€” so
      this maps to font-display, not font-mono. tabular-nums keeps columns
      aligned. Change here and every figure app-wide re-fonts to match. */
-  .gg-num     { @apply font-display tabular-nums; }                                                                     /* numeric cells — Bricolage, aligned */
+  .gg-num     { @apply font-display tabular-nums; }                                                                     /* numeric cells â€” Bricolage, aligned */
   .gg-sub     { @apply text-xs text-guac-muted; }                                                                       /* caption / helper text */
   .gg-chip    { @apply w-8 h-8 rounded-[10px] bg-guac-50 grid place-items-center text-[15px] shrink-0; }               /* emoji chip before a section title */
 
-  /* ── Data-table system — add `.gg-tbl` to EVERY <table> (small or big)
+  /* â”€â”€ Data-table system â€” add `.gg-tbl` to EVERY <table> (small or big)
      and it FORCES one uniform look: 10.5px uppercase guac-label headers,
      14px body, 12px cell padding, hairline row dividers, guac row-hover.
-     Uses !important so a table only needs the class — any leftover
+     Uses !important so a table only needs the class â€” any leftover
      per-cell px/py/text-size utilities are harmlessly overridden. Cells
      keep their own text-align, semantic colour and `.gg-num` for figures. */
   .gg-tbl                       { @apply w-full; }
@@ -132,8 +132,8 @@
    doubled heading. (guac-embedded is set on the embedded layout's <main>.) */
 .guac-embedded .page-title { display: none; }
 .guac-embedded .page-title + p { display: none; }
-/* …and the decorative leading emoji (e.g. the 🥑 next to "Guacanomics") that
-   sits right before the title block — the native app bar already shows it, so
+/* â€¦and the decorative leading emoji (e.g. the ðŸ¥‘ next to "Guacanomics") that
+   sits right before the title block â€” the native app bar already shows it, so
    in the WebView it's a duplicate. Targets a <span> immediately followed by a
    wrapper holding the .page-title; any header controls (range toggles, etc.)
    on the same row are untouched. */
@@ -148,13 +148,13 @@
 @media (prefers-reduced-motion: reduce) { .genie-float, .genie-twinkle { animation: none } }
 
 @layer utilities {
-  /* ────────────────────────────────────────────────────────────────
-     Animation system — shared by web/src/components/animated/*.jsx.
+  /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+     Animation system â€” shared by web/src/components/animated/*.jsx.
      Curves match Apple/Linear: easeOutQuint for entrances,
      easeInOutQuint for emphasis swaps, small backOut for taps.
      Every animation is gated by prefers-reduced-motion below so
      accessibility-first users get static layouts.
-     ──────────────────────────────────────────────────────────────── */
+     â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
   /* Fade + lift entrance. Used by FadeUpStagger to stagger lists. */
   @keyframes anim-fadeup {
@@ -180,7 +180,7 @@
     animation-fill-mode: both;
   }
 
-  /* Shimmer skeleton — a linear gradient sweeping left → right. */
+  /* Shimmer skeleton â€” a linear gradient sweeping left â†’ right. */
   @keyframes anim-shimmer {
     0%   { background-position: -200% 0; }
     100% { background-position: 200% 0; }
@@ -195,7 +195,7 @@
     animation: anim-shimmer 1.4s ease-in-out infinite;
   }
 
-  /* Tap scale — the .tap-scale class is applied by TapScale.jsx; the
+  /* Tap scale â€” the .tap-scale class is applied by TapScale.jsx; the
      transform itself is driven by the inline style on press. The
      transition is what gives the release its soft snap. */
   .tap-scale {
@@ -203,7 +203,7 @@
     will-change: transform;
   }
 
-  /* Filter cross-fade — keyed wrapper transitioning between filtered
+  /* Filter cross-fade â€” keyed wrapper transitioning between filtered
      views. Used by /stash and /returns tab swaps. 180ms is short
      enough that the swap feels instant; the fade only smooths edges. */
   @keyframes anim-crossfade {
@@ -214,7 +214,7 @@
     animation: anim-crossfade 180ms ease-out both;
   }
 
-  /* SuccessPop — the small ring + check that appears on save/rate.
+  /* SuccessPop â€” the small ring + check that appears on save/rate.
      Single combined keyframe so the inner ring scales up then
      settles, and the wrapper fades out at the tail. */
   @keyframes anim-success-pop {
@@ -229,8 +229,8 @@
     animation-fill-mode: forwards;
   }
 
-  /* Checkmark stroke draw — used inside SuccessPop. dasharray = path
-     length-ish; offset eases from full → 0 so the stroke "draws in". */
+  /* Checkmark stroke draw â€” used inside SuccessPop. dasharray = path
+     length-ish; offset eases from full â†’ 0 so the stroke "draws in". */
   @keyframes anim-check-draw {
     0%   { stroke-dasharray: 24; stroke-dashoffset: 24; opacity: 0; }
     30%  { opacity: 1; }
@@ -240,7 +240,7 @@
     animation: anim-check-draw 360ms cubic-bezier(0.22, 1, 0.36, 1) 80ms forwards;
   }
 
-  /* Shake — invalid input / wrong password feedback. Three tight
+  /* Shake â€” invalid input / wrong password feedback. Three tight
      wiggles, no rotation. 260ms total. */
   @keyframes anim-shake {
     0%, 100% { transform: translateX(0); }
@@ -253,7 +253,7 @@
     animation: anim-shake 260ms ease-out;
   }
 
-  /* Paper drop — replaces animate-bounce on the receipts page upload
+  /* Paper drop â€” replaces animate-bounce on the receipts page upload
      icon. Subtle 8px lift, eases back down with a small overshoot. */
   @keyframes anim-paper-drop {
     0%, 100% { transform: translateY(-8px); }
@@ -263,8 +263,8 @@
     animation: anim-paper-drop 1.6s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
   }
 
-  /* Strikethrough wipe — for the smash button checking off a list
-     item. clip-path inset grows from right→0 so the strike "wipes
+  /* Strikethrough wipe â€” for the smash button checking off a list
+     item. clip-path inset grows from rightâ†’0 so the strike "wipes
      across" the text. 250ms feels rewarding. */
   @keyframes anim-strike-wipe {
     0%   { clip-path: inset(0 100% 0 0); }
@@ -274,7 +274,7 @@
     animation: anim-strike-wipe 250ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
   }
 
-  /* Logo intro — auth pages on mount. Slight overshoot lands on 1.0. */
+  /* Logo intro â€” auth pages on mount. Slight overshoot lands on 1.0. */
   @keyframes anim-logo-in {
     0%   { opacity: 0; transform: scale(0.92); }
     60%  { opacity: 1; transform: scale(1.04); }
@@ -284,7 +284,7 @@
     animation: anim-logo-in 360ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
   }
 
-  /* Slide-from-right — message-thread swaps in /inbox and /chat. */
+  /* Slide-from-right â€” message-thread swaps in /inbox and /chat. */
   @keyframes anim-slide-right {
     0%   { opacity: 0; transform: translateX(10px); }
     100% { opacity: 1; transform: translateX(0); }
@@ -293,7 +293,7 @@
     animation: anim-slide-right 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
-  /* Bubble pop — chat messages, rating chips. Tiny scale-in + fade. */
+  /* Bubble pop â€” chat messages, rating chips. Tiny scale-in + fade. */
   @keyframes anim-bubble-in {
     0%   { opacity: 0; transform: scale(0.96); }
     100% { opacity: 1; transform: scale(1); }
@@ -302,7 +302,7 @@
     animation: anim-bubble-in 180ms cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
-  /* Scanning spotlight — for /steals empty state. A soft radial
+  /* Scanning spotlight â€” for /steals empty state. A soft radial
      highlight that drifts across so "still looking" reads as
      ongoing. Looped. */
   @keyframes anim-scan-spotlight {
@@ -317,7 +317,7 @@
     animation: anim-scan-spotlight 3.6s ease-in-out infinite;
   }
 
-  /* Pill pop — for the active sidebar/tab pill background sliding
+  /* Pill pop â€” for the active sidebar/tab pill background sliding
      into place on route change. Scale on X only, anchored center. */
   @keyframes anim-pill-pop {
     0%   { transform: scaleX(0.85); opacity: 0.6; }
@@ -328,7 +328,7 @@
     animation: anim-pill-pop 140ms cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  /* Subtle row collapse on remove — height animation isn't possible
+  /* Subtle row collapse on remove â€” height animation isn't possible
      with auto, but max-height with overflow:hidden looks identical
      for short rows. Caller wraps the row in .anim-row-exit. */
   @keyframes anim-row-exit {
@@ -341,7 +341,7 @@
   }
 
   /* Honor the user's motion preference. Every keyframe above is
-     opt-out via this media query — animations either snap or
+     opt-out via this media query â€” animations either snap or
      play minimally so vestibular users don't get nausea-inducing
      parallax. */
   @media (prefers-reduced-motion: reduce) {
@@ -375,8 +375,8 @@
     .tap-scale { transition: none !important; }
   }
 
-  /* ────────────────────────────────────────────────────────────────
-     Emoji animations — every named animation supported by
+  /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+     Emoji animations â€” every named animation supported by
      <AnimatedEmoji>. Keep keyframes self-contained (no external vars
      except --bdx/--bdy on burst dots) so they Just Work when applied
      to any emoji character.
@@ -385,7 +385,7 @@
      prime-number duration so a grid of mixed emojis doesn't pulse in
      sync, and AnimatedEmoji adds a per-char randomized animation-delay
      on top so even matching anims stagger.
-     ──────────────────────────────────────────────────────────────── */
+     â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
   .anim-emoji-bob       { animation: anim-emoji-bob 3.2s ease-in-out infinite; display: inline-block; }
   .anim-emoji-spin      { animation: anim-emoji-spin 4.8s linear infinite; display: inline-block; }
@@ -442,7 +442,7 @@
     75%      { transform: rotate(8deg)  scale(1.12); }
   }
 
-  /* Tap-burst dot — single shot 600ms radial fly-out. Uses CSS vars
+  /* Tap-burst dot â€” single shot 600ms radial fly-out. Uses CSS vars
      --bdx / --bdy set inline so each of the 8 dots can travel in a
      different direction without authoring 8 keyframes. */
   .anim-emoji-burst-dot {
@@ -454,4 +454,26 @@
     20%  { opacity: 1; }
     100% { transform: translate(-50%, -50%) translate(var(--bdx), var(--bdy)) scale(0.6); opacity: 0; }
   }
+}
+
+/* Homepage "I want toâ€¦" goal strip â€” scrollable but scrollbar-less */
+.gg-goals-row { scrollbar-width: none; }
+.gg-goals-row::-webkit-scrollbar { display: none; }
+
+/* Homepage hero â€” stack columns on small screens */
+@media (max-width: 880px) {
+  .gg-hero { grid-template-columns: 1fr !important; padding-top: 52px !important; gap: 40px !important; }
+  .gg-hero-visual { min-height: 520px !important; }
+}
+
+/* Homepage goal showcase â€” stack panel columns on small screens */
+@media (max-width: 880px) {
+  .gg-showcase { grid-template-columns: 1fr !important; padding: 24px 20px !important; }
+}
+
+/* Scene-swap animation for the hero mockup card + goal showcase */
+.gg-swap { animation: guacSwapIn 1.1s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes guacSwapIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
 }

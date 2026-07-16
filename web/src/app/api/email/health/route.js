@@ -25,8 +25,13 @@ import { sendAdminAlert, adminAlertConfigured, alertRecipient } from '../../../.
 export const runtime = 'nodejs'
 export const maxDuration = 30
 
-// Poll runs every 10 min; allow a couple of missed ticks before crying wolf.
-const STALE_MINUTES = Number(process.env.EMAIL_POLL_STALE_MINUTES || 35)
+// Poll runs every 10 min, but GitHub Actions scheduled crons routinely drift
+// 15-45 min (sometimes skip a tick) under load, and overnight there may be no
+// active user hitting /api/email/sync to refresh the heartbeat either. A 35-min
+// window tripped on that jitter and, with no ALERT_SMTP_PASS set, hard-failed
+// the watchdog workflow (red X) on false positives. 90 min tolerates the drift
+// while still catching a genuine multi-hour outage. Override via env if needed.
+const STALE_MINUTES = Number(process.env.EMAIL_POLL_STALE_MINUTES || 90)
 // Don't re-email more than once per window while it stays down.
 const ALERT_THROTTLE_MINUTES = Number(process.env.EMAIL_ALERT_THROTTLE_MINUTES || 60)
 

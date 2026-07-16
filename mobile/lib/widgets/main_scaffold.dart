@@ -308,6 +308,59 @@ class _MainScaffoldState extends State<MainScaffold> with WidgetsBindingObserver
     );
   }
 
+  // Floating Guac-AI launcher — a persistent avocado bubble that opens the
+  // AI assistant (/guac-ai → the web /chat pinned Guac AI thread in a WebView)
+  // from any screen. Uses the locked avocado emoji + an "AI" badge so it reads
+  // as the assistant, not a generic chat.
+  Widget _guacAiButton(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: 'Ask Guac AI',
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          context.go('/guac-ai');
+        },
+        child: Container(
+          width: 56, height: 56,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft, end: Alignment.bottomRight,
+              colors: [Color(0xFF84CC16), Color(0xFF15803D)],
+            ),
+            border: Border.all(color: Colors.white, width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF15803D).withValues(alpha: 0.40),
+                blurRadius: 12, offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Stack(clipBehavior: Clip.none, alignment: Alignment.center, children: [
+            const Text('🥑', style: TextStyle(fontSize: 26)),
+            Positioned(
+              top: -5, right: -6,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(999),
+                  boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 4)],
+                ),
+                child: Text('AI',
+                  style: TextStyle(
+                    fontSize: 9, height: 1.2, fontWeight: FontWeight.w900,
+                    fontVariations: ggWght(FontWeight.w900), color: const Color(0xFF15803D),
+                  )),
+              ),
+            ),
+          ]),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final idx = _selectedIndex(context);
@@ -316,31 +369,39 @@ class _MainScaffoldState extends State<MainScaffold> with WidgetsBindingObserver
       body: Column(children: [
         if (banner != null) banner,
         Expanded(
-          child: GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            onHorizontalDragEnd: (d) => _handleHorizontalSwipe(context, idx, d),
-            // Cross-fade between routes when the user navigates via
-            // context.go (which replaces rather than pushes — Cupertino
-            // slide doesn't fire on replace). The keyed AnimatedSwitcher
-            // detects the route change and runs a 220ms fade-through so
-            // tab + sidebar nav doesn't feel "instant teleport."
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 220),
-              switchInCurve: Curves.easeOutCubic,
-              switchOutCurve: Curves.easeIn,
-              transitionBuilder: (child, anim) => FadeTransition(
-                opacity: anim,
-                child: SlideTransition(
-                  position: Tween<Offset>(begin: const Offset(0, 0.015), end: Offset.zero).animate(anim),
-                  child: child,
+          child: Stack(children: [
+            GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onHorizontalDragEnd: (d) => _handleHorizontalSwipe(context, idx, d),
+              // Cross-fade between routes when the user navigates via
+              // context.go (which replaces rather than pushes — Cupertino
+              // slide doesn't fire on replace). The keyed AnimatedSwitcher
+              // detects the route change and runs a 220ms fade-through so
+              // tab + sidebar nav doesn't feel "instant teleport."
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 220),
+                switchInCurve: Curves.easeOutCubic,
+                switchOutCurve: Curves.easeIn,
+                transitionBuilder: (child, anim) => FadeTransition(
+                  opacity: anim,
+                  child: SlideTransition(
+                    position: Tween<Offset>(begin: const Offset(0, 0.015), end: Offset.zero).animate(anim),
+                    child: child,
+                  ),
+                ),
+                child: KeyedSubtree(
+                  key: ValueKey(GoRouterState.of(context).matchedLocation),
+                  child: widget.child,
                 ),
               ),
-              child: KeyedSubtree(
-                key: ValueKey(GoRouterState.of(context).matchedLocation),
-                child: widget.child,
-              ),
             ),
-          ),
+            // Floating Guac-AI launcher — persistent avocado bubble opening the
+            // AI assistant from any screen. Bottom-LEFT so it never collides
+            // with per-screen FABs (Smashlist "Add item" etc. sit bottom-right).
+            // Hidden on the assistant screen itself to avoid a no-op reload.
+            if (!GoRouterState.of(context).matchedLocation.startsWith('/guac-ai'))
+              Positioned(left: 16, bottom: 16, child: _guacAiButton(context)),
+          ]),
         ),
         // Native AdMob banner above the bottom nav. Tier-2: renders nothing
         // for premium subscribers (and zero-height until an ad loads).

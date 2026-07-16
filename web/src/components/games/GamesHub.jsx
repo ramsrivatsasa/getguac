@@ -9,6 +9,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import GameCover from './GameCover'
 import { GAMES, CATEGORIES, FEATURED_HREF, POPULAR_HREFS, shotFor } from './gamesList'
+import { createClient } from '../../lib/supabase/client'
 
 const INK = '#15201a'
 const BODY = '#3d4a42'
@@ -187,6 +188,17 @@ export default function GamesHub() {
   const [cat, setCat] = useState('all')
   const [query, setQuery] = useState('')
   const [resume, setResume] = useState([])
+  // null = unknown (still checking) → render neither copy until we know, so a
+  // signed-in player never flashes "Sign in". Set once auth resolves.
+  const [signedIn, setSignedIn] = useState(null)
+
+  useEffect(() => {
+    let dead = false
+    createClient().auth.getUser()
+      .then(({ data }) => { if (!dead) setSignedIn(!!data?.user?.id) })
+      .catch(() => { if (!dead) setSignedIn(false) })
+    return () => { dead = true }
+  }, [])
 
   // Games this browser has actually played, via each game's own save key.
   // localStorage is client-only, so this row appears after hydration.
@@ -264,7 +276,12 @@ export default function GamesHub() {
               <span className="text-sm font-bold" style={{ color: GREEN }}>Playing earns GuacMoney:</span>
               <span className="text-sm" style={{ color: BODY }}>
                 your first finished round of each game every day adds <b>+50 GuacMoney</b>.{' '}
-                <Link href="/login" style={{ color: GREEN, fontWeight: 700 }}>Sign in</Link> so it counts.
+                {signedIn === false && (
+                  <><Link href="/login" style={{ color: GREEN, fontWeight: 700 }}>Sign in</Link> so it counts.</>
+                )}
+                {signedIn === true && (
+                  <span style={{ color: GREEN, fontWeight: 700 }}>You&apos;re signed in — rounds count. 🥑</span>
+                )}
               </span>
             </div>
             <Link href="/chat" className="rounded-2xl px-5 py-4 flex items-center gap-3 no-underline" style={{ background: 'linear-gradient(135deg, #0d3b2e, #15281C)' }}>

@@ -13,6 +13,7 @@ import AdSlot from '../AdSlot'
 import XlOnly from '../XlOnly'
 import GameCover from './GameCover'
 import Leaderboard from './Leaderboard'
+import DailyBonusCard from './DailyBonusCard'
 import ArrowKeyGuard from './ArrowKeyGuard'
 import GameActions from './GameActions'
 import { GAMES, CATEGORIES, FEATURED_HREF, gameIdFor, shotFor } from './gamesList'
@@ -51,17 +52,7 @@ function RelatedRow({ game }) {
 function GameSidebar({ name, gameId, related }) {
   return (
     <>
-      <div className="rounded-2xl p-5 text-white" style={{ background: 'linear-gradient(135deg, #14532d, #166534)' }}>
-        <div className="font-display font-extrabold text-base mb-1.5">🥑 Daily bonus</div>
-        <p className="m-0 text-sm leading-relaxed" style={{ color: '#bbf7d0' }}>
-          Finish one round of {name} today to earn <b className="text-white">+50 GuacMoney</b>.
-        </p>
-        <div className="mt-3 rounded-full overflow-hidden" style={{ height: 9, background: 'rgba(255,255,255,0.15)' }}>
-          <div style={{ width: '0%', height: '100%', background: '#22c55e' }} />
-        </div>
-        <div className="mt-2 text-xs" style={{ color: '#86a893' }}>0 / 1 round finished today</div>
-        <Link href="/login" className="inline-block mt-3 text-xs font-extrabold px-3.5 py-1.5 rounded-full no-underline" style={{ background: AMBER, color: '#3F3206' }}>Sign in so it counts →</Link>
-      </div>
+      <DailyBonusCard name={name} gameId={gameId} />
 
       <Leaderboard game={gameId} />
 

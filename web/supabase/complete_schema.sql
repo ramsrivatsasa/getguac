@@ -284,43 +284,51 @@ end $$;
 create policy "profiles: own row" on public.profiles
   for all using (auth.uid() = id) with check (auth.uid() = id);
 
--- Receipts
+-- Receipts — STRICTLY owner-only. Do NOT re-add an is_admin bypass here: it let
+-- any admin session read every user's receipts through the normal client (see
+-- migration_080). Cross-user admin analytics must use the service role instead.
 create policy "receipts: own rows" on public.receipts
-  for all using (
-    auth.uid() = user_id or
-    exists (select 1 from public.profiles where id = auth.uid() and is_admin = true)
-  );
+  for all
+  using      (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
 
--- Receipt items
+-- Receipt items (scoped through the parent receipt's owner)
 create policy "receipt_items: own receipts" on public.receipt_items
-  for all using (
+  for all
+  using (
     exists (
       select 1 from public.receipts r
-      where r.id = receipt_id and (
-        r.user_id = auth.uid() or
-        exists (select 1 from public.profiles where id = auth.uid() and is_admin = true)
-      )
+      where r.id = receipt_id and r.user_id = auth.uid()
+    )
+  )
+  with check (
+    exists (
+      select 1 from public.receipts r
+      where r.id = receipt_id and r.user_id = auth.uid()
     )
   );
 
--- Refund policies
+-- Refund policies (scoped through the parent receipt's owner)
 create policy "refund_policies: own receipts" on public.receipt_refund_policies
-  for all using (
+  for all
+  using (
     exists (
       select 1 from public.receipts r
-      where r.id = receipt_id and (
-        r.user_id = auth.uid() or
-        exists (select 1 from public.profiles where id = auth.uid() and is_admin = true)
-      )
+      where r.id = receipt_id and r.user_id = auth.uid()
+    )
+  )
+  with check (
+    exists (
+      select 1 from public.receipts r
+      where r.id = receipt_id and r.user_id = auth.uid()
     )
   );
 
--- Rewards
+-- Rewards — owner-only (same is_admin bypass removed in migration_080)
 create policy "rewards: own rows" on public.rewards
-  for all using (
-    auth.uid() = user_id or
-    exists (select 1 from public.profiles where id = auth.uid() and is_admin = true)
-  );
+  for all
+  using      (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
 
 -- Shopping list / Car trips / Payment options — owner only
 create policy "shopping_list: own rows" on public.shopping_list

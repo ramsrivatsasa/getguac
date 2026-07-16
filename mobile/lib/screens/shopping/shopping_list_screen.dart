@@ -382,6 +382,54 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
     }
   }
 
+  // Share the WHOLE active Smashlist as a public /share/<token> page via
+  // the same web endpoint the browser uses (kind='list'). Per-item _share
+  // shares ONE find; this shares the trip plan — the "send it to family in
+  // one tap" affordance the marketing site promises and the web page has.
+  // Payload is grouped by store to match web's buildListPayload exactly so
+  // the landing renders identically.
+  Future<void> _shareList() async {
+    final inList = _items.where((i) => i.listName == _activeList).toList();
+    if (inList.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$_activeList is empty — add items before sharing.')),
+      );
+      return;
+    }
+    // Group by store: { name, items:[{item_name, qty, price, list_name}] }.
+    // Items without a routed store fall under "Any store" — matches web.
+    final byStore = <String, List<Map<String, dynamic>>>{};
+    for (final it in inList) {
+      final key = (it.storeNameDisplay != null && it.storeNameDisplay!.isNotEmpty)
+          ? it.storeNameDisplay!
+          : 'Any store';
+      byStore.putIfAbsent(key, () => <Map<String, dynamic>>[]).add(<String, dynamic>{
+        'item_name': it.name,
+        'qty': it.qty,
+        'price': it.price > 0 ? it.price : null,
+        'list_name': it.listName,
+      });
+    }
+    final stores = byStore.entries
+        .map((e) => <String, dynamic>{'name': e.key, 'items': e.value})
+        .toList();
+    final totalCost = inList.fold<double>(0, (s, it) => s + it.price);
+
+    final url = await ShareService.shareList(
+      context: context,
+      title: 'GetGuac $_activeList',
+      stores: stores,
+      totalItems: inList.length,
+      totalCost: totalCost,
+    );
+    if (!mounted) return;
+    if (url == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not create share link. Try again later.')),
+      );
+    }
+  }
+
   // Auto-Add Cheapest — the GuacMoney engagement loop. For every
   // predicted-and-not-approved item, pull per-store price history,
   // pick the store with the lowest min_price, log a GuacMoney event
@@ -499,6 +547,18 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
           icon: const Icon(Icons.refresh),
           tooltip: 'Refresh list',
           onPressed: _loading ? null : _load,
+        ),
+        // Share the whole active Smashlist as a public link — the "send it
+        // to family in one tap" feature the marketing site promises and the
+        // web page has (kind='list'). Disabled while loading or when the
+        // active list is empty. Per-item Share still lives on Buy Again rows.
+        IconButton(
+          icon: barActionChild(Icons.ios_share, 'Share'),
+          tooltip: 'Share list',
+          visualDensity: VisualDensity.compact,
+          onPressed: (_loading || !_items.any((i) => i.listName == _activeList))
+              ? null
+              : _shareList,
         ),
       ]),
       bottomNavigationBar: _selectedBuyAgain.isEmpty ? null : _compareStoresBar(),

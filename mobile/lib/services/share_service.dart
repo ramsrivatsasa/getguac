@@ -57,6 +57,41 @@ class ShareService {
     return url;
   }
 
+  /// Mints a share link for the user's WHOLE Smashlist (kind='list') and
+  /// pops the OS share sheet — the "send it to family in one tap" affordance
+  /// the marketing site promises. `stores` must match the web buildListPayload
+  /// shape: [{ name, items: [{item_name, qty, price, list_name}] }], so
+  /// /share/<token> renders identically on web and mobile. Returns the URL
+  /// on success, null on failure (caller handles the toast).
+  static Future<String?> shareList({
+    required BuildContext context,
+    required String title,
+    required List<Map<String, dynamic>> stores,
+    required int totalItems,
+    required double totalCost,
+    String channel = 'native',
+  }) async {
+    final url = await _create(
+      kind: 'list',
+      payload: {
+        'kind': 'list',
+        'title': title,
+        'stores': stores,
+        'store_count': stores.length,
+        'total_items': totalItems,
+        'total_cost': totalCost,
+      },
+      channel: channel,
+    );
+    if (url == null) return null;
+
+    await Share.share(
+      'Check out my GetGuac Smashlist 🥑\n$url',
+      subject: title,
+    );
+    return url;
+  }
+
   /// Low-level: POSTs to /api/share/create with the user's bearer token.
   /// Returns the share URL, or null on any failure.
   static Future<String?> _create({

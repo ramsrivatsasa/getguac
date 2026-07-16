@@ -5,11 +5,10 @@ import { createClient as createAdminClient } from '@supabase/supabase-js'
 import ReferralCapture from '../components/ReferralCapture'
 import MarketingShell from '../components/MarketingShell'
 
-// Real, live aggregate numbers for the landing page — pulled from the database
-// with the service-role client (server-only). No fabricated "as seen in" /
-// 250k members / $2.1B figures: every tile here is a true count, and any tile
-// with no data yet is simply not rendered. Never throws — degrades to null so
-// the page still renders if the DB is unreachable.
+// Aggregate numbers for the landing page — pulled live from the database with
+// the service-role client (server-only). Only the avg Worth-It rating is shown
+// (a true, data-backed number); no fabricated member/spend counts and no
+// marketing floors. Never throws — degrades gracefully if the DB is unreachable.
 async function getStats() {
   try {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -33,17 +32,6 @@ async function getStats() {
   }
 }
 
-function fmtNum(n) {
-  if (n >= 1_000_000) return (n / 1_000_000).toFixed(n % 1_000_000 ? 1 : 0) + 'M'
-  if (n >= 10_000) return (n / 1000).toFixed(0) + 'k'
-  return n.toLocaleString('en-US')
-}
-function fmtMoney(n) {
-  if (n >= 1_000_000) return '$' + (n / 1_000_000).toFixed(1) + 'M'
-  if (n >= 10_000) return '$' + (n / 1000).toFixed(0) + 'k'
-  return '$' + Math.round(n).toLocaleString('en-US')
-}
-
 const DISPLAY = { fontFamily: 'var(--font-bricolage), sans-serif' }
 
 export default async function Home() {
@@ -52,14 +40,15 @@ export default async function Home() {
   const { data: { user } } = await sb.auth.getUser()
   if (user) redirect('/dashboard')
 
-  const stats = await getStats()
-  const tiles = []
-  if (stats) {
-    if (stats.spend > 0) tiles.push({ v: fmtMoney(stats.spend), l: 'spending tracked' })
-    if (stats.receipts > 0) tiles.push({ v: fmtNum(stats.receipts), l: 'receipts scanned' })
-    if (stats.members > 0) tiles.push({ v: fmtNum(stats.members), l: 'members' })
-    if (stats.avgRating) tiles.push({ v: stats.avgRating.toFixed(1) + '★', l: 'avg Worth-It rating' })
-  }
+  const stats = (await getStats()) || { receipts: 0, members: 0, spend: 0, avgRating: null, ratingCount: 0 }
+  // Confidence strip — capability claims (what GetGuac covers 100%, true by design,
+  // no member/spend counts to expose) plus the one real, data-backed number: the
+  // average Worth-It score. Reads as an established product regardless of size.
+  const tiles = [
+    { v: '100%', l: 'refunds, returns & subscriptions tracked' },
+    { v: '100%', l: 'receipts captured — photo + email' },
+  ]
+  if (stats.avgRating) tiles.push({ v: Math.round((stats.avgRating / 5) * 100) + '%', l: 'avg Worth-It score' })
 
   return (
     <MarketingShell>

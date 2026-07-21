@@ -384,7 +384,7 @@ export default function BullseyeDarts() {
       <div
         ref={wrapRef}
         className="relative overflow-hidden"
-        style={{ height: 'clamp(470px, calc(100svh - 170px), 900px)', minHeight: 430, background: '#191512', borderTop: '1px solid rgba(87,83,78,0.5)', borderBottom: '1px solid rgba(87,83,78,0.5)' }}
+        style={{ height: 'clamp(470px, calc(100svh - 170px), 900px)', minHeight: 430, background: '#191512' }}
       >
         <canvas
           ref={canvasRef}
@@ -456,7 +456,7 @@ export default function BullseyeDarts() {
                 <div className="text-[11px]" style={{ color: FAINT }}>best game</div>
               </div>
             </div>
-            {newBest && <div className="text-xs font-bold mt-2" style={{ color: AMBER }}>New best! 🥑</div>}
+            {newBest && <div className="text-xs font-bold mt-2" style={{ color: AMBER }}>New best!</div>}
             <SaveScoreLine res={saveRes} />
             <div className="mt-4">
               <PrimaryButton onClick={start}>Play again</PrimaryButton>

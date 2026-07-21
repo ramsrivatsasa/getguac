@@ -541,7 +541,7 @@ export default function SpaceRocks() {
       <div
         ref={wrapRef}
         className="relative overflow-hidden"
-        style={{ height: 'clamp(470px, calc(100svh - 170px), 900px)', minHeight: 430, background: '#0b1026', borderTop: '1px solid rgba(30,41,59,0.8)', borderBottom: '1px solid rgba(30,41,59,0.8)' }}
+        style={{ height: 'clamp(470px, calc(100svh - 170px), 900px)', minHeight: 430, background: '#0b1026' }}
       >
         <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" style={{ touchAction: 'none' }} />
 
@@ -626,7 +626,7 @@ export default function SpaceRocks() {
                 <div className="text-[11px]" style={{ color: FAINT }}>best score</div>
               </div>
             </div>
-            {newBest && <div className="text-xs font-bold mt-2" style={{ color: AMBER }}>New best! 🥑</div>}
+            {newBest && <div className="text-xs font-bold mt-2" style={{ color: AMBER }}>New best!</div>}
             <SaveScoreLine res={saveRes} />
             <div className="mt-4">
               <PrimaryButton onClick={start}>Fly again</PrimaryButton>

@@ -4,14 +4,33 @@
 // loan…); smash them all and the level ends DEBT FREE. Power-ups drop from
 // bricks: wide paddle, slow ball, multiball. Move with mouse / touch / arrows.
 // Sim in refs + rAF; React state is HUD only; synthesized sound.
+//
+// This game owns CHAPTER 2 of the shared financial journey — 🧱 Get debt-free
+// (lib/financialJourney). It opens with that chapter's real lesson (avalanche:
+// highest interest first), sets a payoff goal, runs its levels as the chapter's
+// stages, and finishes by pointing at what genuinely comes next. Difficulty
+// rides the auto-learning engine (lib/adaptiveDifficulty).
 import { useEffect, useRef, useState } from 'react'
 import {
   useArcadeSound, useBestScore, useScoreSaver,
   Overlay, OverlayAd, SaveScoreLine, PrimaryButton, GhostButton, HudButton,
   INK, BODY, MUTED, FAINT, GREEN, AMBER, ROSE, fmt,
 } from './arcadeKit'
+import { roundById } from '../../lib/financialJourney'
+import { useAdaptive, AdaptiveChip, RoundIntro, ChapterComplete, JourneyBar } from './journeyKit'
 
 const BEST_KEY = 'gg-breaker-best-v1'
+
+// The journey chapter this game teaches.
+const CHAPTER = roundById('debt')
+// Payoff goal for the chapter, in this game's economy (a full starting wall is
+// worth roughly $2.5k, so this is a few walls' work). Nudged ±15% by the
+// auto-learning engine. Its levels double as the chapter's stages.
+const CHAPTER_GOAL = 7000
+const CHAPTER_STAGES = 4
+// How long we expect a full chapter run to take; the learning engine grades
+// the player's real time against it.
+const CHAPTER_PAR = 150
 
 // Debt rows, worst (top) to almost-free (bottom). Color runs hot → green.
 const DEBT_ROWS = [
@@ -37,6 +56,7 @@ const freshSim = (w, h) => ({
   drops: [], parts: [],
   level: 1, lives: 3, score: 0, debtLeft: 0,
   speed: 380, slow: 0, clock: 0, launchT: 0,
+  goal: CHAPTER_GOAL, t0: 0, livesLost: 0,
 })
 
 function buildWall(sim, w) {
@@ -54,7 +74,10 @@ function buildWall(sim, w) {
       debt += value
       sim.bricks.push({
         x: gap + c * (bw + gap), y: 64 + r * (bh + gap), w: bw, h: bh,
-        kind, value, hp: r === 0 && sim.level >= 3 ? 2 : 1,
+        kind, value,
+        // Top rows armor up as levels climb; the auto-learning engine adds a
+        // row or two of armor for players who are clearly cruising.
+        hp: (r === 0 && sim.level >= 3) || r < (sim.armorRows || 0) ? 2 : 1,
       })
     }
   }
@@ -89,6 +112,24 @@ export default function DebtBreaker() {
   const { tone, muted, toggleMute } = useArcadeSound()
   const { best, newBest, submit: submitBest } = useBestScore(BEST_KEY)
   const { saveRes, save, resetSave } = useScoreSaver('breaker')
+  // Auto-learning difficulty for this chapter.
+  const { diff, diffRef, record, note } = useAdaptive('breaker')
+  const goal = Math.max(500, Math.round((CHAPTER_GOAL * diff.targetMul) / 100) * 100)
+  const stage = Math.min(CHAPTER_STAGES, level)
+
+  // Fold the run into the skill profile: did they clear the chapter, how fast,
+  // and how many balls did it cost.
+  const learn = (cleared) => {
+    const sim = simRef.current
+    if (!sim) return
+    record({
+      cleared,
+      seconds: sim.t0 ? (performance.now() - sim.t0) / 1000 : 0,
+      par: CHAPTER_PAR,
+      livesLost: sim.livesLost,
+      accuracy: null,
+    })
+  }
 
   const setPhase = (s) => { statusRef.current = s; setStatus(s) }
   const showToast = (msg) => {
@@ -120,11 +161,29 @@ export default function DebtBreaker() {
 
   const endGame = (sim) => {
     cancelAnimationFrame(rafRef.current)
+    learn(false)
     sfx('lose')
     save(sim.score, sim.level)
     submitBest(sim.score)
     setPhase('over')
     draw(sim)
+  }
+
+  // Hit the chapter's payoff goal — debt-free.
+  const winChapter = (sim) => {
+    cancelAnimationFrame(rafRef.current)
+    learn(true)
+    sfx('win')
+    save(sim.score, sim.level)
+    submitBest(sim.score)
+    setPhase('won')
+    draw(sim)
+  }
+  // Called after any payoff; returns true when the chapter is done.
+  const checkGoal = (sim) => {
+    if (sim.score < sim.goal) return false
+    winChapter(sim)
+    return true
   }
 
   function levelUp(sim) {
@@ -138,7 +197,8 @@ export default function DebtBreaker() {
     buildWall(sim, w)
     spawnBall(sim, w, h)
     setScore(sim.score); setLevel(sim.level); setDebtLeft(sim.debtLeft)
-    showToast(`DEBT FREE! 🎉 Level ${sim.level}`)
+    if (checkGoal(sim)) return
+    showToast(`Wall cleared! ⚡ Stage ${Math.min(CHAPTER_STAGES, sim.level)}`)
     sfx('win')
   }
 
@@ -146,6 +206,7 @@ export default function DebtBreaker() {
     const { w, h } = sizeRef.current
     if (sim.balls.length > 0) return // still have another ball in play
     sim.lives -= 1
+    sim.livesLost += 1
     setLives(sim.lives)
     sfx('drop')
     if (sim.lives <= 0) { endGame(sim); return }
@@ -170,6 +231,7 @@ export default function DebtBreaker() {
       const p = POWERS[Math.floor(Math.random() * POWERS.length)]
       sim.drops.push({ x: bx, y: by, vy: 130, power: p })
     }
+    if (checkGoal(sim)) return
     if (sim.bricks.length === 0) levelUp(sim)
   }
 
@@ -384,13 +446,23 @@ export default function DebtBreaker() {
     }
   }
 
-  const start = () => {
+  // Open the chapter with its lesson card; play starts from there.
+  const start = () => { resetSave(); setPhase('intro') }
+
+  const beginPlay = () => {
     const { w, h } = sizeRef.current
     const sim = freshSim(w, h)
+    sim.goal = goal
+    sim.t0 = performance.now()
+    // Auto-learning difficulty: a faster ball and more armored rows for
+    // players the engine has watched handle it.
+    const d = diffRef.current
+    sim.speed = Math.round(380 * Math.max(0.85, Math.min(1.35, d.mul)))
+    sim.armorRows = d.hazards
     buildWall(sim, w)
     spawnBall(sim, w, h)
     simRef.current = sim
-    setScore(0); setLevel(1); setLives(3); setDebtLeft(sim.debtLeft); resetSave()
+    setScore(0); setLevel(1); setLives(3); setDebtLeft(sim.debtLeft)
     setPhase('playing')
     lastRef.current = performance.now()
     cancelAnimationFrame(rafRef.current)
@@ -476,7 +548,7 @@ export default function DebtBreaker() {
       <div
         ref={wrapRef}
         className="relative overflow-hidden"
-        style={{ height: 'clamp(470px, calc(100svh - 170px), 900px)', minHeight: 430, background: '#101826', borderTop: '1px solid rgba(30,41,59,0.8)', borderBottom: '1px solid rgba(30,41,59,0.8)' }}
+        style={{ height: 'clamp(470px, calc(100svh - 170px), 900px)', minHeight: 430, background: '#101826' }}
       >
         <canvas
           ref={canvasRef}
@@ -509,8 +581,12 @@ export default function DebtBreaker() {
           </div>
         </div>
 
+        {status === 'playing' && (
+          <JourneyBar round={CHAPTER} banked={score} target={goal} stage={stage} stages={CHAPTER_STAGES} top={44} />
+        )}
+
         {toast && (
-          <div className="absolute left-1/2 top-14 -translate-x-1/2 text-sm font-bold px-4 py-2 rounded-full" style={{ background: '#A3E635', color: INK, pointerEvents: 'none' }}>{toast}</div>
+          <div className="absolute left-1/2 -translate-x-1/2 text-sm font-bold px-4 py-2 rounded-full" style={{ top: 120, background: '#A3E635', color: INK, pointerEvents: 'none' }}>{toast}</div>
         )}
 
         {status === 'idle' && (
@@ -519,15 +595,30 @@ export default function DebtBreaker() {
             <div className="font-display font-extrabold text-xl mb-2" style={{ color: INK }}>Debt Breaker</div>
             <p className="text-sm mb-1" style={{ color: BODY }}>
               That wall is your debt — credit cards, car loan, student loans.
-              <b style={{ color: GREEN }}> Smash every brick to go debt-free</b> and level up.
+              <b style={{ color: GREEN }}> Smash it down to go debt-free</b>, one stage at a time.
             </p>
             <p className="text-sm mb-3" style={{ color: BODY }}>
               Move the paddle with your mouse, finger or arrow keys. Catch the falling power-ups: wider paddle, slow ball, multiball.
             </p>
-            {best > 0 && <div className="text-xs font-bold mb-3" style={{ color: AMBER }}>Best payoff: ${fmt(best)}</div>}
-            <PrimaryButton onClick={start}>Start breaking</PrimaryButton>
+            <div className="text-[11px] font-bold px-3 py-1 rounded-full inline-block mb-2"
+              style={{ background: `${CHAPTER.color}1a`, color: CHAPTER.dark }}>
+              CHAPTER {CHAPTER.n} OF THE MONEY JOURNEY · {CHAPTER.emoji} {CHAPTER.title}
+            </div>
+            {best > 0 && <div className="text-xs font-bold mb-2" style={{ color: AMBER }}>Best payoff: ${fmt(best)}</div>}
+            <AdaptiveChip diff={diff} note={note} compact />
+            <div className="mt-3"><PrimaryButton onClick={start}>Start breaking</PrimaryButton></div>
             <OverlayAd />
           </Overlay>
+        )}
+
+        {status === 'intro' && (
+          <RoundIntro round={CHAPTER} target={goal} stages={CHAPTER_STAGES} diff={diff} note={note}
+            onStart={beginPlay} cta="Start breaking" />
+        )}
+
+        {status === 'won' && (
+          <ChapterComplete round={CHAPTER} banked={score} caption="of debt crushed" diff={diff} note={note}
+            onReplay={start} replayLabel="Break it again" />
         )}
 
         {status === 'paused' && (
@@ -546,7 +637,7 @@ export default function DebtBreaker() {
             <div className="text-3xl mb-1">🧱💥</div>
             <div className="font-display font-extrabold text-lg" style={{ color: INK }}>Out of balls!</div>
             <div className="font-display font-extrabold text-4xl mt-2" style={{ color: GREEN }}>${fmt(score)}</div>
-            <div className="text-[11px] font-semibold" style={{ color: MUTED }}>of debt crushed</div>
+            <div className="text-[11px] font-semibold" style={{ color: MUTED }}>of debt crushed · goal was ${fmt(goal)}</div>
             <div className="flex justify-center gap-8 mt-3">
               <div>
                 <div className="font-display font-extrabold text-lg" style={{ color: MUTED }}>{level}</div>
@@ -557,8 +648,9 @@ export default function DebtBreaker() {
                 <div className="text-[11px]" style={{ color: FAINT }}>best payoff</div>
               </div>
             </div>
-            {newBest && <div className="text-xs font-bold mt-2" style={{ color: AMBER }}>New best! 🥑</div>}
+            {newBest && <div className="text-xs font-bold mt-2" style={{ color: AMBER }}>New best!</div>}
             <SaveScoreLine res={saveRes} />
+            <AdaptiveChip diff={diff} note={note} compact />
             <div className="mt-4">
               <PrimaryButton onClick={start}>Break more debt</PrimaryButton>
             </div>

@@ -10,7 +10,7 @@ import { useEffect, useRef, useState } from 'react'
 import {
   useArcadeSound, useBestScore, useScoreSaver,
   Overlay, OverlayAd, SaveScoreLine, PrimaryButton, GhostButton, HudButton,
-  INK, BODY, MUTED, FAINT, GREEN, AMBER, fmt,
+  INK, BODY, MUTED, FAINT, GREEN, AMBER, fmt, AvocadoPip,
 } from './arcadeKit'
 
 const BEST_KEY = 'gg-fling-best-v1'
@@ -617,7 +617,7 @@ export default function GuacFling() {
       <div
         ref={wrapRef}
         className="relative overflow-hidden"
-        style={{ height: 'clamp(470px, calc(100svh - 170px), 900px)', minHeight: 430, background: '#bae6fd', borderTop: '1px solid rgba(20,83,45,0.12)', borderBottom: '1px solid rgba(20,83,45,0.12)' }}
+        style={{ height: 'clamp(470px, calc(100svh - 170px), 900px)', minHeight: 430, background: '#bae6fd' }}
       >
         <canvas
           ref={canvasRef}
@@ -640,7 +640,7 @@ export default function GuacFling() {
               <span className="text-[11px] font-semibold" style={{ color: '#5C6B60' }}>Level </span>
               <span className="font-display font-bold text-sm" style={{ color: INK }}>{level}</span>
             </div>
-            <div className="text-sm">{'🥑'.repeat(Math.max(0, birdsLeft))}</div>
+            <div className="flex items-center gap-1" aria-label={`${birdsLeft} avocados left`}>{Array.from({ length: Math.max(0, birdsLeft) }).map((_, i) => <AvocadoPip key={i} size={15} />)}</div>
           </div>
           <div className="flex items-center gap-2" style={{ pointerEvents: 'auto' }}>
             <HudButton onClick={toggleMute} label={muted ? 'Unmute sound' : 'Mute sound'}>{muted ? '🔇' : '🔊'}</HudButton>
@@ -688,7 +688,7 @@ export default function GuacFling() {
                 <div className="text-[11px]" style={{ color: FAINT }}>best run</div>
               </div>
             </div>
-            {newBest && <div className="text-xs font-bold mt-2" style={{ color: AMBER }}>New best! 🥑</div>}
+            {newBest && <div className="text-xs font-bold mt-2 flex items-center justify-center gap-1" style={{ color: AMBER }}>New best! <AvocadoPip size={13} /></div>}
             <SaveScoreLine res={saveRes} />
             <div className="mt-4">
               <PrimaryButton onClick={start}>Play again</PrimaryButton>

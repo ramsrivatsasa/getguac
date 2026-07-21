@@ -46,12 +46,19 @@ export default function AdSlot({ slot = '', format = 'auto', className = '', min
       setEmbedded(true)
       return
     }
-    if (!CLIENT || !slot || pushed.current || hideForPremium) return
-    try {
-      // eslint-disable-next-line no-multi-assign
-      (window.adsbygoogle = window.adsbygoogle || []).push({})
-      pushed.current = true
-    } catch { /* adsbygoogle not ready / blocked */ }
+    if (!CLIENT || !slot || hideForPremium) return
+    // Push at most once per slot — but do NOT let that guard skip the
+    // fill-watching below. React runs effects twice in dev (StrictMode); when
+    // `pushed` short-circuited the whole effect, the second run never attached
+    // the observer or the timeout, so an "unfilled" unit was never collapsed
+    // and left a 280px blank box inside the card.
+    if (!pushed.current) {
+      try {
+        // eslint-disable-next-line no-multi-assign
+        (window.adsbygoogle = window.adsbygoogle || []).push({})
+        pushed.current = true
+      } catch { /* adsbygoogle not ready / blocked */ }
+    }
 
     const ins = insRef.current
     if (!ins) return
@@ -64,13 +71,17 @@ export default function AdSlot({ slot = '', format = 'auto', className = '', min
     const obs = new MutationObserver(read)
     obs.observe(ins, { attributes: true, attributeFilter: ['data-ad-status'] })
     read()
-    // Fallback: if it never resolves (script blocked, not yet approved, no
-    // inventory) and the unit has no height, collapse so we don't leave a
-    // blank reserved box under the label.
+    // Fallback: if it never resolves, collapse. A real ad ALWAYS stamps
+    // data-ad-status="filled", so anything still undecided after a few seconds
+    // is not going to fill — script blocked, site not yet approved, no
+    // inventory, or an ad blocker. Note we must NOT keep the slot just because
+    // it has height: adsbygoogle expands a responsive <ins> to its reserved
+    // size the moment it mounts, so an unapproved site would otherwise be left
+    // with a permanent blank box (this was leaving ~250px of dead white space
+    // inside every game's start / game-over card).
     const t = setTimeout(() => {
-      const s = ins.getAttribute('data-ad-status')
-      if (s === 'unfilled' || (!s && ins.offsetHeight < 10)) setStatus('unfilled')
-    }, 4000)
+      if (ins.getAttribute('data-ad-status') !== 'filled') setStatus('unfilled')
+    }, 2500)   // a working unit resolves well inside a second
     return () => { obs.disconnect(); clearTimeout(t) }
   }, [slot, hideForPremium])
 

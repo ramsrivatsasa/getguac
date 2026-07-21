@@ -85,7 +85,7 @@ export default function HeroScoreCard() {
         </div>
       </div>
       {/* Floating callout — swaps with each scene. */}
-      <div style={{ position: 'absolute', top: 24, left: -6, background: '#fff', borderRadius: 16, padding: '12px 15px', boxShadow: '0 18px 40px -16px rgba(20,40,28,0.35)', border: '1px solid rgba(20,83,45,0.08)', display: 'flex', alignItems: 'center', gap: 10, animation: 'guacFloatB 5s ease-in-out infinite' }}>
+      <div style={{ position: 'absolute', top: 44, left: -54, background: '#fff', borderRadius: 16, padding: '12px 15px', boxShadow: '0 18px 40px -16px rgba(20,40,28,0.35)', border: '1px solid rgba(20,83,45,0.08)', display: 'flex', alignItems: 'center', gap: 10, animation: 'guacFloatB 4.5s ease-in-out infinite' }}>
         <div key={i} className="gg-swap" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ width: 32, height: 32, borderRadius: 10, background: '#F0F7E8', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>{sc.co.i}</span>
           <div><div style={{ fontSize: 11, color: '#8A988E', fontWeight: 600 }}>{sc.co.k}</div><div style={{ ...DISPLAY, fontWeight: 800, fontSize: 16, color: '#4D7C0F' }}>{sc.co.v}</div></div>

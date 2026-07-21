@@ -2,16 +2,18 @@
 // Whack-a-Fee — whack-a-mole with a money filter. Fees (💸 +25) and golden
 // fees (🤑 +100, quick!) pop out of nine holes; hammer them flat. The piggy
 // bank (🐷) is your savings — bonk it and you LOSE 100. 45 seconds, spawns
-// speed up as the clock runs down. DOM holes inside the shared GameFrame.
+// speed up as the clock runs down. DOM holes on the dark guac field, with the
+// unified Guac Arcade HUD overlaid (mockup 1h): score pill, gold timer, pause.
 import { useEffect, useRef, useState } from 'react'
 import {
   useArcadeSound, useBestScore, useScoreSaver,
-  SaveScoreLine, PrimaryButton, GameFrame,
-  INK, BODY, MUTED, FAINT, GREEN, AMBER, fmt,
+  SaveScoreLine, PrimaryButton, ArcadeHud,
+  INK, BODY, MUTED, FAINT, GREEN, AMBER, CARD_BORDER, fmt,
 } from './arcadeKit'
 
 const BEST_KEY = 'gg-whack-best-v1'
 const GAME_SECONDS = 45
+const FIELD_BG = 'linear-gradient(180deg, #14532d 0%, #166534 100%)'
 const TYPES = {
   fee: { emoji: '💸', pts: 25 },
   gold: { emoji: '🤑', pts: 100 },
@@ -19,7 +21,7 @@ const TYPES = {
 }
 
 export default function WhackAFee() {
-  const [status, setStatus] = useState('idle')   // idle | playing | over
+  const [status, setStatus] = useState('idle')   // idle | playing | paused | over
   const [holes, setHoles] = useState(Array(9).fill(null)) // {type, id, whacked}
   const [score, setScore] = useState(0)
   const [timeLeft, setTimeLeft] = useState(GAME_SECONDS)
@@ -27,6 +29,7 @@ export default function WhackAFee() {
   const statusRef = useRef('idle')
   const timersRef = useRef([])
   const startRef = useRef(0)
+  const pausedRef = useRef(0)
   const scoreRef = useRef(0)
   const idRef = useRef(1)
 
@@ -120,29 +123,38 @@ export default function WhackAFee() {
     later(() => setHoles((cur) => cur.map((x, j) => (j === i && x && x.whacked ? null : x))), 240)
   }
 
-  return (
-    <GameFrame inner={500}>
-      <div className="mx-auto select-none">
-        {/* HUD */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-baseline gap-3">
-            <div>
-              <span className="text-[11px] font-semibold" style={{ color: MUTED }}>Score </span>
-              <span className="font-display font-extrabold text-lg" style={{ color: INK }}>{fmt(score)}</span>
-            </div>
-            <div>
-              <span className="text-[11px] font-semibold" style={{ color: MUTED }}>Time </span>
-              <span className="font-display font-bold text-sm" style={{ color: timeLeft <= 10 ? '#dc2626' : INK }}>{timeLeft}s</span>
-            </div>
-          </div>
-          <button type="button" onClick={toggleMute} className="text-xs font-bold px-2.5 py-1.5 rounded-full bg-white" style={{ border: '1px solid rgba(20,83,45,0.15)', color: INK }} aria-label={muted ? 'Unmute' : 'Mute'}>
-            {muted ? '🔇' : '🔊'}
-          </button>
-        </div>
+  // Pause freezes the clock by banking the elapsed offset; resume rewinds the
+  // start time so the countdown continues where it left off.
+  const pause = () => {
+    if (statusRef.current !== 'playing') return
+    clearTimers()
+    pausedRef.current = performance.now()
+    setHoles(Array(9).fill(null))
+    setPopup(null)
+    setPhase('paused')
+  }
+  const resume = () => {
+    if (statusRef.current !== 'paused') return
+    startRef.current += performance.now() - pausedRef.current
+    setPhase('playing')
+    later(spawn, 300)
+    later(tick, 100)
+  }
 
-        {/* Lawn */}
-        <div className="relative">
-          <div className="grid grid-cols-3 gap-4 rounded-3xl p-5" style={{ background: 'linear-gradient(180deg, #86c94f, #65A30D)' }}>
+  useEffect(() => {
+    const onBlur = () => pause()
+    const vis = () => { if (document.hidden) pause() }
+    window.addEventListener('blur', onBlur)
+    document.addEventListener('visibilitychange', vis)
+    return () => { window.removeEventListener('blur', onBlur); document.removeEventListener('visibilitychange', vis) }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <div className="w-full select-none">
+      <div className="relative rounded-2xl overflow-hidden" style={{ minHeight: 'clamp(470px, calc(100svh - 170px), 900px)', background: FIELD_BG }}>
+        {/* Lawn of holes, sitting directly on the dark field (mockup 1h) */}
+        <div className="absolute inset-0 flex items-center justify-center px-6" style={{ paddingTop: 96, paddingBottom: 64 }}>
+          <div className="grid grid-cols-3 gap-5 w-full" style={{ maxWidth: 540 }}>
             {holes.map((h, i) => (
               <button
                 key={i}
@@ -153,63 +165,85 @@ export default function WhackAFee() {
                 aria-label={`Hole ${i + 1}`}
               >
                 {/* hole */}
-                <span className="absolute left-1/2 bottom-2 -translate-x-1/2 rounded-[50%]" style={{ width: '84%', height: '34%', background: '#3b2a17', boxShadow: 'inset 0 6px 10px rgba(0,0,0,0.5)' }} />
+                <span className="absolute left-1/2 bottom-2 -translate-x-1/2 rounded-[50%]" style={{ width: '86%', height: '32%', background: '#052e16', boxShadow: 'inset 0 6px 12px rgba(0,0,0,0.6)' }} />
                 {/* mole */}
                 {h && (
                   <span
                     className="absolute left-1/2 -translate-x-1/2 leading-none"
                     style={{
-                      fontSize: 52,
-                      bottom: h.whacked ? '-6%' : '22%',
+                      fontSize: 54,
+                      bottom: h.whacked ? '-6%' : '20%',
                       transition: 'bottom .12s ease',
                       transform: h.whacked ? 'translateX(-50%) scaleY(0.5)' : 'translateX(-50%)',
-                      filter: 'drop-shadow(0 4px 5px rgba(0,0,0,0.35))',
+                      filter: 'drop-shadow(0 4px 5px rgba(0,0,0,0.4))',
                     }}
                   >
                     {TYPES[h.type].emoji}
                   </span>
                 )}
                 {popup && popup.hole === i && (
-                  <span className="absolute left-1/2 top-1 -translate-x-1/2 font-display font-extrabold text-lg" style={{ color: popup.good ? '#f0fdf4' : '#fecaca', textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>
+                  <span className="absolute left-1/2 top-0 -translate-x-1/2 font-display font-extrabold" style={{ fontSize: 20, color: popup.good ? '#fbbf24' : '#fecaca', textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>
                     {popup.txt}
                   </span>
                 )}
               </button>
             ))}
           </div>
-
-          {status !== 'playing' && (
-            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-3xl text-center px-6" style={{ background: 'rgba(255,255,255,0.94)' }}>
-              {status === 'idle' ? (
-                <>
-                  <div className="text-4xl mb-1">🔨</div>
-                  <div className="font-display font-extrabold text-2xl" style={{ color: INK }}>Whack-a-Fee</div>
-                  <p className="text-sm mt-2 mb-1 max-w-sm" style={{ color: BODY }}>
-                    Fees pop out of the lawn — hammer them! 💸 is +25, the golden 🤑 is +100 but ducks fast.
-                  </p>
-                  <p className="text-xs mb-4" style={{ color: MUTED }}>Never bonk the piggy bank 🐷 — that&apos;s your savings (−100).</p>
-                  {best > 0 && <div className="text-xs font-bold mb-3" style={{ color: AMBER }}>Best round: {fmt(best)}</div>}
-                  <PrimaryButton onClick={start}>Grab the hammer</PrimaryButton>
-                </>
-              ) : (
-                <>
-                  <div className="text-3xl mb-1">🔨🏁</div>
-                  <div className="font-display font-extrabold text-xl" style={{ color: INK }}>Time&apos;s up!</div>
-                  <div className="font-display font-extrabold text-4xl mt-2" style={{ color: GREEN }}>{fmt(score)}</div>
-                  <div className="text-[11px] font-semibold" style={{ color: MUTED }}>best {fmt(best)}</div>
-                  {newBest && <div className="text-xs font-bold mt-1" style={{ color: AMBER }}>New best! 🥑</div>}
-                  <SaveScoreLine res={saveRes} />
-                  <div className="mt-4"><PrimaryButton onClick={start}>Play again</PrimaryButton></div>
-                </>
-              )}
-            </div>
-          )}
         </div>
 
-        <p className="text-xs text-center mt-4 mb-2" style={{ color: FAINT }}>
-          💸 +25 · 🤑 +100 (quick!) · 🐷 −100, leave the piggy alone · 45 seconds, spawns speed up.
-        </p>
+        {/* Unified HUD — score pill, gold countdown, pause (mockup 1h) */}
+        {status === 'playing' && (
+          <ArcadeHud
+            score={score} scoreLabel="SCORE"
+            status={`⏱ 0:${String(timeLeft).padStart(2, '0')}`} statusTone="gold"
+            hint="Whack the fees 💸 and golden 🤑 · leave the piggy 🐷 alone (−100)"
+            onPause={pause} muted={muted} onMute={toggleMute}
+          />
+        )}
+
+        {status === 'idle' && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center text-center px-6" style={{ background: 'rgba(8,18,14,0.55)' }}>
+            <div className="rounded-2xl bg-white p-5 max-w-sm" style={{ border: CARD_BORDER }}>
+              <div className="text-4xl mb-1">🔨</div>
+              <div className="font-display font-extrabold text-2xl" style={{ color: INK }}>Whack-a-Fee</div>
+              <p className="text-sm mt-2 mb-1" style={{ color: BODY }}>
+                Fees pop out of the lawn — hammer them! 💸 is +25, the golden 🤑 is +100 but ducks fast.
+              </p>
+              <p className="text-xs mb-4" style={{ color: MUTED }}>Never bonk the piggy bank 🐷 — that&apos;s your savings (−100).</p>
+              {best > 0 && <div className="text-xs font-bold mb-3" style={{ color: AMBER }}>Best round: {fmt(best)}</div>}
+              <PrimaryButton onClick={start}>Grab the hammer</PrimaryButton>
+            </div>
+          </div>
+        )}
+
+        {status === 'paused' && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center text-center px-6" style={{ background: 'rgba(8,18,14,0.6)' }}>
+            <div className="rounded-2xl bg-white p-5 max-w-xs" style={{ border: CARD_BORDER }}>
+              <div className="font-display font-extrabold text-lg" style={{ color: INK }}>Paused ⏸</div>
+              <p className="text-xs mt-1 mb-3" style={{ color: MUTED }}>{fmt(score)} banked · {timeLeft}s left.</p>
+              <PrimaryButton onClick={resume}>Resume</PrimaryButton>
+            </div>
+          </div>
+        )}
+
+        {status === 'over' && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center text-center px-6" style={{ background: 'rgba(8,18,14,0.6)' }}>
+            <div className="rounded-2xl bg-white p-5 max-w-sm" style={{ border: CARD_BORDER }}>
+              <div className="text-3xl mb-1">🔨🏁</div>
+              <div className="font-display font-extrabold text-xl" style={{ color: INK }}>Time&apos;s up!</div>
+              <div className="font-display font-extrabold text-4xl mt-2" style={{ color: GREEN }}>{fmt(score)}</div>
+              <div className="text-[11px] font-semibold" style={{ color: MUTED }}>best {fmt(best)}</div>
+              {newBest && <div className="text-xs font-bold mt-1" style={{ color: AMBER }}>New best!</div>}
+              <SaveScoreLine res={saveRes} />
+              <div className="mt-4"><PrimaryButton onClick={start}>Play again</PrimaryButton></div>
+            </div>
+          </div>
+        )}
       </div>
-    </GameFrame>
+
+      <p className="text-xs text-center mt-3 mb-2" style={{ color: FAINT }}>
+        💸 +25 · 🤑 +100 (quick!) · 🐷 −100, leave the piggy alone · 45 seconds, spawns speed up.
+      </p>
+    </div>
   )
 }

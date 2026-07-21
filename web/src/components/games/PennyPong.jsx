@@ -307,7 +307,7 @@ export default function PennyPong() {
       <div
         ref={wrapRef}
         className="relative overflow-hidden"
-        style={{ height: 'clamp(470px, calc(100svh - 170px), 900px)', minHeight: 430, background: '#081726', borderTop: '1px solid rgba(20,83,45,0.12)', borderBottom: '1px solid rgba(20,83,45,0.12)' }}
+        style={{ height: 'clamp(470px, calc(100svh - 170px), 900px)', minHeight: 430, background: '#081726' }}
       >
         <canvas
           ref={canvasRef}
@@ -374,7 +374,7 @@ export default function PennyPong() {
                 <div className="text-[11px]" style={{ color: FAINT }}>best match</div>
               </div>
             </div>
-            {newBest && <div className="text-xs font-bold mt-2" style={{ color: AMBER }}>New best! 🥑</div>}
+            {newBest && <div className="text-xs font-bold mt-2" style={{ color: AMBER }}>New best!</div>}
             <SaveScoreLine res={saveRes} />
             <div className="mt-4">
               <PrimaryButton onClick={start}>Rematch</PrimaryButton>

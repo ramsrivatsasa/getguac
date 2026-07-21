@@ -4,7 +4,7 @@
 // the savings jar. Impulse-buy spike balls splat it. 12 hand-built levels,
 // progress (levels + pretend dollars banked + sparkles) lives in localStorage.
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useScoreSaver, SaveScoreLine, GameFrame } from './arcadeKit'
+import { useScoreSaver, SaveScoreLine, GameFrame, drawGuacAvocado } from './arcadeKit'
 
 const INK = '#15281C'
 const BODY = '#3d4a42'
@@ -201,9 +201,8 @@ function draw(ctx, dpr, sim, L, now) {
     ctx.font = `${hr}px system-ui`; ctx.fillText('⚠️', hx, hy + 1)
     ctx.font = '18px system-ui'
   }
-  // avocado, tilted by horizontal motion
-  ctx.save(); ctx.translate(sim.avo.x, sim.avo.y); ctx.rotate((sim.avo.x - sim.avo.px) * 0.04)
-  ctx.font = '30px system-ui'; ctx.fillText('🥑', 0, 1); ctx.restore()
+  // avocado, tilted by horizontal motion — drawn brand avocado, not the emoji
+  drawGuacAvocado(ctx, sim.avo.x, sim.avo.y, 15, (sim.avo.x - sim.avo.px) * 0.04)
   // jar mouth lip (front layer)
   ctx.strokeStyle = GREEN; ctx.lineWidth = 3
   ctx.beginPath(); ctx.moveTo(jx - 32, jy); ctx.lineTo(jx + 32, jy); ctx.stroke()

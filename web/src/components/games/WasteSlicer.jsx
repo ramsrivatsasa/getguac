@@ -6,7 +6,7 @@
 // state only drives the HUD and overlays. In-game dollars are for fun, but the
 // first finished round each day earns GuacMoney via saveGameScore.
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useScoreSaver, SaveScoreLine } from './arcadeKit'
+import { useScoreSaver, SaveScoreLine, AvocadoPip } from './arcadeKit'
 
 const INK = '#15281C'
 const BODY = '#3d4a42'
@@ -17,8 +17,8 @@ const LIGHT = '#f2fbf3'
 const AMBER = '#D9A514'
 const ROSE = '#E11D48'
 const CARD_BORDER = '1px solid rgba(20,83,45,0.10)'
-const BODY_FONT = "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif"
-const DISPLAY_FONT = "'Bricolage Grotesque', 'Plus Jakarta Sans', ui-sans-serif, sans-serif"
+const BODY_FONT = "'Outfit', 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif"
+const DISPLAY_FONT = "'Nunito', 'Bricolage Grotesque', ui-sans-serif, sans-serif"
 
 const GRAVITY = 900        // px/s²
 const MIN_CUT_SPEED = 0.45 // px per ms (450 px/s) — slow drags don't slice
@@ -183,14 +183,14 @@ export default function WasteSlicer() {
         const n = st.strokeCuts.filter((t) => now - t <= COMBO_MS).length
         if (n >= 3 && n > st.comboBest) {
           st.saved += 10 * n - (st.comboBest >= 3 ? 10 * st.comboBest : 0)
-          st.floats.push({ x: w / 2, y: h * 0.3, text: `COMBO ×${n} — Guac frenzy! 🥑`, t0: now, life: 1300, size: 22, color: INK, banner: true })
+          st.floats.push({ x: w / 2, y: h * 0.3, text: `COMBO ×${n} — Guac frenzy!`, t0: now, life: 1300, size: 22, color: INK, banner: true })
           st.comboBest = n
         }
       } else {
         st.lives -= 1
         st.vignette = 1
         st.slowUntil = now + 300 // brief slow-mo at 0.3× timescale
-        st.floats.push({ x: it.x, y: it.y - it.r, text: 'Essential! −1 🥑', t0: now, life: 900, size: 16, color: ROSE })
+        st.floats.push({ x: it.x, y: it.y - it.r, text: 'Essential! −1 life', t0: now, life: 900, size: 16, color: ROSE })
         if (st.lives <= 0) endGame()
       }
       syncHud()
@@ -380,15 +380,15 @@ export default function WasteSlicer() {
           <div className="text-[11px] font-semibold" style={{ color: MUTED }}>Best</div>
           <div className="font-display font-extrabold text-lg leading-none" style={{ color: INK }}>${best}</div>
         </div>
-        <div className="text-xl" aria-label={`${hud.lives} lives left`}>
+        <div className="flex items-center gap-1" aria-label={`${hud.lives} lives left`}>
           {[0, 1, 2].map((i) => (
-            <span key={i} style={{ opacity: i < hud.lives ? 1 : 0.18, filter: i < hud.lives ? 'none' : 'grayscale(1)' }}>🥑</span>
+            <span key={i} style={{ opacity: i < hud.lives ? 1 : 0.22, filter: i < hud.lives ? 'none' : 'grayscale(1)' }}><AvocadoPip size={17} filled={i < hud.lives} /></span>
           ))}
         </div>
       </div>
 
       {/* Arena */}
-      <div className="relative rounded-2xl overflow-hidden" style={{ border: CARD_BORDER, height: 'clamp(470px, calc(100svh - 170px), 900px)', minHeight: 430, background: LIGHT }}>
+      <div className="relative rounded-2xl overflow-hidden" style={{ height: 'clamp(470px, calc(100svh - 170px), 900px)', minHeight: 430, background: LIGHT }}>
         <canvas
           ref={canvasRef}
           onPointerDown={onDown}
@@ -401,13 +401,13 @@ export default function WasteSlicer() {
         {status === 'idle' && (
           <div className="absolute inset-0 flex items-center justify-center p-4" style={{ background: 'rgba(21,40,28,0.25)' }}>
             <div className={overlayCard} style={{ background: 'rgba(255,255,255,0.97)', border: CARD_BORDER, maxWidth: 380 }}>
-              <div className="text-4xl mb-1">🥑</div>
+              <div className="flex justify-center mb-1"><AvocadoPip size={42} /></div>
               <div className="font-display font-extrabold text-xl" style={{ color: INK }}>Waste Slicer</div>
               <p className="text-sm mt-2" style={{ color: BODY }}>
                 Swipe to slice wasteful spending — every <span className="font-bold" style={{ color: ROSE }}>⚠ rose-rim</span> chip you cut adds to your Saved total.
               </p>
               <p className="text-sm mt-1" style={{ color: BODY }}>
-                Never slice the <span className="font-bold" style={{ color: GREEN }}>✓ green-rim</span> essentials — each costs a 🥑. Chain 3+ cuts in one swipe for a Guac-frenzy bonus.
+                Never slice the <span className="font-bold" style={{ color: GREEN }}>✓ green-rim</span> essentials — each costs a life. Chain 3+ cuts in one swipe for a Guac-frenzy bonus.
               </p>
               <button onClick={start} className={`mt-4 ${pillGreen}`} style={{ background: GREEN }}>Start slicing</button>
             </div>
@@ -417,7 +417,7 @@ export default function WasteSlicer() {
         {status === 'paused' && (
           <div className="absolute inset-0 flex items-center justify-center p-4" style={{ background: 'rgba(21,40,28,0.35)' }}>
             <div className={overlayCard} style={{ background: 'rgba(255,255,255,0.97)', border: CARD_BORDER, maxWidth: 320 }}>
-              <div className="font-display font-extrabold text-lg" style={{ color: INK }}>Paused 🥑</div>
+              <div className="font-display font-extrabold text-lg flex items-center justify-center gap-2" style={{ color: INK }}><AvocadoPip size={18} /> Paused</div>
               <p className="text-sm mt-1" style={{ color: BODY }}>The blade waits for no one — except you.</p>
               <button onClick={resume} className={`mt-3 ${pillGreen}`} style={{ background: GREEN }}>Resume</button>
             </div>
@@ -431,7 +431,7 @@ export default function WasteSlicer() {
               <div className="text-[11px] font-semibold mt-3" style={{ color: MUTED }}>You saved</div>
               <div className="font-display font-extrabold text-4xl" style={{ color: GREEN }}>${hud.saved}</div>
               {newBest && (
-                <div className="inline-block mt-1 text-xs font-bold px-3 py-1 rounded-full text-white" style={{ background: AMBER }}>New best! 🥑</div>
+                <div className="inline-flex items-center gap-1 mt-1 text-xs font-bold px-3 py-1 rounded-full text-white" style={{ background: AMBER }}>New best! <AvocadoPip size={13} /></div>
               )}
               <div className="flex justify-center gap-6 mt-3 text-sm" style={{ color: BODY }}>
                 <span>Missed <span className="font-display font-extrabold" style={{ color: AMBER }}>${hud.missed}</span></span>

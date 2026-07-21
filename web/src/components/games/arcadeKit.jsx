@@ -5,6 +5,7 @@
 // use React state only for HUD, matching the BubbleBudget pattern.
 import { useCallback, useEffect, useRef, useState } from 'react'
 import AdSlot from '../AdSlot'
+import { ARCADE_ADS_ENABLED } from '../../lib/arcadeAds'
 import { usePremium } from '../../lib/usePremium'
 import { saveGameScore } from '../../lib/gameScores'
 
@@ -18,10 +19,12 @@ export const ROSE = '#E11D48'
 export const CARD_BORDER = '1px solid rgba(20,83,45,0.10)'
 export const SOUND_KEY = 'gg-arcade-sound'
 
-// Brand type stacks — reused so canvas text matches the site (Bricolage on
-// numbers/amounts, Jakarta on body). Never introduce a new game-only font.
-export const DISPLAY_FONT = "'Bricolage Grotesque', 'Plus Jakarta Sans', ui-sans-serif, sans-serif"
-export const BODY_FONT = "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif"
+// Guac Arcade type stacks — the arcade design mockups use Nunito for
+// numbers/scores/headings and Outfit for body/labels/hints. Loaded under their
+// literal family names by app/games/layout.jsx so canvas ctx.font resolves them
+// (site keeps Bricolage/Jakarta elsewhere). Brand fonts stay as fallbacks.
+export const DISPLAY_FONT = "'Nunito', 'Bricolage Grotesque', ui-sans-serif, sans-serif"
+export const BODY_FONT = "'Outfit', 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif"
 
 export const fmt = (n) => Math.round(n).toLocaleString()
 
@@ -51,6 +54,51 @@ export function drawGuacAvocado(ctx, x, y, r, angle = 0) {
   ctx.beginPath(); ctx.arc(0, -r * 0.02, r * 0.17, 0.16 * Math.PI, 0.84 * Math.PI); ctx.stroke()
   ctx.restore()
 }
+
+// Wooden cutting-board backdrop for the arcade — painted once to an offscreen
+// canvas and cached by the caller (regenerate only on resize). Shared so every
+// game gets the same warm board instead of a dark field.
+export function makeWoodCanvas(w, h) {
+  const c = document.createElement('canvas')
+  c.width = Math.max(1, w); c.height = Math.max(1, h)
+  const x = c.getContext('2d')
+  const base = x.createLinearGradient(0, 0, 0, h)
+  base.addColorStop(0, '#ca9c5c'); base.addColorStop(0.5, '#b9853f'); base.addColorStop(1, '#a1702e')
+  x.fillStyle = base; x.fillRect(0, 0, w, h)
+  const planks = Math.max(4, Math.round(h / 150))
+  const ph = h / planks
+  for (let i = 0; i < planks; i++) {
+    const py = i * ph
+    const t = 0.9 + ((i * 37) % 20) / 100
+    x.fillStyle = `rgba(${Math.round(150 * t)},${Math.round(110 * t)},${Math.round(60 * t)},0.26)`
+    x.fillRect(0, py, w, ph)
+    x.strokeStyle = 'rgba(80,48,18,0.14)'; x.lineWidth = 1
+    for (let g = 0; g < 16; g++) {
+      const gy = py + 6 + ((g * 53) % Math.max(1, ph - 12))
+      x.beginPath(); x.moveTo(0, gy)
+      for (let gx = 0; gx <= w; gx += 36) x.lineTo(gx, gy + Math.sin(gx * 0.02 + i + g) * 2.2)
+      x.stroke()
+    }
+    for (let k = 0; k < 2; k++) {
+      const kx = ((i * 311 + k * 907) % Math.max(1, w - 80)) + 40
+      const ky = py + ph * (0.32 + 0.36 * ((k * 7) % 10) / 10)
+      for (let ring = 3; ring >= 1; ring--) {
+        x.strokeStyle = `rgba(70,40,14,${0.1 * ring})`; x.lineWidth = 1.4
+        x.beginPath(); x.ellipse(kx, ky, 5 * ring, 3.4 * ring, 0.3, 0, Math.PI * 2); x.stroke()
+      }
+    }
+    x.strokeStyle = 'rgba(45,26,10,0.55)'; x.lineWidth = 3
+    x.beginPath(); x.moveTo(0, py); x.lineTo(w, py); x.stroke()
+    x.strokeStyle = 'rgba(255,238,200,0.16)'; x.lineWidth = 1.5
+    x.beginPath(); x.moveTo(0, py + 2.5); x.lineTo(w, py + 2.5); x.stroke()
+  }
+  const vg = x.createRadialGradient(w / 2, h * 0.42, Math.min(w, h) * 0.2, w / 2, h * 0.5, Math.max(w, h) * 0.72)
+  vg.addColorStop(0, 'rgba(255,240,205,0.12)'); vg.addColorStop(0.6, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(40,22,6,0.30)')
+  x.fillStyle = vg; x.fillRect(0, 0, w, h)
+  return c
+}
+// The CSS wood gradient (DOM containers / letterbox fallback behind the canvas).
+export const WOOD_BG = 'linear-gradient(180deg, #c69152 0%, #a9743a 100%)'
 
 // ─── sound: tiny WebAudio synth, context created on first gesture ──────────
 // tone({f0, f1, t, type, g, at}) — same contract as BubbleBudget's synth.
@@ -135,8 +183,8 @@ export function SaveScoreLine({ res }) {
   return (
     <>
       {res.gm > 0 && (
-        <div className="text-xs font-bold mt-2 inline-block px-3 py-1 rounded-full" style={{ background: '#f2fbf3', color: '#065f46' }}>
-          🥑 +{res.gm} GuacMoney — first game today
+        <div className="text-xs font-bold mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full" style={{ background: '#f2fbf3', color: '#065f46' }}>
+          <AvocadoPip size={14} /> +{res.gm} GuacMoney — first game today
         </div>
       )}
       {res.saved && res.gm === 0 && (
@@ -174,7 +222,7 @@ export function adBreak(opts) {
 export function Overlay({ dark = false, maxWidth = 400, children }) {
   const premium = usePremium()
   useEffect(() => {
-    if (!premium) adBreak({ type: 'browse', name: 'arcade_overlay' })
+    if (!premium && ARCADE_ADS_ENABLED) adBreak({ type: 'browse', name: 'arcade_overlay' })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   return (
@@ -190,7 +238,9 @@ export function Overlay({ dark = false, maxWidth = 400, children }) {
 }
 
 // The in-card ad every start/game-over overlay carries (MSN-portal style).
+// Off while we're chasing AdSense approval — see lib/arcadeAds.
 export function OverlayAd() {
+  if (!ARCADE_ADS_ENABLED) return null
   return <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_INGRID || '1890940391'} minHeight={250} className="mt-4" />
 }
 
@@ -232,7 +282,6 @@ export function GameFrame({ inner = 560, children }) {
         minHeight: 'clamp(470px, calc(100svh - 170px), 900px)',
         padding: '28px 16px',
         background: 'linear-gradient(180deg, #f2fbf3 0%, #eaf6ec 100%)',
-        border: CARD_BORDER,
       }}
     >
       <div className="w-full" style={{ maxWidth: inner }}>{children}</div>
@@ -254,6 +303,22 @@ export const surfaceBg = (name) => SURFACES[name] || SURFACES.field
 // Dark surfaces want light HUD text; light ones (paper, sky) want ink text.
 export const isDarkSurface = (name) => name === 'field' || name === 'felt'
 
+// Small brand-avocado pip for HUD lives — a plain avocado fruit icon (NOT the
+// locked mascot character: no face), so lives read as real avocados instead of
+// the 🥑 emoji, which also renders blank in the app's Flutter WebView.
+export function AvocadoPip({ size = 18, filled = true }) {
+  // The GetGuac 🥑 logo emoji — same avocado we already use as the brand mark.
+  return (
+    <span
+      aria-hidden="true"
+      style={{
+        fontSize: size, lineHeight: 1, display: 'inline-block', verticalAlign: 'middle',
+        opacity: filled ? 1 : 0.32, filter: filled ? 'none' : 'grayscale(1)',
+      }}
+    >🥑</span>
+  )
+}
+
 // ─── unified in-game HUD (Guac Arcade design system) ────────────────────────
 // Overlays the play field: score pill top-left, status/combo top-center,
 // lives + mute + pause top-right, hint bar bottom. Container is click-through
@@ -274,6 +339,8 @@ export function ArcadeHud({
   const toneBg = statusTone === 'gold' ? AMBER : statusTone === 'danger' ? ROSE : pillBg
   const toneColor = statusTone === 'neutral' ? (dark ? '#e6f4ea' : INK) : '#052e16'
   const num = { fontFamily: DISPLAY_FONT, fontWeight: 800 }
+  const scoreNum = { fontFamily: DISPLAY_FONT, fontWeight: 900 }  // mockup scores are Nunito 900
+  const lbl = { fontFamily: BODY_FONT, fontWeight: 800, letterSpacing: '0.1em' }
   const btn = {
     pointerEvents: 'auto', border: 'none', cursor: 'pointer',
     background: pillBg, color: btnColor, fontSize: 18, lineHeight: 1,
@@ -284,9 +351,9 @@ export function ArcadeHud({
       <div className="flex items-start justify-between gap-2">
         {/* score */}
         <div style={{ background: pillBg, borderRadius: 999, padding: '7px 16px' }}>
-          <div style={{ color: labelColor, fontSize: 10, fontWeight: 800, letterSpacing: '0.1em' }}>{scoreLabel}</div>
-          <div style={{ ...num, color: scoreColor, fontSize: 22, lineHeight: 1 }}>{scorePrefix}{typeof score === 'number' ? score.toLocaleString() : score}</div>
-          {best != null && <div style={{ color: labelColor, fontSize: 11, fontWeight: 700, marginTop: 2 }}>BEST {scorePrefix}{typeof best === 'number' ? best.toLocaleString() : best}</div>}
+          <div style={{ ...lbl, color: labelColor, fontSize: 10 }}>{scoreLabel}</div>
+          <div style={{ ...scoreNum, color: scoreColor, fontSize: 22, lineHeight: 1 }}>{scorePrefix}{typeof score === 'number' ? score.toLocaleString() : score}</div>
+          {best != null && <div style={{ fontFamily: BODY_FONT, color: labelColor, fontSize: 11, fontWeight: 700, marginTop: 2 }}>BEST {scorePrefix}{typeof best === 'number' ? best.toLocaleString() : best}</div>}
         </div>
         {/* status / combo */}
         {status != null && (
@@ -295,9 +362,11 @@ export function ArcadeHud({
         {/* lives + controls */}
         <div className="flex items-center gap-2" style={{ alignSelf: 'flex-start' }}>
           {lives != null && (
-            <div aria-label={`${lives} lives left`} style={{ fontSize: 18, letterSpacing: 1 }}>
+            <div aria-label={`${lives} lives left`} className="flex items-center" style={{ fontSize: 18, gap: livesIcon === '🥑' || livesIcon === 'avocado' ? 3 : 1 }}>
               {Array.from({ length: livesMax }).map((_, i) => (
-                <span key={i} style={{ opacity: i < lives ? 1 : 0.2, filter: i < lives ? 'none' : 'grayscale(1)' }}>{livesIcon}</span>
+                livesIcon === '🥑' || livesIcon === 'avocado'
+                  ? <AvocadoPip key={i} size={18} filled={i < lives} />
+                  : <span key={i} style={{ opacity: i < lives ? 1 : 0.2, filter: i < lives ? 'none' : 'grayscale(1)' }}>{livesIcon}</span>
               ))}
             </div>
           )}
@@ -307,7 +376,7 @@ export function ArcadeHud({
       </div>
       {children}
       {hint && (
-        <div className="mx-auto" style={{ background: dark ? 'rgba(0,0,0,0.35)' : 'rgba(21,40,28,0.06)', color: dark ? 'rgba(255,255,255,0.8)' : MUTED, fontSize: 13, fontWeight: 600, padding: '6px 16px', borderRadius: 999, maxWidth: '92%', textAlign: 'center' }}>{hint}</div>
+        <div className="mx-auto" style={{ fontFamily: BODY_FONT, background: dark ? 'rgba(0,0,0,0.35)' : 'rgba(21,40,28,0.06)', color: dark ? 'rgba(255,255,255,0.8)' : MUTED, fontSize: 13, fontWeight: 600, padding: '6px 16px', borderRadius: 999, maxWidth: '92%', textAlign: 'center' }}>{hint}</div>
       )}
     </div>
   )

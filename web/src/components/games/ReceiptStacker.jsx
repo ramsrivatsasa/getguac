@@ -390,7 +390,7 @@ export default function ReceiptStacker() {
                   You balanced {hud.lines} row{hud.lines === 1 ? '' : 's'} and saved{' '}
                   <span className="font-display font-extrabold" style={{ color: GREEN }}>${hud.score.toLocaleString()}</span>.
                 </p>
-                {newBest && <p className="text-sm font-bold mt-1" style={{ color: AMBER }}>New personal best! 🥑</p>}
+                {newBest && <p className="text-sm font-bold mt-1" style={{ color: AMBER }}>New personal best!</p>}
                 <SaveScoreLine res={saveRes} />
                 <button onClick={start} className="text-sm font-bold px-6 py-2.5 rounded-full text-white mt-3" style={{ background: GREEN }}>Play again</button>
               </div>

@@ -13,6 +13,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '../../lib/supabase/client'
+import { AvocadoPip } from './arcadeKit'
 
 const AMBER = '#fbbf24'
 
@@ -43,7 +44,7 @@ export default function DailyBonusCard({ name, gameId }) {
 
   return (
     <div className="rounded-2xl p-5 text-white" style={{ background: 'linear-gradient(135deg, #14532d, #166534)' }}>
-      <div className="font-display font-extrabold text-base mb-1.5">🥑 Daily bonus</div>
+      <div className="font-display font-extrabold text-base mb-1.5 flex items-center gap-2"><AvocadoPip size={18} /> Daily bonus</div>
       <p className="m-0 text-sm leading-relaxed" style={{ color: '#bbf7d0' }}>
         {done
           ? <>Today&apos;s <b className="text-white">+50 GuacMoney</b> for {name} is in the bank — come back tomorrow for more.</>

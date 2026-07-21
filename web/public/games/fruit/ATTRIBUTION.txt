@@ -1,0 +1,21 @@
+Fruit + avocado art in this folder.
+
+MOST FRUIT — Microsoft Fluent Emoji (3D style)
+  Source:  https://github.com/microsoft/fluentui-emoji
+  License: MIT License. Free for commercial use, modification, redistribution.
+  Copyright (c) Microsoft Corporation. Include the MIT notice when redistributing.
+
+  File → Fluent asset (game name : Fluent emoji):
+    orange.png     Tangerine      lime.png     Green apple (stand-in for lime)
+    apple.png      Red apple      plum.png     Grapes (stand-in for plum)
+    lemon.png      Lemon          peach.png    Peach
+    mango.png      Mango          melon.png    Melon
+    pineapple.png  Pineapple      strawberry.png Strawberry
+    guac.png       Avocado (the golden GetGuac bonus)
+
+WHOLE WATERMELON + KIWI — original GetGuac art (watermelon.png, kiwi.png)
+  Drawn in-house because no emoji set has a *whole* watermelon or kiwi.
+  Freely usable; no third-party license applies.
+
+To restyle any fruit: drop a replacement transparent PNG here under the same name.
+Anything missing falls back to the canvas art in FruitSlice.jsx.

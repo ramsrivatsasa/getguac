@@ -6,15 +6,30 @@
 // bonus cash, and green bunkers soak up hits until they crumble.
 // Desktop: ← → / A D move, space fires. Mobile: drag to steer, tap to fire.
 // Sim in refs + rAF; React state is HUD only; synthesized sound.
+//
+// This game owns CHAPTER 7 of the shared financial journey — 🎓 Fund an
+// education (lib/financialJourney). It opens with that chapter's real lesson
+// (fund college AFTER your own retirement — there are loans for school, none
+// for retirement), its eight semesters run in four stages, and graduating
+// clears the chapter. Wave speed rides the auto-learning engine
+// (lib/adaptiveDifficulty).
 import { useEffect, useRef, useState } from 'react'
 import {
   useArcadeSound, useBestScore, useScoreSaver,
   Overlay, OverlayAd, SaveScoreLine, PrimaryButton, GhostButton, HudButton,
   INK, BODY, MUTED, FAINT, GREEN, AMBER, fmt,
 } from './arcadeKit'
+import { roundById } from '../../lib/financialJourney'
+import { useAdaptive, AdaptiveChip, RoundIntro, ChapterComplete, JourneyBar } from './journeyKit'
 
 const BEST_KEY = 'gg-tuition-best-v1'
 const GRADUATE_WAVE = 8
+
+// The journey chapter this game teaches. Graduating stays the goal — the
+// auto-learning engine tunes how hard the semesters push back.
+const CHAPTER = roundById('edu')
+const CHAPTER_STAGES = 4      // two semesters per stage
+const CHAPTER_PAR = 210
 
 const INVADER_ROWS = [
   { emoji: '🎓', pts: 30 },
@@ -42,8 +57,11 @@ function buildWave(sim, w) {
   }
   sim.total = sim.invaders.length
   sim.dir = 1
-  sim.baseV = 26 + (sim.wave - 1) * 7
-  sim.bombT = Math.max(0.5, 1.5 - sim.wave * 0.1)
+  // The auto-learning engine scales how fast the semester marches and how
+  // often it fires back.
+  const heat = sim.heat || 1
+  sim.baseV = (26 + (sim.wave - 1) * 7) * heat
+  sim.bombT = Math.max(0.4, (1.5 - sim.wave * 0.1) / heat)
 }
 
 function buildBunkers(sim, w, h) {
@@ -93,11 +111,29 @@ export default function TuitionInvaders() {
   const { best, newBest, submit: submitBest } = useBestScore(BEST_KEY)
   const { saveRes, save, resetSave } = useScoreSaver('tuition')
 
+  // Auto-learning difficulty for this chapter.
+  const { diff, diffRef, record, note } = useAdaptive('tuition')
+  const stage = Math.max(1, Math.min(CHAPTER_STAGES, Math.ceil(Math.min(wave, GRADUATE_WAVE) / 2)))
+
   const setPhase = (s) => { statusRef.current = s; setStatus(s) }
   const showToast = (msg) => {
     setToast(msg)
     clearTimeout(toastTimer.current)
     toastTimer.current = setTimeout(() => setToast(''), 1900)
+  }
+
+  // Fold the run into the skill profile: did they graduate, how long it took,
+  // and how many backpacks it cost.
+  const learn = (cleared) => {
+    const sim = simRef.current
+    if (!sim) return
+    record({
+      cleared,
+      seconds: sim.t0 ? (performance.now() - sim.t0) / 1000 : 0,
+      par: CHAPTER_PAR,
+      livesLost: 3 - Math.max(0, sim.lives),
+      accuracy: null,
+    })
   }
 
   const sfx = (name) => {
@@ -123,10 +159,21 @@ export default function TuitionInvaders() {
 
   const endGame = (sim) => {
     cancelAnimationFrame(rafRef.current)
+    learn(!!sim.graduated)
     sfx('die')
     save(sim.score, sim.wave)
     submitBest(sim.score)
     setPhase('over')
+    draw(sim)
+  }
+
+  // Eight semesters paid — chapter cleared. Bonus waves stay available.
+  const winChapter = (sim) => {
+    cancelAnimationFrame(rafRef.current)
+    learn(true)
+    save(sim.score, sim.wave)
+    submitBest(sim.score)
+    setPhase('won')
     draw(sim)
   }
 
@@ -151,8 +198,15 @@ export default function TuitionInvaders() {
     if (sim.wave > GRADUATE_WAVE && !sim.graduated) {
       sim.graduated = true
       setGraduated(true)
-      showToast('GRADUATED DEBT-FREE! 🎓🎉 Bonus rounds begin')
       sfx('grad')
+      // Reset the board so "keep defending" resumes into a clean bonus wave.
+      buildWave(sim, w)
+      buildBunkers(sim, w, h)
+      sim.bullets = []
+      sim.bombs = []
+      sim.freeze = 1.2
+      winChapter(sim)
+      return
     } else {
       showToast(`Semester ${Math.min(sim.wave, GRADUATE_WAVE)} paid! 🎓 +${fmt(150 * sim.wave)}`)
       sfx('wave')
@@ -403,12 +457,27 @@ export default function TuitionInvaders() {
     }
   }
 
-  const start = () => {
+  // Open the chapter with its lesson card; the first semester starts from there.
+  const start = () => { resetSave(); setPhase('intro') }
+
+  const beginPlay = () => {
     const { w, h } = sizeRef.current
     const sim = freshSim(w, h)
     sim.freeze = 1.4
+    sim.t0 = performance.now()
+    // Auto-learning difficulty: how hard the semesters push back.
+    sim.heat = Math.max(0.85, Math.min(1.4, diffRef.current.mul))
+    buildWave(sim, w)   // rebuild with the adapted heat applied
     simRef.current = sim
-    setScore(0); setWave(1); setLives(3); setGraduated(false); resetSave()
+    setScore(0); setWave(1); setLives(3); setGraduated(false)
+    setPhase('playing')
+    lastRef.current = performance.now()
+    cancelAnimationFrame(rafRef.current)
+    rafRef.current = requestAnimationFrame(loop)
+  }
+
+  // Chapter cleared but the bonus semesters keep coming.
+  const keepDefending = () => {
     setPhase('playing')
     lastRef.current = performance.now()
     cancelAnimationFrame(rafRef.current)
@@ -519,7 +588,7 @@ export default function TuitionInvaders() {
       <div
         ref={wrapRef}
         className="relative overflow-hidden"
-        style={{ height: 'clamp(470px, calc(100svh - 170px), 900px)', minHeight: 430, background: '#111c33', borderTop: '1px solid rgba(30,41,59,0.8)', borderBottom: '1px solid rgba(30,41,59,0.8)' }}
+        style={{ height: 'clamp(470px, calc(100svh - 170px), 900px)', minHeight: 430, background: '#111c33' }}
       >
         <canvas
           ref={canvasRef}
@@ -551,8 +620,13 @@ export default function TuitionInvaders() {
           </div>
         </div>
 
+        {status === 'playing' && (
+          <JourneyBar round={CHAPTER} banked={Math.min(wave, GRADUATE_WAVE)} target={GRADUATE_WAVE}
+            stage={stage} stages={CHAPTER_STAGES} top={44} unit="semesters" />
+        )}
+
         {toast && (
-          <div className="absolute left-1/2 top-14 -translate-x-1/2 text-sm font-bold px-4 py-2 rounded-full text-center" style={{ background: '#FDE68A', color: '#111c33', pointerEvents: 'none', maxWidth: '90%' }}>{toast}</div>
+          <div className="absolute left-1/2 -translate-x-1/2 text-sm font-bold px-4 py-2 rounded-full text-center" style={{ top: 120, background: '#FDE68A', color: '#111c33', pointerEvents: 'none', maxWidth: '90%' }}>{toast}</div>
         )}
 
         {status === 'idle' && (
@@ -566,10 +640,26 @@ export default function TuitionInvaders() {
             <p className="text-sm mb-3" style={{ color: BODY }}>
               Bunkers soak up fire until they crumble, and hitting the scholarship bus is free money. ← → move, space fires; on phones drag to steer and tap to shoot.
             </p>
-            {best > 0 && <div className="text-xs font-bold mb-3" style={{ color: AMBER }}>Best fund: ${fmt(best)}</div>}
-            <PrimaryButton onClick={start}>Defend the fund</PrimaryButton>
+            <div className="text-[11px] font-bold px-3 py-1 rounded-full inline-block mb-2"
+              style={{ background: `${CHAPTER.color}1a`, color: CHAPTER.dark }}>
+              CHAPTER {CHAPTER.n} OF THE MONEY JOURNEY · {CHAPTER.emoji} {CHAPTER.title}
+            </div>
+            {best > 0 && <div className="text-xs font-bold mb-2" style={{ color: AMBER }}>Best fund: ${fmt(best)}</div>}
+            <AdaptiveChip diff={diff} note={note} compact />
+            <div className="mt-3"><PrimaryButton onClick={start}>Defend the fund</PrimaryButton></div>
             <OverlayAd />
           </Overlay>
+        )}
+
+        {status === 'intro' && (
+          <RoundIntro round={CHAPTER} target={GRADUATE_WAVE} stages={CHAPTER_STAGES} diff={diff} note={note}
+            goalText={`Clear all ${GRADUATE_WAVE} semesters to graduate debt-free.`}
+            onStart={beginPlay} cta="Defend the fund" />
+        )}
+
+        {status === 'won' && (
+          <ChapterComplete round={CHAPTER} banked={score} caption="college fund defended — graduated 🎓"
+            diff={diff} note={note} onReplay={keepDefending} replayLabel="Keep defending 🚌" />
         )}
 
         {status === 'paused' && (
@@ -601,8 +691,9 @@ export default function TuitionInvaders() {
                 <div className="text-[11px]" style={{ color: FAINT }}>best fund</div>
               </div>
             </div>
-            {newBest && <div className="text-xs font-bold mt-2" style={{ color: AMBER }}>New best! 🥑</div>}
+            {newBest && <div className="text-xs font-bold mt-2" style={{ color: AMBER }}>New best!</div>}
             <SaveScoreLine res={saveRes} />
+            <AdaptiveChip diff={diff} note={note} compact />
             <div className="mt-4">
               <PrimaryButton onClick={start}>Play again</PrimaryButton>
             </div>

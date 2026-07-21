@@ -15,7 +15,7 @@ const AMBER = '#D9A514'
 const ROSE = '#E11D48'
 const CARD_BORDER = '1px solid rgba(20,83,45,0.10)'
 const DISPLAY = "'Bricolage Grotesque', 'Plus Jakarta Sans', ui-sans-serif, sans-serif"
-const BODY_FONT = "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif"
+const BODY_FONT = "'Outfit', 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif"
 const BEST_KEY = 'gg-climb-best-v1'
 
 const GRAV = 1500
@@ -533,7 +533,7 @@ export default function GuacHillClimb({ vehicle = 'buggy', gameId = 'climb', bes
       </div>
 
       {/* Arena */}
-      <div className="relative rounded-2xl overflow-hidden" style={{ height: 'clamp(430px, calc(100svh - 260px), 760px)', minHeight: 400, border: CARD_BORDER, background: surfaceBg('sky') }}>
+      <div className="relative rounded-2xl overflow-hidden" style={{ height: 'clamp(430px, calc(100svh - 260px), 760px)', minHeight: 400, background: surfaceBg('sky') }}>
         <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" style={{ touchAction: 'none' }} />
 
         {/* pause button */}
@@ -601,7 +601,7 @@ export default function GuacHillClimb({ vehicle = 'buggy', gameId = 'climb', bes
               <div className="text-[11px] font-semibold mt-3" style={{ color: MUTED }}>You banked</div>
               <div className="font-display font-extrabold text-4xl" style={{ color: GREEN }}>${hud.money}</div>
               <div className="mt-1 text-sm" style={{ color: BODY }}>reached <span className="font-display font-extrabold" style={{ color: INK }}>{hud.dist}m</span></div>
-              {newBest && <div className="inline-block mt-2 text-xs font-bold px-3 py-1 rounded-full text-white" style={{ background: AMBER }}>New best! 🥑</div>}
+              {newBest && <div className="inline-block mt-2 text-xs font-bold px-3 py-1 rounded-full text-white" style={{ background: AMBER }}>New best!</div>}
               <SaveScoreLine res={saveRes} />
               <div className="mt-4 flex items-center justify-center gap-2">
                 <button onClick={start} className={pill} style={{ background: GREEN }}>Drive again</button>

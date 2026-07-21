@@ -5,14 +5,28 @@
 // after them — a perfect drop wins width back. Land 20 floors and the dream
 // house is officially built (keep stacking the penthouse for score).
 // Sim in refs + rAF; React state is HUD only; synthesized sound.
+//
+// This game owns CHAPTER 5 of the shared financial journey — 🏡 Buy a house
+// (lib/financialJourney). It opens with that chapter's real lesson (20% down to
+// skip PMI, payment near a third of take-home), its build milestones are the
+// chapter's stages, and the 20th floor clears it. Crane speed rides the
+// auto-learning engine (lib/adaptiveDifficulty).
 import { useEffect, useRef, useState } from 'react'
 import {
   useArcadeSound, useBestScore, useScoreSaver,
   Overlay, OverlayAd, SaveScoreLine, PrimaryButton, GhostButton, HudButton,
   INK, BODY, MUTED, FAINT, GREEN, AMBER, fmt,
 } from './arcadeKit'
+import { roundById } from '../../lib/financialJourney'
+import { useAdaptive, AdaptiveChip, RoundIntro, ChapterComplete, JourneyBar } from './journeyKit'
 
 const BEST_KEY = 'gg-house-best-v1'
+
+// The journey chapter this game teaches. The 20-floor house stays the goal —
+// the auto-learning engine tunes how fast the crane swings, not the finish line.
+const CHAPTER = roundById('house')
+const CHAPTER_STAGES = 4      // milestones at 5 / 10 / 15 / 20 floors
+const CHAPTER_PAR = 90
 
 const FLOOR_H = 34
 const START_W = 190
@@ -65,8 +79,25 @@ export default function DreamHouseStack() {
   const { tone, muted, toggleMute } = useArcadeSound()
   const { best, newBest, submit: submitBest } = useBestScore(BEST_KEY)
   const { saveRes, save, resetSave } = useScoreSaver('house')
+  // Auto-learning difficulty for this chapter.
+  const { diff, diffRef, record, note } = useAdaptive('house')
+  const stage = Math.max(1, Math.min(CHAPTER_STAGES, Math.floor(floorsBuilt / 5) + 1))
 
   const setPhase = (s) => { statusRef.current = s; setStatus(s) }
+
+  // Fold the build into the skill profile: did the house top out, how fast,
+  // and how clean were the drops.
+  const learn = (cleared) => {
+    const sim = simRef.current
+    if (!sim) return
+    record({
+      cleared,
+      seconds: sim.t0 ? (performance.now() - sim.t0) / 1000 : 0,
+      par: CHAPTER_PAR,
+      livesLost: 0,
+      accuracy: sim.score > 0 ? Math.min(1, sim.perfects / sim.score) : null,
+    })
+  }
   const showToast = (msg) => {
     setToast(msg)
     clearTimeout(toastTimer.current)
@@ -148,12 +179,26 @@ export default function DreamHouseStack() {
     setFloorsBuilt(sim.score)
     const m = MILESTONES[sim.score]
     if (m) { showToast(m); sfx('milestone') }
+    // Topped out the dream house — chapter cleared.
+    if (sim.score >= HOUSE_DONE && !sim.won) { sim.won = true; winChapter(sim); return }
   }
 
   const endGame = (sim) => {
+    learn(sim.score >= HOUSE_DONE)
     save(sim.score + sim.perfects, null) // floors + perfect bonus
     submitBest(sim.score)
     setPhase('over')
+  }
+
+  // 20 floors up — the dream house is built. Stacking can carry on afterwards
+  // for the penthouse score.
+  const winChapter = (sim) => {
+    cancelAnimationFrame(rafRef.current)
+    learn(true)
+    sfx('milestone')
+    save(sim.score + sim.perfects, null)
+    submitBest(sim.score)
+    setPhase('won')
   }
 
   function step(sim, dt) {
@@ -327,10 +372,26 @@ export default function DreamHouseStack() {
     if (statusRef.current === 'playing') rafRef.current = requestAnimationFrame(loop)
   }
 
-  const start = () => {
+  // Open the chapter with its lesson card; the crane starts from there.
+  const start = () => { resetSave(); setPhase('intro') }
+
+  const beginPlay = () => {
     const { w, h } = sizeRef.current
-    simRef.current = freshSim(w, h)
-    setFloorsBuilt(0); setPerfects(0); resetSave()
+    const sim = freshSim(w, h)
+    sim.t0 = performance.now()
+    // Auto-learning difficulty: the crane swings faster for builders the
+    // engine has watched land clean drops.
+    sim.speed = 1.15 * Math.max(0.85, Math.min(1.4, diffRef.current.mul))
+    simRef.current = sim
+    setFloorsBuilt(0); setPerfects(0)
+    setPhase('playing')
+    lastRef.current = performance.now()
+    cancelAnimationFrame(rafRef.current)
+    rafRef.current = requestAnimationFrame(loop)
+  }
+
+  // Chapter cleared but the penthouse is still up for grabs.
+  const keepStacking = () => {
     setPhase('playing')
     lastRef.current = performance.now()
     cancelAnimationFrame(rafRef.current)
@@ -400,7 +461,7 @@ export default function DreamHouseStack() {
       <div
         ref={wrapRef}
         className="relative overflow-hidden"
-        style={{ height: 'clamp(470px, calc(100svh - 170px), 900px)', minHeight: 430, background: '#bae6fd', borderTop: '1px solid rgba(20,83,45,0.12)', borderBottom: '1px solid rgba(20,83,45,0.12)' }}
+        style={{ height: 'clamp(470px, calc(100svh - 170px), 900px)', minHeight: 430, background: '#bae6fd' }}
       >
         <canvas
           ref={canvasRef}
@@ -428,8 +489,12 @@ export default function DreamHouseStack() {
           </div>
         </div>
 
+        {status === 'playing' && (
+          <JourneyBar round={CHAPTER} banked={floorsBuilt} target={HOUSE_DONE} stage={stage} stages={CHAPTER_STAGES} top={44} unit="floors" />
+        )}
+
         {toast && (
-          <div className="absolute left-1/2 top-14 -translate-x-1/2 text-sm font-bold px-4 py-2 rounded-full text-center" style={{ background: INK, color: '#fff', pointerEvents: 'none', maxWidth: '90%' }}>{toast}</div>
+          <div className="absolute left-1/2 -translate-x-1/2 text-sm font-bold px-4 py-2 rounded-full text-center" style={{ top: 120, background: INK, color: '#fff', pointerEvents: 'none', maxWidth: '90%' }}>{toast}</div>
         )}
 
         {status === 'idle' && (
@@ -443,10 +508,26 @@ export default function DreamHouseStack() {
             <p className="text-sm mb-3" style={{ color: BODY }}>
               Perfect drops win width back. Stack {HOUSE_DONE} floors and the dream house is yours — then keep going for the penthouse.
             </p>
-            {best > 0 && <div className="text-xs font-bold mb-3" style={{ color: AMBER }}>Best build: {fmt(best)} floors</div>}
-            <PrimaryButton onClick={start}>Start building</PrimaryButton>
+            <div className="text-[11px] font-bold px-3 py-1 rounded-full inline-block mb-2"
+              style={{ background: `${CHAPTER.color}1a`, color: CHAPTER.dark }}>
+              CHAPTER {CHAPTER.n} OF THE MONEY JOURNEY · {CHAPTER.emoji} {CHAPTER.title}
+            </div>
+            {best > 0 && <div className="text-xs font-bold mb-2" style={{ color: AMBER }}>Best build: {fmt(best)} floors</div>}
+            <AdaptiveChip diff={diff} note={note} compact />
+            <div className="mt-3"><PrimaryButton onClick={start}>Start building</PrimaryButton></div>
             <OverlayAd />
           </Overlay>
+        )}
+
+        {status === 'intro' && (
+          <RoundIntro round={CHAPTER} target={HOUSE_DONE} stages={CHAPTER_STAGES} diff={diff} note={note}
+            goalText={`Stack all ${HOUSE_DONE} floors to finish the dream house.`}
+            onStart={beginPlay} cta="Start building" />
+        )}
+
+        {status === 'won' && (
+          <ChapterComplete round={CHAPTER} banked={floorsBuilt} unit=" floors" caption="built — dream house done 🏡"
+            diff={diff} note={note} onReplay={keepStacking} replayLabel="Keep stacking 🍾" />
         )}
 
         {status === 'paused' && (
@@ -478,8 +559,9 @@ export default function DreamHouseStack() {
                 <div className="text-[11px]" style={{ color: FAINT }}>best floors</div>
               </div>
             </div>
-            {newBest && <div className="text-xs font-bold mt-2" style={{ color: AMBER }}>New best! 🥑</div>}
+            {newBest && <div className="text-xs font-bold mt-2" style={{ color: AMBER }}>New best!</div>}
             <SaveScoreLine res={saveRes} />
+            <AdaptiveChip diff={diff} note={note} compact />
             <div className="mt-4">
               <PrimaryButton onClick={start}>Build again</PrimaryButton>
             </div>

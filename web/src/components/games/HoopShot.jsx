@@ -378,7 +378,7 @@ export default function HoopShot() {
       <div
         ref={wrapRef}
         className="relative overflow-hidden"
-        style={{ height: 'clamp(470px, calc(100svh - 170px), 900px)', minHeight: 430, background: '#141d29', borderTop: '1px solid rgba(20,83,45,0.12)', borderBottom: '1px solid rgba(20,83,45,0.12)' }}
+        style={{ height: 'clamp(470px, calc(100svh - 170px), 900px)', minHeight: 430, background: '#141d29' }}
       >
         <canvas
           ref={canvasRef}
@@ -453,7 +453,7 @@ export default function HoopShot() {
                 <div className="text-[11px]" style={{ color: FAINT }}>best game</div>
               </div>
             </div>
-            {newBest && <div className="text-xs font-bold mt-2" style={{ color: AMBER }}>New best! 🥑</div>}
+            {newBest && <div className="text-xs font-bold mt-2" style={{ color: AMBER }}>New best!</div>}
             <SaveScoreLine res={saveRes} />
             <div className="mt-4">
               <PrimaryButton onClick={start}>Play again</PrimaryButton>

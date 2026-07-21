@@ -159,9 +159,9 @@ export default async function Home() {
           `syntax: '<angle>'` chars (< > ') — escaping them as a text child causes a
           server/client hydration mismatch. */}
       <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes guacFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
-        @keyframes guacFloatB { 0%,100% { transform: translateY(0); } 50% { transform: translateY(10px); } }
-        @keyframes guacFloatSlow { 0%,100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-16px) rotate(-3deg); } }
+        @keyframes guacFloat { 0%,100% { transform: translateY(-9px); } 50% { transform: translateY(9px); } }
+        @keyframes guacFloatB { 0%,100% { transform: translateY(-11px); } 50% { transform: translateY(11px); } }
+        @keyframes guacFloatSlow { 0%,100% { transform: translateY(-11px) rotate(-3deg); } 50% { transform: translateY(11px) rotate(-3deg); } }
         @property --gg-deg { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
         @keyframes guacRing { from { --gg-deg: 0deg; } to { --gg-deg: 313deg; } }
         @keyframes guacRise { from { opacity: 0; transform: translateY(24px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }

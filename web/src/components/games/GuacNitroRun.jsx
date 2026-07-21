@@ -249,7 +249,7 @@ export default function GuacNitroRun() {
         <div><div className="text-[11px] font-semibold" style={{ color: MUTED }}>Best</div><div className="font-display font-extrabold text-lg leading-none" style={{ color: INK }}>{best}</div></div>
       </div>
 
-      <div className="relative rounded-2xl overflow-hidden" style={{ height: 'clamp(430px, calc(100svh - 260px), 760px)', minHeight: 400, border: CARD_BORDER, background: '#4d7c0f' }}>
+      <div className="relative rounded-2xl overflow-hidden" style={{ height: 'clamp(430px, calc(100svh - 260px), 760px)', minHeight: 400, background: '#4d7c0f' }}>
         <canvas ref={canvasRef} onPointerDown={onDown} onPointerUp={onUp} className="absolute inset-0 w-full h-full" style={{ touchAction: 'none' }} />
         {status === 'playing' && (
           <button onClick={() => setStatus('paused')} className="absolute top-2 right-2 text-xs font-bold px-3 py-1.5 rounded-full border bg-white" style={{ borderColor: 'rgba(20,83,45,0.18)', color: INK }}>⏸ Pause</button>
@@ -280,7 +280,7 @@ export default function GuacNitroRun() {
               <div className="text-[11px] font-semibold mt-3" style={{ color: MUTED }}>You banked</div>
               <div className="font-display font-extrabold text-4xl" style={{ color: GREEN }}>${hud.cash}</div>
               <div className="mt-1 text-sm" style={{ color: BODY }}>ran <span className="font-display font-extrabold" style={{ color: INK }}>{hud.dist}m</span></div>
-              {newBest && <div className="inline-block mt-2 text-xs font-bold px-3 py-1 rounded-full text-white" style={{ background: AMBER }}>New best! 🥑</div>}
+              {newBest && <div className="inline-block mt-2 text-xs font-bold px-3 py-1 rounded-full text-white" style={{ background: AMBER }}>New best!</div>}
               <SaveScoreLine res={saveRes} />
               <button onClick={start} className={`mt-4 ${pill}`} style={{ background: GREEN }}>Run again</button>
             </div>

@@ -1,8 +1,14 @@
 // Sitemap for the public marketing surface + every money article. Dashboard/
 // auth/api routes are excluded (private), and the thin auto-generated tool pages
 // (/coupons, /marketplace) are deliberately left out — they're noindexed.
+//
+// The arcade (/games and all ~36 game pages) is ALSO left out. It used to be
+// half of everything we submitted, which made a site with 20 long-form money
+// articles look overwhelmingly thin and kept earning AdSense "Low value
+// content" rejections. The arcade is noindexed in app/games/layout.jsx; a
+// sitemap entry for a noindexed URL only sends a contradictory signal.
+// Re-add `...GAMES.map(...)` below once AdSense approves.
 import { ARTICLES } from '../lib/articles'
-import { GAMES } from '../components/games/gamesList'
 
 const SITE_URL = 'https://getguac.app'
 
@@ -15,9 +21,6 @@ export default function sitemap() {
     { path: '/features', priority: 0.9, changeFrequency: 'monthly' },
     { path: '/articles', priority: 0.9, changeFrequency: 'weekly' },
     { path: '/resources', priority: 0.8, changeFrequency: 'monthly' },
-    { path: '/games', priority: 0.7, changeFrequency: 'weekly' },
-    // every arcade game page — the catalog is the single source of truth
-    ...GAMES.map((g) => ({ path: g.href, priority: 0.6, changeFrequency: 'monthly' })),
     { path: '/faq', priority: 0.8, changeFrequency: 'monthly' },
     { path: '/pricing', priority: 0.8, changeFrequency: 'monthly' },
     { path: '/security', priority: 0.7, changeFrequency: 'monthly' },

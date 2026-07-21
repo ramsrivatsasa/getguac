@@ -44,7 +44,7 @@ export default function Leaderboard({ game, className = '' }) {
 
   return (
     <div className={`rounded-2xl bg-white p-4 ${className}`} style={{ border: '1px solid #e4ebe2' }}>
-      <div className="font-display font-extrabold text-base mb-3" style={{ color: INK }}>🏆 Top players</div>
+      <div className="font-display font-extrabold text-base mb-3" style={{ color: INK }}>🏆 This week&apos;s top players</div>
       {rows.length === 0 ? (
         <p className="text-xs" style={{ color: MUTED }}>No scores on the board yet — finish a round and claim the top spot.</p>
       ) : (

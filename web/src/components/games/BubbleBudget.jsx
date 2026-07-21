@@ -10,6 +10,7 @@
 // game start so bubbles stay finger-sized on phones and sane on monitors.
 import { useCallback, useEffect, useRef, useState } from 'react'
 import AdSlot from '../AdSlot'
+import { ARCADE_ADS_ENABLED } from '../../lib/arcadeAds'
 import { saveGameScore } from '../../lib/gameScores'
 
 const INK = '#15281C'
@@ -613,7 +614,7 @@ export default function BubbleBudget() {
       <div
         ref={wrapRef}
         className="relative overflow-hidden rounded-2xl"
-        style={{ height: 'clamp(470px, calc(100svh - 170px), 900px)', minHeight: 430, background: 'radial-gradient(120% 90% at 50% 0%, #413c72 0%, #2c2850 70%, #23204a 100%)', border: CARD_BORDER }}
+        style={{ height: 'clamp(470px, calc(100svh - 170px), 900px)', minHeight: 430, background: 'radial-gradient(120% 90% at 50% 0%, #413c72 0%, #2c2850 70%, #23204a 100%)' }}
       >
         <canvas
           ref={canvasRef}
@@ -692,7 +693,9 @@ export default function BubbleBudget() {
                 <div className="text-xs font-bold mb-3" style={{ color: AMBER }}>Best game: ${fmt(best)} banked</div>
               )}
               <button onClick={start} className="text-sm font-bold px-6 py-2.5 rounded-full text-white" style={{ background: GREEN }}>Start popping</button>
-              <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_INGRID || '1890940391'} minHeight={250} className="mt-4" />
+              {ARCADE_ADS_ENABLED && (
+                <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_INGRID || '1890940391'} minHeight={250} className="mt-4" />
+              )}
             </div>
           </div>
         )}
@@ -729,7 +732,7 @@ export default function BubbleBudget() {
                   <div className="text-[11px]" style={{ color: FAINT }}>best banked</div>
                 </div>
               </div>
-              {newBest && <div className="text-xs font-bold mt-2" style={{ color: AMBER }}>New best! 🥑</div>}
+              {newBest && <div className="text-xs font-bold mt-2" style={{ color: AMBER }}>New best!</div>}
               {saveState?.gm > 0 && (
                 <div className="text-xs font-bold mt-2 inline-block px-3 py-1 rounded-full" style={{ background: '#f2fbf3', color: '#065f46' }}>
                   🥑 +{saveState.gm} GuacMoney — first game today
@@ -745,7 +748,9 @@ export default function BubbleBudget() {
               )}
               <p className="text-xs mt-3" style={{ color: BODY }}>💡 {TIPS[tipIdx]}</p>
               <button onClick={start} className="mt-4 text-sm font-bold px-6 py-2.5 rounded-full text-white" style={{ background: GREEN }}>Play again</button>
-              <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_INGRID || '1890940391'} minHeight={250} className="mt-4" />
+              {ARCADE_ADS_ENABLED && (
+                <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_INGRID || '1890940391'} minHeight={250} className="mt-4" />
+              )}
             </div>
           </div>
         )}

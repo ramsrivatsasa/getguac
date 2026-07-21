@@ -211,7 +211,7 @@ export default function MoneyMatch() {
                   <div className="font-display font-extrabold text-xl" style={{ color: INK }}>All matched!</div>
                   <div className="font-display font-extrabold text-4xl mt-2" style={{ color: GREEN }}>{fmt(finalScore)}</div>
                   <div className="text-[11px] font-semibold" style={{ color: MUTED }}>{moves} moves in {seconds}s · best {fmt(best)}</div>
-                  {newBest && <div className="text-xs font-bold mt-1" style={{ color: AMBER }}>New best! 🥑</div>}
+                  {newBest && <div className="text-xs font-bold mt-1" style={{ color: AMBER }}>New best!</div>}
                   <SaveScoreLine res={saveRes} />
                   <div className="mt-4"><PrimaryButton onClick={() => start()}>Play again</PrimaryButton></div>
                 </>

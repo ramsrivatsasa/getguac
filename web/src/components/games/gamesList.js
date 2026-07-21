@@ -9,17 +9,17 @@ export const GAMES = [
   {
     href: '/games/splurge', emoji: '🔪', name: 'Splurge Slicer', tag: 'Your spending', cat: 'money', isNew: true,
     g1: '#F97316', g2: '#7C2D12', motifs: ['💸', '🥑'], bestKey: 'gg-splurge-best-v1',
-    desc: 'Your real purchases fly up — slice the splurges, spare the essentials, bank the savings.',
+    desc: 'Slice your real splurges through an eight-round money journey — cut expenses, clear debt, buy the house, invest, retire free.',
   },
   {
     href: '/games/invaders', emoji: '👾', name: 'Expense Invaders', tag: 'Your spending', cat: 'money', isNew: true,
     g1: '#6366F1', g2: '#1E1B4B', motifs: ['💸', '🛡️'], bestKey: 'gg-invaders-best-v1',
-    desc: 'Your top spending categories descend as armored invaders — blast down the biggest overspend.',
+    desc: 'Your top spending categories descend as armored invaders — blast the biggest overspend across an eight-round money journey.',
   },
   {
     href: '/games/budget', emoji: '🧱', name: 'Budget Tetris', tag: 'Your spending', cat: 'money', isNew: true,
     g1: '#22C55E', g2: '#14532D', motifs: ['🧾', '📊'], bestKey: 'gg-budget-best-v1',
-    desc: 'Your expenses fall as blocks sized by price — fill a row to bank it, stay under the budget line.',
+    desc: 'Your expenses fall as blocks sized by price — fill a row to bank it, one round of the money journey at a time.',
   },
   // ── racing & wheels ───────────────────────────────────────────────────────
   {
@@ -38,6 +38,12 @@ export const GAMES = [
     desc: 'Swerve between lanes, dodge the traffic and grab the cash as the speed keeps climbing.',
   },
   // ── arcade ────────────────────────────────────────────────────────────────
+  {
+    href: '/games/fruit', emoji: '🍉', name: 'Fruit Slice', tag: 'Swipe arcade', cat: 'arcade', isNew: true, featured: true,
+    g1: '#F43F5E', g2: '#4a1320', motifs: ['🍉', '🍊'], bestKey: 'gg-fruit-best-v1',
+    rating: 4.7, plays: '57.8K',
+    desc: 'Fruit flies, blades swipe. Chain slices for combos, dodge the bombs, and paint the screen in juice.',
+  },
   {
     href: '/games/fling', emoji: '🏹', name: 'Guac Fling', tag: 'Physics arcade', cat: 'arcade', isNew: true,
     g1: '#F43F5E', g2: '#7C2D12', motifs: ['🏰', '💥'], bestKey: 'gg-fling-best-v1',
@@ -129,22 +135,22 @@ export const GAMES = [
   {
     href: '/games/breaker', emoji: '🧱', name: 'Debt Breaker', tag: 'Debt-free goal', cat: 'goal',
     g1: '#F97316', g2: '#9A3412', motifs: ['💳', '💥'], bestKey: 'gg-breaker-best-v1',
-    desc: 'The brick wall is your debt. Paddle, ball, power-ups — smash your way to debt-free.',
+    desc: 'The brick wall is your debt. Paddle, ball, power-ups — smash your way to debt-free. Chapter 2 of the money journey.',
   },
   {
     href: '/games/nestegg', emoji: '🪺', name: 'Nest Egg Climb', tag: 'Retirement goal', cat: 'goal',
     g1: '#34D399', g2: '#0D9488', motifs: ['🏖️', '📈'], bestKey: 'gg-nestegg-best-v1',
-    desc: 'Bounce from platform to platform and grow the nest egg from $0 to a $1M retirement.',
+    desc: 'Bounce from platform to platform and grow the nest egg from $0 to a $1M retirement. Chapter 6 of the money journey.',
   },
   {
     href: '/games/house', emoji: '🏡', name: 'Dream House Stack', tag: 'Home goal', cat: 'goal',
     g1: '#A78BFA', g2: '#6D28D9', motifs: ['🏗️', '🌇'], bestKey: 'gg-house-best-v1',
-    desc: 'Drop the swinging floors dead-center and stack your way to the dream house.',
+    desc: 'Drop the swinging floors dead-center and stack your way to the dream house. Chapter 5 of the money journey.',
   },
   {
     href: '/games/tuition', emoji: '🎓', name: 'Tuition Invaders', tag: 'College goal', cat: 'goal',
     g1: '#60A5FA', g2: '#1E40AF', motifs: ['📚', '🚌'], bestKey: 'gg-tuition-best-v1',
-    desc: 'Waves of tuition bills descend on the college fund — clear each semester to graduate.',
+    desc: 'Waves of tuition bills descend on the college fund — clear each semester to graduate. Chapter 7 of the money journey.',
   },
   // ── puzzle & word ─────────────────────────────────────────────────────────
   {
@@ -217,7 +223,7 @@ export const gameIdFor = (href) => (href === '/games/price-check' ? 'price' : hr
 // the shot as cover art; board/DOM games (solitaire, sudoku, whack, …) keep
 // their illustrated gradient tile.
 export const SHOT_SLUGS = new Set([
-  'splurge', 'invaders', 'budget', 'fling', 'flappy', 'muncher', 'rocks', 'darts',
+  'splurge', 'invaders', 'budget', 'fruit', 'fling', 'flappy', 'muncher', 'rocks', 'darts',
   'bubbles', 'penalty', 'hoops', 'pong', 'breaker', 'nestegg', 'house', 'tuition',
   'rope',
 ])

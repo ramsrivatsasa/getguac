@@ -26,9 +26,17 @@ const ESSENTIAL = new Set([
   'gas-up', 'auto', 'bank-fees',
 ])
 
+// The avocado is the GetGuac mascot — it's the player, the lives, the brand.
+// It must never turn up as a THING TO SHOOT OR SLICE: an invader you blast or a
+// purchase you cut can't also be the logo. Category art elsewhere in the app is
+// untouched; this swap only applies to what the arcade renders as a target.
+const BRAND_MARK = '🥑'
+const TARGET_EMOJI_FALLBACK = '🛒'
+export const targetEmoji = (e) => (!e || e === BRAND_MARK ? TARGET_EMOJI_FALLBACK : e)
+
 function catMeta(slug) {
   const c = CATEGORY_BY_SLUG[slug]
-  return { slug: slug || 'misc', label: c?.label || 'Misc', emoji: c?.emoji || '📦' }
+  return { slug: slug || 'misc', label: c?.label || 'Misc', emoji: targetEmoji(c?.emoji) }
 }
 
 // Is this purchase a splurge? Order of confidence:
@@ -58,7 +66,7 @@ const DEMO = {
     { name: 'Energy drinks', price: 14, category: 'drinks', emoji: '🥤', store: 'QuickStop', splurge: true },
     { name: 'Late-night snacks', price: 11, category: 'snacks', emoji: '🍿', store: 'QuickStop', splurge: true },
     { name: 'Craft beer 6-pack', price: 16, category: 'bars', emoji: '🍺', store: 'BottleShop', splurge: true },
-    { name: 'Groceries', price: 85, category: 'grub', emoji: '🥑', store: 'FreshMart', splurge: false },
+    { name: 'Groceries', price: 85, category: 'grub', emoji: '🛒', store: 'FreshMart', splurge: false },
     { name: 'Phone plan', price: 45, category: 'bills', emoji: '📱', store: 'Telco', splurge: false },
     { name: 'Prescription', price: 18, category: 'pharmacy', emoji: '💊', store: 'Pharmacy', splurge: false },
     { name: 'Electric bill', price: 60, category: 'bills', emoji: '💡', store: 'PowerCo', splurge: false },
@@ -67,7 +75,7 @@ const DEMO = {
   ],
   categories: [
     { slug: 'eats', label: 'Eats', emoji: '🍽️', total: 412 },
-    { slug: 'grub', label: 'Grub', emoji: '🥑', total: 388 },
+    { slug: 'grub', label: 'Grub', emoji: '🛒', total: 388 },
     { slug: 'bills', label: 'Bills', emoji: '💡', total: 305 },
     { slug: 'fits', label: 'Fits', emoji: '👔', total: 214 },
     { slug: 'tech', label: 'Tech', emoji: '📱', total: 189 },

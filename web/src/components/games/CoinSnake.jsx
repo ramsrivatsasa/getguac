@@ -6,8 +6,8 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   useArcadeSound, useBestScore, useScoreSaver,
-  Overlay, OverlayAd, SaveScoreLine, PrimaryButton, GhostButton, HudButton,
-  INK, BODY, MUTED, FAINT, GREEN, AMBER, fmt,
+  Overlay, OverlayAd, SaveScoreLine, PrimaryButton, GhostButton, ArcadeHud,
+  INK, BODY, MUTED, FAINT, GREEN, AMBER, DISPLAY_FONT, fmt,
 } from './arcadeKit'
 
 const BEST_KEY = 'gg-snake-best-v1'
@@ -138,20 +138,23 @@ export default function CoinSnake() {
     if (!cvs) return
     const { w, h } = sizeRef.current
     const ctx = cvs.getContext('2d')
-    const bg = ctx.createLinearGradient(0, 0, 0, h)
-    bg.addColorStop(0, '#14251a'); bg.addColorStop(1, '#0b160f')
+    // Dark guac field (#052e16) — Guac Arcade design system surface.
+    const bg = ctx.createRadialGradient(w / 2, 0, 0, w / 2, 0, Math.max(w, h))
+    bg.addColorStop(0, '#0b3d20'); bg.addColorStop(1, '#052e16')
     ctx.fillStyle = bg
     ctx.fillRect(0, 0, w, h)
 
     const { cell, bx, by, bw, bh } = boardGeo()
-    // board
-    ctx.fillStyle = '#1a2f21'
+    // board — faint grid on the dark field (matches the mockup, not a checker)
+    ctx.fillStyle = '#06331a'
     ctx.fillRect(bx, by, bw, bh)
-    ctx.fillStyle = 'rgba(255,255,255,0.025)'
-    for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) {
-      if ((x + y) % 2 === 0) ctx.fillRect(bx + x * cell, by + y * cell, cell, cell)
-    }
-    ctx.strokeStyle = sim.flash > 0 ? '#67e8f9' : 'rgba(132,204,22,0.5)'
+    ctx.strokeStyle = 'rgba(255,255,255,0.04)'
+    ctx.lineWidth = 1
+    ctx.beginPath()
+    for (let x = 1; x < COLS; x++) { ctx.moveTo(bx + x * cell, by); ctx.lineTo(bx + x * cell, by + bh) }
+    for (let y = 1; y < ROWS; y++) { ctx.moveTo(bx, by + y * cell); ctx.lineTo(bx + bw, by + y * cell) }
+    ctx.stroke()
+    ctx.strokeStyle = sim.flash > 0 ? '#67e8f9' : 'rgba(34,197,94,0.55)'
     ctx.lineWidth = 2.5
     ctx.strokeRect(bx - 2, by - 2, bw + 4, bh + 4)
 
@@ -180,6 +183,18 @@ export default function CoinSnake() {
       ctx.fillStyle = gg; ctx.fill()
       ctx.lineWidth = Math.max(1, cell * 0.045); ctx.strokeStyle = '#155e75'; ctx.stroke()
       ctx.globalAlpha = 1
+      // amber countdown badge — the "4s" chip from the design
+      const badge = `${Math.max(1, Math.ceil(sim.gemLife))}s`
+      ctx.font = `800 ${Math.round(cell * 0.34)}px ${DISPLAY_FONT}`
+      const bw2 = ctx.measureText(badge).width + 10
+      const byTop = gy - gr - cell * 0.62
+      ctx.fillStyle = '#fbbf24'
+      ctx.beginPath()
+      if (ctx.roundRect) ctx.roundRect(gx - bw2 / 2, byTop, bw2, cell * 0.42, cell * 0.21)
+      else ctx.rect(gx - bw2 / 2, byTop, bw2, cell * 0.42)
+      ctx.fill()
+      ctx.fillStyle = '#052e16'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+      ctx.fillText(badge, gx, byTop + cell * 0.23)
     }
 
     // snake
@@ -299,7 +314,7 @@ export default function CoinSnake() {
       <div
         ref={wrapRef}
         className="relative overflow-hidden"
-        style={{ height: 'clamp(470px, calc(100svh - 170px), 900px)', minHeight: 430, background: '#0b160f', borderTop: '1px solid rgba(20,83,45,0.12)', borderBottom: '1px solid rgba(20,83,45,0.12)' }}
+        style={{ height: 'clamp(470px, calc(100svh - 170px), 900px)', minHeight: 430, background: '#0b160f' }}
       >
         <canvas
           ref={canvasRef}
@@ -309,23 +324,16 @@ export default function CoinSnake() {
           style={{ touchAction: 'none' }}
         />
 
-        {/* HUD */}
-        <div className="absolute top-0 inset-x-0 flex items-center justify-between px-3 py-2" style={{ pointerEvents: 'none' }}>
-          <div className="flex items-baseline gap-3">
-            <div>
-              <span className="text-[11px] font-semibold" style={{ color: '#5C6B60' }}>Score </span>
-              <span className="font-display font-extrabold text-lg" style={{ color: '#bef264' }}>{fmt(score)}</span>
-            </div>
-            <div>
-              <span className="text-[11px] font-semibold" style={{ color: '#5C6B60' }}>Length </span>
-              <span className="font-display font-bold text-sm" style={{ color: '#d1fae5' }}>{len}</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-2" style={{ pointerEvents: 'auto' }}>
-            <HudButton onClick={toggleMute} label={muted ? 'Unmute sound' : 'Mute sound'}>{muted ? '🔇' : '🔊'}</HudButton>
-            {status === 'playing' && <HudButton onClick={pause} label="Pause">⏸ Pause</HudButton>}
-          </div>
-        </div>
+        {/* HUD — unified Guac Arcade chrome (mockup 1l) */}
+        {status === 'playing' && (
+          <ArcadeHud
+            score={score} scoreLabel="SCORE"
+            status={best > 0 ? `BEST ${fmt(best)}` : null}
+            hint="Arrows / WASD / swipe to steer · 💎 = +50, grab it before it fades"
+            onPause={pause}
+            muted={muted} onMute={toggleMute}
+          />
+        )}
 
         {status === 'idle' && (
           <Overlay dark>
@@ -367,7 +375,7 @@ export default function CoinSnake() {
                 <div className="text-[11px]" style={{ color: FAINT }}>best run</div>
               </div>
             </div>
-            {newBest && <div className="text-xs font-bold mt-2" style={{ color: AMBER }}>New best! 🥑</div>}
+            {newBest && <div className="text-xs font-bold mt-2" style={{ color: AMBER }}>New best!</div>}
             <SaveScoreLine res={saveRes} />
             <div className="mt-4">
               <PrimaryButton onClick={start}>Play again</PrimaryButton>

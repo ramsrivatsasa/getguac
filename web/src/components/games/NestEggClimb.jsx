@@ -7,14 +7,28 @@
 // 401(k) matches that launch you. Fall off the bottom and the run ends.
 // Desktop: ← → / A D. Mobile: hold the left or right half of the screen.
 // Sim in refs + rAF; React state is HUD only; synthesized sound.
+//
+// This game owns CHAPTER 6 of the shared financial journey — 📈 Invest for
+// retirement (lib/financialJourney). It opens with that chapter's real lesson
+// (compounding + the employer match), its milestones are the chapter's stages,
+// and crossing the $1M line clears the chapter. Platform difficulty rides the
+// auto-learning engine (lib/adaptiveDifficulty).
 import { useEffect, useRef, useState } from 'react'
 import {
   useArcadeSound, useBestScore, useScoreSaver,
   Overlay, OverlayAd, SaveScoreLine, PrimaryButton, GhostButton, HudButton,
-  INK, BODY, MUTED, FAINT, GREEN, AMBER, fmt,
+  INK, BODY, MUTED, FAINT, GREEN, AMBER, fmt, drawGuacAvocado, AvocadoPip,
 } from './arcadeKit'
+import { roundById } from '../../lib/financialJourney'
+import { useAdaptive, AdaptiveChip, RoundIntro, ChapterComplete, JourneyBar } from './journeyKit'
 
 const BEST_KEY = 'gg-nestegg-best-v1'
+
+// The journey chapter this game teaches. The $1M line stays the goal (it's
+// drawn on the canvas and it's the whole point) — the auto-learning engine
+// tunes how hard the CLIMB is, not where the finish line sits.
+const CHAPTER = roundById('invest')
+const CHAPTER_PAR = 100
 
 const GRAV = 1500
 const JUMP_V = 640
@@ -41,7 +55,9 @@ function makePlatform(sim, y) {
     spring: Math.random() < 0.09,
   }
   const alt = sim.altitude(y)
-  const hard = Math.min(0.55, alt / 9000) // more tricky platforms higher up
+  // More tricky platforms higher up — and the auto-learning engine widens that
+  // band for climbers it has watched handle it.
+  const hard = Math.min(0.68, (alt / 9000) * (sim.hardMul || 1))
   const roll = Math.random()
   if (roll < hard * 0.5) { p.type = 'crumble'; p.spring = false }
   else if (roll < hard) { p.type = 'moving'; p.vx = (Math.random() < 0.5 ? -1 : 1) * (70 + Math.random() * 80) }
@@ -67,8 +83,26 @@ export default function NestEggClimb() {
   const { tone, muted, toggleMute } = useArcadeSound()
   const { best, newBest, submit: submitBest } = useBestScore(BEST_KEY)
   const { saveRes, save, resetSave } = useScoreSaver('nestegg')
+  // Auto-learning difficulty for this chapter.
+  const { diff, diffRef, record, note } = useAdaptive('nestegg')
+  // The chapter's milestones double as its stages.
+  const [stage, setStage] = useState(1)
 
   const setPhase = (s) => { statusRef.current = s; setStatus(s) }
+
+  // Fold the climb into the skill profile: did they reach the $1M line, and
+  // how long did the climb take.
+  const learn = (cleared) => {
+    const sim = simRef.current
+    if (!sim) return
+    record({
+      cleared,
+      seconds: sim.t0 ? (performance.now() - sim.t0) / 1000 : 0,
+      par: CHAPTER_PAR,
+      livesLost: 0,
+      accuracy: Math.min(1, sim.maxDollars / GOAL),
+    })
+  }
   const showToast = (msg) => {
     setToast(msg)
     clearTimeout(toastTimer.current)
@@ -96,7 +130,9 @@ export default function NestEggClimb() {
       cameraY: 0, // world y of the top of the view
       startY: h - 100,
       maxDollars: 0, milestoneIdx: 0,
-      clock: 0,
+      clock: 0, t0: performance.now(),
+      // Auto-learning difficulty: how thick the tricky-platform band gets.
+      hardMul: Math.max(0.8, Math.min(1.5, diffRef.current.mul)),
       altitude(y) { return Math.max(0, this.startY - y) },
     }
     // base platform right under the player + a ladder of starters
@@ -109,10 +145,22 @@ export default function NestEggClimb() {
 
   const endGame = (sim) => {
     cancelAnimationFrame(rafRef.current)
+    learn(sim.maxDollars >= GOAL)
     sfx('fall')
     save(sim.maxDollars, null)
     submitBest(sim.maxDollars)
     setPhase('over')
+    draw(sim)
+  }
+
+  // Crossed the $1M line — the chapter is cleared. The climb can carry on
+  // afterwards for the leaderboard.
+  const winChapter = (sim) => {
+    cancelAnimationFrame(rafRef.current)
+    learn(true)
+    save(sim.maxDollars, null)
+    submitBest(sim.maxDollars)
+    setPhase('won')
     draw(sim)
   }
 
@@ -186,8 +234,9 @@ export default function NestEggClimb() {
         const m = MILESTONES[sim.milestoneIdx]
         showToast(m.msg)
         sfx(m.at >= GOAL ? 'retire' : 'milestone')
-        if (m.at >= GOAL) setRetired(true)
         sim.milestoneIdx += 1
+        setStage(Math.min(MILESTONES.length, sim.milestoneIdx + 1))
+        if (m.at >= GOAL) { setRetired(true); winChapter(sim); return }
       }
     }
 
@@ -295,9 +344,7 @@ export default function NestEggClimb() {
     ctx.save()
     ctx.translate(p.x, py)
     ctx.scale(p.face, 1)
-    ctx.font = '30px system-ui'
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
-    ctx.fillText('🥑', 0, 0)
+    drawGuacAvocado(ctx, 0, 0, 15, 0)
     ctx.restore()
 
     // particles
@@ -322,10 +369,21 @@ export default function NestEggClimb() {
     }
   }
 
-  const start = () => {
+  // Open the chapter with its lesson card; the climb starts from there.
+  const start = () => { resetSave(); setPhase('intro') }
+
+  const beginPlay = () => {
     const { w, h } = sizeRef.current
     simRef.current = freshSim(w, h)
-    setDollars(0); setRetired(false); resetSave()
+    setDollars(0); setRetired(false); setStage(1)
+    setPhase('playing')
+    lastRef.current = performance.now()
+    cancelAnimationFrame(rafRef.current)
+    rafRef.current = requestAnimationFrame(loop)
+  }
+
+  // Chapter cleared but the climb doesn't have to stop.
+  const keepClimbing = () => {
     setPhase('playing')
     lastRef.current = performance.now()
     cancelAnimationFrame(rafRef.current)
@@ -418,7 +476,7 @@ export default function NestEggClimb() {
       <div
         ref={wrapRef}
         className="relative overflow-hidden"
-        style={{ height: 'clamp(470px, calc(100svh - 170px), 900px)', minHeight: 430, background: '#d6f4de', borderTop: '1px solid rgba(20,83,45,0.12)', borderBottom: '1px solid rgba(20,83,45,0.12)' }}
+        style={{ height: 'clamp(470px, calc(100svh - 170px), 900px)', minHeight: 430, background: '#d6f4de' }}
       >
         <canvas
           ref={canvasRef}
@@ -445,8 +503,12 @@ export default function NestEggClimb() {
           </div>
         </div>
 
+        {status === 'playing' && (
+          <JourneyBar round={CHAPTER} banked={dollars} target={GOAL} stage={stage} stages={MILESTONES.length} top={44} />
+        )}
+
         {toast && (
-          <div className="absolute left-1/2 top-14 -translate-x-1/2 text-sm font-bold px-4 py-2 rounded-full text-center" style={{ background: INK, color: '#fff', pointerEvents: 'none', maxWidth: '90%' }}>{toast}</div>
+          <div className="absolute left-1/2 -translate-x-1/2 text-sm font-bold px-4 py-2 rounded-full text-center" style={{ top: 120, background: INK, color: '#fff', pointerEvents: 'none', maxWidth: '90%' }}>{toast}</div>
         )}
 
         {status === 'idle' && (
@@ -460,10 +522,25 @@ export default function NestEggClimb() {
             <p className="text-sm mb-3" style={{ color: BODY }}>
               Gold springs are 401(k) matches: free launch upward. Steer with ← → or hold either side of the screen. Don&apos;t fall!
             </p>
-            {best > 0 && <div className="text-xs font-bold mb-3" style={{ color: AMBER }}>Best nest egg: ${fmt(best)}</div>}
-            <PrimaryButton onClick={start}>Start climbing</PrimaryButton>
+            <div className="text-[11px] font-bold px-3 py-1 rounded-full inline-block mb-2"
+              style={{ background: `${CHAPTER.color}1a`, color: CHAPTER.dark }}>
+              CHAPTER {CHAPTER.n} OF THE MONEY JOURNEY · {CHAPTER.emoji} {CHAPTER.title}
+            </div>
+            {best > 0 && <div className="text-xs font-bold mb-2" style={{ color: AMBER }}>Best nest egg: ${fmt(best)}</div>}
+            <AdaptiveChip diff={diff} note={note} compact />
+            <div className="mt-3"><PrimaryButton onClick={start}>Start climbing</PrimaryButton></div>
             <OverlayAd />
           </Overlay>
+        )}
+
+        {status === 'intro' && (
+          <RoundIntro round={CHAPTER} target={GOAL} stages={MILESTONES.length} diff={diff} note={note}
+            onStart={beginPlay} cta="Start climbing" />
+        )}
+
+        {status === 'won' && (
+          <ChapterComplete round={CHAPTER} banked={dollars} caption="in the nest egg — retired 🏖️" diff={diff} note={note}
+            onReplay={keepClimbing} replayLabel="Keep climbing 🚀" />
         )}
 
         {status === 'paused' && (
@@ -495,8 +572,9 @@ export default function NestEggClimb() {
                 <div className="text-[11px]" style={{ color: FAINT }}>best nest egg</div>
               </div>
             </div>
-            {newBest && <div className="text-xs font-bold mt-2" style={{ color: AMBER }}>New best! 🥑</div>}
+            {newBest && <div className="text-xs font-bold mt-2" style={{ color: AMBER }}>New best!</div>}
             <SaveScoreLine res={saveRes} />
+            <AdaptiveChip diff={diff} note={note} compact />
             <div className="mt-4">
               <PrimaryButton onClick={start}>Climb again</PrimaryButton>
             </div>

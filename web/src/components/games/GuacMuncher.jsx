@@ -9,7 +9,7 @@ import { useEffect, useRef, useState } from 'react'
 import {
   useArcadeSound, useBestScore, useScoreSaver,
   Overlay, OverlayAd, SaveScoreLine, PrimaryButton, GhostButton, HudButton,
-  INK, BODY, MUTED, FAINT, GREEN, AMBER, ROSE, fmt, surfaceBg,
+  INK, BODY, MUTED, FAINT, GREEN, AMBER, ROSE, fmt, surfaceBg, AvocadoPip,
 } from './arcadeKit'
 
 const BEST_KEY = 'gg-muncher-best-v1'
@@ -278,7 +278,7 @@ export default function GuacMuncher() {
     resetEntities(sim, true)
     sim.freeze = 1.2
     setScore(sim.score); setLevel(sim.level)
-    showToast(`Level ${sim.level}! 🥑 +500`)
+    showToast(`Level ${sim.level}! +500`)
     sfx('win')
   }
 
@@ -611,7 +611,7 @@ export default function GuacMuncher() {
       <div
         ref={wrapRef}
         className="relative overflow-hidden"
-        style={{ height: 'clamp(470px, calc(100svh - 170px), 900px)', minHeight: 430, background: surfaceBg('field'), borderTop: '1px solid rgba(20,83,45,0.25)', borderBottom: '1px solid rgba(20,83,45,0.25)' }}
+        style={{ height: 'clamp(470px, calc(100svh - 170px), 900px)', minHeight: 430, background: surfaceBg('field') }}
       >
         <canvas
           ref={canvasRef}
@@ -632,7 +632,7 @@ export default function GuacMuncher() {
               <span className="text-[11px] font-semibold" style={{ color: '#5f8570' }}>Level </span>
               <span className="font-display font-bold text-sm" style={{ color: '#cde7d4' }}>{level}</span>
             </div>
-            <div className="text-sm" aria-label={`${lives} lives`}>{'🥑'.repeat(Math.max(0, lives))}</div>
+            <div className="flex items-center gap-1" aria-label={`${lives} lives`}>{Array.from({ length: Math.max(0, lives) }).map((_, i) => <AvocadoPip key={i} size={15} />)}</div>
           </div>
           <div className="flex items-center gap-2" style={{ pointerEvents: 'auto' }}>
             <HudButton onClick={toggleMute} label={muted ? 'Unmute sound' : 'Mute sound'}>{muted ? '🔇' : '🔊'}</HudButton>
@@ -646,7 +646,7 @@ export default function GuacMuncher() {
 
         {status === 'idle' && (
           <Overlay dark>
-            <div className="text-4xl mb-1">🥑</div>
+            <div className="flex justify-center mb-1"><AvocadoPip size={44} /></div>
             <div className="font-display font-extrabold text-xl mb-2" style={{ color: INK }}>Guac Muncher</div>
             <p className="text-sm mb-1" style={{ color: BODY }}>
               Chomp <b style={{ color: AMBER }}>every coin in the maze</b> while four ghosts hunt you down.
@@ -688,7 +688,7 @@ export default function GuacMuncher() {
                 <div className="text-[11px]" style={{ color: FAINT }}>best run</div>
               </div>
             </div>
-            {newBest && <div className="text-xs font-bold mt-2" style={{ color: AMBER }}>New best! 🥑</div>}
+            {newBest && <div className="text-xs font-bold mt-2 flex items-center justify-center gap-1" style={{ color: AMBER }}>New best! <AvocadoPip size={13} /></div>}
             <SaveScoreLine res={saveRes} />
             <div className="mt-4">
               <PrimaryButton onClick={start}>Play again</PrimaryButton>

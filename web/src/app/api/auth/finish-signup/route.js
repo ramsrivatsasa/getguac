@@ -11,6 +11,7 @@ import { createClient } from '../../../../lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { createMailbox, mailboxExists } from '../../../../lib/migadu'
 import { encryptSecret, generateMailboxPassword } from '../../../../lib/crypto'
+import { reportServerError } from '../../../../lib/report-error'
 export const runtime = 'nodejs'
 
 const VALID_USERNAME_RE = /^[a-z0-9][a-z0-9._-]{1,30}[a-z0-9]$/
@@ -25,6 +26,9 @@ function admin() {
 
 async function provisionMailbox(sbAdmin, userId, username, displayName) {
   if (!process.env.MIGADU_API_KEY || !process.env.EMAIL_ENCRYPTION_KEY) {
+    // Loud: a missing env here is exactly how "new users get no mailbox" happens
+    // silently. The poll's self-heal pass will retry, but this must not be quiet.
+    console.warn('[auth/finish-signup] mailbox NOT provisioned — MIGADU_API_KEY/EMAIL_ENCRYPTION_KEY missing in this environment')
     return { provisioned: false, reason: 'not_configured' }
   }
   try {
@@ -41,7 +45,13 @@ async function provisionMailbox(sbAdmin, userId, username, displayName) {
       .eq('id', userId)
     return { provisioned: true }
   } catch (e) {
+    // Report instead of swallowing — the poll self-heal will still retry, but a
+    // provisioning failure should surface in the admin crash dashboard.
     console.error('[auth/finish-signup] mailbox provisioning failed:', e.message)
+    await reportServerError(
+      { tag: 'email_provision', action: 'email_failure', level: 'error', userId, platform: 'server', message: `finish-signup provision: ${e.message}` },
+      sbAdmin,
+    ).catch(() => {})
     return { provisioned: false, error: e.message }
   }
 }

@@ -23,6 +23,7 @@ import { decryptSecret } from '../../../../lib/crypto'
 import { pollMailbox, isReceiptsAddress } from '../../../../lib/imap-poll'
 import { draftReceiptFromEmail } from '../../../../lib/email-to-receipt'
 import { reportServerError } from '../../../../lib/report-error'
+import { isImapAuthFailure, reprovisionMailbox, autoReauthedRecently, recordAutoReauth, describeImapError } from '../../../../lib/mailbox-reauth'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -83,11 +84,22 @@ export async function POST() {
   try {
     result = await pollMailbox({ localPart: prof.email_alias, password, lastUidByFolder })
   } catch (e) {
-    // IMAP login/connection failure — most often a mailbox-password desync.
-    // Surface it so the UI can nudge the user to Reconnect, and record it so
-    // it shows in the admin crash dashboard as an email failure.
-    await reportServerError({ tag: 'email_sync', action: 'email_failure', level: 'error', userId: user.id, platform: 'server', message: `imap: ${e.message}` }, admin)
-    return Response.json({ error: 'imap', detail: e.message, hint: 'reconnect' }, { status: 502 })
+    // Desynced mailbox password → self-heal (rotate on Migadu + retry once)
+    // instead of just telling the user to reconnect. Throttled; falls back to a
+    // 502 reconnect hint only if healing is throttled or itself fails.
+    if (isImapAuthFailure(e) && !(await autoReauthedRecently(admin, user.id))) {
+      try {
+        const { password: newPw } = await reprovisionMailbox(admin, { userId: user.id, alias: prof.email_alias })
+        await recordAutoReauth(admin, { userId: user.id, alias: prof.email_alias, via: 'sync' })
+        result = await pollMailbox({ localPart: prof.email_alias, password: newPw, lastUidByFolder })
+      } catch (healErr) {
+        await reportServerError({ tag: 'email_sync', action: 'email_failure', level: 'error', userId: user.id, platform: 'server', message: `imap heal failed: ${describeImapError(e)} → ${healErr.message}` }, admin)
+        return Response.json({ error: 'imap', detail: describeImapError(e), hint: 'reconnect' }, { status: 502 })
+      }
+    } else {
+      await reportServerError({ tag: 'email_sync', action: 'email_failure', level: 'error', userId: user.id, platform: 'server', message: `imap: ${describeImapError(e)}` }, admin)
+      return Response.json({ error: 'imap', detail: describeImapError(e), hint: 'reconnect' }, { status: 502 })
+    }
   }
 
   const summary = { ok: true, fetched: 0, inserted: 0, drafted: 0, errors: [] }

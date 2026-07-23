@@ -16,6 +16,8 @@ import { pollMailbox, isReceiptsAddress, deleteImapMessage, moveImapMessage } fr
 import { decryptSecret } from '../../../../lib/crypto'
 import { draftReceiptFromEmail } from '../../../../lib/email-to-receipt'
 import { reportServerError } from '../../../../lib/report-error'
+import { isImapAuthFailure, reprovisionMailbox, autoReauthedRecently, recordAutoReauth, describeImapError } from '../../../../lib/mailbox-reauth'
+import { provisionMissingMailboxes } from '../../../../lib/provision-missing'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -65,7 +67,7 @@ export async function POST(request) {
     return Response.json({ error: error.message }, { status: 500 })
   }
 
-  const summary = { users: 0, messages: 0, moved_to_guacked: 0, deleted_upstream: 0, errors: [] }
+  const summary = { users: 0, messages: 0, moved_to_guacked: 0, deleted_upstream: 0, provisioned: 0, reauthed: 0, errors: [] }
 
   for (const u of users || []) {
     summary.users++
@@ -87,7 +89,19 @@ export async function POST(request) {
         }
       }
 
-      const result = await pollMailbox({ localPart: u.email_alias, password, lastUidByFolder })
+      let result
+      try {
+        result = await pollMailbox({ localPart: u.email_alias, password, lastUidByFolder })
+      } catch (pollErr) {
+        // Desynced mailbox password (symptom: IMAP "Command failed") → rotate it
+        // on Migadu and retry once. Throttled so a mailbox that stays unreachable
+        // can't rotate every tick. Non-auth errors bubble to the outer catch.
+        if (!isImapAuthFailure(pollErr) || await autoReauthedRecently(sb, u.id)) throw pollErr
+        const { password: newPw } = await reprovisionMailbox(sb, { userId: u.id, alias: u.email_alias })
+        await recordAutoReauth(sb, { userId: u.id, alias: u.email_alias, via: 'poll' })
+        summary.reauthed++
+        result = await pollMailbox({ localPart: u.email_alias, password: newPw, lastUidByFolder })
+      }
 
       for (const m of result.messages) {
         const isHook = isReceiptsAddress(m, u.email_alias)
@@ -191,9 +205,19 @@ export async function POST(request) {
         .update({ email_last_poll_at: new Date().toISOString() })
         .eq('id', u.id)
     } catch (e) {
-      summary.errors.push({ user: u.id, error: e.message })
-      await reportServerError({ tag: 'email_poll', action: 'email_failure', level: 'error', userId: u.id, platform: 'server', message: e.message }, sb)
+      const msg = describeImapError(e)
+      summary.errors.push({ user: u.id, error: msg })
+      await reportServerError({ tag: 'email_poll', action: 'email_failure', level: 'error', userId: u.id, platform: 'server', message: msg }, sb)
     }
+  }
+
+  // Self-heal: create mailboxes for confirmed users whose signup provisioning
+  // silently failed (they have a handle but no Migadu mailbox). Best-effort —
+  // wrapped so a provisioning hiccup never breaks the mail pull above.
+  try {
+    await provisionMissingMailboxes(sb, summary, reportServerError)
+  } catch (e) {
+    console.error('[email/poll] provision self-heal pass failed:', e.message)
   }
 
   return Response.json(summary)

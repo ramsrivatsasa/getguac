@@ -20,6 +20,9 @@ const ANDROID_RELEASE = {
   ],
 }
 
+// Live Apple App Store listing.
+const APP_STORE_URL = 'https://apps.apple.com/us/app/getguac/id6790993237'
+
 function detectPlatform(ua) {
   if (!ua) return 'desktop'
   const s = ua.toLowerCase()
@@ -131,22 +134,40 @@ export default function DownloadClient() {
           <div className="flex-1 min-w-0">
             <h2 className="text-xl font-extrabold text-gray-900 flex items-center gap-2 flex-wrap">
               iPhone
-              <span className="text-[11px] font-semibold uppercase tracking-wider bg-amber-100 text-amber-800 rounded-full px-2 py-0.5">Web app</span>
+              <span className="text-[11px] font-semibold uppercase tracking-wider bg-emerald-100 text-emerald-800 rounded-full px-2 py-0.5">On the App Store</span>
               {platform === 'ios' && (
                 <span className="text-[11px] font-semibold uppercase tracking-wider bg-lime-200 text-emerald-900 rounded-full px-2 py-0.5">You&apos;re on iOS</span>
               )}
             </h2>
-            <p className="text-sm text-gray-600 mt-1">Install GetGuac on your home screen via Safari. Native iOS app coming soon via TestFlight.</p>
+            <p className="text-sm text-gray-600 mt-1">GetGuac is live on the App Store &mdash; install the native app on your iPhone &amp; iPad.</p>
           </div>
         </div>
 
-        <ol className="mt-5 list-decimal pl-5 space-y-2 text-sm text-gray-700">
-          <li>Open <strong>getguac.app</strong> in <strong>Safari</strong> (not Chrome).</li>
-          <li>Tap the <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-gray-100 font-mono text-xs"><Share2 size={11} /> Share</span> button at the bottom of the screen.</li>
-          <li>Scroll down and tap <strong>Add to Home Screen</strong>.</li>
-          <li>Tap <strong>Add</strong> in the top-right.</li>
-          <li>The avocado icon appears on your home screen. Tap it to open GetGuac fullscreen.</li>
-        </ol>
+        {/* Big primary App Store button */}
+        <a
+          href={APP_STORE_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-5 w-full inline-flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-black hover:bg-gray-900 text-white text-base font-bold shadow-lg hover:shadow-xl transition-all"
+        >
+          <Apple size={24} className="shrink-0" />
+          <span className="text-left leading-tight">
+            <span className="block text-[11px] font-medium opacity-80">Download on the</span>
+            <span className="block text-lg font-bold">App Store</span>
+          </span>
+        </a>
+
+        {/* Add-to-Home-Screen fallback for anyone who prefers the web app */}
+        <details className="mt-4 text-sm text-gray-700">
+          <summary className="cursor-pointer font-semibold text-emerald-800 hover:text-emerald-900">Prefer the web app? Add GetGuac to your home screen</summary>
+          <ol className="mt-3 list-decimal pl-5 space-y-2 text-sm text-gray-700">
+            <li>Open <strong>getguac.app</strong> in <strong>Safari</strong> (not Chrome).</li>
+            <li>Tap the <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-gray-100 font-mono text-xs"><Share2 size={11} /> Share</span> button at the bottom of the screen.</li>
+            <li>Scroll down and tap <strong>Add to Home Screen</strong>.</li>
+            <li>Tap <strong>Add</strong> in the top-right.</li>
+            <li>The avocado icon appears on your home screen. Tap it to open GetGuac fullscreen.</li>
+          </ol>
+        </details>
       </section>
 
       {/* Web */}

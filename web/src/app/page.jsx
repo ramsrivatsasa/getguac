@@ -40,13 +40,12 @@ export default async function Home() {
                   real pre-loaded data without creating anything. */}
               <Link href="/login?demo=1" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#fff', color: '#1A2E22', fontWeight: 700, fontSize: 16, padding: '15px 26px', borderRadius: 999, textDecoration: 'none', border: '1.5px solid rgba(20,83,45,0.16)' }}>🔎 Try the demo</Link>
             </div>
-            {/* Store badges. iOS: swap href to https://apps.apple.com/app/id6790993237
-                once the App Store listing is approved & live — until then /download. */}
+            {/* Store badges — both live. */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 24 }}>
-              <Link href="/download" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: '#0B1410', color: '#fff', padding: '9px 18px 9px 14px', borderRadius: 12, textDecoration: 'none' }}>
+              <a href="https://apps.apple.com/us/app/getguac/id6790993237" target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: '#0B1410', color: '#fff', padding: '9px 18px 9px 14px', borderRadius: 12, textDecoration: 'none' }}>
                 <svg viewBox="0 0 384 512" width="22" height="22" fill="#fff" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.7-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
-                <span><span style={{ display: 'block', fontSize: 10.5, opacity: 0.8, lineHeight: 1.2 }}>Coming soon on the</span><span style={{ display: 'block', fontSize: 17, fontWeight: 700, lineHeight: 1.15 }}>App Store</span></span>
-              </Link>
+                <span><span style={{ display: 'block', fontSize: 10.5, opacity: 0.8, lineHeight: 1.2 }}>Download on the</span><span style={{ display: 'block', fontSize: 17, fontWeight: 700, lineHeight: 1.15 }}>App Store</span></span>
+              </a>
               <a href="https://play.google.com/store/apps/details?id=app.getguac.getguac" target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: '#0B1410', color: '#fff', padding: '9px 18px 9px 14px', borderRadius: 12, textDecoration: 'none' }}>
                 <svg viewBox="0 0 512 512" width="20" height="20" aria-hidden="true"><path fill="#4285F4" d="M48 32 288 256 48 480c-10-6-16-17-16-30V62c0-13 6-24 16-30z"/><path fill="#34A853" d="M48 32c5-3 11-5 17-5 6 0 12 2 18 5l260 148-55 76z"/><path fill="#FBBC04" d="M288 256l55-76 92 52c30 17 30 51 0 68l-92 52z"/><path fill="#EA4335" d="M288 256l55 76L83 480c-6 3-12 5-18 5-6 0-12-2-17-5z"/></svg>
                 <span><span style={{ display: 'block', fontSize: 10.5, opacity: 0.8, lineHeight: 1.2 }}>Get it on</span><span style={{ display: 'block', fontSize: 17, fontWeight: 700, lineHeight: 1.15 }}>Google Play</span></span>

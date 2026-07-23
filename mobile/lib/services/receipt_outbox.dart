@@ -41,6 +41,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
+import 'auth_token.dart';
 
 const String _kApiBase = 'https://getguac.app';
 const String _kStorageKey = 'getguac.outbox.v1';
@@ -84,7 +85,7 @@ class ReceiptOutbox {
     final idemKey = (payload['idempotency_key'] as String?) ?? _uuid.v4();
 
     try {
-      final res = await _post(idemKey, payload, session.accessToken);
+      final res = await _post(idemKey, payload, await ggAccessToken() ?? session.accessToken);
       if (res.statusCode >= 200 && res.statusCode < 300) {
         final body = jsonDecode(res.body) as Map<String, dynamic>;
         return SaveResult.success(
@@ -135,7 +136,7 @@ class ReceiptOutbox {
 
       final idemKey = entry['idempotency_key'] as String;
       try {
-        final res = await _post(idemKey, entry, session.accessToken);
+        final res = await _post(idemKey, entry, await ggAccessToken() ?? session.accessToken);
         if (res.statusCode >= 200 && res.statusCode < 300) {
           sent++;
           continue; // remove from queue

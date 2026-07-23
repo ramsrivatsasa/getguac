@@ -11,7 +11,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:share_plus/share_plus.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'auth_token.dart';
 
 class ShareService {
   static const _apiBase = 'https://getguac.app';
@@ -99,8 +99,7 @@ class ShareService {
     required Map<String, dynamic> payload,
     required String channel,
   }) async {
-    final session = Supabase.instance.client.auth.currentSession;
-    final token = session?.accessToken;
+    final token = await ggAccessToken();
     if (token == null) return null;
 
     try {

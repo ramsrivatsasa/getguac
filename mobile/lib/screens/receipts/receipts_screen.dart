@@ -18,6 +18,7 @@ import '../../widgets/receipt_scan_overlay.dart';
 import '../../widgets/top_app_bar_actions.dart';
 import '../../services/mascot_event_bus.dart';
 import '../../theme/gg_design.dart';
+import '../../services/auth_token.dart';
 
 class ReceiptsScreen extends StatefulWidget {
   /// Optional initial store filter from a deep-link like
@@ -556,7 +557,7 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
     setState(() => _dedupBusy = true);
     final messenger = ScaffoldMessenger.of(context);
     try {
-      final token = Supabase.instance.client.auth.currentSession?.accessToken;
+      final token = await ggAccessToken();
       if (token == null) throw Exception('Not signed in');
       final headers = {
         'Authorization': 'Bearer $token',
@@ -628,7 +629,7 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
     setState(() => _autocatBusy = true);
     try {
       final sb = Supabase.instance.client;
-      final token = sb.auth.currentSession?.accessToken;
+      final token = await ggAccessToken();
       if (token == null) throw Exception('Not signed in');
       // Route caps at 200 receipts/call — chunk so large accounts still work.
       final cats = <String, String>{};

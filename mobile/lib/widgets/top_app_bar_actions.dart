@@ -14,6 +14,7 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../providers/auth_provider.dart';
 import '../theme/gg_design.dart';
+import '../services/auth_token.dart';
 
 /// Shared native app bar — the 🥑 logo (matching the website) + a Bricolage
 /// title + the standard action row (Steals · More · Sign out) in DARK ink on
@@ -282,7 +283,7 @@ Future<void> confirmAndDeleteData(BuildContext context) async {
 
   String? error;
   try {
-    final token = Supabase.instance.client.auth.currentSession?.accessToken;
+    final token = await ggAccessToken();
     if (token == null) throw Exception('not signed in');
     final resp = await http.post(
       Uri.parse('https://getguac.app/api/account/delete'),

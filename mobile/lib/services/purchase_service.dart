@@ -12,9 +12,9 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:in_app_purchase/in_app_purchase.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'premium_service.dart';
+import 'auth_token.dart';
 
 class PurchaseService {
   PurchaseService._();
@@ -134,7 +134,7 @@ class PurchaseService {
   /// Send the receipt to our server for validation. The server grants premium;
   /// we never trust the client. Returns true when the server confirms premium.
   Future<bool> _verifyOnServer(PurchaseDetails p) async {
-    final token = Supabase.instance.client.auth.currentSession?.accessToken;
+    final token = await ggAccessToken();
     if (token == null) return false;
     final platform =
         defaultTargetPlatform == TargetPlatform.iOS ? 'ios' : 'android';

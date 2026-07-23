@@ -22,6 +22,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'analysis_engine.dart' show BankData;
+import 'auth_token.dart';
 
 class WizardSummary {
   final double totalInterest;
@@ -285,7 +286,7 @@ class WizardScoreApi {
     if (session == null) throw Exception('not signed in');
     final uri = Uri.parse('$apiBase/api/guacwizard${days > 0 ? '?days=$days' : ''}');
     final res = await http.get(uri, headers: {
-      'Authorization': 'Bearer ${session.accessToken}',
+      'Authorization': 'Bearer ${await ggAccessToken() ?? session.accessToken}',
     });
     if (res.statusCode >= 400) {
       throw Exception('guacwizard ${res.statusCode}: ${res.body}');

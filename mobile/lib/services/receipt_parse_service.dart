@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'debug_log.dart';
+import 'auth_token.dart';
 
 const _kApiBase = 'https://getguac.app';
 
@@ -152,7 +153,7 @@ class ReceiptParseService {
     try {
       final uri = Uri.parse('$_kApiBase/api/parse-receipt');
       final req = http.MultipartRequest('POST', uri);
-      req.headers['Authorization'] = 'Bearer ${session.accessToken}';
+      req.headers['Authorization'] = 'Bearer ${await ggAccessToken() ?? session.accessToken}';
       for (int i = 0; i < files.length; i++) {
         final f = files[i];
         final mime = _mimeFromExtension(f.path);
@@ -250,7 +251,7 @@ class ReceiptParseService {
     try {
       final uri = Uri.parse('$_kApiBase/api/parse-receipt');
       final req = http.MultipartRequest('POST', uri);
-      req.headers['Authorization'] = 'Bearer ${session.accessToken}';
+      req.headers['Authorization'] = 'Bearer ${await ggAccessToken() ?? session.accessToken}';
       // Explicit content-type. image_picker on Android sometimes returns
       // files without a registered MIME, which made the multipart upload
       // default to application/octet-stream — the server then rejected the

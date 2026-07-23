@@ -9,6 +9,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'auth_token.dart';
 
 const _kApiBase = 'https://getguac.app';
 
@@ -32,7 +33,7 @@ class ReceiptReparseService {
       // wall-clock before we bail, so we surface the server's own error
       // message instead of a generic client timeout.
       final res = await http.post(uri, headers: {
-        'Authorization': 'Bearer ${session.accessToken}',
+        'Authorization': 'Bearer ${await ggAccessToken() ?? session.accessToken}',
         'Content-Type': 'application/json',
       }, body: '{}').timeout(const Duration(seconds: 35));
 

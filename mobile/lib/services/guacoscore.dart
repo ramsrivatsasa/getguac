@@ -17,6 +17,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'auth_token.dart';
 
 // ── Local engine (offline fallback + tests) ─────────────────────────
 
@@ -110,7 +111,7 @@ class GuacoScoreApi {
     if (session == null) throw Exception('not signed in');
     final uri = Uri.parse('$apiBase/api/guacoscore${days > 0 ? '?days=$days' : ''}');
     final res = await http.get(uri, headers: {
-      'Authorization': 'Bearer ${session.accessToken}',
+      'Authorization': 'Bearer ${await ggAccessToken() ?? session.accessToken}',
     });
     if (res.statusCode >= 400) {
       throw Exception('guacoscore ${res.statusCode}: ${res.body}');

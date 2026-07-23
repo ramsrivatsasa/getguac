@@ -9,6 +9,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'auth_token.dart';
 
 class StashService {
   static SupabaseClient get _sb => Supabase.instance.client;
@@ -110,7 +111,7 @@ class StashService {
       Uri.parse('$apiBase/api/best-prices'),
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ${session.accessToken}',
+        'Authorization': 'Bearer ${await ggAccessToken() ?? session.accessToken}',
       },
       body: jsonEncode({
         'item_name': itemName,

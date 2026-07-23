@@ -12,6 +12,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'auth_token.dart';
 
 class ProductImageService {
   static const String defaultApiBase = 'https://getguac.app';
@@ -48,7 +49,7 @@ class ProductImageService {
         Uri.parse('$apiBase/api/product-image-batch'),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${session.accessToken}',
+          'Authorization': 'Bearer ${await ggAccessToken() ?? session.accessToken}',
         },
         body: jsonEncode({'names': unique}),
       );

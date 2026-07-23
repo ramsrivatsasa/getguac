@@ -26,6 +26,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'receipt_parse_service.dart';
 import 'debug_log.dart';
+import 'auth_token.dart';
 
 const _kApiBase = 'https://getguac.app';
 
@@ -151,7 +152,7 @@ class VoiceCaptureService {
       final res = await http.post(
         Uri.parse('$_kApiBase/api/receipts/from-voice'),
         headers: {
-          'Authorization': 'Bearer ${session.accessToken}',
+          'Authorization': 'Bearer ${await ggAccessToken() ?? session.accessToken}',
           'Content-Type': 'application/json',
         },
         body: jsonEncode({'transcript': t}),

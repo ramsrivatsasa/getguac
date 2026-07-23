@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../services/auth_token.dart';
 import '../../services/update_service.dart';
 import '../../widgets/guac_mascot.dart';
 import '../../widgets/animated_mascot.dart';
@@ -69,10 +70,9 @@ class _InboxScreenState extends State<InboxScreen> {
     super.dispose();
   }
 
-  Future<String?> _authHeader() async {
-    final session = Supabase.instance.client.auth.currentSession;
-    return session?.accessToken;
-  }
+  // Always via ggAccessToken so a token that expired while the app was
+  // backgrounded gets refreshed instead of 401-ing the whole inbox.
+  Future<String?> _authHeader() async => ggAccessToken();
 
   Future<void> _load() async {
     setState(() => _loading = true);
@@ -83,7 +83,16 @@ class _InboxScreenState extends State<InboxScreen> {
       'filter=${Uri.encodeQueryComponent(_filter)}&'
       'q=${Uri.encodeQueryComponent(_query)}');
     try {
-      final res = await http.get(uri, headers: {'Authorization': 'Bearer $token'});
+      var res = await http.get(uri, headers: {'Authorization': 'Bearer $token'});
+      // Belt-and-braces: if the server still rejects the token (clock skew, or
+      // it was revoked server-side), force one refresh and retry before we
+      // show the user an error.
+      if (res.statusCode == 401) {
+        final fresh = await ggAccessToken(forceRefresh: true);
+        if (fresh != null && fresh != token) {
+          res = await http.get(uri, headers: {'Authorization': 'Bearer $fresh'});
+        }
+      }
       if (res.statusCode == 200) {
         final body = json.decode(res.body) as Map<String, dynamic>;
         final list = (body['messages'] as List? ?? []).cast<Map<String, dynamic>>();
@@ -103,25 +112,16 @@ class _InboxScreenState extends State<InboxScreen> {
   }
 
   Future<void> _refresh() async {
-    final token = await _authHeader();
-    if (token == null) return;
-    // Trigger a real IMAP poll first so brand-new mail is fetched.
-    try {
-      final session = Supabase.instance.client.auth.currentSession;
-      if (session != null) {
-        // The /api/email/poll endpoint requires the CRON_SECRET, not user auth,
-        // so we can't call it from the client. We just re-fetch the list — the
-        // background cron will have populated it within 10 min.
-      }
-    } catch (_) {}
+    // The /api/email/poll endpoint requires the CRON_SECRET, not user auth, so
+    // we can't trigger an IMAP pull from the client. We just re-fetch the list
+    // — the background cron will have populated it within 10 min.
     await _load();
   }
 
   /// Force re-pull EVERY message from the mailbox starting at UID 1.
   /// Server enforces a 5-min cooldown and a 200-message-per-call cap.
   Future<void> _backfillAll() async {
-    final session = Supabase.instance.client.auth.currentSession;
-    if (session == null) return;
+    if (Supabase.instance.client.auth.currentSession == null) return;
     if (!mounted) return;
     final confirm = await showDialog<bool>(
       context: context,
@@ -141,9 +141,11 @@ class _InboxScreenState extends State<InboxScreen> {
     if (confirm != true) return;
     setState(() => _loading = true);
     try {
+      // Fetched AFTER the confirm dialog — the user may have sat on it long
+      // enough for a token grabbed beforehand to expire.
       final res = await http.post(
         Uri.parse('$_kApiBase/api/email/backfill'),
-        headers: {'Authorization': 'Bearer ${session.accessToken}'},
+        headers: await ggAuthHeaders(),
       );
       if (res.statusCode == 429) {
         if (mounted) ScaffoldMessenger.of(context).showSnackBar(
@@ -472,10 +474,10 @@ class _ComposeSheetState extends State<_ComposeSheet> {
     }
     setState(() => _sending = true);
     try {
-      final session = Supabase.instance.client.auth.currentSession;
+      // Composing a message easily outlasts a token's lifetime.
       final res = await http.post(
         Uri.parse('$_kApiBase/api/email/send'),
-        headers: {'Authorization': 'Bearer ${session?.accessToken ?? ''}', 'Content-Type': 'application/json'},
+        headers: await ggAuthHeaders(json: true),
         body: json.encode({'to': to, 'subject': _subject.text.trim(), 'body': _body.text}),
       );
       if (res.statusCode == 200) {

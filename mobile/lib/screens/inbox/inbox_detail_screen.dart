@@ -4,9 +4,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
+import '../../services/auth_token.dart';
 import '../../widgets/top_app_bar_actions.dart';
 import '../../theme/gg_design.dart';
 import 'inbox_screen.dart' show openInboxComposer;
@@ -33,12 +33,12 @@ class _InboxDetailScreenState extends State<InboxDetailScreen> {
 
   Future<void> _load() async {
     setState(() => _loading = true);
-    final session = Supabase.instance.client.auth.currentSession;
-    if (session == null) { setState(() => _loading = false); return; }
+    final headers = await ggAuthHeaders();
+    if (headers.isEmpty) { setState(() => _loading = false); return; }
     try {
       final res = await http.get(
         Uri.parse('$_kApiBase/api/email/${widget.id}'),
-        headers: {'Authorization': 'Bearer ${session.accessToken}'},
+        headers: headers,
       );
       if (res.statusCode == 200) {
         final body = json.decode(res.body) as Map<String, dynamic>;
@@ -58,12 +58,12 @@ class _InboxDetailScreenState extends State<InboxDetailScreen> {
   }
 
   Future<void> _patch(Map<String, dynamic> patch) async {
-    final session = Supabase.instance.client.auth.currentSession;
-    if (session == null) return;
+    final headers = await ggAuthHeaders(json: true);
+    if (headers.length < 2) return;
     try {
       await http.patch(
         Uri.parse('$_kApiBase/api/email/${widget.id}'),
-        headers: {'Authorization': 'Bearer ${session.accessToken}', 'Content-Type': 'application/json'},
+        headers: headers,
         body: json.encode(patch),
       );
       await _load();
@@ -87,12 +87,12 @@ class _InboxDetailScreenState extends State<InboxDetailScreen> {
       ),
     );
     if (confirm != true) return;
-    final session = Supabase.instance.client.auth.currentSession;
-    if (session == null) return;
+    final headers = await ggAuthHeaders();
+    if (headers.isEmpty) return;
     try {
       await http.delete(
         Uri.parse('$_kApiBase/api/email/${widget.id}'),
-        headers: {'Authorization': 'Bearer ${session.accessToken}'},
+        headers: headers,
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Moved to Trash')));
@@ -406,10 +406,9 @@ class _MessageBodyState extends State<_MessageBody> {
     if (widget.receiptId == null || _imageUrl != null || _imageLoading) return;
     setState(() { _imageLoading = true; _imageError = null; });
     try {
-      final token = Supabase.instance.client.auth.currentSession?.accessToken;
       final res = await http.post(
         Uri.parse('https://getguac.app/api/receipts/${widget.receiptId}/email-snapshot'),
-        headers: {'Authorization': 'Bearer ${token ?? ''}', 'Content-Type': 'application/json'},
+        headers: await ggAuthHeaders(json: true),
       );
       final url = res.statusCode == 200
           ? (jsonDecode(res.body)['receipt_link'] as String?) ?? ''

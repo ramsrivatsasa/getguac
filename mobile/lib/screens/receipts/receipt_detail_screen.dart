@@ -16,6 +16,7 @@ import '../../services/mascot_event_bus.dart';
 import '../../widgets/animated_primitives.dart';
 import '../../widgets/top_app_bar_actions.dart';
 import '../../theme/gg_design.dart';
+import '../../services/auth_token.dart';
 
 class ReceiptDetailScreen extends StatefulWidget {
   final String id;
@@ -128,7 +129,7 @@ class _ReceiptDetailScreenState extends State<ReceiptDetailScreen> {
     String link = '';
     String err = '';
     try {
-      final token = Supabase.instance.client.auth.currentSession?.accessToken;
+      final token = await ggAccessToken();
       final res = await http.post(
         Uri.parse('https://getguac.app/api/receipts/${widget.id}/email-snapshot'),
         headers: {'Authorization': 'Bearer ${token ?? ''}', 'Content-Type': 'application/json'},

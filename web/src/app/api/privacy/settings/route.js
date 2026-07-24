@@ -4,6 +4,7 @@
 import { createClient } from '../../../../lib/supabase/server'
 import { rateLimit, rateKey } from '../../../../lib/apiGuard'
 export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 const ALLOWED_FIELDS = new Set([
   'receipts_retention_days',

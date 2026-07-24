@@ -33,6 +33,7 @@ import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { normalizeStoreName } from '../../../../lib/store-name-normalize'
 
 export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash'

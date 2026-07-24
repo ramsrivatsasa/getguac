@@ -20,6 +20,7 @@ import { createClient as createServiceClient } from '@supabase/supabase-js'
 import crypto from 'crypto'
 
 export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 export const maxDuration = 30
 
 // audit_log actions that are our own ops noise, never app crashes.

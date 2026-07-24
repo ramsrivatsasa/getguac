@@ -6,6 +6,7 @@
 
 import { rateLimit, rateKey } from '../../../lib/apiGuard'
 export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 const EARTH_MILES = 3958.8
 const ROAD_FACTOR = 1.3   // straight-line → typical road distance

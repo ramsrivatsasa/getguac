@@ -12,6 +12,7 @@
 import { createApiClient } from '../../../../lib/supabase/server'
 
 export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 export async function GET(request) {
   const sb = createApiClient()

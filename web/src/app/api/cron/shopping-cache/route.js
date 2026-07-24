@@ -19,6 +19,7 @@ import { serpApiShopping } from '../../../../lib/serpShopping'
 import { getCachedSearch, setCachedSearch } from '../../../../lib/shoppingCache'
 
 export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
 const PRUNE_DAYS = Number(process.env.SHOPPING_CACHE_PRUNE_DAYS) || 14

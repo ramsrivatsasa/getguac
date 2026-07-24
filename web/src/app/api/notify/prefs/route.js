@@ -8,6 +8,7 @@
 
 import { NextResponse } from 'next/server'
 import { createClient } from '../../../../lib/supabase/server'
+export const dynamic = 'force-dynamic'
 
 const VALID_KEYS = new Set([
   'rewards_expiring', 'return_window', 'bank_bite_digest',

@@ -6,6 +6,7 @@
 import { createApiClient } from '../../../../lib/supabase/server'
 import { rateLimit, rateKey } from '../../../../lib/apiGuard'
 export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 const LIST_COLS =
   'id, uid, from_addr, to_addr, subject, received_at, preview, ' +

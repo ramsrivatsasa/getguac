@@ -23,6 +23,7 @@ import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { predict, _internals } from '../../../../lib/predict-smashlist'
 
 export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
 function admin() {

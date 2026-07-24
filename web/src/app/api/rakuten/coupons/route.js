@@ -22,6 +22,7 @@
 
 import { rateLimit, rateKey } from '../../../../lib/apiGuard'
 import { rakutenConfigured, fetchCoupons } from '../../../../lib/rakuten'
+export const dynamic = 'force-dynamic'
 
 export async function GET(request) {
   try {

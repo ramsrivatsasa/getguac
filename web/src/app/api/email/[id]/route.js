@@ -16,6 +16,7 @@ import { rateLimit, rateKey } from '../../../../lib/apiGuard'
 import { deleteImapMessage } from '../../../../lib/imap-poll'
 import { decryptSecret } from '../../../../lib/crypto'
 export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 export const maxDuration = 30
 
 const DETAIL_COLS =

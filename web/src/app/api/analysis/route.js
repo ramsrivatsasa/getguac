@@ -32,6 +32,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '../../../lib/supabase/server'
 import { computeDashboardAnalysis } from '../../../lib/analysisEngine'
+export const dynamic = 'force-dynamic'
 
 const VALID_PERIODS = new Set(['daily', 'weekly', 'monthly', 'yearly'])
 

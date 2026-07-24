@@ -16,6 +16,7 @@ import { createApiClient } from '../../../../lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 
 export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 function adminClient() {
   return createAdminClient(

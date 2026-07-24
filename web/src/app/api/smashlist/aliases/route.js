@@ -13,6 +13,7 @@ import { createClient } from '../../../../lib/supabase/server'
 import { rateLimit, userRateKey, validate, v } from '../../../../lib/apiGuard'
 
 export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 const ALLOWED_STATUSES = new Set(['confirmed', 'rejected', 'auto'])
 

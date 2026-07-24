@@ -22,6 +22,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { sendPushToUser } from '../../../../lib/fcm'
 import { getCachedSearch } from '../../../../lib/shoppingCache'
+export const dynamic = 'force-dynamic'
 
 // ── Auth helper ─────────────────────────────────────────────────────
 function unauthorized() {

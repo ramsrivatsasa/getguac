@@ -8,6 +8,10 @@ import Link from 'next/link'
 
 const DISPLAY = { fontFamily: 'var(--font-bricolage), sans-serif' }
 
+// Our Facebook Page. Kept here (not in an env var) so it ships with the build
+// like every other footer link.
+const FACEBOOK_URL = 'https://www.facebook.com/GetGuacApp'
+
 const COLS = [
   { heading: 'Product', links: [
     { href: '/marketplace', label: 'Marketplace' },
@@ -48,6 +52,18 @@ export default function MarketingFooter() {
             <p style={{ fontSize: 14, color: '#7A897F', margin: 0, maxWidth: 240, lineHeight: 1.55 }}>
               Your money&apos;s wingman. Reads your receipts, scores every dollar, keeps your guac.
             </p>
+            <a
+              href={FACEBOOK_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="GetGuac on Facebook"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 16, fontSize: 14, fontWeight: 600, color: '#5C6B60', textDecoration: 'none' }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="#1877F2" aria-hidden="true">
+                <path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.96h-1.51c-1.49 0-1.956.93-1.956 1.89v2.26h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07z" />
+              </svg>
+              Follow on Facebook
+            </a>
           </div>
           {COLS.map((col) => (
             <div key={col.heading}>

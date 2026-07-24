@@ -8,13 +8,19 @@ the copy/paste kit so it takes ~5 minutes.
 
 ## 1. Assets (already generated)
 
-Run `node web/scripts/fb-page-assets.mjs`, then upload from
-`web/marketing-assets/fb/page/`:
+Two generators, both writing to `web/marketing-assets/fb/page/`:
+
+- `node web/scripts/fb-page-assets.mjs` — profile picture (from the store app icon)
+- `node web/scripts/fb-cover-hero.mjs` — cover, screenshotted from the **live
+  homepage hero** on getguac.app, so the Page matches the site (real
+  Bricolage/Jakarta type + the live `HeroScoreCard` mockup). Needs network.
+
+Then upload:
 
 | File | Where it goes |
 |---|---|
-| `profile-1080x1080.png` | Profile picture — the store app icon, so the Page matches the App Store / Play listing |
-| `cover-1640x624.png` | Cover photo |
+| `profile-1080x1080.png` | Profile picture — the store app icon, so the Page matches the App Store / Play listing. Verified to survive FB's circle crop down to the 40px feed size |
+| `cover-1640x624.png` | Cover photo — the homepage hero: headline, tagline, both store badges, GuacScore card, `getguac.app` footer |
 | `cover-1640x624-GUIDES.png` | **Do not upload.** Reference only — shows the mobile crop + profile-picture overlap zones |
 
 Why 1640×624: Facebook renders the cover at 820×312 on desktop but crops the
@@ -32,7 +38,7 @@ both safe zones.
 |---|---|
 | **Page name** | `GetGuac` |
 | **Category** | `App Page` (add `Finance` / `Software` as secondary if offered) |
-| **Username** | `getguac` → `facebook.com/getguac`. If taken, use `getguacapp`. Set this early; it's needed for the link in the app/site footer |
+| **Username** | ✅ **DONE — `GetGuacApp` → `facebook.com/GetGuacApp`.** `getguac` was already taken (Facebook usernames share one namespace across Pages *and* personal profiles, and you cannot check availability while logged out — a free name and a name held by a personal profile look identical). Wired into `MarketingFooter.jsx` as `FACEBOOK_URL` |
 | **Website** | `https://getguac.app` |
 | **Email** | `admin@getguac.app` |
 | **Call-to-action button** | **Use app** → `https://getguac.app/download` (falls back to **Learn more** → `https://getguac.app`) |

@@ -89,3 +89,9 @@ test/*.apk
 web/marketing-assets/
 
 .vercel
+
+# Local capture output — regenerate via web/scripts/capture-mobile.mjs
+mobile-screens/
+
+# Stray output from a script that ran with an undefined output path
+web/undefined/

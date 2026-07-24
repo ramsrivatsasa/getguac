@@ -21,6 +21,7 @@ import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class PushNotifications {
@@ -29,8 +30,11 @@ class PushNotifications {
 
   bool _initialized = false;
   String? _currentToken;
+  GoRouter? _router;
   StreamSubscription<String>? _tokenRefreshSub;
   StreamSubscription<RemoteMessage>? _foregroundMsgSub;
+  StreamSubscription<RemoteMessage>? _openedAppSub;
+  StreamSubscription<AuthState>? _authSub;
 
   final _localNotifs = FlutterLocalNotificationsPlugin();
   // High-importance channel — Android requires a registered channel
@@ -44,9 +48,11 @@ class PushNotifications {
 
   /// Bootstrap. Safe to call multiple times — second-and-later
   /// invocations are no-ops. Call from `main()` AFTER
-  /// `Supabase.initialize()` so the upsert can write under the
-  /// authenticated user.
-  Future<void> init() async {
+  /// `Supabase.initialize()` and after the GoRouter exists, so the
+  /// upsert can write under the authenticated user and notification
+  /// taps have somewhere to navigate.
+  Future<void> init(GoRouter router) async {
+    _router = router;
     if (_initialized) return;
     try {
       // FlutterFire CLI generates lib/firebase_options.dart with
@@ -88,6 +94,7 @@ class PushNotifications {
             requestSoundPermission: false,
           ),
         ),
+        onDidReceiveNotificationResponse: (r) => _openRoute(r.payload),
       );
       await _localNotifs
           .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
@@ -108,10 +115,35 @@ class PushNotifications {
         await _upsertToken(t);
       });
 
+      // The FCM token belongs to the DEVICE, but a `push_tokens` row
+      // belongs to a USER — and at cold start there usually isn't one
+      // yet. `init()` runs exactly once, the token above rarely
+      // changes, so without this listener anyone who signs in AFTER
+      // launch (i.e. every new install) or signs back in after a
+      // logout never gets a row written, and every send for them
+      // comes back `noTokens`. Re-upsert whenever a session appears.
+      _authSub?.cancel();
+      _authSub = Supabase.instance.client.auth.onAuthStateChange.listen((s) async {
+        if (s.session == null) return;
+        final t = _currentToken;
+        if (t != null) await _upsertToken(t);
+      });
+
       // Foreground message handler. The OS doesn't show a banner
       // while the app is in the foreground unless we do it ourselves.
       _foregroundMsgSub?.cancel();
       _foregroundMsgSub = FirebaseMessaging.onMessage.listen(_onForegroundMessage);
+
+      // Tap handling for the two states the OS owns: notification
+      // tapped while the app was backgrounded, and one that launched
+      // the app from terminated. (Foreground taps come through the
+      // local-notification callback wired above.) Without these the
+      // `route` the dispatcher attaches to every send is dead weight.
+      _openedAppSub?.cancel();
+      _openedAppSub = FirebaseMessaging.onMessageOpenedApp
+          .listen((m) => _openRoute(m.data['route']?.toString()));
+      final launchMsg = await FirebaseMessaging.instance.getInitialMessage();
+      if (launchMsg != null) _openRoute(launchMsg.data['route']?.toString());
     } catch (e) {
       debugPrint('[PushNotifications] Setup error: $e');
     }
@@ -128,7 +160,23 @@ class PushNotifications {
       if (user == null) return;
       await sb.from('push_tokens').delete().eq('user_id', user.id).eq('token', token);
     } catch (_) { /* best-effort */ }
-    _currentToken = null;
+    // Deliberately KEEP _currentToken. It identifies the device, not
+    // the session, and it's still valid after sign-out — the auth
+    // listener needs it to re-register when someone signs back in.
+    // Nulling it here made a single logout silence the device forever.
+  }
+
+  /// Navigate to a route carried by a notification payload. No-ops on
+  /// an empty route or before the router is attached.
+  void _openRoute(String? route) {
+    if (route == null || route.isEmpty) return;
+    final router = _router;
+    if (router == null) return;
+    try {
+      router.go(route);
+    } catch (e) {
+      debugPrint('[PushNotifications] navigation failed for "$route": $e');
+    }
   }
 
   Future<void> _upsertToken(String token) async {

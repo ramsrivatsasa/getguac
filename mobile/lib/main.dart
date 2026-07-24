@@ -151,7 +151,7 @@ Future<void> _bootstrap() async {
   // into `push_tokens` so the server dispatcher can target this
   // device. No-ops cleanly if Firebase isn't configured for this
   // build (no google-services.json / GoogleService-Info.plist).
-  unawaited(PushNotifications.instance.init());
+  unawaited(PushNotifications.instance.init(appRouter));
 
   // PostHog setup + Supabase auth subscription. No-ops when
   // --dart-define=POSTHOG_KEY is empty.

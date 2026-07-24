@@ -273,7 +273,7 @@ async function dispatchSmashlistDay() {
     const title = `🛒 ${topStore} day`
     const body  = topN === 1
       ? `1 item you usually buy is due. Tap to see your Smashlist.`
-      : `$topN items you usually buy are due. Tap to see your Smashlist.`
+      : `${topN} items you usually buy are due. Tap to see your Smashlist.`
     attempted++
     const res = await sendPushToUser(userId, {
       title, body, route: `/shopping`,

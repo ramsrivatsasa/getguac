@@ -7,6 +7,9 @@
 import Link from 'next/link'
 import { shotFor } from './gamesList'
 
+const INK = '#15201a'
+const MUTED = '#5a6a60'
+
 // size: 'sm' = the dense MSN-Play-style tile wall (square art, tight type),
 //       'md' = category rows, 'lg' = search/browse results.
 export default function GameCover({ game, size = 'md' }) {
@@ -20,15 +23,18 @@ export default function GameCover({ game, size = 'md' }) {
   return (
     <Link
       href={game.href}
-      className="group relative block overflow-hidden rounded-2xl no-underline transition-transform duration-200 hover:-translate-y-1"
-      style={{ boxShadow: '0 6px 18px rgba(21,40,28,0.16)' }}
+      // The dense tile keeps its caption OUTSIDE the card (portal convention),
+      // so the art rounds and clips on its own and the wrapper must not.
+      className={`group relative block no-underline transition-transform duration-200 hover:-translate-y-1 ${small ? '' : 'overflow-hidden rounded-2xl'}`}
+      style={small ? undefined : { boxShadow: '0 6px 18px rgba(21,40,28,0.16)' }}
     >
       {/* cover art */}
       <div
-        className="relative flex items-center justify-center overflow-hidden"
+        className={`relative flex items-center justify-center overflow-hidden ${small ? 'rounded-2xl' : ''}`}
         style={{
           aspectRatio: big ? '16 / 9' : small ? '1 / 1' : '4 / 3',
           background: `radial-gradient(120% 120% at 20% 0%, ${game.g1} 0%, ${game.g2} 100%)`,
+          ...(small ? { boxShadow: '0 4px 12px rgba(21,40,28,0.14)' } : null),
         }}
       >
         {shot ? (
@@ -70,20 +76,32 @@ export default function GameCover({ game, size = 'md' }) {
           </span>
         )}
       </div>
-      {/* footer strip. The dense tile drops the tag line and clamps the title to
-          two lines — partner titles run long ("Dream Puppy Spot The Differences")
-          and a variable-height footer would break the grid's alignment. */}
-      <div className={small ? 'px-2 py-1.5' : 'px-3 py-2'} style={{ background: '#101a13' }}>
-        <div
-          className="font-display font-extrabold leading-tight"
-          style={small
-            ? { color: '#f2fbf3', fontSize: 12, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', minHeight: 30 }
-            : { color: '#f2fbf3', fontSize: big ? 17 : 14 }}
-        >
-          {game.name}
+      {/* Meta. The dense tile puts it on the page background under the art
+          (portal convention) rather than in a dark strip, and clamps the title
+          to one line — partner titles run long ("Dream Puppy Spot The
+          Differences") and a variable-height caption breaks grid alignment.
+          `plays` is only ever rendered when a REAL number is passed in: our own
+          games can count rows in game_scores, partner games run cross-origin so
+          we never observe a play. A plausible-looking fake count is the one
+          thing this tile must not show. */}
+      {small ? (
+        <div className="pt-1.5 pb-0.5">
+          <div className="font-display font-extrabold leading-tight truncate" style={{ color: INK, fontSize: 13 }}>
+            {game.name}
+          </div>
+          <div className="text-[11px] font-semibold truncate" style={{ color: MUTED }}>
+            {game.tag}
+            {game.plays != null && <> · 👍 {game.plays}</>}
+          </div>
         </div>
-        {!small && <div className="text-[11px] font-semibold" style={{ color: '#8fbf9c' }}>{game.tag}</div>}
-      </div>
+      ) : (
+        <div className="px-3 py-2" style={{ background: '#101a13' }}>
+          <div className="font-display font-extrabold leading-tight" style={{ color: '#f2fbf3', fontSize: big ? 17 : 14 }}>
+            {game.name}
+          </div>
+          <div className="text-[11px] font-semibold" style={{ color: '#8fbf9c' }}>{game.tag}</div>
+        </div>
+      )}
     </Link>
   )
 }

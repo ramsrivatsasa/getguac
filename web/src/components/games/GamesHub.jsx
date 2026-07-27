@@ -64,6 +64,75 @@ function Chip({ item, active, onClick }) {
   )
 }
 
+// Vertical category rail (lg+), the way MSN Play and Poki navigate a catalog
+// this size: search on top, then every category as its own row with a live
+// count. A horizontal chip strip can't show 9 categories at once — it scrolls
+// sideways and hides most of them. The active row gets a left accent bar so
+// the selection reads at a glance while scrolling a long tile wall.
+//
+// It collapses to an icon-only rail (MSN's pattern), which hands ~180px back to
+// the tile wall — enough for another column at common widths. The choice is
+// remembered, because someone who collapses it wants it collapsed next visit,
+// not reset on every navigation.
+const NAV_W = 236
+const NAV_W_COLLAPSED = 60
+const NAV_KEY = 'gg-arcade-nav-collapsed-v1'
+
+function SideNav({ cat, query, onPick, collapsed, onToggle }) {
+  return (
+    <nav aria-label="Game categories" className="flex flex-col gap-0.5">
+      {CHIPS.map((m) => {
+        const active = cat === m.id && !query
+        return (
+          <button
+            key={m.id}
+            type="button"
+            onClick={() => onPick(m.id)}
+            // The label is gone when collapsed, so the accessible name has to
+            // come from somewhere — title covers the pointer hover, aria-label
+            // covers screen readers.
+            title={collapsed ? `${m.label} (${countFor(m.id)})` : undefined}
+            aria-label={collapsed ? m.label : undefined}
+            aria-current={active ? 'true' : undefined}
+            className={`relative flex items-center rounded-xl py-2.5 transition-colors ${collapsed ? 'justify-center px-0' : 'gap-2.5 pl-3.5 pr-3 text-left'}`}
+            style={{
+              background: active ? '#e9f5ec' : 'transparent',
+              color: active ? GREEN_D : BODY,
+              fontWeight: active ? 800 : 600,
+            }}
+          >
+            {active && (
+              <span aria-hidden className="absolute left-0 rounded-full" style={{ top: 8, bottom: 8, width: 3, background: GREEN }} />
+            )}
+            <span aria-hidden style={{ fontSize: collapsed ? 19 : 16, lineHeight: 1 }}>{m.emoji}</span>
+            {!collapsed && (
+              <>
+                <span className="text-sm truncate">{m.label}</span>
+                <span className="ml-auto text-xs font-bold tabular-nums" style={{ color: active ? GREEN : FAINT }}>
+                  {countFor(m.id)}
+                </span>
+              </>
+            )}
+          </button>
+        )
+      })}
+
+      <button
+        type="button"
+        onClick={onToggle}
+        title={collapsed ? 'Expand menu' : 'Collapse menu'}
+        aria-label={collapsed ? 'Expand category menu' : 'Collapse category menu'}
+        aria-expanded={!collapsed}
+        className={`mt-1.5 flex items-center rounded-xl py-2 ${collapsed ? 'justify-center' : 'gap-2.5 pl-3.5 pr-3'}`}
+        style={{ color: FAINT, borderTop: BORDER, borderRadius: 0, paddingTop: 12 }}
+      >
+        <span aria-hidden className="inline-block transition-transform" style={{ fontSize: 13, transform: collapsed ? 'rotate(-90deg)' : 'rotate(90deg)' }}>❯</span>
+        {!collapsed && <span className="text-xs font-bold">Collapse</span>}
+      </button>
+    </nav>
+  )
+}
+
 // Big featured tile — screenshot cover, bottom scrim, animated shine, Play pill.
 function FeaturedCard({ game }) {
   const shot = shotFor(game.href)
@@ -188,6 +257,10 @@ export default function GamesHub() {
   const [cat, setCat] = useState('all')
   const [query, setQuery] = useState('')
   const [resume, setResume] = useState([])
+  // Starts expanded and is corrected after mount from localStorage. Reading
+  // storage during render would desync SSR html from the client and throw a
+  // hydration error — the arcade has been bitten by exactly that before.
+  const [navCollapsed, setNavCollapsed] = useState(false)
   // null = unknown (still checking) → render neither copy until we know, so a
   // signed-in player never flashes "Sign in". Set once auth resolves.
   const [signedIn, setSignedIn] = useState(null)
@@ -199,6 +272,14 @@ export default function GamesHub() {
       .catch(() => { if (!dead) setSignedIn(false) })
     return () => { dead = true }
   }, [])
+
+  useEffect(() => {
+    try { setNavCollapsed(localStorage.getItem(NAV_KEY) === '1') } catch { /* private mode */ }
+  }, [])
+  const toggleNav = () => setNavCollapsed((v) => {
+    try { localStorage.setItem(NAV_KEY, v ? '0' : '1') } catch { /* private mode */ }
+    return !v
+  })
 
   // Games this browser has actually played, via each game's own save key.
   // localStorage is client-only, so this row appears after hydration.
@@ -226,19 +307,58 @@ export default function GamesHub() {
   }), [cat, q])
   const browsing = q !== '' || cat !== 'all'
 
+  const pick = (id) => { setCat(id); setQuery('') }
+
   return (
-    <div className="mx-auto px-4 sm:px-6 pt-5 pb-20" style={{ maxWidth: 1280 }}>
+    <div className="mx-auto px-4 sm:px-6 pt-5 pb-20" style={{ maxWidth: 1440 }}>
       <style>{'@keyframes gg-shine{0%{transform:translateX(-120%) rotate(12deg)}100%{transform:translateX(240%) rotate(12deg)}}'}</style>
 
-      {/* Search + category chips — sticky just under the site header */}
-      <div className="sticky z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 py-2.5 mb-6" style={{ top: 60, background: 'rgba(246,248,244,0.92)', backdropFilter: 'blur(6px)', borderBottom: BORDER }}>
+      {/* Chips are the NARROW-screen control only. A vertical rail doesn't fit
+          under lg, and a sticky sidebar on a phone would eat the whole screen. */}
+      <div className="lg:hidden sticky z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 py-2.5 mb-6" style={{ top: 60, background: 'rgba(246,248,244,0.92)', backdropFilter: 'blur(6px)', borderBottom: BORDER }}>
         <div className="flex items-center gap-2.5 overflow-x-auto no-scrollbar">
           <SearchBox value={query} onChange={setQuery} />
           {CHIPS.map((m) => (
-            <Chip key={m.id} item={m} active={cat === m.id && !q} onClick={() => { setCat(m.id); setQuery('') }} />
+            <Chip key={m.id} item={m} active={cat === m.id && !q} onClick={() => pick(m.id)} />
           ))}
         </div>
       </div>
+
+      <div className="lg:grid lg:gap-7 lg:items-start" style={{ gridTemplateColumns: `${navCollapsed ? NAV_W_COLLAPSED : NAV_W}px minmax(0, 1fr)` }}>
+        {/* ── Category rail (lg+) ── */}
+        <aside className="hidden lg:block" style={{ position: 'sticky', top: 72 }}>
+          {navCollapsed ? (
+            <button
+              type="button"
+              onClick={toggleNav}
+              title="Search games"
+              aria-label="Search games"
+              className="w-full flex items-center justify-center rounded-xl py-2.5 mb-1.5"
+              style={{ ...CARD, color: FAINT }}
+            >
+              <span aria-hidden style={{ fontSize: 15 }}>🔍</span>
+            </button>
+          ) : (
+            <div className="mb-2.5">
+              <label className="flex items-center gap-2 rounded-full px-4 py-2.5" style={{ ...CARD }}>
+                <span aria-hidden className="text-sm" style={{ color: FAINT }}>🔍</span>
+                <input
+                  type="search"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search games"
+                  className="w-full min-w-0 bg-transparent outline-none text-sm font-semibold"
+                  style={{ color: INK }}
+                  aria-label="Search games"
+                />
+              </label>
+            </div>
+          )}
+          <SideNav cat={cat} query={q} onPick={pick} collapsed={navCollapsed} onToggle={toggleNav} />
+        </aside>
+
+        {/* ── Content ── */}
+        <div className="min-w-0">
 
       {browsing ? (
         <section>
@@ -337,6 +457,8 @@ export default function GamesHub() {
           </div>
         </>
       )}
+        </div>
+      </div>
     </div>
   )
 }

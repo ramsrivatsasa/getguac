@@ -55,7 +55,11 @@ end $$;
 -- ── Convenience view: latest balance per (user, program) ──────────────────
 -- The /rewards page reads from this so it doesn't need to do per-program
 -- LIMIT 1 queries in the client.
-create or replace view public.rewards_balance_latest as
+-- security_invoker = on so rewards_balances' "rb: select own" RLS applies to
+-- the caller; a plain view runs as its OWNER and leaks every user's balances
+-- (see migration_081).
+create or replace view public.rewards_balance_latest
+  with (security_invoker = on) as
   select distinct on (user_id, coalesce(program_name, ''), coalesce(store_id::text, ''))
     user_id, store_id, store_name, program_name,
     balance_amount, balance_unit, expires_at, source_email_id, fetched_at

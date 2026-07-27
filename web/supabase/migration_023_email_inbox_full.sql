@@ -40,7 +40,11 @@ create index if not exists idx_email_messages_unread
 
 -- A view of "everything still in the inbox", excluding trash + sent.
 -- Useful for the list UI which doesn't want to write that filter every time.
-create or replace view public.email_inbox as
+-- security_invoker = on so email_messages' "em: select own" RLS applies to the
+-- caller. Without it the view runs as its OWNER (postgres, RLS-exempt) and
+-- hands every user's mail to anyone who selects from it — see migration_081.
+create or replace view public.email_inbox
+  with (security_invoker = on) as
   select * from public.email_messages
   where folder = 'inbox';
 

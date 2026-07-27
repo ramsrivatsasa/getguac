@@ -113,7 +113,8 @@ end $$;
 -- ── 3. Roll-ups view ──────────────────────────────────────────────────────
 -- Quick "fees this year by issuer" / "fees by kind" — both heavy on the UI
 -- side, both better as views so the client doesn't reinvent the sum.
-create or replace view public.bank_fee_summary as
+create or replace view public.bank_fee_summary
+  with (security_invoker = on) as
   select
     bf.user_id,
     bs.issuer,
@@ -124,5 +125,7 @@ create or replace view public.bank_fee_summary as
   left join public.bank_statements bs on bs.id = bf.statement_id
   group by bf.user_id, bs.issuer;
 
--- View runs as caller, so RLS on bank_fees / bank_statements still applies.
+-- security_invoker = on is what makes the view run as the CALLER, so RLS on
+-- bank_fees / bank_statements still applies. Without it a view runs as its
+-- OWNER (postgres, RLS-exempt) and leaks every user's rows — see migration_081.
 notify pgrst, 'reload schema';

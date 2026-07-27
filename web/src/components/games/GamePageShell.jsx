@@ -19,7 +19,7 @@ import ArrowKeyGuard from './ArrowKeyGuard'
 import GameActions from './GameActions'
 import GameStreak from './GameStreak'
 import { AvocadoPip } from './arcadeKit'
-import { GAMES, CATEGORIES, FEATURED_HREF, gameIdFor, shotFor } from './gamesList'
+import { GAMES, CATEGORIES, FEATURED_HREF, gameIdFor, shotFor, isExternal } from './gamesList'
 
 const INK = '#15201a'
 const BODY = '#3d4a42'
@@ -52,12 +52,17 @@ function RelatedRow({ game }) {
 
 // Sidebar: daily-bonus card, real leaderboard, more-in-category. Shared by the
 // lg+ rail and the narrow-screen inline block.
-function GameSidebar({ name, gameId, related, category }) {
+// `scored` = we can actually see the player's result. False for partner games:
+// they run cross-origin in an iframe, so there is no round-finished signal and
+// no score to record. Those pages therefore show no daily bonus and no
+// leaderboard — promising GuacMoney we can never award would be a lie told to
+// every visitor, and an empty leaderboard on 80 pages reads as broken.
+function GameSidebar({ name, gameId, related, category, scored }) {
   return (
     <>
-      <DailyBonusCard name={name} gameId={gameId} />
+      {scored && <DailyBonusCard name={name} gameId={gameId} />}
 
-      <Leaderboard game={gameId} />
+      {scored && <Leaderboard game={gameId} />}
 
       {related.length > 0 && (
         <div className="rounded-2xl p-4" style={CARD}>
@@ -75,6 +80,7 @@ export default function GamePageShell({ href, title, blurb, how = [], tips = [],
   const game = GAMES.find((g) => g.href === href) || { name: title, tag: blurb, emoji: '🎮', desc: blurb, cat: null, isNew: false, g1: '#166534', g2: '#052e16' }
   const category = CATEGORIES.find((c) => c.id === game.cat)
   const gameId = gameIdFor(href)
+  const scored = !isExternal(game)
   const others = GAMES.filter((g) => g.href !== href)
   const related = others.filter((g) => g.cat === game.cat).slice(0, 4)
 
@@ -90,14 +96,25 @@ export default function GamePageShell({ href, title, blurb, how = [], tips = [],
           <span>›</span><span style={{ color: BODY, fontWeight: 600 }}>{game.name}</span>
         </nav>
 
-        {/* Daily challenge banner */}
-        <div className="flex items-center gap-3 rounded-2xl px-4 py-3 mb-4" style={{ background: 'linear-gradient(90deg, #ecfdf5, #f6f8f4)', border: '1px solid #bbf7d0' }}>
-          <span aria-hidden style={{ fontSize: 20 }}>📅</span>
-          <span className="text-sm" style={{ color: BODY }}>
-            <b style={{ color: INK }}>Daily challenge:</b> finish one round of {game.name} today for <b style={{ color: GREEN }}>+50 GuacMoney</b>.
-          </span>
-          <span className="ml-auto"><GameStreak slug={gameId} /></span>
-        </div>
+        {/* Daily challenge banner — only where we can actually pay it out.
+            Partner games instead get an honest pointer at the games that do. */}
+        {scored ? (
+          <div className="flex items-center gap-3 rounded-2xl px-4 py-3 mb-4" style={{ background: 'linear-gradient(90deg, #ecfdf5, #f6f8f4)', border: '1px solid #bbf7d0' }}>
+            <span aria-hidden style={{ fontSize: 20 }}>📅</span>
+            <span className="text-sm" style={{ color: BODY }}>
+              <b style={{ color: INK }}>Daily challenge:</b> finish one round of {game.name} today for <b style={{ color: GREEN }}>+50 GuacMoney</b>.
+            </span>
+            <span className="ml-auto"><GameStreak slug={gameId} /></span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3 rounded-2xl px-4 py-3 mb-4" style={{ background: '#f6f8f4', border: BORDER }}>
+            <span aria-hidden style={{ fontSize: 20 }}>🎮</span>
+            <span className="text-sm" style={{ color: BODY }}>
+              <b style={{ color: INK }}>Guest game.</b> Scores here stay in the game — want <b style={{ color: GREEN }}>+50 GuacMoney</b> a day
+              for playing? <Link href="/games" style={{ color: GREEN, fontWeight: 700 }}>Play a Guac Arcade original</Link>.
+            </span>
+          </div>
+        )}
 
         <div className="lg:grid lg:gap-6 lg:items-start" style={{ gridTemplateColumns: 'minmax(0, 1fr) 340px' }}>
 
@@ -123,7 +140,7 @@ export default function GamePageShell({ href, title, blurb, how = [], tips = [],
                 {game.plays && <span>🎮 {game.plays} plays this week</span>}
                 <span>🏷️ {game.tag}</span>
                 <span>📱 Phone-friendly</span>
-                <span className="inline-flex items-center gap-1.5" style={{ color: GREEN }}><AvocadoPip size={15} /> +50 GuacMoney daily</span>
+                {scored && <span className="inline-flex items-center gap-1.5" style={{ color: GREEN }}><AvocadoPip size={15} /> +50 GuacMoney daily</span>}
               </div>
               <p className="mt-3.5 m-0 text-base leading-relaxed" style={{ color: BODY }}>{game.desc}</p>
             </div>
@@ -159,7 +176,7 @@ export default function GamePageShell({ href, title, blurb, how = [], tips = [],
 
             {/* Sidebar content inline for narrow screens (the rail is lg-only) */}
             <div className="lg:hidden mt-8 space-y-4">
-              <GameSidebar name={game.name} gameId={gameId} related={related} category={category} />
+              <GameSidebar name={game.name} gameId={gameId} related={related} category={category} scored={scored} />
             </div>
 
             {/* Tips + SEO article — the text band every game portal carries */}
@@ -185,9 +202,12 @@ export default function GamePageShell({ href, title, blurb, how = [], tips = [],
                   </>
                 )}
                 <p className="text-sm leading-relaxed mt-6" style={{ color: BODY }}>
-                  {title} is part of the free <Link href="/games" style={{ color: GREEN, fontWeight: 700 }}>Guac Arcade</Link> from
-                  GetGuac — money&apos;s wingman. Signed-in players earn <b>+50 GuacMoney</b> for the first finished round of each
-                  game every day. If outsmarting the arcade feels good, wait until you do it to your own
+                  {title} is {scored ? 'part of' : 'a guest game on'} the free <Link href="/games" style={{ color: GREEN, fontWeight: 700 }}>Guac Arcade</Link> from
+                  GetGuac — money&apos;s wingman.{' '}
+                  {scored
+                    ? <>Signed-in players earn <b>+50 GuacMoney</b> for the first finished round of each game every day. </>
+                    : <>GuacMoney is earned on Guac Arcade originals rather than guest games. </>}
+                  If outsmarting the arcade feels good, wait until you do it to your own
                   spending: <Link href="/how-it-works" style={{ color: GREEN, fontWeight: 700 }}>see how GetGuac works</Link>.
                 </p>
               </section>

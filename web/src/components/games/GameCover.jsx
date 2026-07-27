@@ -9,7 +9,11 @@ import { shotFor } from './gamesList'
 
 export default function GameCover({ game, size = 'md' }) {
   const big = size === 'lg'
-  const shot = shotFor(game.href)
+  // Partner games ship their own cover art in the feed (512x384 — already the
+  // 4:3 this tile wants), so they get real artwork like a Poki/MSN grid instead
+  // of the emoji-on-gradient fallback, which would look empty for a game whose
+  // emoji we never authored.
+  const shot = game.thumb || shotFor(game.href)
   return (
     <Link
       href={game.href}

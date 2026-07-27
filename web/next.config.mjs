@@ -30,10 +30,20 @@ const securityHeaders = [
       // *.adtrafficquality.google = AdSense's invalid-traffic checks (sodar).
       // Google won't reliably serve ads while these are CSP-blocked, so it
       // must be in script-src + connect-src + frame-src per Google's CSP docs.
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.googleadservices.com https://adservice.google.com https://*.google.com https://*.adtrafficquality.google",   // 'unsafe-eval' needed by some Next.js dev features; safe in prod
-      "style-src 'self' 'unsafe-inline'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.googleadservices.com https://adservice.google.com https://*.google.com https://*.adtrafficquality.google https://cdn.ampproject.org",   // 'unsafe-eval' needed by some Next.js dev features; safe in prod
+      // cdn.ampproject.org = AMP ad host, observed blocked on a partner game
+      // page. Those ads are the revenue share we get from embedded games, so a
+      // block there is lost income. It's Google's AMP CDN and we already allow
+      // the rest of their ad stack, so allowing it is consistent.
+      // fonts.googleapis.com serves the arcade's Nunito + Outfit stylesheet
+      // (app/games/layout.jsx), and fonts.gstatic.com serves the font files it
+      // points at. Both were missing, so CSP silently blocked the stylesheet
+      // and EVERY arcade page quietly fell back to default fonts — the games
+      // draw their own text on <canvas> via ctx.font, which needs a real family
+      // name, so this was breaking the arcade's typography site-wide.
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "img-src 'self' data: blob: https:",
-      "font-src 'self' data:",
+      "font-src 'self' data: https://fonts.gstatic.com",
       // wss://*.supabase.co required for Supabase Realtime channels
       // (households realtime in HouseholdPanel.jsx). CSP treats wss: as
       // a distinct scheme from https:, so the wildcard https entry above
@@ -43,7 +53,13 @@ const securityHeaders = [
       // challenge in a challenges.cloudflare.com iframe.
       // youtube-nocookie.com / youtube.com = the how-it-works video embed;
       // like Turnstile, a missing frame-src entry silently renders an empty box.
-      "frame-src 'self' https://challenges.cloudflare.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://*.googlesyndication.com https://www.google.com https://www.youtube-nocookie.com https://www.youtube.com https://*.adtrafficquality.google",
+      // html5.gamemonetize.co = the embedded partner games (app/games/[slug]).
+      // NOTE the .co — .com only serves their thumbnails. A missing frame-src
+      // entry here renders a silent empty box, exactly like Turnstile and the
+      // YouTube embed did. Hosts are mirrored from lib/gameProviders.js
+      // (ALL_FRAME_HOSTS); this file loads before the app so it can't import
+      // them — keep the two in sync when adding a provider.
+      "frame-src 'self' https://challenges.cloudflare.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://*.googlesyndication.com https://www.google.com https://www.youtube-nocookie.com https://www.youtube.com https://*.adtrafficquality.google https://html5.gamemonetize.co https://html5.gamemonetize.com https://html5.gamedistribution.com",
       "frame-ancestors 'self'",
       "base-uri 'self'",
       "form-action 'self'",

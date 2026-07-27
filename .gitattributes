@@ -1,0 +1,10 @@
+# ads.txt is parsed line-by-line by every ad network's crawler, and this repo is
+# edited on Windows with core.autocrlf=true. Without this rule a Windows commit
+# can round-trip CRLF into the file and leave it with mixed line endings, which
+# some validators reject outright. Pin it to LF so what we serve is exactly what
+# a crawler expects, regardless of who edits it or on what OS.
+public/ads.txt text eol=lf
+web/public/ads.txt text eol=lf
+
+# Same reasoning for the other line-oriented files crawlers read.
+web/public/robots.txt text eol=lf

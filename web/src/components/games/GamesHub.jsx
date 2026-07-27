@@ -249,8 +249,8 @@ export default function GamesHub() {
             {!q && <span className="text-sm hidden md:block" style={{ color: FAINT }}>{CATEGORIES.find((c) => c.id === cat)?.blurb}</span>}
           </div>
           {filtered.length ? (
-            <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-              {filtered.map((g) => <GameCover key={g.href} game={g} size="lg" />)}
+            <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(144px, 1fr))' }}>
+              {filtered.map((g) => <GameCover key={g.href} game={g} size="sm" />)}
             </div>
           ) : (
             <p className="text-sm" style={{ color: BODY }}>
@@ -315,6 +315,21 @@ export default function GamesHub() {
           {CATEGORIES.map((c) => (
             <Row key={c.id} title={`${c.emoji} ${c.title}`} blurb={c.blurb} games={GAMES.filter((g) => g.cat === c.id)} />
           ))}
+
+          {/* All games — the dense tile wall, the way MSN Play and Poki present
+              a catalog this size. The curated rows above answer "what should I
+              play"; this answers "show me everything" without making anyone
+              page through categories. Deliberately last: it's a browse surface,
+              not the first thing to look at. */}
+          <section className="mt-12">
+            <div className="flex items-baseline gap-2.5 mb-3.5">
+              <h2 className="font-display font-extrabold text-xl" style={{ color: INK }}>🎮 All games</h2>
+              <span className="text-sm font-semibold" style={{ color: FAINT }}>{GAMES.length} games</span>
+            </div>
+            <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(144px, 1fr))' }}>
+              {GAMES.map((g) => <GameCover key={g.href} game={g} size="sm" />)}
+            </div>
+          </section>
 
           <div className="mt-12 rounded-2xl px-6 py-5 text-center text-sm" style={{ ...CARD, color: '#5a6a60' }}>
             Like beating games? Beating your own grocery bill feels better —{' '}

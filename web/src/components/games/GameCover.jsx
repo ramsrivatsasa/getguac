@@ -7,8 +7,11 @@
 import Link from 'next/link'
 import { shotFor } from './gamesList'
 
+// size: 'sm' = the dense MSN-Play-style tile wall (square art, tight type),
+//       'md' = category rows, 'lg' = search/browse results.
 export default function GameCover({ game, size = 'md' }) {
   const big = size === 'lg'
+  const small = size === 'sm'
   // Partner games ship their own cover art in the feed (512x384 — already the
   // 4:3 this tile wants), so they get real artwork like a Poki/MSN grid instead
   // of the emoji-on-gradient fallback, which would look empty for a game whose
@@ -24,7 +27,7 @@ export default function GameCover({ game, size = 'md' }) {
       <div
         className="relative flex items-center justify-center overflow-hidden"
         style={{
-          aspectRatio: big ? '16 / 9' : '4 / 3',
+          aspectRatio: big ? '16 / 9' : small ? '1 / 1' : '4 / 3',
           background: `radial-gradient(120% 120% at 20% 0%, ${game.g1} 0%, ${game.g2} 100%)`,
         }}
       >
@@ -67,12 +70,19 @@ export default function GameCover({ game, size = 'md' }) {
           </span>
         )}
       </div>
-      {/* footer strip */}
-      <div className="px-3 py-2" style={{ background: '#101a13' }}>
-        <div className="font-display font-extrabold leading-tight" style={{ color: '#f2fbf3', fontSize: big ? 17 : 14 }}>
+      {/* footer strip. The dense tile drops the tag line and clamps the title to
+          two lines — partner titles run long ("Dream Puppy Spot The Differences")
+          and a variable-height footer would break the grid's alignment. */}
+      <div className={small ? 'px-2 py-1.5' : 'px-3 py-2'} style={{ background: '#101a13' }}>
+        <div
+          className="font-display font-extrabold leading-tight"
+          style={small
+            ? { color: '#f2fbf3', fontSize: 12, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', minHeight: 30 }
+            : { color: '#f2fbf3', fontSize: big ? 17 : 14 }}
+        >
           {game.name}
         </div>
-        <div className="text-[11px] font-semibold" style={{ color: '#8fbf9c' }}>{game.tag}</div>
+        {!small && <div className="text-[11px] font-semibold" style={{ color: '#8fbf9c' }}>{game.tag}</div>}
       </div>
     </Link>
   )

@@ -59,7 +59,7 @@ const securityHeaders = [
       // YouTube embed did. Hosts are mirrored from lib/gameProviders.js
       // (ALL_FRAME_HOSTS); this file loads before the app so it can't import
       // them — keep the two in sync when adding a provider.
-      "frame-src 'self' https://challenges.cloudflare.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://*.googlesyndication.com https://www.google.com https://www.youtube-nocookie.com https://www.youtube.com https://*.adtrafficquality.google https://html5.gamemonetize.co https://html5.gamemonetize.com https://html5.gamedistribution.com",
+      "frame-src 'self' https://challenges.cloudflare.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://*.googlesyndication.com https://www.google.com https://www.youtube-nocookie.com https://www.youtube.com https://*.adtrafficquality.google https://html5.gamemonetize.co https://html5.gamemonetize.com https://html5.gamedistribution.com https://play.gamepix.com",
       "frame-ancestors 'self'",
       "base-uri 'self'",
       "form-action 'self'",

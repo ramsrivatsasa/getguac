@@ -33,6 +33,23 @@ export const PROVIDERS = {
     embedUrl: (game) => game.embed,
   },
 
+  gamepix: {
+    id: 'gamepix',
+    label: 'GamePix',
+    frameHosts: ['https://play.gamepix.com'],
+    imageHosts: ['https://img.gamepix.com'],
+    // JSON Feed (jsonfeed.org 1.1) — games under `items`, NOT `data`.
+    // `sid` is our publisher/site id and is ALSO baked into every embed URL the
+    // feed returns, so attribution needs no extra work on our side.
+    // ⚠️ `pagination` is an enum: only 12 | 24 | 48 | 96 are accepted, anything
+    // else 400s. Default order is `quality`, so page 1 is the best games.
+    feedUrl: ({ sid = '581TT', pagination = 96, page = 1, category = '' } = {}) =>
+      `https://feeds.gamepix.com/v2/json?sid=${encodeURIComponent(sid)}&pagination=${pagination}&page=${page}` +
+      (category ? `&category=${encodeURIComponent(category)}` : ''),
+    // The feed's `url` is already a complete embed link with our sid on it.
+    embedUrl: (game) => game.embed,
+  },
+
   gamedistribution: {
     id: 'gamedistribution',
     label: 'GameDistribution',

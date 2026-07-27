@@ -91,7 +91,15 @@ export default function GameCover({ game, size = 'md' }) {
           </div>
           <div className="text-[11px] font-semibold truncate" style={{ color: MUTED }}>
             {game.tag}
+            {/* `plays` = a real count of finished rounds (our own games only —
+                partner games are cross-origin and unobservable). `quality` =
+                GamePix's own 0-1 editorial ranking, shown as a "top rated"
+                mark, NOT as a rating or a like count, because that is not what
+                it measures. Neither is ever synthesised. */}
             {game.plays != null && <> · 👍 {game.plays}</>}
+            {game.plays == null && game.quality >= 0.9 && (
+              <> · <span title="Rated highly by GamePix" style={{ color: '#b45309' }}>★ Top rated</span></>
+            )}
           </div>
         </div>
       ) : (

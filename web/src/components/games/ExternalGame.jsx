@@ -77,9 +77,18 @@ export default function ExternalGame({ game }) {
     )
   }
 
+  // A quarter of the GamePix catalog is portrait. Stretching one across a wide
+  // stage leaves the game letterboxed in its own black bars, so portrait games
+  // get a narrow centred column instead of the full width.
+  const portrait = game.orientation === 'portrait'
+
   return (
-    <div ref={wrapRef} className="relative w-full rounded-2xl overflow-hidden"
-      style={{ height: STAGE_H, background: 'linear-gradient(180deg, #f2fbf3 0%, #eaf6ec 100%)' }}>
+    <div ref={wrapRef} className="relative w-full rounded-2xl overflow-hidden mx-auto"
+      style={{
+        height: STAGE_H,
+        maxWidth: portrait ? 'min(100%, 520px)' : undefined,
+        background: 'linear-gradient(180deg, #f2fbf3 0%, #eaf6ec 100%)',
+      }}>
 
       {!loaded && (
         <div className="absolute inset-0 grid place-items-center pointer-events-none">

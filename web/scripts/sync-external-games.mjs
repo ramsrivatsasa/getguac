@@ -120,7 +120,11 @@ const hasWord = (hay, word) =>
   new RegExp(`(^|[^a-z0-9])${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^a-z0-9]|$)`, 'i').test(hay)
 
 function rejectReason(g) {
-  if (!ALLOW_CATEGORIES.has(g.category)) return `category:${g.category}`
+  // ALLOW_CATEGORIES is GameMonetize's Titlecase vocabulary. GamePix uses its
+  // own lowercase slugs and is screened by GAMEPIX_BLOCK_CATEGORIES in the
+  // adapter (a blocklist), so running it through this allowlist too would
+  // reject the entire catalog.
+  if (g.provider === 'gamemonetize' && !ALLOW_CATEGORIES.has(g.category)) return `category:${g.category}`
   const hay = haystack(g)
   const ip = BLOCK_IP.find((w) => hay.includes(w))
   if (ip) return `ip:${ip}`
@@ -153,21 +157,127 @@ const GRADIENTS = [
 ]
 
 // Feed category → our hub category. Unmapped ones land in 'arcade'.
+// Covers both vocabularies: GameMonetize uses Titlecase words, GamePix uses
+// lowercase slugs.
 const CAT_MAP = {
   Puzzle: 'puzzle', Bejeweled: 'puzzle', Match3: 'puzzle', Jigsaw: 'puzzle',
   Mahjong: 'puzzle', Strategy: 'puzzle', Boardgames: 'classic', Cards: 'classic',
   Racing: 'racing', Sports: 'sports', Soccer: 'sports', Basketball: 'sports',
+  puzzle: 'puzzle', 'match-3': 'puzzle', mahjong: 'puzzle', 'hidden-object': 'puzzle',
+  memory: 'puzzle', trivia: 'puzzle', word: 'puzzle', block: 'puzzle', '2048': 'puzzle',
+  educational: 'puzzle', drawing: 'puzzle', quiz: 'puzzle', strategy: 'puzzle',
+  cards: 'classic', board: 'classic', retro: 'classic', solitaire: 'classic',
+  racing: 'racing', car: 'racing', bike: 'racing', driving: 'racing',
+  sports: 'sports', basketball: 'sports', football: 'sports', soccer: 'sports',
+  golf: 'sports', pool: 'sports', ball: 'sports',
+  arcade: 'arcade', kids: 'arcade', animal: 'arcade', fun: 'arcade',
+  adventure: 'arcade', simulation: 'arcade', cooking: 'arcade', io: 'arcade',
+}
+
+// GamePix ships no tags and no description — the only text signal is a title
+// and a one-word category slug, so the word-boundary filter has far less to
+// chew on than it does for GameMonetize. Their categories are explicit though,
+// so dropping unsafe ones outright does most of the work.
+const GAMEPIX_BLOCK_CATEGORIES = new Set([
+  'shooter', 'first-person-shooter', 'io-shooter', 'fighting', 'battle', 'war',
+  'zombie', 'horror', 'gun', 'weapon', 'casino', 'card-casino', 'slots',
+  'poker', 'stickman', 'boys', 'girls', 'dress-up',
+])
+
+// The GamePix feed is quality-ordered, so this mainly guards the tail of a
+// deep pull, where the catalog turns into shovelware.
+const MIN_QUALITY = 0.45
+
+// ── Feed adapters ──────────────────────────────────────────────────────────
+// Each returns records in ONE shape so the filter/slug/emit pipeline below
+// stays provider-agnostic:
+//   { id,title,description,instructions,url,category,tags,thumb,width,height,provider }
+
+async function fetchJson(url) {
+  const res = await fetch(url)
+  if (!res.ok) throw new Error(`${url} -> ${res.status} ${res.statusText}`)
+  return res.json()
+}
+
+async function fetchGameMonetize(provider, { pages }) {
+  const out = []
+  for (let page = 1; page <= pages; page++) {
+    const url = provider.feedUrl({ num: 100, page })
+    process.stdout.write(`  gamemonetize page ${page}\n`)
+    const raw = await fetchJson(url)
+    if (!raw.length) break
+    for (const g of raw) out.push({ ...g, provider: 'gamemonetize' })
+  }
+  return out
+}
+
+async function fetchGamePix(provider, { pages, sid }) {
+  const out = []
+  for (let page = 1; page <= pages; page++) {
+    // pagination is an ENUM (12|24|48|96) — 100 returns a 400 Validation Error.
+    const url = provider.feedUrl({ sid, pagination: 96, page })
+    process.stdout.write(`  gamepix page ${page}\n`)
+    const raw = await fetchJson(url)
+    const items = raw.items || []
+    if (!items.length) break
+    for (const g of items) {
+      if (GAMEPIX_BLOCK_CATEGORIES.has(g.category)) continue
+      if (typeof g.quality_score === 'number' && g.quality_score < MIN_QUALITY) continue
+      out.push({
+        id: g.id,
+        title: g.title,
+        // `description` is present on most but NOT all items (93/96 on the
+        // first page), so it must be treated as optional — the very first game
+        // I sampled happened to be one of the three without one.
+        description: g.description || '',
+        // No instructions field exists in this feed. Left empty rather than
+        // inventing how-to copy for a game we haven't played.
+        instructions: '',
+        url: g.url,              // already carries our ?sid= for attribution
+        category: g.category,
+        tags: '',
+        thumb: g.banner_image,
+        width: g.width,
+        height: g.height,
+        slugHint: g.namespace,   // clean pre-made slug, better than slugifying
+        // GamePix's own 0-1 editorial quality ranking. This is a REAL number
+        // from the provider — it is NOT a like count, a play count or a user
+        // rating, and must never be rendered as one.
+        quality: typeof g.quality_score === 'number' ? Math.round(g.quality_score * 100) / 100 : null,
+        // landscape | portrait | all. A quarter of the catalog is portrait, and
+        // a portrait game stretched into a landscape stage looks broken, so the
+        // player needs this to pick a frame shape.
+        orientation: g.orientation || 'all',
+        provider: 'gamepix',
+      })
+    }
+  }
+  return out
 }
 
 async function main() {
   const { PROVIDERS } = await import('../src/lib/gameProviders.js')
-  const provider = PROVIDERS.gamemonetize
 
-  const url = provider.feedUrl({ num: NUM })
-  process.stdout.write(`Fetching ${url}\n`)
-  const res = await fetch(url)
-  if (!res.ok) throw new Error(`feed ${res.status} ${res.statusText}`)
-  const raw = await res.json()
+  const gmPages = Number(args[args.indexOf('--gm-pages') + 1]) || 2
+  const gpPages = Number(args[args.indexOf('--gp-pages') + 1]) || 4
+  const sid = args.includes('--sid') ? args[args.indexOf('--sid') + 1] : '581TT'
+
+  process.stdout.write('Fetching feeds...\n')
+  // One provider being down must not wipe the other's games out of the
+  // catalog, so a failed feed is reported and skipped rather than thrown.
+  const raw = []
+  for (const [name, fn, opts] of [
+    ['gamemonetize', fetchGameMonetize, { pages: gmPages }],
+    ['gamepix', fetchGamePix, { pages: gpPages, sid }],
+  ]) {
+    try {
+      const got = await fn(PROVIDERS[name], opts)
+      process.stdout.write(`  ${name}: ${got.length} raw\n`)
+      raw.push(...got)
+    } catch (e) {
+      process.stderr.write(`  ${name}: FEED FAILED (${e.message}) — skipping\n`)
+    }
+  }
 
   const reserved = reservedSlugs()
   const seen = new Set()
@@ -185,7 +295,9 @@ async function main() {
     }
     const reason = rejectReason(g)
     if (reason) { dropped.push({ ...g, reason }); continue }
-    let slug = slugify(g.title)
+    // GamePix publishes a clean `namespace` slug; prefer it over slugifying the
+    // display title, which is what it was derived from anyway.
+    let slug = slugify(g.slugHint || g.title)
     if (!slug) continue
     // Never take a slug our own games own, and never collide with each other.
     if (reserved.has(slug) || seen.has(slug)) slug = `${slug}-${g.id}`
@@ -196,7 +308,7 @@ async function main() {
     kept.push({
       href: `/games/${slug}`,
       name: g.title.replace(/\s+/g, ' ').trim(),
-      provider: provider.id,
+      provider: g.provider,
       embedId: g.id,
       embed: g.url,
       thumb: g.thumb,
@@ -208,6 +320,8 @@ async function main() {
       tag: g.category,
       desc: (g.description || '').replace(/\s+/g, ' ').trim().slice(0, 320),
       instructions: (g.instructions || '').replace(/\s+/g, ' ').trim().slice(0, 240),
+      ...(g.quality != null ? { quality: g.quality } : null),
+      ...(g.orientation && g.orientation !== 'all' ? { orientation: g.orientation } : null),
       g1, g2,
     })
   }

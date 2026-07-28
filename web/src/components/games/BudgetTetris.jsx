@@ -5,8 +5,8 @@
 // the savings. Top out and the month's over. Blocks come from real purchases
 // (demo when signed out).
 //
-// Runs the shared 8-round FINANCIAL JOURNEY (lib/financialJourney): cut expenses
-// → debt-free → savings → car → house → invest → education → freedom. A round =
+// Runs the shared 7-round FINANCIAL JOURNEY (lib/financialJourney): cut expenses
+// → savings → car → house → invest → education → freedom. A round =
 // bank $target out of cleared rows, split into stages that drop faster as the
 // goal bar fills, on top of the auto-learning difficulty engine
 // (lib/adaptiveDifficulty) which tunes the drop speed to how you actually play.
@@ -17,7 +17,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useScoreSaver, SaveScoreLine, ArcadeHud, AvocadoPip } from './arcadeKit'
 import { usePlayerSpending } from '../../lib/playerSpending'
-import { JOURNEY, journeyTargets, roundValueMul, stageFor } from '../../lib/financialJourney'
+import { JOURNEY, journeyTargets, roundValueMul, stageFor, withBudgetBump } from '../../lib/financialJourney'
 import {
   useJourney, useAdaptive, AdaptiveChip,
   RoundIntro, RoundComplete, JourneyComplete, JourneyBar,
@@ -58,9 +58,9 @@ const frameOf = (p) => SHAPES[p.key][((p.rot % 4) + 4) % 4]
 // grades the player against it.
 const TETRIS_ROUNDS = JOURNEY.map((r, i) => ({
   ...r,
-  dropMul: [1, 1.15, 1.3, 1.45, 1.6, 1.75, 1.9, 2.1][i],
+  dropMul: [1, 1.3, 1.45, 1.6, 1.75, 1.9, 2.1][i],
   valueMul: roundValueMul(i),
-  par: [50, 60, 70, 80, 90, 100, 110, 120][i],
+  par: [50, 70, 80, 90, 100, 110, 120][i],
 }))
 // A cleared row banks a big chunk at once compared with a single slice or a
 // downed invader, so the shared target curve is scaled into this game's economy.
@@ -86,11 +86,11 @@ export default function BudgetTetris() {
   const touchRef = useRef(null)
   const clearTimer = useRef(null)
   const targetsRef = useRef(journeyTargets(null, TARGET_MUL))
-  const roundRef = useRef({ cfg: TETRIS_ROUNDS[0], target: targetsRef.current[0], idx: 0 })
+  const roundRef = useRef({ cfg: TETRIS_ROUNDS[0], target: withBudgetBump(targetsRef.current[0]), idx: 0 })
   const isLastRef = useRef(false)
   const [status, setStatusState] = useState('idle')
   const [hud, setHud] = useState({ saved: 0, cleared: 0, level: 1, next: null })
-  const [roundHud, setRoundHud] = useState({ banked: 0, target: targetsRef.current[0], stage: 1 })
+  const [roundHud, setRoundHud] = useState({ banked: 0, target: withBudgetBump(targetsRef.current[0]), stage: 1 })
   const [best, setBest] = useState(0)
   const [newBest, setNewBest] = useState(false)
   const { saveRes, save, resetSave } = useScoreSaver('budget')
@@ -99,7 +99,7 @@ export default function BudgetTetris() {
   const { roundIdx, round, furthest, isLast, startFrom, advance } = journey
   const { diff, diffRef, record, note } = useAdaptive('budget')
   const cfg = TETRIS_ROUNDS[roundIdx]
-  const target = Math.max(10, Math.round((targetsRef.current[roundIdx] * diff.targetMul) / 10) * 10)
+  const target = withBudgetBump(Math.max(10, Math.round((targetsRef.current[roundIdx] * diff.targetMul) / 10) * 10))
   const nextRound = TETRIS_ROUNDS[roundIdx + 1] || null
 
   useEffect(() => { dataRef.current = data }, [data])
@@ -224,8 +224,10 @@ export default function BudgetTetris() {
         }
       }
       if (n > 0) {
-        // Multi-row clears pay a bonus, classic-style.
-        if (n > 1) banked = Math.round(banked * (1 + (n - 1) * 0.25))
+        // No multi-row bonus. Money is banked for the expenses actually cleared
+        // off the board and nothing else, so a row is worth exactly what its
+        // expenses are worth however many you clear at once. The TETRIS! banner
+        // below stays as flair.
         st.saved += banked
         st.roundBanked += banked
         st.cleared += n
@@ -496,7 +498,7 @@ export default function BudgetTetris() {
   const startRun = (idx = 0) => {
     Object.assign(sim.current, freshSim())
     setHud({ saved: 0, cleared: 0, level: 1, next: null })
-    setRoundHud({ banked: 0, target: targetsRef.current[idx], stage: 1 })
+    setRoundHud({ banked: 0, target: withBudgetBump(targetsRef.current[idx]), stage: 1 })
     setNewBest(false)
     resetSave()
     startFrom(idx)
@@ -604,7 +606,7 @@ export default function BudgetTetris() {
                 Classic Tetris, money-skinned — every falling piece is one of your expenses. Rotate and slot them to complete rows.
               </p>
               <p className="text-sm mt-1" style={{ color: BODY }}>
-                Each full row you clear <span className="font-bold" style={{ color: GREEN }}>banks the savings</span> toward that round&apos;s goal — eight rounds, one money journey. Stack to the top and the run is over.
+                Each full row you clear <span className="font-bold" style={{ color: GREEN }}>banks the savings</span> toward that round&apos;s goal — seven rounds, one money journey. Stack to the top and the run is over.
               </p>
               <div className="flex flex-wrap justify-center gap-1.5 mt-3">
                 {JOURNEY.map((r) => (

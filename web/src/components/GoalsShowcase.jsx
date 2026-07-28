@@ -7,10 +7,24 @@
 // hero GuacScore card) — the screenshots are the real app on demo data.
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import GuacAIBanner from './GuacAIBanner'
 
 const DISPLAY = { fontFamily: 'var(--font-bricolage), sans-serif' }
 
 const CARDS = [
+  {
+    // Lead card — selected by default, so the showcase opens on the Guac AI
+    // banner instead of app screenshots (see the `banner` branch below).
+    slug: 'meet-guac-ai', e: '🥑', name: 'Guac AI', tag: 'reads every receipt', big: '3-in-1', sub: 'refunds · prices · Worth-It',
+    rows: [
+      { i: '📸', t: 'Receipts in', s: 'photo + email', r: '✓' },
+      { i: '⭐', t: 'Worth-It out', s: 'scored per buy', r: '88' },
+    ],
+    goal: 'Put a brain on my money',
+    blurb: 'Snap a receipt or forward an email and Guac AI reads the fine print — finding refunds, watching prices, and scoring whether each buy was actually worth it.',
+    href: '/register', cta: 'Meet your sidekick',
+    banner: true,
+  },
   {
     slug: 'organized', e: '🗂️', name: 'Dashboard', tag: 'This month', big: '$2,291', sub: '62 receipts · all in one place',
     rows: [
@@ -287,6 +301,7 @@ export default function GoalsShowcase() {
 
       {/* showcase — the real app screens for the selected option */}
       <div style={{ maxWidth: 1180, margin: '18px auto 0', padding: '0 28px' }}>
+        {c.banner ? <GuacAIBanner /> : (
         <div className="gg-showcase" style={{ display: 'grid', gridTemplateColumns: '0.85fr 1.15fr', gap: 44, alignItems: 'center', background: '#fff', border: '1px solid rgba(20,83,45,0.10)', borderRadius: 28, padding: '38px 40px', boxShadow: '0 24px 60px -32px rgba(20,40,28,0.3)' }}>
           <div>
             <div style={{ fontSize: 40, marginBottom: 10 }}>{c.e}</div>
@@ -307,6 +322,7 @@ export default function GoalsShowcase() {
             <img key={`p-${c.slug}`} src={`/home/goals/phone-${c.slug}.webp`} alt={`${c.name} on iPhone`} loading="lazy" style={{ position: 'absolute', right: -6, bottom: 0, width: 148, filter: 'drop-shadow(0 22px 34px rgba(20,40,28,0.4))' }} />
           </div>
         </div>
+        )}
       </div>
     </section>
   )

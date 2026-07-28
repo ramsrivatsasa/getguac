@@ -4,8 +4,8 @@
 // invaders (more armor). Blast a category down to "clear" that spending, dodge
 // nothing — just don't let the expenses reach your wallet at the bottom.
 //
-// Runs the shared 8-round FINANCIAL JOURNEY (lib/financialJourney): cut expenses
-// → debt-free → savings → car → house → invest → education → freedom. Each round
+// Runs the shared 7-round FINANCIAL JOURNEY (lib/financialJourney): cut expenses
+// → savings → car → house → invest → education → freedom. Each round
 // = blast $target of overspend out of the sky, split into stages that tighten as
 // the goal bar fills, on top of the auto-learning difficulty engine
 // (lib/adaptiveDifficulty) which tunes march speed and armor to how you play.
@@ -15,7 +15,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useScoreSaver, SaveScoreLine, ArcadeHud, surfaceBg, drawGuacAvocado, AvocadoPip } from './arcadeKit'
 import { usePlayerSpending } from '../../lib/playerSpending'
-import { JOURNEY, journeyTargets, roundValueMul, stageFor } from '../../lib/financialJourney'
+import { JOURNEY, journeyTargets, roundValueMul, stageFor, withBudgetBump } from '../../lib/financialJourney'
 import {
   useJourney, useAdaptive, AdaptiveChip,
   RoundIntro, RoundComplete, JourneyComplete, JourneyBar,
@@ -43,11 +43,11 @@ const ROW_COLORS = ['#f87171', '#fb923c', '#fbbf24', '#a3e635', '#34d399', '#22d
 // a round to take; the auto-learning engine grades you against it.
 const INVADER_ROUNDS = JOURNEY.map((r, i) => ({
   ...r,
-  marchMul: [1, 1.12, 1.26, 1.4, 1.55, 1.72, 1.9, 2.1][i],
-  armorBonus: [0, 0, 1, 1, 1, 2, 2, 2][i],
-  fireRate: [0.34, 0.33, 0.32, 0.3, 0.29, 0.28, 0.26, 0.25][i],
+  marchMul: [1, 1.26, 1.4, 1.55, 1.72, 1.9, 2.1][i],
+  armorBonus: [0, 1, 1, 1, 2, 2, 2][i],
+  fireRate: [0.34, 0.32, 0.3, 0.29, 0.28, 0.26, 0.25][i],
   valueMul: roundValueMul(i),
-  par: [45, 50, 55, 60, 65, 70, 75, 80][i],
+  par: [45, 55, 60, 65, 70, 75, 80][i],
 }))
 // One invader is worth a slice of a real category total, so a full wave banks
 // roughly a month of spending — far more per action than the slicer. The whole
@@ -72,11 +72,11 @@ export default function ExpenseInvaders() {
   const keysRef = useRef({ left: false, right: false })
   const clearTimer = useRef(null)
   const targetsRef = useRef(journeyTargets(null, TARGET_MUL))
-  const roundRef = useRef({ cfg: INVADER_ROUNDS[0], target: targetsRef.current[0], idx: 0 })
+  const roundRef = useRef({ cfg: INVADER_ROUNDS[0], target: withBudgetBump(targetsRef.current[0]), idx: 0 })
   const isLastRef = useRef(false)
   const [status, setStatusState] = useState('idle')
   const [hud, setHud] = useState({ runBanked: 0, lives: 3, wave: 1 })
-  const [roundHud, setRoundHud] = useState({ banked: 0, target: targetsRef.current[0], stage: 1 })
+  const [roundHud, setRoundHud] = useState({ banked: 0, target: withBudgetBump(targetsRef.current[0]), stage: 1 })
   const [best, setBest] = useState(0)
   const [newBest, setNewBest] = useState(false)
   const { saveRes, save, resetSave } = useScoreSaver('invaders')
@@ -85,7 +85,7 @@ export default function ExpenseInvaders() {
   const { roundIdx, round, furthest, isLast, startFrom, advance } = journey
   const { diff, diffRef, record, note } = useAdaptive('invaders')
   const cfg = INVADER_ROUNDS[roundIdx]
-  const target = Math.max(10, Math.round((targetsRef.current[roundIdx] * diff.targetMul) / 10) * 10)
+  const target = withBudgetBump(Math.max(10, Math.round((targetsRef.current[roundIdx] * diff.targetMul) / 10) * 10))
   const nextRound = INVADER_ROUNDS[roundIdx + 1] || null
 
   useEffect(() => { dataRef.current = data }, [data])
@@ -454,7 +454,7 @@ export default function ExpenseInvaders() {
   const startRun = (idx = 0) => {
     Object.assign(sim.current, freshSim())
     setHud({ runBanked: 0, lives: 3, wave: 1 })
-    setRoundHud({ banked: 0, target: targetsRef.current[idx], stage: 1 })
+    setRoundHud({ banked: 0, target: withBudgetBump(targetsRef.current[idx]), stage: 1 })
     setNewBest(false)
     resetSave()
     startFrom(idx)

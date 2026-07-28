@@ -5,8 +5,8 @@
 // dollars you free up bank toward the round's money goal. Don't cut the
 // essentials — rent, groceries, meds cost you an avocado.
 //
-// The eight rounds are the shared, educative money curriculum (lib/financialJourney):
-// cut expenses → debt-free → savings → car → house → invest → education → freedom.
+// The seven rounds are the shared, educative money curriculum (lib/financialJourney):
+// cut expenses → savings → car → house → invest → education → freedom.
 // Each round opens with a lesson + a goal ($ target to bank), splits into stages
 // that tighten as you go, and the whole thing rides on the auto-learning
 // difficulty engine (lib/adaptiveDifficulty) — the game watches how you actually
@@ -18,7 +18,7 @@ import {
   spawnBurst, updateBurst, drawBurst, confettiBurst, updateConfetti, drawConfetti,
 } from './arcadeKit'
 import { usePlayerSpending } from '../../lib/playerSpending'
-import { JOURNEY, journeyTargets, roundValueMul, stageFor } from '../../lib/financialJourney'
+import { JOURNEY, journeyTargets, roundValueMul, stageFor, withBudgetBump } from '../../lib/financialJourney'
 import {
   useJourney, useAdaptive, AdaptiveChip,
   RoundIntro, RoundComplete, JourneyComplete, JourneyBar,
@@ -51,10 +51,10 @@ const BEST_KEY = 'gg-splurge-best-v1'
 // engine compares your real time against it.
 const SLICER_ROUNDS = JOURNEY.map((r, i) => ({
   ...r,
-  spawnMul: [1, 1.14, 1.3, 1.46, 1.62, 1.8, 2, 2.2][i],
-  splurgeProb: [0.76, 0.74, 0.72, 0.7, 0.67, 0.65, 0.62, 0.6][i], // rest are essentials to dodge
+  spawnMul: [1, 1.3, 1.46, 1.62, 1.8, 2, 2.2][i],
+  splurgeProb: [0.76, 0.72, 0.7, 0.67, 0.65, 0.62, 0.6][i], // rest are essentials to dodge
   valueMul: roundValueMul(i),
-  par: [40, 45, 50, 55, 60, 65, 70, 75][i],
+  par: [40, 50, 55, 60, 65, 70, 75][i],
 }))
 
 const freshSim = () => ({
@@ -90,7 +90,7 @@ export default function SplurgeSlicer() {
 
   const [status, setStatusState] = useState('idle')
   const [hud, setHud] = useState({ runBanked: 0, missed: 0, lives: 3 })
-  const [roundHud, setRoundHud] = useState({ banked: 0, target: targetsRef.current[0], stage: 1 })
+  const [roundHud, setRoundHud] = useState({ banked: 0, target: withBudgetBump(targetsRef.current[0]), stage: 1 })
   const [combo, setCombo] = useState(0)
   const [best, setBest] = useState(0)
   const [newBest, setNewBest] = useState(false)
@@ -104,7 +104,7 @@ export default function SplurgeSlicer() {
   const cfg = SLICER_ROUNDS[roundIdx]
   // The goal the player actually plays against = the curriculum target nudged
   // by how well they've been doing (±15%).
-  const target = Math.max(10, Math.round((targetsRef.current[roundIdx] * diff.targetMul) / 10) * 10)
+  const target = withBudgetBump(Math.max(10, Math.round((targetsRef.current[roundIdx] * diff.targetMul) / 10) * 10))
   const nextRound = SLICER_ROUNDS[roundIdx + 1] || null
 
   useEffect(() => { dataRef.current = data }, [data])
@@ -255,10 +255,10 @@ export default function SplurgeSlicer() {
           setCombo(n)
           clearTimeout(comboTimer.current)
           comboTimer.current = setTimeout(() => setCombo(0), 1000)
+          // Combos are flair only — they pay nothing. Money is banked for the
+          // cut itself and nothing else, so the goal bar moves only when an
+          // expense actually goes.
           if (n > st.comboBest) {
-            const unit = 10 * (rc.cfg.valueMul || 1)
-            const bonus = Math.round(unit * n - (st.comboBest >= 3 ? unit * st.comboBest : 0))
-            st.roundBanked += bonus; st.runBanked += bonus
             st.floats.push({ x: w / 2, y: h * 0.28, text: `COMBO ×${n} — Guac frenzy! 🥑`, t0: now, life: 1300, size: 22, color: INK, banner: true })
             st.comboBest = n
           }
@@ -437,7 +437,7 @@ export default function SplurgeSlicer() {
   const startRun = (idx = 0) => {
     Object.assign(sim.current, freshSim())
     setHud({ runBanked: 0, missed: 0, lives: 3 })
-    setRoundHud({ banked: 0, target: targetsRef.current[idx], stage: 1 })
+    setRoundHud({ banked: 0, target: withBudgetBump(targetsRef.current[idx]), stage: 1 })
     setCombo(0)
     setNewBest(false)
     resetSave()

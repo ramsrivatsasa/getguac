@@ -5,8 +5,9 @@
 // bricks: wide paddle, slow ball, multiball. Move with mouse / touch / arrows.
 // Sim in refs + rAF; React state is HUD only; synthesized sound.
 //
-// This game owns CHAPTER 2 of the shared financial journey — 🧱 Get debt-free
-// (lib/financialJourney). It opens with that chapter's real lesson (avalanche:
+// This game owns the standalone 🧱 Get debt-free chapter (DEBT_CHAPTER in
+// lib/financialJourney) — debt is no longer one of the shared journey's rounds,
+// so this is the one place the lesson lives. It opens with that lesson (avalanche:
 // highest interest first), sets a payoff goal, runs its levels as the chapter's
 // stages, and finishes by pointing at what genuinely comes next. Difficulty
 // rides the auto-learning engine (lib/adaptiveDifficulty).
@@ -16,13 +17,15 @@ import {
   Overlay, OverlayAd, SaveScoreLine, PrimaryButton, GhostButton, HudButton,
   INK, BODY, MUTED, FAINT, GREEN, AMBER, ROSE, fmt,
 } from './arcadeKit'
-import { roundById } from '../../lib/financialJourney'
+import { DEBT_CHAPTER, withBudgetBump } from '../../lib/financialJourney'
 import { useAdaptive, AdaptiveChip, RoundIntro, ChapterComplete, JourneyBar } from './journeyKit'
 
 const BEST_KEY = 'gg-breaker-best-v1'
 
-// The journey chapter this game teaches.
-const CHAPTER = roundById('debt')
+// The chapter this game teaches. Debt is no longer one of the shared journey's
+// rounds, so this game owns the lesson on its own — it's a standalone chapter,
+// not "chapter X of Y".
+const CHAPTER = DEBT_CHAPTER
 // Payoff goal for the chapter, in this game's economy (a full starting wall is
 // worth roughly $2.5k, so this is a few walls' work). Nudged ±15% by the
 // auto-learning engine. Its levels double as the chapter's stages.
@@ -114,7 +117,7 @@ export default function DebtBreaker() {
   const { saveRes, save, resetSave } = useScoreSaver('breaker')
   // Auto-learning difficulty for this chapter.
   const { diff, diffRef, record, note } = useAdaptive('breaker')
-  const goal = Math.max(500, Math.round((CHAPTER_GOAL * diff.targetMul) / 100) * 100)
+  const goal = withBudgetBump(Math.max(500, Math.round((CHAPTER_GOAL * diff.targetMul) / 100) * 100))
   const stage = Math.min(CHAPTER_STAGES, level)
 
   // Fold the run into the skill profile: did they clear the chapter, how fast,
@@ -602,7 +605,7 @@ export default function DebtBreaker() {
             </p>
             <div className="text-[11px] font-bold px-3 py-1 rounded-full inline-block mb-2"
               style={{ background: `${CHAPTER.color}1a`, color: CHAPTER.dark }}>
-              CHAPTER {CHAPTER.n} OF THE MONEY JOURNEY · {CHAPTER.emoji} {CHAPTER.title}
+{CHAPTER.emoji} {CHAPTER.title.toUpperCase()}
             </div>
             {best > 0 && <div className="text-xs font-bold mb-2" style={{ color: AMBER }}>Best payoff: ${fmt(best)}</div>}
             <AdaptiveChip diff={diff} note={note} compact />

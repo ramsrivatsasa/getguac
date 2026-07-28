@@ -29,7 +29,10 @@ import {
 // Tracks which round the player is on and the furthest round they've reached
 // (persisted, so a game can offer "Continue from Round N" after a game over).
 export function useJourney(gameId, { count = JOURNEY_COUNT } = {}) {
-  const key = `gg-${gameId}-journey-v1`
+  // v2: the journey dropped the debt round, so every saved round index now
+  // points at a different lesson. Bumping the key resets progress once rather
+  // than resuming people mid-journey on the wrong round.
+  const key = `gg-${gameId}-journey-v2`
   const [roundIdx, setRoundIdx] = useState(0)
   const [furthest, setFurthest] = useState(0)
 
@@ -109,10 +112,13 @@ function Veil({ children, maxWidth = 430 }) {
 }
 
 function RoundChip({ round, count = JOURNEY_COUNT, sub }) {
+  // A standalone chapter (Debt Breaker's, which no longer sits in the numbered
+  // journey) has no `n` — it gets its own title instead of "ROUND x OF y".
+  const label = round.n ? `ROUND ${round.n} OF ${count}` : `${round.emoji} ${round.title.toUpperCase()}`
   return (
     <div className="inline-flex items-center gap-1.5 text-[11px] font-bold px-3 py-1 rounded-full mb-2"
       style={{ background: `${round.color}1a`, color: round.dark || round.color, fontFamily: BODY_FONT, letterSpacing: '0.04em' }}>
-      ROUND {round.n} OF {count}{sub ? ` · ${sub}` : ''}
+      {label}{sub ? ` · ${sub}` : ''}
     </div>
   )
 }
@@ -241,7 +247,7 @@ export function JourneyComplete({ banked, diff = null, onReplay }) {
       <div className="text-5xl mb-1" aria-hidden>🏆</div>
       <div className="font-display font-extrabold text-2xl" style={{ color: INK }}>You walked the whole journey!</div>
       <p className="text-sm mt-2" style={{ color: BODY }}>
-        Cut expenses, crushed debt, built savings, bought the car and the house, invested for retirement, funded an
+        Cut expenses, built savings, bought the car and the house, invested for retirement, funded an
         education, then bought back your time — the real order that gets people ahead with money.
       </p>
       <div className="font-display font-extrabold text-4xl mt-3" style={{ color: GREEN }}>${Number(banked).toLocaleString()}</div>
@@ -267,7 +273,6 @@ export function JourneyComplete({ banked, diff = null, onReplay }) {
 // lesson in that slot, then point the player at what genuinely comes next.
 const ROUND_GAME = {
   cut: { href: '/games/splurge', name: 'Splurge Slicer' },
-  debt: { href: '/games/breaker', name: 'Debt Breaker' },
   save: { href: '/games/budget', name: 'Block Drop' },
   car: { href: '/games/splurge', name: 'Splurge Slicer' },
   house: { href: '/games/house', name: 'Dream House Stack' },
@@ -279,12 +284,15 @@ const ROUND_GAME = {
 // Chapter cleared — celebrate, restate the lesson, then hand the player to the
 // next step of the real journey (and the game that teaches it).
 export function ChapterComplete({ round, banked, unit = '$', caption = 'banked this run', diff = null, note = '', onReplay, replayLabel = 'Play again' }) {
-  const next = JOURNEY[round.n] || null       // round.n is 1-based → this is the next one
+  // round.n is 1-based → JOURNEY[round.n] is the next one. A standalone chapter
+  // (no `n`) isn't in the journey, so there's nothing to hand off to.
+  const next = round.n ? JOURNEY[round.n] || null : null
   const game = next ? ROUND_GAME[next.id] : null
   return (
     <Veil>
       <div className="inline-flex items-center gap-1.5 text-[11px] font-bold px-3 py-1 rounded-full mb-2"
-        style={{ background: '#dcfce7', color: '#166534', fontFamily: BODY_FONT }}>✓ CHAPTER {round.n} OF {JOURNEY_COUNT} CLEARED</div>
+        style={{ background: '#dcfce7', color: '#166534', fontFamily: BODY_FONT }}>
+        {round.n ? `✓ CHAPTER ${round.n} OF ${JOURNEY_COUNT} CLEARED` : '✓ CHAPTER CLEARED'}</div>
       <div className="text-5xl mb-1" aria-hidden>{round.emoji}</div>
       <div className="font-display font-extrabold text-xl" style={{ color: INK }}>{round.banner}</div>
       <div className="font-display font-extrabold text-4xl mt-2" style={{ color: GREEN }}>

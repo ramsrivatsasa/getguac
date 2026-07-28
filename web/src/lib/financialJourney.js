@@ -5,8 +5,9 @@
 // React, so both canvas games and any future story/strategy game can reuse it.
 //
 // Round order is the real personal-finance "order of operations": free up cash
-// first, then kill high-interest debt, build a cushion, then the bigger goals,
-// and only then the long-horizon compounding ones. Lessons are genuine,
+// first, build a cushion, then the bigger goals, and only then the long-horizon
+// compounding ones. (Debt is intentionally NOT a round — see DEBT_CHAPTER
+// below, which Debt Breaker owns on its own.) Lessons are genuine,
 // widely-accepted principles — NOT invented outcome stats. In-game dollar
 // targets are GAME-ONLY goals; a game never claims them as real savings.
 //
@@ -30,18 +31,7 @@ export const JOURNEY = [
     twist: 'Learn the controls — the pace steps up once you find your rhythm.',
   },
   {
-    id: 'debt', n: 2, title: 'Get debt-free', emoji: '🧱',
-    color: '#E11D48', dark: '#9F1239',
-    subtitle: 'Kill the highest interest first.',
-    lesson: 'High-interest debt grows faster than almost any savings account. Throw every freed-up dollar at the worst APR first (the "avalanche"), then roll it to the next.',
-    tip: 'List your debts by interest rate, not balance. The top of that list is costing you the most.',
-    goal: (t) => `Throw $${t.toLocaleString()} at your debt to clear it.`,
-    banner: 'Debt crushed!',
-    stages: 2, heat: 2,
-    twist: 'Interest bites back — the board pushes harder the longer you take.',
-  },
-  {
-    id: 'save', n: 3, title: 'Build your savings', emoji: '🐷',
+    id: 'save', n: 2, title: 'Build your savings', emoji: '🐷',
     color: '#0EA5E9', dark: '#075985',
     subtitle: 'A cushion for the surprises.',
     lesson: 'A starter emergency fund (around $1,000) keeps a flat tire or a surprise bill from turning back into new debt. Build it before you chase bigger goals.',
@@ -52,7 +42,7 @@ export const JOURNEY = [
     twist: 'Surprise bills show up unannounced — that is exactly what the fund is for.',
   },
   {
-    id: 'car', n: 4, title: 'Save for a car', emoji: '🚗',
+    id: 'car', n: 3, title: 'Save for a car', emoji: '🚗',
     color: '#8B5CF6', dark: '#5B21B6',
     subtitle: 'A goal you can save toward.',
     lesson: 'Save the down payment instead of financing the whole thing. A bigger down payment means a smaller loan and far less interest over its life.',
@@ -63,7 +53,7 @@ export const JOURNEY = [
     twist: 'Bigger money moves faster — everything on screen picks up speed.',
   },
   {
-    id: 'house', n: 5, title: 'Buy a house', emoji: '🏡',
+    id: 'house', n: 4, title: 'Buy a house', emoji: '🏡',
     color: '#16A34A', dark: '#166534',
     subtitle: 'The long game.',
     lesson: 'Aim for 20% down to skip PMI, and keep the payment near a third of your take-home so the house never owns you.',
@@ -74,7 +64,7 @@ export const JOURNEY = [
     twist: 'Closing costs sneak in — more essentials to protect, less room for error.',
   },
   {
-    id: 'invest', n: 6, title: 'Invest for retirement', emoji: '📈',
+    id: 'invest', n: 5, title: 'Invest for retirement', emoji: '📈',
     color: '#0D9488', dark: '#115E59',
     subtitle: 'Let time do the heavy lifting.',
     lesson: 'Money invested early compounds on itself — the same dollar put in at 25 does far more work than one put in at 45. If your employer matches contributions, that match is part of your pay.',
@@ -85,7 +75,7 @@ export const JOURNEY = [
     twist: 'The market swings — your run rate speeds up and slows down without warning.',
   },
   {
-    id: 'edu', n: 7, title: 'Fund an education', emoji: '🎓',
+    id: 'edu', n: 6, title: 'Fund an education', emoji: '🎓',
     color: '#4F46E5', dark: '#3730A3',
     subtitle: 'Oxygen mask on yourself first.',
     lesson: 'Fund college AFTER your own retirement, not before it. There are loans and scholarships for school; there are none for retirement.',
@@ -96,7 +86,7 @@ export const JOURNEY = [
     twist: 'Everything at once — every hazard you have met so far is on the board.',
   },
   {
-    id: 'freedom', n: 8, title: 'Reach financial freedom', emoji: '🌴',
+    id: 'freedom', n: 7, title: 'Reach financial freedom', emoji: '🌴',
     color: '#B45309', dark: '#78350F',
     subtitle: 'When work becomes optional.',
     lesson: 'A common yardstick: once invested assets reach roughly 25× your yearly spending, withdrawing about 4% a year has historically been survivable. Note the lever — spending less lowers the finish line as much as saving more raises it.',
@@ -110,13 +100,31 @@ export const JOURNEY = [
 
 export const JOURNEY_COUNT = JOURNEY.length
 
+// Debt is NO LONGER a round of the shared journey — the arcade doesn't put
+// players through a debt chapter on the way to the other goals. Debt Breaker
+// is the one game still built around the lesson, so the chapter def lives here
+// as a standalone (same shape as a round, no `n` — it isn't "chapter X of Y"
+// any more) rather than inside JOURNEY, where every journey game would pick it
+// up again.
+export const DEBT_CHAPTER = {
+  id: 'debt', title: 'Get debt-free', emoji: '🧱',
+  color: '#E11D48', dark: '#9F1239',
+  subtitle: 'Kill the highest interest first.',
+  lesson: 'High-interest debt grows faster than almost any savings account. Throw every freed-up dollar at the worst APR first (the "avalanche"), then roll it to the next.',
+  tip: 'List your debts by interest rate, not balance. The top of that list is costing you the most.',
+  goal: (t) => `Throw $${t.toLocaleString()} at your debt to clear it.`,
+  banner: 'Debt crushed!',
+  stages: 2, heat: 2,
+  twist: 'Interest bites back — the board pushes harder the longer you take.',
+}
+
 // A round def by index, clamped so callers can't fall off the end.
 export const roundAt = (i) => JOURNEY[Math.max(0, Math.min(JOURNEY.length - 1, i))]
 
 // A round def by its stable id — used by the single-chapter goal games
-// (Debt Breaker → 'debt', Nest Egg Climb → 'save', Dream House Stack →
-// 'house', Tuition Invaders → 'edu') so they teach the same lesson the
-// full-journey games teach in that slot.
+// (Nest Egg Climb → 'save', Dream House Stack → 'house', Tuition Invaders →
+// 'edu') so they teach the same lesson the full-journey games teach in that
+// slot. Debt Breaker imports DEBT_CHAPTER directly instead.
 export const roundById = (id) => JOURNEY.find((r) => r.id === id) || JOURNEY[0]
 
 // Per-round dollar goals. The curve climbs hard — later rounds are meant to
@@ -130,7 +138,17 @@ export const roundById = (id) => JOURNEY.find((r) => r.id === id) || JOURNEY[0]
 // lib/playerSpending.js ({ monthlyTotal, ... }); anything falsy → baseline.
 // `mul` lets a game rescale the whole curve into its own economy (Budget
 // Tetris banks far bigger chunks per action than the slicer does).
-const BASE_TARGETS = [300, 800, 1600, 3200, 6000, 10000, 16000, 25000]
+const BASE_TARGETS = [300, 1600, 3200, 6000, 10000, 16000, 25000]
+
+// Every round's budget carries a flat bump on top of whatever the curve, the
+// per-game economy and the adaptive engine produce. It is deliberately applied
+// LAST, by the games, via withBudgetBump() — folding it into BASE_TARGETS here
+// would shrink it everywhere it matters: Budget Tetris rescales the curve by
+// 0.45× (a baked-in bump would land as +$450) and the adaptive engine multiplies
+// by 0.85–1.15× on top (another −15% for a low-skill profile). Added at the end,
+// every game and every player sees the full amount.
+export const BUDGET_BUMP = 1000
+export const withBudgetBump = (v) => BUDGET_BUMP + Math.max(0, Math.round(v))
 
 export function journeyTargets(data, mul = 1) {
   const monthly = Number(data?.monthlyTotal) || 0
@@ -147,7 +165,7 @@ export function journeyTargets(data, mul = 1) {
 // How much one "unit" of progress is worth in a given round. Later rounds move
 // bigger money per action, which is what keeps a $25,000 finale from taking
 // twenty minutes to clear. Games multiply their natural award by this.
-const VALUE_MULS = [1, 1.4, 1.9, 2.6, 3.4, 4.6, 6, 8]
+const VALUE_MULS = [1, 1.9, 2.6, 3.4, 4.6, 6, 8]
 export const roundValueMul = (i) => VALUE_MULS[Math.max(0, Math.min(VALUE_MULS.length - 1, i))]
 
 // Which stage (sub-level) of a round the player is in, given progress toward

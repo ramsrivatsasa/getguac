@@ -145,37 +145,28 @@ export default function JoinClient() {
               place near the fold and the pitch reads underneath. */}
           <div className="gj-herorow">
             <div className="gj-hero-phone">
+              <div className="gj-aipill" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(132,204,22,0.12)', color: '#A3E635', border: '1px solid rgba(132,204,22,0.26)', padding: '7px 14px', borderRadius: 999, fontSize: 13, fontWeight: 600 }}>
+                <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#84CC16', boxShadow: '0 0 0 3px rgba(132,204,22,0.25)' }} /> Guac-AI · personal finance assistant
+              </div>
+
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/home/goals/phone-organized.webp" alt="The GetGuac dashboard on iPhone"
                 width={244} height={500} loading="eager" className="gj-heroshot"
                 style={{ width: 244, maxWidth: '72%', height: 'auto', display: 'block', filter: 'drop-shadow(0 26px 46px rgba(0,0,0,0.55))' }} />
-            </div>
 
-            <div className="gj-hero-pitch">
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(132,204,22,0.12)', color: '#A3E635', border: '1px solid rgba(132,204,22,0.26)', padding: '7px 14px', borderRadius: 999, fontSize: 13, fontWeight: 600, marginBottom: 18 }}>
-                <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#84CC16', boxShadow: '0 0 0 3px rgba(132,204,22,0.25)' }} /> Guac-AI · personal finance assistant
-              </div>
-              <h2 className="gj-pitchhead" style={{ ...DISPLAY, fontWeight: 800, fontSize: 38, lineHeight: 1.04, letterSpacing: '-0.035em', margin: '0 0 16px', color: '#fff' }}>
-                Meet your money&apos;s<br />smartest <span style={{ color: '#A3E635' }}>sidekick.</span>
-              </h2>
-              <p style={{ fontSize: 16, lineHeight: 1.55, color: 'rgba(255,255,255,0.66)', margin: '0 0 24px' }}>
-                GetGuac reads your receipts and bank statements, scores every purchase, sniffs out hidden
-                fees, and shows you exactly where your money gets eaten. Money&apos;s wingman. Keep your guac.
-              </p>
-
-              {/* No "Try the demo" pill here — the demo gets its own block with
-                  the credentials further down, and a second button beside the
-                  primary one splits the click. */}
-              <div className="gj-ctarow" style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
+              {/* No "Try the demo" pill beside this — the demo has its own
+                  block with the credentials further down, and a second button
+                  next to the primary one splits the click. */}
+              <div className="gj-ctarow" style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
                 <Link href="/register" onClick={() => trackSignup('email')}
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#65A30D', color: '#fff', fontWeight: 700, fontSize: 16, padding: '15px 26px', borderRadius: 999, textDecoration: 'none', boxShadow: '0 10px 24px -10px rgba(101,163,13,0.8)' }}>
                   🥑 Meet your sidekick
                 </Link>
               </div>
 
-              {/* White badges: the homepage's ink-on-white badges are invisible
-                  against this ground. */}
-              <div className="gj-badges" style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+              {/* White badges: the homepage's ink badges are invisible against
+                  this ground. */}
+              <div className="gj-badges" style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
                 <a href="https://apps.apple.com/us/app/getguac/id6790993237" target="_blank" rel="noopener noreferrer"
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: '#fff', color: '#0B1410', padding: '9px 18px 9px 14px', borderRadius: 12, textDecoration: 'none' }}>
                   <svg viewBox="0 0 384 512" width="22" height="22" fill="#0B1410" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.7-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" /></svg>
@@ -426,31 +417,26 @@ export default function JoinClient() {
         .gj-grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
         .gj-demo { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: center; }
 
-        /* Hero body. Explicit grid placement rather than source order, because
-           the stacking order on a phone is deliberately different: the auth
-           buttons have to come BEFORE the pitch there, or the only CTA on the
-           first screen ends up a full scroll below the product shot. */
-        .gj-herorow { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr);
-                      gap: 44px; align-items: center; max-width: 980px; margin: 32px auto 0; }
-        .gj-hero-phone { grid-column: 1; grid-row: 1; display: flex; justify-content: center; }
-        .gj-hero-pitch { grid-column: 2; grid-row: 1; }
-        .gj-hero-auth  { grid-column: 1 / -1; grid-row: 2; width: 100%; max-width: 430px;
-                         justify-self: center; margin-top: 30px; text-align: center; }
+        /* Hero body — one centred stack, the way Origin's page runs: Guac-AI
+           pill, device, primary CTA, store badges, then the auth buttons. */
+        .gj-herorow { display: flex; flex-direction: column; align-items: center;
+                      max-width: 980px; margin: 32px auto 0; }
+        .gj-hero-phone { display: flex; flex-direction: column; align-items: center; }
+        .gj-aipill { margin-bottom: 20px; }
+        .gj-ctarow { margin-top: 28px; }
+        .gj-badges { margin-top: 14px; }
+        .gj-hero-auth  { width: 100%; max-width: 430px; margin-top: 30px; text-align: center; }
 
         @media (max-width: 880px) {
           .gj-grid3 { grid-template-columns: 1fr; }
           .gj-demo { grid-template-columns: 1fr; }
           .gj-demoshot { display: none; }
           .gj-h2big { font-size: 34px !important; }
-          .gj-herorow { grid-template-columns: 1fr; gap: 0; margin-top: 24px; }
-          .gj-hero-phone { grid-column: 1; grid-row: 1; }
-          .gj-hero-auth  { grid-column: 1; grid-row: 2; margin-top: 24px; }
-          .gj-hero-pitch { grid-column: 1; grid-row: 3; margin-top: 40px; text-align: center; }
-          .gj-hero-pitch .gj-ctarow, .gj-hero-pitch .gj-badges { justify-content: center; }
+          .gj-herorow { margin-top: 24px; }
+          .gj-hero-auth { margin-top: 24px; }
           .gj-lede { font-size: 31px !important; }
           .gj-subline { font-size: 18px !important; }
           .gj-price { font-size: 32px !important; }
-          .gj-pitchhead { font-size: 32px !important; }
           .gj-stickyinner { padding-right: 64px; }
           /* A credential shown truncated is worse than a smaller one.
              !important because these lose to the elements' own inline styles. */

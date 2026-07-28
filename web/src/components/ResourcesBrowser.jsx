@@ -2,11 +2,15 @@
 // Resources hub content + a "Search resources" filter across GetGuac tools,
 // money articles, and trusted .gov guides. Client component (holds the search
 // state + the icon components).
+//
+// The article list arrives as a prop, deliberately. Importing lib/articles
+// here would drag every article BODY into the client bundle (~128 KB of prose)
+// when this component only ever reads slug/title/excerpt/category. The server
+// page owns the heavy module and hands down just those four fields.
 
 import { useState } from 'react'
 import Link from 'next/link'
 import { Search, ExternalLink, CalendarDays, TrendingUp, ShoppingBag, Ticket, Receipt, Shield, Newspaper } from 'lucide-react'
-import { ARTICLES } from '../lib/articles'
 import AdSlot from './AdSlot'
 
 const TOOLS = [
@@ -27,13 +31,13 @@ const GUIDES = [
   { title: 'Understand credit, interest & fees', source: 'consumerfinance.gov', url: 'https://www.consumerfinance.gov/consumer-tools/', desc: 'How interest and fees quietly add up — and how to dodge them.' },
 ]
 
-export default function ResourcesBrowser() {
+export default function ResourcesBrowser({ articles: allArticles = [] }) {
   const [q, setQ] = useState('')
   const t = q.trim().toLowerCase()
   const m = (...vals) => !t || vals.some((v) => String(v || '').toLowerCase().includes(t))
 
   const tools = TOOLS.filter((x) => m(x.title, x.desc))
-  const articles = ARTICLES.filter((x) => m(x.title, x.excerpt, x.category))
+  const articles = allArticles.filter((x) => m(x.title, x.excerpt, x.category))
   const guides = GUIDES.filter((x) => m(x.title, x.desc, x.source))
   const total = tools.length + articles.length + guides.length
 

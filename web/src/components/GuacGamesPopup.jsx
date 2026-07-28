@@ -6,16 +6,33 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Gamepad2, X } from 'lucide-react'
-import { GAMES } from './games/gamesList'
+import { trackClick } from '../lib/track-click'
+// OWN_GAMES, not GAMES: this component renders in the dashboard LAYOUT, so it
+// is in the client bundle of every signed-in page. Importing the merged catalog
+// pulled externalGames.json (~416 KB of partner listings) along with it — for
+// six hand-picked games that are all ours. Same data, same source of truth.
+import { OWN_GAMES, gameIdFor } from './games/ownGames'
 
 const FEATURED = ['/games/splurge', '/games/nitro', '/games/bubbles', '/games/climb', '/games/muncher', '/games/penalty']
-  .map((h) => GAMES.find((g) => g.href === h))
+  .map((h) => OWN_GAMES.find((g) => g.href === h))
   .filter(Boolean)
 
 const RAINBOW = 'linear-gradient(120deg,#f43f5e 0%,#fb923c 22%,#facc15 42%,#4ade80 62%,#38bdf8 82%,#a78bfa 100%)'
 
 export default function GuacGamesPopup() {
   const [open, setOpen] = useState(false)
+
+  // Opening the menu is the one arcade interaction that leaves NO other trace:
+  // it pops a panel without navigating, so the visit counter never sees it.
+  // Everything downstream of it (a game page, the hub) is already a real
+  // pageview in site_visits, so those are deliberately not double-counted here
+  // — except which game was launched FROM the menu, which the pageview alone
+  // can't attribute back to the launcher.
+  const toggle = () => setOpen((o) => {
+    if (!o) trackClick('games-menu')
+    return !o
+  })
+
   return (
     <>
       {open && (
@@ -31,7 +48,7 @@ export default function GuacGamesPopup() {
                 <Link
                   key={g.href}
                   href={g.href}
-                  onClick={() => setOpen(false)}
+                  onClick={() => { trackClick(`games-menu-${gameIdFor(g.href)}`); setOpen(false) }}
                   className="relative rounded-xl overflow-hidden no-underline h-16 flex items-end"
                   style={{ background: `radial-gradient(120% 120% at 20% 0%, ${g.g1} 0%, ${g.g2} 100%)` }}
                 >
@@ -40,13 +57,13 @@ export default function GuacGamesPopup() {
                 </Link>
               ))}
             </div>
-            <Link href="/games" onClick={() => setOpen(false)} className="block mt-2.5 text-center text-xs font-extrabold no-underline hover:underline" style={{ color: '#166534' }}>See all 30+ games →</Link>
+            <Link href="/games" onClick={() => { trackClick('games-menu-all'); setOpen(false) }} className="block mt-2.5 text-center text-xs font-extrabold no-underline hover:underline" style={{ color: '#166534' }}>See all 30+ games →</Link>
           </div>
         </div>
       )}
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        onClick={toggle}
         aria-label={open ? 'Close Guac Arcade' : 'Open Guac Arcade'}
         className="fixed z-[60] right-4 sm:right-5 bottom-40 h-11 items-center gap-2 rounded-full text-white shadow-lg ring-1 ring-black/5 pl-3.5 pr-4 hover:-translate-y-0.5 transition-transform"
         style={{ display: open ? 'none' : 'flex', background: RAINBOW, textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}

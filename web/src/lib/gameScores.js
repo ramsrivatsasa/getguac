@@ -8,10 +8,19 @@
 // Later rounds the same day save the score but earn 0 — farm-proof by design.
 // The balance side of this lives in guacMoney.js (arcade_gm_days RPC).
 import { createClient } from './supabase/client'
+import { trackClick } from './track-click'
 
 export const GM_PER_FIRST_PLAY = 50
 
 export async function saveGameScore(game, score, level = null) {
+  // Count the round BEFORE the signed-out return below. game_scores needs a
+  // user_id, so every round played by a signed-out visitor used to vanish —
+  // which made "36 plays, 1 player" look like a measurement when it was only
+  // a floor. This counter needs no session (it is the same first-party visit
+  // beacon the landing pages use), so it counts everyone who finishes a round.
+  // Still blind to partner games: they are cross-origin iframes and never call
+  // this, so their only signal remains the /games/<slug> pageview.
+  if (/^[a-z0-9-]{1,30}$/.test(String(game))) trackClick(`play-${game}`)
   try {
     const sb = createClient()
     const { data } = await sb.auth.getUser()

@@ -1,5 +1,10 @@
 import MarketingShell from '../../components/MarketingShell'
 import ResourcesBrowser from '../../components/ResourcesBrowser'
+import { ARTICLES } from '../../lib/articles'
+
+// Only the card fields — never `body`. This page is a server component, so the
+// full corpus stays on the server and just this index crosses to the browser.
+const ARTICLE_INDEX = ARTICLES.map(({ slug, title, excerpt, category }) => ({ slug, title, excerpt, category }))
 
 export const metadata = {
   title: 'Resources — money guides, articles & tools',
@@ -20,7 +25,7 @@ export default function ResourcesPage() {
         <p className="text-gray-600 mt-3 max-w-xl mx-auto">Free tools, articles, and trusted guides — budgeting, saving, planning, and knowing your rights.</p>
       </section>
 
-      <ResourcesBrowser />
+      <ResourcesBrowser articles={ARTICLE_INDEX} />
     </MarketingShell>
   )
 }

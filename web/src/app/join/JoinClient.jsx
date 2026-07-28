@@ -118,7 +118,11 @@ export default function JoinClient() {
               Finally, <span style={{ color: '#A3E635' }}>GetGuac is listening.</span>
             </h1>
             <p className="gj-subline" style={{ ...DISPLAY, fontWeight: 700, color: 'rgba(255,255,255,0.86)', fontSize: 22, lineHeight: 1.3, margin: '16px 0 0' }}>
-              Keep more of your own money. Get Organized.
+              💰 Keep more of your own money. 🗂️ Get Organized.
+            </p>
+
+            <p className="gj-snitch" style={{ fontSize: 16.5, lineHeight: 1.5, color: '#A3E635', fontWeight: 600, margin: '20px auto 0', maxWidth: 620 }}>
+              🥑 GetGuac AI — your receipts already snitched. We just translated. 🕵️
             </p>
 
             <p className="gj-price" style={{ ...DISPLAY, fontWeight: 800, color: '#A3E635', fontSize: 40, lineHeight: 1, letterSpacing: '-0.03em', margin: '28px 0 0' }}>
@@ -149,9 +153,15 @@ export default function JoinClient() {
                 <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#84CC16', boxShadow: '0 0 0 3px rgba(132,204,22,0.25)' }} /> Guac-AI · personal finance assistant
               </div>
 
+              {/* Guacanomics rather than the dashboard: phone-organized.webp
+                  ends in a block of empty white above the tab bar, which reads
+                  as a rendering fault in a hero. This screen is full to the
+                  crop — GuacScore ring, the stat cards, then the spending
+                  chart running off the bottom edge. */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/home/goals/phone-organized.webp" alt="The GetGuac dashboard on iPhone"
-                width={244} height={500} loading="eager" className="gj-heroshot"
+              <img src="/home/goals/phone-guacscore.webp"
+                alt="GetGuac on iPhone: a GuacScore of 74, net spent, refunds, bank fees, receipts and tax paid"
+                width={244} height={514} loading="eager" className="gj-heroshot"
                 style={{ width: 244, maxWidth: '72%', height: 'auto', display: 'block', filter: 'drop-shadow(0 26px 46px rgba(0,0,0,0.55))' }} />
 
               {/* No "Try the demo" pill beside this — the demo has its own
@@ -178,6 +188,29 @@ export default function JoinClient() {
                   <span><span style={{ display: 'block', fontSize: 10.5, opacity: 0.62, lineHeight: 1.2 }}>Get it on</span><span style={{ display: 'block', fontSize: 17, fontWeight: 700, lineHeight: 1.15 }}>Google Play</span></span>
                 </a>
               </div>
+            </div>
+
+            {/* The ad script, in the ad's own voice. It sits under the device
+                and the badges so the reader has already seen what the product
+                looks like by the time it explains what it does. */}
+            <div className="gj-story">
+              <p className="gj-storyp" style={{ fontSize: 16.5, lineHeight: 1.7, color: 'rgba(255,255,255,0.72)', margin: 0 }}>
+                📬 Point it at your inbox and it goes to work: 🔁 rounds up the subscriptions you swore
+                you canceled, 🕵️ drags out the fees your bank buried in the fine print, 💸 flags the
+                refunds still ticking inside their return window, and 🏷️ quietly finds a better price
+                on the thing you were one click from buying anyway.
+              </p>
+              <p className="gj-storyp" style={{ fontSize: 16.5, lineHeight: 1.7, color: 'rgba(255,255,255,0.72)', margin: '18px 0 0' }}>
+                🧮 Then tax season rolls around and — surprise 🎉 — you&rsquo;re already done. Business,
+                charity, and sales tax tagged all year long, exported in one click. 📤
+              </p>
+              <p style={{ ...DISPLAY, fontWeight: 800, fontSize: 22, lineHeight: 1.35, letterSpacing: '-0.02em', color: '#fff', margin: '26px 0 0' }}>
+                🗣️ Your money&rsquo;s been talking.<br />
+                Finally, <span style={{ color: '#A3E635' }}>GetGuac&rsquo;s listening.</span> 👂
+              </p>
+              <p style={{ fontSize: 15, fontWeight: 700, color: '#A3E635', margin: '14px 0 0' }}>
+                🍏 Free on iOS, Android and Web. No card required!!
+              </p>
             </div>
 
             <div className="gj-hero-auth">
@@ -425,7 +458,10 @@ export default function JoinClient() {
         .gj-aipill { margin-bottom: 20px; }
         .gj-ctarow { margin-top: 28px; }
         .gj-badges { margin-top: 14px; }
-        .gj-hero-auth  { width: 100%; max-width: 430px; margin-top: 30px; text-align: center; }
+        /* Narrower than the hero: ~65 characters a line is the point where a
+           paragraph this long stops being a wall. */
+        .gj-story { max-width: 640px; margin: 38px auto 0; text-align: center; }
+        .gj-hero-auth  { width: 100%; max-width: 430px; margin-top: 34px; text-align: center; }
 
         @media (max-width: 880px) {
           .gj-grid3 { grid-template-columns: 1fr; }
@@ -437,10 +473,15 @@ export default function JoinClient() {
           .gj-lede { font-size: 31px !important; }
           .gj-subline { font-size: 18px !important; }
           .gj-price { font-size: 32px !important; }
+          .gj-snitch { font-size: 15px !important; }
+          .gj-story { margin-top: 32px; }
+          .gj-storyp { font-size: 15.5px !important; }
           .gj-stickyinner { padding-right: 64px; }
           /* A credential shown truncated is worse than a smaller one.
              !important because these lose to the elements' own inline styles. */
-          .gj-credlabel { width: 50px !important; font-size: 10px !important; }
+          /* Wide enough for "PASSWORD" — at 50px the label overflowed its own
+             box and collided with the value beside it. */
+          .gj-credlabel { width: 62px !important; font-size: 9.5px !important; }
           .gj-credval { font-size: 13px !important; }
           /* Shorter hero on a phone so the auth buttons sit as close to the
              first screen as the content allows. */

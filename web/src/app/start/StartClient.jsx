@@ -76,8 +76,9 @@ export default function StartClient() {
             surfaced it. Use the goal art the homepage already ships. */}
         <div className="mt-7 flex justify-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/home/goals/phone-organized.webp" alt="The GetGuac dashboard showing tracked spending"
-            width={244} height={500} loading="eager"
+          <img src="/home/goals/phone-guacscore.webp"
+            alt="GetGuac on iPhone: a GuacScore of 74, net spent, refunds, bank fees, receipts and tax paid"
+            width={244} height={514} loading="eager"
             style={{ width: 244, maxWidth: '72%', height: 'auto', display: 'block', filter: 'drop-shadow(0 26px 46px rgba(0,0,0,0.55))' }} />
         </div>
 

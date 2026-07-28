@@ -9,6 +9,7 @@ import PrivacyNote from '../../../components/PrivacyNote'
 import { Check, X, Loader2, AlertCircle, AtSign, Eye, EyeOff } from 'lucide-react'
 import { createClient as createBrowserClient } from '../../../lib/supabase/client'
 import ReferralCapture from '../../../components/ReferralCapture'
+import MetaPixel, { trackSignup } from '../../../components/MetaPixel'
 const VALID_USERNAME_RE = /^[a-z0-9][a-z0-9._-]{1,30}[a-z0-9]$/
 const REFERRAL_RE = /^[A-Z0-9]{6}$/
 const REF_STORAGE_KEY = 'pending_referral_code'
@@ -177,6 +178,12 @@ export default function RegisterPage() {
         setLoading(false)
         return
       }
+      // THE conversion. /api/auth/sign-up returned ok, so the account exists —
+      // fire it here and nowhere else. It used to fire on the <Link> click that
+      // merely navigated to this page, which measured intent, counted everyone
+      // who bounced off this form, and would have taught Meta's optimiser to buy
+      // more link-clickers. That is the exact failure the ad rebuild is undoing.
+      trackSignup(data.needs_email_confirmation ? 'email-unconfirmed' : 'email')
       if (data.needs_email_confirmation) {
         // Hold the user on this page and show the confirmation panel.
         setConfirmation({ email: data.email || form.email, username: data.pending_username || form.username })
@@ -196,6 +203,11 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[1.05fr_1fr] bg-white font-sans">
+      {/* The pixel has to exist on the page where the conversion actually
+          happens, or trackSignup() above no-ops into a missing window.fbq.
+          /register is public and pre-authentication, which keeps the promise
+          the privacy policy makes: no ad tracker once you are signed in. */}
+      <MetaPixel />
       {/* Capture ?ref=<CODE> on register too — direct deep-links to
           /register?ref=ABC123 should also seed localStorage so the
           post-signup hook on the dashboard credits both sides. */}

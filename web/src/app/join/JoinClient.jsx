@@ -22,7 +22,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '../../lib/supabase/client'
-import MetaPixel, { trackSignup } from '../../components/MetaPixel'
+import MetaPixel from '../../components/MetaPixel'
 import { CARDS } from '../../components/GoalsShowcase'
 import GoalCard from '../../components/GoalCard'
 
@@ -82,8 +82,14 @@ export default function JoinClient() {
         provider,
         options: { redirectTo: `${window.location.origin}/auth/callback?next=/dashboard` },
       })
+      // No conversion event here. This fires the instant we hand off to Google,
+      // before consent — and this button signs EXISTING users in too, so it
+      // counted every returning user as a fresh registration. OAuth signups are
+      // therefore untracked for now: the account is created in
+      // /auth/callback, a server route, which lands on /dashboard where we
+      // deliberately no longer run a pixel. Closing that gap means the
+      // Conversions API, not a tracker on a signed-in page.
       if (error) { setErr(error.message); setBusy('') }
-      else trackSignup(provider)
     } catch (e) {
       setErr(e?.message || `Could not start ${provider} sign in`)
       setBusy('')
@@ -171,7 +177,7 @@ export default function JoinClient() {
                   block with the credentials further down, and a second button
                   next to the primary one splits the click. */}
               <div className="gj-ctarow" style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
-                <Link href="/register" onClick={() => trackSignup('email')}
+                <Link href="/register"
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#65A30D', color: '#fff', fontWeight: 700, fontSize: 16, padding: '15px 26px', borderRadius: 999, textDecoration: 'none', boxShadow: '0 10px 24px -10px rgba(101,163,13,0.8)' }}>
                   🥑 Meet your sidekick
                 </Link>
@@ -232,7 +238,7 @@ export default function JoinClient() {
               )}
             </button>
 
-            <Link href="/register" onClick={() => trackSignup('email')}
+            <Link href="/register"
               className={`${authBtn} gj-nounderline`} style={{ background: 'rgba(255,255,255,0.10)', color: '#fff' }}>
               Continue with email
             </Link>
@@ -396,7 +402,7 @@ export default function JoinClient() {
             Free, private, and on your side. No fees, no card, no spam.
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', position: 'relative' }}>
-            <Link href="/register" onClick={() => trackSignup('email')}
+            <Link href="/register"
               style={{ background: '#fff', color: '#15281C', fontWeight: 700, fontSize: 16, padding: '15px 28px', borderRadius: 999, textDecoration: 'none' }}>
               🥑 Create my free account
             </Link>
@@ -429,7 +435,7 @@ export default function JoinClient() {
         {/* Right padding on small screens keeps the last button clear of the
             floating Guac AI launcher, which sits in the same corner. */}
         <div className="gj-stickyinner" style={{ maxWidth: 560, margin: '0 auto', display: 'flex', gap: 10, alignItems: 'center' }}>
-          <Link href="/register" onClick={() => trackSignup('email')}
+          <Link href="/register"
             tabIndex={showBar ? 0 : -1}
             style={{ flex: 1, textAlign: 'center', background: '#84CC16', color: '#0B1410', fontWeight: 800, fontSize: 15, padding: '13px 18px', borderRadius: 999, textDecoration: 'none' }}>
             Get GetGuac — free

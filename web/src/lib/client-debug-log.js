@@ -51,6 +51,17 @@ async function flush() {
       body: JSON.stringify({ events: pending }),
       credentials: 'include',
     })
+    if (res.status === 401) {
+      // Signed out. /api/client-logs writes to audit_log, which is keyed to a
+      // user, so there is nobody to attribute these to and no later attempt can
+      // succeed either. Drop them: keeping them meant a logged-out visitor
+      // retried the same rejected POST on every flush, which on /join (our ad
+      // landing page, where nobody is signed in yet) was a console error on
+      // every single visit and a buffer that only ever grew.
+      buffer = []
+      persist()
+      return { uploaded: 0, dropped: pending.length }
+    }
     if (!res.ok) {
       // Don't drop events — they stay in the buffer for the next attempt.
       return { uploaded: 0, error: `HTTP ${res.status}` }

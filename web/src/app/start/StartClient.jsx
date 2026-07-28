@@ -18,7 +18,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '../../lib/supabase/client'
-import MetaPixel, { trackSignup } from '../../components/MetaPixel'
+import MetaPixel from '../../components/MetaPixel'
 
 const INK = '#0B1410'
 
@@ -33,8 +33,9 @@ export default function StartClient() {
         provider,
         options: { redirectTo: `${window.location.origin}/auth/callback?next=/dashboard` },
       })
+      // See JoinClient: no conversion event on OAuth handoff. It fired before
+      // consent and counted returning sign-ins as registrations.
       if (error) { setErr(error.message); setBusy('') }
-      else trackSignup(provider)
     } catch (e) {
       setErr(e?.message || `Could not start ${provider} sign in`)
       setBusy('')
@@ -91,7 +92,7 @@ export default function StartClient() {
             {busy === 'google' ? 'Opening Google…' : (<><span aria-hidden style={{ fontSize: 18 }}>🔵</span> Continue with Google</>)}
           </button>
 
-          <Link href="/register" onClick={() => trackSignup('email')}
+          <Link href="/register"
             className={`${btn} no-underline`} style={{ background: 'rgba(255,255,255,0.10)', color: '#fff' }}>
             Continue with email
           </Link>

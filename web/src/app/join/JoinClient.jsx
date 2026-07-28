@@ -204,11 +204,10 @@ export default function JoinClient() {
                 🧮 Then tax season rolls around and — surprise 🎉 — you&rsquo;re already done. Business,
                 charity, and sales tax tagged all year long, exported in one click. 📤
               </p>
-              <p style={{ ...DISPLAY, fontWeight: 800, fontSize: 22, lineHeight: 1.35, letterSpacing: '-0.02em', color: '#fff', margin: '26px 0 0' }}>
-                🗣️ Your money&rsquo;s been talking.<br />
-                Finally, <span style={{ color: '#A3E635' }}>GetGuac&rsquo;s listening.</span> 👂
-              </p>
-              <p style={{ fontSize: 15, fontWeight: 700, color: '#A3E635', margin: '14px 0 0' }}>
+              {/* The "your money's been talking" refrain used to repeat here.
+                  It is the page's own H1 a screen and a half above, so saying
+                  it again this close read as a duplication, not a callback. */}
+              <p style={{ fontSize: 15, fontWeight: 700, color: '#A3E635', margin: '22px 0 0' }}>
                 🍏 Free on iOS, Android and Web. No card required!!
               </p>
             </div>

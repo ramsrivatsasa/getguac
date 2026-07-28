@@ -105,43 +105,92 @@ export default function JoinClient() {
 
       {/* ── ORIGIN-SHAPED HERO ────────────────────────────────────────────── */}
       <section style={{ background: INK, padding: '38px 20px 44px' }}>
-        <div style={{ maxWidth: 430, margin: '0 auto', textAlign: 'center' }}>
-          <div aria-hidden style={{ fontSize: 40, lineHeight: 1 }}>🥑</div>
+        <div style={{ maxWidth: 1060, margin: '0 auto' }}>
 
-          <h1 className="gj-price" style={{ ...DISPLAY, fontWeight: 800, color: '#fff', fontSize: 64, lineHeight: 1, letterSpacing: '-0.04em', margin: '14px 0 0' }}>
-            Free
-          </h1>
-          <p style={{ ...DISPLAY, fontWeight: 700, color: 'rgba(255,255,255,0.92)', fontSize: 27, lineHeight: 1.2, margin: '6px 0 0' }}>
-            forever
-          </p>
-          <p style={{ margin: '12px 0 0', fontSize: 14.5, color: 'rgba(255,255,255,0.6)' }}>
-            No card. No trial. Nothing to cancel.
-          </p>
+          {/* The line the story video closes on. Origin puts a price here; the
+              equivalent hook for a free product is the promise, so the phrase
+              leads and "Forever free" takes the price slot under it. */}
+          <div style={{ maxWidth: 760, margin: '0 auto', textAlign: 'center' }}>
+            <div aria-hidden style={{ fontSize: 40, lineHeight: 1 }}>🥑</div>
 
-          <div style={{ display: 'inline-block', marginTop: 18, padding: '10px 18px', borderRadius: 12, background: 'rgba(132,204,22,0.14)', border: '1px solid rgba(132,204,22,0.28)', color: '#A3E635', fontWeight: 700, fontSize: 14 }}>
-            Free forever · No card required
+            <h1 className="gj-lede" style={{ ...DISPLAY, fontWeight: 800, color: '#fff', fontSize: 46, lineHeight: 1.06, letterSpacing: '-0.035em', margin: '16px 0 0' }}>
+              Your money&rsquo;s been talking.<br />
+              Finally, <span style={{ color: '#A3E635' }}>GetGuac is listening.</span>
+            </h1>
+            <p className="gj-subline" style={{ ...DISPLAY, fontWeight: 700, color: 'rgba(255,255,255,0.86)', fontSize: 22, lineHeight: 1.3, margin: '16px 0 0' }}>
+              Keep more of your own money. Get Organized.
+            </p>
+
+            <p className="gj-price" style={{ ...DISPLAY, fontWeight: 800, color: '#A3E635', fontSize: 40, lineHeight: 1, letterSpacing: '-0.03em', margin: '28px 0 0' }}>
+              Forever free
+            </p>
+            <p style={{ margin: '10px 0 0', fontSize: 14.5, color: 'rgba(255,255,255,0.6)' }}>
+              No card. No trial. Nothing to cancel.
+            </p>
+
+            {/* Origin puts a member count and a star rating here. We have neither,
+                so this row states three things about the product that are just
+                true, and claims nothing about how many people use it. */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 22, flexWrap: 'wrap', marginTop: 22 }}>
+              {[['🔒', 'RLS-locked'], ['📱', 'iOS · Android · Web'], ['🧹', 'One-click wipe']].map(([e, t]) => (
+                <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.62)' }}>
+                  <span aria-hidden>{e}</span>{t}
+                </span>
+              ))}
+            </div>
           </div>
 
-          {/* Origin puts a member count and a star rating here. We have neither,
-              so this row states three things about the product that are just
-              true, and claims nothing about how many people use it. */}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 22, flexWrap: 'wrap', marginTop: 22 }}>
-            {[['🔒', 'RLS-locked'], ['📱', 'iOS · Android · Web'], ['🧹', 'One-click wipe']].map(([e, t]) => (
-              <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.62)' }}>
-                <span aria-hidden>{e}</span>{t}
-              </span>
-            ))}
-          </div>
+          {/* Phone + the homepage pitch beside it. On a phone this stacks as
+              product shot → auth buttons → pitch, so the buttons keep their
+              place near the fold and the pitch reads underneath. */}
+          <div className="gj-herorow">
+            <div className="gj-hero-phone">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/home/goals/phone-organized.webp" alt="The GetGuac dashboard on iPhone"
+                width={244} height={500} loading="eager" className="gj-heroshot"
+                style={{ width: 244, maxWidth: '72%', height: 'auto', display: 'block', filter: 'drop-shadow(0 26px 46px rgba(0,0,0,0.55))' }} />
+            </div>
 
-          {/* Product shot — a real screen from the live app on demo data. */}
-          <div style={{ marginTop: 26, display: 'flex', justifyContent: 'center' }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/home/goals/phone-organized.webp" alt="The GetGuac dashboard on iPhone"
-              width={244} height={500} loading="eager" className="gj-heroshot"
-              style={{ width: 244, maxWidth: '72%', height: 'auto', display: 'block', filter: 'drop-shadow(0 26px 46px rgba(0,0,0,0.55))' }} />
-          </div>
+            <div className="gj-hero-pitch">
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(132,204,22,0.12)', color: '#A3E635', border: '1px solid rgba(132,204,22,0.26)', padding: '7px 14px', borderRadius: 999, fontSize: 13, fontWeight: 600, marginBottom: 18 }}>
+                <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#84CC16', boxShadow: '0 0 0 3px rgba(132,204,22,0.25)' }} /> Guac-AI · personal finance assistant
+              </div>
+              <h2 className="gj-pitchhead" style={{ ...DISPLAY, fontWeight: 800, fontSize: 38, lineHeight: 1.04, letterSpacing: '-0.035em', margin: '0 0 16px', color: '#fff' }}>
+                Meet your money&apos;s<br />smartest <span style={{ color: '#A3E635' }}>sidekick.</span>
+              </h2>
+              <p style={{ fontSize: 16, lineHeight: 1.55, color: 'rgba(255,255,255,0.66)', margin: '0 0 24px' }}>
+                GetGuac reads your receipts and bank statements, scores every purchase, sniffs out hidden
+                fees, and shows you exactly where your money gets eaten. Money&apos;s wingman. Keep your guac.
+              </p>
 
-          <div ref={heroCtaRef} style={{ marginTop: 26, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {/* No "Try the demo" pill here — the demo gets its own block with
+                  the credentials further down, and a second button beside the
+                  primary one splits the click. */}
+              <div className="gj-ctarow" style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
+                <Link href="/register" onClick={() => trackSignup('email')}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#65A30D', color: '#fff', fontWeight: 700, fontSize: 16, padding: '15px 26px', borderRadius: 999, textDecoration: 'none', boxShadow: '0 10px 24px -10px rgba(101,163,13,0.8)' }}>
+                  🥑 Meet your sidekick
+                </Link>
+              </div>
+
+              {/* White badges: the homepage's ink-on-white badges are invisible
+                  against this ground. */}
+              <div className="gj-badges" style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+                <a href="https://apps.apple.com/us/app/getguac/id6790993237" target="_blank" rel="noopener noreferrer"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: '#fff', color: '#0B1410', padding: '9px 18px 9px 14px', borderRadius: 12, textDecoration: 'none' }}>
+                  <svg viewBox="0 0 384 512" width="22" height="22" fill="#0B1410" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.7-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" /></svg>
+                  <span><span style={{ display: 'block', fontSize: 10.5, opacity: 0.62, lineHeight: 1.2 }}>Download on the</span><span style={{ display: 'block', fontSize: 17, fontWeight: 700, lineHeight: 1.15 }}>App Store</span></span>
+                </a>
+                <a href="https://play.google.com/store/apps/details?id=app.getguac.getguac" target="_blank" rel="noopener noreferrer"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: '#fff', color: '#0B1410', padding: '9px 18px 9px 14px', borderRadius: 12, textDecoration: 'none' }}>
+                  <svg viewBox="0 0 512 512" width="20" height="20" aria-hidden="true"><path fill="#4285F4" d="M48 32 288 256 48 480c-10-6-16-17-16-30V62c0-13 6-24 16-30z" /><path fill="#34A853" d="M48 32c5-3 11-5 17-5 6 0 12 2 18 5l260 148-55 76z" /><path fill="#FBBC04" d="M288 256l55-76 92 52c30 17 30 51 0 68l-92 52z" /><path fill="#EA4335" d="M288 256l55 76L83 480c-6 3-12 5-18 5-6 0-12-2-17-5z" /></svg>
+                  <span><span style={{ display: 'block', fontSize: 10.5, opacity: 0.62, lineHeight: 1.2 }}>Get it on</span><span style={{ display: 'block', fontSize: 17, fontWeight: 700, lineHeight: 1.15 }}>Google Play</span></span>
+                </a>
+              </div>
+            </div>
+
+            <div className="gj-hero-auth">
+          <div ref={heroCtaRef} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <button type="button" onClick={() => oauth('google')} disabled={!!busy}
               className={authBtn} style={{ background: '#fff', color: '#1f2937' }}>
               {busy === 'google' ? 'Opening Google…' : (
@@ -175,6 +224,8 @@ export default function JoinClient() {
             <Link href="/terms" style={{ color: 'rgba(255,255,255,0.72)' }}>Terms of Service</Link> and{' '}
             <Link href="/privacy" style={{ color: 'rgba(255,255,255,0.72)' }}>Privacy Policy</Link>. We never sell your data.
           </p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -199,8 +250,8 @@ export default function JoinClient() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 18 }}>
                 {[['Email', DEMO.email], ['Password', DEMO.password]].map(([label, value]) => (
                   <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#fff', border: '1px solid rgba(20,83,45,0.12)', borderRadius: 12, padding: '10px 12px' }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: '#8A988E', width: 66, flex: '0 0 auto', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</span>
-                    <span style={{ flex: 1, minWidth: 0, fontWeight: 700, fontSize: 14.5, color: '#15281C', overflow: 'hidden', textOverflow: 'ellipsis' }}>{value}</span>
+                    <span className="gj-credlabel" style={{ fontSize: 11, fontWeight: 700, color: '#8A988E', width: 66, flex: '0 0 auto', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</span>
+                    <span className="gj-credval" style={{ flex: 1, minWidth: 0, fontWeight: 700, fontSize: 14.5, color: '#15281C', overflow: 'hidden', textOverflow: 'ellipsis' }}>{value}</span>
                     <button type="button" onClick={() => copy(label, value)}
                       style={{ flex: '0 0 auto', cursor: 'pointer', fontFamily: 'inherit', background: '#F0F7E8', border: '1px solid rgba(101,163,13,0.24)', color: '#4D7C0F', fontWeight: 700, fontSize: 12, padding: '6px 12px', borderRadius: 999 }}>
                       {copied === label ? 'Copied' : 'Copy'}
@@ -226,22 +277,10 @@ export default function JoinClient() {
         </div>
       </section>
 
+      {/* The "smartest sidekick" pitch used to sit here. It moved into the hero
+          beside the phone — repeating the same headline two screens later read
+          as a mistake rather than a refrain. */}
       <CardRail n={0} />
-
-      {/* ── WHAT IT IS (homepage hero copy) ───────────────────────────────── */}
-      <section style={{ maxWidth: 1180, margin: '0 auto', padding: '52px 24px 0', textAlign: 'center' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#F0F7E8', color: '#4D7C0F', border: '1px solid rgba(101,163,13,0.2)', padding: '7px 14px', borderRadius: 999, fontSize: 13, fontWeight: 600, marginBottom: 20 }}>
-          <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#84CC16', boxShadow: '0 0 0 3px rgba(132,204,22,0.25)' }} /> Guac-AI · personal finance assistant
-        </div>
-        <h2 className="gj-h2big" style={{ ...DISPLAY, fontWeight: 800, fontSize: 52, lineHeight: 1.03, letterSpacing: '-0.035em', margin: '0 0 18px', color: '#15281C' }}>
-          Meet your money&apos;s<br />smartest <span style={{ color: '#65A30D' }}>sidekick.</span>
-        </h2>
-        <p style={{ fontSize: 18, lineHeight: 1.55, color: '#56655B', margin: '0 auto', maxWidth: 620 }}>
-          GetGuac reads your receipts and bank statements, scores every purchase, sniffs out hidden fees,
-          and shows you exactly where your money gets eaten. Money&apos;s wingman. Keep your guac.
-        </p>
-      </section>
-
       <CardRail n={1} />
 
       {/* ── FEATURES ──────────────────────────────────────────────────────── */}
@@ -361,7 +400,9 @@ export default function JoinClient() {
         transform: showBar ? 'translateY(0)' : 'translateY(110%)',
         transition: 'transform 260ms cubic-bezier(.2,.8,.2,1)',
       }}>
-        <div style={{ maxWidth: 560, margin: '0 auto', display: 'flex', gap: 10, alignItems: 'center' }}>
+        {/* Right padding on small screens keeps the last button clear of the
+            floating Guac AI launcher, which sits in the same corner. */}
+        <div className="gj-stickyinner" style={{ maxWidth: 560, margin: '0 auto', display: 'flex', gap: 10, alignItems: 'center' }}>
           <Link href="/register" onClick={() => trackSignup('email')}
             tabIndex={showBar ? 0 : -1}
             style={{ flex: 1, textAlign: 'center', background: '#84CC16', color: '#0B1410', fontWeight: 800, fontSize: 15, padding: '13px 18px', borderRadius: 999, textDecoration: 'none' }}>
@@ -384,12 +425,37 @@ export default function JoinClient() {
         .gj-nounderline { text-decoration: none; }
         .gj-grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
         .gj-demo { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: center; }
+
+        /* Hero body. Explicit grid placement rather than source order, because
+           the stacking order on a phone is deliberately different: the auth
+           buttons have to come BEFORE the pitch there, or the only CTA on the
+           first screen ends up a full scroll below the product shot. */
+        .gj-herorow { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+                      gap: 44px; align-items: center; max-width: 980px; margin: 32px auto 0; }
+        .gj-hero-phone { grid-column: 1; grid-row: 1; display: flex; justify-content: center; }
+        .gj-hero-pitch { grid-column: 2; grid-row: 1; }
+        .gj-hero-auth  { grid-column: 1 / -1; grid-row: 2; width: 100%; max-width: 430px;
+                         justify-self: center; margin-top: 30px; text-align: center; }
+
         @media (max-width: 880px) {
           .gj-grid3 { grid-template-columns: 1fr; }
           .gj-demo { grid-template-columns: 1fr; }
           .gj-demoshot { display: none; }
           .gj-h2big { font-size: 34px !important; }
-          .gj-price { font-size: 54px !important; }
+          .gj-herorow { grid-template-columns: 1fr; gap: 0; margin-top: 24px; }
+          .gj-hero-phone { grid-column: 1; grid-row: 1; }
+          .gj-hero-auth  { grid-column: 1; grid-row: 2; margin-top: 24px; }
+          .gj-hero-pitch { grid-column: 1; grid-row: 3; margin-top: 40px; text-align: center; }
+          .gj-hero-pitch .gj-ctarow, .gj-hero-pitch .gj-badges { justify-content: center; }
+          .gj-lede { font-size: 31px !important; }
+          .gj-subline { font-size: 18px !important; }
+          .gj-price { font-size: 32px !important; }
+          .gj-pitchhead { font-size: 32px !important; }
+          .gj-stickyinner { padding-right: 64px; }
+          /* A credential shown truncated is worse than a smaller one.
+             !important because these lose to the elements' own inline styles. */
+          .gj-credlabel { width: 50px !important; font-size: 10px !important; }
+          .gj-credval { font-size: 13px !important; }
           /* Shorter hero on a phone so the auth buttons sit as close to the
              first screen as the content allows. */
           .gj-heroshot { width: 196px !important; }

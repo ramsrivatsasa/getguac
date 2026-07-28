@@ -30,7 +30,11 @@ const securityHeaders = [
       // *.adtrafficquality.google = AdSense's invalid-traffic checks (sodar).
       // Google won't reliably serve ads while these are CSP-blocked, so it
       // must be in script-src + connect-src + frame-src per Google's CSP docs.
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.googleadservices.com https://adservice.google.com https://*.google.com https://*.adtrafficquality.google https://cdn.ampproject.org",   // 'unsafe-eval' needed by some Next.js dev features; safe in prod
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.googleadservices.com https://adservice.google.com https://*.google.com https://*.adtrafficquality.google https://cdn.ampproject.org https://connect.facebook.net https://va.vercel-scripts.com",   // 'unsafe-eval' needed by some Next.js dev features; safe in prod
+      // connect.facebook.net = Meta Pixel loader, va.vercel-scripts.com =
+      // Vercel Analytics. Both ALSO need connect-src below to report events —
+      // a script that loads but can't POST is a silently broken counter, which
+      // is worse than no counter because you trust the zero.
       // cdn.ampproject.org = AMP ad host, observed blocked on a partner game
       // page. Those ads are the revenue share we get from embedded games, so a
       // block there is lost income. It's Google's AMP CDN and we already allow
@@ -48,7 +52,7 @@ const securityHeaders = [
       // (households realtime in HouseholdPanel.jsx). CSP treats wss: as
       // a distinct scheme from https:, so the wildcard https entry above
       // does not cover it — must be listed explicitly.
-      "connect-src 'self' https://*.supabase.co https://*.supabase.in wss://*.supabase.co wss://*.supabase.in https://api.migadu.com https://dns.google https://pagead2.googlesyndication.com https://*.googlesyndication.com https://googleads.g.doubleclick.net https://*.google.com https://*.adtrafficquality.google",
+      "connect-src 'self' https://*.supabase.co https://*.supabase.in wss://*.supabase.co wss://*.supabase.in https://api.migadu.com https://dns.google https://pagead2.googlesyndication.com https://*.googlesyndication.com https://googleads.g.doubleclick.net https://*.google.com https://*.adtrafficquality.google https://connect.facebook.net https://www.facebook.com https://va.vercel-scripts.com https://vitals.vercel-insights.com",
       // Ad creatives render inside Google ad iframes; Turnstile renders its
       // challenge in a challenges.cloudflare.com iframe.
       // youtube-nocookie.com / youtube.com = the how-it-works video embed;

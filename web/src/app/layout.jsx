@@ -13,6 +13,8 @@ const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '500', '
 const robotoMono = Roboto_Mono({ subsets: ['latin'], weight: ['500', '600', '700'], variable: '--font-roboto-mono', display: 'swap' })
 import UpdatePrompt from '../components/UpdatePrompt'
 import PosthogProvider from '../components/PosthogProvider'
+import MetaPixel from '../components/MetaPixel'
+import { Analytics } from '@vercel/analytics/react'
 
 // Google AdSense publisher id. Public (it ships in page source), so it's fine
 // to default in code; override per-env with NEXT_PUBLIC_ADSENSE_CLIENT.
@@ -122,6 +124,16 @@ export default function RootLayout({ children }) {
             keep running on yesterday's bundle. Renders at the
             root layout so every route gets it. */}
         <UpdatePrompt />
+        {/* Daily visitor counts. Vercel Analytics needs no key and no
+            third-party signup — switch it on in the Vercel dashboard
+            (Project -> Analytics) and daily visitors/pageviews appear there.
+            Added because the site had NO working analytics at all: PostHog is
+            wired but NEXT_PUBLIC_POSTHOG_KEY was never set, so there was no
+            way to tell whether ad traffic was arriving. */}
+        <Analytics />
+        {/* Meta Pixel — conversion tracking for the /start ad funnel. Inert
+            until NEXT_PUBLIC_FB_PIXEL_ID is set. */}
+        <MetaPixel />
         {/* Google AdSense loader — only emitted when a publisher id is set.
             Powers <AdSlot/> and the arcade's fullscreen ad breaks (adBreak in
             arcadeKit.jsx). data-ad-frequency-hint = minimum gap Google keeps

@@ -1,3 +1,4 @@
+import AdSenseScript from '../../components/AdSenseScript'
 // Guac Arcade typography. Loads the arcade's display + body typefaces —
 // Nunito (numbers, scores, headings) and Outfit (body, labels, hints) — under
 // their LITERAL family names. That matters because the games draw text on a
@@ -23,6 +24,11 @@ export const metadata = {
 export default function GamesLayout({ children }) {
   return (
     <>
+      {/* The arcade's fullscreen ad breaks (adBreak in arcadeKit) push onto
+          window.adsbygoogle directly, with no <AdSlot/> on the page to pull the
+          loader in. Mount it for the whole route group so moving the script out
+          of the root layout does not silently kill interstitial revenue. */}
+      <AdSenseScript />
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       <link

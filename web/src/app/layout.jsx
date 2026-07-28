@@ -1,5 +1,4 @@
 import './globals.css'
-import Script from 'next/script'
 import { Bricolage_Grotesque, Plus_Jakarta_Sans, Roboto_Mono } from 'next/font/google'
 import { Providers } from './providers'
 
@@ -143,21 +142,11 @@ export default function RootLayout({ children }) {
             root-layout mount put one on every receipts page. Ad measurement
             only ever needed the landing pages, so scoping it costs nothing.
             See components/MetaPixel.jsx. */}
-        {/* Google AdSense loader — only emitted when a publisher id is set.
-            Powers <AdSlot/> and the arcade's fullscreen ad breaks (adBreak in
-            arcadeKit.jsx). data-ad-frequency-hint = minimum gap Google keeps
-            between fullscreen interstitials. afterInteractive so it never
-            blocks first paint. */}
-        {ADSENSE_CLIENT && (
-          <Script
-            id="adsbygoogle-init"
-            async
-            strategy="afterInteractive"
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
-            data-ad-frequency-hint="120s"
-            crossOrigin="anonymous"
-          />
-        )}
+        {/* The AdSense loader is NOT here any more. It moved to AdSlot (and the
+            /games layout, for the arcade's interstitials) so Google's script and
+            its doubleclick.net cookies stop loading on pages that show no ads —
+            notably every signed-in receipts page. No page under (dashboard)
+            renders an AdSlot, so no revenue moved. See AdSenseScript.jsx. */}
       </body>
     </html>
   )

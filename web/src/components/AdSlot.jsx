@@ -21,6 +21,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { usePremium } from '../lib/usePremium'
+import AdSenseScript from './AdSenseScript'
 
 const CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || 'ca-pub-5959691671441705'
 
@@ -107,6 +108,10 @@ export default function AdSlot({ slot = '', format = 'auto', className = '', min
   const filled = status === 'filled'
   return (
     <div className={className} style={status === 'unfilled' ? { display: 'none' } : undefined}>
+      {/* The loader lives with the slot, not in the root layout — see
+          AdSenseScript. Rendering it here is what keeps Google off every
+          signed-in page. Deduped by id, so N slots still load it once. */}
+      <AdSenseScript />
       {filled && (
         <p className="text-[9px] uppercase tracking-[0.2em] text-gray-300 text-center mb-1">{label}</p>
       )}

@@ -23,6 +23,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '../../lib/supabase/client'
 import MetaPixel from '../../components/MetaPixel'
+import { trackClick } from '../../lib/track-click'
 import { CARDS } from '../../components/GoalsShowcase'
 import GoalCard from '../../components/GoalCard'
 
@@ -77,6 +78,7 @@ export default function JoinClient() {
 
   async function oauth(provider) {
     setBusy(provider); setErr('')
+    trackClick(`join-signup-${provider}`)
     try {
       const { error } = await createClient().auth.signInWithOAuth({
         provider,
@@ -177,7 +179,7 @@ export default function JoinClient() {
                   block with the credentials further down, and a second button
                   next to the primary one splits the click. */}
               <div className="gj-ctarow" style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
-                <Link href="/register"
+                <Link href="/register" onClick={() => trackClick('join-signup-email')}
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#65A30D', color: '#fff', fontWeight: 700, fontSize: 16, padding: '15px 26px', borderRadius: 999, textDecoration: 'none', boxShadow: '0 10px 24px -10px rgba(101,163,13,0.8)' }}>
                   🥑 Meet your sidekick
                 </Link>
@@ -186,12 +188,12 @@ export default function JoinClient() {
               {/* White badges: the homepage's ink badges are invisible against
                   this ground. */}
               <div className="gj-badges" style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
-                <a href="https://apps.apple.com/us/app/getguac/id6790993237" target="_blank" rel="noopener noreferrer"
+                <a href="https://apps.apple.com/us/app/getguac/id6790993237" target="_blank" rel="noopener noreferrer" onClick={() => trackClick('join-app-store')}
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: '#fff', color: '#0B1410', padding: '9px 18px 9px 14px', borderRadius: 12, textDecoration: 'none' }}>
                   <svg viewBox="0 0 384 512" width="22" height="22" fill="#0B1410" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.7-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" /></svg>
                   <span><span style={{ display: 'block', fontSize: 10.5, opacity: 0.62, lineHeight: 1.2 }}>Download on the</span><span style={{ display: 'block', fontSize: 17, fontWeight: 700, lineHeight: 1.15 }}>App Store</span></span>
                 </a>
-                <a href="https://play.google.com/store/apps/details?id=app.getguac.getguac" target="_blank" rel="noopener noreferrer"
+                <a href="https://play.google.com/store/apps/details?id=app.getguac.getguac" target="_blank" rel="noopener noreferrer" onClick={() => trackClick('join-google-play')}
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: '#fff', color: '#0B1410', padding: '9px 18px 9px 14px', borderRadius: 12, textDecoration: 'none' }}>
                   <svg viewBox="0 0 512 512" width="20" height="20" aria-hidden="true"><path fill="#4285F4" d="M48 32 288 256 48 480c-10-6-16-17-16-30V62c0-13 6-24 16-30z" /><path fill="#34A853" d="M48 32c5-3 11-5 17-5 6 0 12 2 18 5l260 148-55 76z" /><path fill="#FBBC04" d="M288 256l55-76 92 52c30 17 30 51 0 68l-92 52z" /><path fill="#EA4335" d="M288 256l55 76L83 480c-6 3-12 5-18 5-6 0-12-2-17-5z" /></svg>
                   <span><span style={{ display: 'block', fontSize: 10.5, opacity: 0.62, lineHeight: 1.2 }}>Get it on</span><span style={{ display: 'block', fontSize: 17, fontWeight: 700, lineHeight: 1.15 }}>Google Play</span></span>
@@ -238,7 +240,7 @@ export default function JoinClient() {
               )}
             </button>
 
-            <Link href="/register"
+            <Link href="/register" onClick={() => trackClick('join-signup-email')}
               className={`${authBtn} gj-nounderline`} style={{ background: 'rgba(255,255,255,0.10)', color: '#fff' }}>
               Continue with email
             </Link>
@@ -292,7 +294,7 @@ export default function JoinClient() {
                 ))}
               </div>
 
-              <Link href="/login?demo=1"
+              <Link href="/login?demo=1" onClick={() => trackClick('join-demo')}
                 style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#65A30D', color: '#fff', fontWeight: 700, fontSize: 15, padding: '13px 24px', borderRadius: 999, textDecoration: 'none' }}>
                 🔎 Enter the demo →
               </Link>
@@ -402,11 +404,11 @@ export default function JoinClient() {
             Free, private, and on your side. No fees, no card, no spam.
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', position: 'relative' }}>
-            <Link href="/register"
+            <Link href="/register" onClick={() => trackClick('join-signup-email')}
               style={{ background: '#fff', color: '#15281C', fontWeight: 700, fontSize: 16, padding: '15px 28px', borderRadius: 999, textDecoration: 'none' }}>
               🥑 Create my free account
             </Link>
-            <Link href="/login?demo=1"
+            <Link href="/login?demo=1" onClick={() => trackClick('join-demo')}
               style={{ background: 'rgba(255,255,255,0.18)', color: '#fff', fontWeight: 700, fontSize: 16, padding: '15px 28px', borderRadius: 999, textDecoration: 'none', border: '1px solid rgba(255,255,255,0.4)' }}>
               🔎 Try the demo
             </Link>
@@ -435,12 +437,12 @@ export default function JoinClient() {
         {/* Right padding on small screens keeps the last button clear of the
             floating Guac AI launcher, which sits in the same corner. */}
         <div className="gj-stickyinner" style={{ maxWidth: 560, margin: '0 auto', display: 'flex', gap: 10, alignItems: 'center' }}>
-          <Link href="/register"
+          <Link href="/register" onClick={() => trackClick('join-signup-email')}
             tabIndex={showBar ? 0 : -1}
             style={{ flex: 1, textAlign: 'center', background: '#84CC16', color: '#0B1410', fontWeight: 800, fontSize: 15, padding: '13px 18px', borderRadius: 999, textDecoration: 'none' }}>
             Get GetGuac — free
           </Link>
-          <Link href="/login?demo=1" tabIndex={showBar ? 0 : -1}
+          <Link href="/login?demo=1" tabIndex={showBar ? 0 : -1} onClick={() => trackClick('join-demo')}
             style={{ flex: '0 0 auto', color: '#fff', fontWeight: 700, fontSize: 14, padding: '13px 16px', borderRadius: 999, textDecoration: 'none', border: '1px solid rgba(255,255,255,0.28)' }}>
             Demo
           </Link>

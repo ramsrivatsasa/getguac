@@ -53,6 +53,12 @@ const shot = (t) => resolve(SHOTS_DIR, `Simulator Screenshot - iPhone 17 Pro Max
 // (public/home/goals/phone-<slug>.webp). Lets a scene exist for any card
 // without needing a fresh simulator capture in SHOTS_DIR.
 const goal = (slug) => resolve(WEB, 'public', 'home', 'goals', `phone-${slug}.webp`)
+
+// Blurb per slug, from the CARDS already lifted out of GoalsShowcase.jsx above.
+// This is the sub-headline the store panels carry ("GetGuac spots every
+// recurring charge, flags the price hikes...") which the animated scenes were
+// missing.
+const BLURB = Object.fromEntries(CARDS.map((c) => [c.slug, c.blurb]))
 const SHOTS = {
   organized: shot('14.00.19'), subs: shot('14.00.11'), fees: shot('14.00.27'),
   'worth-it': shot('14.00.48'), returns: shot('14.02.36'), steals: shot('14.01.38'),
@@ -108,6 +114,10 @@ const ANIM = {
   organized: 'rise', tax: 'drop', subs: 'swing', fees: 'pop',
   returns: 'rise', steals: 'drop', games: 'zoom',
 }
+// Slugs added to the cut later were never given an entrance here, which left
+// `animation-name: undefined` on their chip — it snapped in with no animation
+// at all. Default them rather than leaving half the scenes without a move.
+const chipAnim = (slug) => ANIM[slug] || 'rise'
 
 const BADGES = {
   ios: { small: 'Download on the', big: 'App Store',
@@ -128,7 +138,9 @@ const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(
 const dataUri = (b, mime = 'image/png') => `data:${mime};base64,${b.toString('base64')}`
 
 const PHONE_W = Math.round(W * 0.58)
-const PHONE_TOP = Math.round(H * 0.31)
+// PHONE_TOP is derived further down, once the panel-parity header stack
+// (brand lockup + emoji + headline + blurb) has been sized — the phone starts
+// below whatever that stack needs.
 
 for (const s of STORY) if (!existsSync(SHOTS[s])) throw new Error(`missing screen for ${s}: ${SHOTS[s]}`)
 // Downscaling a 1290-wide capture to ~630 softens it; sharpen after the resize
@@ -151,6 +163,33 @@ const LASSO = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 80' pres
 const lassoUrl = LASSO.replace(/\n\s*/g, ' ').replace(/"/g, "'").replace(/#/g, '%23')
 
 const titleSize = (t) => Math.round((t.length > 40 ? 62 : t.length > 30 ? 68 : 76) * (H / 1350) ** 0.3)
+
+// ── Panel parity ────────────────────────────────────────────────────────────
+// The curated store panels (marketing-assets/fb-story/slide) stack
+// brand lockup → emoji → headline → blurb above the phone. The animated scenes
+// carried only the headline, so they read as a different design. These are the
+// panel's own ratios, measured off reel-frames.mjs at 1242 wide and rebuilt
+// here from live parts, which is what lets each element animate on its own.
+const BRAND_IMG  = Math.round(W * 0.050)
+const BRAND_FS   = Math.round(W * 0.033)
+const EMOJI_FS   = Math.round(W * 0.060)
+const BLURB_FS   = Math.round(W * 0.027)
+const BLURB_MAXW = Math.round(W * 0.80)
+const BLURB_LH   = 1.45
+// Vertical rhythm scales with the frame so the same stack fits 4x5 and 9x16.
+const K = H / 1920
+const TOP_PAD   = Math.round(H * 0.042)
+const GAP_EMOJI = Math.round(30 * K)
+const GAP_H1    = Math.round(22 * K)
+const GAP_BLURB = Math.round(30 * K)
+const GAP_PHONE = Math.round(46 * K)
+
+// Three blurb lines are reserved whether a given card fills them or not, and
+// the headline is measured at its LONGEST across the cut: the phone then sits
+// at exactly the same height in every scene instead of jumping between cuts.
+const BLURB_H = Math.round(3 * BLURB_FS * BLURB_LH)
+const H1_H = Math.round(2 * Math.max(...STORY.map((s) => titleSize(LINES[s].join(' ')))) * 1.07)
+const PHONE_TOP = TOP_PAD + BRAND_IMG + GAP_EMOJI + EMOJI_FS + GAP_H1 + H1_H + GAP_BLURB + BLURB_H + GAP_PHONE
 
 function markUp(slug) {
   const word = CIRCLE[slug]
@@ -180,15 +219,25 @@ const OPEN_PHONE_TOP = Math.round(H * 0.42)
 // words, so it needs its own smaller size or line two runs past the margins.
 const fsClose = Math.round(W * 0.052)
 
+const brandIcon = dataUri(readFileSync(ICON))
+
 const scenes = STORY.map((slug, i) => {
   const c = CARDS.find(x => x.slug === slug)
   const fs = titleSize(LINES[slug].join(' '))
   const at = starts[i]
+  // Staggered top-down so the scene assembles in reading order: lockup, emoji,
+  // headline, blurb — with the phone sliding up alongside the headline and the
+  // chip landing last, once there is something for it to sit on top of.
   return `
   <div class="scene" style="animation-delay:${at}s; animation-duration:${SCENE}s">
-    <div class="top"><h1 style="font-size:${fs}px; animation-delay:${at + 0.1}s">${markUp(slug)}</h1></div>
-    <div class="phone" style="animation-delay:${at + 0.15}s"><img src="${phoneSrc[slug]}"></div>
-    <div class="chip" style="animation-delay:${at + 0.95}s, ${at + 2.0}s; animation-name:${ANIM[slug]}, bob">
+    <div class="top">
+      <div class="brand" style="animation-delay:${at + 0.05}s"><img src="${brandIcon}"><span>GetGuac</span></div>
+      <div class="emoji" style="animation-delay:${at + 0.20}s">${esc(c.e)}</div>
+      <h1 style="font-size:${fs}px; animation-delay:${at + 0.34}s">${markUp(slug)}</h1>
+      <p class="blurb" style="animation-delay:${at + 0.58}s">${esc(c.blurb)}</p>
+    </div>
+    <div class="phone" style="animation-delay:${at + 0.30}s"><img src="${phoneSrc[slug]}"></div>
+    <div class="chip" style="animation-delay:${at + 1.25}s, ${at + 2.35}s; animation-name:${chipAnim(slug)}, bob">
       <div class="h"><b>${esc(c.e)} ${esc(c.name)}</b><i>${esc(c.tag)}</i></div>
       <div class="big">${esc(c.big)}</div>
       <div class="sub">${esc(c.sub)}</div>
@@ -199,7 +248,7 @@ const scenes = STORY.map((slug, i) => {
 const html = `<!doctype html><html><head><meta charset="utf-8">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { width: ${W}px; height: ${H}px; overflow: hidden; position: relative;
@@ -215,10 +264,25 @@ const html = `<!doctype html><html><head><meta charset="utf-8">
     ${(100 - (FADE / SCENE) * 100).toFixed(1)}% { opacity: 1 } 100% { opacity: 0 }
   }
 
-  .top { position: absolute; left: 0; right: 0; top: ${Math.round(H * 0.055)}px; padding: 0 ${Math.round(W * 0.075)}px; text-align: center; }
+  .top { position: absolute; left: 0; right: 0; top: ${TOP_PAD}px; padding: 0 ${Math.round(W * 0.075)}px; text-align: center; }
   h1 { font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; line-height: 1.07;
        letter-spacing: -0.035em; color: #15281C;
        animation: headIn 820ms both cubic-bezier(.2,.8,.2,1); }
+
+  /* Panel parity — the lockup, emoji and blurb the store slides carry. Scoped
+     to .scene so the open/close cards keep their own larger brand sizing. */
+  .scene .brand { animation: fadeUp 620ms both cubic-bezier(.2,.8,.2,1); }
+  .scene .brand img { width: ${BRAND_IMG}px; height: ${BRAND_IMG}px; border-radius: ${Math.round(BRAND_IMG * 0.26)}px; }
+  .scene .brand span { font-size: ${BRAND_FS}px; letter-spacing: -0.02em; }
+  .scene .emoji { font-size: ${EMOJI_FS}px; line-height: 1; margin-top: ${GAP_EMOJI}px;
+                  animation: emojiIn 700ms both cubic-bezier(.2,.9,.25,1.2); }
+  .scene h1 { margin-top: ${GAP_H1}px; }
+  /* Fixed height, not auto: a two-line blurb and a three-line blurb must not
+     move the phone underneath them between scenes. */
+  .blurb { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 500;
+           font-size: ${BLURB_FS}px; line-height: ${BLURB_LH}; color: #56655B;
+           margin: ${GAP_BLURB}px auto 0; max-width: ${BLURB_MAXW}px; height: ${BLURB_H}px;
+           animation: fadeUp 760ms both cubic-bezier(.2,.8,.2,1); }
   .lasso { position: relative; display: inline-block; padding: 0 .14em;
            background-image: url("data:image/svg+xml,${lassoUrl}");
            background-repeat: no-repeat; background-position: center; background-size: 100% 1.34em; }
@@ -281,6 +345,8 @@ const html = `<!doctype html><html><head><meta charset="utf-8">
   @keyframes caret { 0%, 49% { opacity: 1 } 50%, 100% { opacity: 0 } }
 
   @keyframes headIn  { from { transform: translateY(-16px) } to { transform: none } }
+  @keyframes fadeUp  { from { opacity: 0; transform: translateY(18px) } to { opacity: 1; transform: none } }
+  @keyframes emojiIn { 0% { opacity: 0; transform: scale(.6) } 70% { opacity: 1; transform: scale(1.12) } 100% { opacity: 1; transform: scale(1) } }
   /* No opacity ramp — the device stays fully opaque and only slides. Fading it
      in left the screenshot looking washed out for a quarter of every scene. */
   @keyframes phoneIn { from { transform: translateX(-50%) translateY(60px) } to { transform: translateX(-50%) translateY(0) } }

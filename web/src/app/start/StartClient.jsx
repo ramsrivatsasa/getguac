@@ -69,12 +69,16 @@ export default function StartClient() {
           </div>
         </div>
 
-        {/* Product shot — a real screenshot of the real dashboard. */}
-        <div className="mt-7 rounded-3xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.12)' }}>
+        {/* Product shot — a real screenshot of the real dashboard.
+            NB: this pointed at /og-dashboard.png, which does not exist in
+            public/. The onError below hid the broken image, so the ad's landing
+            page had been shipping with no product shot at all and nothing
+            surfaced it. Use the goal art the homepage already ships. */}
+        <div className="mt-7 flex justify-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/og-dashboard.png" alt="The GetGuac dashboard showing tracked spending"
-            className="w-full block" loading="eager"
-            onError={(e) => { e.currentTarget.style.display = 'none' }} />
+          <img src="/home/goals/phone-organized.webp" alt="The GetGuac dashboard showing tracked spending"
+            width={244} height={500} loading="eager"
+            style={{ width: 244, maxWidth: '72%', height: 'auto', display: 'block', filter: 'drop-shadow(0 26px 46px rgba(0,0,0,0.55))' }} />
         </div>
 
         <div className="mt-7 space-y-3">

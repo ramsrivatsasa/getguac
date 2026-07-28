@@ -11,7 +11,10 @@ import GuacAIBanner from './GuacAIBanner'
 
 const DISPLAY = { fontFamily: 'var(--font-bricolage), sans-serif' }
 
-const CARDS = [
+// Exported so the paid-ad landing page (/join) can render the same cards
+// without duplicating the copy — one source of truth for what GetGuac claims
+// it does. Keep this array the only place these cards are defined.
+export const CARDS = [
   {
     // Lead card — selected by default, so the showcase opens on the Guac AI
     // banner instead of app screenshots (see the `banner` branch below).

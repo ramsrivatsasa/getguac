@@ -113,13 +113,13 @@ export default function JoinClient() {
           <div style={{ maxWidth: 760, margin: '0 auto', textAlign: 'center' }}>
             <div aria-hidden style={{ fontSize: 40, lineHeight: 1 }}>🥑</div>
 
-            <h1 className="gj-lede" style={{ ...DISPLAY, fontWeight: 800, color: '#fff', fontSize: 46, lineHeight: 1.06, letterSpacing: '-0.035em', margin: '16px 0 0' }}>
-              Your money&rsquo;s been talking.<br />
-              Finally, <span style={{ color: '#A3E635' }}>GetGuac is listening.</span>
-            </h1>
-            <p className="gj-subline" style={{ ...DISPLAY, fontWeight: 700, color: 'rgba(255,255,255,0.86)', fontSize: 22, lineHeight: 1.3, margin: '16px 0 0' }}>
+            {/* The "Your money's been talking / GetGuac is listening" lede was
+                removed on request. This line is now the h1 — the page still
+                needs exactly one, and dropping the old heading without
+                promoting anything would leave the hero headless. */}
+            <h1 className="gj-subline" style={{ ...DISPLAY, fontWeight: 800, color: '#fff', fontSize: 34, lineHeight: 1.15, letterSpacing: '-0.03em', margin: '16px 0 0' }}>
               💰 Keep more of your own money. 🗂️ Get Organized.
-            </p>
+            </h1>
 
             <p className="gj-snitch" style={{ fontSize: 16.5, lineHeight: 1.5, color: '#A3E635', fontWeight: 600, margin: '20px auto 0', maxWidth: 620 }}>
               🥑 GetGuac AI — your receipts already snitched. We just translated. 🕵️
@@ -469,8 +469,9 @@ export default function JoinClient() {
           .gj-h2big { font-size: 34px !important; }
           .gj-herorow { margin-top: 24px; }
           .gj-hero-auth { margin-top: 24px; }
-          .gj-lede { font-size: 31px !important; }
-          .gj-subline { font-size: 18px !important; }
+          /* .gj-lede went with the removed heading. .gj-subline is the h1 now,
+             so its mobile size steps up instead of sitting at sub-line size. */
+          .gj-subline { font-size: 26px !important; }
           .gj-price { font-size: 32px !important; }
           .gj-snitch { font-size: 15px !important; }
           .gj-story { margin-top: 32px; }

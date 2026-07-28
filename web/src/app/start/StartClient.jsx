@@ -18,7 +18,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '../../lib/supabase/client'
-import { trackSignup } from '../../components/MetaPixel'
+import MetaPixel, { trackSignup } from '../../components/MetaPixel'
 
 const INK = '#0B1410'
 
@@ -45,6 +45,9 @@ export default function StartClient() {
 
   return (
     <main style={{ background: INK, minHeight: '100svh' }} className="px-5 py-9">
+      {/* Mounted here rather than in the root layout so the ad tracker exists
+          only on the ad landing pages, never on a signed-in receipts page. */}
+      <MetaPixel />
       <div className="mx-auto w-full" style={{ maxWidth: 430 }}>
 
         <div className="text-center">

@@ -14,7 +14,7 @@ export const metadata = {
   description: 'What GetGuac collects, what it can see, who else can see it, and how to delete it. Plain language.',
 }
 
-const LAST_UPDATED = 'June 3, 2026'
+const LAST_UPDATED = 'July 28, 2026'
 
 export default function PrivacyPage() {
   return (
@@ -50,7 +50,7 @@ export default function PrivacyPage() {
             <li><strong>Your household members</strong> see only: the shared shopping list rows you mark as shared, the household chat messages, and other members' display names. They do <strong>not</strong> see your receipts, rewards, totals, categories, or any analytics.</li>
             <li><strong>Other GetGuac users</strong> can find you by email to start a 1:1 chat — same disclosure surface as a password reset. They cannot see any of your data unless you send them a message.</li>
             <li><strong>GetGuac employees</strong> — only on-call engineers, only when investigating a specific issue you reported, only the minimum needed to fix it. Every read is logged.</li>
-            <li><strong>Nobody else.</strong> We don't sell data. We don't share it with advertisers. We don't train external AI models on your receipts.</li>
+            <li><strong>Nobody else.</strong> We don't sell data. We don't share your account or receipt data with advertisers — no advertising network ever receives your purchases, totals, categories, email or phone number. We don't train external AI models on your receipts. Our public marketing pages do carry advertising scripts, which see only that a browser loaded a page; section 8 names them.</li>
           </ul>
         </Section>
 
@@ -82,7 +82,14 @@ export default function PrivacyPage() {
         </Section>
 
         <Section icon={Database} title="8. Cookies & Tracking">
-          <p>We use exactly one cookie: your sign-in session. No analytics cookies, no advertising pixels, no cross-site trackers. The few server-side analytics we collect (page-view counts, error rates) are aggregated and not tied to your identity in the dashboards we look at.</p>
+          <p><strong>Inside the app</strong> — once you are signed in, we use exactly one cookie: your sign-in session. No advertising pixel, no cross-site tracker and no analytics cookie runs on your dashboard, your receipts, or any other signed-in page. That is a hard line, and it is enforced in code rather than by policy: the ad tracker is not loaded by the app at all.</p>
+          <p className="mt-2"><strong>On our public marketing pages</strong> — two third-party advertising scripts run, and we would rather name them than describe ourselves as tracker-free:</p>
+          <ul className="list-disc ml-5 space-y-1.5 mt-2">
+            <li><strong>Meta pixel</strong> — only on our two ad landing pages, <code>/join</code> and <code>/start</code>. It sets an <code>_fbp</code> cookie and tells us whether people who clicked an ad actually arrived and signed up. It is the only way to know if we are wasting money on ads. It does not run anywhere else on the site, and never once you are signed in.</li>
+            <li><strong>Google AdSense</strong> — loads across our public pages to serve the ads that fund the free tier, and sets its own cookies (<code>test_cookie</code> and others from <code>doubleclick.net</code>).</li>
+          </ul>
+          <p className="mt-2">Neither of these ever receives your receipts, your totals, your categories, or anything we have parsed from a purchase. We do not send your email address or phone number to any advertising network — Meta&rsquo;s &ldquo;advanced matching&rdquo; feature, which would do exactly that, is deliberately turned off.</p>
+          <p className="mt-2">Our own analytics are first-party and aggregate: a per-day, per-page view count and a visitor tally where the visitor identifier is a salted hash whose salt rotates daily, so the same person on two days cannot be linked. We store no IP address and no user agent against it. Error and performance logs are kept 30 days.</p>
         </Section>
 
         <Section icon={ShieldCheck} title="9. Third Parties We Use">

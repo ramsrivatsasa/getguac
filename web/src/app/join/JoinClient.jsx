@@ -22,7 +22,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '../../lib/supabase/client'
-import { trackSignup } from '../../components/MetaPixel'
+import MetaPixel, { trackSignup } from '../../components/MetaPixel'
 import { CARDS } from '../../components/GoalsShowcase'
 import GoalCard from '../../components/GoalCard'
 
@@ -102,6 +102,9 @@ export default function JoinClient() {
 
   return (
     <main style={{ background: '#fff', overflowX: 'hidden' }}>
+      {/* Mounted here rather than in the root layout so the ad tracker exists
+          only on the ad landing pages, never on a signed-in receipts page. */}
+      <MetaPixel />
 
       {/* ── ORIGIN-SHAPED HERO ────────────────────────────────────────────── */}
       <section style={{ background: INK, padding: '38px 20px 44px' }}>

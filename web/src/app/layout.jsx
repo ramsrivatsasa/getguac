@@ -13,7 +13,6 @@ const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '500', '
 const robotoMono = Roboto_Mono({ subsets: ['latin'], weight: ['500', '600', '700'], variable: '--font-roboto-mono', display: 'swap' })
 import UpdatePrompt from '../components/UpdatePrompt'
 import PosthogProvider from '../components/PosthogProvider'
-import MetaPixel from '../components/MetaPixel'
 import VisitBeacon from '../components/VisitBeacon'
 import { Analytics } from '@vercel/analytics/react'
 
@@ -138,9 +137,12 @@ export default function RootLayout({ children }) {
             visitor hash is derived server-side and the salt rotates daily.
             Silently does nothing until migration_083 is applied. */}
         <VisitBeacon />
-        {/* Meta Pixel — conversion tracking for the /start and /join ad
-            funnels. Inert until NEXT_PUBLIC_FB_PIXEL_ID is set. */}
-        <MetaPixel />
+        {/* NO Meta Pixel here. It is mounted ONLY by /join and /start — the two
+            ad landing pages that actually need it — because the privacy policy
+            promises no advertising trackers inside the signed-in app, and a
+            root-layout mount put one on every receipts page. Ad measurement
+            only ever needed the landing pages, so scoping it costs nothing.
+            See components/MetaPixel.jsx. */}
         {/* Google AdSense loader — only emitted when a publisher id is set.
             Powers <AdSlot/> and the arcade's fullscreen ad breaks (adBreak in
             arcadeKit.jsx). data-ad-frequency-hint = minimum gap Google keeps

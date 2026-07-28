@@ -14,6 +14,7 @@ const robotoMono = Roboto_Mono({ subsets: ['latin'], weight: ['500', '600', '700
 import UpdatePrompt from '../components/UpdatePrompt'
 import PosthogProvider from '../components/PosthogProvider'
 import MetaPixel from '../components/MetaPixel'
+import VisitBeacon from '../components/VisitBeacon'
 import { Analytics } from '@vercel/analytics/react'
 
 // Google AdSense publisher id. Public (it ships in page source), so it's fine
@@ -131,8 +132,14 @@ export default function RootLayout({ children }) {
             wired but NEXT_PUBLIC_POSTHOG_KEY was never set, so there was no
             way to tell whether ad traffic was arriving. */}
         <Analytics />
-        {/* Meta Pixel — conversion tracking for the /start ad funnel. Inert
-            until NEXT_PUBLIC_FB_PIXEL_ID is set. */}
+        {/* First-party visitor counter — the one that needs no dashboard
+            toggle and no third-party account, because the numbers live in our
+            own database (migration_083). Posts nothing but the pathname; the
+            visitor hash is derived server-side and the salt rotates daily.
+            Silently does nothing until migration_083 is applied. */}
+        <VisitBeacon />
+        {/* Meta Pixel — conversion tracking for the /start and /join ad
+            funnels. Inert until NEXT_PUBLIC_FB_PIXEL_ID is set. */}
         <MetaPixel />
         {/* Google AdSense loader — only emitted when a publisher id is set.
             Powers <AdSlot/> and the arcade's fullscreen ad breaks (adBreak in

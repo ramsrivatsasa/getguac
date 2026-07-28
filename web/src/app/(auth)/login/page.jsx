@@ -81,12 +81,22 @@ function LoginPageInner() {
   useEffect(() => {
     if (isDemo) setForm(DEMO_CREDS)
   }, [isDemo])
+
+  // The server requires a Turnstile token for the demo account on EVERY
+  // sign-in, not just ones that arrived at /login?demo=1. The credentials are
+  // published on /join, /how-it-works and the tour deck, so people copy them
+  // into the ordinary login form — and used to get "CAPTCHA verification
+  // failed" with no CAPTCHA anywhere on screen to solve. Gate on the account
+  // being signed into, which is what the server actually checks.
+  const demoMode = isDemo ||
+    form.identifier.trim().toLowerCase() === DEMO_CREDS.identifier
+
   useEffect(() => {
-    if (!isDemo || !TURNSTILE_SITE_KEY) return
+    if (!demoMode || !TURNSTILE_SITE_KEY) return
     function onToken(e) { setTurnstileToken(e?.detail || '') }
     window.addEventListener('turnstile-token', onToken)
     return () => window.removeEventListener('turnstile-token', onToken)
-  }, [isDemo])
+  }, [demoMode])
 
   async function signInWithGoogle() {
     setGoogleLoading(true)
@@ -309,10 +319,12 @@ function LoginPageInner() {
                 </p>
               )}
             </div>
-            {/* Turnstile CAPTCHA — demo flow only. The shared demo password is
-                public, so the widget (verified server-side) keeps bots out.
-                Same widget + global-callback pattern as /register. */}
-            {isDemo && TURNSTILE_SITE_KEY && (
+            {/* Turnstile CAPTCHA — demo account only. The shared demo password
+                is public, so the widget (verified server-side) keeps bots out.
+                Keyed on demoMode, not the ?demo=1 URL: the server demands the
+                token whenever the identifier is the demo account, however the
+                user got here. Same widget + global-callback pattern as /register. */}
+            {demoMode && TURNSTILE_SITE_KEY && (
               <div>
                 <Script
                   src="https://challenges.cloudflare.com/turnstile/v0/api.js"
@@ -348,7 +360,7 @@ function LoginPageInner() {
             )}
             <button
               type="submit"
-              disabled={loading || (isDemo && TURNSTILE_SITE_KEY && !turnstileToken)}
+              disabled={loading || (demoMode && TURNSTILE_SITE_KEY && !turnstileToken)}
               className="btn-primary w-full justify-center py-2.5 mt-1"
             >
               {loading ? 'Signing in…' : isDemo ? 'Enter the demo' : 'Sign In'}

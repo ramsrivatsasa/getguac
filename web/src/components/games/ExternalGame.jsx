@@ -27,6 +27,14 @@ export default function ExternalGame({ game }) {
     // WebView are an AdSense/AdMob policy violation and an app-store review
     // risk, and unlike <AdSlot/> we cannot suppress the ads inside someone
     // else's game. So the app gets a link out to the browser instead.
+    //
+    // The cookie is the ONLY signal, deliberately. ?play=browser must never
+    // override it: on an app build older than this change the delegate still
+    // keeps getguac.app inside the WebView, so a URL param that forced the game
+    // to render would embed a third-party ad iframe in the app — worse than the
+    // dead end it was meant to fix. The handoff tab is a Custom Tab /
+    // SFSafariViewController with its own cookie jar, so the cookie is simply
+    // absent there and the game plays.
     setEmbedded(document.cookie.split('; ').some((c) => c === 'guac_embedded=1'))
   }, [])
 
@@ -62,15 +70,20 @@ export default function ExternalGame({ game }) {
       <div className="w-full rounded-2xl grid place-items-center text-center px-6"
         style={{ minHeight: STAGE_H, background: 'linear-gradient(180deg, #f2fbf3 0%, #eaf6ec 100%)' }}>
         <div>
-          <div aria-hidden style={{ fontSize: 40 }}>🌐</div>
-          <p className="font-display font-extrabold text-lg mt-3 mb-1.5" style={{ color: '#15201a' }}>Play {game.name} in your browser</p>
+          <div aria-hidden style={{ fontSize: 40 }}>🎮</div>
+          <p className="font-display font-extrabold text-lg mt-3 mb-1.5" style={{ color: '#15201a' }}>{game.name} opens in a browser tab</p>
           <p className="text-sm m-0 mb-4 mx-auto" style={{ color: '#5a6a60', maxWidth: 380 }}>
-            Guest games from our partner network run outside the app. Tap below to open it — your GuacMoney and receipts stay right here.
+            Guest games come from our partner network, so they play in a tab instead of inside the app. It opens right on top — close it and you&rsquo;re back here.
           </p>
-          <a href={`https://getguac.app${game.href}`} target="_blank" rel="noopener noreferrer"
+          {/* ?play=browser is the signal the app's WebView looks for. Without it
+              the navigation delegate keeps getguac.app URLs INSIDE the WebView,
+              so this button reloaded the same screen forever. target="_blank"
+              is also a no-op in the Android WebView (no onCreateWindow), which
+              is why the old version did nothing at all on mobile. */}
+          <a href={`https://getguac.app${game.href}?play=browser`} rel="noopener noreferrer"
             className="inline-block rounded-full px-5 py-2.5 font-display font-extrabold text-sm no-underline"
             style={{ background: '#166534', color: '#fff' }}>
-            Open in browser
+            Play {game.name}
           </a>
         </div>
       </div>

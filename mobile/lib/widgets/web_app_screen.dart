@@ -97,9 +97,17 @@ class _WebAppScreenState extends State<WebAppScreen> with SingleTickerProviderSt
           // iOS users out of the app into random ad pages the moment an
           // embedded page loaded. Only ever intercept MAIN-frame navigations.
           if (!req.isMainFrame) return NavigationDecision.navigate;
-          final host = Uri.tryParse(req.url)?.host ?? '';
+          final navUri = Uri.tryParse(req.url);
+          final host = navUri?.host ?? '';
+          // ?play=browser is how a getguac.app page asks to be opened OUTSIDE
+          // the WebView. Partner games are third-party ad-serving iframes, which
+          // we must not render inside the app, so /games/<slug> shows a handoff
+          // button instead — but that button pointed at getguac.app and so was
+          // kept in the WebView by the rule below, reloading the same handoff
+          // screen. (target="_blank" is also inert here: no onCreateWindow.)
+          final forceExternal = navUri?.queryParameters['play'] == 'browser';
           // Keep our own pages in the WebView; send everything else out.
-          if (host.isEmpty || host.endsWith('getguac.app')) {
+          if (!forceExternal && (host.isEmpty || host.endsWith('getguac.app'))) {
             return NavigationDecision.navigate;
           }
           // Ground truth for the iOS "Steals opens an ad" report — record
@@ -117,9 +125,22 @@ class _WebAppScreenState extends State<WebAppScreen> with SingleTickerProviderSt
   Future<void> _openExternal(String url) async {
     final uri = Uri.tryParse(url);
     if (uri == null) return;
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!await canLaunchUrl(uri)) return;
+    // http(s) opens in a Custom Tab / SFSafariViewController: it slides over the
+    // app with a close button instead of throwing the user into Chrome or
+    // Safari and losing their place. Still the system browser, so a partner
+    // game's ads are the browser's business and never render inside our app —
+    // the policy line that the handoff exists to respect in the first place.
+    // Anything else (market:, itms-apps:, mailto:, tel:) has to leave properly.
+    final isWeb = uri.scheme == 'http' || uri.scheme == 'https';
+    if (isWeb) {
+      final ok = await launchUrl(uri, mode: LaunchMode.inAppBrowserView)
+          .catchError((_) => false);
+      if (ok) return;
+      // Some devices have no Custom Tabs provider at all; fall back rather
+      // than leave the tap doing nothing, which is the bug being fixed here.
     }
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
   // Refresh = re-run the /embed auth handshake from scratch. A plain

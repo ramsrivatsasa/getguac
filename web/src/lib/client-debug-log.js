@@ -67,6 +67,14 @@ async function flush() {
       return { uploaded: 0, error: `HTTP ${res.status}` }
     }
     const data = await res.json().catch(() => null)
+    // Signed out: the server accepted the request and wrote nothing. Drop the
+    // batch — without this the `written > 0` check below leaves it in the
+    // buffer and it is re-sent on every flush, forever.
+    if (data?.skipped) {
+      buffer = []
+      persist()
+      return { uploaded: 0, dropped: pending.length }
+    }
     const written = data?.written ?? 0
     if (written > 0) {
       // Evict the first `written` events (they were sent in order).

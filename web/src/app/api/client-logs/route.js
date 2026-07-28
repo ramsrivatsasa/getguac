@@ -20,7 +20,12 @@ export const runtime = 'nodejs'
 export async function POST(request) {
   const sb = createApiClient()
   const { data: { user } } = await sb.auth.getUser()
-  if (!user) return Response.json({ error: 'Not signed in' }, { status: 401 })
+  // Signed out is NOT an error here. audit_log rows are keyed to a user, so
+  // there is nothing to write — but answering 401 made every logged-out visitor
+  // print a red console error on page load, and /join is an ad landing page
+  // where nobody is signed in yet. `skipped` tells the client to drop the batch
+  // rather than keep retrying something that can never succeed.
+  if (!user) return Response.json({ written: 0, skipped: true })
 
   let body
   try { body = await request.json() } catch { return Response.json({ error: 'Invalid JSON' }, { status: 400 }) }

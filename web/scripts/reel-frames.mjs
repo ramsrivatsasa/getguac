@@ -25,7 +25,7 @@
 
 import { chromium } from 'playwright'
 import sharp from 'sharp'
-import { readFileSync, mkdirSync } from 'node:fs'
+import { readFileSync, mkdirSync, existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 
@@ -51,6 +51,13 @@ const PRESETS = {
   apple65: size('store-1242x2688', 1242, 2688),   // iPhone 6.5"
   apple55: size('store-1242x2208', 1242, 2208),   // iPhone 5.5" (legacy slot)
 }
+// NO_CTA=1 drops the green "See how it works ->" pill from the goal frames.
+// A store screenshot wants that CTA; a video frame does not — the ad already
+// has its own call to action, and a second one inside the artwork competes
+// with it. PREFIX renames the output so a CTA-less set can sit in the same
+// folder as the store set without overwriting it.
+const NO_CTA = process.env.NO_CTA === '1'
+const PREFIX = process.env.PREFIX || ''
 const preset = PRESETS[process.env.PRESET || 'reel']
 if (!preset) throw new Error(`Unknown PRESET. Use: ${Object.keys(PRESETS).join(', ')}`)
 
@@ -145,6 +152,15 @@ const SCREEN_OVERRIDES = {
 
 // The source phone shots are 360px wide; resample them to the exact display
 // width here rather than letting the browser do it.
+// True when a card has artwork to render. CARDS is read live out of
+// GoalsShowcase.jsx, so a newly added card whose phone shot hasn't been
+// captured yet would otherwise kill the whole run partway through — which is
+// exactly what `meet-guac-ai` did. Skip and report instead.
+function hasPhone(slug) {
+  const override = SCREEN_OVERRIDES[slug]
+  return existsSync(override ? resolve(STORE, `${override}_iphone.png`) : resolve(GOALS, `phone-${slug}.webp`))
+}
+
 async function phoneUri(slug) {
   const override = SCREEN_OVERRIDES[slug]
   if (override) {
@@ -247,7 +263,7 @@ function goalHtml(c, phoneSrc) {
     <div class="emoji">${esc(c.e)}</div>
     <h1>${esc(c.goal)}</h1>
     <p class="blurb">${esc(c.blurb)}</p>
-    <div class="cta">${esc(c.cta)} →</div>
+    ${NO_CTA ? '' : `<div class="cta">${esc(c.cta)} →</div>`}
   </div>
   <div class="phone"><img src="${phoneSrc}"></div>
   ${RINGS[c.slug] ? ringCard(RINGS[c.slug]) : `<div class="chip">
@@ -300,14 +316,22 @@ function outroHtml() {
     font-weight: 800; font-size: 38px; padding: 28px 62px; border-radius: 999px;
     box-shadow: 0 26px 52px -18px rgba(101,163,13,0.65);
   }
+  .plainurl {
+    margin-top: 52px; font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800; font-size: 46px; color: #4D7C0F; letter-spacing: -0.02em;
+  }
   .stores { margin-top: 40px; font-size: 30px; font-weight: 700; color: #4D7C0F; }
   .stores span { display: block; margin-top: 12px; font-size: 25px; font-weight: 600; color: #8A988E; }
 </style></head><body>
   <div class="glow"></div>
   <div class="wrap">
     <div class="brand"><img src="${fileUri(ICON)}"><span>GetGuac</span></div>
-    <h1>Start keeping<br>your guac.</h1>
-    <p class="blurb">Free to start. No card required. Your data stays yours.</p>
+    <h1>Your money&rsquo;s been<br>talking.</h1>
+    <p class="blurb">GetGuac is listening. Free to start, no card required, your data stays yours.</p>
+    ${/* The outro pill STAYS even under NO_CTA. NO_CTA is about the per-goal
+          "See how it works ->" pill competing with the ad's own button; the
+          closing card is the one place the video says where to go, and it
+          should look like a button. */''}
     <div class="cta">getguac.app</div>
     <div class="stores">Free on iOS, Android &amp; web<span>Snap a receipt in under a minute</span></div>
   </div>
@@ -324,14 +348,20 @@ async function shoot(html, name, label) {
   await p.waitForTimeout(300)
   const shot = await p.screenshot()
   // fractional dsf can land a pixel off; force the exact store dimensions
-  await sharp(shot).resize(preset.out[0], preset.out[1], { fit: 'fill' }).png().toFile(resolve(OUT, name))
-  console.log('✓', name, '—', label)
+  const file = `${PREFIX}${name}`
+  await sharp(shot).resize(preset.out[0], preset.out[1], { fit: 'fill' }).png().toFile(resolve(OUT, file))
+  console.log('✓', file, '—', label)
 }
 
 if (!only) await shoot(introHtml(await phoneUri('organized')), '00-intro.png', "Your money's wingman")
 
+const skipped = targets.filter((c) => !hasPhone(c.slug))
+if (skipped.length) {
+  console.log(`\n⚠ skipping ${skipped.length} card(s) with no phone artwork: ${skipped.map((c) => c.slug).join(', ')}\n`)
+}
+
 let n = 0
-for (const c of targets) {
+for (const c of targets.filter((c) => hasPhone(c.slug))) {
   n = CARDS.indexOf(c) + 1
   const nn = String(n).padStart(2, '0')
   await shoot(goalHtml(c, await phoneUri(c.slug)), `${nn}-${c.slug}.png`, c.goal)

@@ -86,7 +86,7 @@ const nextConfig = {
     // Next 14.2 name (renamed to top-level `serverExternalPackages` in Next 15).
     // At top level it's silently ignored here, so it MUST live under experimental
     // — keeps webpack from mangling the brotli-packed Chromium binary.
-    serverComponentsExternalPackages: ['tesseract.js', 'pdf-parse', 'imapflow', 'mailparser', '@sparticuz/chromium', 'puppeteer-core'],
+    serverComponentsExternalPackages: ['pdf-parse', 'imapflow', 'mailparser', '@sparticuz/chromium', 'puppeteer-core'],
     // Next's file tracer still drops @sparticuz/chromium's bin/ (the packed
     // Chromium) from the email-snapshot function — so executablePath() 500s with
     // "bin does not exist". Force the whole package into that function.

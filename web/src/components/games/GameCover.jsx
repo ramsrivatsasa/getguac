@@ -6,13 +6,14 @@
 // Pure markup (server-safe); the screenshot is a static image, no external load.
 import Link from 'next/link'
 import { shotFor } from './gamesList'
+import { formatLikes } from '../../lib/gameLikes'
 
 const INK = '#15201a'
 const MUTED = '#5a6a60'
 
 // size: 'sm' = the dense MSN-Play-style tile wall (square art, tight type),
 //       'md' = category rows, 'lg' = search/browse results.
-export default function GameCover({ game, size = 'md' }) {
+export default function GameCover({ game, size = 'md', likes }) {
   const big = size === 'lg'
   const small = size === 'sm'
   // Partner games ship their own cover art in the feed (512x384 — already the
@@ -96,9 +97,14 @@ export default function GameCover({ game, size = 'md' }) {
                 GamePix's own 0-1 editorial ranking, shown as a "top rated"
                 mark, NOT as a rating or a like count, because that is not what
                 it measures. Neither is ever synthesised. */}
-            {game.plays != null && <> · 👍 {game.plays}</>}
-            {game.plays == null && game.quality >= 0.9 && (
-              <> · <span title="Rated highly by GamePix" style={{ color: '#b45309' }}>★ Top rated</span></>
+            {/* Real like count from public.game_likes (migration_082) — every
+                number here is somebody actually pressing the button. Hidden at
+                zero so a new game reads clean rather than "0". */}
+            {likes > 0 && <> · 👍 {formatLikes(likes)}</>}
+            {!likes && game.quality != null && (
+              <> · <span title={`Quality score ${Math.round(game.quality * 100)}% (rated by GamePix)`} style={{ color: '#b45309' }}>
+                ★ {(game.quality * 5).toFixed(1)}
+              </span></>
             )}
           </div>
         </div>

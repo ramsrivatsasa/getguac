@@ -258,8 +258,15 @@ async function fetchGamePix(provider, { pages, sid }) {
 async function main() {
   const { PROVIDERS } = await import('../src/lib/gameProviders.js')
 
-  const gmPages = Number(args[args.indexOf('--gm-pages') + 1]) || 2
-  const gpPages = Number(args[args.indexOf('--gp-pages') + 1]) || 4
+  // GameMonetize defaults to ZERO pages. Its feed carries no rating, no play
+  // count and no quality score, so its games are the only ones that cannot
+  // show a real number on their card — and a catalog where most tiles have a
+  // score and some don't reads as broken data rather than as honesty. GamePix
+  // has ~13,500 games to backfill with, so we take those instead.
+  // The provider stays wired (and its ads.txt block stays put): re-enable any
+  // time with `--gm-pages 2`.
+  const gmPages = Number(args[args.indexOf('--gm-pages') + 1]) || 0
+  const gpPages = Number(args[args.indexOf('--gp-pages') + 1]) || 8
   const sid = args.includes('--sid') ? args[args.indexOf('--sid') + 1] : '581TT'
 
   process.stdout.write('Fetching feeds...\n')

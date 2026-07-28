@@ -8,8 +8,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import GameCover from './GameCover'
-import { GAMES, CATEGORIES, FEATURED_HREF, POPULAR_HREFS, shotFor } from './gamesList'
+import { GAMES, CATEGORIES, FEATURED_HREF, POPULAR_HREFS, shotFor, gameIdFor } from './gamesList'
 import { createClient } from '../../lib/supabase/client'
+import { fetchLikeCounts } from '../../lib/gameLikes'
 
 const INK = '#15201a'
 const BODY = '#3d4a42'
@@ -261,6 +262,7 @@ export default function GamesHub() {
   // storage during render would desync SSR html from the client and throw a
   // hydration error — the arcade has been bitten by exactly that before.
   const [navCollapsed, setNavCollapsed] = useState(false)
+  const [likes, setLikes] = useState({})   // slug -> real like count
   // null = unknown (still checking) → render neither copy until we know, so a
   // signed-in player never flashes "Sign in". Set once auth resolves.
   const [signedIn, setSignedIn] = useState(null)
@@ -275,6 +277,15 @@ export default function GamesHub() {
 
   useEffect(() => {
     try { setNavCollapsed(localStorage.getItem(NAV_KEY) === '1') } catch { /* private mode */ }
+  }, [])
+
+  // Real like counts for every game, in one RPC. Resolves to {} if the call
+  // fails or migration_082 isn't applied yet, in which case tiles just render
+  // without a number instead of the grid breaking.
+  useEffect(() => {
+    let dead = false
+    fetchLikeCounts().then((m) => { if (!dead) setLikes(m) })
+    return () => { dead = true }
   }, [])
   const toggleNav = () => setNavCollapsed((v) => {
     try { localStorage.setItem(NAV_KEY, v ? '0' : '1') } catch { /* private mode */ }
@@ -370,7 +381,7 @@ export default function GamesHub() {
           </div>
           {filtered.length ? (
             <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(144px, 1fr))' }}>
-              {filtered.map((g) => <GameCover key={g.href} game={g} size="sm" />)}
+              {filtered.map((g) => <GameCover key={g.href} game={g} size="sm" likes={likes[gameIdFor(g.href)]} />)}
             </div>
           ) : (
             <p className="text-sm" style={{ color: BODY }}>
@@ -447,7 +458,7 @@ export default function GamesHub() {
               <span className="text-sm font-semibold" style={{ color: FAINT }}>{GAMES.length} games</span>
             </div>
             <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(144px, 1fr))' }}>
-              {GAMES.map((g) => <GameCover key={g.href} game={g} size="sm" />)}
+              {GAMES.map((g) => <GameCover key={g.href} game={g} size="sm" likes={likes[gameIdFor(g.href)]} />)}
             </div>
           </section>
 

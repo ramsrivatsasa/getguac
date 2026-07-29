@@ -154,48 +154,6 @@ export default function JoinClient() {
                 <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#84CC16', boxShadow: '0 0 0 3px rgba(132,204,22,0.25)' }} /> Guac-AI · personal finance assistant
               </div>
 
-              {/* THE ASK, ABOVE THE PHONE (moved here on request 2026-07-29).
-                  It used to sit in a block below the device, which on a 412px
-                  handset put the only way to sign up at the very bottom edge of
-                  the fold — a dominant button nobody scrolls to is still
-                  invisible. Now the first thing in view after the headline is
-                  the one-tap path.
-                  Google is deliberately dominant rather than one of two equal
-                  buttons: it is the only route that costs a cold visitor a
-                  single tap, against six fields, a CAPTCHA and a confirmation
-                  email. 14 visitors were asked to choose between two equal
-                  buttons and chose neither. Email stays one tap away as a link.
-                  heroCtaRef drives the sticky bar's IntersectionObserver — it
-                  moves with the buttons, so the bar still appears exactly when
-                  the real CTA leaves the screen. */}
-              <div ref={heroCtaRef} className="gj-heroauthstack" style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', maxWidth: 430 }}>
-                <button type="button" onClick={() => oauth('google')} disabled={!!busy}
-                  className={authBtn}
-                  style={{
-                    background: '#fff', color: '#1f2937',
-                    padding: '18px 20px', fontSize: 17, fontWeight: 800,
-                    boxShadow: '0 14px 30px -12px rgba(0,0,0,0.55)',
-                  }}>
-                  {busy === 'google' ? 'Opening Google…' : (
-                    <>
-                      <GoogleG size={22} />
-                      Continue with Google
-                    </>
-                  )}
-                </button>
-                <p style={{ margin: '2px 0 0', fontSize: 12.5, fontWeight: 600, color: 'rgba(255,255,255,0.55)', textAlign: 'center' }}>
-                  One tap — nothing to fill in, no confirmation email.
-                </p>
-
-                <Link href="/register" onClick={() => trackClick('join-signup-email')}
-                  style={{
-                    display: 'block', textAlign: 'center', marginTop: 4, padding: '6px 0',
-                    fontSize: 14, fontWeight: 700, color: 'rgba(255,255,255,0.66)', textDecoration: 'underline',
-                  }}>
-                  or sign up with email
-                </Link>
-              </div>
-
               {/* Guacanomics rather than the dashboard: phone-organized.webp
                   ends in a block of empty white above the tab bar, which reads
                   as a rendering fault in a hero. This screen is full to the
@@ -229,13 +187,53 @@ export default function JoinClient() {
                 </a>
               </div>
 
+              {/* THE ASK — directly under the store badges (moved here on
+                  request 2026-07-29). The reader has just seen the product and
+                  the two app stores; this is the third option, and the only one
+                  that works without leaving the browser.
+                  Google is deliberately dominant rather than one of two equal
+                  buttons: it is the only route that costs a cold visitor a
+                  single tap, against six fields, a CAPTCHA and a confirmation
+                  email. 14 visitors were asked to choose between two equal
+                  buttons and chose neither. Email stays one tap away as a link.
+                  heroCtaRef drives the sticky bar's IntersectionObserver — it
+                  moves with the buttons, so the bar still appears exactly when
+                  the real CTA leaves the screen. */}
+              <div ref={heroCtaRef} className="gj-heroauthstack" style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', maxWidth: 430 }}>
+                <button type="button" onClick={() => oauth('google')} disabled={!!busy}
+                  className={authBtn}
+                  style={{
+                    background: '#fff', color: '#1f2937',
+                    padding: '18px 20px', fontSize: 17, fontWeight: 800,
+                    boxShadow: '0 14px 30px -12px rgba(0,0,0,0.55)',
+                  }}>
+                  {busy === 'google' ? 'Opening Google…' : (
+                    <>
+                      <GoogleG size={22} />
+                      Continue with Google
+                    </>
+                  )}
+                </button>
+                <p style={{ margin: 0, fontSize: 12.5, fontWeight: 600, color: 'rgba(255,255,255,0.55)', textAlign: 'center' }}>
+                  One tap — nothing to fill in, no confirmation email.
+                </p>
+
+                <Link href="/register" onClick={() => trackClick('join-signup-email')}
+                  style={{
+                    display: 'block', textAlign: 'center', margin: 0, padding: '2px 0',
+                    fontSize: 14, fontWeight: 700, color: 'rgba(255,255,255,0.66)', textDecoration: 'underline',
+                  }}>
+                  or sign up with email
+                </Link>
+              </div>
+
               {/* TRUST ROW — moved here from above the phone on request
                   2026-07-29. Origin puts a member count and a star rating in
                   this slot; we have neither, so these are three things about
                   the product that are simply true and claim nothing about how
                   many people use it. Keep it that way (see the HONESTY note at
                   the top of this file). */}
-              <div className="gj-trustrow" style={{ display: 'flex', justifyContent: 'center', gap: 22, flexWrap: 'wrap', marginTop: 18 }}>
+              <div className="gj-trustrow" style={{ display: 'flex', justifyContent: 'center', gap: 22, flexWrap: 'wrap', marginTop: 14 }}>
                 {[['🔒', 'RLS-locked'], ['📱', 'iOS · Android · Web'], ['🧹', 'One-click wipe']].map(([e, t]) => (
                   <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.62)' }}>
                     <span aria-hidden>{e}</span>{t}
@@ -487,9 +485,11 @@ export default function JoinClient() {
                       max-width: 980px; margin: 32px auto 0; }
         .gj-hero-phone { display: flex; flex-direction: column; align-items: center; }
         .gj-aipill { margin-bottom: 20px; }
-        /* The auth stack now sits between the pill and the device. */
-        .gj-heroauthstack { margin-bottom: 30px; }
         .gj-badges { margin-top: 14px; }
+        /* The auth stack sits under the store badges. Tight above (it belongs
+           with the badges as one block of ways-in) and tight below, so the
+           trust row reads as a caption to it rather than a separate section. */
+        .gj-heroauthstack { margin-top: 16px; }
         /* Narrower than the hero: ~65 characters a line is the point where a
            paragraph this long stops being a wall. */
         .gj-story { max-width: 640px; margin: 38px auto 0; text-align: center; }

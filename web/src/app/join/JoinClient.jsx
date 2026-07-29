@@ -24,6 +24,7 @@ import Link from 'next/link'
 import { createClient } from '../../lib/supabase/client'
 import MetaPixel from '../../components/MetaPixel'
 import { trackClick } from '../../lib/track-click'
+import GoogleG from '../../components/GoogleG'
 import { CARDS } from '../../components/GoalsShowcase'
 import GoalCard from '../../components/GoalCard'
 
@@ -225,24 +226,36 @@ export default function JoinClient() {
 
             <div className="gj-hero-auth">
           <div ref={heroCtaRef} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {/* Google is deliberately the dominant control, not one of two equal
+                buttons. It is the only path that costs a cold visitor a single
+                tap: no six fields, no CAPTCHA, and no leaving the site to find
+                a confirmation email. Two equally-weighted buttons made the
+                visitor choose before doing anything, and 14 of them chose
+                neither. Email stays reachable, demoted to a text link. */}
             <button type="button" onClick={() => oauth('google')} disabled={!!busy}
-              className={authBtn} style={{ background: '#fff', color: '#1f2937' }}>
+              className={authBtn}
+              style={{
+                background: '#fff', color: '#1f2937',
+                padding: '18px 20px', fontSize: 17, fontWeight: 800,
+                boxShadow: '0 14px 30px -12px rgba(0,0,0,0.55)',
+              }}>
               {busy === 'google' ? 'Opening Google…' : (
                 <>
-                  <svg viewBox="0 0 48 48" width="19" height="19" aria-hidden="true">
-                    <path fill="#4285F4" d="M45.1 24.5c0-1.6-.1-3.2-.4-4.7H24v8.9h11.8c-.5 2.7-2 5-4.4 6.6v5.5h7.1c4.2-3.8 6.6-9.5 6.6-16.3z" />
-                    <path fill="#34A853" d="M24 46c5.9 0 10.9-2 14.5-5.2l-7.1-5.5c-2 1.3-4.5 2.1-7.4 2.1-5.7 0-10.5-3.8-12.2-9H4.5v5.7C8.1 41.2 15.5 46 24 46z" />
-                    <path fill="#FBBC05" d="M11.8 28.4c-.4-1.3-.7-2.7-.7-4.4s.3-3.1.7-4.4v-5.7H4.5A22 22 0 0 0 2 24c0 3.5.8 6.9 2.5 9.9l7.3-5.5z" />
-                    <path fill="#EA4335" d="M24 10.6c3.2 0 6.1 1.1 8.4 3.3l6.3-6.3C34.9 4.1 29.9 2 24 2 15.5 2 8.1 6.8 4.5 14.1l7.3 5.7c1.7-5.2 6.5-9.2 12.2-9.2z" />
-                  </svg>
+                  <GoogleG size={22} />
                   Continue with Google
                 </>
               )}
             </button>
+            <p style={{ margin: '2px 0 0', fontSize: 12.5, fontWeight: 600, color: 'rgba(255,255,255,0.55)', textAlign: 'center' }}>
+              One tap — nothing to fill in, no confirmation email.
+            </p>
 
             <Link href="/register" onClick={() => trackClick('join-signup-email')}
-              className={`${authBtn} gj-nounderline`} style={{ background: 'rgba(255,255,255,0.10)', color: '#fff' }}>
-              Continue with email
+              style={{
+                display: 'block', textAlign: 'center', marginTop: 4, padding: '6px 0',
+                fontSize: 14, fontWeight: 700, color: 'rgba(255,255,255,0.66)', textDecoration: 'underline',
+              }}>
+              or sign up with email
             </Link>
           </div>
 

@@ -24,6 +24,7 @@ import MetaPixel from '../../components/MetaPixel'
 // anyone reached for a button, which is the one thing /join's counters revealed
 // (14 visitors, 0 presses).
 import { trackClick } from '../../lib/track-click'
+import GoogleG from '../../components/GoogleG'
 
 const INK = '#0B1410'
 
@@ -95,16 +96,28 @@ export default function StartClient() {
             style={{ width: 244, maxWidth: '72%', height: 'auto', display: 'block', filter: 'drop-shadow(0 26px 46px rgba(0,0,0,0.55))' }} />
         </div>
 
-        <div className="mt-7 space-y-3">
+        {/* Google dominant, email demoted to a link — same hierarchy as /join.
+            One tap versus six fields, a CAPTCHA and a confirmation email is not
+            a fair choice to put to a cold visitor as two equal buttons. */}
+        <div className="mt-7">
           <button type="button" onClick={() => oauth('google')} disabled={!!busy}
-            className={btn} style={{ background: '#fff', color: '#1f2937' }}>
-            {busy === 'google' ? 'Opening Google…' : (<><span aria-hidden style={{ fontSize: 18 }}>🔵</span> Continue with Google</>)}
+            className={btn}
+            style={{
+              background: '#fff', color: '#1f2937',
+              padding: '18px 20px', fontSize: 17, fontWeight: 800,
+              boxShadow: '0 14px 30px -12px rgba(0,0,0,0.55)',
+            }}>
+            {busy === 'google' ? 'Opening Google…' : (<><GoogleG size={22} /> Continue with Google</>)}
           </button>
+          <p className="text-center" style={{ margin: '10px 0 0', fontSize: 12.5, fontWeight: 600, color: 'rgba(255,255,255,0.55)' }}>
+            One tap — nothing to fill in, no confirmation email.
+          </p>
 
           <Link href="/register"
             onClick={() => trackClick('start-signup-email')}
-            className={`${btn} no-underline`} style={{ background: 'rgba(255,255,255,0.10)', color: '#fff' }}>
-            Continue with email
+            className="block text-center"
+            style={{ marginTop: 14, padding: '6px 0', fontSize: 14, fontWeight: 700, color: 'rgba(255,255,255,0.66)', textDecoration: 'underline' }}>
+            or sign up with email
           </Link>
         </div>
 

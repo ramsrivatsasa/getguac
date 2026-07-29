@@ -123,37 +123,26 @@ export default function JoinClient() {
               equivalent hook for a free product is the promise, so the phrase
               leads and "Forever free" takes the price slot under it. */}
           <div style={{ maxWidth: 760, margin: '0 auto', textAlign: 'center' }}>
-            <div aria-hidden style={{ fontSize: 40, lineHeight: 1 }}>🥑</div>
-
             {/* The "Your money's been talking / GetGuac is listening" lede was
                 removed on request. This line is now the h1 — the page still
                 needs exactly one, and dropping the old heading without
-                promoting anything would leave the hero headless. */}
-            <h1 className="gj-subline" style={{ ...DISPLAY, fontWeight: 800, color: '#fff', fontSize: 34, lineHeight: 1.15, letterSpacing: '-0.03em', margin: '16px 0 0' }}>
-              💰 Keep more of your own money. 🗂️ Get Organized.
+                promoting anything would leave the hero headless.
+                The avocado moved INTO this line on request 2026-07-29; it used
+                to be a standalone 40px block above the headline, which cost a
+                whole row of vertical space before the reader got any words. */}
+            <h1 className="gj-subline" style={{ ...DISPLAY, fontWeight: 800, color: '#fff', fontSize: 34, lineHeight: 1.15, letterSpacing: '-0.03em', margin: 0 }}>
+              <span aria-hidden>🥑</span> Keep more of your own money. 🗂️ Get Organized.
             </h1>
 
-            <p className="gj-snitch" style={{ fontSize: 16.5, lineHeight: 1.5, color: '#A3E635', fontWeight: 600, margin: '20px auto 0', maxWidth: 620 }}>
-              🥑 GetGuac AI — your receipts already snitched. We just translated. 🕵️
-            </p>
-
-            <p className="gj-price" style={{ ...DISPLAY, fontWeight: 800, color: '#A3E635', fontSize: 40, lineHeight: 1, letterSpacing: '-0.03em', margin: '28px 0 0' }}>
-              Forever free
-            </p>
-            <p style={{ margin: '10px 0 0', fontSize: 14.5, color: 'rgba(255,255,255,0.6)' }}>
-              No card. No trial. Nothing to cancel.
-            </p>
-
-            {/* Origin puts a member count and a star rating here. We have neither,
-                so this row states three things about the product that are just
-                true, and claims nothing about how many people use it. */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 22, flexWrap: 'wrap', marginTop: 22 }}>
-              {[['🔒', 'RLS-locked'], ['📱', 'iOS · Android · Web'], ['🧹', 'One-click wipe']].map(([e, t]) => (
-                <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.62)' }}>
-                  <span aria-hidden>{e}</span>{t}
-                </span>
-              ))}
-            </div>
+            {/* Removed on request 2026-07-29: the Guac-AI "snitched" line and
+                the "Forever free" / "No card. No trial. Nothing to cancel."
+                price block both lived here. The trust row that sat under them
+                MOVED below the phone (see TRUST ROW further down) — it was not
+                deleted. The hero now runs headline → pill → phone.
+                Do not restore the removed lines as an "improvement": this is
+                the fourth deliberate pass at shortening this hero.
+                NOTE: the price claim survives below the phone in the ad script
+                ("🍏 Free on iOS, Android and Web. No card required!!"). */}
           </div>
 
           {/* Phone + the homepage pitch beside it. On a phone this stacks as
@@ -163,6 +152,48 @@ export default function JoinClient() {
             <div className="gj-hero-phone">
               <div className="gj-aipill" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(132,204,22,0.12)', color: '#A3E635', border: '1px solid rgba(132,204,22,0.26)', padding: '7px 14px', borderRadius: 999, fontSize: 13, fontWeight: 600 }}>
                 <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#84CC16', boxShadow: '0 0 0 3px rgba(132,204,22,0.25)' }} /> Guac-AI · personal finance assistant
+              </div>
+
+              {/* THE ASK, ABOVE THE PHONE (moved here on request 2026-07-29).
+                  It used to sit in a block below the device, which on a 412px
+                  handset put the only way to sign up at the very bottom edge of
+                  the fold — a dominant button nobody scrolls to is still
+                  invisible. Now the first thing in view after the headline is
+                  the one-tap path.
+                  Google is deliberately dominant rather than one of two equal
+                  buttons: it is the only route that costs a cold visitor a
+                  single tap, against six fields, a CAPTCHA and a confirmation
+                  email. 14 visitors were asked to choose between two equal
+                  buttons and chose neither. Email stays one tap away as a link.
+                  heroCtaRef drives the sticky bar's IntersectionObserver — it
+                  moves with the buttons, so the bar still appears exactly when
+                  the real CTA leaves the screen. */}
+              <div ref={heroCtaRef} className="gj-heroauthstack" style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', maxWidth: 430 }}>
+                <button type="button" onClick={() => oauth('google')} disabled={!!busy}
+                  className={authBtn}
+                  style={{
+                    background: '#fff', color: '#1f2937',
+                    padding: '18px 20px', fontSize: 17, fontWeight: 800,
+                    boxShadow: '0 14px 30px -12px rgba(0,0,0,0.55)',
+                  }}>
+                  {busy === 'google' ? 'Opening Google…' : (
+                    <>
+                      <GoogleG size={22} />
+                      Continue with Google
+                    </>
+                  )}
+                </button>
+                <p style={{ margin: '2px 0 0', fontSize: 12.5, fontWeight: 600, color: 'rgba(255,255,255,0.55)', textAlign: 'center' }}>
+                  One tap — nothing to fill in, no confirmation email.
+                </p>
+
+                <Link href="/register" onClick={() => trackClick('join-signup-email')}
+                  style={{
+                    display: 'block', textAlign: 'center', marginTop: 4, padding: '6px 0',
+                    fontSize: 14, fontWeight: 700, color: 'rgba(255,255,255,0.66)', textDecoration: 'underline',
+                  }}>
+                  or sign up with email
+                </Link>
               </div>
 
               {/* Guacanomics rather than the dashboard: phone-organized.webp
@@ -176,15 +207,12 @@ export default function JoinClient() {
                 width={244} height={514} loading="eager" className="gj-heroshot"
                 style={{ width: 244, maxWidth: '72%', height: 'auto', display: 'block', filter: 'drop-shadow(0 26px 46px rgba(0,0,0,0.55))' }} />
 
-              {/* No "Try the demo" pill beside this — the demo has its own
-                  block with the credentials further down, and a second button
-                  next to the primary one splits the click. */}
-              <div className="gj-ctarow" style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
-                <Link href="/register" onClick={() => trackClick('join-signup-email')}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#65A30D', color: '#fff', fontWeight: 700, fontSize: 16, padding: '15px 26px', borderRadius: 999, textDecoration: 'none', boxShadow: '0 10px 24px -10px rgba(101,163,13,0.8)' }}>
-                  🥑 Meet your sidekick
-                </Link>
-              </div>
+              {/* The "🥑 Meet your sidekick" button was removed on request
+                  2026-07-29. It pointed at /register — the long email path —
+                  while the hero's primary control is now Continue with Google.
+                  Its join-signup-email counter is NOT orphaned: the same name
+                  is still fired by the "or sign up with email" link in the
+                  auth block below. */}
 
               {/* White badges: the homepage's ink badges are invisible against
                   this ground. */}
@@ -199,6 +227,20 @@ export default function JoinClient() {
                   <svg viewBox="0 0 512 512" width="20" height="20" aria-hidden="true"><path fill="#4285F4" d="M48 32 288 256 48 480c-10-6-16-17-16-30V62c0-13 6-24 16-30z" /><path fill="#34A853" d="M48 32c5-3 11-5 17-5 6 0 12 2 18 5l260 148-55 76z" /><path fill="#FBBC04" d="M288 256l55-76 92 52c30 17 30 51 0 68l-92 52z" /><path fill="#EA4335" d="M288 256l55 76L83 480c-6 3-12 5-18 5-6 0-12-2-17-5z" /></svg>
                   <span><span style={{ display: 'block', fontSize: 10.5, opacity: 0.62, lineHeight: 1.2 }}>Get it on</span><span style={{ display: 'block', fontSize: 17, fontWeight: 700, lineHeight: 1.15 }}>Google Play</span></span>
                 </a>
+              </div>
+
+              {/* TRUST ROW — moved here from above the phone on request
+                  2026-07-29. Origin puts a member count and a star rating in
+                  this slot; we have neither, so these are three things about
+                  the product that are simply true and claim nothing about how
+                  many people use it. Keep it that way (see the HONESTY note at
+                  the top of this file). */}
+              <div className="gj-trustrow" style={{ display: 'flex', justifyContent: 'center', gap: 22, flexWrap: 'wrap', marginTop: 18 }}>
+                {[['🔒', 'RLS-locked'], ['📱', 'iOS · Android · Web'], ['🧹', 'One-click wipe']].map(([e, t]) => (
+                  <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.62)' }}>
+                    <span aria-hidden>{e}</span>{t}
+                  </span>
+                ))}
               </div>
             </div>
 
@@ -225,40 +267,6 @@ export default function JoinClient() {
             </div>
 
             <div className="gj-hero-auth">
-          <div ref={heroCtaRef} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {/* Google is deliberately the dominant control, not one of two equal
-                buttons. It is the only path that costs a cold visitor a single
-                tap: no six fields, no CAPTCHA, and no leaving the site to find
-                a confirmation email. Two equally-weighted buttons made the
-                visitor choose before doing anything, and 14 of them chose
-                neither. Email stays reachable, demoted to a text link. */}
-            <button type="button" onClick={() => oauth('google')} disabled={!!busy}
-              className={authBtn}
-              style={{
-                background: '#fff', color: '#1f2937',
-                padding: '18px 20px', fontSize: 17, fontWeight: 800,
-                boxShadow: '0 14px 30px -12px rgba(0,0,0,0.55)',
-              }}>
-              {busy === 'google' ? 'Opening Google…' : (
-                <>
-                  <GoogleG size={22} />
-                  Continue with Google
-                </>
-              )}
-            </button>
-            <p style={{ margin: '2px 0 0', fontSize: 12.5, fontWeight: 600, color: 'rgba(255,255,255,0.55)', textAlign: 'center' }}>
-              One tap — nothing to fill in, no confirmation email.
-            </p>
-
-            <Link href="/register" onClick={() => trackClick('join-signup-email')}
-              style={{
-                display: 'block', textAlign: 'center', marginTop: 4, padding: '6px 0',
-                fontSize: 14, fontWeight: 700, color: 'rgba(255,255,255,0.66)', textDecoration: 'underline',
-              }}>
-              or sign up with email
-            </Link>
-          </div>
-
           {err && <p style={{ marginTop: 12, fontSize: 14, color: '#fca5a5' }}>{err}</p>}
 
           <p style={{ marginTop: 20, fontSize: 14, color: 'rgba(255,255,255,0.55)' }}>
@@ -479,7 +487,8 @@ export default function JoinClient() {
                       max-width: 980px; margin: 32px auto 0; }
         .gj-hero-phone { display: flex; flex-direction: column; align-items: center; }
         .gj-aipill { margin-bottom: 20px; }
-        .gj-ctarow { margin-top: 28px; }
+        /* The auth stack now sits between the pill and the device. */
+        .gj-heroauthstack { margin-bottom: 30px; }
         .gj-badges { margin-top: 14px; }
         /* Narrower than the hero: ~65 characters a line is the point where a
            paragraph this long stops being a wall. */
@@ -496,8 +505,8 @@ export default function JoinClient() {
           /* .gj-lede went with the removed heading. .gj-subline is the h1 now,
              so its mobile size steps up instead of sitting at sub-line size. */
           .gj-subline { font-size: 26px !important; }
-          .gj-price { font-size: 32px !important; }
-          .gj-snitch { font-size: 15px !important; }
+          /* .gj-price and .gj-snitch went with the "Forever free" block and the
+             Guac-AI "snitched" line — both removed from the hero 2026-07-29. */
           .gj-story { margin-top: 32px; }
           .gj-storyp { font-size: 15.5px !important; }
           .gj-stickyinner { padding-right: 64px; }

@@ -19,6 +19,11 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '../../lib/supabase/client'
 import MetaPixel from '../../components/MetaPixel'
+// Same counters as /join, with start- names. Without these the /start-vs-/join
+// A/B is unmeasurable: we would see arrivals on both and still not know whether
+// anyone reached for a button, which is the one thing /join's counters revealed
+// (14 visitors, 0 presses).
+import { trackClick } from '../../lib/track-click'
 
 const INK = '#0B1410'
 
@@ -27,6 +32,10 @@ export default function StartClient() {
   const [err, setErr] = useState('')
 
   async function oauth(provider) {
+    // Counted on the press, not on success: the point is whether a visitor
+    // reached for the button at all. The OAuth handoff still fires no
+    // conversion event (see below) — this is a click counter, not a signup.
+    trackClick(`start-signup-${provider}`)
     setBusy(provider); setErr('')
     try {
       const { error } = await createClient().auth.signInWithOAuth({
@@ -93,6 +102,7 @@ export default function StartClient() {
           </button>
 
           <Link href="/register"
+            onClick={() => trackClick('start-signup-email')}
             className={`${btn} no-underline`} style={{ background: 'rgba(255,255,255,0.10)', color: '#fff' }}>
             Continue with email
           </Link>
@@ -102,7 +112,7 @@ export default function StartClient() {
 
         <p className="mt-6 text-center text-sm" style={{ color: 'rgba(255,255,255,0.55)' }}>
           Already have an account?{' '}
-          <Link href="/login" style={{ color: '#fff', fontWeight: 700 }}>SIGN IN</Link>
+          <Link href="/login" onClick={() => trackClick('start-signin')} style={{ color: '#fff', fontWeight: 700 }}>SIGN IN</Link>
         </p>
 
         <p className="mt-7 text-center text-[11px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.42)' }}>

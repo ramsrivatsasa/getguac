@@ -33,8 +33,11 @@ const db = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_
 // Every name passed to trackClick() anywhere in the app. Keep in sync when you
 // wire a new button — the point of the list is to show zeros.
 const WIRED = [
-  ['/join landing page', [
+  ['/join landing page (long, 19 goal cards)', [
     'join-app-store', 'join-google-play', 'join-signup-google', 'join-signup-email', 'join-demo',
+  ]],
+  ['/start landing page (one screen, signup only)', [
+    'start-signup-google', 'start-signup-email', 'start-signin',
   ]],
   ['Arcade launcher (dashboard)', [
     'games-menu', 'games-menu-all',

@@ -162,17 +162,20 @@ export default function JoinClient() {
                 This slot has now held, in order: "Your money's been talking /
                 GetGuac is listening", "Keep more of your own money. Get the
                 whole family organized.", a three-losses gap-opener, and "Keep
-                more of your own money. Get Organized." All were statements
-                ABOUT the product; this one is an instruction to the reader, and
-                it is deliberately the same sentence that used to sit under the
-                headline in lime — that line was promoted here rather than
-                copied, so the page does not say it twice.
+                more of your own money. Get Organized.", and "Every Dollar
+                Counts. Keep More of Yours." All the early ones were statements
+                ABOUT the product; this one is an instruction to the reader.
+                ⚠️ NOTE 2026-07-29: "Start Saving Today" is ALSO the closing CTA
+                headline further down this same page (see the final CTA section).
+                That echo is deliberate — top ask + closing ask — but if you
+                change one, decide about the other rather than leaving them
+                half-matched.
                 Consequence to keep in mind: the h1 no longer describes what
                 GetGuac is. The line under it and the story paragraph below the
                 phone now carry that entire job between them. Do not thin either
                 one out without putting the description somewhere else. */}
             <h1 className="gj-subline" style={{ ...DISPLAY, fontWeight: 800, color: '#fff', fontSize: 34, lineHeight: 1.15, letterSpacing: '-0.03em', margin: 0 }}>
-              Every Dollar Counts. Keep More of Yours.
+              Every Dollar Counts. Start Saving Today with GetGuac <span aria-hidden>🥑</span>
             </h1>
 
             {/* The "your money's been talking" refrain, restored to the hero on

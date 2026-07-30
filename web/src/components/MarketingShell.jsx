@@ -11,6 +11,7 @@ import HeaderSearch from './HeaderSearch'
 import MarketingAuthButtons from './MarketingAuthButtons'
 import MarketingMobileMenu from './MarketingMobileMenu'
 import MarketingFooter from './MarketingFooter'
+import AdSenseScript from './AdSenseScript'
 
 // Flat list — feeds the mobile hamburger menu (and keeps every page reachable).
 const NAV = [
@@ -80,6 +81,15 @@ export default function MarketingShell({ subtitle, hideSearch = false, headerTit
   const embedded = cookies().get('guac_embedded')?.value === '1'
   return (
     <div className="gg-marketing min-h-screen" style={{ fontFamily: 'var(--font-jakarta), system-ui, sans-serif', color: '#1A2E22', background: '#fff' }}>
+      {/* AdSense loader on the PUBLIC marketing pages only.
+          Why here and not the root layout: the root layout also wraps (dashboard),
+          and §8 of /privacy makes a hard promise that no ad tracker runs on a
+          signed-in page. MarketingShell is used by 24 public pages and by ZERO
+          pages under (dashboard), so mounting it here matches the policy exactly
+          — /privacy §8 already says AdSense "loads across our public pages".
+          Skipped when embedded: the mobile WebView renders these same pages to a
+          signed-in user, which is the case §8 covers. Same rule as MetaPixel. */}
+      {!embedded && <AdSenseScript />}
       {/* Scope the new typography + accents to marketing pages only. */}
       <style>{`
         .gg-marketing h1, .gg-marketing h2, .gg-marketing h3, .gg-marketing h4 { font-family: var(--font-bricolage), sans-serif; letter-spacing: -0.02em; }

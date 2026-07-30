@@ -48,42 +48,88 @@ export default function AdSlot({ slot = '', format = 'auto', className = '', min
       return
     }
     if (!CLIENT || !slot || hideForPremium) return
-    // Push at most once per slot — but do NOT let that guard skip the
-    // fill-watching below. React runs effects twice in dev (StrictMode); when
-    // `pushed` short-circuited the whole effect, the second run never attached
-    // the observer or the timeout, so an "unfilled" unit was never collapsed
-    // and left a 280px blank box inside the card.
-    if (!pushed.current) {
-      try {
-        // eslint-disable-next-line no-multi-assign
-        (window.adsbygoogle = window.adsbygoogle || []).push({})
-        pushed.current = true
-      } catch { /* adsbygoogle not ready / blocked */ }
-    }
-
     const ins = insRef.current
     if (!ins) return
+
+    let ro = null
+    let obs = null
+    let t = null
+
     const read = () => {
       const s = ins.getAttribute('data-ad-status')
       if (s === 'filled') setStatus('filled')
       else if (s === 'unfilled') setStatus('unfilled')
     }
-    // AdSense sets data-ad-status asynchronously once it resolves the request.
-    const obs = new MutationObserver(read)
-    obs.observe(ins, { attributes: true, attributeFilter: ['data-ad-status'] })
-    read()
-    // Fallback: if it never resolves, collapse. A real ad ALWAYS stamps
-    // data-ad-status="filled", so anything still undecided after a few seconds
-    // is not going to fill — script blocked, site not yet approved, no
-    // inventory, or an ad blocker. Note we must NOT keep the slot just because
-    // it has height: adsbygoogle expands a responsive <ins> to its reserved
-    // size the moment it mounts, so an unapproved site would otherwise be left
-    // with a permanent blank box (this was leaving ~250px of dead white space
-    // inside every game's start / game-over card).
-    const t = setTimeout(() => {
-      if (ins.getAttribute('data-ad-status') !== 'filled') setStatus('unfilled')
-    }, 2500)   // a working unit resolves well inside a second
-    return () => { obs.disconnect(); clearTimeout(t) }
+
+    // Watch for the fill decision. Started only AFTER a successful push — the
+    // countdown means "this request has had long enough to resolve", so arming
+    // it before the request exists would collapse a slot that was merely late
+    // to lay out.
+    //
+    // React runs effects twice in dev (StrictMode); the `pushed` guard must
+    // never short-circuit this part, or the second run leaves no observer and
+    // an "unfilled" unit is never collapsed (that used to leave a 280px blank
+    // box inside the card).
+    const watchFill = () => {
+      // AdSense sets data-ad-status asynchronously once it resolves the request.
+      obs = new MutationObserver(read)
+      obs.observe(ins, { attributes: true, attributeFilter: ['data-ad-status'] })
+      read()
+      // Fallback: if it never resolves, collapse. A real ad ALWAYS stamps
+      // data-ad-status="filled", so anything still undecided after a few seconds
+      // is not going to fill — script blocked, site not yet approved, no
+      // inventory, or an ad blocker. Note we must NOT keep the slot just because
+      // it has height: adsbygoogle expands a responsive <ins> to its reserved
+      // size the moment it mounts, so an unapproved site would otherwise be left
+      // with a permanent blank box (this was leaving ~250px of dead white space
+      // inside every game's start / game-over card).
+      t = setTimeout(() => {
+        if (ins.getAttribute('data-ad-status') !== 'filled') setStatus('unfilled')
+      }, 2500)   // a working unit resolves well inside a second
+    }
+
+    // Only request an ad once the <ins> actually has width. adsbygoogle measures
+    // the element at push time, so pushing at 0px logs the long-standing
+    //   "adsbygoogle.push() error: No slot size for availableWidth=0"
+    // and that unit never fills — Google does not retry it. Zero width happens
+    // whenever a slot mounts inside something not yet laid out: a collapsed
+    // parent, a game's start / game-over card, a not-yet-visible tab.
+    // Push at most once per slot.
+    const tryPush = () => {
+      if (pushed.current) return true
+      if (!ins.offsetWidth) return false
+      try {
+        // eslint-disable-next-line no-multi-assign
+        (window.adsbygoogle = window.adsbygoogle || []).push({})
+        pushed.current = true
+      } catch { /* adsbygoogle not ready / blocked */ }
+      return pushed.current
+    }
+
+    if (tryPush()) {
+      watchFill()
+    } else if (typeof ResizeObserver !== 'undefined') {
+      // Wait for the first non-zero width, then request.
+      ro = new ResizeObserver(() => {
+        if (tryPush()) { ro.disconnect(); ro = null; watchFill() }
+      })
+      ro.observe(ins)
+    } else {
+      // No ResizeObserver (very old browser) — fall back to the old behaviour
+      // rather than never requesting an ad at all.
+      pushed.current = true
+      try {
+        // eslint-disable-next-line no-multi-assign
+        (window.adsbygoogle = window.adsbygoogle || []).push({})
+      } catch { /* adsbygoogle not ready / blocked */ }
+      watchFill()
+    }
+
+    return () => {
+      if (ro) ro.disconnect()
+      if (obs) obs.disconnect()
+      if (t) clearTimeout(t)
+    }
   }, [slot, hideForPremium])
 
   // Tier-2 ad + premium subscriber, or inside the app WebView → render nothing.

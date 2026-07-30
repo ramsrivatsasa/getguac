@@ -126,6 +126,13 @@ const nextConfig = {
         destination: 'https://getguac.app/inbox',
         permanent: false,
       },
+      // Trailing-dot URLs. When someone writes "…see getguac.app/privacy." in
+      // prose, the sentence's full stop gets glued onto the link — /privacy.
+      // has taken 4 hits in 90 days from an off-site source and 404s every
+      // time. A dead legal page is a bad look for any policy review, and this
+      // costs nothing. Same trap applies to any URL that ends a sentence.
+      ...['privacy', 'terms', 'security', 'about', 'contact', 'articles', 'plan', 'pricing', 'features', 'editorial-policy']
+        .map((p) => ({ source: `/${p}.`, destination: `/${p}`, permanent: true })),
     ]
   },
 }

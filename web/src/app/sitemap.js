@@ -35,6 +35,10 @@ export default function sitemap() {
     { path: '/how-email-works', priority: 0.7, changeFrequency: 'monthly' },
     { path: '/download', priority: 0.8, changeFrequency: 'weekly' },
     { path: '/about', priority: 0.6, changeFrequency: 'monthly' },
+    // E-E-A-T: every article bylines "By the GetGuac team" and links here, and
+    // the Article JSON-LD uses it as author.url. A trust page that search
+    // engines can't discover does the job only half way.
+    { path: '/editorial-policy', priority: 0.5, changeFrequency: 'yearly' },
     { path: '/contact', priority: 0.5, changeFrequency: 'yearly' },
     { path: '/privacy', priority: 0.4, changeFrequency: 'yearly' },
     { path: '/terms', priority: 0.4, changeFrequency: 'yearly' },

@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { ArrowLeft, ArrowRight, Calculator as CalcIcon, Clock } from 'lucide-react'
 import MarketingShell from '../../../components/MarketingShell'
 import AdSlot from '../../../components/AdSlot'
+import ArticleFigure from '../../../components/ArticleFigure'
 import { ARTICLES, getArticle } from '../../../lib/articles'
 
 const SITE_URL = 'https://getguac.app'
@@ -13,12 +14,17 @@ function prettyDate(iso) {
   return `${MONTHS[Number(m) - 1] || ''} ${y}`.trim()
 }
 
-// Rough reading time from the structured body (paragraphs + headings + lists).
+// Rough reading time from the structured body (paragraphs + headings + lists
+// + figure titles/captions).
 function wordCount(body) {
   return body.reduce((n, item) => {
     if (typeof item === 'string') return n + item.split(/\s+/).length
     if (item && item.h) return n + item.h.split(/\s+/).length
     if (item && item.list) return n + item.list.join(' ').split(/\s+/).length
+    if (item && item.figure) {
+      const f = item.figure
+      return n + `${f.title || ''} ${f.caption || ''}`.trim().split(/\s+/).filter(Boolean).length
+    }
     return n
   }, 0)
 }
@@ -58,7 +64,10 @@ export default function ArticlePage({ params }) {
     '@type': 'Article',
     headline: a.title,
     description: a.excerpt,
-    author: { '@type': 'Organization', name: 'GetGuac', url: SITE_URL },
+    // E-E-A-T: name the author and point at a real, public editorial policy
+    // rather than leaving a bare Organization stub. Deliberately the team and
+    // not an invented human byline — we are not going to fabricate a credential.
+    author: { '@type': 'Organization', name: 'The GetGuac team', url: `${SITE_URL}/editorial-policy` },
     publisher: {
       '@type': 'Organization',
       name: 'GetGuac',
@@ -76,10 +85,18 @@ export default function ArticlePage({ params }) {
         <Link href="/articles" className="text-sm text-emerald-700 font-semibold inline-flex items-center gap-1 hover:underline"><ArrowLeft size={14} /> All articles</Link>
         <span className="block text-[11px] font-bold uppercase tracking-wider text-emerald-700 mt-4">{a.category}</span>
         <h1 className="text-3xl sm:text-4xl font-black text-gray-900 mt-1 leading-tight">{a.title}</h1>
-        <div className="mt-3 flex items-center gap-2.5 text-xs text-gray-400 font-semibold">
+        {/* Byline. An article with no visible author and no stated editorial
+            standard is exactly the shape a content review treats as low-trust,
+            and every article here carried both gaps. The link goes to a real
+            page, and the attribution is the team — not an invented expert. */}
+        <div className="mt-3 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs font-semibold" style={{ color: '#5F6D63' }}>
+          <span>By the GetGuac team</span>
+          <span aria-hidden>·</span>
           <span className="inline-flex items-center gap-1"><Clock size={12} /> {readMins} min read</span>
           <span aria-hidden>·</span>
           <span>Updated {prettyDate(updated)}</span>
+          <span aria-hidden>·</span>
+          <Link href="/editorial-policy" className="text-emerald-700 hover:underline">Editorial policy</Link>
         </div>
 
         <div className="mt-6 space-y-4 text-[15px] text-gray-700 leading-relaxed">
@@ -91,6 +108,10 @@ export default function ArticlePage({ params }) {
                 {item.list.map((li, j) => <li key={j}>{li}</li>)}
               </ul>
             )
+            // Figures — bars / split / steps / line, drawn from the same numbers
+            // the surrounding paragraphs cite. Until this node type existed the
+            // renderer handled only text, so every article was a wall of prose.
+            if (item && item.figure) return <ArticleFigure key={i} figure={item.figure} />
             return null
           })}
         </div>

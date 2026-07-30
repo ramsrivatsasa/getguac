@@ -1,7 +1,19 @@
 // Original GetGuac money articles for the Articles / Resources hub. In-depth,
 // evergreen, US-focused, cross-linked to the matching calculator. Each body item
-// is a paragraph string, a { h } subheading, or a { list } bullet array.
+// is a paragraph string, a { h } subheading, a { list } bullet array, or a
+// { figure } diagram (see components/ArticleFigure.jsx for the four shapes:
+// bars, split, steps, line).
 // (Rewritten 2026-06-30 from the earlier thin stubs — AdSense low-value-content fix.)
+//
+// 2026-07-30: every article gained a figure. Until then the renderer had no
+// image or diagram node at all, so all 20 shipped as unbroken walls of text.
+// A figure is placed directly after the prose that states its numbers — keep it
+// that way, and never put a number in a figure that the article doesn't say.
+//
+// 🔒 There is deliberately NO link node. /editorial-policy tells readers that an
+// article cannot contain an affiliate or paid link, and that promise is only
+// true because the renderer makes it structurally impossible. Adding a link node
+// would silently make that page a lie.
 
 export const ARTICLES = [
   {
@@ -28,6 +40,26 @@ export const ARTICLES = [
       },
       "Say you invest $300 per month starting at age 25, at an average annual return of around 7% (a rough historical average for a diversified stock index fund, before inflation). By age 65, you'd have contributed $144,000 of your own money. But the account balance would be somewhere in the neighborhood of $790,000 — because the growth compounded on itself for 40 years.",
       "Now imagine you wait until 35 to start. Same $300/month, same ~7% return, but only 30 years. You'd contribute $108,000 and end up with roughly $340,000. Starting just 10 years earlier — with $36,000 more contributed — could more than double the outcome. That's compounding at work.",
+      {
+        "figure": {
+          "type": "bars",
+          "format": "usd",
+          "title": "$300 a month, invested at about 7%",
+          "data": [
+            {
+              "label": "Start at 25 — 40 years of growth",
+              "value": 790000,
+              "note": "You contribute $144,000 of your own money"
+            },
+            {
+              "label": "Start at 35 — 30 years of growth",
+              "value": 340000,
+              "note": "You contribute $108,000 of your own money"
+            }
+          ],
+          "caption": "Ten extra years of compounding more than doubles the outcome, on $36,000 more contributed. An illustration at a rough historical average — real returns vary year to year."
+        }
+      },
       {
         "h": "Starting early beats saving more later"
       },
@@ -88,6 +120,30 @@ export const ARTICLES = [
         ]
       },
       {
+        "figure": {
+          "type": "bars",
+          "title": "How many months you should cover",
+          "data": [
+            {
+              "label": "Stable salaried job, dual income",
+              "value": 3,
+              "display": "3 months"
+            },
+            {
+              "label": "Single income household",
+              "value": 5,
+              "display": "4–5 months"
+            },
+            {
+              "label": "Self-employed, or sole earner with dependents",
+              "value": 6,
+              "display": "6+ months"
+            }
+          ],
+          "caption": "Months of essential expenses — rent, utilities, groceries, transport, insurance, minimum debt payments. Not your total spending."
+        }
+      },
+      {
         "h": "What counts as 'monthly expenses'"
       },
       "Your emergency fund should cover your actual monthly cost of staying alive and housed — not your spending in general. That means rent or mortgage, utilities, groceries, transportation, insurance premiums, minimum debt payments, and any subscriptions that are genuinely essential. It does not mean dining out, travel, or discretionary shopping.",
@@ -134,6 +190,28 @@ export const ARTICLES = [
       },
       "Many employers match a portion of your contributions. A common structure is something like: the employer matches 50% of your contributions up to 6% of your salary. That means if you earn $60,000 and contribute 6% ($3,600/year), your employer adds another $1,800 — for free.",
       "That's a 50% instant return on $3,600 before the market does anything at all. No investment in the world reliably delivers that. Not contributing enough to capture the full match is, in plain terms, turning down part of your compensation. Check your plan documents or ask HR what your specific match formula is — and contribute at least enough to get every dollar of it.",
+      {
+        "figure": {
+          "type": "bars",
+          "format": "usd",
+          "title": "A 50%-up-to-6% match on a $60,000 salary",
+          "data": [
+            {
+              "label": "You contribute 6%",
+              "value": 3600
+            },
+            {
+              "label": "Employer matches 50% of that",
+              "value": 1800
+            },
+            {
+              "label": "Total into your 401(k) that year",
+              "value": 5400
+            }
+          ],
+          "caption": "The $1,800 is compensation you only receive if you contribute. Not contributing enough to capture the full match is turning down part of your pay."
+        }
+      },
       {
         "h": "Pre-tax traditional vs. Roth 401(k)"
       },
@@ -192,6 +270,27 @@ export const ARTICLES = [
       },
       "Both a Roth IRA and a Traditional IRA give you a tax-advantaged way to save for retirement. The difference is timing. A Traditional IRA generally lets you deduct contributions from your taxable income now, and you pay income tax when you withdraw money in retirement. A Roth IRA gives you no deduction now, but your money grows tax-free and qualified withdrawals in retirement are completely untaxed.",
       "The question you're really answering is: when will your tax rate be lower? If it's lower now (you're early in your career, your income is relatively modest, or you're in a low-income year), paying taxes now and getting tax-free withdrawals later is usually the better deal. If you expect to be in a lower tax bracket in retirement than you are today, deferring taxes with a Traditional IRA often makes more sense.",
+      {
+        "figure": {
+          "type": "steps",
+          "title": "The one question that decides it",
+          "data": [
+            {
+              "label": "Is your tax rate lower now than it will be in retirement?",
+              "note": "Roth. Pay tax at today’s lower rate and withdraw tax-free later."
+            },
+            {
+              "label": "Is it higher now than it will be in retirement?",
+              "note": "Traditional. Take the deduction now, while it is worth more."
+            },
+            {
+              "label": "Genuinely unsure?",
+              "note": "Hold both. In retirement you choose which account to draw from each year, which lets you manage your own tax bracket."
+            }
+          ],
+          "caption": "Agonising over the choice — and delaying because of it — costs more than picking the \"wrong\" one and starting now."
+        }
+      },
       {
         "h": "Who the Roth IRA typically suits"
       },
@@ -273,6 +372,26 @@ export const ARTICLES = [
       "Your total minimum outlay is $195. That leaves $105 per month as your attack payment.",
       "Avalanche order: Card A (22%) → Card B (17%) → Card C (12%). You'd pay off all three debts in roughly 32 months and pay approximately $1,850 in total interest.",
       "Snowball order: Card A ($800) → Card B ($3,000) → Card C ($5,500). Same debts, same $300/month. You'd still clear them in roughly 33 months, but you'd pay approximately $2,050 in total interest — about $200 more.",
+      {
+        "figure": {
+          "type": "bars",
+          "format": "usd",
+          "title": "Total interest on $9,300 of card debt at $300 a month",
+          "data": [
+            {
+              "label": "Avalanche — highest APR first",
+              "value": 1850,
+              "note": "Roughly 32 months to debt-free"
+            },
+            {
+              "label": "Snowball — smallest balance first",
+              "value": 2050,
+              "note": "Roughly 33 months to debt-free"
+            }
+          ],
+          "caption": "The avalanche wins by about $200 on these numbers. But an avalanche you abandon costs far more than a snowball you finish."
+        }
+      },
       "That $200 gap is real, and the avalanche wins it. But if the snowball's early win on Card A keeps you in the game when motivation dips, the snowball saves you more money in practice than an abandoned avalanche.",
       {
         "h": "The 0% balance-transfer card: a bonus move"
@@ -341,6 +460,28 @@ export const ARTICLES = [
           "Savings/debt (20%): $840 — 401(k) contribution $400, emergency fund $200, extra debt payment $240"
         ]
       },
+      {
+        "figure": {
+          "type": "split",
+          "format": "usd",
+          "title": "$4,200 of take-home pay, split three ways",
+          "data": [
+            {
+              "label": "Needs — 50%",
+              "value": 2100
+            },
+            {
+              "label": "Wants — 30%",
+              "value": 1260
+            },
+            {
+              "label": "Savings & extra debt — 20%",
+              "value": 840
+            }
+          ],
+          "caption": "The percentages come off take-home pay, not gross. Using gross makes the needs bucket look bigger than the money you actually have."
+        }
+      },
       "If your rent alone is $1,800, your needs bucket is $300 over before you've added anything else. That's the signal to look at housing costs — not to abandon saving.",
       {
         "h": "Pay yourself first: automating the 20%"
@@ -391,6 +532,27 @@ export const ARTICLES = [
         ]
       },
       "By contrast, a traditional 401(k) gives you the first two benefits but taxes you on the way out. A Roth IRA gives you the last two but taxes you on the way in. The HSA is the only account that skips taxes at all three stages — but only when funds are used for qualified medical expenses.",
+      {
+        "figure": {
+          "type": "steps",
+          "title": "Where each account taxes you",
+          "data": [
+            {
+              "label": "Money goes in — untaxed",
+              "note": "Contributions are deductible, or pre-tax straight from payroll. A Roth IRA taxes you here."
+            },
+            {
+              "label": "Money grows — untaxed",
+              "note": "Interest, dividends and investment gains inside the HSA are never taxed."
+            },
+            {
+              "label": "Money comes out — untaxed",
+              "note": "Withdrawals for qualified medical expenses are tax-free. A traditional 401(k) taxes you here. Only the HSA skips all three."
+            }
+          ],
+          "caption": "The triple advantage holds only for qualified medical expenses. Before 65, a non-qualified withdrawal owes income tax plus a 20% penalty."
+        }
+      },
       {
         "h": "The rollover advantage: HSAs vs. FSAs"
       },
@@ -459,6 +621,30 @@ export const ARTICLES = [
         "h": "The thirds framework"
       },
       "Financial planners often describe college funding in thirds: roughly one-third from savings accumulated before enrollment, one-third from current income and student wages during the college years, and one-third from student loans or aid. This framework is a sanity check, not a rigid rule — but it's useful because it prevents two common errors.",
+      {
+        "figure": {
+          "type": "split",
+          "title": "The thirds framework",
+          "data": [
+            {
+              "label": "Saved before enrollment",
+              "value": 1,
+              "display": "About a third"
+            },
+            {
+              "label": "Current income & student wages",
+              "value": 1,
+              "display": "About a third"
+            },
+            {
+              "label": "Loans, grants & scholarships",
+              "value": 1,
+              "display": "About a third"
+            }
+          ],
+          "caption": "A sanity check, not a rule. It stops you over-funding a 529 — excess money withdrawn for non-education purposes owes income tax plus a 10% penalty on earnings — and it assumes some aid will exist."
+        }
+      },
       "First, it keeps you from over-saving: you don't need to fund 100% of a projected future cost through a 529. Over-funding creates headaches, because excess 529 money withdrawn for non-education purposes is subject to income tax plus a 10% penalty on earnings.",
       "Second, it acknowledges that income and aid will exist. Many families qualify for at least some need-based aid; merit scholarships are also common. Build a plan that doesn't assume zero aid, or you may put yourself under unnecessary financial pressure.",
       {
@@ -518,6 +704,30 @@ export const ARTICLES = [
         "h": "A simple worked example"
       },
       "Suppose you're deciding between renting an apartment for $1,800 a month and buying a comparable home for $380,000 with 10% down. Your mortgage payment might be around $2,000/month (principal + interest at a moderate rate). Add $500 for taxes, $120 for insurance, and $315 for maintenance (1% of value ÷ 12). All-in: roughly $2,935/month to own.",
+      {
+        "figure": {
+          "type": "bars",
+          "format": "usd",
+          "title": "$1,800 rent vs a $380,000 home with 10% down, per month",
+          "data": [
+            {
+              "label": "Rent",
+              "value": 1800
+            },
+            {
+              "label": "Own — mortgage payment only",
+              "value": 2000,
+              "note": "The comparison most people stop at"
+            },
+            {
+              "label": "Own — all-in",
+              "value": 2935,
+              "note": "Plus $500 taxes, $120 insurance, $315 maintenance"
+            }
+          ],
+          "caption": "The real gap is $1,135 a month — $68,100 over five years — and that is before the 2–5% of the price you pay to buy and the 6–10% you pay to sell."
+        }
+      },
       "The monthly gap is $1,135. Over five years that's $68,100 more spent owning. You'd need your home to appreciate enough — and your equity to accumulate enough — to exceed that gap plus your transaction costs before the buying side wins. In a fast-appreciating market with a long time horizon, buying can win decisively. In a flat market where you move in three years, renting almost always wins.",
       {
         "h": "Equity and flexibility: the intangibles"
@@ -563,6 +773,36 @@ export const ARTICLES = [
           "Credit mix (~10%): Whether you have different types of credit (cards, loans, etc.).",
           "New credit (~10%): Recent applications and hard inquiries."
         ]
+      },
+      {
+        "figure": {
+          "type": "split",
+          "format": "pct",
+          "title": "What a FICO score is actually made of",
+          "data": [
+            {
+              "label": "Payment history",
+              "value": 35
+            },
+            {
+              "label": "Amounts owed / utilization",
+              "value": 30
+            },
+            {
+              "label": "Length of credit history",
+              "value": 15
+            },
+            {
+              "label": "Credit mix",
+              "value": 10
+            },
+            {
+              "label": "New credit",
+              "value": 10
+            }
+          ],
+          "caption": "The first two are about 65% of the score between them — and utilization is the one you can move inside a single billing cycle."
+        }
       },
       "Payment history and utilization together account for roughly 65% of your score. Master those two and you've done most of the work.",
       {
@@ -641,6 +881,24 @@ export const ARTICLES = [
       "An expense ratio is the annual fee a fund charges, expressed as a percentage of your investment. A 1% expense ratio on $100,000 costs you $1,000 a year. That sounds modest, but it compounds against you for decades.",
       "Here's the math: assume two funds both earn 8% gross returns over 30 years. Fund A charges 0.05% (typical for a broad index fund). Fund B charges 1.0% (typical for an active fund). Starting with $50,000, Fund A grows to roughly $488,000. Fund B grows to roughly $378,000. That 0.95% annual difference costs you over $110,000 in final wealth — on the same gross return. Low fees matter enormously over long time horizons.",
       {
+        "figure": {
+          "type": "bars",
+          "format": "usd",
+          "title": "$50,000 held for 30 years at the same 8% gross return",
+          "data": [
+            {
+              "label": "Index fund — 0.05% expense ratio",
+              "value": 488000
+            },
+            {
+              "label": "Active fund — 1.00% expense ratio",
+              "value": 378000
+            }
+          ],
+          "caption": "Identical gross returns, identical 30 years. The 0.95-point difference in fees costs over $110,000 of final wealth."
+        }
+      },
+      {
         "h": "A simple 2–3 fund portfolio"
       },
       "You don't need twenty funds to build a solid investment portfolio. Many experienced investors use just two or three:",
@@ -705,6 +963,26 @@ export const ARTICLES = [
       },
       "Say you spend roughly $1,200 on holiday gifts, travel, and celebrations each year. Divide by 12 months: that's $100 per month. Instead of scrambling every December, you quietly move $100 into a labeled bucket each month and arrive at the holidays fully funded.",
       "Another example: your car insurance is paid every six months at $720 per payment. Divide $720 by 6 months: $120 per month. Set that aside every month and your next premium is covered before you even get the bill.",
+      {
+        "figure": {
+          "type": "bars",
+          "format": "usd",
+          "title": "Turning irregular bills into a monthly line item",
+          "data": [
+            {
+              "label": "Holidays — about $1,200 a year",
+              "value": 100,
+              "display": "$100 a month"
+            },
+            {
+              "label": "Car insurance — $720 every six months",
+              "value": 120,
+              "display": "$120 a month"
+            }
+          ],
+          "caption": "Estimate the cost, divide by the months until it lands, set that aside every month. When the bill arrives the money is already there."
+        }
+      },
       "Do this for every irregular expense you can anticipate, add up the monthly amounts, and fold that total into your budget as a fixed line item — the same way you'd treat rent or utilities.",
       {
         "h": "Common sinking fund categories"
@@ -775,6 +1053,28 @@ export const ARTICLES = [
       },
       "Large purchases — a laptop, a car repair, a vacation — tend to be memorable. You planned for them, or at least you noticed the sting. The real budget leaks are the transactions that feel too small to matter in the moment: a $6 smoothie, a $12 parking fee, a $9.99 monthly charge for a service you used twice.",
       "Here is a quick illustration of the math. Suppose you spend $8 on lunch out three times a week. That feels modest — it is less than the price of a movie ticket. But multiply it out: $8 × 3 × 52 = $1,248 per year. Now add a daily $4 coffee habit: $4 × 5 × 52 = $1,040. Two habits that individually feel minor have now accounted for nearly $2,300 annually. Receipts surface exactly this kind of math before it surprises you at year-end.",
+      {
+        "figure": {
+          "type": "bars",
+          "format": "usd",
+          "title": "Two small habits, priced by the year",
+          "data": [
+            {
+              "label": "Lunch out — $8, three times a week",
+              "value": 1248
+            },
+            {
+              "label": "Coffee — $4, five days a week",
+              "value": 1040
+            },
+            {
+              "label": "Both, over one year",
+              "value": 2288
+            }
+          ],
+          "caption": "Two purchases that each feel too small to matter in the moment. Receipts surface this arithmetic before it surprises you at year-end."
+        }
+      },
       {
         "h": "How categorizing receipts changes the picture"
       },
@@ -853,6 +1153,40 @@ export const ARTICLES = [
       "Suppose your audit turns up the following: a $7.99/month streaming service you rarely watch, a $4.99/month music tier you mostly use on a free plan anyway, a $12.99/month software subscription for a tool you stopped needing six months ago, and a $2.99/month cloud storage plan that duplicates one you already have through your phone's operating system.",
       "Monthly total: $28.96. That feels modest — less than one dinner out. But annualized: $28.96 × 12 = $347.52 per year. That is the equivalent of a round-trip domestic flight, several months of groceries for a single person, or a solid emergency fund contribution. The monthly view obscures the annual reality. Always convert monthly subscription costs to annual figures when evaluating them.",
       {
+        "figure": {
+          "type": "bars",
+          "format": "usd",
+          "title": "$28.96 a month — $347.52 a year",
+          "data": [
+            {
+              "label": "Streaming service you rarely watch",
+              "value": 7.99,
+              "display": "$7.99/mo",
+              "note": "$95.88 a year"
+            },
+            {
+              "label": "Music tier you mostly use free anyway",
+              "value": 4.99,
+              "display": "$4.99/mo",
+              "note": "$59.88 a year"
+            },
+            {
+              "label": "Software you stopped needing months ago",
+              "value": 12.99,
+              "display": "$12.99/mo",
+              "note": "$155.88 a year"
+            },
+            {
+              "label": "Cloud storage that duplicates your phone’s",
+              "value": 2.99,
+              "display": "$2.99/mo",
+              "note": "$35.88 a year"
+            }
+          ],
+          "caption": "Four charges that each feel too small to bother cancelling. Annualised, they are a round-trip domestic flight."
+        }
+      },
+      {
         "h": "Common mistake: the 'I might use it someday' trap"
       },
       "The most common reason people keep subscriptions they should cancel is vague future intent. 'I am going to get back into that workout app.' 'I will probably want to watch that show eventually.' This reasoning is almost always more expensive than just canceling and re-subscribing when the moment actually arrives. Re-subscribing to a $10/month service costs $10. Keeping it for six months on the promise of future use costs $60. Cancel now and re-subscribe with intention later.",
@@ -895,6 +1229,29 @@ export const ARTICLES = [
       },
       "Many retailers offer post-purchase price adjustments — if the item you bought goes on sale within a certain window (often 14 to 30 days), you can receive the difference back without returning and re-purchasing the item. This policy exists at a wide range of retailers, though not all, and the window is usually shorter than the standard return window.",
       "Here is how the math works: you buy a jacket for $120. Ten days later, the same jacket is on sale for $84. A price adjustment would return $36 to you. All you need is your receipt and about five minutes at customer service or a quick chat with support online.",
+      {
+        "figure": {
+          "type": "bars",
+          "format": "usd",
+          "title": "A price adjustment, in one example",
+          "data": [
+            {
+              "label": "What you paid for the jacket",
+              "value": 120
+            },
+            {
+              "label": "Its sale price ten days later",
+              "value": 84
+            },
+            {
+              "label": "Adjusted back to you",
+              "value": 36,
+              "note": "Receipt plus about five minutes at customer service"
+            }
+          ],
+          "caption": "No retailer is going to email you when your recent purchase gets cheaper. You have to notice — which is the whole reason to keep the receipt."
+        }
+      },
       "The catch is that you have to notice the price drop and act on it. Most retailers are not going to email you to let you know your recent purchase just got cheaper. Build a habit of glancing back at significant recent purchases when you see a sale event — it takes a minute and occasionally turns into real money back.",
       {
         "h": "Warranties, recalls, and manufacturer programs"
@@ -952,6 +1309,24 @@ export const ARTICLES = [
       "There is no single national sales tax rate in the United States. Each state sets its own base rate, and most states allow counties and cities to layer additional local taxes on top of that. This means the effective sales tax rate on a given purchase depends on exactly where the transaction takes place.",
       "Some states have no sales tax at all — you pay what the tag says, nothing more. Other states have base rates in the low single digits. Still others, when state and local rates are combined, can push effective rates close to or above 10 percent. If you regularly shop near a state or county border, it can actually be worth knowing which side charges less, especially for larger purchases.",
       "A practical example: a $500 appliance purchased where the combined rate is 5 percent costs you $525. The same appliance in a jurisdiction with a 10 percent rate costs $550. That $25 difference is real money, and it comes entirely from your zip code.",
+      {
+        "figure": {
+          "type": "bars",
+          "format": "usd",
+          "title": "The same $500 appliance, two zip codes",
+          "data": [
+            {
+              "label": "Where the combined rate is 5%",
+              "value": 525
+            },
+            {
+              "label": "Where the combined rate is 10%",
+              "value": 550
+            }
+          ],
+          "caption": "A $25 difference that comes entirely from where the transaction happens. There is no single national sales tax rate in the US."
+        }
+      },
       {
         "h": "What is and is not taxed — exemptions that matter"
       },
@@ -1022,6 +1397,35 @@ export const ARTICLES = [
           "Month 3: price $25/share. $300 buys 12 shares.",
           "Month 4: price $50/share. $300 buys 6 shares."
         ]
+      },
+      {
+        "figure": {
+          "type": "bars",
+          "title": "The same $300 buys more shares when prices are low",
+          "data": [
+            {
+              "label": "Month 1 — $30 a share",
+              "value": 10,
+              "display": "10 shares"
+            },
+            {
+              "label": "Month 2 — $20 a share",
+              "value": 15,
+              "display": "15 shares"
+            },
+            {
+              "label": "Month 3 — $25 a share",
+              "value": 12,
+              "display": "12 shares"
+            },
+            {
+              "label": "Month 4 — $50 a share",
+              "value": 6,
+              "display": "6 shares"
+            }
+          ],
+          "caption": "$1,200 invested, 43 shares, an average cost of $27.91 a share — below the $31.25 simple average of the four prices you actually saw."
+        }
       },
       "Over four months you invested $1,200 total and ended up with 43 shares. Your average cost per share is $1,200 divided by 43, which is about $27.91.",
       "Now compare that with the simple average of the four prices: $30, $20, $25 and $50 average out to $31.25. Your actual cost — $27.91 — came in lower. That gap is the quiet benefit of DCA. Because your fixed dollars scooped up extra shares in the cheap months and fewer in the pricey month, your blended price landed below the plain average of the prices you saw.",
@@ -1098,6 +1502,32 @@ export const ARTICLES = [
       },
       "Even good debt becomes a problem if there is too much of it. The simplest guardrail is your debt-to-income ratio, or DTI: the share of your monthly gross income that goes to debt payments.",
       "Work it out by adding up your required monthly debt payments and dividing by your gross monthly income. Suppose your payments look like this: $1,200 mortgage, $250 student loan, $300 car loan, and $150 in minimum credit-card payments. That is $1,900 in monthly debt payments. If your gross monthly income is $6,000, your DTI is $1,900 divided by $6,000, which is about 0.317 — roughly 32%.",
+      {
+        "figure": {
+          "type": "bars",
+          "format": "usd",
+          "title": "A debt-to-income ratio, worked out",
+          "data": [
+            {
+              "label": "Mortgage",
+              "value": 1200
+            },
+            {
+              "label": "Car loan",
+              "value": 300
+            },
+            {
+              "label": "Student loan",
+              "value": 250
+            },
+            {
+              "label": "Credit-card minimums",
+              "value": 150
+            }
+          ],
+          "caption": "$1,900 of required monthly payments against $6,000 of gross monthly income is a DTI of about 32% — committed before a single grocery run. Lower is safer."
+        }
+      },
       "Lenders watch this number because it signals how stretched you are, and you should watch it for the same reason. As a rough rule of thumb, lower is safer, and once a large chunk of your income is committed to debt before you have bought a single grocery run, you have little room for a surprise. Running your own DTI through a calculator a couple of times a year keeps the number honest.",
       {
         "h": "Questions to ask before you borrow"
@@ -1164,6 +1594,26 @@ export const ARTICLES = [
       },
       "Say you keep $5,000 in savings. In a big-bank account paying a near-zero rate — call it about 0.01% APY — you would earn roughly fifty cents over a year. Not five dollars. Fifty cents.",
       "Move that same $5,000 to an HYSA paying, say, around 4% APY, and you would earn roughly $200 over a year — about $5,000 times 0.04. Same money, same safety (assuming both are insured), same easy access. The only thing you changed was the account.",
+      {
+        "figure": {
+          "type": "bars",
+          "format": "usd",
+          "title": "One year of interest on the same $5,000",
+          "data": [
+            {
+              "label": "Big-bank savings, about 0.01% APY",
+              "value": 0.5,
+              "display": "about $0.50"
+            },
+            {
+              "label": "High-yield savings, about 4% APY",
+              "value": 200,
+              "display": "about $200"
+            }
+          ],
+          "caption": "Same money, same FDIC protection, same easy access — the only thing that changed is the account. At a $15,000 balance the gap is roughly $600 a year against about a dollar fifty. Rates move, but the gap between sleepy and competitive accounts tends to persist."
+        }
+      },
       "Now stretch it. If your emergency fund grows toward $15,000, that gap widens to roughly $600 a year versus about a dollar and a half. The bigger your safe-money balance, the more the choice of account matters — and the more the do-nothing option quietly costs you.",
       {
         "h": "Watch for teaser rates and fees"
@@ -1200,6 +1650,31 @@ export const ARTICLES = [
       },
       "A monthly grocery number is hard to feel. A weekly number is easy. Divide your monthly target by about 4.3 — the rough number of weeks in a month — to get a weekly figure you can check against as you shop.",
       "Say your honest baseline came to about $900 a month for a household of three, and you set a target of $800. Divide $800 by 4.3 and you get roughly $186 a week. Now go one level deeper. If your household eats around 21 dinners a week between everyone, that is about $186 divided by 21, or roughly $8.85 per person-dinner — and that is before breakfasts, lunches, and snacks. Suddenly the abstract budget becomes a concrete question at the shelf: does this cart fit a week that costs about $186?",
+      {
+        "figure": {
+          "type": "steps",
+          "title": "From receipts to a number you can shop against",
+          "data": [
+            {
+              "label": "Add up your real receipts",
+              "note": "A household of three finds a baseline of about $900 a month — almost always higher than the guess."
+            },
+            {
+              "label": "Set a target just below it",
+              "note": "$800, not $600. A fantasy number collapses in the first normal week and takes your motivation with it."
+            },
+            {
+              "label": "Divide by 4.3 weeks",
+              "note": "$800 ÷ 4.3 ≈ $186 a week — a number you can hold a cart up against."
+            },
+            {
+              "label": "Go one level deeper",
+              "note": "$186 ÷ 21 dinners ≈ $8.85 per person-dinner, and that is before breakfasts, lunches and snacks."
+            }
+          ],
+          "caption": "The maths only has to be done once. It recalibrates what a reasonable cart looks like, and that instinct does the work from then on."
+        }
+      },
       "You do not have to track every meal forever. Doing this math once recalibrates your sense of what a reasonable cart looks like, and that instinct does the work going forward.",
       {
         "h": "Learn to read the unit price"
@@ -1231,6 +1706,581 @@ export const ARTICLES = [
       "Total up your recent grocery receipts to find your real baseline, set a target a little below it, and convert that target into a weekly number you can actually shop against. Keeping the receipts in one place makes this painless — GetGuac scans your grocery receipts to track exactly what you spend and can flag where a better price exists, so your baseline and your target stay honest without manual tallying.",
       "Then watch for the two classic mistakes. The first is setting the number too low out of optimism, blowing it in week one, and giving up — start realistic and tighten gradually. The second is judging your week by the total at the register while ignoring unit prices, which lets shrinkflation and oversized packages erode your budget even when the total looks fine.",
       "If you are trimming groceries to free up money for something specific — a debt payoff, a trip, a cushion — name that goal and run it through a savings-goal calculator so the sacrifice has a face. It is a lot easier to skip the impulse cart when you can see the thing your restraint is buying. This is general guidance, not personalized financial advice."
+    ]
+  },
+  {
+    "slug": "how-long-to-keep-receipts",
+    "title": "How long should you actually keep a receipt?",
+    "category": "Receipts",
+    "excerpt": "Most receipts can go in a month. A few you should keep for seven years — and a handful until you sell the house.",
+    "calc": null,
+    "updated": "2026-07-30",
+    "body": [
+      "Almost everyone handles receipts one of two ways: throw them all out immediately and occasionally regret it, or keep every single one in a drawer that becomes archaeologically interesting and practically useless. Neither is a system. The useful version is knowing that receipts fall into a handful of tiers, and each tier has a different answer.",
+      "Here is the framework, from shortest to longest.",
+      {
+        "h": "Tier 1: until the transaction clears — a few days"
+      },
+      "The shortest-lived receipt is one for a routine purchase you have no intention of returning. Its only job is to let you check the charge against your bank or card statement. Once the transaction has posted and the amount matches, that receipt has done everything it will ever do.",
+      "This is most of what comes out of a register: coffee, petrol, a sandwich, a bag of groceries you have already eaten. Verify and discard. The trap is not throwing these away — it is keeping them, because a drawer full of them is what makes people stop sorting receipts entirely.",
+      {
+        "h": "Tier 2: until the return window closes"
+      },
+      "Anything you might return, exchange, or be unhappy with needs its receipt until the retailer’s return window has expired. That is usually somewhere between two weeks and three months depending on the store and the product category, and the clock almost always starts on the purchase date rather than the day you opened the box.",
+      "Two specific cases catch people out. Gifts bought early — a November purchase for a December holiday can be outside a 30-day window before it is ever unwrapped. And anything you bought but have not yet used: the unopened printer, the shoes still in the box, the appliance waiting for a free weekend. Those are precisely the items whose window quietly expires while you are not paying attention.",
+      {
+        "h": "Tier 3: for the life of the warranty"
+      },
+      "If a product carries a manufacturer warranty, the receipt is what proves the purchase date the warranty runs from. Keep it as long as the coverage lasts — commonly one to three years for electronics and appliances, sometimes much longer for tools, mattresses and building materials.",
+      "This is the tier people lose the most money on. When a two-year-old appliance dies, the retailer’s return window closed long ago, but the manufacturer’s warranty may well be live. Without a dated proof of purchase, that claim gets much harder. A receipt you kept costs nothing; a warranty claim you cannot make costs the price of a replacement.",
+      {
+        "h": "Tier 4: three to seven years — anything with tax consequences"
+      },
+      "Records that support something on a tax return live on a much longer clock. The general rule in the US is that the IRS can examine a return for three years after you file it. That window extends to six years if you substantially under-report income, and there is no time limit at all on an unfiled or fraudulent return. Some categories, such as claims relating to bad debts or worthless securities, carry a seven-year rule.",
+      "Because the exact rules depend on your situation and do change, treat these as orientation rather than gospel and check current IRS guidance — or ask a tax professional — for anything material. The practical upshot for most people is simple: if a receipt supports a number you put on a tax return, keep it for at least three years after filing, and seven if you want to be comfortable rather than merely compliant.",
+      {
+        "h": "Tier 5: until you sell the asset, plus a few years"
+      },
+      "A small category of receipts should outlive almost everything else in your filing system: records of money spent improving a property or acquiring a significant asset.",
+      "If you own a home, the cost of capital improvements — a new roof, an addition, a renovated kitchen — can matter when you eventually sell, because those costs may adjust the basis used to work out any gain. That means a receipt from a kitchen renovation could still be relevant fifteen or twenty years later. Routine repairs generally do not count the same way, but the distinction is exactly why keeping the paperwork is worth it: you want the option to make the case.",
+      "The same logic applies to major purchases you might one day sell, insure, or claim: keep the proof of what you paid and when.",
+      {
+        "h": "The one-glance version"
+      },
+      {
+        "list": [
+          "Routine everyday purchase → discard once the charge clears your statement.",
+          "Anything returnable → keep until the return window closes; note the deadline for gifts and unopened items.",
+          "Anything under warranty → keep for the full warranty period, not the return period.",
+          "Anything that supports a tax return → at least three years after filing; seven is the comfortable answer.",
+          "Home improvements and major assets → until you sell, plus a few years after.",
+          "Business expenses if you are self-employed → treat every one as tier 4 by default."
+        ]
+      },
+      {
+        "figure": {
+          "type": "bars",
+          "title": "The five tiers, by how long they last",
+          "data": [
+            {
+              "label": "Routine purchase — verify against your statement",
+              "value": 0.2,
+              "display": "days"
+            },
+            {
+              "label": "Anything returnable",
+              "value": 3,
+              "display": "2 weeks to 3 months"
+            },
+            {
+              "label": "Anything under warranty",
+              "value": 36,
+              "display": "1 to 3 years"
+            },
+            {
+              "label": "Anything supporting a tax return",
+              "value": 84,
+              "display": "3 to 7 years"
+            },
+            {
+              "label": "Home improvements & major assets",
+              "value": 240,
+              "display": "until you sell"
+            }
+          ],
+          "caption": "Roughly to scale in months. Almost everything that comes out of a till is the top bar — which is why a keep-everything drawer buries the few that are not."
+        }
+      },
+      {
+        "h": "Why \"keep everything\" fails in practice"
+      },
+      "The instinct after reading a list like that is to keep everything forever and stop thinking about it. It sounds safe, and it is why so many households have a shoebox. The problem is that an undifferentiated pile is functionally the same as having nothing: when the appliance breaks, you will not find the receipt in it, and you know that, so you will not even look.",
+      "A pile also has a physical failure mode. Most register receipts are printed on thermal paper, which fades. Heat, sunlight and time turn them blank — sometimes within months. A faded receipt in a shoebox is not a record, and it is worth knowing that the tier-3 and tier-4 receipts, the ones that matter most, are usually exactly the ones you need to still be legible years from now.",
+      {
+        "h": "The habit that makes it work"
+      },
+      "You do not need an elaborate filing system. You need a decision made once, at the moment the receipt enters your life, rather than deferred to a future sorting session that will not happen.",
+      "When a receipt arrives, ask one question: is this ever going to matter again? For most, the answer is no and it can go as soon as the charge clears. For the minority where the answer is yes, capture it in a durable form immediately — a photo or scan, filed somewhere searchable, on the day you get it, while you still know what it was for.",
+      "That is the entire system. One question at the point of entry, and a durable copy of anything that survives it.",
+      {
+        "h": "If you are self-employed, shift everything up a tier"
+      },
+      "The tiers above describe a personal filing system. Self-employment changes the calculation, because business expenses are deducted in working out profit rather than itemised on the personal side — which means they matter regardless of how you file personally.",
+      "In practice that means the default answer for a business purchase is tier 4, not tier 1. The coffee you bought for yourself is a receipt you can discard once the charge clears; the same coffee bought while meeting a client is a record with a multi-year life. The receipt looks identical. What changed is the purpose, and the purpose is the thing you will not remember in eighteen months.",
+      "This is the argument for noting the reason on a business receipt at the moment you get it. A few words — what it was for, who was there — takes seconds and converts an ambiguous piece of paper into a record that stands on its own. Doing it later never happens, and reconstructing it at year end is exactly the position you are trying to avoid.",
+      "GetGuac scans your receipts and keeps them searchable by store, date and amount, so the tier-3 and tier-4 receipts are still findable years later even after the paper has faded to nothing."
+    ]
+  },
+  {
+    "slug": "find-receipts-in-your-email",
+    "title": "Every receipt you own is probably already in your email",
+    "category": "Receipts",
+    "excerpt": "Order confirmations, renewals and e-receipts pile up in your inbox. Here is how to find them all in one sitting.",
+    "calc": null,
+    "updated": "2026-07-30",
+    "body": [
+      "People spend a surprising amount of effort building a receipt-tracking habit from scratch while sitting on top of a nearly complete archive they have been accumulating for years. Almost every online order, every subscription renewal, every airline booking, and an increasing share of in-store purchases arrive as email. The record already exists. It is just unsorted.",
+      "The work is not collection. It is retrieval.",
+      {
+        "h": "Why the inbox beats the shoebox"
+      },
+      "An email receipt has three advantages over paper that are easy to overlook. It is dated and timestamped by the mail server rather than by a fading thermal print. It is searchable by merchant, amount and text. And it is already backed up by your mail provider, which means it survives a house move, a flood, or the drawer being tidied by someone else.",
+      "The one thing it is not is organised. Receipts sit interleaved with newsletters, shipping notifications, marketing and everything else, which is why most people believe they do not have the record when in fact they do.",
+      {
+        "h": "The searches that surface almost everything"
+      },
+      "Rather than scrolling, run a series of targeted searches. In Gmail these operators work in the main search box; Outlook, Apple Mail and most other clients have close equivalents.",
+      {
+        "list": [
+          "Search the obvious words first: receipt, invoice, order confirmation, your order, payment received, renewal, subscription.",
+          "Search by sender domain when you know the merchant — in Gmail, from:amazon.com or from:apple.com pulls everything from one company at once.",
+          "Search by amount. Most receipts contain the total as text, so searching for a specific figure often finds a transaction you can only half remember.",
+          "Search for attachments — in Gmail, has:attachment invoice — because many business and service receipts arrive as a PDF rather than in the message body.",
+          "Bound it by date when you are reconstructing a period: in Gmail, after:2026/01/01 before:2026/04/01 combined with any of the above.",
+          "Search for the words that appear on renewals — \"your subscription will renew\", \"auto-renew\", \"payment method\" — to surface recurring charges specifically."
+        ]
+      },
+      {
+        "figure": {
+          "type": "steps",
+          "title": "One sitting, four passes",
+          "data": [
+            {
+              "label": "Pass 1 — the obvious words",
+              "note": "receipt, invoice, order confirmation, payment received. This alone finds most of it."
+            },
+            {
+              "label": "Pass 2 — by merchant",
+              "note": "Work down your card statement and search each recurring name by sender domain."
+            },
+            {
+              "label": "Pass 3 — attachments",
+              "note": "has:attachment plus invoice or receipt, for the PDFs the body-text searches miss."
+            },
+            {
+              "label": "Pass 4 — the renewals",
+              "note": "\"auto-renew\", \"will renew\", \"subscription\". This is the pass that finds charges you forgot you had."
+            }
+          ],
+          "caption": "Label as you go rather than sorting afterwards — a message you have already read and not labelled is one you will not find again."
+        }
+      },
+      {
+        "h": "The merchants that never say \"receipt\""
+      },
+      "Keyword searching has a blind spot: plenty of companies never use the word. Confirmations arrive titled \"Thanks for your order\", \"Your booking is confirmed\", \"We’ve got your payment\", or simply the order number. Ride-hailing, food delivery and travel companies are particularly prone to this, and app-store purchases often arrive from a platform address rather than the developer you think you bought from.",
+      "The fix is to work from the other direction for anything the keyword passes missed. Pull up two or three months of card statements, and for each merchant name you see, search your mail for that name specifically. Statements tell you the transaction happened; the inbox tells you what was in it.",
+      {
+        "h": "Label as you go, not afterwards"
+      },
+      "The single biggest mistake in an inbox cleanup is doing all the searching first and all the filing later. Momentum dies, and a message you have already read but not marked is one you will scroll straight past next time.",
+      "Create one label — Receipts is fine — and apply it as each search result appears. If you want more structure, a small number of sub-labels by year is far more sustainable than a taxonomy by category. You are building an index, not a library.",
+      "Then set up a rule or filter so future receipts label themselves. Most mail clients can match on sender or subject and apply a label automatically. Every receipt you catch with a rule is one you never have to search for again.",
+      {
+        "h": "Body text vs attachments"
+      },
+      "Two formats behave differently and it matters for retrieval. A receipt written into the body of the message is fully searchable — every line item, the total, the tax. A receipt attached as a PDF often is not, depending on your provider, which means an invoice search may miss it entirely even though it is sitting right there.",
+      "This is why the attachment pass is worth running separately. For anything important that arrives as an attachment, it is worth putting the merchant and amount into the message itself — forwarding it to yourself with a descriptive subject line is a crude but effective way to make an unsearchable PDF findable.",
+      {
+        "h": "Reconstructing one specific period"
+      },
+      "The searches above are for building a general archive. There is a second, more urgent version of this task: you need every receipt from a particular window, because of an expense claim, an insurance loss, a warranty dispute or a return that has gone wrong.",
+      "For that, invert the approach. Start from the card statement covering the period rather than from your inbox, because the statement is the authoritative list of what actually happened. Work down it merchant by merchant, searching your mail for each name and a date bound. Anything you cannot find in email, you know to chase from the merchant directly — most will re-send a copy from an order history if you ask.",
+      "Doing it in that direction gives you something searching alone does not: certainty about what is missing. An inbox search tells you what you found. A statement tells you what you should have found.",
+      {
+        "h": "What to do with what you find"
+      },
+      "A labelled inbox is a real improvement on nothing, but it is still an inbox: subject to provider outages, account lockouts, and the fact that everything lives with one company. For the receipts that matter — warranties, anything with tax consequences, large purchases — pull a durable copy out into storage you control.",
+      "The rest can happily stay where it is. The point of the exercise is not to migrate your entire mail history. It is to know what you have, make it findable, and stop rebuilding from scratch every time you need a proof of purchase.",
+      {
+        "h": "The recurring-charge dividend"
+      },
+      "One reliable side effect of doing this properly: you will find subscriptions you had forgotten. The renewal pass is the one that does it. Free trials that converted, an annual plan that quietly re-billed, a service you cancelled on the website but which kept charging through an app store.",
+      "People routinely turn up several of these, and each one is money recovered for an afternoon of searching. If you do nothing else from this article, run the renewal search.",
+      {
+        "h": "The trade-off worth being aware of"
+      },
+      "Anything that reads your mail to find receipts — including your own mail provider’s built-in features — is by definition processing your correspondence. That is a real trade-off, and it is worth making deliberately rather than by default.",
+      "The questions worth asking of any tool you point at an inbox: what does it read, what does it store, how long does it keep it, and can you revoke access and have the data deleted. Access granted to a mail account is broad by nature, and it is easy to grant and easy to forget.",
+      "It is also worth periodically reviewing which applications currently have access to your mail account. Most providers list this in security settings, and most people find something there they authorised years ago and no longer use. Revoking stale access costs nothing and closes a door you forgot was open.",
+      "GetGuac can pull receipts straight out of your email and file them automatically, which turns this from an afternoon of searching into something that keeps itself current."
+    ]
+  },
+  {
+    "slug": "digital-vs-paper-receipts",
+    "title": "Digital vs paper receipts: what to keep and how",
+    "category": "Receipts",
+    "excerpt": "Thermal paper fades within months. Here is what to digitise, what holds up as a record, and where to put it.",
+    "calc": null,
+    "updated": "2026-07-30",
+    "body": [
+      "There is a specific and very common failure that costs people real money: they do everything right, keep the receipt for the expensive thing, file it carefully, and then discover years later that the paper is blank. Not lost. Blank.",
+      "Understanding why that happens — and what to do instead — is most of what you need to know about keeping receipts in a form that will still be a record when you need one.",
+      {
+        "h": "Thermal paper is not an archive"
+      },
+      "Most register receipts are printed on thermal paper, which carries no ink. The paper is coated with a heat-sensitive layer, and the printer darkens it selectively. That is why receipts print silently and fast, and why they cost almost nothing.",
+      "It is also why they fade. The same coating that responds to a print head responds to heat, sunlight, humidity and friction. A receipt left in a car, a sunny windowsill or a warm pocket can become unreadable in weeks. Even filed carefully in a drawer, thermal print degrades over months to years — and the timeline is far shorter than the warranty and tax windows the important receipts need to survive.",
+      "You can usually tell what you are holding: thermal paper is smooth and slightly shiny, and scratching it with a fingernail or coin leaves a dark mark. If it does, that receipt has an expiry date whether you like it or not.",
+      {
+        "figure": {
+          "type": "bars",
+          "title": "How long the paper lasts vs how long you need it",
+          "data": [
+            {
+              "label": "Thermal receipt in a hot car or sunlight",
+              "value": 2,
+              "display": "weeks to months"
+            },
+            {
+              "label": "Thermal receipt filed in a cool dark drawer",
+              "value": 24,
+              "display": "months to a few years"
+            },
+            {
+              "label": "A warranty you may need to claim on",
+              "value": 36,
+              "display": "up to 3 years"
+            },
+            {
+              "label": "A receipt supporting a tax return",
+              "value": 84,
+              "display": "3 to 7 years"
+            }
+          ],
+          "caption": "The gap between the bottom two bars and the top two is the whole problem. The receipts that need to last longest are printed on the medium that lasts least."
+        }
+      },
+      {
+        "h": "Does a photo actually count?"
+      },
+      "This is the question that stops people digitising, and the general answer is reassuring. The IRS has long accepted electronic copies of records, provided the copy is legible, complete and an accurate reproduction of the original — and it is worth reading current IRS guidance on recordkeeping, or asking a tax professional, if you are relying on this for anything material. Retailers and manufacturers vary more, but a clear photo showing the store, date, items and total is accepted for most warranty and return purposes.",
+      "What gets rejected is a copy that is unreadable, cropped, or missing the parts that make it a receipt. That gives you a practical standard for every scan you take.",
+      {
+        "list": [
+          "The whole receipt in frame, including the top with the store name and the bottom with the total and payment method.",
+          "Flat and square on, not at an angle — perspective distortion is what makes line items unreadable later.",
+          "Even light, no shadow across the print and no flash glare on the glossy coating.",
+          "Legible at the level of individual line items, not just the total, since that is where the detail lives.",
+          "Captured while the print is still crisp, which in practice means on the day you get it."
+        ]
+      },
+      {
+        "h": "The habit is the hard part"
+      },
+      "Everyone agrees digitising is sensible; almost nobody does it consistently, because it is framed as a task. Photographing a stack of receipts at the end of the month is genuinely tedious, and worse, by then the pile has become intimidating enough to skip entirely.",
+      "The version that works is capture at the moment of transaction. Photograph the receipt while you are still standing at the counter or sitting in the car. It takes a few seconds, there is exactly one receipt to deal with, the print is at its most legible, and you still remember what the purchase was for. There is no pile, because a pile never forms.",
+      "For anything that arrives by email, the work is already done — see our guide to finding receipts in your inbox. Those are already digital, already dated, and already searchable.",
+      {
+        "h": "Where to put them"
+      },
+      "A folder of undifferentiated photos on your phone is better than a fading drawer, but not by as much as you would hope, because it is not searchable. Six months later you are scrolling a camera roll looking for a small white rectangle among the holiday pictures.",
+      "What makes a digital archive useful is being able to find one specific receipt without knowing when it happened. That means the store, date and amount need to be attached to the image as text — either because something read them off the receipt, or because you typed them in. The storage matters less than the index.",
+      {
+        "h": "Naming, if you are filing them yourself"
+      },
+      "If you are keeping receipts as loose files rather than in something that indexes them for you, the file name is doing all the work. A convention that holds up is date, then merchant, then amount — 2026-07-14-hardware-store-284.jpg — because it sorts chronologically on its own and tells you what the file is without opening it.",
+      "The date first is the part that matters. Any other order produces a folder you have to search rather than scan. It is a small discipline that decides whether the archive is usable in three years or merely present.",
+      "Wherever you put them, make sure it is backed up and not solely on the device in your pocket. A phone lost with a year of unsynced receipts on it is a worse outcome than the drawer.",
+      {
+        "h": "What still deserves paper"
+      },
+      "Digitising is the default, but a handful of documents are worth keeping physically as well: vehicle titles and major purchase agreements, anything with a wet signature, warranty certificates that are separate documents rather than register receipts, and closing documents from a property purchase.",
+      "These are not thermal prints, they do not fade the same way, and the situations where you need them tend to be the situations where an original is expected. Keep them physically, and scan them too — the digital copy is what you will actually use day to day.",
+      {
+        "h": "One copy is not a backup"
+      },
+      "A digital archive fails differently from a paper one. Paper degrades gradually and visibly; digital storage tends to work perfectly right up until it does not — a lost phone, a drive failure, an account you are locked out of, a subscription that lapsed and took the files with it.",
+      "For anything genuinely irreplaceable, the standard advice is worth following: more than one copy, on more than one kind of storage, with at least one of them somewhere other than your house. For most people that is satisfied by a phone that syncs to a cloud account plus an occasional export to a drive — which is not a demanding standard, but it does require doing it once.",
+      "The failure mode to avoid specifically is an archive that exists only inside one application. If you cannot get your receipts out in a form you could read without that product, you have a dependency rather than an archive. Check that an export exists before you rely on anything.",
+      {
+        "h": "A note on handling"
+      },
+      "Thermal receipt paper has historically been coated with chemicals including BPA or its substitutes, and the coating can transfer onto skin from handling. Guidance on this varies by jurisdiction and continues to develop. Whatever your view of the risk, it is one more small argument for the same conclusion this article keeps reaching: photograph it, deal with the digital copy, and do not hoard the paper.",
+      {
+        "h": "The short version"
+      },
+      "Assume every thermal receipt will be blank before you need it. Capture the ones that matter on the day you get them, in a form that is legible end to end. Store them somewhere searchable and backed up. Keep paper only for the small set of documents where an original genuinely counts.",
+      "GetGuac scans a receipt from your phone camera and reads the store, date, items and total off it, so the digital copy is searchable rather than just stored."
+    ]
+  },
+  {
+    "slug": "how-to-read-a-grocery-receipt",
+    "title": "How to read a grocery receipt properly",
+    "category": "Shopping",
+    "excerpt": "Tax codes, unit prices and promo lines — your receipt says considerably more than the total.",
+    "calc": "savings-goal",
+    "updated": "2026-07-30",
+    "body": [
+      "Most people read a grocery receipt exactly once, at the bottom, to see how bad it was. Everything above that number is where the useful information lives — including, fairly often, an error in your favour that nobody is going to point out.",
+      "A supermarket receipt has a consistent structure once you know what you are looking at.",
+      {
+        "h": "The anatomy of a receipt"
+      },
+      "From top to bottom, almost every grocery receipt follows the same order: store identification and address, the date and time, a transaction or terminal identifier, the line items, the subtotal, discounts, tax, the total, and finally the payment method and the last few digits of the card.",
+      "The store identification and the date matter more than they look. They are what make the receipt usable for a return, a warranty, a price adjustment or an expense record. A photo that crops off the header is a photo of a list of groceries, not a receipt.",
+      {
+        "h": "Line items and the codes beside them"
+      },
+      "Each line is typically the item description, sometimes a product code, and the price. Descriptions are often brutally abbreviated to fit the paper width, which is why a receipt from three weeks ago can be genuinely cryptic.",
+      "Next to the price you will usually find a single letter or symbol. This is the tax code, and it tells you how that item was treated at the till. The letters are not standardised across chains — one store’s T is another’s 1 — but the concept is universal, and most receipts print a legend at the bottom explaining them. It is worth finding that legend once for the shop you use most.",
+      "The reason to care: in many US states unprepared food is exempt from sales tax or taxed at a reduced rate, while prepared food is not. That means the hot deli item and the bag of rice on the same receipt can be treated differently — and it is exactly where miscategorisation happens.",
+      {
+        "h": "Weighted items"
+      },
+      "Anything sold by weight prints differently: you will see the weight, the price per pound or kilogram, and then the extended price. Produce, meat, cheese and deli items all work this way.",
+      "These lines are worth a glance because they are where genuine errors cluster. A mis-keyed product code — expensive item rung as a cheaper one or the reverse — is invisible in the total but obvious on the line. So is a weight that does not match what you actually took home.",
+      {
+        "figure": {
+          "type": "bars",
+          "title": "The number that tells the truth is the unit price",
+          "data": [
+            {
+              "label": "32 oz jar at $4.00",
+              "value": 12.5,
+              "display": "12.5¢ per oz"
+            },
+            {
+              "label": "48 oz jar at $5.40",
+              "value": 11.25,
+              "display": "11.25¢ per oz"
+            }
+          ],
+          "caption": "The bigger package wins here — but only by a little, and only if you use it before it spoils. The headline price is not a reliable guide to which is cheaper."
+        }
+      },
+      {
+        "h": "Promotions and what actually came off"
+      },
+      "Discounts appear in several forms and they are not interchangeable. An instant markdown reduces the line price directly. A loyalty or member price shows the full price and then a separate savings line. A multi-buy offer may only apply once you have taken the qualifying quantity — and if you took two when the deal needed three, the receipt will quietly show full price.",
+      "Most receipts print a total savings figure near the bottom. Treat that number sceptically. It is calculated against the store’s own reference price, which is not necessarily what you would have paid elsewhere, and it is designed to be reassuring.",
+      "The check worth doing: if you deliberately bought something because it was on offer, find the discount line for it. Promotions fail to apply more often than people assume — an expired shelf tag, a loyalty account not scanned, a variant that did not qualify.",
+      {
+        "h": "The 30-second spot check"
+      },
+      "You do not need to audit every shop. For a large receipt, or any time the total feels wrong, three checks catch nearly everything.",
+      {
+        "list": [
+          "Scan the line prices for anything that looks obviously out of place — a single item that costs more than the rest of the basket combined is usually a keying error.",
+          "Confirm that every promotion you shopped for actually has a matching discount line.",
+          "Sanity-check the tax: multiply the taxable subtotal by your local combined rate. At roughly 8%, a $40 taxable subtotal should produce about $3.20 of tax. If it shows twice that, either the rate is wrong or exempt items are being taxed."
+        ]
+      },
+      "If something is off, the customer service desk will almost always correct it on the spot with the receipt in hand — which is the practical reason to check before you have left the car park.",
+      {
+        "h": "Voids, overrides and returns on the same receipt"
+      },
+      "Occasionally you will see a line with a negative amount, or a void or override marker. These are legitimate — a cashier correcting a double scan, applying a manual price, or processing a return in the same transaction.",
+      "They are also worth reading, because a void that did not fully reverse leaves you paying for something twice. If a correction was made while you were at the till, confirm it appears on the printed receipt before you walk away.",
+      {
+        "h": "The bottom of the receipt is not decoration"
+      },
+      "Below the total there is usually a block most people never read, and it carries some of the most practical information on the page: the store’s return policy in summary, the transaction and register identifiers you would be asked for in a dispute, your loyalty balance or points earned, and often a survey invitation.",
+      "The transaction identifiers are the part worth knowing about. If you need to query a charge weeks later, that string is what lets the retailer find your specific transaction quickly rather than searching by card and date. It is also what a customer service agent will ask for first.",
+      "The printed return policy is a snapshot of the policy on the day you bought — which occasionally matters if a policy changes afterwards, and which is a reason to keep the receipt rather than just a photo of the item lines.",
+      {
+        "h": "What the receipt tells you over time"
+      },
+      "A single receipt is a transaction record. A run of them is something considerably more useful: the actual price history of the things you buy regularly.",
+      "This is how you catch shrinkflation, where the price holds steady while the package quietly gets smaller. The headline price gives no signal at all; the unit price does, but only if you have something to compare it against. It is also how you find out what your real grocery baseline is, which is the only honest starting point for a grocery budget.",
+      {
+        "h": "Comparing two stores honestly"
+      },
+      "People form strong opinions about which supermarket is cheaper on very little evidence — usually a memory of one basket, or a general impression from headline prices. Receipts let you settle it properly, but only if you compare the right thing.",
+      "Comparing two totals is nearly meaningless, because the baskets differ. What works is picking a handful of items you buy every week regardless of where you shop — the same milk, the same bread, the same staples — and comparing unit price for those specific lines across a few receipts from each store.",
+      "That comparison is usually less dramatic than people expect, and the differences often sit in categories rather than across the whole shop: one store better on fresh produce, another on packaged goods. Which is a more useful conclusion than a blanket judgement, because it tells you what to buy where instead of just where to go.",
+      "GetGuac scans grocery receipts and itemises them, so the line-item detail — including what you paid per unit last time — is there without you keeping the paper.",
+      "None of this requires becoming a person who audits their shopping. It requires reading above the total occasionally, and knowing what the codes mean when you do."
+    ]
+  },
+  {
+    "slug": "return-windows-what-to-check",
+    "title": "Return windows: what to check before you buy",
+    "category": "Shopping",
+    "excerpt": "The clock starts at purchase, not when you open the box — and gift season quietly breaks that assumption.",
+    "calc": null,
+    "updated": "2026-07-30",
+    "body": [
+      "A return policy is one of the few pieces of consumer protection that is genuinely generous, widely available, and routinely wasted. Not because people are refused, but because they turn up after the window closed — often without ever having checked what the window was.",
+      "The fix is not to memorise every retailer’s policy. It is to know which variables matter and to check them at the point where checking is still useful: before you buy.",
+      {
+        "h": "The clock starts at purchase"
+      },
+      "The single most important thing to internalise is that return windows almost always run from the transaction date, not from delivery, not from when you opened the box, and certainly not from when you got round to trying the thing.",
+      "This is what turns gift buying into a trap. A purchase made in early November for a December holiday can be outside a 30-day window before the recipient has unwrapped it. The same applies to anything you buy ahead — the tool for a project that slipped, the clothes for a season that has not started, the appliance waiting on a free weekend.",
+      "Many retailers do extend windows for the holiday period specifically because of this, often treating purchases from some point in autumn as if they were bought in late December. That is a real and useful concession, but it is a policy that varies by retailer and by year. It is worth checking rather than assuming.",
+      {
+        "h": "Windows vary far more by category than by store"
+      },
+      "People tend to think of a retailer as having \"a\" return policy. In practice most large retailers have a general window and then a list of exceptions, and the exceptions are where the short windows live.",
+      {
+        "list": [
+          "Electronics, and especially phones and computers, frequently carry a much shorter window than the store default — sometimes two weeks against a general month or more.",
+          "Opened media, software and anything with an activation code is often non-returnable once opened, or exchange-only for an identical item.",
+          "Perishables, and items with a hygiene dimension such as cosmetics, earrings and underwear, are commonly final sale.",
+          "Large appliances and furniture may carry restocking fees, delivery charges that are not refunded, or a requirement that the item be in original packaging.",
+          "Clearance, final-sale and open-box items are frequently excluded entirely, which is part of what makes the price low.",
+          "Membership warehouse clubs sit at the other extreme, with unusually generous windows on most categories and a shorter one on electronics."
+        ]
+      },
+      "Because these vary by retailer and change over time, the durable skill is knowing that category exceptions exist and looking for them on anything expensive — not memorising a specific number that will be out of date.",
+      {
+        "figure": {
+          "type": "steps",
+          "title": "Four things to check before an expensive purchase",
+          "data": [
+            {
+              "label": "What is the window for this category?",
+              "note": "Not the store default — electronics and opened items are routinely shorter."
+            },
+            {
+              "label": "When does the clock start?",
+              "note": "Almost always the purchase date. If it is a gift, ask whether a holiday extension applies."
+            },
+            {
+              "label": "What proof will they want?",
+              "note": "Receipt, order number, or a card lookup. A gift needs a gift receipt."
+            },
+            {
+              "label": "Is there a price-adjustment window?",
+              "note": "Usually shorter than the return window, and separate from it."
+            }
+          ],
+          "caption": "Four questions, about a minute, and only worth doing on purchases where the answer would cost you real money."
+        }
+      },
+      {
+        "h": "What counts as proof"
+      },
+      "The original receipt is the cleanest path: it establishes the date, the price and the store in one document. Most large retailers can also look up a purchase from the card you paid with or an online account order history, which is a genuine safety net — but it is a courtesy that depends on their systems, not a right you can rely on.",
+      "Without any proof, you are usually in the territory of store credit at the current selling price, which on a discounted item can be considerably less than you paid. That gap is the concrete cost of a lost receipt.",
+      "Gifts need their own treatment. A gift receipt proves the purchase without disclosing the price, and it is the difference between a straightforward exchange and an awkward conversation. Ask for one at the till — nearly every retailer offers them and almost nobody thinks to request one.",
+      {
+        "h": "Price adjustments are a different clock"
+      },
+      "A price adjustment — getting the difference back when something you bought goes on sale shortly afterwards — is a separate policy from returns, with its own and usually shorter window.",
+      "It is also the one nobody uses, because it requires you to notice. No retailer emails to say your recent purchase got cheaper. The habit that captures it: when a sale event starts, spend a minute looking back at anything significant you bought in the preceding few weeks. Most of the time there is nothing. Occasionally there is a refund sitting there for the asking.",
+      {
+        "h": "Online orders follow their own rules"
+      },
+      "Buying online adds variables that do not exist in a shop. The window may run from delivery rather than purchase, which is more generous — but it may not, and the two are worth distinguishing before you assume.",
+      "Return shipping is the bigger issue. Free returns are common but not universal, and where they are not, the cost of sending something back can be a meaningful fraction of a low-value item — enough that returning it is not worth doing, which some sellers are relying on. Check before you buy anything you are genuinely unsure about.",
+      "Marketplace listings are the case that catches people most often. On many large sites, a substantial share of items are sold by third parties whose return policies differ from the platform’s own, even though the buying experience looks identical. The seller name on the listing is the thing to check, and the policy shown is the seller’s, not the site’s.",
+      {
+        "h": "Restocking fees and condition rules"
+      },
+      "Some categories carry a restocking fee, typically a percentage of the price, on opened items. Others require original packaging and all accessories, which is a good argument for not immediately recycling the box on anything you are unsure about.",
+      "Condition requirements are usually the practical obstacle rather than the deadline. Keeping the packaging intact for the first couple of weeks on a significant purchase costs you some cupboard space and preserves every option you have.",
+      {
+        "h": "Build the habit, not the encyclopedia"
+      },
+      "You do not need to become an expert on retail policy. Three habits capture nearly all the value.",
+      "Ask about the window at the point of purchase for anything expensive, and ask specifically whether the category has its own rule. Keep the receipt somewhere you will actually find it, for at least as long as that window. And for gifts and anything you are buying ahead, note the deadline somewhere that will remind you — the window will expire while the item is still in its box, and nothing will prompt you.",
+      {
+        "h": "When the retailer says no"
+      },
+      "A closed return window is not necessarily the end of it, and it is worth knowing what remains.",
+      "If the item is defective rather than unwanted, the manufacturer’s warranty is a separate route with its own, usually much longer, clock — and it is claimed from the manufacturer, not the shop. People routinely give up at the retailer without ever trying this, which is the single most commonly missed option.",
+      "If a product has been recalled, the manufacturer is typically obliged to offer a remedy regardless of how long ago you bought it. Recalls are published, but almost nobody sees them, so it is worth searching for the product and the word recall before writing off something that failed early.",
+      "And if a merchant simply will not honour something you are genuinely owed — goods that never arrived, a service not delivered, a charge you did not authorise — a card chargeback exists as a backstop, with its own filing deadline. It is a last resort rather than an opening move, and it is not a remedy for changing your mind after a window closed.",
+      "GetGuac stores your receipts and flags open return windows, so the deadline surfaces before it passes rather than after.",
+      "The refunds and exchanges you are entitled to are not hard to claim. They are just easy to miss, and they are missed at the point of buying, not at the point of returning."
+    ]
+  },
+  {
+    "slug": "receipts-at-tax-time",
+    "title": "Which receipts actually matter at tax time",
+    "category": "Taxes",
+    "excerpt": "Most personal receipts have no tax value at all. A specific few do — and the difference is worth knowing.",
+    "calc": null,
+    "updated": "2026-07-30",
+    "body": [
+      "A lot of receipt-keeping advice is written as though every scrap of paper is a potential tax deduction. For most people filing a straightforward personal return, that is simply not true, and treating it as true produces a drawer full of documents that will never be looked at.",
+      "The useful question is narrower: which receipts could actually change a number on a return? This article is general education rather than tax advice — rules change and depend heavily on your circumstances, so treat it as orientation and check current IRS guidance or a tax professional for anything that matters.",
+      {
+        "h": "Why most personal receipts do not matter"
+      },
+      "The reason is the standard deduction. Taxpayers can either take a flat standard deduction or itemise their deductible expenses, and only the larger of the two is worth taking. Since the standard deduction was substantially increased, the large majority of filers take it — which means their individual deductible expenses never appear on the return at all.",
+      "If you take the standard deduction, keeping receipts for charitable donations or medical bills does nothing for your tax position. They may be worth keeping for other reasons, but not that one.",
+      "So the first question is not \"which receipts should I keep\" but \"am I itemising, or could I plausibly be?\" For most people the answer settles the matter quickly.",
+      {
+        "h": "If you are self-employed, the rules are completely different"
+      },
+      "Business expenses are not itemised deductions. They are subtracted in working out business profit, and they apply whether or not you take the standard deduction on the personal side.",
+      "This is the single biggest fork in the road. A freelancer, contractor, gig worker or small business owner has a genuine and ongoing reason to keep receipts that a salaried employee taking the standard deduction usually does not. If you have any self-employment income at all, treat every business purchase as a receipt worth keeping by default.",
+      {
+        "figure": {
+          "type": "steps",
+          "title": "Which fork are you on?",
+          "data": [
+            {
+              "label": "Standard deduction, no self-employment income",
+              "note": "Most filers. Personal receipts have little tax value — keep them for warranties and returns instead."
+            },
+            {
+              "label": "Itemising deductions",
+              "note": "Now the supporting receipts matter: qualifying medical costs, charitable gifts, state and local taxes, mortgage interest."
+            },
+            {
+              "label": "Any self-employment income",
+              "note": "Business expense receipts matter regardless of which deduction you take on the personal side. Keep them all."
+            }
+          ],
+          "caption": "The fork decides almost everything. Working out which side you are on takes a minute and saves keeping documents that will never be used."
+        }
+      },
+      {
+        "h": "The categories worth keeping"
+      },
+      "Assuming you are itemising, self-employed, or both, these are the receipts with genuine potential relevance.",
+      {
+        "list": [
+          "Business expenses of every kind if you are self-employed — supplies, equipment, software, professional services, business travel and meals, and a share of home office costs where you qualify.",
+          "Charitable contributions, where written acknowledgement is expected above certain amounts and the rules differ for non-cash gifts.",
+          "Medical and dental expenses, which are only deductible above a percentage-of-income threshold — meaning they matter in years with unusually high costs and rarely otherwise.",
+          "State and local taxes paid, including in some cases sales tax on large purchases, subject to an overall cap.",
+          "Mortgage interest and points, which generally arrive as a year-end statement rather than as receipts.",
+          "Capital improvements to a property, which are not deducted annually but may adjust your basis when you sell.",
+          "Education costs and student loan interest, where the relevant credits and deductions have their own eligibility rules.",
+          "Childcare and dependent care costs, where a credit may apply."
+        ]
+      },
+      "Note how few of these are the kind of receipt that comes out of a supermarket till. The tax-relevant pile is much smaller and much more specific than \"everything\".",
+      {
+        "h": "Why itemising can matter in one year and not the next"
+      },
+      "The standard-versus-itemised choice is made fresh every year, and some deductible expenses are at least partly within your control as to timing. That leads to a planning idea usually described as bunching: concentrating discretionary deductible spending into one year so that the itemised total clears the standard deduction, then taking the standard deduction in the following year.",
+      "Charitable giving is the common example, since the timing of a gift is often flexible in a way that a medical bill is not. Two years of ordinary giving may fall below the threshold in both years and produce no benefit at all; the same total given across a single year may clear it once.",
+      "Whether this is worth doing depends entirely on your numbers and your circumstances, and it is exactly the kind of question worth putting to a tax professional rather than deciding from an article. The reason it appears here is narrower: it means a year in which you might itemise is not always predictable in advance, which is an argument for keeping the qualifying receipts as you go rather than deciding in December that they would have been useful.",
+      {
+        "h": "What \"adequate records\" actually means"
+      },
+      "A receipt is only useful if it establishes what was bought, from whom, when, and for how much. A credit card statement on its own generally does not meet that bar — it shows a merchant and an amount, but not what was purchased, which is exactly the point in dispute if anyone asks.",
+      "For business expenses, the purpose matters too. A restaurant receipt with no indication of who was there and why is materially weaker than the same receipt with a note on it. Writing the purpose on the receipt at the time takes seconds and is the difference between a record and a piece of paper.",
+      "Electronic copies are generally acceptable provided they are legible, complete and accurate reproductions — which, given that thermal receipts fade within months, makes digitising the practical default rather than a nicety.",
+      {
+        "h": "Mileage and vehicle use"
+      },
+      "Vehicle expenses have their own substantiation rules and are a common weak point. What is generally expected is a contemporaneous log: the date, the destination, the business purpose and the distance, recorded at or near the time of the trip rather than reconstructed from memory at year end.",
+      "A pile of fuel receipts is not a mileage log, and does not substitute for one. If you drive for work, the log is the record that matters, and keeping it as you go is far easier than rebuilding a year of trips in April.",
+      {
+        "h": "How long to keep them"
+      },
+      "The general rule is that the IRS can examine a return for three years after filing, extending to six years where income is substantially under-reported, with no limit at all on unfiled or fraudulent returns. Records supporting property basis should be kept until you dispose of the asset, plus the applicable period after that.",
+      "The practical translation: three years minimum for anything supporting a filed return, seven if you would rather not think about it again, and effectively indefinitely for property improvement records.",
+      {
+        "h": "The system that actually works"
+      },
+      "Separate the two piles at the moment the receipt arrives, because that is the only moment you reliably know what it was for. If you are self-employed, decide business or personal on the spot. If you might itemise, decide whether this falls in one of the categories above.",
+      "Then capture the tax-relevant pile digitally, with the purpose noted, on the day. Everything else follows the ordinary rules — keep it until the return window and warranty have passed, then let it go.",
+      "GetGuac scans and files receipts with the store, date and total read off them, which makes the annual reconstruction considerably shorter than a shoebox does.",
+      "The goal is not to keep more. It is to keep the right small subset in a form that will still be legible and findable in three years — and to stop carrying the rest around.",
+      {
+        "h": "The question people are actually worried about"
+      },
+      "Most of the anxiety around receipt-keeping is really about being asked to justify something years later, and it is worth separating that fear from the practical reality.",
+      "The realistic version is not dramatic. It is usually a request for documentation supporting a specific figure — and the difference between a straightforward reply and a genuine problem is simply whether you can produce a legible record of what was bought, when, from whom, and for how much.",
+      "Which is the same standard the rest of this article describes, and the reason the advice is consistent: keep the narrow set that could matter, note the purpose while you still know it, and store it somewhere it will still be readable. Done as you go it is a few seconds per receipt. Done retrospectively under a deadline it is the worst weekend of the year."
     ]
   }
 ]

@@ -19,6 +19,17 @@ import { Analytics } from '@vercel/analytics/react'
 // to default in code; override per-env with NEXT_PUBLIC_ADSENSE_CLIENT.
 const ADSENSE_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || 'ca-pub-5959691671441705'
 
+// Google Search Console site verification. Paste the token from the "HTML tag"
+// method (Search Console → Add property → getguac.app → HTML tag) into the
+// NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION env var in Vercel — just the content
+// value, not the whole <meta> tag — and redeploy. No code change needed.
+//
+// Why this matters more than it looks: with no Search Console property we
+// cannot tell "never indexed" from "indexed but ranking on page 8", and those
+// two need opposite fixes. /articles has taken 0 pageviews in 14 days and
+// right now that number is undiagnosable.
+const SITE_VERIFICATION = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || ''
+
 const SITE_URL = 'https://getguac.app'
 
 export const metadata = {
@@ -61,6 +72,10 @@ export const metadata = {
   // into <head> on every page so Google can confirm ownership without relying
   // on the JS-injected adsbygoogle loader.
   other: { 'google-adsense-account': ADSENSE_CLIENT },
+  // Rendered only once the env var is set, so an unset token never ships an
+  // empty <meta name="google-site-verification" content=""> — which Search
+  // Console reads as a failed verification rather than an absent one.
+  ...(SITE_VERIFICATION ? { verification: { google: SITE_VERIFICATION } } : {}),
   robots: {
     index: true,
     follow: true,

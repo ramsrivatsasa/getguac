@@ -34,6 +34,7 @@ const COLS = [
   ]},
   { heading: 'Company', links: [
     { href: '/contact', label: 'Contact' },
+    { href: '/editorial-policy', label: 'Editorial policy' },
     { href: '/privacy', label: 'Privacy' },
     { href: '/terms', label: 'Terms' },
   ]},

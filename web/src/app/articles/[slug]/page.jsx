@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, Calculator as CalcIcon, Clock } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Calculator as CalcIcon, Clock } from 'lucide-react'
 import MarketingShell from '../../../components/MarketingShell'
 import AdSlot from '../../../components/AdSlot'
 import { ARTICLES, getArticle } from '../../../lib/articles'
@@ -114,6 +114,26 @@ export default function ArticlePage({ params }) {
               </Link>
             ))}
           </div>
+        </div>
+
+        {/* The closing ask. Until now an article ended with a calculator link, 3
+            related posts and an ad slot, and never once asked the reader to sign
+            up — /articles was the only public surface with no conversion path.
+            Placed after "Keep reading" rather than under the body so it doesn't
+            sit shoulder-to-shoulder with the "Run the numbers" calculator CTA.
+            🔒 COPY LOCK: the headline is "Start Saving Today" and the button is
+            "Get Started Free" — both are the site-wide locked strings, not new
+            copy. Do not add a user-count line here ("join thousands of…"): that
+            claim was cut from /join as false, and it is still false. Every
+            feature named below ships today (receipt scan, email pull). */}
+        <div className="mt-10 rounded-2xl border border-emerald-100 bg-emerald-50/60 p-6 text-center">
+          <div className="text-xl sm:text-2xl font-black text-gray-900 leading-snug">Start Saving Today</div>
+          <p className="text-sm text-gray-600 mt-1.5 max-w-md mx-auto">
+            GetGuac scans your receipts, pulls them straight out of your email, and shows you where the money actually went. Free forever — no card, no fees, no spam.
+          </p>
+          <Link href="/register" className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-emerald-600 px-6 py-3 text-white font-bold text-sm hover:bg-emerald-700 transition-colors no-underline">
+            Get Started Free <ArrowRight size={15} />
+          </Link>
         </div>
       </article>
     </MarketingShell>

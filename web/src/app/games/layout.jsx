@@ -1,4 +1,5 @@
 import AdSenseScript from '../../components/AdSenseScript'
+import { ARCADE_ADS_ENABLED } from '../../lib/arcadeAds'
 // Guac Arcade typography. Loads the arcade's display + body typefaces —
 // Nunito (numbers, scores, headings) and Outfit (body, labels, hints) — under
 // their LITERAL family names. That matters because the games draw text on a
@@ -26,9 +27,22 @@ export default function GamesLayout({ children }) {
     <>
       {/* The arcade's fullscreen ad breaks (adBreak in arcadeKit) push onto
           window.adsbygoogle directly, with no <AdSlot/> on the page to pull the
-          loader in. Mount it for the whole route group so moving the script out
-          of the root layout does not silently kill interstitial revenue. */}
-      <AdSenseScript />
+          loader in, so the loader has to be mounted for the whole route group.
+          But it is gated on the SAME kill-switch as every arcade ad unit.
+          Why: ARCADE_ADS_ENABLED is off while we chase approval, so every unit
+          in here already renders nothing (arcadeKit, GamePageShell,
+          BubbleBudget all check it). An unconditional loader therefore bought
+          zero revenue and still told Google "this page is monetized" on all
+          548 arcade URLs -- 512 of which are cross-origin partner iframes with
+          no unique content of their own. Asking AdSense to monetize 512 iframe
+          wrappers is a far more plausible "Low value content" trigger than the
+          20 long-form money articles, and noindex does not help: it is not a
+          crawl block, and policy review assesses the site you asked it to
+          monetize, not just the indexed part.
+          Reversal is unchanged and still config-only: NEXT_PUBLIC_ARCADE_ADS=on
+          brings back the loader and the units together, which is the point --
+          they can no longer drift apart. */}
+      {ARCADE_ADS_ENABLED && <AdSenseScript />}
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       <link

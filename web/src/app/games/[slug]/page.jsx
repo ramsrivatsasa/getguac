@@ -57,7 +57,7 @@ export default function Page({ params }) {
       how={how}
     >
       <ExternalGame game={game} />
-      <p className="text-[11px] text-center pt-2 pb-1" style={{ color: '#8a988f' }}>
+      <p className="text-[11px] text-center pt-2 pb-1" style={{ color: '#5F6D63' }}>
         Guest game provided by {provider?.label || 'our partner network'}.
       </p>
     </GamePageShell>

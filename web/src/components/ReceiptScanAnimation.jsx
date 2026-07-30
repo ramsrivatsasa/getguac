@@ -208,7 +208,7 @@ export default function ReceiptScanAnimation({ count = 0, variant = 'receipt' })
           <div style={{ position: 'relative', height: 7, borderRadius: 4, background: '#E4EDD8', overflow: 'hidden', marginBottom: 8 }}>
             <div style={{ position: 'absolute', top: 0, width: '42%', height: '100%', borderRadius: 4, background: 'linear-gradient(90deg,#A3E635,#65A30D)', animation: 'ggIndet 1.5s ease-in-out infinite' }} />
           </div>
-          <div style={{ textAlign: 'center', fontSize: 12, color: '#8A988E', fontWeight: 600 }}>
+          <div style={{ textAlign: 'center', fontSize: 12, color: '#5F6D63', fontWeight: 600 }}>
             Usually takes 5–15 seconds{count > 1 ? ` · ${count} ${cfg.noun} in line` : ''}
           </div>
         </div>

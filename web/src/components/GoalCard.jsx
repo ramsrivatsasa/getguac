@@ -32,7 +32,7 @@ export default function GoalCard({ card: g, href }) {
           benefit-phrase titles need the whole row on a phone. */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, marginBottom: 10, padding: '0 2px' }}>
         <span style={{ ...DISPLAY, fontWeight: 800, fontSize: 15, color: '#15281C' }}>{g.e} {g.name}</span>
-        <span className="gc-tag" style={{ fontSize: 11, color: '#8A988E', flex: '0 0 auto', whiteSpace: 'nowrap' }}>{g.tag}</span>
+        <span className="gc-tag" style={{ fontSize: 11, color: '#5F6D63', flex: '0 0 auto', whiteSpace: 'nowrap' }}>{g.tag}</span>
       </div>
       <div style={{ textAlign: 'center', margin: '4px 0 12px' }}>
         <div style={{ ...DISPLAY, fontWeight: 800, fontSize: 30, letterSpacing: '-0.02em', color: '#15281C', lineHeight: 1.1 }}>{g.big}</div>
@@ -44,7 +44,7 @@ export default function GoalCard({ card: g, href }) {
             <span style={{ fontSize: 15 }}>{r.i}</span>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontWeight: 700, fontSize: 12.5, color: '#16241C', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.t}</div>
-              <div style={{ fontSize: 10.5, color: '#8A988E', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.s}</div>
+              <div style={{ fontSize: 10.5, color: '#5F6D63', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.s}</div>
             </div>
             <span style={{ fontWeight: 800, fontSize: 12.5, color: r.neg ? '#C2410C' : '#16241C', whiteSpace: 'nowrap' }}>{r.r}</span>
           </div>

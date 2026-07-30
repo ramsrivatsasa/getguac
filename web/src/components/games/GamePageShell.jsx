@@ -24,7 +24,11 @@ import { GAMES, CATEGORIES, FEATURED_HREF, gameIdFor, shotFor, isExternal } from
 const INK = '#15201a'
 const BODY = '#3d4a42'
 const MUTED = '#5a6a60'
-const FAINT = '#8a988f'
+// Muted label gray. Was #8a988f, which is ~3.0:1 on the arcade's white/#f6f8f4
+// cards and failed WCAG AA (4.5:1) for normal text. #5F6D63 is 5.4:1 on white.
+// Every FAINT usage in the arcade sits on a light surface -- checked -- so this
+// only ever darkens. Do not lighten it back.
+const FAINT = '#5F6D63'
 const GREEN = '#166534'
 const AMBER = '#fbbf24'
 const BORDER = '1px solid #e4ebe2'
@@ -84,8 +88,10 @@ export default function GamePageShell({ href, title, blurb, how = [], tips = [],
   const others = GAMES.filter((g) => g.href !== href)
   const related = others.filter((g) => g.cat === game.cat).slice(0, 4)
 
+  // ads follow the arcade kill-switch: this shell renders all 548 game
+  // pages, 512 of them cross-origin partner iframes.
   return (
-    <MarketingShell subtitle="money's wingman">
+    <MarketingShell subtitle="money's wingman" ads={ARCADE_ADS_ENABLED}>
       <ArrowKeyGuard />
       <div className="mx-auto px-4 sm:px-6 pt-5 pb-16" style={{ maxWidth: 1280 }}>
 

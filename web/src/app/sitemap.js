@@ -20,6 +20,14 @@ export default function sitemap() {
     { path: '/tour', priority: 0.9, changeFrequency: 'monthly' },
     { path: '/features', priority: 0.9, changeFrequency: 'monthly' },
     { path: '/articles', priority: 0.9, changeFrequency: 'weekly' },
+    // /plan is the 9 calculators in components/PlanCalculators.jsx (savings-goal,
+    // invest-growth, retirement, college, healthcare, credit-card, dti,
+    // emergency, rent-buy). It is indexable -- unlike /coupons and /marketplace
+    // it sets no `robots` -- and it had simply never been listed here, so our
+    // single strongest "useful free tools" asset had never been submitted to
+    // Google at all. Priority matches /articles: these are the two things on the
+    // site worth ranking for.
+    { path: '/plan', priority: 0.9, changeFrequency: 'monthly' },
     { path: '/resources', priority: 0.8, changeFrequency: 'monthly' },
     { path: '/faq', priority: 0.8, changeFrequency: 'monthly' },
     { path: '/pricing', priority: 0.8, changeFrequency: 'monthly' },

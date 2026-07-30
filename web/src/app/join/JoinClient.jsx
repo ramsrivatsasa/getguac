@@ -385,7 +385,7 @@ export default function JoinClient() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 18 }}>
                 {[['Email', DEMO.email], ['Password', DEMO.password]].map(([label, value]) => (
                   <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#fff', border: '1px solid rgba(20,83,45,0.12)', borderRadius: 12, padding: '10px 12px' }}>
-                    <span className="gj-credlabel" style={{ fontSize: 11, fontWeight: 700, color: '#8A988E', width: 66, flex: '0 0 auto', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</span>
+                    <span className="gj-credlabel" style={{ fontSize: 11, fontWeight: 700, color: '#5F6D63', width: 66, flex: '0 0 auto', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</span>
                     <span className="gj-credval" style={{ flex: 1, minWidth: 0, fontWeight: 700, fontSize: 14.5, color: '#15281C', overflow: 'hidden', textOverflow: 'ellipsis' }}>{value}</span>
                     <button type="button" onClick={() => copy(label, value)}
                       style={{ flex: '0 0 auto', cursor: 'pointer', fontFamily: 'inherit', background: '#F0F7E8', border: '1px solid rgba(101,163,13,0.24)', color: '#4D7C0F', fontWeight: 700, fontSize: 12, padding: '6px 12px', borderRadius: 999 }}>
@@ -399,7 +399,7 @@ export default function JoinClient() {
                 style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#65A30D', color: '#fff', fontWeight: 700, fontSize: 15, padding: '13px 24px', borderRadius: 999, textDecoration: 'none' }}>
                 🔎 Enter the demo →
               </Link>
-              <p style={{ fontSize: 12, color: '#8A988E', margin: '12px 0 0' }}>
+              <p style={{ fontSize: 12, color: '#5F6D63', margin: '12px 0 0' }}>
                 The credentials arrive prefilled — just pass the quick captcha.
               </p>
             </div>
@@ -571,14 +571,14 @@ export default function JoinClient() {
           </div>
         </div>
 
-        <p style={{ textAlign: 'center', fontSize: 12.5, color: '#8A988E', margin: '28px 0 0' }}>
-          <Link href="/terms" style={{ color: '#8A988E' }}>Terms</Link>
+        <p style={{ textAlign: 'center', fontSize: 12.5, color: '#5F6D63', margin: '28px 0 0' }}>
+          <Link href="/terms" style={{ color: '#5F6D63' }}>Terms</Link>
           {' · '}
-          <Link href="/privacy" style={{ color: '#8A988E' }}>Privacy</Link>
+          <Link href="/privacy" style={{ color: '#5F6D63' }}>Privacy</Link>
           {' · '}
-          <Link href="/security" style={{ color: '#8A988E' }}>Security</Link>
+          <Link href="/security" style={{ color: '#5F6D63' }}>Security</Link>
           {' · '}
-          <Link href="/contact" style={{ color: '#8A988E' }}>Contact</Link>
+          <Link href="/contact" style={{ color: '#5F6D63' }}>Contact</Link>
         </p>
       </section>
 

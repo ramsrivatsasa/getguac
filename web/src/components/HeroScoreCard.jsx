@@ -56,7 +56,7 @@ export default function HeroScoreCard() {
         <div key={i} className="gg-swap">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, padding: '0 4px' }}>
             <span style={{ ...DISPLAY, fontWeight: 800, color: '#15281C' }}>{sc.title}</span>
-            <span style={{ fontSize: 12, color: '#8A988E' }}>{sc.tag}</span>
+            <span style={{ fontSize: 12, color: '#5F6D63' }}>{sc.tag}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 16, height: 150 }}>
             {sc.ring ? (
@@ -77,7 +77,7 @@ export default function HeroScoreCard() {
             {sc.rows.map((r, ri) => (
               <div key={r.t} className="gg-swap" style={{ animationDelay: `${120 + ri * 90}ms`, display: 'flex', alignItems: 'center', gap: 11, background: r.neg ? '#FBF3EC' : '#F7FAF2', borderRadius: 13, padding: '11px 13px' }}>
                 <span style={{ fontSize: 18 }}>{r.i}</span>
-                <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontWeight: 700, fontSize: 13.5, color: '#16241C' }}>{r.t}</div><div style={{ fontSize: 11.5, color: '#8A988E' }}>{r.s}</div></div>
+                <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontWeight: 700, fontSize: 13.5, color: '#16241C' }}>{r.t}</div><div style={{ fontSize: 11.5, color: '#5F6D63' }}>{r.s}</div></div>
                 <span style={{ fontWeight: 800, fontSize: 14, color: r.neg ? '#C2410C' : '#16241C' }}>{r.r}</span>
               </div>
             ))}
@@ -88,7 +88,7 @@ export default function HeroScoreCard() {
       <div style={{ position: 'absolute', top: 44, left: -54, background: '#fff', borderRadius: 16, padding: '12px 15px', boxShadow: '0 18px 40px -16px rgba(20,40,28,0.35)', border: '1px solid rgba(20,83,45,0.08)', display: 'flex', alignItems: 'center', gap: 10, animation: 'guacFloatB 4.5s ease-in-out infinite' }}>
         <div key={i} className="gg-swap" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ width: 32, height: 32, borderRadius: 10, background: '#F0F7E8', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>{sc.co.i}</span>
-          <div><div style={{ fontSize: 11, color: '#8A988E', fontWeight: 600 }}>{sc.co.k}</div><div style={{ ...DISPLAY, fontWeight: 800, fontSize: 16, color: '#4D7C0F' }}>{sc.co.v}</div></div>
+          <div><div style={{ fontSize: 11, color: '#5F6D63', fontWeight: 600 }}>{sc.co.k}</div><div style={{ ...DISPLAY, fontWeight: 800, fontSize: 16, color: '#4D7C0F' }}>{sc.co.v}</div></div>
         </div>
       </div>
     </>

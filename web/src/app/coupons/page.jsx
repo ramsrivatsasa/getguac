@@ -17,8 +17,10 @@ export const metadata = {
 }
 
 export default function CouponsPage() {
+  // No <AdSlot/> on this page and it is noindexed, so the loader earned
+  // nothing here -- see the `ads` prop comment in MarketingShell.
   return (
-    <MarketingShell subtitle="coupons">
+    <MarketingShell subtitle="coupons" ads={false}>
       <section className="max-w-5xl mx-auto px-4 sm:px-6 pt-7 sm:pt-9 pb-6 text-center">
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider">
           🎟️ Coupons & promo codes

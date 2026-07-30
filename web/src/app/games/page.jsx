@@ -1,4 +1,5 @@
 import MarketingShell from '../../components/MarketingShell'
+import { ARCADE_ADS_ENABLED } from '../../lib/arcadeAds'
 import GamesHub from '../../components/games/GamesHub'
 
 export const metadata = {
@@ -11,8 +12,10 @@ export const metadata = {
 // MSN-Play-style portal: regular site header, sidebar + rows live in the
 // client GamesHub (search/category filtering + localStorage continue row).
 export default function GamesPage() {
+  // ads follow the arcade kill-switch, not the shell default -- see
+  // lib/arcadeAds and the `ads` prop comment in MarketingShell.
   return (
-    <MarketingShell subtitle="money's wingman">
+    <MarketingShell subtitle="money's wingman" ads={ARCADE_ADS_ENABLED}>
       <GamesHub />
     </MarketingShell>
   )

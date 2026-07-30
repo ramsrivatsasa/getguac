@@ -73,7 +73,7 @@ const FOOTER = [
 
 const DISPLAY = { fontFamily: 'var(--font-bricolage), sans-serif' }
 
-export default function MarketingShell({ subtitle, hideSearch = false, headerTitle, children }) {
+export default function MarketingShell({ subtitle, hideSearch = false, headerTitle, ads = true, children }) {
   // In-app (mobile WebView) the native shell already provides the top app bar +
   // logo, so rendering the marketing nav here stacks a SECOND avocado logo/header
   // under it. The /embed handshake drops guac_embedded=1 — when set, drop the
@@ -84,12 +84,25 @@ export default function MarketingShell({ subtitle, hideSearch = false, headerTit
       {/* AdSense loader on the PUBLIC marketing pages only.
           Why here and not the root layout: the root layout also wraps (dashboard),
           and §8 of /privacy makes a hard promise that no ad tracker runs on a
-          signed-in page. MarketingShell is used by 24 public pages and by ZERO
-          pages under (dashboard), so mounting it here matches the policy exactly
+          signed-in page. MarketingShell backs the public pages and ZERO pages
+          under (dashboard), so mounting it here matches the policy exactly
           — /privacy §8 already says AdSense "loads across our public pages".
           Skipped when embedded: the mobile WebView renders these same pages to a
-          signed-in user, which is the case §8 covers. Same rule as MetaPixel. */}
-      {!embedded && <AdSenseScript />}
+          signed-in user, which is the case §8 covers. Same rule as MetaPixel.
+
+          `ads` exists because "public" is not the same as "should be monetized".
+          This shell ALSO backs the 548 arcade pages (app/games/page.jsx and
+          components/games/GamePageShell.jsx) and the thin, noindexed /coupons
+          page. Those opt out: the arcade follows the ARCADE_ADS_ENABLED
+          kill-switch, and /coupons carries no <AdSlot/> at all, so loading
+          Google there earned nothing and only widened the surface we are asking
+          AdSense to judge while a "Low value content" rejection is outstanding.
+          NOT /marketplace, despite it being equally thin and noindexed: it
+          renders four real <AdSlot/>s via MarketplaceClient, so opting it out
+          would be a revenue decision — and would not even work, since AdSlot
+          pulls this same loader in by itself. Default stays true so a new real
+          content page is monetized unless it says otherwise. */}
+      {!embedded && ads && <AdSenseScript />}
       {/* Scope the new typography + accents to marketing pages only. */}
       <style>{`
         .gg-marketing h1, .gg-marketing h2, .gg-marketing h3, .gg-marketing h4 { font-family: var(--font-bricolage), sans-serif; letter-spacing: -0.02em; }

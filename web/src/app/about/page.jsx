@@ -60,7 +60,7 @@ export default function AboutPage() {
           ))}
         </div>
         <div className="text-center mt-10">
-          <Link href="/register" className="btn-primary">Get started free</Link>
+          <Link href="/register" className="btn-primary">Get Started Free</Link>
         </div>
       </section>
 

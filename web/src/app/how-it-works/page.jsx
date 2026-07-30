@@ -53,7 +53,7 @@ export default function HowItWorksPage() {
       {/* CTA */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 pb-16 text-center">
         <div className="flex flex-wrap gap-3 justify-center">
-          <Link href="/register" className="btn-primary">Get started free</Link>
+          <Link href="/register" className="btn-primary">Get Started Free</Link>
           <Link href="/login?demo=1" className="btn-secondary">🔎 Try the demo first</Link>
           <Link href="/download" className="btn-secondary">Get the app</Link>
         </div>

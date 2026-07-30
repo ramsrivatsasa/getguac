@@ -1,5 +1,11 @@
-// The "I want to…" mockup card, lifted out of GoalsShowcase so the paid-ad
-// landing page can repeat it between sections without re-implementing it.
+// The benefit mockup card, lifted out of GoalsShowcase so the paid-ad landing
+// page can repeat it between sections without re-implementing it. (It used to
+// answer an "I want to…" prompt; that framing is retired and the copy on every
+// card now addresses the reader as "you".)
+//
+// ⚠️ `g.goal` is the card's action line here and `g.cta` is never rendered — so
+// a card's `goal` has to work as a link AND as the showcase heading it becomes
+// back in GoalsShowcase. Keep both readings in mind when editing one.
 //
 // Presentational only — no selection state, no marquee. GoalsShowcase keeps its
 // own interactive copy because there the card doubles as a tab control; here it
@@ -21,9 +27,12 @@ export default function GoalCard({ card: g, href }) {
         boxShadow: '0 10px 26px -20px rgba(20,40,28,0.25)',
       }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, padding: '0 2px' }}>
+      {/* `gap` + a non-shrinking tag so the two halves never overlap; the tag
+          itself is hidden under 560px (see .gc-tag in globals.css) because the
+          benefit-phrase titles need the whole row on a phone. */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, marginBottom: 10, padding: '0 2px' }}>
         <span style={{ ...DISPLAY, fontWeight: 800, fontSize: 15, color: '#15281C' }}>{g.e} {g.name}</span>
-        <span style={{ fontSize: 11, color: '#8A988E' }}>{g.tag}</span>
+        <span className="gc-tag" style={{ fontSize: 11, color: '#8A988E', flex: '0 0 auto', whiteSpace: 'nowrap' }}>{g.tag}</span>
       </div>
       <div style={{ textAlign: 'center', margin: '4px 0 12px' }}>
         <div style={{ ...DISPLAY, fontWeight: 800, fontSize: 30, letterSpacing: '-0.02em', color: '#15281C', lineHeight: 1.1 }}>{g.big}</div>

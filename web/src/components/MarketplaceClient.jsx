@@ -487,7 +487,7 @@ function RegisterCta() {
         Create a free account and GetGuac watches these searches for you — pinging you the moment a price drops.
       </p>
       <Link href="/register" className="inline-flex items-center gap-1.5 mt-4 bg-white text-guac-700 font-bold px-6 py-3 rounded-full hover:scale-105 active:scale-95 transition-transform">
-        🥑 Get started free <ArrowRight size={16} />
+        🥑 Get Started Free <ArrowRight size={16} />
       </Link>
     </div>
   )

@@ -49,7 +49,7 @@ export default function PricingPage() {
               </li>
             ))}
           </ul>
-          <Link href="/register" className="btn-primary w-full justify-center mt-7">Get started free</Link>
+          <Link href="/register" className="btn-primary w-full justify-center mt-7">Get Started Free</Link>
           <p className="text-center text-xs text-gray-400 mt-3">Your data stays yours. We never sell it.</p>
         </div>
       </section>

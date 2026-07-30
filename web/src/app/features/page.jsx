@@ -73,7 +73,7 @@ export default function FeaturesPage() {
           your spending and keep more of it. All free.
         </p>
         <div className="mt-7 flex flex-wrap gap-3 justify-center">
-          <Link href="/register" className="btn-primary">Get started free</Link>
+          <Link href="/register" className="btn-primary">Get Started Free</Link>
           <Link href="/tour" className="btn-secondary">Watch the tour</Link>
         </div>
       </section>
@@ -108,12 +108,12 @@ export default function FeaturesPage() {
       {/* CTA */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
         <div className="rounded-3xl bg-gradient-to-br from-emerald-700 via-emerald-600 to-lime-600 p-8 sm:p-12 text-center text-white shadow-xl">
-          <h2 className="text-2xl sm:text-4xl font-black tracking-tight">Take control of your money — free.</h2>
+          <h2 className="text-2xl sm:text-4xl font-black tracking-tight">Stop overpaying. Start saving smarter.</h2>
           <p className="text-emerald-50/90 mt-3 max-w-2xl mx-auto">
             No subscription, no card, no catch. Snap your first receipt and see where your money really goes.
           </p>
           <div className="mt-6 flex flex-wrap gap-3 justify-center">
-            <Link href="/register" className="inline-flex items-center rounded-full bg-lime-400 text-emerald-900 font-black px-7 py-3 hover:bg-lime-300 transition">Get started free</Link>
+            <Link href="/register" className="inline-flex items-center rounded-full bg-lime-400 text-emerald-900 font-black px-7 py-3 hover:bg-lime-300 transition">Get Started Free</Link>
             <Link href="/download" className="inline-flex items-center rounded-full bg-white/15 text-white font-bold px-7 py-3 hover:bg-white/25 transition">Get the app</Link>
           </div>
         </div>

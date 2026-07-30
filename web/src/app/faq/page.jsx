@@ -70,7 +70,7 @@ export default function FaqPage() {
         <div className="text-center mt-10">
           <p className="text-gray-600">Still curious?</p>
           <div className="mt-4 flex flex-wrap gap-3 justify-center">
-            <Link href="/register" className="btn-primary">Get started free</Link>
+            <Link href="/register" className="btn-primary">Get Started Free</Link>
             <Link href="/contact" className="btn-secondary">Contact us</Link>
           </div>
         </div>

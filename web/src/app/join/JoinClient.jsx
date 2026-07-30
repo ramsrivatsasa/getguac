@@ -36,18 +36,50 @@ const INK = '#0B1410'
 // look before they sign up never has to hunt for them.
 const DEMO = { email: 'demo@getguac.app', password: 'Guac!Demo2026' }
 
+// What is ACTUALLY in that demo account, measured 2026-07-29 straight from the
+// receipts table — not estimates, not marketing rounding. This is the page's
+// only quantified claim and the closest thing to social proof we can make
+// honestly: we have no user count or star rating worth showing (see the HONESTY
+// note by the trust row), but we do have a real year of parsed spending that
+// any visitor can log in and audit line by line.
+//
+// These drift as the demo account grows. Re-measure before quoting new figures:
+//   receipts    -> count(*)            where user_id = demo
+//   stores      -> distinct store_name where user_id = demo
+//   line items  -> count(*) receipt_items for those receipts
+//   sales tax   -> sum(tax_paid)       where user_id = demo
+// Do NOT hand-edit these upward. A number on this page has to survive someone
+// signing into the demo and checking it.
+const DEMO_STATS = [
+  ['163', 'receipts parsed'],
+  ['51', 'different stores'],
+  ['226', 'line items read'],
+  ['$309.06', 'sales tax tagged'],
+]
+
 // Cards recur down the page rather than living in one strip: three per rail,
 // walked in order, so a scroller keeps meeting a new thing GetGuac does.
 // There is one rail slot per section break below — enough to show every card
 // exactly once. Out-of-range slots render nothing, so adding or removing cards
 // degrades quietly instead of duplicating or dropping one silently.
+// Rails 0-2 used to be ONE sentence split across three headings ("I want to…" /
+// "…without thinking about it" / "…and keep more of it"). Rail 0 is now a
+// question, so the next two can no longer be dangling ellipses — they were
+// rewritten to stand on their own.
 const RAIL_TITLES = [
-  'I want to…',
-  '…without thinking about it',
-  '…and keep more of it',
-  'Every dollar, accounted for',
+  'How can Guac-AI help today?',
+  'Handled without you thinking about it',
+  'Keep more of what you earn',
+  // No trailing period — every other rail title goes without one.
+  // NOT "Turn every receipt into savings": that exact line is already the STEPS
+  // heading further down this same page.
+  'Make every dollar go further',
   'The bits that pay for themselves',
-  'There’s more in here',
+  // "More ways to save every day" was the suggested winner, but this rail is
+  // bills · GuacMoney · Guac-AI · the arcade — only one of those is a saving
+  // mechanism, and the two rails above it already say "save"/"every dollar".
+  // "More than receipt scanning" is the one option that actually fits the cards.
+  'More than receipt scanning',
 ]
 // Three cards per slot, except the last, which takes everything left over —
 // CARDS is not a multiple of three, and a leftover card would otherwise be the
@@ -116,23 +148,42 @@ export default function JoinClient() {
       <MetaPixel />
 
       {/* ── ORIGIN-SHAPED HERO ────────────────────────────────────────────── */}
-      <section style={{ background: INK, padding: '38px 20px 44px' }}>
+      {/* Bottom padding trimmed 44 -> 18 on request: the legal line is the last
+          thing in the dark hero and 44px under it left a visible band of empty
+          ink before the demo section's white ground began. */}
+      <section style={{ background: INK, padding: '38px 20px 18px' }}>
         <div style={{ maxWidth: 1060, margin: '0 auto' }}>
 
           {/* The line the story video closes on. Origin puts a price here; the
               equivalent hook for a free product is the promise, so the phrase
               leads and "Forever free" takes the price slot under it. */}
           <div style={{ maxWidth: 760, margin: '0 auto', textAlign: 'center' }}>
-            {/* The "Your money's been talking / GetGuac is listening" lede was
-                removed on request. This line is now the h1 — the page still
-                needs exactly one, and dropping the old heading without
-                promoting anything would leave the hero headless.
-                The avocado moved INTO this line on request 2026-07-29; it used
-                to be a standalone 40px block above the headline, which cost a
-                whole row of vertical space before the reader got any words. */}
+            {/* THE ASK IS THE HEADLINE — set on request 2026-07-29.
+                This slot has now held, in order: "Your money's been talking /
+                GetGuac is listening", "Keep more of your own money. Get the
+                whole family organized.", a three-losses gap-opener, and "Keep
+                more of your own money. Get Organized." All were statements
+                ABOUT the product; this one is an instruction to the reader, and
+                it is deliberately the same sentence that used to sit under the
+                headline in lime — that line was promoted here rather than
+                copied, so the page does not say it twice.
+                Consequence to keep in mind: the h1 no longer describes what
+                GetGuac is. The line under it and the story paragraph below the
+                phone now carry that entire job between them. Do not thin either
+                one out without putting the description somewhere else. */}
             <h1 className="gj-subline" style={{ ...DISPLAY, fontWeight: 800, color: '#fff', fontSize: 34, lineHeight: 1.15, letterSpacing: '-0.03em', margin: 0 }}>
-              <span aria-hidden>🥑</span> Keep more of your own money. 🗂️ Get Organized.
+              Every Dollar Counts. Keep More of Yours.
             </h1>
+
+            {/* The "your money's been talking" refrain, restored to the hero on
+                request 2026-07-29 as a small line tight under the h1 — 4px, so
+                it reads as part of the headline block rather than as its own
+                paragraph. Set small and dim on purpose: it is the emotional
+                beat under the promise, not a competing claim. */}
+            <p className="gj-snitch" style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.4, color: 'rgba(255,255,255,0.62)', margin: '4px 0 0' }}>
+              💸 Your money has been talking… GetGuac-AI is finally listening. <span aria-hidden>🥑</span>
+            </p>
+
 
             {/* Removed on request 2026-07-29: the Guac-AI "snitched" line and
                 the "Forever free" / "No card. No trial. Nothing to cancel."
@@ -246,20 +297,24 @@ export default function JoinClient() {
                 and the badges so the reader has already seen what the product
                 looks like by the time it explains what it does. */}
             <div className="gj-story">
-              <p className="gj-storyp" style={{ fontSize: 16.5, lineHeight: 1.7, color: 'rgba(255,255,255,0.72)', margin: 0 }}>
-                📬 Point it at your inbox and it goes to work: 🔁 rounds up the subscriptions you swore
-                you canceled, 🕵️ drags out the fees your bank buried in the fine print, 💸 flags the
-                refunds still ticking inside their return window, and 🏷️ quietly finds a better price
-                on the thing you were one click from buying anyway.
-              </p>
-              <p className="gj-storyp" style={{ fontSize: 16.5, lineHeight: 1.7, color: 'rgba(255,255,255,0.72)', margin: '18px 0 0' }}>
-                🧮 Then tax season rolls around and — surprise 🎉 — you&rsquo;re already done. Business,
-                charity, and sales tax tagged all year long, exported in one click. 📤
+              {/* ONE paragraph, set on request 2026-07-29. This block used to
+                  run to three: the four-leak list ("rounds up the subscriptions
+                  you swore you canceled…"), a payoff line, and a tax-season
+                  paragraph. All three were replaced by the single line below.
+                  NOTE what that trades away, so nobody re-discovers it as a bug:
+                  subscriptions, bank fees, refund windows, better prices and the
+                  tax export are no longer named ANYWHERE in the hero. They still
+                  appear further down the page in FEATURES and BRAIN. If the hero
+                  ever needs to name a capability again, put it here rather than
+                  growing the h1. */}
+              <p className="gj-storylede" style={{ fontSize: 18.5, lineHeight: 1.6, fontWeight: 600, color: 'rgba(255,255,255,0.94)', margin: 0 }}>
+                Give your family more savings with GetGuac. Simply scan or inbox a receipt, and
+                GetGuac AI will uncover savings you may be missing every month. ✨
               </p>
               {/* The "your money's been talking" refrain used to repeat here.
-                  It is the page's own H1 a screen and a half above, so saying
-                  it again this close read as a duplication, not a callback. */}
-              <p style={{ fontSize: 15, fontWeight: 700, color: '#A3E635', margin: '22px 0 0' }}>
+                  It now sits directly under the h1 at the top of the hero, so
+                  repeating it this close read as a duplication, not a callback. */}
+              <p style={{ fontSize: 15, fontWeight: 700, color: '#A3E635', margin: '10px 0 0' }}>
                 🍏 Free on iOS, Android and Web. No card required!!
               </p>
             </div>
@@ -267,12 +322,12 @@ export default function JoinClient() {
             <div className="gj-hero-auth">
           {err && <p style={{ marginTop: 12, fontSize: 14, color: '#fca5a5' }}>{err}</p>}
 
-          <p style={{ marginTop: 20, fontSize: 14, color: 'rgba(255,255,255,0.55)' }}>
+          <p style={{ marginTop: 12, fontSize: 14, color: 'rgba(255,255,255,0.55)' }}>
             Already have an account?{' '}
             <Link href="/login" style={{ color: '#fff', fontWeight: 700 }}>SIGN IN</Link>
           </p>
 
-          <p style={{ marginTop: 22, fontSize: 11, lineHeight: 1.7, color: 'rgba(255,255,255,0.42)' }}>
+          <p style={{ marginTop: 12, fontSize: 11, lineHeight: 1.7, color: 'rgba(255,255,255,0.42)' }}>
             By creating an account you agree to our{' '}
             <Link href="/terms" style={{ color: 'rgba(255,255,255,0.72)' }}>Terms of Service</Link> and{' '}
             <Link href="/privacy" style={{ color: 'rgba(255,255,255,0.72)' }}>Privacy Policy</Link>. We never sell your data.
@@ -290,15 +345,39 @@ export default function JoinClient() {
           <div className="gj-demo">
             <div style={{ minWidth: 0 }}>
               <span style={{ display: 'inline-block', fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#4D7C0F', marginBottom: 10 }}>
-                Don&apos;t want to sign up yet?
+                Don&apos;t take our word for it
               </span>
-              <h2 style={{ ...DISPLAY, fontWeight: 800, fontSize: 28, letterSpacing: '-0.025em', margin: '0 0 8px', color: '#15281C' }}>
-                Use our demo account.
+              {/* Reframed 2026-07-29. This section used to sell the demo as a
+                  way to avoid signing up ("Don't want to sign up yet? Use our
+                  demo account") — which is an objection handler, not a reason
+                  to click. It now leads with what is actually inside, because
+                  a real year of parsed spending is the strongest evidence on
+                  the page that the hero's promise is not vapour. The numbers
+                  are checkable: the credentials are right underneath. */}
+              {/* 23px, not 28: this heading is 45 characters and the demo block
+                  gives it only half the 1180px row, so at 28 it wrapped onto a
+                  second line mid-phrase ("before you / commit"). Sized to sit on
+                  ONE line at desktop on request. It still wraps on a phone,
+                  where the column is full-width but only ~342px — one line
+                  there would need ~15px, which is smaller than the body copy
+                  underneath it. */}
+              <h2 className="gj-demoh2" style={{ ...DISPLAY, fontWeight: 800, fontSize: 23, letterSpacing: '-0.025em', margin: '0 0 8px', color: '#15281C', whiteSpace: 'nowrap' }}>
+                See what Guac-AI can find before you commit. <span aria-hidden>🥑</span>
               </h2>
               <p style={{ fontSize: 15.5, lineHeight: 1.55, color: '#3D4F44', margin: '0 0 18px' }}>
-                A shared account pre-loaded with real receipts, scores and reports. Look around the whole
-                app first — nothing to create, nothing to cancel.
+                Open a real year of spending and discover hidden savings opportunities from 12 months
+                of receipts already analyzed by our AI.
               </p>
+
+              {/* The page's one quantified block. See DEMO_STATS. */}
+              <div className="gj-proof" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 20 }}>
+                {DEMO_STATS.map(([n, label]) => (
+                  <div key={label} style={{ background: '#fff', border: '1px solid rgba(101,163,13,0.2)', borderRadius: 14, padding: '12px 10px', textAlign: 'center' }}>
+                    <div style={{ ...DISPLAY, fontWeight: 800, fontSize: 20, color: '#15281C', letterSpacing: '-0.02em' }}>{n}</div>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: '#6B7A70', lineHeight: 1.3, marginTop: 3 }}>{label}</div>
+                  </div>
+                ))}
+              </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 18 }}>
                 {[['Email', DEMO.email], ['Password', DEMO.password]].map(([label, value]) => (
@@ -330,6 +409,29 @@ export default function JoinClient() {
         </div>
       </section>
 
+      {/* ── WHY SHOULD I? ─────────────────────────────────────────────────── */}
+      {/* Placed directly after the demo block on purpose. The hero asks for a
+          signup and the demo answers "what's behind the wall"; this answers the
+          question that sits between them — "why should I bother at all". It has
+          to come BEFORE the goal-card rails, because those assume the reader
+          already wants something.
+          Deliberately compact — one emoji and one line each. This page already
+          carries six feature cards, three brain cards, three steps and nineteen
+          goal cards; five more full-size cards would have been sprawl. */}
+      <section style={{ maxWidth: 1180, margin: '0 auto', padding: '44px 24px 8px' }}>
+        <h2 style={{ ...DISPLAY, fontWeight: 800, fontSize: 30, letterSpacing: '-0.03em', margin: '0 0 22px', color: '#15281C' }}>
+          Why should I?
+        </h2>
+        <div className="gj-why">
+          {WHY.map((w) => (
+            <div key={w.t} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, background: '#fff', border: '1px solid rgba(20,83,45,0.10)', borderRadius: 16, padding: '16px 18px' }}>
+              <span aria-hidden style={{ fontSize: 22, lineHeight: 1.1, flex: '0 0 auto' }}>{w.e}</span>
+              <span style={{ fontSize: 14.5, fontWeight: 600, lineHeight: 1.4, color: '#15281C' }}>{w.t}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* The "smartest sidekick" pitch used to sit here. It moved into the hero
           beside the phone — repeating the same headline two screens later read
           as a mistake rather than a refrain. */}
@@ -338,9 +440,13 @@ export default function JoinClient() {
 
       {/* ── FEATURES ──────────────────────────────────────────────────────── */}
       <section style={{ maxWidth: 1180, margin: '0 auto', padding: '52px 24px' }}>
-        <div style={{ maxWidth: 640, marginBottom: 36 }}>
-          <h2 style={{ ...DISPLAY, fontWeight: 800, fontSize: 38, letterSpacing: '-0.03em', margin: '0 0 12px', color: '#15281C' }}>Take control of your money.</h2>
-          <p style={{ fontSize: 17, lineHeight: 1.55, color: '#56655B', margin: 0 }}>Better prices, the refunds you&apos;re owed, and exactly where your money goes — in about a minute.</p>
+        {/* 820px, not 640: the heading is 37 characters and would not sit on one
+            line inside 640 at any size that still reads as a section heading.
+            Widening the block was the cheaper half of the fix — the font only
+            had to come down 38 -> 34. Requested one-line 2026-07-29. */}
+        <div style={{ maxWidth: 820, marginBottom: 36 }}>
+          <h2 className="gj-secth2" style={{ ...DISPLAY, fontWeight: 800, fontSize: 34, letterSpacing: '-0.03em', margin: '0 0 12px', color: '#15281C', whiteSpace: 'nowrap' }}>Stop overpaying. Start saving smarter.</h2>
+          <p style={{ fontSize: 17, lineHeight: 1.55, color: '#56655B', margin: 0 }}>Guac-AI analyzes your spending to find better prices, uncover refunds, and reveal where your money goes — all in about a minute.</p>
         </div>
         <div className="gj-grid3">
           {FEATURES.map((f) => (
@@ -351,6 +457,7 @@ export default function JoinClient() {
             </div>
           ))}
         </div>
+
       </section>
 
       <CardRail n={2} />
@@ -359,9 +466,13 @@ export default function JoinClient() {
       <section style={{ background: '#F7FAF2', borderTop: '1px solid rgba(101,163,13,0.12)', borderBottom: '1px solid rgba(101,163,13,0.12)', marginTop: 44 }}>
         <div style={{ maxWidth: 1180, margin: '0 auto', padding: '56px 24px' }}>
           <div style={{ maxWidth: 620, marginBottom: 36 }}>
-            <span style={{ display: 'inline-block', color: '#4D7C0F', fontWeight: 700, fontSize: 13, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 12 }}>The brain behind the guac</span>
-            <h2 style={{ ...DISPLAY, fontWeight: 800, fontSize: 38, letterSpacing: '-0.03em', margin: '0 0 12px', color: '#15281C' }}>Most apps just track. Guac-AI thinks.</h2>
-            <p style={{ fontSize: 17, lineHeight: 1.55, color: '#56655B', margin: 0 }}>It tags, scores, spots patterns, and nudges you — like a CFO that lives in your pocket and never sends a bill.</p>
+            <span style={{ display: 'inline-block', color: '#4D7C0F', fontWeight: 700, fontSize: 13, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 12 }}>AI that works for your wallet</span>
+            {/* "Guac-AI", NOT bare "Guac": the codebase already uses Guac-AI 63×
+                to Guac AI 25×, and on this site "guac" separately means MONEY
+                ("Keep More Guac in Your Pocket"), so "Guac thinks" would make the
+                guacamole the thinker. Dropped "just" for the punchiness instead. */}
+            <h2 style={{ ...DISPLAY, fontWeight: 800, fontSize: 38, letterSpacing: '-0.03em', margin: '0 0 12px', color: '#15281C' }}>Most apps track. Guac-AI thinks.</h2>
+            <p style={{ fontSize: 17, lineHeight: 1.55, color: '#56655B', margin: 0 }}>It reads every receipt and statement, then tells you what to do about it — like a CFO that lives in your pocket and never sends a bill.</p>
           </div>
           <div className="gj-grid3">
             {BRAIN.map((c) => (
@@ -379,8 +490,20 @@ export default function JoinClient() {
 
       {/* ── THREE STEPS ───────────────────────────────────────────────────── */}
       <section style={{ maxWidth: 1180, margin: '0 auto', padding: '52px 24px' }}>
-        <div style={{ textAlign: 'center', maxWidth: 600, margin: '0 auto 36px' }}>
-          <h2 style={{ ...DISPLAY, fontWeight: 800, fontSize: 38, letterSpacing: '-0.03em', margin: 0, color: '#15281C' }}>Three taps from receipt to insight.</h2>
+        {/* Heading replaced 2026-07-29. "Three taps from receipt to insight."
+            had the right sentence shape but the wrong payoff — "insight" is
+            abstract and promises nothing about money. The support line under it
+            is new; the block used to be a bare heading. maxWidth 680 (was 600)
+            so the support line runs to two balanced rows instead of three. */}
+        <div style={{ textAlign: 'center', maxWidth: 680, margin: '0 auto 36px' }}>
+          <h2 style={{ ...DISPLAY, fontWeight: 800, fontSize: 38, letterSpacing: '-0.03em', margin: '0 0 12px', color: '#15281C' }}>Turn Every Receipt Into Savings.</h2>
+          {/* Lede rewritten 2026-07-29 — see the fuller note on the same line in
+              app/page.jsx. Short version: it restated the two cards below it and
+              collided with the FEATURES lede up the page. */}
+          <p style={{ fontSize: 17, lineHeight: 1.55, color: '#56655B', margin: 0 }}>
+            Upload once — GetGuac does the rest. Every purchase organized, every refund window
+            watched, and the savings surfaced for you. Under a minute per receipt.
+          </p>
         </div>
         <div className="gj-grid3">
           {STEPS.map((s) => (
@@ -402,9 +525,15 @@ export default function JoinClient() {
           <span style={{ fontSize: 36 }}>🛡️</span>
           <div style={{ flex: 1, minWidth: 240 }}>
             <h3 style={{ ...DISPLAY, fontWeight: 800, fontSize: 22, margin: '0 0 6px', color: '#15281C' }}>Your guac. Your rules.</h3>
+            {/* 🔴 HONESTY FIX 2026-07-29 — see the fuller note on the same paragraph in
+                app/page.jsx. Short version: the old "even our own engineers can't see
+                your data" was false (44 files use the service-role key, which bypasses
+                RLS). 🔒 Don't re-add a staff-access claim.
+                ⚠️ This page has NO "How we protect you" link beside the strip, unlike the
+                homepage — so this paragraph is the whole privacy story on /join. */}
             <p style={{ fontSize: 14.5, color: '#3D4F44', margin: 0, lineHeight: 1.55 }}>
-              Inbox sync is opt-in, auto-parse is limited to your +g address, and row-level security means
-              even our own engineers can&apos;t see your data. One-click account + data wipe, any time.
+              Your receipts stay yours. Inbox sync is opt-in, we never ask for your bank login, and
+              one click wipes your account and every record — any time.
             </p>
           </div>
         </div>
@@ -417,15 +546,20 @@ export default function JoinClient() {
         <div style={{ background: '#65A30D', borderRadius: 32, padding: '58px 40px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
           <div aria-hidden style={{ position: 'absolute', top: -60, right: -40, fontSize: 200, opacity: 0.14 }}>🥑</div>
           <h2 className="gj-h2big" style={{ ...DISPLAY, fontWeight: 800, fontSize: 40, letterSpacing: '-0.03em', margin: '0 0 14px', color: '#fff', position: 'relative' }}>
-            Ready to put a brain on your money?
+            Start Saving Today
           </h2>
+          {/* 🔒 HONESTY LOCK — the same one as the hero trust row. The requested
+              copy opened "Join thousands of smarter shoppers"; GetGuac has 10
+              accounts, so that clause is cut and only the capability claims and
+              the price (both true) are kept. Never add member counts, star
+              ratings or savings figures to this page. */}
           <p style={{ fontSize: 17, lineHeight: 1.5, color: 'rgba(255,255,255,0.9)', margin: '0 auto 26px', maxWidth: 520, position: 'relative' }}>
-            Free, private, and on your side. No fees, no card, no spam.
+            Save money, track spending, and never miss a refund. Free forever — no card, no fees, no spam.
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', position: 'relative' }}>
             <Link href="/register" onClick={() => trackClick('join-signup-email')}
               style={{ background: '#fff', color: '#15281C', fontWeight: 700, fontSize: 16, padding: '15px 28px', borderRadius: 999, textDecoration: 'none' }}>
-              🥑 Create my free account
+              Get Started Free
             </Link>
             <Link href="/login?demo=1" onClick={() => trackClick('join-demo')}
               style={{ background: 'rgba(255,255,255,0.18)', color: '#fff', fontWeight: 700, fontSize: 16, padding: '15px 28px', borderRadius: 999, textDecoration: 'none', border: '1px solid rgba(255,255,255,0.4)' }}>
@@ -477,14 +611,22 @@ export default function JoinClient() {
         .gj-authbtn:disabled { opacity: 0.7; cursor: default; }
         .gj-nounderline { text-decoration: none; }
         .gj-grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+        /* Five cards do not divide into three, so this is auto-fit rather than a
+           fixed column count — it lays out 5-across on a wide screen and reflows
+           to 3, 2 then 1 without a media query per breakpoint. */
+        .gj-why { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
         .gj-demo { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: center; }
 
         /* Hero body — one centred stack, the way Origin's page runs: Guac-AI
            pill, device, primary CTA, store badges, then the auth buttons. */
+        /* Vertical rhythm tightened 2026-07-29 on request — the hero was
+           carrying ~60px of dead air across four seams (headline→pill,
+           trust row→story, story→sign-in, and the legal footer). Each of
+           these was cut roughly in half. */
         .gj-herorow { display: flex; flex-direction: column; align-items: center;
-                      max-width: 980px; margin: 32px auto 0; }
+                      max-width: 980px; margin: 20px auto 0; }
         .gj-hero-phone { display: flex; flex-direction: column; align-items: center; }
-        .gj-aipill { margin-bottom: 20px; }
+        .gj-aipill { margin-bottom: 14px; }
         .gj-badges { margin-top: 14px; }
         /* The auth stack sits under the store badges. Tight above (it belongs
            with the badges as one block of ways-in) and tight below, so the
@@ -492,23 +634,44 @@ export default function JoinClient() {
         .gj-heroauthstack { margin-top: 16px; }
         /* Narrower than the hero: ~65 characters a line is the point where a
            paragraph this long stops being a wall. */
-        .gj-story { max-width: 640px; margin: 38px auto 0; text-align: center; }
-        .gj-hero-auth  { width: 100%; max-width: 430px; margin-top: 34px; text-align: center; }
+        .gj-story { max-width: 640px; margin: 24px auto 0; text-align: center; }
+        /* 6px, not 18: the first child inside this block already carries its
+           own 12px margin-top, so anything here stacks on top of that. */
+        .gj-hero-auth  { width: 100%; max-width: 430px; margin-top: 6px; text-align: center; }
 
         @media (max-width: 880px) {
           .gj-grid3 { grid-template-columns: 1fr; }
           .gj-demo { grid-template-columns: 1fr; }
           .gj-demoshot { display: none; }
           .gj-h2big { font-size: 34px !important; }
-          .gj-herorow { margin-top: 24px; }
-          .gj-hero-auth { margin-top: 24px; }
+          .gj-herorow { margin-top: 16px; }
+          .gj-hero-auth { margin-top: 6px; }
           /* .gj-lede went with the removed heading. .gj-subline is the h1 now,
              so its mobile size steps up instead of sitting at sub-line size. */
+          /* Stays 26. The h1 now carries three named losses plus the payoff
+             line and runs to five lines on a 390px screen. 24px was tried and
+             reverted: it still wrapped to five lines (measured 138px tall vs
+             149px), so it bought ~11px of fold for a visibly weaker headline.
+             The Google button clears the fold at 26px — verified at 390x844. */
           .gj-subline { font-size: 26px !important; }
           /* .gj-price and .gj-snitch went with the "Forever free" block and the
              Guac-AI "snitched" line — both removed from the hero 2026-07-29. */
-          .gj-story { margin-top: 32px; }
+          .gj-story { margin-top: 20px; }
           .gj-storyp { font-size: 15.5px !important; }
+          /* The lede is set larger than the body copy on desktop as the thesis
+             line; at 18.5px on a phone it ran to five lines and stopped being
+             one. Steps down but stays above .gj-storyp so the hierarchy holds. */
+          .gj-storylede { font-size: 16.5px !important; }
+          /* Four stat tiles across a 320px screen gives each ~70px, which wraps
+             "sales tax tagged" onto three lines and breaks the row's rhythm.
+             2x2 keeps every figure on one line. */
+          .gj-proof { grid-template-columns: repeat(2, 1fr) !important; }
+          /* The one-line headings are desktop-only. nowrap on a 390px screen
+             would push the page into horizontal scroll, so both drop back to
+             normal wrapping here — a phone cannot fit either line at a size
+             that is still legible. */
+          .gj-secth2 { white-space: normal !important; font-size: 27px !important; }
+          .gj-demoh2 { white-space: normal !important; font-size: 22px !important; }
           .gj-stickyinner { padding-right: 64px; }
           /* A credential shown truncated is worse than a smaller one.
              !important because these lose to the elements' own inline styles. */
@@ -544,23 +707,64 @@ function CardRail({ n }) {
   )
 }
 
+// ⚠️ A quantified rewrite of these cards was tried and ROLLED BACK on request
+// 2026-07-29 ("Find Money You're Missing" / "$111/month discovered in recurring
+// charges" etc). If it is ever revived, note why it needed a caveat line: those
+// figures came from the DEMO dashboard at one time window and several could not
+// be reproduced against the database — $2,291/62 receipts matched no window
+// (90d = 50/$1,629.61), demo bank_fees is $120.00 all-time not $60, $111/month
+// was not reproducible, and the dashboard showed 5 anomalies not 3.
+// Titles rewritten 2026-07-29: feature-shaped ("Track receipts & statements")
+// -> benefit-shaped ("Know Where Every Dollar Goes"). Every claim here is a
+// capability, with no figures — unlike the quantified version of these cards
+// that was tried and rolled back earlier the same day (see git history / the
+// note that used to sit here). Keep it that way: this list is the one place on
+// the page that says what GetGuac does without asserting an amount.
 const FEATURES = [
-  { e: '🧾', t: 'Track receipts & statements', b: 'Every purchase, fee, and charge, organized in one place.' },
-  { e: '🏷️', t: 'Get better deals', b: 'Steals finds a cheaper price on the things you rebuy.' },
-  { e: '↩️', t: 'Never miss a refund', b: 'Money back on price drops and returns, before deadlines pass.' },
-  { e: '✂️', t: 'Cut hidden subscriptions', b: 'Find and cancel the monthly bills you forgot about.' },
-  { e: '📝', t: 'Share a shopping list', b: 'Build one on the fly and send it to family in one tap.' },
-  { e: '📊', t: 'See it all & plan ahead', b: 'GuacScore + GuacWizard guide every spending call.' },
+  { e: '🧾', t: 'Know Where Every Dollar Goes', b: 'Every receipt, purchase, fee, and statement — automatically organized in one place.' },
+  { e: '🏷️', t: 'Never Overpay Again', b: 'We’ll help you find better prices on the things you buy, so your money goes further.' },
+  { e: '↩️', t: 'Claim Every Dollar You’re Owed', b: 'Stay ahead of return deadlines and price drops so you never miss a refund.' },
+  { e: '✂️', t: 'Stop Paying for What You Don’t Use', b: 'Spot forgotten subscriptions and recurring charges before they drain your wallet.' },
+  { e: '📝', t: 'Shop Together. Save Together.', b: 'Create, share, and compare shopping lists to get the best value every trip.' },
+  { e: '📊', t: 'Spend With Confidence', b: 'Get personalized insights that help you make smarter spending decisions every day.' },
 ]
 
+// ⚠️ Kept in sync with the same list in app/page.jsx.
+//
+// 🔒 "Bank Bite" is a SHIPPED FEATURE NAME, not a marketing label — it is a live
+// dashboard stat tile ("🦷 Bank Bite" in guacanomics), a chart slice, a
+// notification preference backed by the DB key `bank_bite_digest`, and it is
+// narrated repeatedly in the /how-it-works tour and the video. Renaming it here
+// (suggested: "Cost Leak Detector") would send a new signup hunting for a
+// feature that does not exist under that name. The eyebrow carries the plain
+// meaning instead. A real rename is a product-wide change plus a re-render.
 const BRAIN = [
-  { k: 'Your spending IQ', t: 'GuacScore', b: 'A 0–100 grade for every dollar you spent. Weighted by amount, rated by your taste, dinged by fees.' },
-  { k: 'AI insights', t: 'GuacWizard', b: 'Bank statements in, insights out. Interest, fees, regret-spend, hidden subscriptions — with a "do this next" nudge.' },
-  { k: 'Hidden cost killer', t: 'Bank Bite Tracker', b: 'Every interest charge, overdraft, and annual fee — itemized per card, scored against your spend.' },
+  { k: 'Your spending IQ', t: 'GuacScore', b: 'Know whether every purchase was worth it — a personalized 0–100 score from your own ratings, dinged by fees.' },
+  { k: 'AI insights', t: 'GuacWizard', b: 'Reads your bank statements, explains your spending, and recommends your next move.' },
+  { k: 'Hidden cost killer', t: 'Bank Bite Tracker', b: 'Every interest charge, overdraft and annual fee your bank took — itemized per card.' },
 ]
 
+// "Why should I?" strip. Kept in sync with the same list in app/page.jsx.
+//
+// ⚠️ The last line was supplied as "Works on Android and the web". Corrected to
+// name the iPhone: GetGuac has been live on the App Store since 2026-07-14
+// (bundle com.yathis.getguac, currently 0.4.21), and this very page shows a
+// "Download on the App Store" badge in the hero. Shipping "Android and the web"
+// would have contradicted the badge two screens above it and told every iPhone
+// visitor the app was not for them.
+const WHY = [
+  { e: '📸', t: 'Scan receipts in seconds' },
+  { e: '📊', t: 'Automatically track spending & start saving' },
+  { e: '💡', t: 'Discover unnecessary expenses' },
+  { e: '🔒', t: 'Your financial data stays private' },
+  { e: '📱', t: 'Works on iPhone, Android and the web' },
+]
+
+// ⚠️ Kept in sync with the same list in app/page.jsx — the note there explains
+// why these are the outcome arc (Upload → AI Organizes → Save More) rather than
+// the old feature labels, and which app code backs each claim.
 const STEPS = [
-  { n: '1', e: '📷', t: 'Drop or snap', b: 'Drag a PDF, forward an email, or snap a photo.' },
-  { n: '2', e: '🧾', t: 'Auto-organized', b: 'Items, categories, locations, refund policies — extracted.' },
-  { n: '3', e: '💎', t: 'Rate & learn', b: 'Worth It? rating + Guacanomics charts surface what you need.' },
+  { n: '1', e: '📷', t: 'Upload', b: 'Snap a photo, forward an email, or drop a PDF.' },
+  { n: '2', e: '🧾', t: 'AI Organizes', b: 'Items, categories, stores, warranties and return windows — pulled out for you.' },
+  { n: '3', e: '💎', t: 'Save More', b: 'Better prices, refunds you’re owed, and a Worth It? score on every buy.' },
 ]

@@ -28,7 +28,7 @@ export default async function Home() {
               <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#84CC16', boxShadow: '0 0 0 3px rgba(132,204,22,0.25)' }} /> Guac-AI · personal finance assistant
             </div>
             <h1 className="gg-h1" style={{ ...DISPLAY, fontWeight: 800, fontSize: 58, lineHeight: 1.02, letterSpacing: '-0.035em', margin: '0 0 22px', color: '#15281C' }}>
-              Meet your money&apos;s<br />smartest <span style={{ color: '#65A30D' }}>sidekick.</span>
+              Keep More <span style={{ color: '#65A30D' }}>Guac</span><br />in Your Pocket <span aria-hidden>🥑</span>
             </h1>
             <p style={{ fontSize: 19, lineHeight: 1.55, color: '#56655B', margin: '0 0 30px', maxWidth: 520 }}>
               GetGuac reads your receipts and bank statements, scores every purchase, sniffs out hidden fees, and shows you exactly where your money gets eaten. Money&apos;s wingman. Keep your guac.
@@ -64,15 +64,18 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* GOALS — "I want to…" mockup cards + click-a-card showcase of the
-            real web + phone screens for each option (client component). */}
+        {/* GOALS — benefit mockup cards + click-a-card showcase of the real web
+            + phone screens for each option (client component). */}
         <GoalsShowcase />
 
         {/* FEATURES */}
         <section style={{ maxWidth: 1180, margin: '0 auto', padding: '72px 28px' }}>
-          <div style={{ maxWidth: 640, marginBottom: 44 }}>
-            <h2 style={{ ...DISPLAY, fontWeight: 800, fontSize: 40, letterSpacing: '-0.03em', margin: '0 0 14px', color: '#15281C' }}>Take control of your money.</h2>
-            <p style={{ fontSize: 18, lineHeight: 1.55, color: '#56655B', margin: 0 }}>Better prices, the refunds you&apos;re owed, and exactly where your money goes — in about a minute.</p>
+          {/* 860 + 36px + nowrap so the heading holds one line — see the same
+              treatment on /join. `.gg-secth2` drops back to normal wrapping
+              under 880px; nowrap on a phone would cause horizontal scroll. */}
+          <div style={{ maxWidth: 860, marginBottom: 44 }}>
+            <h2 className="gg-secth2" style={{ ...DISPLAY, fontWeight: 800, fontSize: 36, letterSpacing: '-0.03em', margin: '0 0 14px', color: '#15281C', whiteSpace: 'nowrap' }}>Stop overpaying. Start saving smarter.</h2>
+            <p style={{ fontSize: 18, lineHeight: 1.55, color: '#56655B', margin: 0 }}>Guac-AI analyzes your spending to find better prices, uncover refunds, and reveal where your money goes — all in about a minute.</p>
           </div>
           <div className="gg-grid3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
             {FEATURES.map((f) => (
@@ -83,15 +86,18 @@ export default async function Home() {
               </div>
             ))}
           </div>
+
         </section>
 
         {/* BRAIN */}
         <section style={{ background: '#F7FAF2', borderTop: '1px solid rgba(101,163,13,0.12)', borderBottom: '1px solid rgba(101,163,13,0.12)' }}>
           <div style={{ maxWidth: 1180, margin: '0 auto', padding: '76px 28px' }}>
             <div style={{ maxWidth: 620, marginBottom: 44 }}>
-              <span style={{ display: 'inline-block', color: '#4D7C0F', fontWeight: 700, fontSize: 13, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 14 }}>The brain behind the guac</span>
-              <h2 style={{ ...DISPLAY, fontWeight: 800, fontSize: 40, letterSpacing: '-0.03em', margin: '0 0 14px', color: '#15281C' }}>Most apps just track. Guac-AI thinks.</h2>
-              <p style={{ fontSize: 18, lineHeight: 1.55, color: '#56655B', margin: 0 }}>It tags, scores, spots patterns, and nudges you — like a CFO that lives in your pocket and never sends a bill.</p>
+              <span style={{ display: 'inline-block', color: '#4D7C0F', fontWeight: 700, fontSize: 13, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 14 }}>AI that works for your wallet</span>
+              {/* "Guac-AI", not bare "Guac" — see the note in join/JoinClient.jsx.
+                  On this page in particular the h1 uses "Guac" to mean money. */}
+              <h2 style={{ ...DISPLAY, fontWeight: 800, fontSize: 40, letterSpacing: '-0.03em', margin: '0 0 14px', color: '#15281C' }}>Most apps track. Guac-AI thinks.</h2>
+              <p style={{ fontSize: 18, lineHeight: 1.55, color: '#56655B', margin: 0 }}>It reads every receipt and statement, then tells you what to do about it — like a CFO that lives in your pocket and never sends a bill.</p>
             </div>
             <div className="gg-grid3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
               {BRAIN.map((c) => (
@@ -105,10 +111,42 @@ export default async function Home() {
           </div>
         </section>
 
+        {/* WHY SHOULD I? — see the note on the same block in join/JoinClient.jsx.
+            Sits after the features grid here rather than after a demo block,
+            because this page has no demo section: features make the claims, and
+            this strip answers "why bother" before the how-it-works steps. */}
+        <section style={{ maxWidth: 1180, margin: '0 auto', padding: '0 28px 8px' }}>
+          <h2 style={{ ...DISPLAY, fontWeight: 800, fontSize: 32, letterSpacing: '-0.03em', margin: '0 0 22px', color: '#15281C' }}>
+            Why should I?
+          </h2>
+          <div className="gg-why">
+            {WHY.map((w) => (
+              <div key={w.t} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, background: '#fff', border: '1px solid rgba(20,83,45,0.10)', borderRadius: 16, padding: '16px 18px' }}>
+                <span aria-hidden style={{ fontSize: 22, lineHeight: 1.1, flex: '0 0 auto' }}>{w.e}</span>
+                <span style={{ fontSize: 15, fontWeight: 600, lineHeight: 1.4, color: '#15281C' }}>{w.t}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
         {/* HOW IT WORKS */}
         <section style={{ maxWidth: 1180, margin: '0 auto', padding: '76px 28px' }}>
-          <div style={{ textAlign: 'center', maxWidth: 600, margin: '0 auto 44px' }}>
-            <h2 style={{ ...DISPLAY, fontWeight: 800, fontSize: 40, letterSpacing: '-0.03em', margin: '0 0 14px', color: '#15281C' }}>Three taps from receipt to insight.</h2>
+          {/* See the note on the same block in join/JoinClient.jsx. The support
+              line goes ABOVE the "See how it works" link so the link stays the
+              last thing in the block, where it reads as the next action. */}
+          <div style={{ textAlign: 'center', maxWidth: 680, margin: '0 auto 44px' }}>
+            <h2 style={{ ...DISPLAY, fontWeight: 800, fontSize: 40, letterSpacing: '-0.03em', margin: '0 0 14px', color: '#15281C' }}>Turn Every Receipt Into Savings.</h2>
+            {/* Lede rewritten 2026-07-29. The old one ("Scan receipts, automatically
+                categorize purchases, and discover where your money really goes — all
+                in under a minute") had two problems: it restated steps 1 and 2 of the
+                three cards directly below it, and it collided with the FEATURES lede
+                further up this same page, which already ends "reveal where your money
+                goes — all in about a minute". This one hands the mechanics to the
+                cards and keeps the payoff for itself. */}
+            <p style={{ fontSize: 18, lineHeight: 1.55, color: '#56655B', margin: '0 0 14px' }}>
+              Upload once — GetGuac does the rest. Every purchase organized, every refund window
+              watched, and the savings surfaced for you. Under a minute per receipt.
+            </p>
             <Link href="/how-it-works" style={{ color: '#4D7C0F', fontWeight: 700, fontSize: 15, textDecoration: 'none' }}>See how it works in detail →</Link>
           </div>
           <div className="gg-grid3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
@@ -132,7 +170,19 @@ export default async function Home() {
             <span style={{ fontSize: 40 }}>🛡️</span>
             <div style={{ flex: 1, minWidth: 240 }}>
               <h3 style={{ ...DISPLAY, fontWeight: 800, fontSize: 24, margin: '0 0 6px', color: '#15281C' }}>Your guac. Your rules.</h3>
-              <p style={{ fontSize: 15, color: '#3D4F44', margin: 0, lineHeight: 1.55 }}>Inbox sync is opt-in, auto-parse is limited to your +g address, and row-level security means even our own engineers can&apos;t see your data. One-click account + data wipe, any time.</p>
+              {/* 🔴 HONESTY FIX 2026-07-29 — the old line claimed "row-level security
+                  means even our own engineers can't see your data". That is FALSE:
+                  44 files under web/src use SUPABASE_SERVICE_ROLE_KEY, which bypasses
+                  RLS by design, including (dashboard)/admin/page.jsx. RLS is what stops
+                  one signed-in USER reading another's rows — it is not a promise about
+                  staff access, and marketing must not sell it as one. Same defect class
+                  as the false privacy-policy §8 fixed in acc0283.
+                  Every clause below is verifiable: inbox sync is opt-in, statements are
+                  PDF uploads (/features: "No bank login required"), and the wipe is
+                  self-serve via /delete-account → api/account/delete.
+                  🔒 Do not re-add a staff-access claim here. /security carries the
+                  detail, and the button beside this paragraph links to it. */}
+              <p style={{ fontSize: 15, color: '#3D4F44', margin: 0, lineHeight: 1.55 }}>Your receipts stay yours. Inbox sync is opt-in, we never ask for your bank login, and one click wipes your account and every record — any time.</p>
             </div>
             <Link href="/security" style={{ background: '#65A30D', color: '#fff', fontWeight: 700, fontSize: 15, padding: '13px 22px', borderRadius: 999, textDecoration: 'none' }}>How we protect you →</Link>
           </div>
@@ -142,10 +192,14 @@ export default async function Home() {
         <section style={{ maxWidth: 1180, margin: '0 auto', padding: '0 28px 76px' }}>
           <div style={{ background: '#65A30D', borderRadius: 32, padding: '68px 48px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
             <div style={{ position: 'absolute', top: -60, right: -40, fontSize: 200, opacity: 0.14, animation: 'guacFloatSlow 8s ease-in-out infinite' }}>🥑</div>
-            <h2 style={{ ...DISPLAY, fontWeight: 800, fontSize: 44, letterSpacing: '-0.03em', margin: '0 0 16px', color: '#fff', position: 'relative' }}>Ready to put a brain on your money?</h2>
-            <p style={{ fontSize: 18, lineHeight: 1.5, color: 'rgba(255,255,255,0.9)', margin: '0 auto 30px', maxWidth: 520, position: 'relative' }}>Free, private, and on your side. No fees, no card, no spam.</p>
+            <h2 style={{ ...DISPLAY, fontWeight: 800, fontSize: 44, letterSpacing: '-0.03em', margin: '0 0 16px', color: '#fff', position: 'relative' }}>Start Saving Today</h2>
+            {/* 🔒 HONESTY LOCK — requested copy opened "Join thousands of smarter
+                shoppers"; GetGuac has 10 accounts, so that clause is cut and only
+                the capability claims and the price are kept. No member counts,
+                star ratings or savings figures on this page. */}
+            <p style={{ fontSize: 18, lineHeight: 1.5, color: 'rgba(255,255,255,0.9)', margin: '0 auto 30px', maxWidth: 520, position: 'relative' }}>Save money, track spending, and never miss a refund. Free forever — no card, no fees, no spam.</p>
             <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap', position: 'relative' }}>
-              <Link href="/register" style={{ background: '#fff', color: '#15281C', fontWeight: 700, fontSize: 16, padding: '16px 30px', borderRadius: 999, textDecoration: 'none' }}>🥑 Hire your sidekick</Link>
+              <Link href="/register" style={{ background: '#fff', color: '#15281C', fontWeight: 700, fontSize: 16, padding: '16px 30px', borderRadius: 999, textDecoration: 'none' }}>Get Started Free</Link>
               <Link href="/login?demo=1" style={{ background: 'rgba(255,255,255,0.18)', color: '#fff', fontWeight: 700, fontSize: 16, padding: '16px 30px', borderRadius: 999, textDecoration: 'none', border: '1px solid rgba(255,255,255,0.4)' }}>🔎 Try the demo</Link>
               <Link href="/login" style={{ background: 'rgba(255,255,255,0.18)', color: '#fff', fontWeight: 700, fontSize: 16, padding: '16px 30px', borderRadius: 999, textDecoration: 'none', border: '1px solid rgba(255,255,255,0.4)' }}>Sign in</Link>
             </div>
@@ -173,29 +227,58 @@ export default async function Home() {
           .gg-grid3 { grid-template-columns: 1fr !important; }
           .gg-navlinks { display: none !important; }
           .gg-h1 { font-size: 40px !important; }
+          /* Desktop-only one-liner — see the h2 it targets. */
+          .gg-secth2 { white-space: normal !important; font-size: 30px !important; }
         }
       ` }} />
     </MarketingShell>
   )
 }
 
+// ⚠️ Kept in sync with the same list in app/join/JoinClient.jsx — see the note
+// there. A quantified rewrite of these cards was tried and rolled back on
+// request 2026-07-29.
 const FEATURES = [
-  { e: '🧾', t: 'Track receipts & statements', b: 'Every purchase, fee, and charge, organized in one place.' },
-  { e: '🏷️', t: 'Get better deals', b: 'Steals finds a cheaper price on the things you rebuy.' },
-  { e: '↩️', t: 'Never miss a refund', b: 'Money back on price drops and returns, before deadlines pass.' },
-  { e: '✂️', t: 'Cut hidden subscriptions', b: 'Find and cancel the monthly bills you forgot about.' },
-  { e: '📝', t: 'Share a shopping list', b: 'Build one on the fly and send it to family in one tap.' },
-  { e: '📊', t: 'See it all & plan ahead', b: 'GuacScore + GuacWizard guide every spending call.' },
+  { e: '🧾', t: 'Know Where Every Dollar Goes', b: 'Every receipt, purchase, fee, and statement — automatically organized in one place.' },
+  { e: '🏷️', t: 'Never Overpay Again', b: 'We’ll help you find better prices on the things you buy, so your money goes further.' },
+  { e: '↩️', t: 'Claim Every Dollar You’re Owed', b: 'Stay ahead of return deadlines and price drops so you never miss a refund.' },
+  { e: '✂️', t: 'Stop Paying for What You Don’t Use', b: 'Spot forgotten subscriptions and recurring charges before they drain your wallet.' },
+  { e: '📝', t: 'Shop Together. Save Together.', b: 'Create, share, and compare shopping lists to get the best value every trip.' },
+  { e: '📊', t: 'Spend With Confidence', b: 'Get personalized insights that help you make smarter spending decisions every day.' },
 ]
 
+// 🔒 "Bank Bite" stays — it is a shipped feature name (dashboard tile, chart
+// slice, `bank_bite_digest` notification key, tour + video narration), not a
+// marketing label. See the fuller note in app/join/JoinClient.jsx.
 const BRAIN = [
-  { k: 'Your spending IQ', t: 'GuacScore', b: 'A 0–100 grade for every dollar you spent. Weighted by amount, rated by your taste, dinged by fees.' },
-  { k: 'AI insights', t: 'GuacWizard', b: 'Bank statements in, insights out. Interest, fees, regret-spend, hidden subscriptions — with a "do this next" nudge.' },
-  { k: 'Hidden cost killer', t: 'Bank Bite Tracker', b: 'Every interest charge, overdraft, and annual fee — itemized per card, scored against your spend.' },
+  { k: 'Your spending IQ', t: 'GuacScore', b: 'Know whether every purchase was worth it — a personalized 0–100 score from your own ratings, dinged by fees.' },
+  { k: 'AI insights', t: 'GuacWizard', b: 'Reads your bank statements, explains your spending, and recommends your next move.' },
+  { k: 'Hidden cost killer', t: 'Bank Bite Tracker', b: 'Every interest charge, overdraft and annual fee your bank took — itemized per card.' },
 ]
 
+// ⚠️ Kept in sync with the same list in app/join/JoinClient.jsx — the note
+// there explains why the last line names the iPhone.
+const WHY = [
+  { e: '📸', t: 'Scan receipts in seconds' },
+  { e: '📊', t: 'Automatically track spending & start saving' },
+  { e: '💡', t: 'Discover unnecessary expenses' },
+  { e: '🔒', t: 'Your financial data stays private' },
+  { e: '📱', t: 'Works on iPhone, Android and the web' },
+]
+
+// ⚠️ Kept in sync with the same list in app/join/JoinClient.jsx.
+//
+// Rewritten 2026-07-29 from feature labels to the outcome arc: the old titles
+// ("Drop or snap" / "Auto-organized" / "Rate & learn") named the mechanic, and
+// step 3 spent its whole line on two product names (Worth It?, Guacanomics)
+// instead of saying what the reader gets. Upload → AI Organizes → Save More
+// makes the third card the payoff, which is the only reason to read the first.
+//
+// Every claim here is verified against the app: parsing is AI (api/parse-receipt),
+// and warranty_info + return_policy are really extracted per item (lib/save-receipt.js).
+// "Worth It?" stays — it is the shipped name of the rating, not a label.
 const STEPS = [
-  { n: '1', e: '📷', t: 'Drop or snap', b: 'Drag a PDF, forward an email, or snap a photo.' },
-  { n: '2', e: '🧾', t: 'Auto-organized', b: 'Items, categories, locations, refund policies — extracted.' },
-  { n: '3', e: '💎', t: 'Rate & learn', b: 'Worth It? rating + Guacanomics charts surface what you need.' },
+  { n: '1', e: '📷', t: 'Upload', b: 'Snap a photo, forward an email, or drop a PDF.' },
+  { n: '2', e: '🧾', t: 'AI Organizes', b: 'Items, categories, stores, warranties and return windows — pulled out for you.' },
+  { n: '3', e: '💎', t: 'Save More', b: 'Better prices, refunds you’re owed, and a Worth It? score on every buy.' },
 ]

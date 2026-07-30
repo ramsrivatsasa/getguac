@@ -49,7 +49,7 @@ export default function DemoPage() {
               your money.
             </p>
             <div className="flex flex-wrap gap-3 mt-8">
-              <Link href="/register" className="px-6 py-3 rounded-full bg-white text-emerald-800 font-bold hover:bg-emerald-50 shadow-lg">Get started free</Link>
+              <Link href="/register" className="px-6 py-3 rounded-full bg-white text-emerald-800 font-bold hover:bg-emerald-50 shadow-lg">Get Started Free</Link>
               <a href="#features" className="px-6 py-3 rounded-full ring-2 ring-white/40 font-bold hover:bg-white/10">Explore features</a>
             </div>
             <p className="text-emerald-200/80 text-xs mt-5">Free · No card · Your data, RLS-locked.</p>

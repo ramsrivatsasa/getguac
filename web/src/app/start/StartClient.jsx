@@ -54,28 +54,36 @@ export default function StartClient() {
 
   const btn = 'w-full flex items-center justify-center gap-3 rounded-2xl py-4 font-bold text-[15px] transition-transform active:scale-[0.99]'
 
+  // py-7 not py-9: this page's whole premise is one screen, so the hero pays for
+  // the proposition line below by giving back the same height.
   return (
-    <main style={{ background: INK, minHeight: '100svh' }} className="px-5 py-9">
+    <main style={{ background: INK, minHeight: '100svh' }} className="px-5 py-7">
       {/* Mounted here rather than in the root layout so the ad tracker exists
           only on the ad landing pages, never on a signed-in receipts page. */}
       <MetaPixel />
       <div className="mx-auto w-full" style={{ maxWidth: 430 }}>
 
         <div className="text-center">
-          <div aria-hidden style={{ fontSize: 44, lineHeight: 1 }}>🥑</div>
-          <h1 className="font-display font-extrabold mt-4 mb-0 text-white" style={{ fontSize: 40, lineHeight: 1.05 }}>
+          <div aria-hidden style={{ fontSize: 36, lineHeight: 1 }}>🥑</div>
+          <h1 className="font-display font-extrabold mt-2 mb-0 text-white" style={{ fontSize: 40, lineHeight: 1.05 }}>
             Free
           </h1>
           <p className="font-display text-white/90 m-0" style={{ fontSize: 26, lineHeight: 1.2 }}>
             forever
           </p>
-          <p className="mt-3 mb-0 text-sm" style={{ color: 'rgba(255,255,255,0.62)' }}>
+          {/* The one thing this page was missing: it sold a PRICE and never said
+              what the product is for. Sits above the fine print, because the
+              proposition has to land before the terms do. */}
+          <p className="font-display font-bold text-white mt-3 mb-0" style={{ fontSize: 20, lineHeight: 1.25 }}>
+            Smarter Spending Starts Here.
+          </p>
+          <p className="mt-2 mb-0 text-sm" style={{ color: 'rgba(255,255,255,0.62)' }}>
             No card. No trial. No subscription to cancel.
           </p>
 
           {/* Honest capability claims — what the product does, not how many
               people use it or what they saved. */}
-          <div className="mt-5 inline-flex flex-wrap justify-center gap-2">
+          <div className="mt-4 inline-flex flex-wrap justify-center gap-2">
             {['Reads your email receipts', 'Finds what you overpaid', 'Works on any phone'].map((t) => (
               <span key={t} className="text-[11px] font-bold px-3 py-1.5 rounded-full"
                 style={{ background: 'rgba(134,239,172,0.12)', color: '#86efac' }}>{t}</span>
@@ -88,7 +96,7 @@ export default function StartClient() {
             public/. The onError below hid the broken image, so the ad's landing
             page had been shipping with no product shot at all and nothing
             surfaced it. Use the goal art the homepage already ships. */}
-        <div className="mt-7 flex justify-center">
+        <div className="mt-5 flex justify-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/home/goals/phone-guacscore.webp"
             alt="GetGuac on iPhone: a GuacScore of 74, net spent, refunds, bank fees, receipts and tax paid"
@@ -99,7 +107,7 @@ export default function StartClient() {
         {/* Google dominant, email demoted to a link — same hierarchy as /join.
             One tap versus six fields, a CAPTCHA and a confirmation email is not
             a fair choice to put to a cold visitor as two equal buttons. */}
-        <div className="mt-7">
+        <div className="mt-5">
           <button type="button" onClick={() => oauth('google')} disabled={!!busy}
             className={btn}
             style={{

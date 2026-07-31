@@ -160,33 +160,61 @@ export default function JoinClient() {
               equivalent hook for a free product is the promise, so the phrase
               leads and "Forever free" takes the price slot under it. */}
           <div style={{ maxWidth: 760, margin: '0 auto', textAlign: 'center' }}>
-            {/* THE ASK IS THE HEADLINE — set on request 2026-07-29.
+            {/* PROBLEM-FIRST HEADLINE — set 2026-07-31 from an outside critique.
                 This slot has now held, in order: "Your money's been talking /
                 GetGuac is listening", "Keep more of your own money. Get the
-                whole family organized.", a three-losses gap-opener, and "Keep
-                more of your own money. Get Organized.", and "Every Dollar
-                Counts. Keep More of Yours." All the early ones were statements
-                ABOUT the product; this one is an instruction to the reader.
-                ⚠️ NOTE 2026-07-29: "Start Saving Today" is ALSO the closing CTA
-                headline further down this same page (see the final CTA section).
-                That echo is deliberate — top ask + closing ask — but if you
-                change one, decide about the other rather than leaving them
-                half-matched.
-                Consequence to keep in mind: the h1 no longer describes what
-                GetGuac is. The line under it and the story paragraph below the
-                phone now carry that entire job between them. Do not thin either
-                one out without putting the description somewhere else. */}
+                whole family organized.", a three-losses gap-opener, "Keep more
+                of your own money. Get Organized.", "Every Dollar Counts. Keep
+                More of Yours.", and "Every Dollar Counts. Start Saving Today
+                with GetGuac."
+
+                Why it changed again: every previous line was a statement about
+                the product or an instruction to the reader. The critique's
+                central point is that nobody wakes up wanting a budgeting app —
+                they wake up thinking "where did all my money go?" — so the h1
+                now opens on the reader's problem and the sub-line answers it.
+
+                ⚠️ The three headlines the critique suggested were NOT used as
+                given, and it is worth knowing why before someone "restores" one:
+                  • "Turn Receipts Into Savings"      — already the STEPS h2 on
+                    this same page ("Turn Every Receipt Into Savings.").
+                  • "Finally Know Where Every Dollar Goes" — already a FEATURES
+                    card title ("Know Where Every Dollar Goes").
+                  • "Stop Overspending Without Tracking Everything Manually" —
+                    REJECTED ON HONESTY. GetGuac has no bank linking at all, so
+                    every receipt is photographed or forwarded BY HAND. Against
+                    a bank-linked competitor we are the more manual product;
+                    claiming otherwise is the one thing a new user would
+                    disprove on day one.
+
+                ⚠️ "Start Saving Today" survives as the CLOSING CTA h2 further
+                down. That used to be a deliberate top-ask/closing-ask echo; the
+                top half has now moved to the problem, and the closing ask was
+                left alone on purpose — it is the right words in the right place
+                for someone who has already read the page. */}
             <h1 className="gj-subline" style={{ ...DISPLAY, fontWeight: 800, color: '#fff', fontSize: 34, lineHeight: 1.15, letterSpacing: '-0.03em', margin: 0 }}>
-              Every Dollar Counts. Start Saving Today with GetGuac <span aria-hidden>🥑</span>
+              Stop wondering where your money went. <span aria-hidden>🥑</span>
             </h1>
 
-            {/* The "your money's been talking" refrain, restored to the hero on
-                request 2026-07-29 as a small line tight under the h1 — 4px, so
-                it reads as part of the headline block rather than as its own
-                paragraph. Set small and dim on purpose: it is the emotional
-                beat under the promise, not a competing claim. */}
-            <p className="gj-snitch" style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.4, color: 'rgba(255,255,255,0.62)', margin: '4px 0 0' }}>
-              💸 Your money has been talking… GetGuac-AI is finally listening. <span aria-hidden>🥑</span>
+            {/* 🗣️ CHANGED FROM A USER-SET LINE — revert candidate #1 if this
+                pass is unwound. This slot held the "your money's been talking…
+                GetGuac-AI is finally listening" refrain, restored here on
+                request 2026-07-29. It was atmosphere, not information, and with
+                a problem-first h1 above it the hero went two lines deep without
+                once saying what GetGuac actually IS — the exact failure the old
+                comment in this file warned about ("do not thin either one out
+                without putting the description somewhere else").
+                This replaces it with that description. Every clause is backed:
+                  scan or forward  → api/parse-receipt, lib/email-to-receipt.js
+                  sorts purchases  → lib/auto-categorize.js
+                  subscriptions    → lib/subscription-tracker.js
+                  bank fees        → the shipped Bank Bite tile
+                🔒 NOT included, though the critique asked for it: "build a
+                smarter budget". There is NO budgeting feature — `budget` in this
+                repo is a game mechanic (Budget Tetris) and article prose. */}
+            <p className="gj-snitch" style={{ fontSize: 16, fontWeight: 600, lineHeight: 1.5, color: 'rgba(255,255,255,0.82)', margin: '10px 0 0' }}>
+              Scan or forward a receipt — Guac-AI sorts every purchase, surfaces the
+              subscriptions you forgot, and shows what your bank quietly took.
             </p>
 
 
@@ -513,6 +541,65 @@ export default function JoinClient() {
 
       </section>
 
+      {/* ── VS A SPREADSHEET ──────────────────────────────────────────────── */}
+      {/* Added 2026-07-31 from the critique, which asked for a comparison table
+          with an "Other Budget Apps" column. That column was DELIBERATELY NOT
+          BUILT, and should not be added later:
+            • Its headline row was false. The suggested table had receipt
+              scanning as ❌ for other apps — Fetch, Ibotta and Expensify all
+              scan receipts, and two of them built their whole business on it.
+            • Every other cell would be an unverifiable claim about a named
+              competitor, published on a personal-finance page by a product
+              with 10 accounts. That is a fight with no upside.
+          A spreadsheet is the honest comparison because it is what people
+          actually use instead, and every cell below is checkable against this
+          repo rather than against someone else's product.
+          The caveat line under the table is not hedging — a table that lets the
+          alternative win nothing reads as marketing, and a spreadsheet genuinely
+          beats us on flexibility. */}
+      <section style={{ maxWidth: 1180, margin: '0 auto', padding: '8px 24px 0' }}>
+        <div style={{ maxWidth: 820, marginBottom: 26 }}>
+          <h2 className="gj-secth2" style={{ ...DISPLAY, fontWeight: 800, fontSize: 34, letterSpacing: '-0.03em', margin: '0 0 12px', color: '#15281C' }}>Or keep using a spreadsheet.</h2>
+          <p style={{ fontSize: 17, lineHeight: 1.55, color: '#56655B', margin: 0 }}>
+            Plenty of people track spending in one, and it works — right up until the
+            typing stops. Here is what changes when a receipt reads itself.
+          </p>
+        </div>
+
+        <div style={{ overflowX: 'auto', border: '1px solid rgba(20,83,45,0.12)', borderRadius: 18, background: '#fff' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 560 }}>
+            <thead>
+              <tr style={{ background: '#F4F8EE' }}>
+                <th scope="col" style={{ ...DISPLAY, textAlign: 'left', fontWeight: 800, fontSize: 14, color: '#15281C', padding: '14px 18px' }}>&nbsp;</th>
+                <th scope="col" style={{ ...DISPLAY, textAlign: 'left', fontWeight: 800, fontSize: 14, color: '#4D7C0F', padding: '14px 18px', whiteSpace: 'nowrap' }}>GetGuac 🥑</th>
+                <th scope="col" style={{ ...DISPLAY, textAlign: 'left', fontWeight: 800, fontSize: 14, color: '#5F6D63', padding: '14px 18px', whiteSpace: 'nowrap' }}>A spreadsheet</th>
+              </tr>
+            </thead>
+            <tbody>
+              {COMPARE.map(([what, guac, sheet], i) => (
+                <tr key={what} style={{ borderTop: '1px solid rgba(20,83,45,0.09)', background: i % 2 ? '#FCFDFA' : '#fff' }}>
+                  <th scope="row" style={{ textAlign: 'left', fontWeight: 600, fontSize: 14.5, lineHeight: 1.45, color: '#15281C', padding: '14px 18px' }}>{what}</th>
+                  <td style={{ fontSize: 14, lineHeight: 1.45, color: '#3D4F44', padding: '14px 18px' }}>
+                    <span aria-hidden style={{ marginRight: 7 }}>✅</span>{guac}
+                  </td>
+                  {/* #5F6D63, not the lighter #6B7A70 this started as: on the
+                      #FCFDFA zebra rows that measured ~4.5:1, i.e. exactly on
+                      the AA boundary for body text. Same colour the rest of the
+                      site standardised on for muted copy. */}
+                  <td style={{ fontSize: 14, lineHeight: 1.45, color: '#5F6D63', padding: '14px 18px' }}>
+                    <span aria-hidden style={{ marginRight: 7 }}>✍️</span>{sheet}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p style={{ fontSize: 13.5, lineHeight: 1.55, color: '#5F6D63', margin: '14px 0 0' }}>
+          To be fair to the spreadsheet: it is free, it does exactly what you tell it, and
+          it will outlive every app you own. It just needs you to do all of the above by hand.
+        </p>
+      </section>
+
       <CardRail n={2} />
 
       {/* ── BRAIN ─────────────────────────────────────────────────────────── */}
@@ -726,8 +813,13 @@ export default function JoinClient() {
              149px), so it bought ~11px of fold for a visibly weaker headline.
              The Google button clears the fold at 26px — verified at 390x844. */
           .gj-subline { font-size: 26px !important; }
-          /* .gj-price and .gj-snitch went with the "Forever free" block and the
-             Guac-AI "snitched" line — both removed from the hero 2026-07-29. */
+          /* .gj-price went with the "Forever free" block, removed 2026-07-29.
+             .gj-snitch is BACK IN USE as of 2026-07-31 — it is the descriptive
+             sub-line under the problem-first h1 now, not the old refrain, so it
+             needs a mobile size again. 15px keeps it clearly below the 26px h1
+             while staying above caption weight; it is carrying the entire "what
+             is this product" job on the first screen. */
+          .gj-snitch { font-size: 15px !important; }
           .gj-story { margin-top: 20px; }
           .gj-storyp { font-size: 15.5px !important; }
           /* The lede is set larger than the body copy on desktop as the thesis
@@ -837,6 +929,29 @@ const BRAIN = [
 // "Download on the App Store" badge in the hero. Shipping "Android and the web"
 // would have contradicted the badge two screens above it and told every iPhone
 // visitor the app was not for them.
+// GetGuac vs a spreadsheet. See the note on the section that renders this for
+// why there is no "other budget apps" column.
+//
+// ⚠️ EVERY ROW IS CHECKABLE AGAINST THIS REPO. If you add one, name the code:
+//   receipt → line items   api/parse-receipt, lib/save-receipt.js
+//   categories             lib/auto-categorize.js, api/categorize
+//   subscriptions          lib/subscription-tracker.js
+//   unusual spending       lib/spending-anomalies.js + the anomaly_alert push
+//   returns/warranties     lib/save-receipt.js extracts return_policy +
+//                          warranty_info per item
+//   bank fees              the shipped Bank Bite tile
+// 🔒 Rows that were asked for and CANNOT be added: bill reminders (there is a
+// bills CALENDAR, lib/billsCalendar.js; the only notification types that exist
+// are bank_bite_digest and anomaly_alert) and expense forecasting (no engine).
+const COMPARE = [
+  ['A photo of a receipt becomes line items', 'Guac-AI reads it', 'You type each row'],
+  ['Purchases sorted into categories', 'Automatic', 'You tag them'],
+  ['Subscriptions you forgot you had', 'Surfaced for you', 'Only if you look'],
+  ['Unusual spending', 'Flagged, with an alert', 'You spot it or you don’t'],
+  ['Return windows and warranties', 'Pulled from the receipt', 'You diary them'],
+  ['What your bank charged you', 'Itemized per card', 'You dig through statements'],
+]
+
 const WHY = [
   { e: '📸', t: 'Scan receipts in seconds' },
   { e: '📊', t: 'Automatically track spending & start saving' },

@@ -723,7 +723,23 @@ export default function JoinClient() {
           </p>
         </div>
 
-        <p style={{ textAlign: 'center', fontSize: 12.5, color: '#5F6D63', margin: '28px 0 0' }}>
+        {/* WHO BUILT IT — added 2026-07-31. The critique listed this as the
+            single biggest unanswered trust question, and it was the only one of
+            its seven that was both real and fixable: banks, security, price and
+            data-selling are all answered above; user counts, reviews and press
+            mentions cannot be answered at all without lying.
+            🔑 "Yathis Corporation" is NOT a new disclosure and needs nobody's
+            personal name: it is already the public sellerName/artistName on the
+            App Store listing this page links to in the hero, and it matches the
+            bundle id com.yathis.getguac. Verified via the iTunes lookup API.
+            🔒 Do NOT inflate this into a founder story, a team size, or a
+            "trusted by" line. /editorial-policy explicitly promises no invented
+            bylines or credentials, and the same standard applies here. */}
+        <p style={{ textAlign: 'center', fontSize: 12.5, lineHeight: 1.6, color: '#5F6D63', margin: '28px 0 0' }}>
+          GetGuac is built by <strong style={{ color: '#3D4F44', fontWeight: 700 }}>Yathis Corporation</strong>, publisher of
+          GetGuac on the App Store and Google Play.
+        </p>
+        <p style={{ textAlign: 'center', fontSize: 12.5, color: '#5F6D63', margin: '8px 0 0' }}>
           <Link href="/terms" style={{ color: '#5F6D63' }}>Terms</Link>
           {' · '}
           <Link href="/privacy" style={{ color: '#5F6D63' }}>Privacy</Link>

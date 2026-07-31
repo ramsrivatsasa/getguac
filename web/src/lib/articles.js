@@ -2282,6 +2282,179 @@ export const ARTICLES = [
       "The realistic version is not dramatic. It is usually a request for documentation supporting a specific figure — and the difference between a straightforward reply and a genuine problem is simply whether you can produce a legible record of what was bought, when, from whom, and for how much.",
       "Which is the same standard the rest of this article describes, and the reason the advice is consistent: keep the narrow set that could matter, note the purpose while you still know it, and store it somewhere it will still be readable. Done as you go it is a few seconds per receipt. Done retrospectively under a deadline it is the worst weekend of the year."
     ]
+  },
+  {
+    "slug": "fund-your-emergency-fund",
+    "title": "Where to find the money for your emergency fund",
+    "category": "Saving",
+    "excerpt": "Your fund lives at your bank. The money to fill it is usually already hiding in your own spending.",
+    "calc": "emergency",
+    "readMins": 6,
+    "updated": "2026-07-30",
+    "body": [
+      "Most emergency-fund advice stops at the target. Three to six months of essential expenses, it says, and then leaves you staring at a number with no obvious way to reach it. The sizing question has a clean answer. The funding question — where does $6,000 actually come from when your paycheck is already spoken for — is the one that stalls people.",
+      {
+        "h": "Your fund does not live in an app"
+      },
+      "Worth being clear about this up front, because it shapes everything else. Your emergency fund belongs in an account at a bank: liquid, insured, and boring. No budgeting tool holds it for you, and you should be skeptical of one that offers to. GetGuac does not store your money, open accounts on your behalf, or watch a savings balance tick upward.",
+      "What a spending tracker is genuinely good for is the other half of the problem — finding the money to put in. That is a question about your outflows, and your outflows are exactly what receipts and statements record.",
+      {
+        "h": "Start with a target, not a habit"
+      },
+      "Saving without a number is how people end up with $400 in a vague savings account three years later. Decide what you are aiming at first: add up your essential monthly costs — housing, utilities, groceries, transportation, insurance, minimum debt payments — and multiply by the number of months you want covered. Note that this is your cost of staying alive and housed, not your total spending; dining out and travel do not belong in the figure. GetGuac's emergency-fund calculator does this arithmetic and shows what a given monthly contribution does to the timeline.",
+      "Then split the target in two. A full six-month cushion is intimidating enough to be demotivating. A $1,000 starter fund is not, and it already covers the majority of the surprises that would otherwise land on a credit card. Hit the starter number first, then keep the same habit running toward the full one.",
+      {
+        "h": "The money is usually already in your spending"
+      },
+      "Here is the part people skip. Before cutting anything you actually enjoy, look at what you are paying for and not using, and at what your accounts are quietly charging you. In most households there is real money sitting in four places.",
+      {
+        "list": [
+          "Subscriptions you forgot about — the ones that renewed silently after a free trial, or that you replaced with something else and never cancelled.",
+          "Fees and interest — overdraft charges, monthly maintenance fees, late fees, and credit-card interest. This is the purest form of found money, because cutting it costs you nothing you value.",
+          "Category drift — groceries, takeout and delivery tend to creep up a few percent a year without any decision ever being made.",
+          "Duplicates — two streaming services you barely watch, or an unused gym membership running alongside a fitness app."
+        ]
+      },
+      "GetGuac helps most directly with the first two. It groups recurring charges by merchant, so a subscription you stopped noticing shows up as a pattern rather than as one forgettable line each month. And when you upload a bank or card statement, it pulls out every fee and interest charge on that statement and totals them per account — which is often the first time people see the annual figure rather than a scattering of small ones. The other two surface from the category view once a few weeks of receipts are in.",
+      "The uploading is worth being honest about: statements go in as files you provide, not through a live connection to your bank. That is slower to set up than a sync, and it is also the reason the app never needs your banking credentials.",
+      {
+        "h": "A worked example"
+      },
+      "Say your starter target is $1,000 in six months. That is about $167 a month, which sounds like a lot until it is broken into its sources.",
+      {
+        "figure": {
+          "type": "bars",
+          "format": "usd",
+          "title": "Finding $167 a month for a $1,000 starter fund",
+          "data": [
+            {
+              "label": "Groceries trimmed by about 10%",
+              "value": 58,
+              "note": "Same list, cheaper store, fewer impulse adds"
+            },
+            {
+              "label": "Bank fees and card interest",
+              "value": 41,
+              "note": "Costs you nothing to cut — it was buying you nothing"
+            },
+            {
+              "label": "Three takeout meals skipped",
+              "value": 36,
+              "note": "Roughly one every ten days"
+            },
+            {
+              "label": "Two unused subscriptions",
+              "value": 32,
+              "note": "A streaming service and a lapsed app renewal"
+            }
+          ],
+          "caption": "Four ordinary sources totaling $167 a month — $1,002 over six months. Illustrative figures; your own mix will look different."
+        }
+      },
+      "None of those four is a lifestyle change. Together they come to $167 a month, and $1,002 over six months. The point is not that these exact numbers are yours, because they will not be. It is that the total almost never comes from one heroic sacrifice. It comes from four unremarkable ones, and the only hard part is knowing which four apply to you.",
+      {
+        "h": "Move it before you can spend it"
+      },
+      "Once you know the monthly number, automate it. Set a standing transfer for the day after payday into a separate account. Separate matters: money sitting in your everyday checking gets spent without a decision ever being made, and the friction of a second account is doing real work.",
+      "A high-yield savings account is the standard home for this — liquid within a day or two, federally insured, and paying meaningfully more than a large bank's default savings rate. What matters more than squeezing out the last fraction of a percent is that the money is somewhere you will not touch by accident.",
+      "Automating also removes the step that actually fails, which is you remembering to make the transfer in a month where things are tight. Those are precisely the months the fund exists for.",
+      {
+        "h": "What progress actually looks like"
+      },
+      "Checking a balance daily does nothing except make a slow process feel slower. A better rhythm is monthly, and it has two halves. Look at the fund balance at your bank — and separately, check whether the leaks you closed have stayed closed.",
+      "The second half is the one people forget. Subscriptions resurrect, fees return after a promotional period ends, and grocery spending drifts back up. A fund that grows for four months and then stalls has almost always stalled because something quietly reopened. That check takes a minute if your spending is already being recorded, and is nearly impossible if it is not.",
+      "Expect the first two months to feel pointless. A starter fund only becomes obviously worth it the first time a car repair or a vet bill arrives and you pay it from cash instead of from a card at 24% APR. That single event is usually worth more than a year of optimizing interest rates.",
+      {
+        "h": "When you get there"
+      },
+      "Once the starter fund is full, leave it alone and raise the target to your full months-of-expenses number, keeping the same transfer running. Resist the urge to redirect it into something with a better return — the entire value of this money is that it is boring and available.",
+      "And if you do have to spend it, which is the whole point of having it, treat refilling it as the priority ahead of every other financial goal until it is whole again. You already know where the money comes from; you did that work once.",
+      "None of this requires a spreadsheet, and none of it requires an app to hold your savings for you. It requires knowing your target, knowing where your money currently goes, and moving the difference automatically before you can think about it. This is general education, not personalized financial advice."
+    ]
+  },
+  {
+    "slug": "how-getguac-helps-you-save",
+    "title": "How GetGuac helps you spend less",
+    "category": "Saving",
+    "excerpt": "Not by budgeting harder — by showing you the money already leaking out of accounts you are not watching.",
+    "calc": "savings-goal",
+    "readMins": 6,
+    "updated": "2026-07-30",
+    "body": [
+      "Most money apps begin by asking you to change your behavior. Set a budget, stick to categories, log every purchase, and check in daily. That works for a small number of disciplined people and quietly fails for everyone else, usually within about three weeks.",
+      "GetGuac starts from the opposite end: the record of what you have already spent. You cannot argue with a receipt, and you do not have to remember anything to produce one. The useful question is not what you intended to spend — it is what actually left your accounts, and which parts of it bought you nothing.",
+      {
+        "h": "It starts with the receipt"
+      },
+      "There are three ways purchase data gets in. You can photograph a paper receipt and have the store, date, total and line items read off it. You can forward email receipts to a private GetGuac address, or set up forwarding once per retailer so they arrive on their own. And you can upload a bank or credit-card statement as a file, which gets parsed into individual transactions.",
+      "Worth saying plainly: all three of those start with you. GetGuac does not connect to your bank, does not hold a login to your accounts, and cannot pull a balance. That is a real limitation compared to apps built on bank aggregation, and it is also the reason the app never needs your banking credentials. What it gets is what you give it.",
+      {
+        "h": "What it looks for once the data is in"
+      },
+      "A single receipt tells you almost nothing. A few months of them tell you quite a lot, because the leaks in most people's spending are patterns rather than events. GetGuac watches for four kinds.",
+      {
+        "list": [
+          "Recurring charges — merchants that bill you on a regular cadence get grouped into a subscription view with the average amount and what it costs per month, so a renewal you stopped noticing reads as a pattern rather than one forgettable line.",
+          "Fees and interest — when you upload a statement, every fee, penalty and interest charge on it is pulled out and totaled by account, alongside the APR and an estimate of how long the balance takes to clear at the minimum payment.",
+          "Price gaps — items you buy repeatedly get tracked by price, so when the same product is cheaper at another store you have been to, the difference is shown rather than assumed.",
+          "Spending spikes — categories and merchants are compared against your own history, not against a generic benchmark, so a flag means you spent unusually for you."
+        ]
+      },
+      "The fourth one matters more than it sounds. Most budgeting advice compares you to an average household, which is close to useless when your rent, income and city are nothing like the average. Comparing you to your own last six months is a question you can actually act on.",
+      {
+        "h": "From a receipt to money you keep"
+      },
+      {
+        "figure": {
+          "type": "steps",
+          "title": "How a purchase turns into a saving",
+          "data": [
+            {
+              "label": "A record arrives",
+              "note": "Scanned from paper, forwarded from your email, or parsed out of a statement you upload."
+            },
+            {
+              "label": "It gets read and filed",
+              "note": "Store, date, total and line items are extracted and sorted into a category."
+            },
+            {
+              "label": "Patterns surface once there is history",
+              "note": "Recurring charges, fees, price gaps and unusual spikes only appear across many receipts, not one."
+            },
+            {
+              "label": "You act on a specific one",
+              "note": "Cancel the subscription, switch stores for that item, dispute the fee, or return the thing while the window is open."
+            },
+            {
+              "label": "The freed-up money gets a destination",
+              "note": "Otherwise it is reabsorbed into general spending within a month and the work is wasted."
+            }
+          ],
+          "caption": "The last step is the one people skip. Money saved without somewhere to go does not stay saved."
+        }
+      },
+      "That final step is worth dwelling on. Cancelling a subscription feels like a win, but if the freed-up amount just sits in checking, it gets spent on something else and the net change to your finances is zero. Sending it somewhere — a goal, a fund, an extra debt payment — is what converts a discovery into a result.",
+      {
+        "h": "Refunds and returns"
+      },
+      "Returns are the most commonly abandoned form of free money. A return window is typically somewhere between two weeks and a month, the receipt gets lost, and the item quietly becomes yours. Because purchases are already recorded with their dates, GetGuac can flag which ones are still inside their return window and produce the receipt when you need to show it.",
+      "The same record does double duty at tax time and for warranty claims, both of which tend to arrive long after the paper has disappeared.",
+      {
+        "h": "The planning side"
+      },
+      "Knowing where the money went is half the job. The other half is deciding where it should go instead, which is arithmetic most people avoid because it is tedious rather than difficult. There are sixteen calculators covering the common decisions — emergency fund sizing, savings goals, retirement, college costs, mortgage and home affordability, auto loans, credit-card payoff, debt-to-income, rent versus buy, take-home pay and net worth among them.",
+      "These are ordinary financial calculators, not predictions. They tell you what a set of assumptions implies, which is useful precisely because it makes the assumptions visible.",
+      {
+        "h": "What it deliberately does not do"
+      },
+      "Being clear about the boundaries is more useful than a feature list, so here they are. GetGuac does not hold your money or open accounts for you. It does not pay you cashback or rewards for shopping, because those programs are funded by getting you to spend more. It does not sell your spending data. And it does not automatically know about a purchase you never gave it a record of.",
+      "It is a tool for seeing your own money clearly and finding the parts of it that are being wasted. That is a narrower promise than most finance apps make, and it is one that can actually be kept.",
+      {
+        "h": "Where to start"
+      },
+      "If you are trying this, the fastest useful result usually comes from one statement upload rather than from diligently scanning receipts for a month. A single statement covers every transaction in that period at once, and the fees and recurring charges it exposes are typically the largest and easiest things to cut.",
+      "After that, the receipts are what give you detail — which items, which stores, which prices — and detail is what turns a vague sense of overspending into a specific decision you can make this week. This is general education, not personalized financial advice."
+    ]
   }
 ]
 

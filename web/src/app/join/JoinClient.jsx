@@ -117,13 +117,15 @@ export default function JoinClient() {
         provider,
         options: { redirectTo: `${window.location.origin}/auth/callback?next=/dashboard` },
       })
-      // No conversion event here. This fires the instant we hand off to Google,
-      // before consent — and this button signs EXISTING users in too, so it
-      // counted every returning user as a fresh registration. OAuth signups are
-      // therefore untracked for now: the account is created in
-      // /auth/callback, a server route, which lands on /dashboard where we
-      // deliberately no longer run a pixel. Closing that gap means the
-      // Conversions API, not a tracker on a signed-in page.
+      // No conversion event here, and there must never be one. This fires the
+      // instant we hand off to Google, BEFORE consent — and this button signs
+      // EXISTING users in too, so a fire here counts both abandoned consent
+      // screens and every returning user as a fresh registration.
+      //
+      // ✅ The gap this used to leave is now CLOSED, server-side: the account
+      // is created in /auth/callback, and that route fires CompleteRegistration
+      // through the Conversions API on the new-account branch only. See
+      // lib/meta-capi.js. Inert until FB_CAPI_TOKEN is set in Vercel.
       if (error) { setErr(error.message); setBusy('') }
     } catch (e) {
       setErr(e?.message || `Could not start ${provider} sign in`)
@@ -214,10 +216,16 @@ export default function JoinClient() {
                   crop — GuacScore ring, the stat cards, then the spending
                   chart running off the bottom edge. */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
+              {/* Enlarged 244 -> 320 (+31%) 2026-07-31. The product shot was
+                  the smallest thing in its own hero — a visitor could not tell
+                  what the app looked like without leaning in, which is the one
+                  job a hero screenshot has. Height moves with it to hold the
+                  244:514 aspect (320 * 514/244 = 674) so nothing squashes. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/home/goals/phone-guacscore.webp"
                 alt="GetGuac on iPhone: a GuacScore of 74, net spent, refunds, bank fees, receipts and tax paid"
-                width={244} height={514} loading="eager" className="gj-heroshot"
-                style={{ width: 244, maxWidth: '72%', height: 'auto', display: 'block', filter: 'drop-shadow(0 26px 46px rgba(0,0,0,0.55))' }} />
+                width={320} height={674} loading="eager" className="gj-heroshot"
+                style={{ width: 320, maxWidth: '78%', height: 'auto', display: 'block', filter: 'drop-shadow(0 26px 46px rgba(0,0,0,0.55))' }} />
 
               {/* The "🥑 Meet your sidekick" button was removed on request
                   2026-07-29. It pointed at /register — the long email path —
@@ -254,6 +262,26 @@ export default function JoinClient() {
                   moves with the buttons, so the bar still appears exactly when
                   the real CTA leaves the screen. */}
               <div ref={heroCtaRef} className="gj-heroauthstack" style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', maxWidth: 430 }}>
+                {/* Reassurance ABOVE the button, added 2026-07-31. The hesitation
+                    a cold visitor feels about tapping a Google button on an
+                    unfamiliar finance site happens BEFORE the tap, so an
+                    answer underneath it arrives too late to prevent the bounce.
+                    ⚠️ HONESTY: all three are verified, not aspirational.
+                      "Free forever"  — there is no payment code in the repo at
+                                        all (no Stripe, no checkout, no tier).
+                      "No card"       — follows from the above.
+                      "One tap"       — Google OAuth needs no fields.
+                    A suggested fourth, "takes less than 30 seconds", was CUT:
+                    nobody has timed it, and the callback does profile + mailbox
+                    provisioning before the dashboard paints. Don't add a
+                    duration here until someone measures one. */}
+                <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '6px 14px', marginBottom: 2 }}>
+                  {['Free forever', 'No card required', 'One tap'].map((t) => (
+                    <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, fontWeight: 700, color: '#A3E635' }}>
+                      <span aria-hidden>✓</span>{t}
+                    </span>
+                  ))}
+                </div>
                 <button type="button" onClick={() => oauth('google')} disabled={!!busy}
                   className={authBtn}
                   style={{
@@ -287,9 +315,31 @@ export default function JoinClient() {
                   the product that are simply true and claim nothing about how
                   many people use it. Keep it that way (see the HONESTY note at
                   the top of this file). */}
-              <div className="gj-trustrow" style={{ display: 'flex', justifyContent: 'center', gap: 22, flexWrap: 'wrap', marginTop: 14 }}>
-                {[['🔒', 'RLS-locked'], ['📱', 'iOS · Android · Web'], ['🧹', 'One-click wipe']].map(([e, t]) => (
-                  <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.62)' }}>
+              {/* Reworked 2026-07-31. Two problems with the old row: it was set
+                  at 12px / 62% opacity, which is caption weight for the only
+                  trust signal above the fold; and it led with "RLS-locked",
+                  which is database jargon a shopper cannot parse.
+                  🔑 THE BANK LINE LEADS ON PURPOSE. "We never ask for your bank
+                  login" is the strongest true claim on this entire site and it
+                  used to sit six screens down in the privacy strip. It is
+                  verified, not spin: there is NO bank aggregation in the repo
+                  (grepped Plaid, Teller, Finicity, Yodlee, MX, TrueLayer,
+                  Akoya — zero integrations). It answers the first objection a
+                  cold finance-ad visitor has, so it goes first.
+                  ⚠️ HONESTY: "Encrypted in transit & at rest" replaces the
+                  jargon and is exactly what /security documents — TLS 1.3 in
+                  transit, AES-256 on disk. 🔒 Do NOT upgrade this into a
+                  staff-access claim ("only you can see it", "even our engineers
+                  can't"). That was shipped once, was FALSE, and was removed:
+                  44 files use the service-role key, which bypasses RLS. */}
+              <div className="gj-trustrow" style={{ display: 'flex', justifyContent: 'center', gap: '10px 20px', flexWrap: 'wrap', marginTop: 16 }}>
+                {[
+                  ['🏦', 'We never ask for your bank login'],
+                  ['🔒', 'Encrypted in transit & at rest'],
+                  ['🧹', 'Delete everything in one click'],
+                  ['📱', 'iOS · Android · Web'],
+                ].map(([e, t]) => (
+                  <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.8)' }}>
                     <span aria-hidden>{e}</span>{t}
                   </span>
                 ))}
@@ -559,16 +609,31 @@ export default function JoinClient() {
           <p style={{ fontSize: 17, lineHeight: 1.5, color: 'rgba(255,255,255,0.9)', margin: '0 auto 26px', maxWidth: 520, position: 'relative' }}>
             Save money, track spending, and never miss a refund. Free forever — no card, no fees, no spam.
           </p>
+          {/* Repointed at Google 2026-07-31. This button used to be a link to
+              /register — the long email path — while the hero's primary control
+              is Continue with Google. A reader who scrolled the whole page and
+              committed at the very bottom was handed the SLOWER of the two
+              routes: six fields, a CAPTCHA and a confirmation email, against
+              one tap. The two asks now agree.
+              "Get Started Free" moved to the email fallback underneath, so the
+              phrase is not lost — it is just no longer the label on a button
+              that costs the most effort. */}
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', position: 'relative' }}>
-            <Link href="/register" onClick={() => trackClick('join-signup-email')}
-              style={{ background: '#fff', color: '#15281C', fontWeight: 700, fontSize: 16, padding: '15px 28px', borderRadius: 999, textDecoration: 'none' }}>
-              Get Started Free
-            </Link>
+            <button type="button" onClick={() => oauth('google')} disabled={!!busy}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 10, cursor: busy ? 'default' : 'pointer', fontFamily: 'inherit', border: 0, background: '#fff', color: '#15281C', fontWeight: 700, fontSize: 16, padding: '15px 28px', borderRadius: 999, opacity: busy ? 0.7 : 1 }}>
+              {busy === 'google' ? 'Opening Google…' : (<><GoogleG size={20} />Continue with Google</>)}
+            </button>
             <Link href="/login?demo=1" onClick={() => trackClick('join-demo')}
               style={{ background: 'rgba(255,255,255,0.18)', color: '#fff', fontWeight: 700, fontSize: 16, padding: '15px 28px', borderRadius: 999, textDecoration: 'none', border: '1px solid rgba(255,255,255,0.4)' }}>
               🔎 Try the demo
             </Link>
           </div>
+          <p style={{ position: 'relative', margin: '14px 0 0' }}>
+            <Link href="/register" onClick={() => trackClick('join-signup-email')}
+              style={{ fontSize: 14, fontWeight: 700, color: 'rgba(255,255,255,0.82)', textDecoration: 'underline' }}>
+              Get started free with email
+            </Link>
+          </p>
         </div>
 
         <p style={{ textAlign: 'center', fontSize: 12.5, color: '#5F6D63', margin: '28px 0 0' }}>
@@ -593,11 +658,15 @@ export default function JoinClient() {
         {/* Right padding on small screens keeps the last button clear of the
             floating Guac AI launcher, which sits in the same corner. */}
         <div className="gj-stickyinner" style={{ maxWidth: 560, margin: '0 auto', display: 'flex', gap: 10, alignItems: 'center' }}>
-          <Link href="/register" onClick={() => trackClick('join-signup-email')}
+          {/* Also repointed at Google 2026-07-31, for the same reason as the
+              closing CTA: this bar is the page's most-seen ask on a phone (it
+              is up for the whole scroll), and it was sending every tap down the
+              email path the hero deliberately de-emphasises. */}
+          <button type="button" onClick={() => oauth('google')} disabled={!!busy}
             tabIndex={showBar ? 0 : -1}
-            style={{ flex: 1, textAlign: 'center', background: '#84CC16', color: '#0B1410', fontWeight: 800, fontSize: 15, padding: '13px 18px', borderRadius: 999, textDecoration: 'none' }}>
-            Get GetGuac — free
-          </Link>
+            style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: busy ? 'default' : 'pointer', fontFamily: 'inherit', border: 0, background: '#84CC16', color: '#0B1410', fontWeight: 800, fontSize: 15, padding: '13px 18px', borderRadius: 999, opacity: busy ? 0.7 : 1 }}>
+            {busy === 'google' ? 'Opening Google…' : (<><GoogleG size={18} />Sign up free</>)}
+          </button>
           <Link href="/login?demo=1" tabIndex={showBar ? 0 : -1} onClick={() => trackClick('join-demo')}
             style={{ flex: '0 0 auto', color: '#fff', fontWeight: 700, fontSize: 14, padding: '13px 16px', borderRadius: 999, textDecoration: 'none', border: '1px solid rgba(255,255,255,0.28)' }}>
             Demo
@@ -683,8 +752,16 @@ export default function JoinClient() {
           .gj-credlabel { width: 62px !important; font-size: 9.5px !important; }
           .gj-credval { font-size: 13px !important; }
           /* Shorter hero on a phone so the auth buttons sit as close to the
-             first screen as the content allows. */
-          .gj-heroshot { width: 196px !important; }
+             first screen as the content allows.
+             196 -> 232 (+18%) 2026-07-31, alongside the desktop 244 -> 320.
+             Held back from the desktop's +31% deliberately: every pixel the
+             shot grows pushes the Google button further past the fold on a
+             390x844 screen, and the button was already only just clearing it.
+             The sticky CTA bar covers the case where it does go under — it is
+             driven by an IntersectionObserver on the buttons themselves, so it
+             raises the moment they leave the viewport rather than at a fixed
+             scroll depth. If this grows again, re-check the fold at 390x844. */
+          .gj-heroshot { width: 232px !important; }
         }
       ` }} />
     </main>
@@ -741,10 +818,15 @@ const FEATURES = [
 // (suggested: "Cost Leak Detector") would send a new signup hunting for a
 // feature that does not exist under that name. The eyebrow carries the plain
 // meaning instead. A real rename is a product-wide change plus a re-render.
+// Flipped benefit-first 2026-07-31 — see the fuller note on the same list in
+// app/page.jsx. Short version: the h3 used to be the product name, so the three
+// largest words in this section were GuacScore, GuacWizard and Bank Bite
+// Tracker, none of which mean anything to a first-time visitor. Eyebrow and
+// title swapped; bodies untouched; the names stay on the page as the eyebrow.
 const BRAIN = [
-  { k: 'Your spending IQ', t: 'GuacScore', b: 'Know whether every purchase was worth it — a personalized 0–100 score from your own ratings, dinged by fees.' },
-  { k: 'AI insights', t: 'GuacWizard', b: 'Reads your bank statements, explains your spending, and recommends your next move.' },
-  { k: 'Hidden cost killer', t: 'Bank Bite Tracker', b: 'Every interest charge, overdraft and annual fee your bank took — itemized per card.' },
+  { k: 'GuacScore', t: 'Know if it was worth it', b: 'Know whether every purchase was worth it — a personalized 0–100 score from your own ratings, dinged by fees.' },
+  { k: 'GuacWizard', t: 'Understand where it all went', b: 'Reads your bank statements, explains your spending, and recommends your next move.' },
+  { k: 'Bank Bite Tracker', t: 'See what your bank quietly took', b: 'Every interest charge, overdraft and annual fee your bank took — itemized per card.' },
 ]
 
 // "Why should I?" strip. Kept in sync with the same list in app/page.jsx.

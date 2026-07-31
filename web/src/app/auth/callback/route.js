@@ -26,6 +26,7 @@
 import { NextResponse } from 'next/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { createApiClient } from '../../../lib/supabase/server'
+import { trackServerEvent } from '../../../lib/meta-capi'
 
 export const runtime = 'nodejs'
 
@@ -123,6 +124,23 @@ export async function GET(request) {
         .eq('id', user.id)
         .maybeSingle()
 
+      // Is this a genuinely NEW account, as opposed to a returning user?
+      //
+      // Deliberately stricter than the provisioning condition below. That one
+      // also catches an established user who never claimed a username, which
+      // is a repair case, not a signup — counting it would inflate the ad
+      // conversion number with people who joined weeks ago.
+      //
+      // Two independent signals, both required:
+      //   - no profiles row at all (never completed provisioning), and
+      //   - the auth user was created in the last 5 minutes.
+      // The recency check is what stops a re-fire if a profile row is ever
+      // deleted and the user signs in again.
+      const createdAtMs = Date.parse(user.created_at || '')
+      const isNewAccount = !existing &&
+        Number.isFinite(createdAtMs) &&
+        Date.now() - createdAtMs < 5 * 60 * 1000
+
       if (!existing || !existing.email_alias) {
         const meta = user.user_metadata || {}
         const { first, last } = splitName(meta.full_name || meta.name)
@@ -164,6 +182,30 @@ export async function GET(request) {
             body: JSON.stringify({ username }),
           }).catch(() => {})
         } catch {}
+      }
+
+      // ── AD CONVERSION ────────────────────────────────────────────────
+      // The one place an OAuth signup can honestly be counted. The browser
+      // pixel cannot do this: /join's Google button fires before consent and
+      // also serves returning users, so a client-side event would count both
+      // abandoned consent screens and every repeat sign-in as a registration.
+      //
+      // Awaited rather than fired-and-forgotten because this route redirects
+      // immediately afterwards — on a serverless function the runtime can be
+      // frozen the moment the response is returned, killing an in-flight
+      // request. trackServerEvent caps itself at 2.5s and never throws.
+      //
+      // No-ops entirely until FB_CAPI_TOKEN is set. See lib/meta-capi.js.
+      if (isNewAccount) {
+        await trackServerEvent('CompleteRegistration', {
+          request,
+          email: user.email,
+          externalId: user.id,
+          // Where the signup actually originated, so the ad campaign's
+          // landing page and the conversion line up in Events Manager.
+          sourceUrl: new URL(next, url.origin).toString(),
+          customData: { method: 'google' },
+        })
       }
     }
   } catch (err) {

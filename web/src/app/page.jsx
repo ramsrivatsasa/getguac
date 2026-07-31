@@ -250,10 +250,17 @@ const FEATURES = [
 // 🔒 "Bank Bite" stays — it is a shipped feature name (dashboard tile, chart
 // slice, `bank_bite_digest` notification key, tour + video narration), not a
 // marketing label. See the fuller note in app/join/JoinClient.jsx.
+// Flipped benefit-first 2026-07-31. These cards used to put the PRODUCT NAME in
+// the h3 and the benefit in the small eyebrow above it — so the three biggest
+// words in the section were GuacScore, GuacWizard and Bank Bite Tracker, none
+// of which mean anything to someone who has never used GetGuac. The eyebrow and
+// the title swapped places; the bodies are untouched.
+// 🔒 The names stay on the page (now as the eyebrow) rather than being dropped:
+// all three are shipped feature names a new user has to be able to find again.
 const BRAIN = [
-  { k: 'Your spending IQ', t: 'GuacScore', b: 'Know whether every purchase was worth it — a personalized 0–100 score from your own ratings, dinged by fees.' },
-  { k: 'AI insights', t: 'GuacWizard', b: 'Reads your bank statements, explains your spending, and recommends your next move.' },
-  { k: 'Hidden cost killer', t: 'Bank Bite Tracker', b: 'Every interest charge, overdraft and annual fee your bank took — itemized per card.' },
+  { k: 'GuacScore', t: 'Know if it was worth it', b: 'Know whether every purchase was worth it — a personalized 0–100 score from your own ratings, dinged by fees.' },
+  { k: 'GuacWizard', t: 'Understand where it all went', b: 'Reads your bank statements, explains your spending, and recommends your next move.' },
+  { k: 'Bank Bite Tracker', t: 'See what your bank quietly took', b: 'Every interest charge, overdraft and annual fee your bank took — itemized per card.' },
 ]
 
 // ⚠️ Kept in sync with the same list in app/join/JoinClient.jsx — the note

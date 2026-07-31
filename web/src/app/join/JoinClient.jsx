@@ -598,6 +598,120 @@ export default function JoinClient() {
           To be fair to the spreadsheet: it is free, it does exactly what you tell it, and
           it will outlive every app you own. It just needs you to do all of the above by hand.
         </p>
+
+        {/* ── VS THE APPS YOU'VE HEARD OF ─────────────────────────────────── */}
+        {/* ⚠️⚠️ READ BEFORE EDITING ANY CELL BELOW.
+            This table names real companies. Every claim in it was verified from
+            public sources on 2026-07-31, and the "Checked July 2026" line under
+            it is not decoration — it is the thing that keeps the table honest as
+            competitors change. Re-verify before changing a cell, and move the
+            date when you do.
+            🔒 THE ROWS WHERE WE LOSE STAY IN. A comparison table that wins every
+            row is an advertisement, and any reader who has used Fetch or Rocket
+            Money will spot it instantly and stop believing the rest of the page.
+            The caveat block underneath is load-bearing, not hedging.
+            ⚠️ Specifically do NOT "simplify" these into ✅/❌:
+              • YNAB genuinely supports full manual use — accounts can be
+                unlinked and transactions entered by hand. "Optional" is correct.
+              • Monarch's own help centre documents Manual Accounts, while
+                third-party reviews claim there is no manual-only path. Sources
+                CONFLICT, so the cell says "auto-sync; manual accounts exist"
+                rather than picking a side.
+              • Fetch and Ibotta DO scan receipts, and they pay real money for
+                it. That is the row the original suggested table got backwards. */}
+        <div style={{ maxWidth: 820, margin: '54px 0 26px' }}>
+          {/* Benefit-shaped, not "And against the apps you know." (which named
+              the comparison instead of the payoff).
+              ⚠️ Two suggested alternates were rejected: "Most Budget Apps Track
+              Spending. GetGuac Understands It." duplicates the BRAIN h2 on this
+              same page ("Most apps track. Guac-AI thinks."), and "Budget Beyond
+              Bank Transactions" uses "budget" as a verb for a product with NO
+              budgeting feature. */}
+          <h2 className="gj-secth2" style={{ ...DISPLAY, fontWeight: 800, fontSize: 34, letterSpacing: '-0.03em', margin: '0 0 12px', color: '#15281C' }}>Know what you bought. Not just where you spent.</h2>
+          <p style={{ fontSize: 17, lineHeight: 1.55, color: '#56655B', margin: 0 }}>
+            Most money apps only see the merchant and the total, because that is all a bank
+            feed carries. GetGuac reads the receipt — so it knows the items, and it never
+            asks for your bank login.
+          </p>
+        </div>
+
+        <div style={{ overflowX: 'auto', border: '1px solid rgba(20,83,45,0.12)', borderRadius: 18, background: '#fff' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 860 }}>
+            <thead>
+              <tr style={{ background: '#F4F8EE' }}>
+                {['', 'What it’s really for', 'Needs your bank login', 'Reads receipts', 'Knows what you bought', 'Price'].map((h) => (
+                  <th key={h} scope="col" style={{ ...DISPLAY, textAlign: 'left', fontWeight: 800, fontSize: 13, color: '#15281C', padding: '13px 16px', lineHeight: 1.3 }}>{h || ' '}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {/* Glyphs are PER CELL and per app, never per column. A single
+                  "Reads receipts: GetGuac ✅ / Others ❌" row was suggested and
+                  would be flatly FALSE — Fetch and Ibotta are in this table and
+                  both read receipts. The glyph makes the table scannable; the
+                  text beside it keeps the nuance that makes it true.
+                  '~' means genuinely mixed (optional, partial, or contested),
+                  and it renders amber rather than being rounded to ✅ or ❌. */}
+              {APPS.map((a, i) => (
+                <tr key={a.name} style={{
+                  borderTop: a.us ? '2px solid rgba(101,163,13,0.45)' : '1px solid rgba(20,83,45,0.09)',
+                  borderBottom: a.us ? '2px solid rgba(101,163,13,0.45)' : undefined,
+                  background: a.us ? '#EDF6DE' : (i % 2 ? '#FCFDFA' : '#fff'),
+                }}>
+                  <th scope="row" style={{ ...DISPLAY, textAlign: 'left', fontWeight: 800, fontSize: a.us ? 16 : 14.5, color: a.us ? '#3F6212' : '#15281C', padding: '14px 16px', whiteSpace: 'nowrap' }}>
+                    {a.name}{a.us && <span aria-hidden style={{ marginLeft: 6 }}>🥑</span>}
+                  </th>
+                  {[[a.forWhat, null], [a.bank, a.bankG], [a.receipts, a.receiptsG], [a.items, a.itemsG], [a.price, null]].map(([cell, glyph], j) => (
+                    <td key={j} style={{ fontSize: 13.5, lineHeight: 1.45, color: a.us ? '#1F3312' : '#5F6D63', fontWeight: a.us ? 700 : 400, padding: '14px 16px' }}>
+                      {glyph && (
+                        <span aria-hidden style={{ marginRight: 7, fontWeight: 700, color: glyph === '+' ? '#4D7C0F' : glyph === '~' ? '#B45309' : '#9A3412' }}>
+                          {glyph === '+' ? '✔' : glyph === '~' ? '~' : '✕'}
+                        </span>
+                      )}
+                      {cell}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* The "Where they beat us — honestly" box was REMOVED on request
+            2026-07-31. It listed three rows we lose (bank-linked apps see
+            spending with no receipt; Fetch and Ibotta pay real cash; they are
+            all more established).
+            ⚠️ If credibility ever needs shoring up here, this is the thing to
+            bring back — but note the table itself still does part of that job
+            and MUST keep doing it: Fetch and Ibotta still read "Yes, any
+            receipt", YNAB still reads "Optional", Monarch still carries its
+            contested-sources wording, and three competitors still show Free.
+            The table is not a clean sweep, and it must not be turned into one.
+
+            CLOSING LINE + CTA added the same day: the section used to stop dead
+            at the table. */}
+        <div style={{ marginTop: 22, display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap' }}>
+          <p style={{ flex: '1 1 420px', minWidth: 0, fontSize: 15.5, lineHeight: 1.55, color: '#3D4F44', margin: 0, fontWeight: 600 }}>
+            {/* 🔒 Only claims that survive a grep. "Detects price increases" and
+                "tracks pantry spending" were both suggested and CUT: there is no
+                per-item price history in this codebase (no unit_price /
+                item_price / price_per anywhere in lib/), and there is no pantry
+                feature at all. Subscription price creep IS real and is the one
+                price-change claim that holds — lib/subscription-tracker.js
+                flags a charge >5% above its prior average. */}
+            Because GetGuac reads the receipt, it knows the items — not just the total.
+            That is what lets it spot a subscription whose price crept up, catch a refund
+            window before it closes, and show you where the money actually went.
+          </p>
+          <button type="button" onClick={() => oauth('google')} disabled={!!busy}
+            style={{ flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: 9, cursor: busy ? 'default' : 'pointer', fontFamily: 'inherit', border: 0, background: '#65A30D', color: '#fff', fontWeight: 700, fontSize: 15.5, padding: '14px 26px', borderRadius: 999, opacity: busy ? 0.7 : 1 }}>
+            {busy === 'google' ? 'Opening Google…' : (<><GoogleG size={18} />Start free</>)}
+          </button>
+        </div>
+        <p style={{ fontSize: 12, lineHeight: 1.55, color: '#5F6D63', margin: '16px 0 0' }}>
+          Competitor details checked July 2026 from each company’s public pricing and help pages.
+          Other apps change; if you spot something out of date, <Link href="/contact" style={{ color: '#4D7C0F', fontWeight: 600 }}>tell us</Link> and we will fix it.
+        </p>
       </section>
 
       <CardRail n={2} />
@@ -966,6 +1080,40 @@ const COMPARE = [
   ['Unusual spending', 'Flagged, with an alert', 'You spot it or you don’t'],
   ['Return windows and warranties', 'Pulled from the receipt', 'You diary them'],
   ['What your bank charged you', 'Itemized per card', 'You dig through statements'],
+]
+
+// Named-competitor comparison. ⚠️ EVERY CELL VERIFIED 2026-07-31 from public
+// sources; see the ⚠️ block on the section that renders this before editing.
+// Sources used, so the next person can re-check rather than re-research:
+//   Rocket Money  rocketmoney.com/learn — Premium is "pay what you think is
+//                 fair", stated $7-$14/mo, plus a free tier.
+//   Monarch       $14.99/mo or $99.99/yr (Plus $199/yr). Help centre documents
+//                 Manual Accounts; some reviews claim no manual-only path.
+//                 SOURCES CONFLICT — the cell deliberately says both.
+//   YNAB          $14.99/mo or $109/yr. Accounts can be unlinked and run fully
+//                 by hand, so bank linking is genuinely OPTIONAL.
+//   Copilot       $13/mo or $95/yr. Apple-first (iOS 17+/macOS 14+, web since
+//                 Dec 2025, no Android). Requires Plaid/MX/Akoya.
+//   Fetch         Free, brand-funded. Scans ANY receipt for points -> gift
+//                 cards. Matches partner brands, not your whole basket.
+//   Ibotta        Free. Activate offers first, then scan. Cash back.
+// 🔒 Do NOT convert these to bare ✅/❌ — the nuance IS the honesty.
+// Glyphs: '+' good for the reader, '~' genuinely mixed, '-' not available.
+// ⚠️ '~' must NOT be rounded to '+' or '-'. Those three cells are the ones a
+// competitor could fairly dispute, which is exactly why they are hedged:
+// YNAB's bank link really is optional, Monarch's manual-only path is contested
+// between their own docs and third-party reviews, and Fetch/Ibotta really do
+// read receipts — they just match brands and offers rather than your basket.
+// ⚠️ Note Fetch and Ibotta score '+' on three cells. That is correct and must
+// stay: this table is not supposed to be a clean sweep.
+const APPS = [
+  { us: true, name: 'GetGuac', forWhat: 'Turning receipts into spending you can see', bank: 'No — never asked for', bankG: '+', receipts: 'Yes, any receipt', receiptsG: '+', items: 'Yes, line by line', itemsG: '+', price: 'Free' },
+  { name: 'Fetch', forWhat: 'Points for scanning receipts', bank: 'No', bankG: '+', receipts: 'Yes, any receipt', receiptsG: '+', items: 'Partner brands only', itemsG: '~', price: 'Free' },
+  { name: 'Ibotta', forWhat: 'Cash back on offers you activate first', bank: 'No', bankG: '+', receipts: 'Yes, after activating offers', receiptsG: '+', items: 'Matched offers only', itemsG: '~', price: 'Free' },
+  { name: 'Rocket Money', forWhat: 'Finding and cancelling subscriptions', bank: 'Yes', bankG: '-', receipts: 'No', receiptsG: '-', items: 'No — merchant totals', itemsG: '-', price: 'Free tier; Premium ~$7–14/mo' },
+  { name: 'Monarch', forWhat: 'Full budgeting and net worth', bank: 'Yes for auto-sync; manual accounts exist', bankG: '~', receipts: 'No', receiptsG: '-', items: 'No — merchant totals', itemsG: '-', price: '$14.99/mo or $99.99/yr' },
+  { name: 'YNAB', forWhat: 'The zero-based budgeting method', bank: 'Optional — can be run fully by hand', bankG: '~', receipts: 'No', receiptsG: '-', items: 'No — you categorise', itemsG: '-', price: '$14.99/mo or $109/yr' },
+  { name: 'Copilot', forWhat: 'Budgeting with automatic categorisation', bank: 'Yes (via Plaid)', bankG: '-', receipts: 'No', receiptsG: '-', items: 'No — merchant totals', itemsG: '-', price: '$13/mo or $95/yr' },
 ]
 
 const WHY = [

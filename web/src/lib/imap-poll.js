@@ -20,7 +20,11 @@ const MAX_PER_RUN = 200
 // IMAP folders we never poll into email_messages. Match against the LEAF name
 // of a folder path (the last segment after the delimiter), case-insensitive,
 // so 'INBOX.Trash' / 'INBOX/Trash' / 'Trash' all get skipped uniformly.
-const SKIP_LEAF_NAMES = new Set(['sent', 'drafts', 'junk', 'spam', 'trash', 'archive'])
+// `Guacked` is our own processed-mail archive. Polling it turns every message
+// we just moved out of INBOX into a second ingestion source on the next run.
+// On a long-lived mailbox that archive also becomes the largest folder and a
+// single bad archived message can make Migadu abort the entire mailbox poll.
+const SKIP_LEAF_NAMES = new Set(['sent', 'drafts', 'junk', 'spam', 'trash', 'archive', 'guacked'])
 
 // Extract the leaf name from an IMAP folder path. Dovecot/Migadu typically
 // uses '.' as the delimiter (so 'INBOX.g' has leaf 'g'); other servers use '/'.

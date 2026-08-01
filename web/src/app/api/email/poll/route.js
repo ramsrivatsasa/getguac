@@ -87,7 +87,7 @@ export async function POST(request) {
   for (const u of users || []) {
     summary.users++
     try {
-      const password = decryptSecret(u.email_inbox_password_enc)
+      let password = decryptSecret(u.email_inbox_password_enc)
 
       // Get the highest UID per IMAP folder we've already stored. UIDs are
       // unique only within a folder, so we keep one cursor per folder.
@@ -122,6 +122,9 @@ export async function POST(request) {
         //      is how it auto-recovers once fixed upstream) but stop rotating.
         if (!isImapAuthFailure(pollErr) || u.email_quarantined_at || await autoReauthedRecently(sb, u.id)) throw pollErr
         const { password: newPw } = await reprovisionMailbox(sb, { userId: u.id, alias: u.email_alias })
+        // Everything after the retry (including move/delete cleanup) must use
+        // the credential now stored in Migadu, not the stale pre-rotation one.
+        password = newPw
         await recordAutoReauth(sb, { userId: u.id, alias: u.email_alias, via: 'poll' })
         summary.reauthed++
         // Migadu does not publish a password change to its IMAP frontend

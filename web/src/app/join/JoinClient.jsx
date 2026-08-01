@@ -1279,9 +1279,19 @@ export default function JoinClient() {
         /* Both bleed off the band's edges and are cropped by its overflow:hidden,
            as the mockup draws them. */
         .gj-ctaphone { position: absolute; left: 52px; bottom: -30px; }
-        /* Supplied hero banner, when web/public/join/hero.png exists. */
+        /* Supplied hero banner, when web/public/join/hero.png exists.
+           🔑 mix-blend-mode: multiply is doing real work — do not drop it.
+           The supplied PNG is Format24bppRgb: NO alpha channel, flattened
+           onto white. Dropped in raw it renders as a visible white card
+           against the hero's white -> #F5FAEC gradient. multiply maps white
+           to the backdrop (white x bg = bg), so the box disappears while the
+           artwork stays. It costs a barely-perceptible tint on the white
+           areas INSIDE the image, which is the right trade on a background
+           this pale.
+           If a version WITH transparency is ever supplied, delete this line —
+           multiply on a true-alpha PNG would tint it for no reason. */
         .gj-heroart { display: block; width: 100%; max-width: 460px; height: auto;
-                      margin: 0 auto; }
+                      margin: 0 auto; mix-blend-mode: multiply; }
         .gj-ctaavo { position: absolute; right: 30px; bottom: -22px; width: 176px; height: 202px;
                      display: block; pointer-events: none; }
         /* Six small boxes in one row — the mockup's feature strip. Its own

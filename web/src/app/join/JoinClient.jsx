@@ -153,9 +153,12 @@ export default function JoinClient() {
   function moveFeatureRail(direction) {
     const track = featureScrollRef.current
     if (!track) return
+    stopFeatureScroll()
     const card = track.firstElementChild
     const step = card ? card.getBoundingClientRect().width + 12 : track.clientWidth * 0.75
-    track.scrollBy({ left: direction * step, behavior: 'smooth' })
+    const max = Math.max(0, track.scrollWidth - track.clientWidth)
+    track.scrollLeft = Math.min(max, Math.max(0, track.scrollLeft + direction * step))
+    requestAnimationFrame(updateFeatureNav)
   }
 
   function handleFeaturePointerMove(event) {

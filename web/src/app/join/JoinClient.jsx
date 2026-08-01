@@ -40,6 +40,7 @@ import { createClient } from '../../lib/supabase/client'
 import MetaPixel from '../../components/MetaPixel'
 import { trackClick } from '../../lib/track-click'
 import GoogleG from '../../components/GoogleG'
+import GuacMascot from '../../components/GuacMascot'
 import { CARDS } from '../../components/GoalsShowcase'
 import GoalCard from '../../components/GoalCard'
 // Line icons, added 2026-07-31 with the reskin. The mockup's "premium" read
@@ -55,11 +56,6 @@ import {
 
 const DISPLAY = { fontFamily: 'var(--font-bricolage), sans-serif' }
 const INK = '#0B1410'
-
-// Drop artwork at web/public/join/avocado.png and the closing band uses it
-// instead of the drawn SVG. Nothing else to change. See CtaAvocado — including
-// why it must have a transparent background.
-const SUPPLIED_AVOCADO = '/join/avocado.png'
 
 // The demo account is deliberately public — /login?demo=1 prefills it behind a
 // Turnstile check. Showing the credentials outright means someone who wants to
@@ -359,12 +355,13 @@ export default function JoinClient() {
                   swap. The mockup's photorealistic halved-avocado render is a
                   design asset, not something to reproduce by hand in SVG, so
                   the watermark stands in for it. */}
-              {/* Same drawn avocado as the closing band, swapped in for the 🥑
-                  glyph that was here — see CtaAvocado for why the emoji was
-                  never going to hold up at this size. Sits behind the
+              {/* 🔒 The LOCKED brand mascot (components/GuacMascot.jsx), used
+                  as-is. Not a redraw and not the 🥑 glyph — the emoji is the
+                  platform's own artwork and renders as three different
+                  avocados across Windows, Apple and Android. Sits behind the
                   screenshot and is pointer-events:none, so it can never eat a
                   tap meant for the hero. */}
-              <span aria-hidden className="gj-heroavo"><CtaAvocado /></span>
+              <span aria-hidden className="gj-heroavo"><GuacMascot expression="happy" size={200} /></span>
 
               {/* The mockup's two pointer callouts, as boxed chips with an
                   icon and a dashed arrow — they were plain handwritten text
@@ -1188,16 +1185,15 @@ export default function JoinClient() {
             </div>
           </div>
 
-          {/* The band's avocado. Supplied artwork if it is there, drawn SVG if
-              it is not — see CtaAvocado.
-              🔑 Why never the 🥑 glyph: at this size you get the platform's
-              own artwork, and Segoe UI Emoji, Apple Color Emoji and Noto each
-              draw a different avocado. A CTA band that changes shape with the
-              visitor's OS is not a design.
-              🔒 NOT the mascot and NOT the logo mark, both of which stay
-              locked — this is a decorative background shape in one band. Do
-              not reuse it as a brand asset. */}
-          <span aria-hidden className="gj-ctaavo"><CtaAvocado /></span>
+          {/* 🔒 The LOCKED brand mascot (components/GuacMascot.jsx), used
+              as-is — no redraw, no re-author, no separable parts. The `rich`
+              pose is the one its own docs assign to Steals / deals, which is
+              the right register for a money CTA.
+              🔑 Why never the 🥑 glyph here: at this size you get the
+              platform's own artwork, and Segoe UI Emoji, Apple Color Emoji and
+              Noto each draw a different avocado. A CTA band that changes shape
+              with the visitor's OS is not a design. */}
+          <span aria-hidden className="gj-ctaavo"><GuacMascot expression="rich" size={168} /></span>
         </div>
 
         {/* WHO BUILT IT — the critique listed this as the single biggest
@@ -1276,7 +1272,7 @@ export default function JoinClient() {
            class, not gj-grid3, because nothing else on the page goes 6-up.
            Steps to 3 then 2 rather than 6→1: six full-width cards on a phone
            would be six screens of scrolling for one heading's worth of copy. */
-        .gj-features6 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; align-items: stretch; }
+        .gj-features6 { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; align-items: stretch; }
         /* The mockup's two hero buttons, side by side. Wraps before it
            squeezes — "See how it works" is three words and truncating it
            would be worse than a second row. */
@@ -1512,29 +1508,6 @@ export default function JoinClient() {
       ` }} />
     </div>
   )
-}
-
-// The band + hero avocado. Renders web/public/join/avocado.png and nothing
-// else — no drawn substitute. Save the file there and it appears in both
-// places; until then the slot is simply empty.
-// ⚠️ Needs a TRANSPARENT background: the closing band is #65A30D, so a PNG
-//    exported on its own green shows as a slightly-wrong square against it.
-// 🔑 It probes with `new Image()` after mount rather than rendering an <img>
-//    and catching onError. The img is server-rendered, so a missing file
-//    fails while the browser parses the initial HTML — before React hydrates
-//    and attaches the handler — and you get a broken-image icon that never
-//    clears. Probing means nothing renders until a load has succeeded.
-function CtaAvocado() {
-  const [src, setSrc] = useState(null)
-  useEffect(() => {
-    const probe = new window.Image()
-    probe.onload = () => setSrc(SUPPLIED_AVOCADO)
-    probe.src = SUPPLIED_AVOCADO
-    return () => { probe.onload = null }
-  }, [])
-  if (!src) return null
-  // eslint-disable-next-line @next/next/no-img-element
-  return <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
 }
 
 // A testimonial portrait, with the initial circle as the fallback.
@@ -1882,7 +1855,12 @@ const VOICES = [
   //    never requests the missing file, never 404s, and never fires the
   //    onError that swaps in the initial — it just sat there blank. A path
   //    pointing at nothing is worse than no path.
-  { quote: 'I caught a return window I would have missed by two days.', name: 'Ram', detail: 'Founder', stars: 5, founder: true },
+  // Written here and used under the founder's name at his request. Framed as
+  // WHY HE BUILT IT rather than as a review — a founder rating his own product
+  // beside two real users reads as padding, but a founder saying what problem
+  // he had is the one thing only he can say. It also restates the page's core
+  // argument in a human voice, one screen after the comparison table makes it.
+  { quote: 'I built GetGuac because my bank statement could tell me I spent $180 at Target, and nothing else.', name: 'Ram', detail: 'Founder', stars: 5, founder: true },
   // STEVEN — ✅ APPROVED 2026-07-31. Same chain as Rebecca's card: drafted in
   // this repo as a candidate → shown to him by the site owner → published on
   // the owner's report that he approved it appearing under his name. His

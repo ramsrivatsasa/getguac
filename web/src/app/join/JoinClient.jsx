@@ -348,6 +348,18 @@ export default function JoinClient() {
 
             {/* ── RIGHT: the product ───────────────────────────────────── */}
             <div className="gj-hero-phone">
+              {/* 🖼️ ONE SUPPLIED IMAGE WINS OVER THE WHOLE ASSEMBLY BELOW.
+                  Save the composed hero — phone, both chips, arrows, avocado,
+                  leaves — as web/public/join/hero.png and it replaces every
+                  piece under it: the screenshot, the two callout chips, the
+                  dashed arrows and the mascot. Nothing else to change.
+                  Until that file exists the assembled version renders, so the
+                  page is never broken mid-swap. See HeroArt for why it probes
+                  the file rather than rendering an <img> and catching onError.
+                  ⚠️ Needs a transparent background — the hero sits on a white
+                  -> #F5FAEC gradient, so a PNG flattened onto white will show
+                  a visible box at the bottom of the fade. */}
+              <HeroArt>
               {/* The mockup's soft avocado behind the product shot. It is the
                   SAME 🥑 glyph the closing CTA already uses as a watermark, at
                   the same low opacity — not new artwork.
@@ -422,6 +434,7 @@ export default function JoinClient() {
                 width={340} height={716} loading="eager" className="gj-heroshot"
                 style={{ width: 340, maxWidth: '82%', height: 'auto', display: 'block', filter: 'drop-shadow(0 30px 50px rgba(20,40,25,0.28))' }} />
 
+              </HeroArt>
             </div>
           </div>
 
@@ -1266,6 +1279,9 @@ export default function JoinClient() {
         /* Both bleed off the band's edges and are cropped by its overflow:hidden,
            as the mockup draws them. */
         .gj-ctaphone { position: absolute; left: 52px; bottom: -30px; }
+        /* Supplied hero banner, when web/public/join/hero.png exists. */
+        .gj-heroart { display: block; width: 100%; max-width: 460px; height: auto;
+                      margin: 0 auto; }
         .gj-ctaavo { position: absolute; right: 30px; bottom: -22px; width: 176px; height: 202px;
                      display: block; pointer-events: none; }
         /* Six small boxes in one row — the mockup's feature strip. Its own
@@ -1508,6 +1524,46 @@ export default function JoinClient() {
       ` }} />
     </div>
   )
+}
+
+// ── SUPPLIED ARTWORK SLOTS ────────────────────────────────────────────────
+// The composed hero banner can be dropped in as a single image. It replaces
+// the hand-assembled version underneath it — screenshot, both chips, the
+// dashed arrows and the mascot — with no code change:
+//
+//     web/public/join/hero.png
+//
+// 🔒 HERO ONLY. The closing green band is deliberately NOT swappable: the
+//    hand-built one was kept on request. Do not add a footer.png slot.
+//
+// ⚠️ NEEDS A TRANSPARENT BACKGROUND. The hero sits on a white -> #F5FAEC
+//    gradient, so anything flattened onto white shows as a visible box.
+//
+// 🔑 They PROBE with `new Image()` after mount instead of rendering an <img>
+//    and catching onError. The obvious version shows a broken-image icon: the
+//    img is server-rendered, so a missing file fails while the browser parses
+//    the initial HTML — before React hydrates and attaches the handler — and
+//    the placeholder never clears. (A related trap: loading="lazy" on an
+//    off-screen missing image never requests it at all, so it never 404s and
+//    you get a silent blank. That one produced an empty founder avatar.)
+//    Probing means the assembled fallback renders until a load has actually
+//    SUCCEEDED, so the page is never broken mid-swap.
+function useSuppliedArt(src) {
+  const [ok, setOk] = useState(false)
+  useEffect(() => {
+    const probe = new window.Image()
+    probe.onload = () => setOk(true)
+    probe.src = src
+    return () => { probe.onload = null }
+  }, [src])
+  return ok
+}
+
+function HeroArt({ children }) {
+  const ok = useSuppliedArt('/join/hero.png')
+  if (!ok) return children
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src="/join/hero.png" alt="" className="gj-heroart" />
 }
 
 // A testimonial portrait, with the initial circle as the fallback.

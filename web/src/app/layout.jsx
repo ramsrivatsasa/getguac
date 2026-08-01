@@ -1,5 +1,5 @@
 import './globals.css'
-import { Bricolage_Grotesque, Plus_Jakarta_Sans, Roboto_Mono } from 'next/font/google'
+import { Bricolage_Grotesque, Plus_Jakarta_Sans, Roboto_Mono, Caveat } from 'next/font/google'
 import { Providers } from './providers'
 
 // New marketing design typefaces. Exposed as CSS variables so the redesigned
@@ -10,6 +10,15 @@ const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '500', '
 // Roboto Mono = the mockup's number/date typeface. Wired as Tailwind `font-mono`
 // (see tailwind.config.js) so every `.gg-num` figure across the app matches.
 const robotoMono = Roboto_Mono({ subsets: ['latin'], weight: ['500', '600', '700'], variable: '--font-roboto-mono', display: 'swap' })
+// Caveat = the mockup's handwritten annotation face, used ONLY for the two
+// pointer callouts flanking the hero phone on /join.
+// ⚠️ This is a FOURTH family on a site whose typography lock is Bricolage +
+// Jakarta. It earns the exception the same way Roboto Mono did — it is a
+// specific element of the design mockup, not a general-purpose face. 🔒 Do not
+// reach for it for headings, body copy, or anything on a signed-in page: one
+// decorative script face used twice reads as art direction, the same face used
+// six times reads as a template. One weight only, so the payload is ~10 kB.
+const caveat = Caveat({ subsets: ['latin'], weight: ['600'], variable: '--font-caveat', display: 'swap' })
 import UpdatePrompt from '../components/UpdatePrompt'
 import PosthogProvider from '../components/PosthogProvider'
 import VisitBeacon from '../components/VisitBeacon'
@@ -120,7 +129,7 @@ const jsonLd = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${bricolage.variable} ${jakarta.variable} ${robotoMono.variable}`}>
+    <html lang="en" className={`${bricolage.variable} ${jakarta.variable} ${robotoMono.variable} ${caveat.variable}`}>
       <body>
         {/* Site-wide JSON-LD structured data for rich results. */}
         <script

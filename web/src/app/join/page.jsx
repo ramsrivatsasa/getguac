@@ -1,9 +1,9 @@
 // /join — paid-social landing page for the Facebook/Instagram ads.
 //
-// Shaped like Origin's ad landing page above the fold, then continues into the
-// homepage's own content (goal cards, features, brain, steps, privacy, CTA) and
-// publishes the demo-account credentials so a stranger can look before signing
-// up. /start is the stripped one-screen variant — keep both and A/B them.
+// Shaped like the design mockup: hero → item-level comparison → 4 steps →
+// benefit cards → what it catches → data-safety band → FAQ, then the proof
+// sections (demo account, comparison tables, goal rails, Guac-AI) stacked at
+// the bottom near the footer, then the closing CTA.
 //
 // Route name is deliberately NOT /fb or /facebook: a first-party path with
 // those tokens is the kind of thing content blockers match on, and losing the
@@ -11,6 +11,7 @@
 //
 // noindex: an ad destination, not a page we want ranking against the real
 // homepage. `follow` so links out still count.
+import MarketingShell from '../../components/MarketingShell'
 import JoinClient from './JoinClient'
 
 // Tagline instead of a keyword title: this page is noindex, so the title does no
@@ -45,6 +46,26 @@ export const metadata = {
   },
 }
 
+// NAV + FOOTER added 2026-07-31 on request, from the design mockup.
+//
+// ⚠️ THIS REVERSES A DELIBERATE DECISION, and the reason it was made is worth
+// keeping: /join is an ad destination, so every nav link is an exit before the
+// ask. The hero CTA, the sticky bar and the closing CTA are what pay for the
+// clicks. If join→signup conversion drops after this ships, the nav is the
+// first thing to test removing again — MarketingShell comes off in one line.
+//
+// ads={false} is NOT cosmetic. MarketingShell mounts AdSense by default, and
+// this is the one page on the site where we are PAYING for every visitor:
+// loading Google's ad network here would put competitors' ads on a page we
+// bought traffic for. (It also keeps the surface AdSense is judging unchanged
+// while the "low value content" re-application is outstanding.)
+//
+// hideSearch: the mockup's nav is logo → links → auth. The header search box
+// is a third thing to look at on a page with exactly one job.
 export default function Page() {
-  return <JoinClient />
+  return (
+    <MarketingShell ads={false} hideSearch>
+      <JoinClient />
+    </MarketingShell>
+  )
 }

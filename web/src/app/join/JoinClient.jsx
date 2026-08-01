@@ -1399,7 +1399,7 @@ export default function JoinClient() {
            this pale.
            If a version WITH transparency is ever supplied, delete this line —
            multiply on a true-alpha PNG would tint it for no reason. */
-        .gj-heroart { display: block; width: 100%; max-width: 460px; height: auto;
+        .gj-heroart { display: block; width: 112%; max-width: 570px; height: auto;
                       margin: 0 auto; mix-blend-mode: multiply; }
         .gj-ctaavo { position: absolute; right: 30px; bottom: -22px; width: 176px; height: 202px;
                      display: block; pointer-events: none; }
@@ -1609,6 +1609,7 @@ export default function JoinClient() {
              layout fault. Copy comes first and the phone second, which is the
              natural source order, so the button stays as high as it can. */
           .gj-herorow { grid-template-columns: 1fr; gap: 22px; margin-top: 14px; }
+          .gj-heroart { width: 100%; max-width: 460px; }
           .gj-heroleft { text-align: center; }
           .gj-heroauthstack { align-items: center; margin-top: 20px; }
           .gj-heroctas { justify-content: center; width: 100%; }

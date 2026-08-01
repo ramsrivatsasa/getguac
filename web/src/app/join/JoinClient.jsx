@@ -53,6 +53,7 @@ import {
   Receipt, Scissors, ListChecks, BarChart3,
   Camera, Brain, TrendingUp, CalendarClock, PiggyBank,
   ShieldCheck, RefreshCw, Check, Star, X, Car, FileText, LayoutGrid,
+  ChevronLeft, ChevronRight,
 } from 'lucide-react'
 
 const DISPLAY = { fontFamily: 'var(--font-bricolage), sans-serif' }
@@ -118,6 +119,8 @@ export default function JoinClient() {
   const [err, setErr] = useState('')
   const [copied, setCopied] = useState('')
   const [showBar, setShowBar] = useState(false)
+  const [featureCanPrev, setFeatureCanPrev] = useState(false)
+  const [featureCanNext, setFeatureCanNext] = useState(true)
   const heroCtaRef = useRef(null)
   const featureScrollRef = useRef(null)
   const featureScrollFrame = useRef(null)
@@ -132,8 +135,27 @@ export default function JoinClient() {
   function runFeatureScroll() {
     const track = featureScrollRef.current
     if (!track || !featureScrollSpeed.current) return stopFeatureScroll()
-    track.scrollLeft += featureScrollSpeed.current
+    const max = Math.max(0, track.scrollWidth - track.clientWidth)
+    const next = Math.min(max, Math.max(0, track.scrollLeft + featureScrollSpeed.current))
+    if (Math.abs(next - track.scrollLeft) < 0.5) return stopFeatureScroll()
+    track.scrollLeft = next
     featureScrollFrame.current = requestAnimationFrame(runFeatureScroll)
+  }
+
+  function updateFeatureNav() {
+    const track = featureScrollRef.current
+    if (!track) return
+    const max = Math.max(0, track.scrollWidth - track.clientWidth)
+    setFeatureCanPrev(track.scrollLeft > 3)
+    setFeatureCanNext(track.scrollLeft < max - 3)
+  }
+
+  function moveFeatureRail(direction) {
+    const track = featureScrollRef.current
+    if (!track) return
+    const card = track.firstElementChild
+    const step = card ? card.getBoundingClientRect().width + 12 : track.clientWidth * 0.75
+    track.scrollBy({ left: direction * step, behavior: 'smooth' })
   }
 
   function handleFeaturePointerMove(event) {
@@ -160,19 +182,33 @@ export default function JoinClient() {
     if (!track || !card || window.matchMedia('(hover: none)').matches) return
     const trackRect = track.getBoundingClientRect()
     const cardRect = card.getBoundingClientRect()
-    const step = cardRect.width + 12
-    // Hovering the last visible card advances the rail immediately. Hovering
-    // the first visible card does the same in reverse. This is intentionally
-    // independent of pointer coordinates, so it works even when the cursor is
-    // centered on the card rather than pressed against the container edge.
+    // Hovering the last visible card continuously advances the rail. A single
+    // smooth scrollBy() was unreliable here: once the card moved, no new mouse
+    // event was guaranteed, so the rail often stopped after one card (or never
+    // visibly moved at all). Keep one animation frame loop running until the
+    // pointer leaves the rail or the scroll boundary is reached.
     if (cardRect.right >= trackRect.right - cardRect.width * 0.35 && track.scrollLeft < track.scrollWidth - track.clientWidth - 2) {
-      track.scrollBy({ left: step, behavior: 'smooth' })
+      featureScrollSpeed.current = 3.5
+      if (!featureScrollFrame.current) featureScrollFrame.current = requestAnimationFrame(runFeatureScroll)
     } else if (cardRect.left <= trackRect.left + cardRect.width * 0.35 && track.scrollLeft > 2) {
-      track.scrollBy({ left: -step, behavior: 'smooth' })
+      featureScrollSpeed.current = -3.5
+      if (!featureScrollFrame.current) featureScrollFrame.current = requestAnimationFrame(runFeatureScroll)
     }
   }
 
-  useEffect(() => () => stopFeatureScroll(), [])
+  useEffect(() => {
+    const track = featureScrollRef.current
+    if (!track) return () => stopFeatureScroll()
+    updateFeatureNav()
+    const observer = new ResizeObserver(updateFeatureNav)
+    observer.observe(track)
+    track.addEventListener('scroll', updateFeatureNav, { passive: true })
+    return () => {
+      stopFeatureScroll()
+      observer.disconnect()
+      track.removeEventListener('scroll', updateFeatureNav)
+    }
+  }, [])
 
   // The sticky bar is a second chance at the CTA, not a competitor to it: it
   // shows exactly when the hero's own buttons are NOT on screen.
@@ -699,22 +735,30 @@ export default function JoinClient() {
             page uses. That is why this grid is its own class and why the type
             steps down: at 1132px, six columns leave ~176px each, so a 17px
             title would break "Receipt Intelligence" across three lines. */}
-        <div
-          ref={featureScrollRef}
-          className="gj-features6"
-          onPointerMove={handleFeaturePointerMove}
-          onPointerLeave={stopFeatureScroll}
-          aria-label="GetGuac features — swipe or move the pointer near an edge to see more"
-        >
-          {FEATURES.map((f) => (
-            <div key={f.t} onMouseEnter={handleFeatureCardEnter} style={{ background: '#fff', border: '1px solid rgba(20,83,45,0.10)', borderRadius: 18, padding: '20px 12px', textAlign: 'center' }}>
-              <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, borderRadius: 12, background: '#F0F7E8', border: '1px solid rgba(101,163,13,0.18)', marginBottom: 12 }}>
-                <f.i size={20} strokeWidth={1.9} color="#4D7C0F" aria-hidden />
+        <div className="gj-featurewrap">
+          <div
+            ref={featureScrollRef}
+            className="gj-features6"
+            onPointerMove={handleFeaturePointerMove}
+            onPointerLeave={stopFeatureScroll}
+            aria-label="GetGuac features — use the arrow buttons or swipe to see more"
+          >
+            {FEATURES.map((f) => (
+              <div key={f.t} onMouseEnter={handleFeatureCardEnter} style={{ background: '#fff', border: '1px solid rgba(20,83,45,0.10)', borderRadius: 18, padding: '20px 12px', textAlign: 'center' }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, borderRadius: 12, background: '#F0F7E8', border: '1px solid rgba(101,163,13,0.18)', marginBottom: 12 }}>
+                  <f.i size={20} strokeWidth={1.9} color="#4D7C0F" aria-hidden />
+                </div>
+                <h3 style={{ ...DISPLAY, fontWeight: 700, fontSize: 13.5, lineHeight: 1.25, margin: '0 0 5px', color: '#15281C' }}>{f.t}</h3>
+                <p style={{ fontSize: 12, lineHeight: 1.4, color: '#5C6B60', margin: 0 }}>{f.b}</p>
               </div>
-              <h3 style={{ ...DISPLAY, fontWeight: 700, fontSize: 13.5, lineHeight: 1.25, margin: '0 0 5px', color: '#15281C' }}>{f.t}</h3>
-              <p style={{ fontSize: 12, lineHeight: 1.4, color: '#5C6B60', margin: 0 }}>{f.b}</p>
-            </div>
-          ))}
+            ))}
+          </div>
+          <button type="button" className="gj-featurearrow gj-featurearrow-left" onClick={() => moveFeatureRail(-1)} disabled={!featureCanPrev} aria-label="Show previous features">
+            <ChevronLeft size={21} strokeWidth={2.2} />
+          </button>
+          <button type="button" className="gj-featurearrow gj-featurearrow-right" onClick={() => moveFeatureRail(1)} disabled={!featureCanNext} aria-label="Show more features">
+            <ChevronRight size={21} strokeWidth={2.2} />
+          </button>
         </div>
       </section>
 
@@ -1365,11 +1409,20 @@ export default function JoinClient() {
            would be six screens of scrolling for one heading's worth of copy. */
         .gj-features6 { display: flex; gap: 12px; align-items: stretch; overflow-x: auto;
                         scroll-snap-type: x proximity; scroll-behavior: auto; overscroll-behavior-x: contain;
-                        scrollbar-width: thin; scrollbar-color: rgba(77,124,15,.35) transparent;
-                        padding: 2px 2px 10px; touch-action: pan-x pan-y; }
+                        scrollbar-width: none; -ms-overflow-style: none;
+                        padding: 2px; touch-action: pan-x pan-y; }
         .gj-features6 > * { flex: 0 0 calc((100% - 60px) / 6); min-height: 150px; scroll-snap-align: start; }
-        .gj-features6::-webkit-scrollbar { height: 6px; }
-        .gj-features6::-webkit-scrollbar-thumb { background: rgba(77,124,15,.32); border-radius: 999px; }
+        .gj-features6::-webkit-scrollbar { display: none; width: 0; height: 0; }
+        .gj-featurewrap { position: relative; }
+        .gj-featurewrap::before, .gj-featurewrap::after { content: ''; position: absolute; z-index: 2; top: 2px; bottom: 2px; width: 38px; pointer-events: none; }
+        .gj-featurewrap::before { left: 0; background: linear-gradient(90deg, #fff 5%, rgba(255,255,255,0)); }
+        .gj-featurewrap::after { right: 0; background: linear-gradient(270deg, #fff 5%, rgba(255,255,255,0)); }
+        .gj-featurearrow { position: absolute; z-index: 3; top: 50%; transform: translateY(-50%); width: 42px; height: 42px; border-radius: 999px; border: 1px solid rgba(20,83,45,.18); background: #fff; color: #3F720C; display: grid; place-items: center; box-shadow: 0 8px 24px -10px rgba(20,60,30,.45); transition: opacity .18s ease, transform .18s ease, background .18s ease; cursor: pointer; }
+        .gj-featurearrow:hover:not(:disabled) { background: #F0F7E8; transform: translateY(-50%) scale(1.06); }
+        .gj-featurearrow:focus-visible { outline: 3px solid rgba(101,163,13,.28); outline-offset: 3px; }
+        .gj-featurearrow:disabled { opacity: 0; pointer-events: none; }
+        .gj-featurearrow-left { left: -16px; }
+        .gj-featurearrow-right { right: -16px; }
         /* The mockup's two hero buttons, side by side. Wraps before it
            squeezes — "See how it works" is three words and truncating it
            would be worse than a second row. */

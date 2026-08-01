@@ -21,8 +21,8 @@ const WELCOME = {
 
 function renderReply(text) {
   return String(text).split(/(\/login\?demo=1|\/start)/g).map((part, index) => {
-    if (part === '/login?demo=1') return <Link key={index} href={part} onClick={() => trackClick('join-chat-demo-link')} className="font-extrabold text-[#4D7C0F] underline underline-offset-2">Try the demo</Link>
-    if (part === '/start') return <Link key={index} href={part} onClick={() => trackClick('join-chat-signup-link')} className="font-extrabold text-[#4D7C0F] underline underline-offset-2">Join free</Link>
+    if (part === '/login?demo=1') return <Link key={index} href={part} target="_blank" rel="noopener noreferrer" onClick={() => trackClick('join-chat-demo-link')} className="font-extrabold text-[#4D7C0F] underline underline-offset-2">Try the demo</Link>
+    if (part === '/start') return <Link key={index} href={part} target="_blank" rel="noopener noreferrer" onClick={() => trackClick('join-chat-signup-link')} className="font-extrabold text-[#4D7C0F] underline underline-offset-2">Join free</Link>
     return part
   })
 }
@@ -100,7 +100,7 @@ export default function JoinGuacChat() {
                   Ask me how GetGuac reads receipts, catches subscriptions, tracks returns, and helps you understand where your money goes.
                 </p>
                 <div className="mt-4 flex w-full max-w-[300px] flex-col items-stretch gap-2">
-                  <Link href="/login?demo=1" onClick={() => trackClick('join-chat-demo-starter')} className="rounded-full bg-white px-4 py-2 text-center text-xs font-extrabold text-[#4D7C0F] shadow-sm ring-1 ring-[#CFE1C1] transition hover:bg-[#F0F7E8]">
+                  <Link href="/login?demo=1" target="_blank" rel="noopener noreferrer" onClick={() => trackClick('join-chat-demo-starter')} className="rounded-full bg-white px-4 py-2 text-center text-xs font-extrabold text-[#4D7C0F] shadow-sm ring-1 ring-[#CFE1C1] transition hover:bg-[#F0F7E8]">
                     🥑 Try our demo
                   </Link>
                   {STARTERS.map(question => (
@@ -110,7 +110,7 @@ export default function JoinGuacChat() {
                   ))}
                   <div className="mt-1 flex items-center justify-between gap-3 rounded-2xl bg-white p-2 pl-3 shadow-sm ring-1 ring-gray-200">
                     <span className="text-left text-xs font-bold text-[#1F2937]">Do you want to play free games?</span>
-                    <Link href="/games" onClick={() => trackClick('join-chat-games')} className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-gradient-to-r from-[#FF7548] via-[#F7B733] to-[#39CFA0] px-3 py-2 text-xs font-extrabold text-white shadow-md transition hover:-translate-y-0.5">
+                    <Link href="/games" target="_blank" rel="noopener noreferrer" onClick={() => trackClick('join-chat-games')} className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-gradient-to-r from-[#FF7548] via-[#F7B733] to-[#39CFA0] px-3 py-2 text-xs font-extrabold text-white shadow-md transition hover:-translate-y-0.5">
                       🎮 Games
                     </Link>
                   </div>
@@ -144,8 +144,8 @@ export default function JoinGuacChat() {
               <button type="submit" disabled={busy || !input.trim()} aria-label="Send message" className="grid w-11 place-items-center rounded-xl bg-[#65A30D] text-white transition hover:bg-[#4D7C0F] disabled:cursor-not-allowed disabled:opacity-40"><Send size={17} /></button>
             </form>
             <div className="mt-2.5 grid grid-cols-2 gap-2">
-              <Link href="/start" onClick={() => trackClick('join-chat-signup')} className="rounded-xl bg-[#65A30D] px-3 py-2 text-center text-xs font-extrabold text-white hover:bg-[#4D7C0F]">Join free</Link>
-              <Link href="/login?demo=1" onClick={() => trackClick('join-chat-demo')} className="rounded-xl bg-[#F0F7E8] px-3 py-2 text-center text-xs font-extrabold text-[#4D7C0F] hover:bg-[#E6F2D8]">Try the demo</Link>
+              <Link href="/start" target="_blank" rel="noopener noreferrer" onClick={() => trackClick('join-chat-signup')} className="rounded-xl bg-[#65A30D] px-3 py-2 text-center text-xs font-extrabold text-white hover:bg-[#4D7C0F]">Join free</Link>
+              <Link href="/login?demo=1" target="_blank" rel="noopener noreferrer" onClick={() => trackClick('join-chat-demo')} className="rounded-xl bg-[#F0F7E8] px-3 py-2 text-center text-xs font-extrabold text-[#4D7C0F] hover:bg-[#E6F2D8]">Try the demo</Link>
             </div>
             <p className="mt-2 text-center text-[10px] text-gray-400">No card · No bank connection · Your data is never sold</p>
           </div>

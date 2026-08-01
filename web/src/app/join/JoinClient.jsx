@@ -43,6 +43,7 @@ import GoogleG from '../../components/GoogleG'
 import GuacMascot from '../../components/GuacMascot'
 import { CARDS } from '../../components/GoalsShowcase'
 import GoalCard from '../../components/GoalCard'
+import JoinGuacChat from '../../components/JoinGuacChat'
 // Line icons, added 2026-07-31 with the reskin. The mockup's "premium" read
 // comes almost entirely from these — emoji at 28px is the single biggest
 // tell that a page was assembled quickly. lucide-react was already a
@@ -118,6 +119,60 @@ export default function JoinClient() {
   const [copied, setCopied] = useState('')
   const [showBar, setShowBar] = useState(false)
   const heroCtaRef = useRef(null)
+  const featureScrollRef = useRef(null)
+  const featureScrollFrame = useRef(null)
+  const featureScrollSpeed = useRef(0)
+
+  function stopFeatureScroll() {
+    featureScrollSpeed.current = 0
+    if (featureScrollFrame.current) cancelAnimationFrame(featureScrollFrame.current)
+    featureScrollFrame.current = null
+  }
+
+  function runFeatureScroll() {
+    const track = featureScrollRef.current
+    if (!track || !featureScrollSpeed.current) return stopFeatureScroll()
+    track.scrollLeft += featureScrollSpeed.current
+    featureScrollFrame.current = requestAnimationFrame(runFeatureScroll)
+  }
+
+  function handleFeaturePointerMove(event) {
+    // Touch devices use native momentum swiping. Edge-hover scrolling is only
+    // useful for a precise mouse/trackpad pointer.
+    if (event.pointerType && event.pointerType !== 'mouse') return
+    const track = featureScrollRef.current
+    if (!track) return
+    const rect = track.getBoundingClientRect()
+    const edge = Math.min(120, rect.width * 0.2)
+    const fromLeft = event.clientX - rect.left
+    const fromRight = rect.right - event.clientX
+    let speed = 0
+    if (fromRight < edge) speed = Math.max(1.5, (1 - fromRight / edge) * 9)
+    else if (fromLeft < edge) speed = -Math.max(1.5, (1 - fromLeft / edge) * 9)
+    featureScrollSpeed.current = speed
+    if (speed && !featureScrollFrame.current) featureScrollFrame.current = requestAnimationFrame(runFeatureScroll)
+    if (!speed) stopFeatureScroll()
+  }
+
+  function handleFeatureCardEnter(event) {
+    const track = featureScrollRef.current
+    const card = event.currentTarget
+    if (!track || !card || window.matchMedia('(hover: none)').matches) return
+    const trackRect = track.getBoundingClientRect()
+    const cardRect = card.getBoundingClientRect()
+    const step = cardRect.width + 12
+    // Hovering the last visible card advances the rail immediately. Hovering
+    // the first visible card does the same in reverse. This is intentionally
+    // independent of pointer coordinates, so it works even when the cursor is
+    // centered on the card rather than pressed against the container edge.
+    if (cardRect.right >= trackRect.right - cardRect.width * 0.35 && track.scrollLeft < track.scrollWidth - track.clientWidth - 2) {
+      track.scrollBy({ left: step, behavior: 'smooth' })
+    } else if (cardRect.left <= trackRect.left + cardRect.width * 0.35 && track.scrollLeft > 2) {
+      track.scrollBy({ left: -step, behavior: 'smooth' })
+    }
+  }
+
+  useEffect(() => () => stopFeatureScroll(), [])
 
   // The sticky bar is a second chance at the CTA, not a competitor to it: it
   // shows exactly when the hero's own buttons are NOT on screen.
@@ -177,6 +232,7 @@ export default function JoinClient() {
       {/* Mounted here rather than in the root layout so the ad tracker exists
           only on the ad landing pages, never on a signed-in receipts page. */}
       <MetaPixel />
+      <JoinGuacChat />
 
       {/* ── 1. HERO ───────────────────────────────────────────────────────
           Light ground, copy left, product shot right, trust bar underneath.
@@ -278,21 +334,24 @@ export default function JoinClient() {
                       </>
                     )}
                   </button>
-                  <Link href="/how-it-works" onClick={() => trackClick('join-how-it-works')}
-                    className={authBtn}
-                    style={{
-                      background: '#fff', color: '#15281C',
-                      border: '1.5px solid rgba(20,83,45,0.16)',
-                      padding: '15px 24px', fontSize: 16, textDecoration: 'none',
-                      width: 'auto',
-                    }}>
-                    <span aria-hidden style={{ display: 'inline-flex' }}>
-                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#4D7C0F" strokeWidth="2" aria-hidden>
-                        <circle cx="12" cy="12" r="10" /><path d="M10 8l6 4-6 4V8z" fill="#4D7C0F" stroke="none" />
-                      </svg>
-                    </span>
-                    See how it works
-                  </Link>
+                  <div className="gj-herosecondary">
+                    <Link href="/how-it-works" onClick={() => trackClick('join-how-it-works')}
+                      className={authBtn}
+                      style={{ background: '#fff', color: '#15281C', border: '1.5px solid rgba(20,83,45,0.16)', padding: '15px 10px', fontSize: 14, textDecoration: 'none' }}>
+                      <span aria-hidden style={{ display: 'inline-flex' }}>
+                        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#4D7C0F" strokeWidth="2" aria-hidden>
+                          <circle cx="12" cy="12" r="10" /><path d="M10 8l6 4-6 4V8z" fill="#4D7C0F" stroke="none" />
+                        </svg>
+                      </span>
+                      See how it works
+                    </Link>
+                    <Link href="/login?demo=1" onClick={() => trackClick('join-hero-demo')}
+                      className={authBtn}
+                      style={{ background: '#F0F7E8', color: '#4D7C0F', border: '1.5px solid rgba(101,163,13,0.24)', padding: '15px 10px', fontSize: 14, textDecoration: 'none' }}>
+                      <span aria-hidden>🥑</span>
+                      Try the demo
+                    </Link>
+                  </div>
                 </div>
 
                 {/* ⚠️ HONESTY: all three are verified, not aspirational.
@@ -640,9 +699,15 @@ export default function JoinClient() {
             page uses. That is why this grid is its own class and why the type
             steps down: at 1132px, six columns leave ~176px each, so a 17px
             title would break "Receipt Intelligence" across three lines. */}
-        <div className="gj-features6">
+        <div
+          ref={featureScrollRef}
+          className="gj-features6"
+          onPointerMove={handleFeaturePointerMove}
+          onPointerLeave={stopFeatureScroll}
+          aria-label="GetGuac features — swipe or move the pointer near an edge to see more"
+        >
           {FEATURES.map((f) => (
-            <div key={f.t} style={{ background: '#fff', border: '1px solid rgba(20,83,45,0.10)', borderRadius: 18, padding: '20px 12px', textAlign: 'center' }}>
+            <div key={f.t} onMouseEnter={handleFeatureCardEnter} style={{ background: '#fff', border: '1px solid rgba(20,83,45,0.10)', borderRadius: 18, padding: '20px 12px', textAlign: 'center' }}>
               <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, borderRadius: 12, background: '#F0F7E8', border: '1px solid rgba(101,163,13,0.18)', marginBottom: 12 }}>
                 <f.i size={20} strokeWidth={1.9} color="#4D7C0F" aria-hidden />
               </div>
@@ -1298,11 +1363,20 @@ export default function JoinClient() {
            class, not gj-grid3, because nothing else on the page goes 6-up.
            Steps to 3 then 2 rather than 6→1: six full-width cards on a phone
            would be six screens of scrolling for one heading's worth of copy. */
-        .gj-features6 { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; align-items: stretch; }
+        .gj-features6 { display: flex; gap: 12px; align-items: stretch; overflow-x: auto;
+                        scroll-snap-type: x proximity; scroll-behavior: auto; overscroll-behavior-x: contain;
+                        scrollbar-width: thin; scrollbar-color: rgba(77,124,15,.35) transparent;
+                        padding: 2px 2px 10px; touch-action: pan-x pan-y; }
+        .gj-features6 > * { flex: 0 0 calc((100% - 60px) / 6); min-height: 150px; scroll-snap-align: start; }
+        .gj-features6::-webkit-scrollbar { height: 6px; }
+        .gj-features6::-webkit-scrollbar-thumb { background: rgba(77,124,15,.32); border-radius: 999px; }
         /* The mockup's two hero buttons, side by side. Wraps before it
            squeezes — "See how it works" is three words and truncating it
            would be worse than a second row. */
-        .gj-heroctas { display: flex; flex-wrap: wrap; gap: 12px; align-items: stretch; }
+        .gj-heroctas { display: flex; flex-direction: column; gap: 12px; align-items: stretch;
+                       width: min(320px, 100%); }
+        .gj-herosecondary { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
+        .gj-herosecondary > * { width: 100% !important; min-width: 0; white-space: nowrap; }
         /* Bank-feed panel · receipt panel · why it matters. Uneven on purpose:
            the receipt side carries eight line items and the other two carry a
            handful of lines each.
@@ -1447,12 +1521,12 @@ export default function JoinClient() {
           .gj-split3 { grid-template-columns: 0.9fr 1.1fr; }
           .gj-split3 > :last-child { grid-column: 1 / -1; }
           .gj-examples { grid-template-columns: 1fr 1fr; }
-          .gj-features6 { grid-template-columns: repeat(3, 1fr); }
+          .gj-features6 > * { flex-basis: calc((100% - 24px) / 3); }
         }
 
         @media (max-width: 880px) {
           .gj-grid3 { grid-template-columns: 1fr; }
-          .gj-features6 { grid-template-columns: repeat(2, 1fr); }
+          .gj-features6 > * { flex-basis: min(78vw, 260px); }
           .gj-split3 { grid-template-columns: 1fr; }
           /* A "vs" chip between vertically stacked cards points at nothing. */
           .gj-vs { display: none !important; }

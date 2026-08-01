@@ -76,7 +76,17 @@ export async function pollMailbox({ localPart, password, lastUidByFolder = {} })
     logger: false,
   })
 
-  const results = { fetched: 0, messages: [], highestUidByFolder: { ...lastUidByFolder } }
+  const results = {
+    fetched: 0,
+    messages: [],
+    highestUidByFolder: { ...lastUidByFolder },
+    // UIDs the server refused to serve, recorded so a poison message is
+    // visible instead of silently vanishing. Shape: [{ folder, uid, error }].
+    skipped: [],
+    // Folders that failed outright, so one dead folder is reportable without
+    // taking the rest of the mailbox down with it.
+    folderErrors: [],
+  }
 
   await client.connect()
   try {
@@ -84,10 +94,21 @@ export async function pollMailbox({ localPart, password, lastUidByFolder = {} })
     for (const folder of folders) {
       if (results.fetched >= MAX_PER_RUN) break
       const lastUid = lastUidByFolder[folder] || null
-      const folderFetched = await pollOneFolder(client, folder, lastUid, results)
+      // 🔴 PER-FOLDER ISOLATION. Before this, a throw anywhere inside one
+      // folder propagated out of pollMailbox and killed the whole run —
+      // every folder after it was never polled, and NO cursor was persisted,
+      // so the next run repeated the identical failure. Forever.
+      let folderFetched
+      try {
+        folderFetched = await pollOneFolder(client, folder, lastUid, results)
+      } catch (e) {
+        results.folderErrors.push({ folder, error: e?.message || String(e) })
+        continue
+      }
       if (folderFetched.highestUid > (results.highestUidByFolder[folder] || 0)) {
         results.highestUidByFolder[folder] = folderFetched.highestUid
       }
+      if (folderFetched.skipped?.length) results.skipped.push(...folderFetched.skipped)
     }
   } finally {
     await client.logout().catch(() => {})
@@ -98,8 +119,29 @@ export async function pollMailbox({ localPart, password, lastUidByFolder = {} })
 
 // Poll a single IMAP folder. Mutates `results.messages` and `results.fetched`
 // to share the per-run cap with the caller.
+// 🔴🔴 THE POISON-MESSAGE WEDGE — READ BEFORE CHANGING THE FETCH STRATEGY.
+//
+// Symptom it fixes (rdasaradi@, 2026-07-15 → 2026-08-01, 9+ consecutive
+// failures): Migadu answers a bulk `UID FETCH lastUid+1:*` with an internal
+// error partway through the stream. The `for await` threw, nothing was
+// persisted, the cursor never moved — so the next run issued the IDENTICAL
+// range, hit the IDENTICAL message, and failed again. Permanently. The
+// mailbox was receiving mail fine the whole time; only the pull was stuck.
+//
+// Two rules make that unrepeatable, and both matter:
+//
+//   1. NEVER let one message end the run. Each message is parsed inside its
+//      own try/catch, and a bulk-stream failure downgrades to a per-UID
+//      fallback so the bad message fails ALONE.
+//   2. ALWAYS advance the cursor past a message we cannot read. A UID that
+//      can never be fetched must still move `highestUid`, or it wedges the
+//      folder forever. Skipping data is bad; silently re-failing on every
+//      run for two weeks is worse, and it hides every message behind it.
+//
+// Bulk fetch stays the fast path — per-UID is ~1 round trip per message and
+// only pays that cost on a mailbox that is actually broken.
 async function pollOneFolder(client, folder, lastUid, results) {
-  const out = { highestUid: lastUid || 0 }
+  const out = { highestUid: lastUid || 0, skipped: [] }
   const lock = await client.getMailboxLock(folder)
   try {
     const mb = client.mailbox
@@ -112,63 +154,118 @@ async function pollOneFolder(client, folder, lastUid, results) {
     //   over a few cron ticks (cap below stops a single run from timing out).
     const range = lastUid && lastUid > 0 ? `${lastUid + 1}:*` : '1:*'
 
-    for await (const msg of client.fetch(range, {
-      envelope: true,
-      internalDate: true,
-      uid: true,
-      source: true,
-      bodyStructure: false,
-    }, { uid: true })) {
-      if (!msg.uid || (lastUid && msg.uid <= lastUid)) continue
-
-      const parsed = await simpleParser(msg.source).catch(() => null)
-      if (!parsed) continue
-
-      // mailparser exposes a Map at parsed.headers — that's the reliable
-      // source for Delivered-To. (imapflow's msg.headers when requested
-      // as a list returns a Buffer, not a Map, so .get() throws.)
-      const deliveredToRaw = parsed.headers?.get?.('delivered-to')
-      const deliveredTo = String(
-        Array.isArray(deliveredToRaw) ? deliveredToRaw[0] : (deliveredToRaw || '')
-      ).toLowerCase()
-      const toHeader   = parsed.to?.text || ''
-      const fromHeader = parsed.from?.text || ''
-      const subject    = parsed.subject || ''
-      const messageId  = parsed.messageId || msg.envelope?.messageId || `uid:${msg.uid}`
-      const receivedAt = parsed.date || msg.internalDate || new Date()
-      const bodyText   = parsed.text || ''
-      const bodyHtml   = parsed.html || ''
-      const preview    = bodyText.trim().slice(0, 200)
-      const attachments = (parsed.attachments || []).map(a => ({
-        filename: a.filename, contentType: a.contentType, size: a.size,
-        // We don't ship raw bytes in the poller result — too much memory.
-        // Attachment retrieval is on-demand from IMAP via a future endpoint.
-      }))
-
-      results.messages.push({
-        uid: Number(msg.uid),
-        imapFolder: folder,
-        messageId,
-        fromAddr: fromHeader,
-        toAddr: toHeader,
-        deliveredTo,
-        subject,
-        receivedAt,
-        preview,
-        bodyText,
-        bodyHtml,
-        attachments,
-        hasAttachments: attachments.length > 0,
-      })
-      if (msg.uid > out.highestUid) out.highestUid = msg.uid
-      results.fetched++
-      if (results.fetched >= MAX_PER_RUN) break  // next cron tick will continue
+    try {
+      await drainFetch(client, folder, range, lastUid, results, out)
+    } catch (bulkErr) {
+      // The stream died mid-flight. Re-run the remaining range one UID at a
+      // time so the offending message is isolated, recorded and stepped over
+      // instead of taking every message behind it down with it.
+      await fetchOneByOne(client, folder, lastUid, results, out, bulkErr)
     }
   } finally {
     lock.release()
   }
   return out
 }
+
+// Bulk path. Throws on a stream-level failure so the caller can downgrade.
+async function drainFetch(client, folder, range, lastUid, results, out) {
+  for await (const msg of client.fetch(range, {
+    envelope: true,
+    internalDate: true,
+    uid: true,
+    source: true,
+    bodyStructure: false,
+  }, { uid: true })) {
+    if (!msg.uid || (lastUid && msg.uid <= lastUid)) continue
+    // A per-message throw must not abort the stream — see rule 1.
+    try {
+      await ingestMessage(msg, folder, results, out)
+    } catch (e) {
+      out.skipped.push({ folder, uid: Number(msg.uid), error: e?.message || String(e) })
+      if (msg.uid > out.highestUid) out.highestUid = Number(msg.uid)  // rule 2
+    }
+    if (results.fetched >= MAX_PER_RUN) break  // next cron tick continues
+  }
+}
+
+// Fallback path: one UID per FETCH, so a message the server cannot serve
+// fails by itself. Every failure still advances the cursor (rule 2).
+async function fetchOneByOne(client, folder, lastUid, results, out, bulkErr) {
+  let uids = []
+  try {
+    uids = await client.search({ uid: `${(lastUid || 0) + 1}:*` }, { uid: true }) || []
+  } catch {
+    // If even SEARCH fails the folder is unreadable; surface the original
+    // bulk error rather than pretending we recovered.
+    throw bulkErr
+  }
+  for (const uid of uids) {
+    if (results.fetched >= MAX_PER_RUN) break
+    // Compare against out.highestUid, NOT lastUid: the bulk pass may have
+    // ingested part of the range before it died, and that work already moved
+    // highestUid. Guarding on lastUid instead would re-ingest every one of
+    // those messages as a duplicate on the fallback sweep.
+    if (uid <= out.highestUid) continue
+    try {
+      const msg = await client.fetchOne(String(uid), {
+        envelope: true, internalDate: true, uid: true, source: true, bodyStructure: false,
+      }, { uid: true })
+      if (!msg) throw new Error('server returned no message body')
+      await ingestMessage(msg, folder, results, out)
+    } catch (e) {
+      out.skipped.push({ folder, uid: Number(uid), error: e?.message || String(e) })
+      if (uid > out.highestUid) out.highestUid = Number(uid)  // step over the poison
+    }
+  }
+}
+
+// Parse one fetched message into `results.messages`. Throws on a parse
+// failure so the caller records the UID and steps over it (rule 2).
+async function ingestMessage(msg, folder, results, out) {
+  const parsed = await simpleParser(msg.source)
+  if (!parsed) throw new Error('mailparser returned nothing')
+
+  // mailparser exposes a Map at parsed.headers — that's the reliable
+  // source for Delivered-To. (imapflow's msg.headers when requested
+  // as a list returns a Buffer, not a Map, so .get() throws.)
+  const deliveredToRaw = parsed.headers?.get?.('delivered-to')
+  const deliveredTo = String(
+    Array.isArray(deliveredToRaw) ? deliveredToRaw[0] : (deliveredToRaw || '')
+  ).toLowerCase()
+  const toHeader   = parsed.to?.text || ''
+  const fromHeader = parsed.from?.text || ''
+  const subject    = parsed.subject || ''
+  const messageId  = parsed.messageId || msg.envelope?.messageId || `uid:${msg.uid}`
+  const receivedAt = parsed.date || msg.internalDate || new Date()
+  const bodyText   = parsed.text || ''
+  const bodyHtml   = parsed.html || ''
+  const preview    = bodyText.trim().slice(0, 200)
+  const attachments = (parsed.attachments || []).map(a => ({
+    filename: a.filename, contentType: a.contentType, size: a.size,
+    // We don't ship raw bytes in the poller result — too much memory.
+    // Attachment retrieval is on-demand from IMAP via a future endpoint.
+  }))
+
+  results.messages.push({
+    uid: Number(msg.uid),
+    imapFolder: folder,
+    messageId,
+    fromAddr: fromHeader,
+    toAddr: toHeader,
+    deliveredTo,
+    subject,
+    receivedAt,
+    preview,
+    bodyText,
+    bodyHtml,
+    attachments,
+    hasAttachments: attachments.length > 0,
+  })
+  if (msg.uid > out.highestUid) out.highestUid = Number(msg.uid)
+  results.fetched++
+}
+
 
 // Detect whether a message was sent to one of our receipt-hook plus addresses.
 // We accept the short default '+g' (brand-friendly: g for guac) AND the

@@ -233,6 +233,36 @@ export async function POST(request) {
         }
       }
 
+      // Messages the IMAP server refused to serve, and folders that failed
+      // outright. The poller now steps over both rather than letting either
+      // end the run (see the poison-message note in lib/imap-poll.js), so
+      // they would otherwise vanish silently — which is exactly how
+      // rdasaradi@ sat broken for 17 days. Report them loudly enough to act
+      // on, but as a WARNING: the run itself succeeded.
+      if (result?.skipped?.length || result?.folderErrors?.length) {
+        summary.skipped = (summary.skipped || 0) + (result.skipped?.length || 0)
+        for (const s of result.skipped || []) {
+          summary.errors.push({ user: u.id, uid: s.uid, folder: s.folder, error: `unreadable: ${s.error}` })
+        }
+        for (const f of result.folderErrors || []) {
+          summary.errors.push({ user: u.id, folder: f.folder, error: `folder failed: ${f.error}` })
+        }
+        await reportServerError({
+          tag: 'email_poll_skipped',
+          action: 'email_skip',
+          level: 'warn',
+          userId: u.id,
+          platform: 'server',
+          message: `${u.email_alias}@: stepped over ${result.skipped?.length || 0} unreadable message(s), `
+            + `${result.folderErrors?.length || 0} folder error(s)`,
+          meta: {
+            alias: u.email_alias,
+            skipped: (result.skipped || []).slice(0, 20),
+            folderErrors: result.folderErrors || [],
+          },
+        }, sb).catch(() => {})
+      }
+
       // Success stamps the heartbeat AND clears any failure/quarantine state,
       // so a mailbox fixed upstream recovers on the next tick with nothing to
       // click and nothing to redeploy.

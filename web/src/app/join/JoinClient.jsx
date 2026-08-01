@@ -1402,11 +1402,11 @@ export default function JoinClient() {
            this pale.
            If a version WITH transparency is ever supplied, delete this line —
            multiply on a true-alpha PNG would tint it for no reason. */
-        .gj-heroart-frame { width: 100%; max-width: 560px; overflow: hidden; margin: 0 auto; }
-        .gj-heroart { display: block; width: 128%; max-width: none; height: auto;
-                      margin-left: -14%; mix-blend-mode: multiply; }
+        .gj-heroart-frame { width: 100%; max-width: 520px; height: 480px; overflow: hidden; margin: 0 auto; }
+        .gj-heroart { display: block; width: auto; max-width: none; height: 100%;
+                      margin-left: 50%; transform: translateX(-50%); mix-blend-mode: multiply; }
         @media (min-width: 881px) and (max-width: 1100px) {
-          .gj-heroart-frame { max-width: 500px; }
+          .gj-heroart-frame { max-width: 480px; height: 440px; }
         }
         .gj-ctaavo { position: absolute; right: 30px; bottom: -22px; width: 176px; height: 202px;
                      display: block; pointer-events: none; }
@@ -1616,7 +1616,8 @@ export default function JoinClient() {
              layout fault. Copy comes first and the phone second, which is the
              natural source order, so the button stays as high as it can. */
           .gj-herorow { grid-template-columns: 1fr; gap: 22px; margin-top: 14px; }
-          .gj-heroart-frame { max-width: 420px; }
+          .gj-heroart-frame { max-width: 420px; height: auto; }
+          .gj-heroart { width: 128%; height: auto; margin-left: -14%; transform: none; }
           .gj-heroleft { text-align: center; }
           .gj-heroauthstack { align-items: center; margin-top: 20px; }
           .gj-heroctas { justify-content: center; width: 100%; }

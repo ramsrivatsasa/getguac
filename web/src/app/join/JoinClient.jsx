@@ -1402,8 +1402,12 @@ export default function JoinClient() {
            this pale.
            If a version WITH transparency is ever supplied, delete this line —
            multiply on a true-alpha PNG would tint it for no reason. */
-        .gj-heroart { display: block; width: 112%; max-width: 570px; height: auto;
-                      margin: 0 auto; mix-blend-mode: multiply; }
+        .gj-heroart-frame { width: 100%; max-width: 560px; overflow: hidden; margin: 0 auto; }
+        .gj-heroart { display: block; width: 128%; max-width: none; height: auto;
+                      margin-left: -14%; mix-blend-mode: multiply; }
+        @media (min-width: 881px) and (max-width: 1100px) {
+          .gj-heroart-frame { max-width: 500px; }
+        }
         .gj-ctaavo { position: absolute; right: 30px; bottom: -22px; width: 176px; height: 202px;
                      display: block; pointer-events: none; }
         /* Six small boxes in one row — the mockup's feature strip. Its own
@@ -1612,7 +1616,7 @@ export default function JoinClient() {
              layout fault. Copy comes first and the phone second, which is the
              natural source order, so the button stays as high as it can. */
           .gj-herorow { grid-template-columns: 1fr; gap: 22px; margin-top: 14px; }
-          .gj-heroart { width: 100%; max-width: 460px; }
+          .gj-heroart-frame { max-width: 420px; }
           .gj-heroleft { text-align: center; }
           .gj-heroauthstack { align-items: center; margin-top: 20px; }
           .gj-heroctas { justify-content: center; width: 100%; }
@@ -1680,31 +1684,18 @@ export default function JoinClient() {
 // ⚠️ NEEDS A TRANSPARENT BACKGROUND. The hero sits on a white -> #F5FAEC
 //    gradient, so anything flattened onto white shows as a visible box.
 //
-// 🔑 They PROBE with `new Image()` after mount instead of rendering an <img>
-//    and catching onError. The obvious version shows a broken-image icon: the
-//    img is server-rendered, so a missing file fails while the browser parses
-//    the initial HTML — before React hydrates and attaches the handler — and
-//    the placeholder never clears. (A related trap: loading="lazy" on an
-//    off-screen missing image never requests it at all, so it never 404s and
-//    you get a silent blank. That one produced an empty founder avatar.)
-//    Probing means the assembled fallback renders until a load has actually
-//    SUCCEEDED, so the page is never broken mid-swap.
-function useSuppliedArt(src) {
-  const [ok, setOk] = useState(false)
-  useEffect(() => {
-    const probe = new window.Image()
-    probe.onload = () => setOk(true)
-    probe.src = src
-    return () => { probe.onload = null }
-  }, [src])
-  return ok
-}
-
-function HeroArt({ children }) {
-  const ok = useSuppliedArt('/join/hero.png')
-  if (!ok) return children
+// The supplied hero is now a permanent repository asset. Render it in the
+// initial HTML with intrinsic dimensions so the browser reserves the final
+// aspect ratio before downloading it. The previous client-side existence
+// probe first painted the tall assembled phone and then swapped in this wider
+// composition, which produced a conspicuous large-to-small layout jump.
+function HeroArt() {
   // eslint-disable-next-line @next/next/no-img-element
-  return <img src="/join/hero.png" alt="" className="gj-heroart" />
+  return (
+    <div className="gj-heroart-frame">
+      <img src="/join/hero.png" alt="" width={1448} height={1086} loading="eager" fetchPriority="high" className="gj-heroart" />
+    </div>
+  )
 }
 
 // A testimonial portrait, with the initial circle as the fallback.

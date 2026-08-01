@@ -50,6 +50,82 @@ export async function reprovisionMailbox(client, { userId, alias }) {
   return { password }
 }
 
+export const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+
+// Migadu does not make a password change visible to its IMAP frontend
+// instantly. The original code retried the login ~1 second after the PUT, so
+// the single retry it allowed itself usually lost a propagation race — and the
+// 6h throttle then blocked another attempt. Retry a few times with backoff
+// instead, staying well inside the route's 60s budget.
+//
+// `attempt` is called with the 1-based try number and must resolve on success.
+// Returns the resolved value, or throws the LAST error after all tries.
+export async function retryAfterReauth(attempt, { tries = 3, delaysMs = [1500, 4000] } = {}) {
+  let lastErr
+  for (let i = 0; i < tries; i++) {
+    if (i > 0) await sleep(delaysMs[i - 1] ?? delaysMs[delaysMs.length - 1] ?? 4000)
+    try {
+      return await attempt(i + 1)
+    } catch (e) {
+      lastErr = e
+    }
+  }
+  throw lastErr
+}
+
+// ---------------------------------------------------------------------------
+// Per-mailbox health record (migration 082).
+//
+// The fleet-wide MAX(email_last_poll_at) watchdog could not see a single dead
+// mailbox — 8 healthy ones masked rdasaradi@ for 18 days. These two helpers
+// give every mailbox its own success/failure state so the watchdog can ask
+// about each one, and so a permanently-broken mailbox stops burning a password
+// rotation every 6h forever.
+// ---------------------------------------------------------------------------
+
+// After this many consecutive failed polls a mailbox is quarantined. At the
+// 10-min cron cadence that is ~2h — long enough to ride out a Migadu blip or a
+// deploy, short enough that a genuinely dead mailbox stops thrashing.
+export const QUARANTINE_AFTER_FAILURES = 12
+
+// A successful poll is the ONLY thing that clears failure state, so recovery is
+// automatic: fix the mailbox upstream and the next tick un-quarantines it with
+// no redeploy and nothing to click.
+export async function recordPollSuccess(sbAdmin, userId) {
+  await sbAdmin
+    .from('profiles')
+    .update({
+      email_last_poll_at: new Date().toISOString(),
+      email_consecutive_failures: 0,
+      email_last_error: null,
+      email_last_error_at: null,
+      email_quarantined_at: null,
+      email_quarantine_reason: null,
+    })
+    .eq('id', userId)
+    .then(() => {}, () => {})
+}
+
+// Increment the failure counter and quarantine on the way past the threshold.
+// Returns { failures, quarantined, justQuarantined } — `justQuarantined` is the
+// edge the caller alerts on, so a dead mailbox pages once instead of hourly.
+export async function recordPollFailure(sbAdmin, { userId, message, priorFailures = 0, alreadyQuarantined = false }) {
+  const failures = (priorFailures || 0) + 1
+  const shouldQuarantine = failures >= QUARANTINE_AFTER_FAILURES
+  const justQuarantined = shouldQuarantine && !alreadyQuarantined
+  const patch = {
+    email_consecutive_failures: failures,
+    email_last_error: String(message ?? '').slice(0, 500),
+    email_last_error_at: new Date().toISOString(),
+  }
+  if (justQuarantined) {
+    patch.email_quarantined_at = new Date().toISOString()
+    patch.email_quarantine_reason = String(message ?? '').slice(0, 500)
+  }
+  await sbAdmin.from('profiles').update(patch).eq('id', userId).then(() => {}, () => {})
+  return { failures, quarantined: shouldQuarantine || alreadyQuarantined, justQuarantined }
+}
+
 // Best-effort throttle so a mailbox that stays unreachable even after a reset
 // (e.g. IMAP access disabled, or the mailbox was deleted upstream) can't trigger
 // a password rotation on every 10-min cron tick. Reuses audit_log — no new table.

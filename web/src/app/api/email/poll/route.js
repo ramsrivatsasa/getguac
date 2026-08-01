@@ -16,7 +16,7 @@ import { pollMailbox, isReceiptsAddress, deleteImapMessage, moveImapMessage } fr
 import { decryptSecret } from '../../../../lib/crypto'
 import { draftReceiptFromEmail } from '../../../../lib/email-to-receipt'
 import { reportServerError } from '../../../../lib/report-error'
-import { isImapAuthFailure, reprovisionMailbox, autoReauthedRecently, recordAutoReauth, describeImapError } from '../../../../lib/mailbox-reauth'
+import { isImapAuthFailure, reprovisionMailbox, autoReauthedRecently, recordAutoReauth, describeImapError, retryAfterReauth, recordPollSuccess, recordPollFailure, QUARANTINE_AFTER_FAILURES } from '../../../../lib/mailbox-reauth'
 import { provisionMissingMailboxes } from '../../../../lib/provision-missing'
 
 export const runtime = 'nodejs'
@@ -52,14 +52,29 @@ export async function POST(request) {
   }
 
   const sb = adminClient()
-  const { data: users, error } = await sb
+
+  // The per-mailbox health columns arrive in migration 082. Selecting a column
+  // that does not exist is a hard PostgREST error, which would take email
+  // pulling from "one broken mailbox" to "all nine" for however long the code
+  // is deployed ahead of the SQL. So ask for them, and fall back to the legacy
+  // column set if they are not there yet — the deploy is then safe in either
+  // order. The health writes below already swallow their own errors.
+  const BASE_COLS = 'id, email_alias, email_inbox_password_enc, email_last_poll_at, email_processing_enabled, email_auto_delete_after_import'
+  const HEALTH_COLS = `${BASE_COLS}, email_consecutive_failures, email_quarantined_at`
+  const selectUsers = (cols) => sb
     .from('profiles')
-    .select('id, email_alias, email_inbox_password_enc, email_last_poll_at, email_processing_enabled, email_auto_delete_after_import')
+    .select(cols)
     .eq('email_inbox_provisioned', true)
     .eq('email_processing_enabled', true)
     .not('email_alias', 'is', null)
     .not('email_inbox_password_enc', 'is', null)
     .limit(500)
+
+  let { data: users, error } = await selectUsers(HEALTH_COLS)
+  if (error && /does not exist/i.test(error.message || '')) {
+    console.warn('[email/poll] migration 082 not applied yet — per-mailbox health tracking disabled this run')
+    ;({ data: users, error } = await selectUsers(BASE_COLS))
+  }
 
   if (error) {
     console.error('[email/poll] profiles fetch failed:', error.message)
@@ -67,7 +82,7 @@ export async function POST(request) {
     return Response.json({ error: error.message }, { status: 500 })
   }
 
-  const summary = { users: 0, messages: 0, moved_to_guacked: 0, deleted_upstream: 0, provisioned: 0, reauthed: 0, errors: [] }
+  const summary = { users: 0, messages: 0, moved_to_guacked: 0, deleted_upstream: 0, provisioned: 0, reauthed: 0, recovered: 0, quarantined: [], failing: [], errors: [] }
 
   for (const u of users || []) {
     summary.users++
@@ -94,13 +109,27 @@ export async function POST(request) {
         result = await pollMailbox({ localPart: u.email_alias, password, lastUidByFolder })
       } catch (pollErr) {
         // Desynced mailbox password (symptom: IMAP "Command failed") → rotate it
-        // on Migadu and retry once. Throttled so a mailbox that stays unreachable
-        // can't rotate every tick. Non-auth errors bubble to the outer catch.
-        if (!isImapAuthFailure(pollErr) || await autoReauthedRecently(sb, u.id)) throw pollErr
+        // on Migadu and retry. Non-auth errors bubble to the outer catch.
+        //
+        // Three gates before we rotate anything, because rotation is the
+        // expensive, destructive option and it was previously unbounded:
+        //   1. the error must actually look like an auth failure
+        //   2. not already rotated within the 6h throttle window
+        //   3. the mailbox must not be QUARANTINED — a mailbox Migadu itself
+        //      cannot repair (rdasaradi@: 500 on the password PUT *and* on IMAP
+        //      login) burned 26 rotations across 18 days and recovered from
+        //      exactly none of them. Past the threshold we keep polling (that
+        //      is how it auto-recovers once fixed upstream) but stop rotating.
+        if (!isImapAuthFailure(pollErr) || u.email_quarantined_at || await autoReauthedRecently(sb, u.id)) throw pollErr
         const { password: newPw } = await reprovisionMailbox(sb, { userId: u.id, alias: u.email_alias })
         await recordAutoReauth(sb, { userId: u.id, alias: u.email_alias, via: 'poll' })
         summary.reauthed++
-        result = await pollMailbox({ localPart: u.email_alias, password: newPw, lastUidByFolder })
+        // Migadu does not publish a password change to its IMAP frontend
+        // instantly. Retrying ~1s later (the old behaviour) lost that race and
+        // wasted the whole 6h throttle window, so back off and try again.
+        result = await retryAfterReauth(() =>
+          pollMailbox({ localPart: u.email_alias, password: newPw, lastUidByFolder })
+        )
       }
 
       for (const m of result.messages) {
@@ -201,13 +230,42 @@ export async function POST(request) {
         }
       }
 
-      await sb.from('profiles')
-        .update({ email_last_poll_at: new Date().toISOString() })
-        .eq('id', u.id)
+      // Success stamps the heartbeat AND clears any failure/quarantine state,
+      // so a mailbox fixed upstream recovers on the next tick with nothing to
+      // click and nothing to redeploy.
+      if (u.email_quarantined_at || u.email_consecutive_failures > 0) summary.recovered++
+      await recordPollSuccess(sb, u.id)
     } catch (e) {
       const msg = describeImapError(e)
       summary.errors.push({ user: u.id, error: msg })
-      await reportServerError({ tag: 'email_poll', action: 'email_failure', level: 'error', userId: u.id, platform: 'server', message: msg }, sb)
+
+      // Per-mailbox failure accounting (migration 082). Without this a single
+      // dead mailbox is invisible to the watchdog, which is precisely how
+      // rdasaradi@ stayed broken from 2026-07-15 to 2026-08-01 unnoticed.
+      const state = await recordPollFailure(sb, {
+        userId: u.id,
+        message: msg,
+        priorFailures: u.email_consecutive_failures || 0,
+        alreadyQuarantined: !!u.email_quarantined_at,
+      })
+      summary.failing.push({ user: u.id, alias: u.email_alias, failures: state.failures, error: msg })
+      if (state.quarantined) summary.quarantined.push(u.email_alias)
+
+      // Alert on the QUARANTINE EDGE only. Every failure still lands in
+      // audit_log for /admin/crashes, but the loud "this mailbox is dead"
+      // signal fires once rather than every 10 minutes forever — repeat noise
+      // is what makes an alarm get ignored.
+      await reportServerError({
+        tag: state.justQuarantined ? 'email_mailbox_dead' : 'email_poll',
+        action: 'email_failure',
+        level: state.justQuarantined ? 'error' : 'warn',
+        userId: u.id,
+        platform: 'server',
+        message: state.justQuarantined
+          ? `mailbox ${u.email_alias}@ QUARANTINED after ${state.failures} consecutive failed polls: ${msg}`
+          : msg,
+        meta: { alias: u.email_alias, consecutive_failures: state.failures, quarantine_threshold: QUARANTINE_AFTER_FAILURES },
+      }, sb)
     }
   }
 

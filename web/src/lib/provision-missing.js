@@ -8,7 +8,7 @@
 // Idempotent + best-effort: never throws to the caller; records outcomes on the
 // shared `summary` object and reports hard failures so they stop being silent.
 
-import { createMailbox, mailboxExists } from './migadu'
+import { createMailbox, mailboxExists, updatePassword } from './migadu'
 import { encryptSecret, generateMailboxPassword } from './crypto'
 
 const VALID_USERNAME_RE = /^[a-z0-9][a-z0-9._-]{1,30}[a-z0-9]$/
@@ -17,13 +17,24 @@ export async function provisionMissingMailboxes(sbAdmin, summary, reportServerEr
   if (!process.env.MIGADU_API_KEY || !process.env.EMAIL_ENCRYPTION_KEY) return
   summary.provisioned = summary.provisioned || 0
 
-  // Only the small set of not-yet-provisioned profiles — cheap even on the
-  // 10-min cron. `email_alias` may be null if provisioning died before the
-  // handle was even claimed (we recover that from auth metadata below).
+  // Only the small set of profiles that cannot currently be polled — cheap even
+  // on the 10-min cron. Two distinct broken states, and BOTH must be caught:
+  //
+  //   a) not provisioned at all — signup-time provisioning died. `email_alias`
+  //      may be null if it died before the handle was claimed (recovered from
+  //      auth metadata below).
+  //
+  //   b) provisioned = true but NO stored password. This is an orphan and it
+  //      was previously unreachable by every code path: the poll query requires
+  //      `email_inbox_password_enc IS NOT NULL` so it never polls, and this
+  //      healer only looked at provisioned != true so it never healed. The
+  //      mailbox is silently dead forever. kingsindianchess@ is in exactly this
+  //      state in production right now. Root cause is the mailboxExists branch
+  //      below, which used to mark provisioned WITHOUT ever storing a password.
   const { data: pending } = await sbAdmin
     .from('profiles')
-    .select('id, email_alias, email_inbox_provisioned, first_name, last_name')
-    .or('email_inbox_provisioned.is.null,email_inbox_provisioned.eq.false')
+    .select('id, email_alias, email_inbox_provisioned, email_inbox_password_enc, first_name, last_name')
+    .or('email_inbox_provisioned.is.null,email_inbox_provisioned.eq.false,email_inbox_password_enc.is.null')
     .limit(200)
   if (!pending?.length) return
 
@@ -54,9 +65,26 @@ export async function provisionMissingMailboxes(sbAdmin, summary, reportServerEr
           .eq('id', p.id)
       }
 
-      // Mailbox already exists upstream (a prior partial run) → just mark it.
+      // Mailbox already exists upstream (a prior partial run, or a handle that
+      // was created before this healer existed).
+      //
+      // Marking it provisioned is NOT enough: without a stored password the
+      // poll query filters the row out and the mailbox never pulls a single
+      // message — the orphan bug described above. We cannot recover the
+      // original password (it was never stored, and Migadu only stores a hash),
+      // so rotate to a fresh one and store that. Rotating is safe: nobody can
+      // be using a password we do not have.
       if (await mailboxExists(alias)) {
-        await sbAdmin.from('profiles').update({ email_inbox_provisioned: true }).eq('id', p.id)
+        if (p.email_inbox_password_enc) {
+          await sbAdmin.from('profiles').update({ email_inbox_provisioned: true }).eq('id', p.id)
+          continue
+        }
+        const recovered = generateMailboxPassword()
+        await updatePassword(alias, recovered)
+        await sbAdmin.from('profiles')
+          .update({ email_inbox_provisioned: true, email_inbox_password_enc: encryptSecret(recovered) })
+          .eq('id', p.id)
+        summary.provisioned++
         continue
       }
 

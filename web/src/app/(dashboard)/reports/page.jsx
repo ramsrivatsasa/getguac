@@ -10,6 +10,7 @@
 
 'use client'
 import { useMemo, useState, Fragment } from 'react'
+import useCurrencySymbol from '../../../hooks/useCurrencySymbol'
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '../../../lib/supabase/client'
@@ -51,8 +52,14 @@ const CATEGORY_COLORS = {
 // Presentation-only money formatter — thousands separators + 2 decimals
 // ($1,234.56), matching the mockup. `dp` overrides fraction digits (e.g. 0
 // for the whole-dollar KPI / donut-center figures the mockup shows as $16,399).
-const money = (n, dp = 2) =>
-  `$${Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: dp, maximumFractionDigits: dp })}`
+//
+// The symbol is passed IN rather than hardcoded, so an Italian viewer sees
+// €1,234.56. It is only ever the symbol — the number is untouched, nothing is
+// converted, and the CSV export below deliberately carries no symbol at all.
+// `sym` comes from useCurrencySymbol() inside the component; taking it as an
+// argument keeps this a pure function and keeps the hook out of module scope.
+const moneyWith = (sym) => (n, dp = 2) =>
+  `${sym}${Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: dp, maximumFractionDigits: dp })}`
 
 // Presentation-only date formatter — `DD MMM YYYY` with spaces (mockup style).
 // Reuses the shared formatter's parsing and just swaps its dashes for spaces so
@@ -81,6 +88,8 @@ async function getReportsData({ dateFrom }) {
 }
 
 export default function ReportsPage() {
+  const curSymbol = useCurrencySymbol()
+  const money = useMemo(() => moneyWith(curSymbol), [curSymbol])
   const [selectedCategory, setSelectedCategory] = useState(null)
   const { spendingPeriod, spendingPeriodCount } = useStore()
   const dateFrom = periodStartIsoDate(spendingPeriod, spendingPeriodCount)
@@ -730,7 +739,14 @@ function SortableTh({ label, sortKey, align, sort, onSort }) {
 // Native SVG donut. Reliable across layouts — recharts silently fails to
 // render when its parent has computed-zero width. Each segment is a circle
 // with strokeDasharray sized to its fraction of the total.
+// ⚠️ Calls the hook itself rather than taking `money` as a prop. `money` is
+// scoped inside ReportsPage now (it depends on the resolved symbol), and this
+// component sits outside it — referencing the parent's `money` here is a
+// ReferenceError that takes the whole page down to the error boundary.
+// Learned the hard way: the page rendered "Something went sideways."
 function CategoryDonut({ data, total, colors, size = 240, caption }) {
+  const curSymbol = useCurrencySymbol()
+  const money = useMemo(() => moneyWith(curSymbol), [curSymbol])
   if (!data || data.length === 0 || !total) {
     return (
       <div className="shrink-0 flex items-center justify-center text-gray-300 text-xs" style={{ width: size, height: size }}>

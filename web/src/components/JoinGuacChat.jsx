@@ -79,7 +79,7 @@ export default function JoinGuacChat() {
       {open ? (
         <section
           aria-label="Chat with Guac"
-          className="max-h-[calc(100dvh-2rem)] w-[min(390px,calc(100vw-2rem))] overflow-hidden rounded-3xl bg-white shadow-2xl ring-1 ring-[#D9E2DA]"
+          className="max-h-[calc(100dvh-1.5rem)] w-[min(324px,calc(100vw-1.5rem))] overflow-hidden rounded-3xl bg-white shadow-2xl ring-1 ring-[#D9E2DA]"
         >
           <header className="flex items-center gap-2.5 border-b border-gray-100 bg-white px-4 py-3 text-[#1F2937]">
             <GuacMascot expression="happy" size={25} className="shrink-0" />
@@ -91,10 +91,10 @@ export default function JoinGuacChat() {
             </button>
           </header>
 
-          <div ref={scrollRef} className="relative h-[min(58vh,500px)] space-y-3 overflow-y-auto bg-[#F8FAFB] p-3.5">
+          <div ref={scrollRef} className="relative h-[min(32vh,250px)] space-y-3 overflow-y-auto bg-[#F8FAFB] p-3">
             {messages.length === 1 && (
               <div className="flex min-h-full flex-col items-center justify-center px-3 py-6 text-center">
-                <GuacMascot expression="happy" size={66} />
+                <GuacMascot expression="happy" size={46} />
                 <h2 className="mt-4 text-base font-extrabold text-[#1F2937]">Hey — I&apos;m Guac 🥑</h2>
                 <p className="mt-1.5 max-w-[310px] text-xs leading-relaxed text-gray-500">
                   Ask me how GetGuac reads receipts, catches subscriptions, tracks returns, and helps you understand where your money goes.

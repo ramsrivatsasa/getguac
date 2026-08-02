@@ -1403,8 +1403,22 @@ export default function JoinClient() {
            If a version WITH transparency is ever supplied, delete this line —
            multiply on a true-alpha PNG would tint it for no reason. */
         .gj-heroart-frame { width: 100%; max-width: 520px; height: 480px; overflow: hidden; margin: 0 auto; }
-        .gj-heroart { display: block; width: auto; max-width: none; height: 100%;
-                      margin-left: 50%; transform: translateX(-50%); mix-blend-mode: multiply; }
+         .gj-heroart { display: block; width: auto; max-width: none; height: 100%;
+                       margin-left: 50%; transform: translateX(-50%); transform-origin: 50% 58%;
+                       mix-blend-mode: multiply;
+                       animation: gjHeroReveal .72s cubic-bezier(.22,.8,.24,1) both,
+                                  gjHeroFocus 8s ease-in-out .72s infinite; }
+         @keyframes gjHeroReveal {
+           from { opacity: 0; transform: translateX(-50%) scale(.965); filter: saturate(.8); }
+           to { opacity: 1; transform: translateX(-50%) scale(1); filter: saturate(1); }
+         }
+         @keyframes gjHeroFocus {
+           0%, 100% { transform: translateX(-50%) scale(1); }
+           50% { transform: translateX(-50%) scale(1.018); }
+         }
+         @media (prefers-reduced-motion: reduce) {
+           .gj-heroart { animation: none; }
+         }
         @media (min-width: 881px) and (max-width: 1100px) {
           .gj-heroart-frame { max-width: 480px; height: 440px; }
         }
@@ -2084,7 +2098,7 @@ const VOICES = [
 const RATED = VOICES.filter((v) => v.stars && !v.founder)
 const RATING = RATED.length ? {
   stars: Math.round(RATED.reduce((s, v) => s + v.stars, 0) / RATED.length),
-  label: `${(RATED.reduce((s, v) => s + v.stars, 0) / RATED.length).toFixed(1)} average, from ${RATED.length} ${RATED.length === 1 ? 'rating' : 'ratings'}`,
+  label: `${Number((RATED.reduce((s, v) => s + v.stars, 0) / RATED.length).toFixed(1))}/5 from our customer ratings`,
 } : null
 
 // The six highest-intent questions for someone who arrived from an ad.

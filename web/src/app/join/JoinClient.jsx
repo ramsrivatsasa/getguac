@@ -591,6 +591,7 @@ export default function JoinClient() {
         </div>
       </section>
 
+      <BelowFold>
       {/* ── 2. KNOW WHAT YOU BOUGHT ───────────────────────────────────────
           The mockup's three-panel block: what other apps see, what GetGuac
           sees, and why the difference is worth anything. Moved directly under
@@ -1234,6 +1235,7 @@ export default function JoinClient() {
             where the mockup puts it. Only one copy on the page — see the 🔴
             block there before touching either. */}
       </div>
+      </BelowFold>
 
       {/* ── 13. CLOSING CTA ───────────────────────────────────────────────── */}
       <section style={{ maxWidth: 1180, margin: '0 auto', padding: '36px 24px 56px' }}>
@@ -1762,6 +1764,56 @@ const HERO_BUBBLES = [
   { position: 'four', icon: '🧾', title: 'Receipt organized', value: '41 items read' },
   { position: 'five', icon: '🥑', title: 'Ask Guac-AI', value: 'What changed this month?' },
 ]
+
+// Defers everything below the first screen until after the hero has painted.
+//
+// 🔴 WHY — measured on production 2026-08-02, throttled 4x CPU (a mid-tier
+// Android, which is what paid Facebook traffic actually is):
+//     TTFB 17ms · download 309ms · FCP 5588ms · DCL 7174ms
+// Network was NEVER the bottleneck after the asset work; CPU was. `/join` is
+// one ~1800-line 'use client' component, so React had to build and hydrate
+// 9,000px of tables, carousels, goal rails and the whole proof stack before
+// the headline could paint — for a visitor who has seen none of it yet.
+// The campaign bought 116 link clicks and got 62 landing page views; a ~3s
+// abandon threshold against a 5.6s paint is most of that 47% gap.
+//
+// 🔑 THIS IS DELIBERATELY NOT next/dynamic. The sections below are written
+// inline in this file, and extracting them into separate modules would mean
+// restructuring a file another agent is actively committing to. Gating the
+// render is a two-line diff that achieves the same first-paint saving with
+// none of the merge risk. If the page is ever split into real components,
+// swap this for dynamic imports and delete it.
+//
+// ⚠️ It must be impossible for this content to never appear:
+//   • requestIdleCallback fires as soon as the main thread is free — which,
+//     after the hero paints, is immediately.
+//   • `timeout: 800` makes the browser run it even under sustained load.
+//   • setTimeout fallback covers Safari, which lacked rIC until recently.
+//   • Any scroll or pointer input renders it at once, so a fast scroller
+//     never out-runs the gate.
+// Nothing above the fold is inside it, so there is no layout shift a visitor
+// can see, and /join is noindex so no crawler is affected.
+function BelowFold({ children }) {
+  const [show, setShow] = useState(false)
+  useEffect(() => {
+    let done = false
+    const go = () => { if (!done) { done = true; setShow(true) } }
+    const ric = typeof window.requestIdleCallback === 'function'
+      ? window.requestIdleCallback
+      : (cb) => setTimeout(cb, 1)
+    ric(go, { timeout: 800 })
+    const t = setTimeout(go, 1500)               // belt and braces
+    window.addEventListener('scroll', go, { once: true, passive: true })
+    window.addEventListener('pointerdown', go, { once: true, passive: true })
+    return () => {
+      done = true
+      clearTimeout(t)
+      window.removeEventListener('scroll', go)
+      window.removeEventListener('pointerdown', go)
+    }
+  }, [])
+  return show ? children : null
+}
 
 function HeroArt() {
   const [activeBubble, setActiveBubble] = useState(0)

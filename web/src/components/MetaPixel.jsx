@@ -35,8 +35,24 @@ export default function MetaPixel() {
   if (typeof document !== 'undefined' &&
       document.cookie.split('; ').some((c) => c === 'guac_embedded=1')) return null
 
+  // 🔴 lazyOnload, NOT afterInteractive — measured 2026-08-02.
+  // fbevents.js (395 KB) + the pixel config (263 KB) are 658 KB, 27% of the
+  // whole page payload, and afterInteractive puts them in the hydration path.
+  // On a throttled mid-tier Android (what Facebook traffic actually is) /join
+  // took 8.5s to DOMContentLoaded and 13.4s to load — against a ~3s abandon
+  // threshold. The campaign showed 116 link clicks but only 62 landing page
+  // views: 47% of paid clicks bounced before the page rendered.
+  //
+  // ⚠️ The tradeoff, so nobody "fixes" this back: lazyOnload fires PageView
+  // later, so a visitor who leaves almost instantly may not be counted. That
+  // is the right trade here — those visitors were already not being counted,
+  // because at 8.5s the pixel had not loaded for them either. Getting the page
+  // under 3s means MORE people reach the pixel, not fewer.
+  // CompleteRegistration is unaffected: it fires on an explicit user action,
+  // long after any load strategy has settled, and the server-side CAPI path in
+  // lib/meta-capi.js is the authoritative one for signups regardless.
   return (
-    <Script id="meta-pixel" strategy="afterInteractive">
+    <Script id="meta-pixel" strategy="lazyOnload">
       {`
         !function(f,b,e,v,n,t,s)
         {if(f.fbq)return;n=f.fbq=function(){n.callMethod?

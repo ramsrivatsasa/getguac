@@ -36,6 +36,7 @@
 // figures to this page. It is the first thing a stranger ever sees.
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import { createClient } from '../../lib/supabase/client'
 import MetaPixel from '../../components/MetaPixel'
 import { trackClick } from '../../lib/track-click'
@@ -43,7 +44,15 @@ import GoogleG from '../../components/GoogleG'
 import GuacMascot from '../../components/GuacMascot'
 import { CARDS } from '../../components/GoalsShowcase'
 import GoalCard from '../../components/GoalCard'
-import JoinGuacChat from '../../components/JoinGuacChat'
+// 🔴 Lazy, not a static import — measured 2026-08-02.
+// The chat guide is an OPTIONAL, below-the-fold, interaction-only widget, and
+// a static import puts it and its dependencies in the bundle that has to parse
+// before the headline paints. Paid Facebook traffic on a mid-tier Android was
+// waiting 8.5s for DOMContentLoaded against a ~3s abandon threshold, and 47%
+// of bought clicks never became landing page views.
+// ssr:false because it is purely client-interactive — rendering it on the
+// server buys nothing and costs HTML.
+const JoinGuacChat = dynamic(() => import('../../components/JoinGuacChat'), { ssr: false })
 // Line icons, added 2026-07-31 with the reskin. The mockup's "premium" read
 // comes almost entirely from these — emoji at 28px is the single biggest
 // tell that a page was assembled quickly. lucide-react was already a
@@ -1767,7 +1776,17 @@ function HeroArt() {
   // eslint-disable-next-line @next/next/no-img-element
   return (
     <div className="gj-heroart-frame" onPointerLeave={() => setPauseBubbles(false)}>
-      <img src="/join/hero-clean.png" alt="" width={1448} height={1086} loading="eager" fetchPriority="high" className="gj-heroart" />
+      {/* 🔴 .webp, NOT .png — same pixels, 97 KB instead of 1286 KB (92%).
+          Re-encoded at q95: mean per-channel difference from the PNG is
+          0.77/255, well under the perceptual threshold, and the dimensions,
+          framing and every animation on .gj-heroart are untouched.
+          Why it matters: this is fetchPriority="high" above the fold, so on a
+          throttled mobile connection it was ~1.2 MB standing between a paid
+          Facebook click and anything appearing. The campaign bought 116 link
+          clicks and only 62 became landing page views.
+          ⚠️ Keep hero-clean.png in the repo as the master — re-encode from it,
+          never from the webp, or quality compounds each pass. */}
+      <img src="/join/hero-clean.webp" alt="" width={1448} height={1086} loading="eager" fetchPriority="high" className="gj-heroart" />
       {HERO_BUBBLES.map((bubble, index) => (
         <button
           key={bubble.title}

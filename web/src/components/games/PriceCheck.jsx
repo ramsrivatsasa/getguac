@@ -3,7 +3,8 @@
 // one everyday item costs; guess whether the next one costs more or less.
 // Sudden death: one wrong call ends the run. Trains exactly the instinct the
 // app is about — knowing what things actually cost.
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
+import useCurrencySymbol from '../../hooks/useCurrencySymbol'
 import { useScoreSaver, SaveScoreLine, GameFrame } from './arcadeKit'
 
 const GREEN = '#65A30D'
@@ -46,7 +47,7 @@ const ITEMS = [
   ['Protein powder (2 lb)', '💪', 32], ['Bottle of vitamins', '💊', 14],
 ].map(([label, emoji, price]) => ({ label, emoji, price }))
 
-const money = (n) => (Number.isInteger(n) ? `$${n.toLocaleString('en-US')}` : `$${n.toFixed(2)}`)
+const moneyWith = (sym) => (n) => (Number.isInteger(n) ? `${sym}${n.toLocaleString('en-US')}` : `${sym}${n.toFixed(2)}`)
 const draw = (excludeIdx) => {
   let i = Math.floor(Math.random() * ITEMS.length)
   while (i === excludeIdx) i = Math.floor(Math.random() * ITEMS.length)
@@ -54,6 +55,8 @@ const draw = (excludeIdx) => {
 }
 
 export default function PriceCheck() {
+  const __cur = useCurrencySymbol()
+  const money = useMemo(() => moneyWith(__cur), [__cur])
   const [phase, setPhase] = useState('idle') // idle | guessing | reveal | over
   const [known, setKnown] = useState(0)      // index of the item with the shown price
   const [mystery, setMystery] = useState(1)  // index of the item being guessed

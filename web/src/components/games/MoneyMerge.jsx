@@ -2,7 +2,8 @@
 // Money Merge — 2048, GetGuac edition. Slide the board; equal dollar tiles
 // merge and double. Turn scattered $1 tiles into one $2,048 — a tactile little
 // lesson in compounding. Arrow keys / WASD or swipe.
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, useMemo } from 'react'
+import useCurrencySymbol from '../../hooks/useCurrencySymbol'
 import { useScoreSaver, SaveScoreLine, GameFrame } from './arcadeKit'
 
 const GREEN = '#65A30D'
@@ -16,7 +17,7 @@ const TILE_STYLE = {
   1024: ['#C4920D', '#fff'], 2048: ['#A87B00', '#fff'],
 }
 const styleFor = (v) => TILE_STYLE[v] || ['#15281C', '#fff']
-const fmt = (v) => `$${v.toLocaleString('en-US')}`
+const fmtWith = (sym) => (v) => `${sym}${v.toLocaleString('en-US')}`
 
 let nextId = 1
 const makeTile = (r, c, v) => ({ id: nextId++, r, c, v, pop: true })
@@ -80,6 +81,8 @@ function computeMove(tiles, dir) {
 }
 
 export default function MoneyMerge() {
+  const __cur = useCurrencySymbol()
+  const fmt = useMemo(() => fmtWith(__cur), [__cur])
   const [tiles, setTiles] = useState([])
   const [score, setScore] = useState(0)
   const [best, setBest] = useState(0)

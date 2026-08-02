@@ -1,5 +1,6 @@
 'use client'
 import { formatDateShort } from '../../../lib/dateFormat'
+import useCurrencySymbol from '../../../hooks/useCurrencySymbol'
 import Link from 'next/link'
 import {
   ComposedChart, Area, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
@@ -22,6 +23,7 @@ const PIE_COLORS = ['#e11d48', '#10b981']
 const HEAT_GRADIENT = 'linear-gradient(90deg,#16a34a,#f59e0b,#dc2626)'
 
 export default function Charts({ insights }) {
+  const __cur = useCurrencySymbol()
   return (
     <>
       <div className="grid lg:grid-cols-3 gap-6">
@@ -49,7 +51,7 @@ export default function Charts({ insights }) {
                 <Tooltip
                   cursor={{ stroke: '#cbd5e1', strokeDasharray: '3 3' }}
                   contentStyle={{ borderRadius: 14, border: '1px solid #d1fae5', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', fontSize: 12 }}
-                  formatter={v => `$${money2(v)}`}
+                  formatter={v => `${__cur}${money2(v)}`}
                 />
                 <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} iconType="circle" />
                 <Area type="monotone" dataKey="spent" name="Spent" stroke="#E5194B" strokeWidth={2} fill="url(#spentFill)" dot={{ r: 2.5, fill: '#E5194B', strokeWidth: 0 }} activeDot={{ r: 5 }} isAnimationActive={false} />
@@ -82,7 +84,7 @@ export default function Charts({ insights }) {
                     </Pie>
                     <Tooltip
                       contentStyle={{ borderRadius: 14, border: '1px solid #d1fae5', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', fontSize: 12 }}
-                      formatter={v => `$${money2(v)}`}
+                      formatter={v => `${__cur}${money2(v)}`}
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -98,7 +100,7 @@ export default function Charts({ insights }) {
                 </div>
                 <div>
                   <p className="text-[10px] uppercase tracking-wider text-guac-muted font-bold">Regret</p>
-                  <p className="gg-num text-sm font-bold text-rose-700 mt-0.5">${money0(insights.regretSpend)}</p>
+                  <p className="gg-num text-sm font-bold text-rose-700 mt-0.5">{__cur}{money0(insights.regretSpend)}</p>
                 </div>
               </div>
               <Link href="/validate" className="text-center text-xs text-guac-700 hover:underline mt-2 font-semibold">
@@ -136,7 +138,7 @@ export default function Charts({ insights }) {
                           <div className="flex-1 h-[15px] rounded-[5px] bg-[#F0F4EA] overflow-hidden">
                             <div className="h-full rounded-[5px]" style={{ width: `${pct}%`, background: HEAT_GRADIENT }} />
                           </div>
-                          <span className="gg-num w-20 shrink-0 text-right text-[13px] font-extrabold text-guac-ink">${money0(s.spent)}</span>
+                          <span className="gg-num w-20 shrink-0 text-right text-[13px] font-extrabold text-guac-ink">{__cur}{money0(s.spent)}</span>
                         </div>
                       )
                     })}
@@ -173,14 +175,14 @@ export default function Charts({ insights }) {
                   </Pie>
                   <Tooltip
                     contentStyle={{ borderRadius: 14, border: '1px solid #d1fae5', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', fontSize: 12 }}
-                    formatter={v => `$${money2(v)}`}
+                    formatter={v => `${__cur}${money2(v)}`}
                   />
                   <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} iconType="circle" />
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 bottom-8 flex flex-col items-center justify-center pointer-events-none">
                 <span className="text-[10px] uppercase tracking-wider text-guac-muted font-bold">Net out</span>
-                <span className="gg-num text-xl font-extrabold text-guac-ink leading-tight">${money0(insights.netSpend)}</span>
+                <span className="gg-num text-xl font-extrabold text-guac-ink leading-tight">{__cur}{money0(insights.netSpend)}</span>
               </div>
             </div>
           )}
@@ -205,13 +207,13 @@ export default function Charts({ insights }) {
                   </Pie>
                   <Tooltip
                     contentStyle={{ borderRadius: 14, border: '1px solid #d1fae5', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', fontSize: 12 }}
-                    formatter={v => `$${money2(v)}`}
+                    formatter={v => `${__cur}${money2(v)}`}
                   />
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <span className="text-[10px] uppercase tracking-wider text-guac-muted font-bold">Total</span>
-                <span className="gg-num text-xl font-extrabold text-guac-ink leading-tight">${money0(insights.categoryBuckets.reduce((n, c) => n + c.spend, 0))}</span>
+                <span className="gg-num text-xl font-extrabold text-guac-ink leading-tight">{__cur}{money0(insights.categoryBuckets.reduce((n, c) => n + c.spend, 0))}</span>
                 <span className="text-[10px] text-guac-muted mt-0.5">this range</span>
               </div>
             </div>
@@ -241,7 +243,7 @@ export default function Charts({ insights }) {
                           </div>
                         </td>
                         <td className="py-2 px-2 text-right text-guac-faint">{c.count || ''}</td>
-                        <td className="py-2 px-2 text-right gg-num font-semibold text-guac-ink">${money0(c.spend)}</td>
+                        <td className="py-2 px-2 text-right gg-num font-semibold text-guac-ink">{__cur}{money0(c.spend)}</td>
                         <td className="py-2 pl-2 text-right text-guac-faint">{pct.toFixed(0)}%</td>
                       </tr>
                     )
@@ -283,12 +285,12 @@ export default function Charts({ insights }) {
                   >
                     {insights.ratingBuckets.filter(b => b.spend > 0).map((b, i) => <Cell key={i} fill={b.color} />)}
                   </Pie>
-                  <Tooltip formatter={v => `$${money2(v)}`} />
+                  <Tooltip formatter={v => `${__cur}${money2(v)}`} />
                 </PieChart>
               </ResponsiveContainer>
               <p className="text-center text-xs text-guac-muted mt-1">
                 Avg <span className="gg-num font-bold text-guac-700">{insights.avgRating.toFixed(1)} ★</span>
-                {' '}· Regret <span className="gg-num font-bold text-rose-700">${money2(insights.regretSpend)}</span>
+                {' '}· Regret <span className="gg-num font-bold text-rose-700">{__cur}{money2(insights.regretSpend)}</span>
               </p>
             </div>
 
@@ -307,7 +309,7 @@ export default function Charts({ insights }) {
                       <div className="flex-1 h-[9px] rounded-[5px] bg-[#F0F4EA] overflow-hidden">
                         <div className="h-full rounded-[5px] transition-all" style={{ width: `${pct}%`, background: HEAT_GRADIENT }} />
                       </div>
-                      <span className="gg-num text-[11px] font-semibold text-guac-ink w-16 text-right">${money0(b.spend)}</span>
+                      <span className="gg-num text-[11px] font-semibold text-guac-ink w-16 text-right">{__cur}{money0(b.spend)}</span>
                     </div>
                   )
                 })}
@@ -363,8 +365,8 @@ export default function Charts({ insights }) {
                     <Link href={`/receipts/${r.id}`} className="text-guac-700 hover:underline">{displayStoreName(r.store_name)}</Link>
                   </td>
                   <td className="px-5 py-3 gg-num text-guac-muted">{formatDateSpaced(r.date)}</td>
-                  <td className="px-5 py-3 gg-num font-semibold text-guac-ink">${money2(r.total_amount)}</td>
-                  <td className="px-5 py-3 gg-num text-guac-faint">${money2(r.tax_paid)}</td>
+                  <td className="px-5 py-3 gg-num font-semibold text-guac-ink">{__cur}{money2(r.total_amount)}</td>
+                  <td className="px-5 py-3 gg-num text-guac-faint">{__cur}{money2(r.tax_paid)}</td>
                   <td className="px-5 py-3">
                     <span className={r.business_purchase ? 'badge-blue' : 'badge-gray'}>
                       {r.business_purchase ? 'Business' : 'Personal'}

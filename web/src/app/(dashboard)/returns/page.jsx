@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import useCurrencySymbol from '../../../hooks/useCurrencySymbol'
 import Link from 'next/link'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
@@ -15,6 +16,7 @@ import { formatDateShort } from '../../../lib/dateFormat'
 const fmtMoney = (n) => Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
 export default function ReturnsPage() {
+  const __cur = useCurrencySymbol()
   const qc = useQueryClient()
   const [search, setSearch] = useState('')
   // Two views on this page now:
@@ -126,7 +128,7 @@ export default function ReturnsPage() {
             </div>
             <div className="rounded-2xl border px-5 py-4 text-center" style={{ background: '#FEF1F1', borderColor: 'rgba(220,38,38,0.16)' }}>
               <p className="text-[10.5px] font-extrabold tracking-[0.07em]" style={{ color: '#C2554F' }}>TOTAL REFUNDED</p>
-              <p className="gg-num font-display text-3xl font-extrabold mt-2" style={{ color: '#DC2626' }}>${fmtMoney(totalRefunded)}</p>
+              <p className="gg-num font-display text-3xl font-extrabold mt-2" style={{ color: '#DC2626' }}>{__cur}{fmtMoney(totalRefunded)}</p>
             </div>
             <div className="rounded-2xl border border-guac-line bg-white px-5 py-4 text-center">
               <p className="text-[10.5px] font-extrabold tracking-[0.07em] text-guac-faint">STORES</p>
@@ -141,7 +143,7 @@ export default function ReturnsPage() {
             </div>
             <div className="rounded-2xl border bg-guac-50 px-5 py-4 text-center" style={{ borderColor: 'rgba(31,138,61,0.16)' }}>
               <p className="text-[10.5px] font-extrabold tracking-[0.07em]" style={{ color: '#3F7A4F' }}>VALUE IF RETURNED</p>
-              <p className="gg-num font-display text-3xl font-extrabold text-guac-600 mt-2">${fmtMoney(totalEligibleValue)}</p>
+              <p className="gg-num font-display text-3xl font-extrabold text-guac-600 mt-2">{__cur}{fmtMoney(totalEligibleValue)}</p>
             </div>
             <div className="rounded-2xl border border-guac-line bg-white px-5 py-4 text-center">
               <p className="text-[10.5px] font-extrabold tracking-[0.07em] text-guac-faint">EXPIRING SOON (7D)</p>
@@ -223,7 +225,7 @@ export default function ReturnsPage() {
                         </td>
                         <td className="px-5 py-3.5 text-[12.5px] text-guac-muted whitespace-nowrap">{formatDateShort(r.receipt_date) || '—'}</td>
                         <td className="px-5 py-3.5 text-right">
-                          <span className="gg-num font-display text-sm font-extrabold text-guac-600">${fmtMoney(refund)}</span>
+                          <span className="gg-num font-display text-sm font-extrabold text-guac-600">{__cur}{fmtMoney(refund)}</span>
                         </td>
                         <td className="px-5 py-3.5">
                           <span className="text-xs text-guac-faint">
@@ -315,7 +317,7 @@ export default function ReturnsPage() {
                           </div>
                         </td>
                         <td className="px-5 py-3.5 text-right">
-                          <span className="gg-num font-display text-sm font-extrabold" style={{ color: '#DC2626' }}>${fmtMoney(refund)}</span>
+                          <span className="gg-num font-display text-sm font-extrabold" style={{ color: '#DC2626' }}>{__cur}{fmtMoney(refund)}</span>
                         </td>
                         <td className="px-5 py-3.5">
                           <div className="flex items-center gap-2.5 min-w-0">

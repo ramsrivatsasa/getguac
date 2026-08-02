@@ -4,6 +4,7 @@
 // what's coming and when. Pure client: pulls receipts, runs the projector.
 
 import { useMemo, useState } from 'react'
+import useCurrencySymbol from '../hooks/useCurrencySymbol'
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
 import { ChevronLeft, ChevronRight, CalendarDays, AlertTriangle, Repeat } from 'lucide-react'
@@ -11,10 +12,13 @@ import { getReceipts } from '../lib/db'
 import { projectBills, toIso } from '../lib/billsCalendar'
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-const money = (n) => `$${(Number(n) || 0).toFixed(2)}`
-const money0 = (n) => `$${Math.round(Number(n) || 0)}`
+const moneyWith = (sym) => (n) => `${sym}${(Number(n) || 0).toFixed(2)}`
+const money0With = (sym) => (n) => `${sym}${Math.round(Number(n) || 0)}`
 
 export default function BillsCalendar() {
+  const __cur = useCurrencySymbol()
+  const money = useMemo(() => moneyWith(__cur), [__cur])
+  const money0 = useMemo(() => money0With(__cur), [__cur])
   const { data: receipts = [], isLoading } = useQuery({
     queryKey: ['receipts'],
     queryFn: () => getReceipts(),
@@ -152,6 +156,8 @@ export default function BillsCalendar() {
 }
 
 function BillRow({ b, showDate }) {
+  const __cur = useCurrencySymbol()
+  const money = useMemo(() => moneyWith(__cur), [__cur])
   const when = new Date(`${b.dateIso}T00:00:00`)
   const days = Math.round((when - new Date(new Date().toDateString())) / 86400000)
   const rel = days <= 0 ? 'today' : days === 1 ? 'tomorrow' : `in ${days} days`

@@ -1,5 +1,6 @@
 'use client'
 import { useState, useMemo, useEffect, Fragment, useCallback, useRef, memo } from 'react'
+import useCurrencySymbol from '../../../hooks/useCurrencySymbol'
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
@@ -54,8 +55,8 @@ const SORTS = [
 // Money formatter — thousands separators + 2 decimals, matching the
 // mockup's Bricolage money figures (paired with `.gg-num` for the font).
 // Same convention as DashboardClient's `money` helper.
-const money = (n) => `$${Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-const money0 = (n) => `$${Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}`
+const moneyWith = (sym) => (n) => `${sym}${Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+const money0With = (sym) => (n) => `${sym}${Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}`
 
 const TONE_TINT = {
   emerald:  { from: 'from-emerald-50',  to: 'to-green-100',   ring: 'ring-guac-100',  text: 'text-guac-ink', accent: 'bg-guac-600' },
@@ -84,6 +85,9 @@ const TINT_HEX = {
 }
 
 export default function StashPage() {
+  const __cur = useCurrencySymbol()
+  const money0 = useMemo(() => money0With(__cur), [__cur])
+  const money = useMemo(() => moneyWith(__cur), [__cur])
   const [search, setSearch] = useState('')
   const [activeCat, setActiveCat] = useState('all')
   const [sort, setSort] = useState('recent')
@@ -801,6 +805,8 @@ function CategorySection({ cat, items, expandedKey, onCardToggle, onAddToSmashli
 }
 
 const StashCard = memo(function StashCard({ item, expanded, onToggle, onAddToSmashlist, onFindDeals, imageUrl, loveCount, likedByMe, onToggleLove }) {
+  const __cur = useCurrencySymbol()
+  const money = useMemo(() => moneyWith(__cur), [__cur])
   const qc = useQueryClient()
   const cat = CATEGORY_BY_SLUG[item.category] || CATEGORY_BY_SLUG['misc']
   const tone = TONE_TINT[cat.color] || TONE_TINT.gray
@@ -930,6 +936,8 @@ const StashCard = memo(function StashCard({ item, expanded, onToggle, onAddToSma
  * value comes from the already-aggregated `item` — no new queries.
  */
 const StashSavingsCard = memo(function StashSavingsCard({ item, onAddToSmashlist, onFindDeals }) {
+  const __cur = useCurrencySymbol()
+  const money = useMemo(() => moneyWith(__cur), [__cur])
   const qc = useQueryClient()
   const cat = CATEGORY_BY_SLUG[item.category] || CATEGORY_BY_SLUG['misc']
   const tintBg = TINT_HEX[cat.color] || TINT_HEX.gray
@@ -1079,6 +1087,9 @@ function friendlyDate(iso) {
 }
 
 const ProductCard = memo(function ProductCard({ item, expanded, onToggle, onAddToSmashlist, onFindDeals }) {
+  const __cur = useCurrencySymbol()
+  const money0 = useMemo(() => money0With(__cur), [__cur])
+  const money = useMemo(() => moneyWith(__cur), [__cur])
   const qc = useQueryClient()
   const cat = CATEGORY_BY_SLUG[item.category] || CATEGORY_BY_SLUG['misc']
   const tone = TONE_TINT[cat.color] || TONE_TINT.gray

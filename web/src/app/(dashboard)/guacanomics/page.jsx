@@ -1,5 +1,6 @@
 'use client'
 import { useState, useMemo } from 'react'
+import useCurrencySymbol from '../../../hooks/useCurrencySymbol'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
@@ -46,6 +47,7 @@ const RANGES = [
 ]
 
 export default function GuacanomicsPage() {
+  const __cur = useCurrencySymbol()
   const [range, setRange] = useState('90d')
   const { data: rawReceipts = [], isLoading } = useReceipts()
 
@@ -232,11 +234,11 @@ export default function GuacanomicsPage() {
           />
 
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-            <Stat icon={DollarSign} color="bg-[#FDE3EA] text-[#E5194B]" label="Net Spent (out)" value={`$${money2(insights.netSpend)}`} sub={`Gross $${money2(insights.grossSpend)}`} />
-            <Stat icon={Undo2}      color="bg-[#E4F6E8] text-[#16A34A]" label="Refunded (in)" value={`$${money2(insights.refunded)}`} sub={`${insights.returnCount} returned`} />
-            <Stat icon={Banknote}   color="bg-[#FDEBD5] text-[#EA7A0C]" label="🦷 Bank Bite" value={`$${money2(bankBite.total)}`} sub={`$${money2(bankBite.interest)} interest · $${money2(bankBite.fees)} fees`} />
-            <Stat icon={ReceiptIcon} color="bg-[#FCF0CE] text-[#B4791A]" label="Receipts" value={insights.purchaseCount.toLocaleString('en-US')} sub={`Avg $${money2(insights.avgTicket)}`} />
-            <Stat icon={TrendingUp} color="bg-[#E9F5DD] text-[#4D7C0F]" label="Tax Paid" value={`$${money2(insights.totalTax)}`} sub={`Biz $${money2(insights.businessSpend)}`} />
+            <Stat icon={DollarSign} color="bg-[#FDE3EA] text-[#E5194B]" label="Net Spent (out)" value={`${__cur}${money2(insights.netSpend)}`} sub={`Gross ${__cur}${money2(insights.grossSpend)}`} />
+            <Stat icon={Undo2}      color="bg-[#E4F6E8] text-[#16A34A]" label="Refunded (in)" value={`${__cur}${money2(insights.refunded)}`} sub={`${insights.returnCount} returned`} />
+            <Stat icon={Banknote}   color="bg-[#FDEBD5] text-[#EA7A0C]" label="🦷 Bank Bite" value={`${__cur}${money2(bankBite.total)}`} sub={`${__cur}${money2(bankBite.interest)} interest · ${__cur}${money2(bankBite.fees)} fees`} />
+            <Stat icon={ReceiptIcon} color="bg-[#FCF0CE] text-[#B4791A]" label="Receipts" value={insights.purchaseCount.toLocaleString('en-US')} sub={`Avg ${__cur}${money2(insights.avgTicket)}`} />
+            <Stat icon={TrendingUp} color="bg-[#E9F5DD] text-[#4D7C0F]" label="Tax Paid" value={`${__cur}${money2(insights.totalTax)}`} sub={`Biz ${__cur}${money2(insights.businessSpend)}`} />
           </div>
 
           <Charts insights={insights} />

@@ -4,6 +4,7 @@
 // group, ordered by relevance (best discount first). The header carries the
 // "X new" count so the user sees how many fresh steals were found.
 import Link from 'next/link'
+import useCurrencySymbol from '../hooks/useCurrencySymbol'
 import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Tag, Star, ArrowRight, Search, ChevronDown } from 'lucide-react'
@@ -146,6 +147,7 @@ function AutoScrollRow({ children }) {
 }
 
 function DealCard({ d }) {
+  const __cur = useCurrencySymbol()
   const price = Number(d.price) || 0
   const orig = Number(d.original_price) || 0
   const off = orig > price && orig > 0 ? Math.round(((orig - price) / orig) * 100) : 0
@@ -167,8 +169,8 @@ function DealCard({ d }) {
       <div className="p-2.5">
         <p className="text-[11px] font-semibold text-gray-800 line-clamp-2 leading-tight min-h-[28px]">{d.title || d.store}</p>
         <div className="flex items-center gap-1.5 mt-1">
-          <span className="text-sm font-black text-gray-900 tabular-nums">${price.toFixed(2)}</span>
-          {orig > price && <span className="text-[10px] text-gray-400 line-through tabular-nums">${orig.toFixed(2)}</span>}
+          <span className="text-sm font-black text-gray-900 tabular-nums">{__cur}{price.toFixed(2)}</span>
+          {orig > price && <span className="text-[10px] text-gray-400 line-through tabular-nums">{__cur}{orig.toFixed(2)}</span>}
           {off > 0 && <span className="text-[9px] font-extrabold bg-rose-100 text-rose-700 rounded px-1">−{off}%</span>}
         </div>
         <div className="flex items-center justify-between mt-1 gap-1">

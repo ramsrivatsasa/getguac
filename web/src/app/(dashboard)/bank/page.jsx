@@ -1,5 +1,6 @@
 'use client'
 import { useMemo, useState, useEffect } from 'react'
+import useCurrencySymbol from '../../../hooks/useCurrencySymbol'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useDropzone } from 'react-dropzone'
@@ -43,6 +44,7 @@ const KIND_STYLE = {
 
 // View states: 'banks' (default), 'statements' (one bank picked), 'transactions' (one statement picked)
 export default function BankPage() {
+  const __cur = useCurrencySymbol()
   const sb = createClient()
   const qc = useQueryClient()
   const router = useRouter()
@@ -525,8 +527,8 @@ export default function BankPage() {
               </h2>
               <p className="text-xs text-gray-500 mt-1">
                 {pickedBank.statements.length} statement{pickedBank.statements.length === 1 ? '' : 's'} · {combinedTx.length} transactions combined
-                {pickedBank.totalFees > 0 && ` · $${fmtMoney(pickedBank.totalFees)} in fees`}
-                {pickedBank.totalInterest > 0 && ` · $${fmtMoney(pickedBank.totalInterest)} interest`}
+                {pickedBank.totalFees > 0 && ` · ${__cur}${fmtMoney(pickedBank.totalFees)} in fees`}
+                {pickedBank.totalInterest > 0 && ` · ${__cur}${fmtMoney(pickedBank.totalInterest)} interest`}
               </p>
               {pickedBank.issuerAliases.length > 1 && (
                 <p className="text-[11px] text-amber-700 mt-1" title={pickedBank.issuerAliases.join(' · ')}>
@@ -584,7 +586,7 @@ export default function BankPage() {
                       const cls = { rose: 'bg-rose-100 text-rose-700', amber: 'bg-amber-100 text-amber-800', emerald: 'bg-guac-100 text-guac-700', gray: 'bg-gray-100 text-gray-600' }[tone]
                       return (
                         <div className={`inline-block mt-1 ml-0 px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${cls}`}>
-                          <span className="gg-num">${fmtMoney(s.minimum_payment_due)}</span> due {formatDateShort(s.payment_due_date)}
+                          <span className="gg-num">{__cur}{fmtMoney(s.minimum_payment_due)}</span> due {formatDateShort(s.payment_due_date)}
                           {d != null && d < 0 ? ` · ${-d}d late` : d != null && d <= 7 ? ` · ${d}d` : ''}
                         </div>
                       )
@@ -801,25 +803,25 @@ export default function BankPage() {
               <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
                 <div className="rounded-lg bg-[#FBFCF9] border border-guac-line px-2 py-1.5">
                   <p className="text-[9px] uppercase tracking-wider text-guac-faint font-semibold">Purchases</p>
-                  <p className="gg-num font-bold text-guac-ink">${fmtMoney(b.totalPurchases)}</p>
+                  <p className="gg-num font-bold text-guac-ink">{__cur}{fmtMoney(b.totalPurchases)}</p>
                 </div>
                 <div className="rounded-lg bg-[#FBFCF9] border border-guac-line px-2 py-1.5">
                   <p className="text-[9px] uppercase tracking-wider text-guac-faint font-semibold">
                     Payments made{b.paymentCount > 0 ? ` (${b.paymentCount})` : ''}
                   </p>
-                  <p className="gg-num font-bold text-guac-ink">${fmtMoney(b.totalPayments)}</p>
+                  <p className="gg-num font-bold text-guac-ink">{__cur}{fmtMoney(b.totalPayments)}</p>
                 </div>
                 <div className="rounded-lg bg-[#FBFCF9] border border-guac-line px-2 py-1.5">
                   <p className="text-[9px] uppercase tracking-wider text-guac-faint font-semibold">Fees paid</p>
-                  <p className="gg-num font-bold text-guac-ink">${fmtMoney(b.totalFees)}</p>
+                  <p className="gg-num font-bold text-guac-ink">{__cur}{fmtMoney(b.totalFees)}</p>
                 </div>
                 <div className="rounded-lg bg-[#FFF6EF] border border-guac-line px-2 py-1.5">
                   <p className="text-[9px] uppercase tracking-wider text-[#B23C0C] font-semibold">Interest paid</p>
-                  <p className="gg-num font-bold text-[#B23C0C]">${fmtMoney(b.totalInterest)}</p>
+                  <p className="gg-num font-bold text-[#B23C0C]">{__cur}{fmtMoney(b.totalInterest)}</p>
                 </div>
                 <div className="rounded-lg bg-[#F1F6EA] border border-guac-line px-2 py-1.5 col-span-2">
                   <p className="text-[9px] uppercase tracking-wider text-guac-600 font-semibold">Refunds</p>
-                  <p className="gg-num font-bold text-guac-700">${fmtMoney(b.totalRefunds)}</p>
+                  <p className="gg-num font-bold text-guac-700">{__cur}{fmtMoney(b.totalRefunds)}</p>
                 </div>
               </div>
             </button>
@@ -885,6 +887,7 @@ function daysUntil(dateStr) {
 }
 
 function FinanceSummary({ statement: s }) {
+  const __cur = useCurrencySymbol()
   const hasAny = s.minimum_payment_due != null || s.payment_due_date || s.new_balance != null ||
     s.purchase_apr != null || s.balance_transfer_apr != null || s.cash_advance_apr != null
   if (!hasAny) return null
@@ -912,7 +915,7 @@ function FinanceSummary({ statement: s }) {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {s.minimum_payment_due != null && (
-          <FinanceCell label="Minimum due" value={`$${fmtMoney(s.minimum_payment_due)}`} accent="rose" emoji="💸" />
+          <FinanceCell label="Minimum due" value={`${__cur}${fmtMoney(s.minimum_payment_due)}`} accent="rose" emoji="💸" />
         )}
         {s.payment_due_date && (
           <div className={`rounded-xl border px-3 py-2.5 ${DUE_TONE[dueTone]}`}>
@@ -924,16 +927,16 @@ function FinanceSummary({ statement: s }) {
           </div>
         )}
         {s.new_balance != null && (
-          <FinanceCell label="Statement balance" value={`$${fmtMoney(s.new_balance)}`} accent="indigo" />
+          <FinanceCell label="Statement balance" value={`${__cur}${fmtMoney(s.new_balance)}`} accent="indigo" />
         )}
         {s.previous_balance != null && (
-          <FinanceCell label="Previous balance" value={`$${fmtMoney(s.previous_balance)}`} accent="gray" />
+          <FinanceCell label="Previous balance" value={`${__cur}${fmtMoney(s.previous_balance)}`} accent="gray" />
         )}
         {s.credit_limit != null && (
-          <FinanceCell label="Credit limit" value={`$${fmtInt(s.credit_limit)}`} accent="gray" />
+          <FinanceCell label="Credit limit" value={`${__cur}${fmtInt(s.credit_limit)}`} accent="gray" />
         )}
         {s.available_credit != null && (
-          <FinanceCell label="Available credit" value={`$${fmtInt(s.available_credit)}`} accent="emerald" />
+          <FinanceCell label="Available credit" value={`${__cur}${fmtInt(s.available_credit)}`} accent="emerald" />
         )}
       </div>
 
@@ -970,9 +973,9 @@ function FinanceSummary({ statement: s }) {
                 <p className="text-sm text-rose-700 font-bold mt-0.5">Minimum doesn&apos;t even cover monthly interest — balance grows forever.</p>
               ) : (
                 <p className="text-sm text-gray-700 mt-0.5">
-                  <span className="font-bold text-guac-700">{payoffMonthsLabel(s.payoff_months_min)}</span> to clear <span className="gg-num">${fmtMoney(s.new_balance)}</span>
+                  <span className="font-bold text-guac-700">{payoffMonthsLabel(s.payoff_months_min)}</span> to clear <span className="gg-num">{__cur}{fmtMoney(s.new_balance)}</span>
                   {s.payoff_total_interest != null && (
-                    <> · costs you <span className="gg-num font-bold text-rose-700">${fmtMoney(s.payoff_total_interest)}</span> in interest</>
+                    <> · costs you <span className="gg-num font-bold text-rose-700">{__cur}{fmtMoney(s.payoff_total_interest)}</span> in interest</>
                   )}
                 </p>
               )}
@@ -1174,7 +1177,7 @@ function StatementDetail({ statement, fees, transactions }) {
                   <span className="text-gray-600">{formatDateShort(f.date)}</span>
                   {f.merchant && <span className="text-gray-500 truncate max-w-xs">{f.merchant}</span>}
                 </span>
-                <span className="gg-num font-semibold text-amber-700">${fmtMoney(f.amount)}</span>
+                <span className="gg-num font-semibold text-amber-700">{__cur}{fmtMoney(f.amount)}</span>
               </li>
             ))}
           </ul>
@@ -1278,10 +1281,11 @@ function CombinedTransactionTable({ transactions, statements }) {
 }
 
 function Mini({ label, value }) {
+  const __cur = useCurrencySymbol()
   return (
     <div className="rounded-lg bg-white border border-gray-100 px-2.5 py-1.5">
       <p className="text-[9px] uppercase tracking-wider text-gray-400 font-semibold">{label}</p>
-      <p className="gg-num text-sm font-semibold text-gray-800">{value == null ? '—' : `$${fmtMoney(value)}`}</p>
+      <p className="gg-num text-sm font-semibold text-gray-800">{value == null ? '—' : `${__cur}${fmtMoney(value)}`}</p>
     </div>
   )
 }
@@ -1305,7 +1309,7 @@ function BigTotal({ label, value, icon: Icon, tone, sub }) {
               lands the "you lost $X this period" punch like Mint's
               old hero numbers. */}
           <p className={`gg-stat ${t.text} mt-0.5`}>
-            <CountUp value={Number(value) || 0} duration={620} className="gg-num" format={(n) => `$${fmtMoney(n)}`} />
+            <CountUp value={Number(value) || 0} duration={620} className="gg-num" format={(n) => `${__cur}${fmtMoney(n)}`} />
           </p>
           {sub && <p className={`text-[11px] ${t.accent} mt-1`}>{sub}</p>}
         </div>
@@ -1322,8 +1326,9 @@ const TOTAL_TONE = {
   emerald: { bg: 'bg-guac-50', text: 'text-guac-700', icon: 'text-guac-600' },
 }
 function Stat({ icon: Icon, tone, label, value, raw }) {
+  const __cur = useCurrencySymbol()
   const t = TOTAL_TONE[tone] || TOTAL_TONE.amber
-  const display = raw ? fmtInt(value) : (value == null ? '$0.00' : `$${fmtMoney(value)}`)
+  const display = raw ? fmtInt(value) : (value == null ? '$0.00' : `${__cur}${fmtMoney(value)}`)
   return (
     <div className="stat-card">
       <div className={`p-3 rounded-xl ${t.bg}`}><Icon size={20} className={t.icon} /></div>

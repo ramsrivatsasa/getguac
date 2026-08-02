@@ -1,5 +1,6 @@
 'use client'
 import { useState, useMemo, useRef, Fragment } from 'react'
+import useCurrencySymbol from '../../../hooks/useCurrencySymbol'
 import Link from 'next/link'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
@@ -68,6 +69,7 @@ const SORT_OPTIONS = [
 ]
 
 export default function ValidatePage() {
+  const __cur = useCurrencySymbol()
   const [period, setPeriod] = useState('monthly')
   const [count, setCount] = useState(DEFAULT_COUNT.monthly)
   const [search, setSearch] = useState('')
@@ -230,13 +232,13 @@ export default function ValidatePage() {
                     <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={48} outerRadius={70} paddingAngle={3} isAnimationActive={false}>
                       {pieData.map((d, i) => <Cell key={i} fill={d.fill} />)}
                     </Pie>
-                    <RTooltip formatter={(v, _n, p) => [`$${money(v)} (${p.payload.count})`, p.payload.name]} />
+                    <RTooltip formatter={(v, _n, p) => [`${__cur}${money(v)} (${p.payload.count})`, p.payload.name]} />
                   </PieChart>
                 </ResponsiveContainer>
                 {/* Total spend printed in the donut hole (= sum of buckets). */}
                 <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
                   <span className="gg-colhead text-guac-muted">Spend</span>
-                  <span className="gg-num font-extrabold text-guac-ink text-xl leading-none">${money0(totalSpend)}</span>
+                  <span className="gg-num font-extrabold text-guac-ink text-xl leading-none">{__cur}{money0(totalSpend)}</span>
                 </div>
               </div>
 
@@ -247,7 +249,7 @@ export default function ValidatePage() {
                     <span className="text-[15px] leading-none">{d.emoji}</span>
                     <span className="flex-1 font-semibold text-guac-body">{d.label}</span>
                     <span className="text-guac-muted w-7 text-right">{d.count}</span>
-                    <span className="gg-num font-extrabold text-guac-ink w-16 text-right">${money0(d.value)}</span>
+                    <span className="gg-num font-extrabold text-guac-ink w-16 text-right">{__cur}{money0(d.value)}</span>
                   </div>
                 ))}
               </div>
@@ -255,7 +257,7 @@ export default function ValidatePage() {
 
             <div className="w-full lg:w-[360px] shrink-0 grid grid-cols-2 gap-2">
               <ValStat label="Avg Rating"   value={`${avgRating.toFixed(1)} ★`}                          tone="emerald" />
-              <ValStat label="Regret Spend" value={`$${money0(regretSpend)}`}                             tone="rose" />
+              <ValStat label="Regret Spend" value={`${__cur}${money0(regretSpend)}`}                             tone="rose" />
               <ValStat label="Rated"        value={`${ratedCount} / ${filtered.length}`}                  tone="gray" />
               <ValStat label="Period"       value={`${count} ${UNIT_LABEL[period]}${count === 1 ? '' : 's'}`} tone="amber" />
             </div>

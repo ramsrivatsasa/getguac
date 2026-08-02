@@ -1,5 +1,6 @@
 'use client'
 import { useEffect } from 'react'
+import useCurrencySymbol from '../hooks/useCurrencySymbol'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import {
@@ -24,6 +25,7 @@ async function fetchBestPrices({ item_name, sku, category, stashItems }) {
 // Modal that shows live web-scanned prices for a product.
 // Usage: <BestPricesModal open={...} onClose={...} item={{ item_name, sku }} />
 export default function BestPricesModal({ open, onClose, item }) {
+  const __cur = useCurrencySymbol()
   // Pull a compact slice of the user's stash to feed Guac-Search's fuzzy matcher
   const { data: stashRows = [] } = useQuery({
     queryKey: ['stash'],
@@ -154,7 +156,7 @@ export default function BestPricesModal({ open, onClose, item }) {
                     <p className="text-[10px] uppercase tracking-wider font-bold text-amber-700">Best price</p>
                     <p className="font-bold text-amber-900">{best.store}</p>
                   </div>
-                  <p className="text-2xl font-extrabold text-guac-700 tabular-nums">${best.price.toFixed(2)}</p>
+                  <p className="text-2xl font-extrabold text-guac-700 tabular-nums">{__cur}{best.price.toFixed(2)}</p>
                 </div>
               )}
               {results.map((r, i) => {
@@ -172,7 +174,7 @@ export default function BestPricesModal({ open, onClose, item }) {
                       {r.notes && <p className="text-[11px] text-amber-700 mt-0.5">{r.notes}</p>}
                       {!r.available && <p className="text-[11px] text-rose-500 mt-0.5">Out of stock</p>}
                     </div>
-                    <p className={`text-lg font-bold tabular-nums ${isBest ? 'text-guac-700' : 'text-gray-700'}`}>${r.price.toFixed(2)}</p>
+                    <p className={`text-lg font-bold tabular-nums ${isBest ? 'text-guac-700' : 'text-gray-700'}`}>{__cur}{r.price.toFixed(2)}</p>
                     <a
                       href={bestDealUrl({ ...r, title: r.matched_name || item?.item_name })}
                       target="_blank" rel="noreferrer"

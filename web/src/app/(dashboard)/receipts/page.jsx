@@ -1,5 +1,6 @@
 'use client'
 import { useState, useCallback, useRef, useEffect, useMemo, Fragment } from 'react'
+import useCurrencySymbol from '../../../hooks/useCurrencySymbol'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useDropzone } from 'react-dropzone'
@@ -116,6 +117,7 @@ function StoreAvatar({ name }) {
 }
 
 export default function ReceiptsPage() {
+  const __cur = useCurrencySymbol()
   const router = useRouter()
   const searchParams = useSearchParams()
   // Initialize the search box from ?store=<name> so the Spending-by-Store
@@ -436,7 +438,7 @@ export default function ReceiptsPage() {
         const data = await quickProcess(f)
         ok++
         lastSavedId = data._savedId || lastSavedId
-        toast.success(`${data.store_name} • $${money(data.total_amount)} saved (${data.items?.length || 0} items)`)
+        toast.success(`${data.store_name} • ${__cur}${money(data.total_amount)} saved (${data.items?.length || 0} items)`)
       } catch (err) {
         fail++
         toast.error(`${f.name}: ${err.message}`)
@@ -624,7 +626,7 @@ export default function ReceiptsPage() {
         lastId = data.receipt_id || lastId
         const store = data.parsed?.store_name || 'Receipt'
         const total = money(data.parsed?.total_amount)
-        toast.success(`${store} • $${total} saved from PDF`)
+        toast.success(`${store} • ${__cur}${total} saved from PDF`)
       } catch (err) {
         toast.error(`${f.name}: ${err.message}`)
       } finally {
@@ -1278,7 +1280,7 @@ export default function ReceiptsPage() {
               <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 space-y-2">
                 <p className="text-sm font-semibold text-amber-800">Receipt already exists</p>
                 <p className="text-sm text-amber-700">
-                  A receipt from <strong>{duplicate.store_name}</strong> on <strong>{formatDateShort(duplicate.date)}</strong> (<span className="gg-num">${money(duplicate.total_amount)}</span>) was found.
+                  A receipt from <strong>{duplicate.store_name}</strong> on <strong>{formatDateShort(duplicate.date)}</strong> (<span className="gg-num">{__cur}{money(duplicate.total_amount)}</span>) was found.
                   Do you want to update it?
                 </p>
                 <div className="flex gap-2 pt-1">
@@ -1503,8 +1505,8 @@ export default function ReceiptsPage() {
                           />
                         </td>
                         <td className="px-4 py-2 gg-num text-[#6B7A6E] whitespace-nowrap">{formatDayMonth(r.date)}</td>
-                        <td className="px-4 py-2 text-right gg-num font-extrabold text-[14.5px] text-[#14241A]">${money(r.total_amount)}</td>
-                        <td className="px-4 py-2 text-right gg-num text-[13px] text-[#9AA89E]">${money(r.tax_paid)}</td>
+                        <td className="px-4 py-2 text-right gg-num font-extrabold text-[14.5px] text-[#14241A]">{__cur}{money(r.total_amount)}</td>
+                        <td className="px-4 py-2 text-right gg-num text-[13px] text-[#9AA89E]">{__cur}{money(r.tax_paid)}</td>
                         <td className="px-4 py-2 text-center">
                           {r.business_purchase
                             ? <span className="inline-flex items-center text-[11px] font-extrabold text-[#1F8A3D] bg-[#E9F5DD] px-2 py-0.5 rounded-full">Biz</span>
@@ -1875,7 +1877,7 @@ function ReceiptLineItems({ receiptId }) {
               </td>
               <td className="px-3 py-0.5 gg-num">{it.qty}</td>
               <td className="px-3 py-0.5 gg-num">
-                {it.price == null ? <span className="text-gray-300">—</span> : `$${money(it.price)}`}
+                {it.price == null ? <span className="text-gray-300">—</span> : `${__cur}${money(it.price)}`}
               </td>
               <td className="px-3 py-0.5">
                 {perishable ? (

@@ -1,5 +1,6 @@
 'use client'
 import { useMemo } from 'react'
+import useCurrencySymbol from '../../../hooks/useCurrencySymbol'
 import Link from 'next/link'
 import { generateInsights } from '../../../lib/financeInsights'
 import { computeWizardScore } from '../../../lib/wizardScore'
@@ -14,7 +15,7 @@ import { Banknote, Sparkles } from 'lucide-react'
 
 // Money figures render with thousands separators + 2 dp and a leading $ —
 // matching the mockup (Bricolage display font via .gg-num, neutral ink).
-const fmtMoney = (n) => `$${Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+const fmtMoneyWith = (sym) => (n) => `${sym}${Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
 const SEVERITY_STYLE = {
   good:    { card: 'bg-[#F4FAF5] border-guac-line2',   label: 'text-guac-700',       badge: 'bg-[#DDF3E1]' },
@@ -36,6 +37,8 @@ const MASCOT_BY_SCORE = (score) => {
 // dashboard tile and this page never drift. Don't redefine it here.
 
 export default function GuacWizardPage() {
+  const __cur = useCurrencySymbol()
+  const fmtMoney = useMemo(() => fmtMoneyWith(__cur), [__cur])
   // Time-frame inherited from the dashboard's selector via the
   // shared Zustand store (persisted to localStorage). The dashboard
   // is the single edit surface — this page reads the (period,
@@ -207,6 +210,8 @@ export default function GuacWizardPage() {
 }
 
 function Tile({ emoji, label, value, bold }) {
+  const __cur = useCurrencySymbol()
+  const fmtMoney = useMemo(() => fmtMoneyWith(__cur), [__cur])
   return (
     <div className="stat-card bg-white border rounded-[18px]" style={{ borderColor: 'rgba(20,83,45,.1)' }}>
       <div className="text-2xl leading-none shrink-0">{emoji}</div>

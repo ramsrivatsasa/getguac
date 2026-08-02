@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import useCurrencySymbol from '../../../../hooks/useCurrencySymbol'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -28,6 +29,7 @@ function money(n) {
 }
 
 export default function StoreDetailPage() {
+  const __cur = useCurrencySymbol()
   const { id } = useParams()
   const router = useRouter()
   const qc = useQueryClient()
@@ -192,7 +194,7 @@ export default function StoreDetailPage() {
         </div>
         <div className="card text-center py-3">
           <p className="gg-colhead">Total Spend</p>
-          <p className="gg-stat gg-num mt-1">${money(totalSpend)}</p>
+          <p className="gg-stat gg-num mt-1">{__cur}{money(totalSpend)}</p>
         </div>
       </div>
 

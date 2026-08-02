@@ -1402,7 +1402,7 @@ export default function JoinClient() {
            this pale.
            If a version WITH transparency is ever supplied, delete this line —
            multiply on a true-alpha PNG would tint it for no reason. */
-        .gj-heroart-frame { width: 100%; max-width: 520px; height: 480px; overflow: hidden; margin: 0 auto; }
+         .gj-heroart-frame { width: 100%; max-width: 520px; height: 480px; overflow: hidden; margin: 0 auto; position: relative; }
          .gj-heroart { display: block; width: auto; max-width: none; height: 100%;
                        margin-left: 50%; transform: translateX(-50%); transform-origin: 50% 58%;
                        mix-blend-mode: multiply;
@@ -1416,12 +1416,40 @@ export default function JoinClient() {
            0%, 100% { transform: translateX(-50%) scale(1); }
            50% { transform: translateX(-50%) scale(1.018); }
          }
+         @keyframes gjHeroRevealMobile {
+           from { opacity: 0; transform: scale(.97); }
+           to { opacity: 1; transform: scale(1); }
+         }
          @media (prefers-reduced-motion: reduce) {
            .gj-heroart { animation: none; }
          }
-        @media (min-width: 881px) and (max-width: 1100px) {
-          .gj-heroart-frame { max-width: 480px; height: 440px; }
-        }
+         .gj-herobubble { position: absolute; z-index: 4; max-width: 170px; padding: 10px 13px;
+                          border: 1px solid rgba(20,83,45,.16); border-radius: 15px; background: rgba(255,255,255,.94);
+                          color: #5F6D63; text-align: left; font-size: 10px; line-height: 1.25;
+                          box-shadow: 0 18px 38px -26px rgba(21,40,28,.6); cursor: pointer;
+                          opacity: .24; filter: saturate(.55); transform: scale(.94);
+                          transition: opacity .24s ease, filter .24s ease, transform .24s ease, border-color .24s ease; }
+         .gj-herobubble strong { display: block; margin-top: 2px; color: #4D7C0F; font-size: 12px; }
+         .gj-herobubble:hover, .gj-herobubble:focus-visible, .gj-herobubble[aria-pressed='true'] {
+                          opacity: 1; filter: none; transform: scale(1.02); border-color: #65A30D; }
+         .gj-herobubble[aria-pressed='true'] { animation: gjBubblePulse 2.6s ease-in-out infinite; }
+         .gj-herobubble:focus-visible { outline: 3px solid rgba(245,181,27,.5); outline-offset: 2px; }
+         .gj-herobubble-one { left: 8px; top: 92px; }
+         .gj-herobubble-two { right: 8px; top: 66px; }
+         .gj-herobubble-three { left: 12px; bottom: 74px; }
+         .gj-herobubble-four { right: 6px; top: 210px; }
+         .gj-herobubble-five { right: 14px; bottom: 58px; }
+         @keyframes gjBubblePulse {
+           0%, 100% { box-shadow: 0 0 0 4px rgba(132,204,22,.09), 0 18px 38px -24px rgba(101,163,13,.45); }
+           50% { box-shadow: 0 0 0 8px rgba(132,204,22,.16), 0 18px 38px -20px rgba(101,163,13,.62); }
+         }
+         @media (prefers-reduced-motion: reduce) {
+           .gj-herobubble[aria-pressed='true'] { animation: none; }
+         }
+         @media (min-width: 881px) and (max-width: 1100px) {
+           .gj-heroart-frame { max-width: 480px; height: 440px; }
+           .gj-herobubble { max-width: 148px; padding: 9px 11px; }
+         }
         .gj-ctaavo { position: absolute; right: 30px; bottom: -22px; width: 176px; height: 202px;
                      display: block; pointer-events: none; }
         /* Six small boxes in one row — the mockup's feature strip. Its own
@@ -1629,9 +1657,17 @@ export default function JoinClient() {
              a left-aligned CTA stack under a centred headline reads as a
              layout fault. Copy comes first and the phone second, which is the
              natural source order, so the button stays as high as it can. */
-          .gj-herorow { grid-template-columns: 1fr; gap: 22px; margin-top: 14px; }
-          .gj-heroart-frame { max-width: 420px; height: auto; }
-          .gj-heroart { width: 128%; height: auto; margin-left: -14%; transform: none; }
+           .gj-herorow { grid-template-columns: 1fr; gap: 22px; margin-top: 14px; }
+           .gj-heroart-frame { max-width: 420px; height: auto; }
+           .gj-heroart { width: 128%; height: auto; margin-left: -14%; transform: none;
+                         animation: gjHeroRevealMobile .6s ease both; }
+           .gj-herobubble { max-width: 126px; padding: 8px 9px; font-size: 8px; }
+           .gj-herobubble strong { font-size: 10px; }
+           .gj-herobubble-one { left: 3px; top: 22%; }
+           .gj-herobubble-two { right: 3px; top: 17%; }
+           .gj-herobubble-three { left: 6px; bottom: 16%; }
+           .gj-herobubble-four { right: 2px; top: 49%; }
+           .gj-herobubble-five { right: 7px; bottom: 12%; }
           .gj-heroleft { text-align: center; }
           .gj-heroauthstack { align-items: center; margin-top: 20px; }
           .gj-heroctas { justify-content: center; width: 100%; }
@@ -1680,7 +1716,13 @@ export default function JoinClient() {
              raises the moment they leave the viewport rather than at a fixed
              scroll depth. If this grows again, re-check the fold at 390x844. */
           .gj-heroshot { width: 232px !important; }
-        }
+         }
+         @media (max-width: 560px) {
+           .gj-herobubble-four, .gj-herobubble-five { display: none; }
+         }
+         @media (prefers-reduced-motion: reduce) {
+           .gj-heroart, .gj-herobubble[aria-pressed='true'] { animation: none; }
+         }
       ` }} />
     </div>
   )
@@ -1704,11 +1746,43 @@ export default function JoinClient() {
 // aspect ratio before downloading it. The previous client-side existence
 // probe first painted the tall assembled phone and then swapped in this wider
 // composition, which produced a conspicuous large-to-small layout jump.
+const HERO_BUBBLES = [
+  { position: 'one', icon: '🔄', title: 'Subscription spotted', value: 'Review the renewal' },
+  { position: 'two', icon: '↩️', title: 'Return window', value: '5 days left to act' },
+  { position: 'three', icon: '🏦', title: 'Bank fee found', value: 'Worth reviewing' },
+  { position: 'four', icon: '🧾', title: 'Receipt organized', value: '41 items read' },
+  { position: 'five', icon: '🥑', title: 'Ask Guac-AI', value: 'What changed this month?' },
+]
+
 function HeroArt() {
+  const [activeBubble, setActiveBubble] = useState(0)
+  const [pauseBubbles, setPauseBubbles] = useState(false)
+
+  useEffect(() => {
+    if (pauseBubbles) return undefined
+    const timer = setInterval(() => setActiveBubble((current) => (current + 1) % HERO_BUBBLES.length), 3600)
+    return () => clearInterval(timer)
+  }, [pauseBubbles])
+
   // eslint-disable-next-line @next/next/no-img-element
   return (
-    <div className="gj-heroart-frame">
-      <img src="/join/hero.png" alt="" width={1448} height={1086} loading="eager" fetchPriority="high" className="gj-heroart" />
+    <div className="gj-heroart-frame" onPointerLeave={() => setPauseBubbles(false)}>
+      <img src="/join/hero-clean.png" alt="" width={1448} height={1086} loading="eager" fetchPriority="high" className="gj-heroart" />
+      {HERO_BUBBLES.map((bubble, index) => (
+        <button
+          key={bubble.title}
+          type="button"
+          className={`gj-herobubble gj-herobubble-${bubble.position}`}
+          aria-pressed={activeBubble === index}
+          onPointerEnter={() => { setPauseBubbles(true); setActiveBubble(index) }}
+          onFocus={() => { setPauseBubbles(true); setActiveBubble(index) }}
+          onBlur={() => setPauseBubbles(false)}
+          onClick={() => setActiveBubble(index)}
+        >
+          <span aria-hidden>{bubble.icon}</span> {bubble.title}
+          <strong>{bubble.value}</strong>
+        </button>
+      ))}
     </div>
   )
 }

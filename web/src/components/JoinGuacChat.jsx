@@ -39,8 +39,6 @@ export default function JoinGuacChat() {
       const saved = JSON.parse(sessionStorage.getItem(STORE_KEY) || 'null')
       if (Array.isArray(saved) && saved.length) setMessages(saved.slice(-12))
     } catch {}
-    const timer = setTimeout(() => setOpen(true), 900)
-    return () => clearTimeout(timer)
   }, [])
 
   useEffect(() => {
@@ -151,9 +149,9 @@ export default function JoinGuacChat() {
           </div>
         </section>
       ) : (
-        <button type="button" onClick={() => setOpen(true)} className="flex items-center gap-2 rounded-full bg-[#15281C] py-2 pl-2 pr-4 text-sm font-extrabold text-white shadow-xl transition hover:-translate-y-0.5" aria-label="Ask Guac-AI">
-          <span className="grid h-9 w-9 place-items-center rounded-full bg-white/10"><GuacMascot expression="happy" size={31} /></span>
-          <MessageCircle size={16} /> Ask Guac-AI
+        <button type="button" onClick={() => setOpen(true)} className="flex items-center gap-1.5 rounded-full bg-[#15281C] py-1.5 pl-1.5 pr-3 text-xs font-extrabold text-white shadow-xl transition hover:-translate-y-0.5" aria-label="Ask Guac-AI">
+          <span className="grid h-7 w-7 place-items-center rounded-full bg-white/10"><GuacMascot expression="happy" size={25} /></span>
+          <MessageCircle size={13} /> Ask Guac-AI
         </button>
       )}
     </div>

@@ -54,6 +54,37 @@ export async function middleware(request) {
   return supabaseResponse
 }
 
+// ⚠️ ALLOWLIST, NOT A CATCH-ALL. Do not widen this back to `/(.*)`.
+//
+// This middleware returns a response that can carry a refreshed Supabase auth
+// cookie. Any response that might Set-Cookie is user-specific, so Next marks it
+// `Cache-Control: private, no-store` and Vercel's CDN refuses to cache it —
+// which means every request it touches runs a serverless function, even one for
+// a page that was PRERENDERED at build time.
+//
+// Measured 2026-08-03: the old catch-all matcher put all 548 arcade URLs behind
+// this. Production served `/games/[slug]` (a build-time `●` page) as
+// `source: serverless`, `X-Vercel-Cache: MISS` on every single hit — 212
+// req/min sustained, ~81k function invocations per 12h, against 36 real
+// visitors. 177 of 194 routes reported `ƒ` for the same reason.
+//
+// So it now runs ONLY where the code above can actually change the outcome:
+// the dashboard redirect, the auth-page redirect, and the `/` Android nudge.
+// Everything else — games, articles, marketing, /join — serves from the CDN.
+//
+// Session refresh is not lost: the browser SDK refreshes tokens client-side,
+// and any navigation INTO a guarded route re-enters this middleware.
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|api).*)'],
+  matcher: [
+    '/',                      // Android → /download nudge
+    '/login/:path*',          // isAuthPage
+    '/register/:path*',       // isAuthPage
+    '/dashboard/:path*',      // isDashboard ↓
+    '/receipts/:path*',
+    '/rewards/:path*',
+    '/shopping/:path*',
+    '/car-miles/:path*',
+    '/profile/:path*',
+    '/admin/:path*',
+  ],
 }

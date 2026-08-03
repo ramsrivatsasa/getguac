@@ -118,10 +118,30 @@ export function createChallenge() {
   const answer = plus ? a + b : a - b
   const now = Date.now()
   const exp = now + TTL_MS
-  // The signed payload carries the ANSWER, never the operands, so the wire
-  // format gives a scraper nothing to compute from.
-  const payload = `${answer}.${exp}.${now}`
-  return { svg: renderSvg(a, plus, b), token: `${payload}.${sign(payload)}` }
+  // 🔴 THE ANSWER MUST NEVER APPEAR IN THE TOKEN. IT IS SENT TO THE CLIENT.
+  //
+  // The first version shipped `${answer}.${exp}.${iat}.${sig}` — so the token
+  // literally BEGAN with the digit the user was meant to read off the image.
+  // Verified against production 2026-08-03: four fetches returned tokens
+  // starting 8, 2, 9, 9, each the correct answer. `token.split('.')[0]` was a
+  // complete bypass, and every bit of the distorted rendering below was
+  // decoration over a plaintext answer. The file's own comment claimed the
+  // wire format "gives a scraper nothing to compute from"; it gave it
+  // everything.
+  //
+  // Now the answer is only ever an HMAC INPUT. The token carries the expiry
+  // and issued-at, plus a signature over (answer, exp, iat). verifyChallenge()
+  // recomputes that signature from what the USER typed and compares. A client
+  // cannot read the answer out, and cannot forge a signature without the
+  // secret — so the only attack left is guessing.
+  //
+  // ⚠️ Guessing is 1-in-9, because Ram asked twice for single-digit answers
+  // and that stays. The honeypot, MIN_FORM_SECONDS and per-IP rate limiting
+  // are what carry the load here — this arithmetic proves a human is present,
+  // it is not a work factor. If fake signups appear, add attempt limiting
+  // before you make the sum harder.
+  const payload = `${exp}.${now}`
+  return { svg: renderSvg(a, plus, b), token: `${payload}.${sign(`${answer}.${payload}`)}` }
 }
 
 // Returns { ok: true } or { ok: false, reason }.
@@ -134,17 +154,11 @@ export function verifyChallenge(token, answer, honeypot, opts = {}) {
     return { ok: false, reason: 'missing' }
   }
   const parts = String(token).split('.')
-  if (parts.length !== 4) return { ok: false, reason: 'malformed' }
-  const [ansStr, expStr, iatStr, sig] = parts
+  if (parts.length !== 3) return { ok: false, reason: 'malformed' }
+  const [expStr, iatStr, sig] = parts
 
-  const expected = sign(`${ansStr}.${expStr}.${iatStr}`)
-  // Constant-time compare so a wrong signature leaks nothing by timing.
-  const gotBuf = Buffer.from(String(sig))
-  const expBuf = Buffer.from(expected)
-  if (gotBuf.length !== expBuf.length || !timingSafeEqual(gotBuf, expBuf)) {
-    return { ok: false, reason: 'bad-signature' }
-  }
-
+  // Check expiry and timing BEFORE the signature, so a stale token cannot be
+  // replayed indefinitely by an attacker who found one valid answer for it.
   const exp = Number(expStr)
   if (!Number.isFinite(exp) || Date.now() > exp) return { ok: false, reason: 'expired' }
 
@@ -154,8 +168,20 @@ export function verifyChallenge(token, answer, honeypot, opts = {}) {
     if (Date.now() - iat < opts.minSeconds * 1000) return { ok: false, reason: 'too-fast' }
   }
 
-  const got = Number(String(answer).trim())
-  if (!Number.isFinite(got) || got !== Number(ansStr)) return { ok: false, reason: 'wrong-answer' }
+  // The answer the USER typed is an input to the signature, never read out of
+  // the token — see the note in createChallenge(). A wrong answer produces a
+  // different digest and fails here, which is also what makes this the
+  // 'wrong-answer' path: there is nothing else to compare against.
+  const got = String(answer).trim()
+  if (!/^\d{1,3}$/.test(got)) return { ok: false, reason: 'wrong-answer' }
+
+  const expected = sign(`${Number(got)}.${expStr}.${iatStr}`)
+  // Constant-time compare so a wrong signature leaks nothing by timing.
+  const gotBuf = Buffer.from(String(sig))
+  const expBuf = Buffer.from(expected)
+  if (gotBuf.length !== expBuf.length || !timingSafeEqual(gotBuf, expBuf)) {
+    return { ok: false, reason: 'wrong-answer' }
+  }
 
   return { ok: true }
 }

@@ -101,14 +101,20 @@ function renderSvg(a, plus, b) {
        + `</g></svg>`
 }
 
-// Small numbers on purpose — this is "1 + 1", not a puzzle. Addition and
-// subtraction only, and subtraction never goes negative so nobody has to
-// think about sign.
+// 🔑 DELIBERATELY TRIVIAL. Single digits in, single digit out — "3 + 4", not
+// "17 + 8". The point is to prove a person is present, not to test anyone's
+// arithmetic, and every extra second of thinking is a signup lost. Ram asked
+// for this twice; keep it this easy.
+// Subtraction never goes negative, so nobody has to reason about sign.
 export function createChallenge() {
   const plus = randomInt(0, 2) === 0
   let a, b
-  if (plus) { a = randomInt(1, 10); b = randomInt(1, 10) }
-  else { a = randomInt(4, 13); b = randomInt(1, a) }
+  if (plus) {
+    // a + b <= 9, so the answer is always one digit
+    a = randomInt(1, 6); b = randomInt(1, 10 - a)
+  } else {
+    a = randomInt(3, 10); b = randomInt(1, a)
+  }
   const answer = plus ? a + b : a - b
   const now = Date.now()
   const exp = now + TTL_MS

@@ -71,6 +71,28 @@ export async function POST() {
       return Response.json({ error: 'Email not yet confirmed' }, { status: 403 })
     }
 
+    // ── Stamp the confirmation on public.signups ───────────────────────────
+    // 🔴 MUST STAY ABOVE THE `no_pending_username` RETURN BELOW.
+    // That early return fires for anyone who already finished signup or came
+    // in through a different flow (OAuth, an admin-created account). Stamping
+    // after it would silently skip those users and make confirmed_at look
+    // like a much smaller number than it is.
+    //
+    // Done here, right after the email-confirmed guard, so it records exactly
+    // one thing: this person clicked the link. Best-effort — never fail a
+    // confirmation over an analytics write.
+    const sbAdminEarly = admin()
+    try {
+      const { error: cErr } = await sbAdminEarly
+        .from('signups')
+        .update({ confirmed_at: new Date().toISOString() })
+        .eq('user_id', user.id)
+        .is('confirmed_at', null)          // first confirmation only, never overwritten
+      if (cErr) console.error('[auth/finish-signup] signups.confirmed_at failed:', cErr.message)
+    } catch (e) {
+      console.error('[auth/finish-signup] signups.confirmed_at threw:', e.message)
+    }
+
     const meta = user.user_metadata || {}
     const pending = String(meta.pending_username || '').toLowerCase()
     const first_name = meta.first_name || null
@@ -82,7 +104,7 @@ export async function POST() {
       return Response.json({ ok: true, claimed: false, reason: 'no_pending_username' })
     }
 
-    const sbAdmin = admin()
+    const sbAdmin = sbAdminEarly
 
     // Re-check availability — the username may have been claimed by someone
     // else during the time the user took to confirm their email.

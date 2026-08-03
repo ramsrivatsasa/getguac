@@ -189,7 +189,41 @@ export async function POST(request) {
       return Response.json({ error: error.message }, { status: 400 })
     }
 
+    // ── Record the signup in OUR OWN tables ────────────────────────────────
+    // 🔴 THIS MUST RUN BEFORE THE CONFIRMATION-PENDING RETURNS BELOW.
+    // The `profiles` upsert further down sits in the auto-confirmed branch,
+    // which only executes when "Confirm email" is OFF — i.e. never in
+    // production. So for every real signup, nothing was written here at all,
+    // and the person's email existed only in auth.users (a schema you cannot
+    // join from SQL) while their chosen handle existed only in user_metadata.
+    //
+    // Writing it here means an account that is created but NEVER confirmed is
+    // still a queryable row — and those are precisely the ones worth chasing.
+    //
+    // Best-effort: a failure here must never fail a signup that Supabase has
+    // already accepted, so it is logged and swallowed.
+    async function recordSignup(uid) {
+      try {
+        const { error: sErr } = await sbAdmin.from('signups').upsert({
+          user_id: uid,
+          email,
+          requested_username: username,
+          first_name,
+          last_name,
+          birth_date: body.birth_date || null,
+          age: body.age || null,
+          mobile_no: body.mobile_no || null,
+          signup_method: 'email',
+        }, { onConflict: 'user_id' })
+        if (sErr) console.error('[auth/sign-up] signups insert failed:', sErr.message)
+      } catch (e) {
+        console.error('[auth/sign-up] signups insert threw:', e.message)
+      }
+    }
+
     const userId = data?.user?.id
+    if (userId) await recordSignup(userId)
+
     if (!userId) {
       // Some GoTrue/SDK combinations return { user: null, session: null }
       // with no error when "Confirm email" is on, even though the user WAS

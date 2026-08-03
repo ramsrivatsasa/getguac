@@ -48,7 +48,13 @@ create table if not exists public.signups (
   -- The funnel. Each is set once, by the step that actually happened, so the
   -- drop-off between them is readable straight off this table.
   confirmed_at        timestamptz,
-  first_receipt_at    timestamptz
+  first_receipt_at    timestamptz,
+  -- Confirmation-reminder state. Counting the sends in the SAME row we check
+  -- confirmed_at against is what makes the reminder job safe to re-run: it can
+  -- never send twice for one nudge, even if the cron double-fires or a deploy
+  -- replays it.
+  reminder_count      integer     not null default 0,
+  last_reminder_at    timestamptz
 );
 
 comment on table public.signups is
@@ -59,6 +65,10 @@ comment on column public.signups.confirmed_at is
   'Set by /api/auth/finish-signup when the confirmation link is clicked. NULL means the email never landed or was never opened.';
 comment on column public.signups.first_receipt_at is
   'First receipt ever saved. NULL means the account was created but the core action was never performed — the drop-off that matters most.';
+comment on column public.signups.reminder_count is
+  'How many confirmation reminders have been sent. Capped in /api/cron/signup-reminders; this is a real person''s inbox, not a retry queue.';
+comment on column public.signups.last_reminder_at is
+  'When the last reminder went out. Enforces the gap between nudges.';
 
 alter table public.signups enable row level security;
 -- No policies on purpose. See the PII note above.

@@ -1,3 +1,5 @@
+'use client'
+import { useEffect, useState } from 'react'
 import Script from 'next/script'
 
 // The AdSense loader, rendered only where an ad can actually appear.
@@ -19,8 +21,28 @@ import Script from 'next/script'
 // next/script dedupes on `id`, so several AdSlots on one page load it once.
 const CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || 'ca-pub-5959691671441705'
 
+// ⚠️ THE IN-APP SKIP IS A PRIVACY PROMISE, NOT A PREFERENCE.
+// /privacy §8 says no ad tracker runs on a signed-in page. The mobile WebView
+// renders these same public pages to a signed-in user, so Google must not load
+// there. That check used to live in MarketingShell as `cookies().get(...)`,
+// which is a dynamic API: it made all 548 arcade pages and 27 marketing pages
+// impossible to prerender or CDN-cache, so every crawler hit ran a serverless
+// render (~82k invocations / 12h, measured 2026-08-03).
+//
+// Reading the cookie HERE, on the client, keeps the promise and keeps the HTML
+// byte-identical for everyone — so the page can be static.
+//
+// 🔒 Renders null on the server AND on the first client render, then decides
+// after mount. Do not "optimise" that into reading the cookie during render:
+// that is exactly what caused React #418/#423/#425 in the currency sweep.
 export default function AdSenseScript() {
-  if (!CLIENT) return null
+  const [allowed, setAllowed] = useState(false)
+  useEffect(() => {
+    const embedded = document.cookie.split('; ').some((c) => c === 'guac_embedded=1')
+    if (!embedded) setAllowed(true)
+  }, [])
+
+  if (!CLIENT || !allowed) return null
   return (
     <Script
       id="adsbygoogle-init"

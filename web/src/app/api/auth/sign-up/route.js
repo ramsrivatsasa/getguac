@@ -12,7 +12,7 @@ import { createMailbox, mailboxExists } from '../../../../lib/migadu'
 import { encryptSecret, generateMailboxPassword } from '../../../../lib/crypto'
 import { validatePassword } from '../../../../lib/passwordStrength'
 import { isDisposableEmail } from '../../../../lib/disposable-emails'
-import { verifyTurnstile } from '../../../../lib/turnstile'
+import { verifyChallenge, MIN_FORM_SECONDS } from '../../../../lib/demo-challenge'
 export const runtime = 'nodejs'
 
 // Best-effort: provision the Migadu mailbox at signup so the user's
@@ -75,17 +75,35 @@ export async function POST(request) {
         status: 'disposable_email',
       }, { status: 400 })
     }
-    // Cloudflare Turnstile CAPTCHA token verification. Silently
-    // skipped when TURNSTILE_SECRET_KEY isn't configured so the
-    // signup path still works in local dev / before keys are
-    // provisioned in Vercel.
-    const remoteIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-                  || request.headers.get('x-real-ip')
-                  || null
-    const turnstile = await verifyTurnstile(body.turnstile_token, remoteIp)
-    if (!turnstile.ok) {
+    // Arithmetic challenge, replacing Cloudflare Turnstile (2026-08-03).
+    //
+    // 🔴 WHY (measured on /register, 2026-08-02): Turnstile pulled 0.5-1.3 MB
+    // and took ~2,227 ms on a fast connection / ~5,996 ms on a mid-tier
+    // Android over 4G, with the submit button DISABLED the whole time. Ram's
+    // own code comment already recorded the failure mode this caused once:
+    // "the submit button just sits disabled with no explanation".
+    //
+    // ⚠️ Registration is a harder target than the demo login — a bot that
+    // gets through creates a real account, provisions a Migadu mailbox
+    // against a paid quota, and triggers a confirmation email. So sign-up
+    // enforces THREE gates, not one:
+    //   1. the signed sum        (HMAC; operands never on the wire)
+    //   2. the honeypot field    (CSS-hidden; scripts fill it, people do not)
+    //   3. MIN_FORM_SECONDS      (a human cannot complete this form in <3s;
+    //                             the issued-at is inside the signed token so
+    //                             the client cannot backdate it)
+    // 🔑 If fake signups ever appear, raise MIN_FORM_SECONDS first; putting
+    // Turnstile back on /register alone is the fallback.
+    const challenge = verifyChallenge(body.demo_token, body.demo_answer, body.website, {
+      minSeconds: MIN_FORM_SECONDS,
+    })
+    if (!challenge.ok) {
       return Response.json({
-        error: 'CAPTCHA verification failed. Please try again.',
+        error: challenge.reason === 'too-fast'
+          ? 'That was submitted a little too quickly — please try again.'
+          : challenge.reason === 'wrong-answer'
+            ? 'That answer was not right. Try the new one.'
+            : 'Check expired — please try again.',
         status: 'captcha_failed',
       }, { status: 400 })
     }

@@ -341,11 +341,16 @@ function LoginPageInner() {
             {demoMode && (
               <div>
                 <label htmlFor="demo-answer" className="block text-sm font-semibold text-gray-700 mb-1">
-                  Quick check: what is{' '}
-                  <span className="font-extrabold text-guac-700">
-                    {challenge ? challenge.question : '…'}
-                  </span>?
+                  Solve this to continue
                 </label>
+                {/* The digits are SVG PATHS, not text — nothing here is
+                    machine-readable. aria-hidden because a screen reader
+                    would only announce noise; the help text below carries
+                    the accessible explanation. */}
+                <div
+                  className="inline-flex items-center justify-center rounded-lg bg-gray-100 border border-gray-200 px-3 py-2 mb-2 select-none"
+                  dangerouslySetInnerHTML={{ __html: challenge?.svg || '' }}
+                />
                 <input
                   id="demo-answer"
                   type="text"
@@ -358,7 +363,7 @@ function LoginPageInner() {
                   aria-describedby="demo-answer-help"
                 />
                 <p id="demo-answer-help" className="text-[11px] text-gray-500 mt-1">
-                  Confirms you are a person. No tracking, no third-party script.
+                  Type the result. Confirms you are a person — no tracking, no third-party script. Stuck? Contact support.
                 </p>
                 {/* Honeypot: hidden from people, filled by naive form-fillers.
                     Any value fails verification server-side before the sum is

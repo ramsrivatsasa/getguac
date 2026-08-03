@@ -12,8 +12,8 @@ import { createChallenge } from '../../../../lib/demo-challenge'
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
-  const { question, token } = createChallenge()
-  return Response.json({ question, token }, {
+  const { svg, token } = createChallenge()
+  return Response.json({ svg, token }, {
     headers: { 'Cache-Control': 'no-store, max-age=0' },
   })
 }

@@ -1,6 +1,5 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
-import Script from 'next/script'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
@@ -21,11 +20,8 @@ const SIGNUP_BENEFITS = [
   { icon: '↩️', text: 'Never miss a return or refund deadline' },
   { icon: '🏷️', text: 'Find a better price with Steals' },
 ]
-// Cloudflare Turnstile site key — public, safe to ship in the client
-// bundle. When unset (local dev / before keys are provisioned in
-// Vercel), the widget renders nothing and the server-side verify is
-// also silently skipped, so the signup path still works.
-const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ''
+// TURNSTILE_SITE_KEY removed 2026-08-03 with the widget — registration
+// now uses the distorted-image sum in lib/demo-challenge.js.
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -80,11 +76,13 @@ export default function RegisterPage() {
   // Cloudflare Turnstile token — populated by the widget on success.
   // Server-side verify treats a missing token as a failed CAPTCHA
   // (unless TURNSTILE_SECRET_KEY isn't set, in which case it skips).
-  const [turnstileToken, setTurnstileToken] = useState('')
-  // True when the Turnstile script itself failed to load (ad-blocker,
-  // network). Without this the submit button just sits disabled with no
-  // explanation — the exact bug we shipped when CSP blocked the script.
-  const [turnstileBlocked, setTurnstileBlocked] = useState(false)
+  // 🔴 Turnstile REPLACED 2026-08-03 with a distorted-image sum.
+  // Measured on /register: 0.5-1.3 MB and ~2,227 ms desktop / ~5,996 ms on a
+  // mid-tier Android over 4G, with the submit button disabled the whole time.
+  // Registration is a harder target than the demo login, so the server also
+  // enforces MIN_FORM_SECONDS on top of the sum and the honeypot.
+  const [challenge, setChallenge] = useState(null)   // { svg, token }
+  const [answer, setAnswer] = useState('')
 
   // Auto-derive age from birth date so the two fields can't disagree.
   // Years between today and birthDate, rounded down at the month/day boundary.
@@ -104,15 +102,15 @@ export default function RegisterPage() {
     if (form.age !== next) setForm(p => ({ ...p, age: next }))
   }, [form.birthDate])
 
-  // Listen for the Turnstile success callback (the global JS handlers
-  // dispatch a CustomEvent because Next.js's <Script> can't reference
-  // React setState directly). Same listener handles success + error +
-  // expiry (error/expiry pass an empty string → disables submit).
+  // Fetch the signed challenge once on mount. One ~1 KB JSON response, no
+  // third-party script, nothing an ad-blocker can break.
   useEffect(() => {
-    if (!TURNSTILE_SITE_KEY) return
-    function onToken(e) { setTurnstileToken(e?.detail || '') }
-    window.addEventListener('turnstile-token', onToken)
-    return () => window.removeEventListener('turnstile-token', onToken)
+    let live = true
+    fetch('/api/auth/demo-challenge', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((d) => { if (live && d?.token) setChallenge(d) })
+      .catch(() => {})
+    return () => { live = false }
   }, [])
 
   // Live availability check for username
@@ -169,7 +167,8 @@ export default function RegisterPage() {
           // Bot-prevention payload — honeypot must be empty, Turnstile
           // token comes from the widget (or empty if no key configured).
           website: honeypot,
-          turnstile_token: turnstileToken,
+          demo_token: challenge?.token,
+          demo_answer: answer,
         }),
       })
       const data = await res.json()
@@ -522,52 +521,36 @@ export default function RegisterPage() {
               />
             </div>
 
-            {/* Cloudflare Turnstile CAPTCHA — invisible most of the
-                time; falls back to a micro-challenge for suspicious
-                traffic. Self-hides when no site key is configured so
-                local-dev signups still work. */}
-            {TURNSTILE_SITE_KEY && (
-              <>
-                {/* afterInteractive (not lazyOnload): the CAPTCHA gates the
-                    submit button, so it must load as early as possible.
-                    onError → visible feedback instead of a dead button. */}
-                <Script
-                  src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-                  strategy="afterInteractive"
-                  onError={() => setTurnstileBlocked(true)}
-                />
-                <div
-                  className="cf-turnstile flex justify-center"
-                  data-sitekey={TURNSTILE_SITE_KEY}
-                  data-callback="onTurnstileSuccess"
-                  data-error-callback="onTurnstileError"
-                  data-expired-callback="onTurnstileExpired"
-                />
-                {turnstileBlocked && !turnstileToken && (
-                  <div className="rounded-xl bg-amber-50 border-2 border-amber-300 px-3 py-2.5 text-xs font-semibold text-amber-800 flex items-start gap-2">
-                    <AlertCircle size={14} className="mt-0.5 flex-shrink-0" />
-                    <span>
-                      The security check couldn&apos;t load — an ad-blocker or network filter may be
-                      blocking <span className="font-mono">challenges.cloudflare.com</span>. Allow it (or pause the
-                      blocker for getguac.app) and reload this page to finish signing up.
-                    </span>
-                  </div>
-                )}
-                <Script id="turnstile-callbacks" strategy="afterInteractive">
-                  {`
-                    window.onTurnstileSuccess = function(token) {
-                      window.dispatchEvent(new CustomEvent('turnstile-token', { detail: token }))
-                    }
-                    window.onTurnstileError = function() {
-                      window.dispatchEvent(new CustomEvent('turnstile-token', { detail: '' }))
-                    }
-                    window.onTurnstileExpired = function() {
-                      window.dispatchEvent(new CustomEvent('turnstile-token', { detail: '' }))
-                    }
-                  `}
-                </Script>
-              </>
-            )}
+            {/* Distorted-image sum. The digits are SVG PATHS, so the DOM
+                holds no machine-readable text. Numerals are universal — no
+                English required, which the worded version wrongly assumed.
+                ⚠️ Not screen-reader readable: that is the real cost of any
+                image CAPTCHA. If a blind user is blocked, add an audio or
+                email fallback — do NOT weaken the image. */}
+            <div>
+              <label htmlFor="signup-answer" className="block text-sm font-semibold text-gray-700 mb-1">
+                Solve this to continue
+              </label>
+              <div
+                aria-hidden="true"
+                className="inline-flex items-center justify-center rounded-lg bg-gray-100 border border-gray-200 px-3 py-2 mb-2 select-none"
+                dangerouslySetInnerHTML={{ __html: challenge?.svg || '' }}
+              />
+              <input
+                id="signup-answer"
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
+                value={answer}
+                onChange={(e) => setAnswer(e.target.value)}
+                placeholder="Type the result"
+                className="input w-full"
+                aria-describedby="signup-answer-help"
+              />
+              <p id="signup-answer-help" className="text-[11px] text-gray-500 mt-1">
+                Confirms you are a person. No tracking, no third-party script. Stuck? Contact support.
+              </p>
+            </div>
 
             {/* In-page error — red, persistent, right where the user is looking. */}
             {errorMsg && (
@@ -579,7 +562,7 @@ export default function RegisterPage() {
 
             <button
               type="submit"
-              disabled={loading || usernameStatus !== 'available' || !acceptTerms || underage || (TURNSTILE_SITE_KEY && !turnstileToken)}
+              disabled={loading || usernameStatus !== 'available' || !acceptTerms || underage || !answer.trim()}
               className="btn-primary w-full justify-center py-2.5 mt-1"
             >
               {loading ? 'Creating account…' : 'Create my free account'}

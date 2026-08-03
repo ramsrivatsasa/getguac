@@ -1,106 +1,137 @@
-// Lightweight arithmetic challenge for the DEMO ACCOUNT sign-in.
+// Distorted-image arithmetic check for demo sign-in and registration.
 //
-// Replaces Cloudflare Turnstile on that one path. Measured cost of Turnstile
-// on /login?demo=1 (2026-08-02): 0.5–1.3 MB downloaded, ~2.2s to settle on a
-// fast connection and ~6.0s on a mid-tier Android over 4G — with the submit
-// button gated on the token the whole time. This costs zero bytes and zero
-// network round trips.
+// Replaces Cloudflare Turnstile on both paths. Measured cost of Turnstile
+// (2026-08-02): 0.5–1.3 MB downloaded, ~2.2s to settle on a fast connection
+// and ~6.0s on a mid-tier Android over 4G, with the submit button disabled
+// the whole time. This is a ~1 KB inline SVG and one JSON round trip.
 //
-// 🔑 WHY THIS IS AN ACCEPTABLE TRADE HERE, AND ONLY HERE:
-// the demo credentials are PUBLISHED IN PLAIN TEXT on /join. There is no
-// secret to protect and no account to take over — the challenge exists only
-// to stop trivial scripted hammering of a shared login. Turnstile was
-// enormous overkill for that.
+// ── WHY DIGITS DRAWN AS PATHS ────────────────────────────────────────────
+// Three earlier attempts, and why each was wrong:
+//   1. "4 + 5" as TEXT   — /\d+\s*[+-]\s*\d+/ solves it in four characters.
+//   2. "four plus five"  — beats that regex, but requires reading ENGLISH.
+//                          GetGuac's users do not all read English, and
+//                          locking them out to inconvenience a scraper is a
+//                          bad trade.
+//   3. "I am not a robot" checkbox — pure UX. reCAPTCHA v2 works because
+//                          Google scores behaviour behind it; with no such
+//                          signal the box alone proves nothing.
+// Digits drawn as SVG PATHS are universal — a numeral reads the same in every
+// language — and carry no machine-readable text: the DOM holds
+// `<path d="M3 2L17 2…">`, not "8 + 3".
 //
-// 🔒 DO NOT reuse this for /register or for real user sign-in. Registration
-// is where bot defence actually matters (fake accounts, mailbox
-// provisioning, Migadu quota), and a solvable-by-regex sum protects none of
-// it. Turnstile stays there.
+// ⚠️ ACCESSIBILITY — the real cost of any image CAPTCHA: a screen reader
+// cannot read this. The aria-label says a check is present and points at
+// support rather than leaking the operands. If a blind user is ever blocked,
+// that is a genuine bug and the fix is an audio or email fallback, NOT
+// weakening the image.
 //
-// Stateless by design: no DB row, no session, no store to clean up. The
-// server signs (a, b, expiry) with HMAC; the client echoes the signed blob
-// back with the user's answer; the server re-derives and compares. Nothing
-// is trusted from the client except the signature it cannot forge.
+// Stateless: no DB row, no session. The server HMAC-signs (answer, expiry,
+// issued-at); the client echoes that blob back with the typed result.
+// Nothing is trusted from the client except a signature it cannot forge.
 import { createHmac, timingSafeEqual, randomInt } from 'node:crypto'
 
-// Falls back to the service-role key so this works before anyone sets a
-// dedicated secret. Any stable server-only string is fine — it never leaves
-// the server and rotating it only invalidates in-flight challenges.
 function secret() {
   return process.env.DEMO_CHALLENGE_SECRET
       || process.env.SUPABASE_SERVICE_ROLE_KEY
       || 'getguac-demo-challenge-fallback'
 }
 
-const TTL_MS = 10 * 60 * 1000   // 10 minutes: generous for a human, short
-                                // enough that a harvested pair is useless.
+const TTL_MS = 10 * 60 * 1000
+
+// Registration only. A person cannot fill in username, email, password and
+// birth date in under three seconds; a script posts instantly. The issued-at
+// lives inside the signature, so the client cannot backdate it.
+export const MIN_FORM_SECONDS = 3
 
 function sign(payload) {
   return createHmac('sha256', secret()).update(payload).digest('base64url')
 }
 
-// ── Bot resistance ────────────────────────────────────────────────────────
-// A literal "3 + 4 = ?" is solved by a four-character regex, so the prompt is
-// never rendered as digits and an operator:
+// ── Digit rendering ───────────────────────────────────────────────────────
+// Seven-segment geometry drawn as stroked paths. Every glyph is jittered and
+// rotated slightly, so no two challenges render byte-identically and the SVG
+// cannot be matched against a fixed template.
 //
-//   1. NUMBERS ARE WORDS.        "seven plus two"  — `/\d+\s*\+\s*\d+/` finds
-//                                nothing to parse.
-//   2. THE OPERATION VARIES.     plus / minus / times, so a scraper cannot
-//                                assume addition.
-//   3. SUBTRACTION NEVER GOES NEGATIVE and multiplication stays inside the
-//                                times tables — still trivial for a person.
-//   4. A HONEYPOT FIELD ships alongside (see the login page): hidden from
-//                                humans, filled by naive form-fillers.
-//
-// This is not unbreakable and is not meant to be — anyone willing to write a
-// word-to-number map gets through. It is a speed bump on a login whose
-// credentials are already printed on /join. 🔒 It must never be used to
-// protect real accounts; see the note at the top of this file.
-const WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve']
-const OPS = [
-  { key: 'plus',  word: 'plus',  apply: (a, b) => a + b },
-  { key: 'minus', word: 'minus', apply: (a, b) => a - b },
-  { key: 'times', word: 'times', apply: (a, b) => a * b },
-]
+//    aaa
+//   f   b
+//    ggg
+//   e   c
+//    ddd
+const SEG = {
+  0: 'abcdef', 1: 'bc', 2: 'abdeg', 3: 'abcdg', 4: 'bcfg',
+  5: 'acdfg', 6: 'acdefg', 7: 'abc', 8: 'abcdefg', 9: 'abcdfg',
+}
+// segment -> [x1, y1, x2, y2] inside a 20x34 cell
+const PATH = {
+  a: [3, 2, 17, 2], b: [17, 3, 17, 15], c: [17, 19, 17, 31],
+  d: [3, 32, 17, 32], e: [3, 19, 3, 31], f: [3, 3, 3, 15], g: [3, 17, 17, 17],
+}
 
+function glyph(digit, ox) {
+  const rot = randomInt(0, 13) - 6          // -6..+6 degrees
+  const dy = randomInt(0, 5) - 2
+  const d = (SEG[digit] || '').split('').map((k) => {
+    const [x1, y1, x2, y2] = PATH[k]
+    return `M${x1} ${y1}L${x2} ${y2}`
+  }).join('')
+  return `<g transform="translate(${ox} ${dy}) rotate(${rot} 10 17)"><path d="${d}"/></g>`
+}
+
+function operatorGlyph(plus, ox) {
+  const d = plus ? 'M4 17L16 17M10 11L10 23' : 'M4 17L16 17'
+  return `<g transform="translate(${ox} 0)"><path d="${d}"/></g>`
+}
+
+function renderSvg(a, plus, b) {
+  const parts = []
+  let x = 8
+  for (const ch of String(a)) { parts.push(glyph(Number(ch), x)); x += 24 }
+  parts.push(operatorGlyph(plus, x)); x += 24
+  for (const ch of String(b)) { parts.push(glyph(Number(ch), x)); x += 24 }
+  const w = x + 8
+  // Two faint strokes across the glyphs — cheap defeat for naive segment
+  // matching, faint enough not to bother a person.
+  const noise = [0, 1].map(() => {
+    const y1 = randomInt(4, 30), y2 = randomInt(4, 30)
+    return `<path d="M0 ${y1}L${w} ${y2}" stroke-opacity="0.22"/>`
+  }).join('')
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} 36" width="${w}" height="36" aria-hidden="true">`
+       + `<g fill="none" stroke="#15281C" stroke-width="3.4" stroke-linecap="round">`
+       + parts.join('') + noise
+       + `</g></svg>`
+}
+
+// Small numbers on purpose — this is "1 + 1", not a puzzle. Addition and
+// subtraction only, and subtraction never goes negative so nobody has to
+// think about sign.
 export function createChallenge() {
-  const op = OPS[randomInt(0, OPS.length)]
+  const plus = randomInt(0, 2) === 0
   let a, b
-  if (op.key === 'minus') {
-    // never negative — a human should not have to think about sign
-    a = randomInt(4, 12); b = randomInt(1, a)
-  } else if (op.key === 'times') {
-    a = randomInt(2, 6); b = randomInt(2, 6)
-  } else {
-    a = randomInt(2, 10); b = randomInt(2, 10)
-  }
-  const answer = op.apply(a, b)
-  const exp = Date.now() + TTL_MS
-  // The signed payload carries the ANSWER, not the operands, so the wire
+  if (plus) { a = randomInt(1, 10); b = randomInt(1, 10) }
+  else { a = randomInt(4, 13); b = randomInt(1, a) }
+  const answer = plus ? a + b : a - b
+  const now = Date.now()
+  const exp = now + TTL_MS
+  // The signed payload carries the ANSWER, never the operands, so the wire
   // format gives a scraper nothing to compute from.
-  const payload = `${answer}.${exp}`
-  return {
-    question: `${WORDS[a]} ${op.word} ${WORDS[b]}`,
-    token: `${payload}.${sign(payload)}`,
-  }
+  const payload = `${answer}.${exp}.${now}`
+  return { svg: renderSvg(a, plus, b), token: `${payload}.${sign(payload)}` }
 }
 
 // Returns { ok: true } or { ok: false, reason }.
-// ⚠️ Mirrors verifyTurnstile's shape so the call site reads the same.
-//
-// `honeypot` is the value of a field hidden from humans by CSS. Any non-empty
-// value means an automated form-filler walked the DOM, so it fails before the
-// arithmetic is even considered.
-export function verifyChallenge(token, answer, honeypot) {
+// `honeypot` is a CSS-hidden field: any value means an automated form-filler
+// walked the DOM, and it fails before the arithmetic is considered.
+// `opts.minSeconds` enforces a minimum time on form (sign-up only).
+export function verifyChallenge(token, answer, honeypot, opts = {}) {
   if (honeypot) return { ok: false, reason: 'honeypot' }
-  if (!token || answer === undefined || answer === null || answer === '') {
+  if (!token || answer === undefined || answer === null || String(answer).trim() === '') {
     return { ok: false, reason: 'missing' }
   }
   const parts = String(token).split('.')
-  if (parts.length !== 3) return { ok: false, reason: 'malformed' }
-  const [ansStr, expStr, sig] = parts
+  if (parts.length !== 4) return { ok: false, reason: 'malformed' }
+  const [ansStr, expStr, iatStr, sig] = parts
 
-  const expected = sign(`${ansStr}.${expStr}`)
+  const expected = sign(`${ansStr}.${expStr}.${iatStr}`)
   // Constant-time compare so a wrong signature leaks nothing by timing.
   const gotBuf = Buffer.from(String(sig))
   const expBuf = Buffer.from(expected)
@@ -110,6 +141,12 @@ export function verifyChallenge(token, answer, honeypot) {
 
   const exp = Number(expStr)
   if (!Number.isFinite(exp) || Date.now() > exp) return { ok: false, reason: 'expired' }
+
+  if (opts.minSeconds) {
+    const iat = Number(iatStr)
+    if (!Number.isFinite(iat)) return { ok: false, reason: 'malformed' }
+    if (Date.now() - iat < opts.minSeconds * 1000) return { ok: false, reason: 'too-fast' }
+  }
 
   const got = Number(String(answer).trim())
   if (!Number.isFinite(got) || got !== Number(ansStr)) return { ok: false, reason: 'wrong-answer' }

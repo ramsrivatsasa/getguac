@@ -12,6 +12,7 @@ import { createClient } from '../../../../lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { rateLimit, rateKey } from '../../../../lib/apiGuard'
 import { verifyTurnstile } from '../../../../lib/turnstile'
+import { verifyChallenge } from '../../../../lib/demo-challenge'
 export const runtime = 'nodejs'
 
 const VALID_USERNAME_RE = /^[a-z0-9][a-z0-9._-]{1,30}[a-z0-9]$/
@@ -66,16 +67,25 @@ export async function POST(request) {
       email = userRes.user.email
     }
 
-    // Demo account → require a Turnstile token (skips gracefully in local
-    // dev when TURNSTILE_SECRET_KEY isn't configured, same as sign-up).
+    // Demo account → arithmetic challenge instead of Turnstile.
+    //
+    // 🔴 WHY THE SWAP (measured 2026-08-02 on /login?demo=1):
+    // Turnstile pulled 0.5–1.3 MB and took ~2.2s on a fast connection and
+    // ~6.0s on a mid-tier Android over 4G, with the submit button disabled
+    // the entire time. Most visitors here arrive from a paid Facebook click.
+    // The demo credentials are PUBLISHED ON /join, so there is no secret to
+    // protect — the gate only needs to stop trivial scripted hammering.
+    //
+    // 🔒 REGISTRATION KEEPS TURNSTILE. Do not copy this to sign-up: that is
+    // where bot defence actually matters (fake accounts, mailbox
+    // provisioning, Migadu quota), and a word-sum will not carry it.
     if (email.toLowerCase() === DEMO_EMAIL) {
-      const remoteIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-                    || request.headers.get('x-real-ip')
-                    || null
-      const turnstile = await verifyTurnstile(body?.turnstile_token, remoteIp)
-      if (!turnstile.ok) {
+      const challenge = verifyChallenge(body?.demo_token, body?.demo_answer, body?.website)
+      if (!challenge.ok) {
         return Response.json({
-          error: 'CAPTCHA verification failed. Please try again.',
+          error: challenge.reason === 'wrong-answer'
+            ? 'That answer was not right. Try the new one.'
+            : 'Check expired — please try again.',
           captcha_required: true,
         }, { status: 403 })
       }

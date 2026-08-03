@@ -2,7 +2,6 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import Script from 'next/script'
 import { createClient } from '../../../lib/supabase/client'
 import toast from 'react-hot-toast'
 import GuacMascot from '../../../components/GuacMascot'
@@ -13,7 +12,8 @@ import { ShakeOnError } from '../../../components/animated'
 // On /login the CAPTCHA renders ONLY for the demo-account flow (?demo=1):
 // the demo credentials are published on the site, so the widget (verified
 // server-side in /api/auth/sign-in) keeps bots off the shared account.
-const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ''
+// TURNSTILE_SITE_KEY was removed with the widget on 2026-08-02 — the demo
+// path now uses the arithmetic challenge. /register still imports it.
 
 // The shared try-before-you-register account. Intentionally public —
 // also shown on /how-it-works and the tour deck's closing slide.
@@ -76,8 +76,16 @@ function LoginPageInner() {
   // ?demo=1 — "try before you sign up": prefill the shared demo account and
   // gate the sign-in behind Turnstile (see DEMO_CREDS note above).
   const isDemo = search?.get('demo') === '1'
-  const [turnstileToken, setTurnstileToken] = useState('')
-  const [turnstileBlocked, setTurnstileBlocked] = useState(false)
+  // 🔴 Turnstile was REPLACED here on 2026-08-02, demo path only.
+  // Measured on /login?demo=1: 0.5-1.3 MB downloaded and ~2.2s desktop /
+  // ~6.0s on a mid-tier Android over 4G before the submit button unlocked --
+  // paid on every ad visitor who clicks "Try the demo". The demo credentials
+  // are printed on /join, so there is no secret to defend; the gate only has
+  // to stop trivial scripted hammering.
+  // 🔒 /register KEEPS Turnstile. Do not copy this pattern there.
+  const [challenge, setChallenge] = useState(null)   // { question, token }
+  const [answer, setAnswer] = useState('')
+  const [website, setWebsite] = useState('')         // honeypot
   useEffect(() => {
     if (isDemo) setForm(DEMO_CREDS)
   }, [isDemo])
@@ -91,11 +99,16 @@ function LoginPageInner() {
   const demoMode = isDemo ||
     form.identifier.trim().toLowerCase() === DEMO_CREDS.identifier
 
+  // Fetch a fresh signed challenge whenever the demo account is targeted.
+  // One ~120-byte JSON response, no third-party script, nothing to block.
   useEffect(() => {
-    if (!demoMode || !TURNSTILE_SITE_KEY) return
-    function onToken(e) { setTurnstileToken(e?.detail || '') }
-    window.addEventListener('turnstile-token', onToken)
-    return () => window.removeEventListener('turnstile-token', onToken)
+    if (!demoMode) { setChallenge(null); return }
+    let live = true
+    fetch('/api/auth/demo-challenge', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((d) => { if (live && d?.token) setChallenge(d) })
+      .catch(() => {})
+    return () => { live = false }
   }, [demoMode])
 
   async function signInWithGoogle() {
@@ -126,7 +139,7 @@ function LoginPageInner() {
       const res = await fetch('/api/auth/sign-in', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, turnstile_token: turnstileToken || undefined }),
+        body: JSON.stringify({ ...form, demo_token: challenge?.token, demo_answer: answer || undefined, website }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -319,48 +332,53 @@ function LoginPageInner() {
                 </p>
               )}
             </div>
-            {/* Turnstile CAPTCHA — demo account only. The shared demo password
-                is public, so the widget (verified server-side) keeps bots out.
-                Keyed on demoMode, not the ?demo=1 URL: the server demands the
-                token whenever the identifier is the demo account, however the
-                user got here. Same widget + global-callback pattern as /register. */}
-            {demoMode && TURNSTILE_SITE_KEY && (
+            {/* Arithmetic challenge — demo account only. Replaces the
+                Turnstile widget that used to sit here; see the note by the
+                `challenge` state for the measurements that prompted it.
+                Numbers are spelled as WORDS and the operation varies, so a
+                scraper cannot match /\d+\s*\+\s*\d+/ and assume addition.
+                The signed token carries the ANSWER, never the operands. */}
+            {demoMode && (
               <div>
-                <Script
-                  src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-                  strategy="afterInteractive"
-                  onError={() => setTurnstileBlocked(true)}
+                <label htmlFor="demo-answer" className="block text-sm font-semibold text-gray-700 mb-1">
+                  Quick check: what is{' '}
+                  <span className="font-extrabold text-guac-700">
+                    {challenge ? challenge.question : '…'}
+                  </span>?
+                </label>
+                <input
+                  id="demo-answer"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  value={answer}
+                  onChange={(e) => setAnswer(e.target.value)}
+                  placeholder="Type the number"
+                  className="input w-full"
+                  aria-describedby="demo-answer-help"
                 />
-                <div
-                  className="cf-turnstile flex justify-center"
-                  data-sitekey={TURNSTILE_SITE_KEY}
-                  data-callback="onTurnstileSuccess"
-                  data-error-callback="onTurnstileError"
-                  data-expired-callback="onTurnstileExpired"
+                <p id="demo-answer-help" className="text-[11px] text-gray-500 mt-1">
+                  Confirms you are a person. No tracking, no third-party script.
+                </p>
+                {/* Honeypot: hidden from people, filled by naive form-fillers.
+                    Any value fails verification server-side before the sum is
+                    even considered. aria-hidden + tabIndex keeps it away from
+                    screen readers and keyboard users. */}
+                <input
+                  type="text"
+                  name="website"
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
+                  style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, opacity: 0 }}
                 />
-                {turnstileBlocked && !turnstileToken && (
-                  <p className="text-[11px] text-rose-600 font-semibold mt-1 text-center">
-                    The captcha couldn&apos;t load (ad-blocker?). Allow challenges.cloudflare.com and reload.
-                  </p>
-                )}
-                <Script id="turnstile-callbacks" strategy="afterInteractive">
-                  {`
-                    window.onTurnstileSuccess = function(token) {
-                      window.dispatchEvent(new CustomEvent('turnstile-token', { detail: token }))
-                    }
-                    window.onTurnstileError = function() {
-                      window.dispatchEvent(new CustomEvent('turnstile-token', { detail: '' }))
-                    }
-                    window.onTurnstileExpired = function() {
-                      window.dispatchEvent(new CustomEvent('turnstile-token', { detail: '' }))
-                    }
-                  `}
-                </Script>
               </div>
             )}
             <button
               type="submit"
-              disabled={loading || (demoMode && TURNSTILE_SITE_KEY && !turnstileToken)}
+              disabled={loading || (demoMode && !answer.trim())}
               className="btn-primary w-full justify-center py-2.5 mt-1"
             >
               {loading ? 'Signing in…' : isDemo ? 'Enter the demo' : 'Sign In'}

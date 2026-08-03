@@ -67,28 +67,62 @@ const PATH = {
   d: [3, 32, 17, 32], e: [3, 19, 3, 31], f: [3, 3, 3, 15], g: [3, 17, 17, 17],
 }
 
+// 🔴 THE DISTORTION MUST LIVE IN THE COORDINATES, NOT IN A transform=.
+//
+// The first version emitted `<g transform="translate(..) rotate(..)"><path
+// d="M3 2L17 2..."/></g>`. The rotation and jitter were real to the EYE, but
+// the `d` attribute still held canonical, unchanged segment coordinates — so a
+// parser ignored the transform, read `d`, and looked the digit up in a table
+// built from SEG/PATH. Measured 2026-08-03: a six-line regex solved 300/300.
+//
+// So every point is now rotated, offset and jittered in JS, and only the
+// resulting numbers reach the markup. No two renders of the same digit produce
+// the same `d`, and there is no canonical string left to match against.
+function transformPoint(x, y, cos, sin, ox, dy) {
+  const dx = x - 10, dyc = y - 17          // rotate about the cell centre
+  const rx = 10 + dx * cos - dyc * sin + ox + (randomInt(0, 15) - 7) / 10
+  const ry = 17 + dx * sin + dyc * cos + dy + (randomInt(0, 15) - 7) / 10
+  return `${rx.toFixed(1)} ${ry.toFixed(1)}`
+}
+
+// Returns an ARRAY of subpaths rather than an element — renderSvg merges every
+// glyph into ONE <path>, so the markup no longer reveals which strokes belong
+// to which character.
 function glyph(digit, ox) {
-  const rot = randomInt(0, 13) - 6          // -6..+6 degrees
+  const rad = ((randomInt(0, 13) - 6) * Math.PI) / 180   // -6..+6 degrees
   const dy = randomInt(0, 5) - 2
-  const d = (SEG[digit] || '').split('').map((k) => {
+  const cos = Math.cos(rad), sin = Math.sin(rad)
+  return (SEG[digit] || '').split('').map((k) => {
     const [x1, y1, x2, y2] = PATH[k]
-    return `M${x1} ${y1}L${x2} ${y2}`
-  }).join('')
-  return `<g transform="translate(${ox} ${dy}) rotate(${rot} 10 17)"><path d="${d}"/></g>`
+    return `M${transformPoint(x1, y1, cos, sin, ox, dy)}L${transformPoint(x2, y2, cos, sin, ox, dy)}`
+  })
 }
 
 function operatorGlyph(plus, ox) {
-  const d = plus ? 'M4 17L16 17M10 11L10 23' : 'M4 17L16 17'
-  return `<g transform="translate(${ox} 0)"><path d="${d}"/></g>`
+  const rad = ((randomInt(0, 9) - 4) * Math.PI) / 180
+  const cos = Math.cos(rad), sin = Math.sin(rad)
+  const strokes = plus ? [[4, 17, 16, 17], [10, 11, 10, 23]] : [[4, 17, 16, 17]]
+  return strokes.map(([x1, y1, x2, y2]) =>
+    `M${transformPoint(x1, y1, cos, sin, ox, 0)}L${transformPoint(x2, y2, cos, sin, ox, 0)}`)
 }
 
 function renderSvg(a, plus, b) {
-  const parts = []
+  let parts = []
   let x = 8
-  for (const ch of String(a)) { parts.push(glyph(Number(ch), x)); x += 24 }
-  parts.push(operatorGlyph(plus, x)); x += 24
-  for (const ch of String(b)) { parts.push(glyph(Number(ch), x)); x += 24 }
+  for (const ch of String(a)) { parts.push(...glyph(Number(ch), x)); x += 24 }
+  parts.push(...operatorGlyph(plus, x)); x += 24
+  for (const ch of String(b)) { parts.push(...glyph(Number(ch), x)); x += 24 }
   const w = x + 8
+
+  // Shuffle, then emit as ONE <path>. Every coordinate is absolute, so order is
+  // visually irrelevant — but it means the markup no longer groups strokes by
+  // character, and the '+' can no longer be spotted by counting two strokes in
+  // one element. Reading this now needs spatial clustering, not a regex.
+  for (let i = parts.length - 1; i > 0; i--) {
+    const j = randomInt(0, i + 1)
+    ;[parts[i], parts[j]] = [parts[j], parts[i]]
+  }
+  parts = [`<path d="${parts.join('')}"/>`]
   // Two faint strokes across the glyphs — cheap defeat for naive segment
   // matching, faint enough not to bother a person.
   const noise = [0, 1].map(() => {

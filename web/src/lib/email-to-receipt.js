@@ -349,6 +349,13 @@ async function insertStubReceipt(sb, userId, { fromAddr, subject, receivedAt, pr
     business_purchase: false,
     processed: false,
     validation_comment: `From email: ${subject || ''}\n\n${preview || ''}`,
+    // Tag the modality — migration_069's taxonomy. This insert is the stub
+    // created for an email we could NOT parse (total_amount 0, processed
+    // false), so it is exactly the row that would otherwise look like a failed
+    // scan when counting receipts with no line items. Without the tag there is
+    // no way to separate "the extractor is broken" from "this was an
+    // unparseable email", which is the distinction that matters.
+    source: 'email',
   }).select('id').single()
   if (error) throw error
   return { receipt_id: rcpt.id }

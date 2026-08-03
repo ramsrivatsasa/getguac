@@ -110,6 +110,24 @@ export async function POST(request) {
         business_purchase: body.business_purchase,
         validation_comment: body.validation_comment,
         user_category: body.user_category,
+        // 🔴 THIS ROUTE IS THE MAIN CAPTURE PATH AND IT TAGGED NOTHING.
+        // migration_069 defined the taxonomy (image/pdf/email/manual/statement)
+        // and save-receipt.js has always accepted opts.source — but this
+        // caller never passed it, so 273 of 347 rows on production had
+        // source = NULL. Only /api/receipts/from-pdf was tagging.
+        //
+        // The cost: receipts and statements could not be told apart when
+        // measuring extraction quality. "230 of 347 receipts have zero line
+        // items" looked catastrophic until it was split by source — statement
+        // imports and manual entries have no line items BY DESIGN. The real
+        // figure is 84 of 201 actual scans. Without this column that split
+        // cannot be done at all, and a genuine extraction bug is
+        // indistinguishable from correct behaviour.
+        //
+        // Default 'image' (phone camera / screenshot / drag-drop) is what this
+        // endpoint overwhelmingly serves; the client sends 'manual' when the
+        // user typed the form instead of uploading anything.
+        source: body.source || 'image',
       })
     } catch (e) {
       console.error('[receipts/save] pipeline error:', e)

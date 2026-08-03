@@ -70,6 +70,12 @@ const RECEIPT_COLUMNS = [
   'business_purchase', 'processed', 'payment_method', 'payment_last4',
   'rating', 'validation_tags', 'validation_comment', 'validated_at',
   'category', 'category_source',
+  // 'source' = capture modality (migration_069: image/pdf/email/manual/
+  // statement). It was missing here, so pickReceiptColumns SILENTLY STRIPPED
+  // it — any caller of upsertReceipt that tried to set or preserve it was
+  // ignored with no error. Omissions from this list fail quietly, which is
+  // exactly why the column ended up NULL on 273 of 347 production rows.
+  'source',
   'from_statement', 'statement_source', 'statement_import_id',
   'reconciled', 'reconciled_with', 'reconciled_at',
 ]

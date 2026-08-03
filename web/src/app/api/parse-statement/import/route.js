@@ -140,6 +140,14 @@ export async function POST(request) {
         payment_last4:     last4,
         from_statement:    true,
         statement_source:  source,
+        // ⚠️ LITERAL 'statement', NOT the `source` variable above it — that
+        // one holds the PDF FILENAME and belongs in statement_source. This is
+        // migration_069's modality column, which every other writer now sets,
+        // so extraction quality can be measured per capture path.
+        // Redundant with from_statement by design: one column answers "how did
+        // this arrive" for every row, instead of callers having to know that
+        // statements are the special case expressed as a boolean.
+        source:            'statement',
         statement_import_id: statementImportId,
         receipt_link:      linkParts.length ? `Statement row — ${linkParts.join(' · ')}`.slice(0, 500) : null,
       }

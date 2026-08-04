@@ -126,14 +126,28 @@ export default function MarketingShell({ subtitle, hideSearch = false, headerTit
           parser reaches it — before the header below exists — so there is no
           flash of marketing chrome inside the native app. Identical bytes for
           every visitor, so it does not stop the page being cached. */}
+      {/* 🔴 A CLASS, NOT AN ATTRIBUTE — AND NO DOUBLE QUOTES IN THE CSS BELOW.
+          The first version set data-gg-embedded="1" and matched it with
+          html[data-gg-embedded="1"]. React's server renderer HTML-escapes text
+          children of <style>, so the server sent
+              html[data-gg-embedded=&quot;1&quot;]
+          while the client produced real quotes. Two consequences, both shipped
+          to production before this fix:
+            1. Text-content hydration mismatch — a React runtime error on every
+               marketing page.
+            2. <style> content is RAW TEXT, so &quot; is never decoded. The
+               server-rendered selector was invalid CSS, meaning the in-app
+               chrome was NOT hidden until React hydrated and rewrote the node —
+               exactly the flash this script exists to prevent.
+          A class name needs no quotes, so nothing can be escaped. */}
       <script
         dangerouslySetInnerHTML={{
-          __html: "try{if(document.cookie.split('; ').indexOf('guac_embedded=1')>-1)document.documentElement.setAttribute('data-gg-embedded','1')}catch(e){}",
+          __html: "try{if(document.cookie.split('; ').indexOf('guac_embedded=1')>-1)document.documentElement.classList.add('gg-embedded')}catch(e){}",
         }}
       />
       {/* Scope the new typography + accents to marketing pages only. */}
       <style>{`
-        html[data-gg-embedded="1"] .gg-embed-hide { display: none !important; }
+        html.gg-embedded .gg-embed-hide { display: none !important; }
         .gg-marketing { overflow-x: clip; }
         .gg-marketing h1, .gg-marketing h2, .gg-marketing h3, .gg-marketing h4 { font-family: var(--font-bricolage), sans-serif; letter-spacing: -0.02em; }
         .gg-marketing a { transition: color .15s ease; }

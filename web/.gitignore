@@ -1,2 +1,5 @@
 .vercel
 .env*
+
+# route backups: copies of live routes, must never be compiled
+_route-backups/

@@ -12,7 +12,8 @@
 // noindex: an ad destination, not a page we want ranking against the real
 // homepage. `follow` so links out still count.
 import MarketingShell from '../../components/MarketingShell'
-import JoinClient from './JoinClient'
+// JoinClient.jsx is untouched on disk — swap this import back to revert.
+import JoinV3Client from './JoinV3Client'
 
 // Tagline instead of a keyword title: this page is noindex, so the title does no
 // search work — its only jobs are the browser tab and the share card.
@@ -65,7 +66,7 @@ export const metadata = {
 export default function Page() {
   return (
     <MarketingShell ads={false} hideSearch>
-      <JoinClient />
+      <JoinV3Client />
     </MarketingShell>
   )
 }

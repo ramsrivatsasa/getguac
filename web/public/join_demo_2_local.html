@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>GetGuac — Detailed local homepage demo</title>
+  <title>GetGuac — Local marketing preview (demo 2)</title>
   <meta name="robots" content="noindex">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -100,16 +100,14 @@
 
     /* ---- hero (same cast as demo_1 / the live gj-market collage) ---- */
     .hero{position:relative;overflow:hidden;padding:clamp(28px,3.8vw,48px) 0 clamp(26px,3.6vw,42px);background:#fff}
-    .hero>.wrap{width:min(1280px,calc(100% - 24px))}
     .hero::before{display:none}
     .hero .wrap{position:relative}
-    .hero-grid{display:grid;grid-template-columns:minmax(0,526px) minmax(0,1fr);gap:clamp(20px,2.4vw,34px);align-items:center}
+    .hero-grid{display:grid;grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr);gap:clamp(30px,4.5vw,64px);align-items:center}
     .pill{display:inline-flex;align-items:center;gap:9px;border:1px solid #d8e9c2;background:rgba(255,255,255,.78);color:var(--green-ink);
       border-radius:999px;padding:8px 15px;font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}
     .pill::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--lime-2);box-shadow:0 0 0 4px rgba(132,204,22,.22)}
     .hero h1{font-size:clamp(38px,5.4vw,66px);letter-spacing:-.05em;margin:22px 0 20px;max-width:15ch}
     .hero h1 span{background:linear-gradient(96deg,var(--green) 10%,var(--lime) 90%);-webkit-background-clip:text;background-clip:text;color:transparent}
-    .hero h1 span.h1-emoji{background:none;-webkit-background-clip:border-box;background-clip:border-box;color:initial}
     .lede{max-width:53ch;color:var(--ink-2);font-size:clamp(16px,1.4vw,18.5px);line-height:1.62}
     .actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
     .micro{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:20px;color:var(--green-ink);font-size:13px;font-weight:700}
@@ -148,77 +146,13 @@
     .quick-snap p{position:relative;padding-left:24px;color:var(--ink-2);font-size:11px;line-height:1.45}
     .quick-snap p+p{margin-top:5px}
     .quick-snap p::before{content:"✓";position:absolute;left:0;top:0;display:grid;place-items:center;width:17px;height:17px;border-radius:50%;background:#e6f6e9;color:var(--green);font-weight:900}
-    /* ---- hero scene -----------------------------------------------------
-       The scene had been left with no surface of its own — overflow:visible,
-       transparent, no border, no shadow — while its children still sat at
-       left:0 / right:-3%. The result was four loose objects on white with the
-       phone bleeding past the edge. This keeps the lighter direction (the old
-       saturated green box is gone) but gives it one contained surface and
-       insets every child off the edge.
-
-       object-fit stays `contain`: family-tablet.webp is 1200x800 and the box
-       is aspect-ratio 3/2, so it fits exactly — and .tablet-screen is aligned
-       to that predictable placement. Switching to cover would shift it. */
-    /* The surface is painted by ::after at z-index 0 rather than on the box
-       itself, so the scene keeps overflow:visible. That gives it one contained
-       panel AND lets the phone break past the right edge on purpose — a device
-       crossing the frame reads as depth; the same device floating on bare white
-       reads as a mistake. overflow:hidden would just have clipped it. */
-    .family-scene{height:clamp(450px,43vw,530px);overflow:visible;border:0;background:transparent;box-shadow:none}
-    .family-scene::after{
-      content:"";position:absolute;z-index:0;inset:0;pointer-events:none;
-      border:1px solid var(--line);border-radius:var(--r-xl) var(--r-xl) var(--r-xl) var(--r-sm);
-      box-shadow:var(--sh-2);
-      background:
-        radial-gradient(circle at 88% 12%,rgba(163,230,53,.20),transparent 46%),
-        radial-gradient(circle at 6% 94%,rgba(245,181,27,.12),transparent 42%),
-        linear-gradient(160deg,#FBFDF7 0%,#F1F8E8 100%);
-    }
-    .family-scene::before{display:block;z-index:1;opacity:.28}
-    .family-scene .scene-title{left:7%;top:6%}
-    .family-scene .quick-snap{left:7%;top:21%;width:52%}
-    /* anchored to the bottom, so it never depends on the scene's height */
-    .family-scene .person.main{z-index:3;left:7%;bottom:7%;top:auto;width:60%;max-width:none;height:auto;
-      aspect-ratio:3/2;border-radius:20px;border:0;box-shadow:0 22px 40px -28px rgba(15,45,26,.5)}
+    .family-scene .person.main{z-index:3;left:0;top:220px;width:68%;max-width:none;height:auto;aspect-ratio:3/2;border-radius:20px;border:0;box-shadow:0 20px 38px -30px rgba(15,45,26,.34)}
     .family-scene .person.main>img{object-fit:contain;object-position:center}
-    /* multiply was knocking the whites out of a PNG that carries its own alpha,
-       flattening the device into the panel. Normal blend + a real shadow. */
-    .family-scene .phone{z-index:4;right:5%;bottom:8%;top:auto;width:36%;max-width:215px;
-      transform:rotate(4deg);transform-origin:center;mix-blend-mode:normal;
-      filter:drop-shadow(0 22px 24px rgba(20,47,31,.34))}
+    .family-scene{height:clamp(450px,43vw,530px);overflow:visible;border:0;background:transparent;box-shadow:none}
+    .family-scene::before{display:none}
+    .family-scene .phone{z-index:4;right:-3%;top:205px;bottom:auto;width:45%;max-width:270px;transform:rotate(5deg);transform-origin:center;filter:none;mix-blend-mode:multiply}
     .tablet-screen{position:absolute;z-index:2;left:34%;top:55%;width:22.5%;height:28%;overflow:hidden;clip-path:polygon(5% 0,100% 4%,96% 100%,0 96%);transform:rotate(1deg);transform-origin:center;background:#fff}
     .tablet-screen img{width:100%;height:100%;object-fit:cover;object-position:left top}
-
-    /* ---- demo 3: one receipt keeps working after checkout ---- */
-    .concept-three{height:clamp(350px,34vw,380px);overflow:visible;border:0;background:transparent;box-shadow:none}
-    .concept-three::before{display:none}
-    .concept-three::after{display:none}
-    .concept-three .scene-title{max-width:13ch;font-size:clamp(30px,3.4vw,44px);line-height:1.01}
-    .concept-three .scene-title strong{color:var(--green)}
-    .concept-three .scene-title::after{width:88px;margin-top:14px}
-    .concept-three .scene-title{display:block;left:0;top:0;max-width:230px;padding:11px 15px;border-radius:16px 16px 16px 5px;background:rgba(255,255,255,.96);box-shadow:0 16px 32px -24px rgba(20,50,26,.55);font-family:var(--text);font-size:12px;font-weight:700;letter-spacing:0;line-height:1.35;color:var(--ink-2)}
-    .concept-three .scene-title strong{display:block;margin-top:2px;color:var(--green-ink);font-family:var(--display);font-size:18px;letter-spacing:-.025em}
-    .concept-three .scene-title::after{display:none}
-    .concept-three .person.main{z-index:3;left:0;top:78px;bottom:auto;width:72%;border-radius:22px}
-    .concept-three .phone{z-index:5;right:0;top:52px;bottom:auto;width:135px;max-width:135px;transform:rotate(3deg);filter:drop-shadow(0 16px 16px rgba(14,38,20,.2));-webkit-mask-image:none;mask-image:none;mix-blend-mode:normal}
-    .concept-three .b1{left:0;bottom:12px}.concept-three .b2{right:-2px;top:145px}.concept-three .b3{right:-2px;bottom:8px}
-    .concept-three .mascot{left:68%;bottom:5px;font-size:50px}
-    .hero-image-only{position:relative;width:100%;aspect-ratio:3/2;overflow:hidden;border-radius:22px;background:#f4f2eb;box-shadow:0 24px 50px -34px rgba(15,45,26,.42)}
-    .hero-image-only>.hero-family-only{display:block;width:100%;height:100%;object-fit:cover;object-position:center;transform:scale(.94);transform-origin:left bottom}
-    .hero-image-only>.hero-bubble{position:absolute;z-index:3;padding:9px 12px;border-radius:14px 14px 14px 5px;
-      background:rgba(255,255,255,.96);border:1px solid rgba(20,83,45,.14);
-      box-shadow:0 14px 26px -18px rgba(15,45,26,.55);backdrop-filter:blur(6px)}
-    .hero-bubble small{display:block;color:var(--green);font-size:9px;font-weight:800;letter-spacing:.07em;text-transform:uppercase}
-    .hero-bubble strong{display:block;margin-top:2px;font-size:12px;line-height:1.2;letter-spacing:-.01em;white-space:nowrap}
-    .hb-1{left:3%;top:8%}
-    .hb-2{right:26%;bottom:12%}
-    .hb-3{right:20%;top:11%}
-    @media(max-width:560px){.hero-bubble strong{font-size:10.5px}.hero-bubble small{font-size:8px}.hb-1{left:2%;top:5%}.hb-2{right:25%;bottom:8%}.hb-3{right:18%;top:8%}}
-    .hero-phone-inline{position:absolute;z-index:2;right:4%;bottom:4%;display:block;width:auto;height:70%;max-width:23%;object-fit:contain;transform:rotate(2deg);filter:drop-shadow(0 18px 16px rgba(17,42,24,.28))}
-    .outcome-row{position:absolute;z-index:8;left:2%;right:0;bottom:0;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-    .outcome{display:flex;align-items:center;gap:8px;min-height:54px;padding:10px 11px;border:1px solid #dbe9da;border-radius:15px;background:rgba(255,255,255,.96);box-shadow:0 10px 24px -20px rgba(15,45,26,.45);color:var(--forest);font-size:10px;font-weight:800;line-height:1.25}
-    .outcome i{display:grid;place-items:center;flex:0 0 28px;width:28px;height:28px;border-radius:9px;background:#edf8e9;font-style:normal;font-size:14px}
-    .outcome:nth-child(2) i{background:#fff4dd}.outcome:nth-child(3) i{background:#eaf4ff}
 
     /* ---- demo 2 hero: emotional family visual + floating product story ---- */
     .hero-showcase{position:relative;min-height:clamp(470px,46vw,575px);isolation:isolate}
@@ -246,7 +180,6 @@
 
     /* ---- sections ---- */
     .section{padding:var(--section) 0}
-    .section,.life,.blog,.cta{content-visibility:auto;contain-intrinsic-size:auto 700px}
     .section.soft{background:linear-gradient(180deg,var(--cream-2),#fff);border-top:1px solid var(--line-2)}
     .section h2{font-size:clamp(30px,3.8vw,50px);letter-spacing:-.045em;margin:8px 0 10px}
     .head-row{display:flex;align-items:flex-end;justify-content:space-between;gap:32px;flex-wrap:wrap}
@@ -268,7 +201,7 @@
     .person-card>img{width:100%;height:100%;object-fit:cover;transition:transform .5s ease}
     .person-card:hover>img{transform:scale(1.045)}
     .person-card::after{content:"";position:absolute;inset:auto 0 0;height:62%;background:linear-gradient(to top,rgba(9,28,17,.5),transparent);pointer-events:none}
-    .person-message{position:absolute;min-height:108px;z-index:2;left:13px;right:13px;bottom:13px;padding:14px 15px;border-radius:var(--r-sm) var(--r-sm) var(--r-sm) 6px;
+    .person-message{position:absolute;z-index:2;left:13px;right:13px;bottom:13px;padding:14px 15px;border-radius:var(--r-sm) var(--r-sm) var(--r-sm) 6px;
       background:rgba(255,255,255,.96);border:1px solid rgba(255,255,255,.7);box-shadow:var(--sh-2);backdrop-filter:blur(8px)}
     .person-message small{display:block;color:var(--green);font-size:9.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;margin-bottom:5px}
     .person-message strong{display:block;font-family:var(--display);font-weight:700;font-size:15px;line-height:1.25;letter-spacing:-.02em}
@@ -279,12 +212,11 @@
        them. Same shape as the live gg-flow section — what changed is the puck
        treatment, a progress line that shows where autoplay is, and a return
        arrow drawn as one smooth path instead of three borders. */
-    .flow{display:grid;grid-template-columns:270px minmax(0,1fr);column-gap:clamp(26px,3.4vw,46px);row-gap:4px;align-items:start}
+    .flow{display:grid;grid-template-columns:270px minmax(0,1fr);gap:clamp(26px,3.4vw,46px);align-items:start}
     .flow-head h2{font-size:clamp(25px,2.5vw,32px);letter-spacing:-.035em;margin:11px 0 12px}
-    .flow-link{display:inline-flex;align-items:center;gap:6px;margin-left:auto;color:var(--green);font-size:13.5px;font-weight:800;white-space:nowrap}
+    .flow-head .sub{font-size:14.5px;line-height:1.55}
+    .flow-link{display:inline-flex;align-items:center;gap:6px;margin-top:18px;color:var(--green);font-size:13.5px;font-weight:800}
     .flow-link:hover{text-decoration:underline}
-    .flow-under{grid-column:1/-1;display:flex;align-items:center;gap:24px;margin-top:-4px}
-    .flow-under .sub{margin:0;color:var(--ink-2);font-size:14.5px;line-height:1.5;white-space:nowrap}
 
     .tabs-wrap{position:relative;min-width:0;padding-top:2px}
     .tabs{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px}
@@ -307,19 +239,20 @@
     .loop-arrow{display:block;width:100%;height:34px;margin-top:2px;overflow:visible}
     .loop-arrow path{fill:none;stroke:var(--accent);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;opacity:.55;transition:opacity .4s ease,stroke .4s ease}
     .flow.is-closing .loop-arrow path{opacity:1}
+    .loop-caption{margin:9px 0 0;text-align:center;color:var(--ink);font-size:12.5px;font-weight:600}
 
     /* ---- stage card (mirrors the real story card, restyled) ---- */
-    .stage{display:grid;grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr);margin-top:clamp(18px,2.3vw,26px);
+    .stage{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);margin-top:clamp(18px,2.3vw,26px);
       border:1px solid var(--line);border-radius:var(--r-xl);overflow:hidden;background:#fff;box-shadow:var(--sh-3)}
     /* The gradient keeps a tint at its far end instead of going pure white — a
        hard white-to-cream seam down the middle of the card read as a bug. */
-    .stage-copy{padding:clamp(24px,2.5vw,34px);display:flex;flex-direction:column;gap:14px;
+    .stage-copy{padding:clamp(28px,2.9vw,40px);display:flex;flex-direction:column;gap:16px;
       background:linear-gradient(150deg,var(--soft),color-mix(in srgb,var(--soft) 26%,#fff) 82%);
       border-right:1px solid color-mix(in srgb,var(--accent) 13%,transparent);transition:background .4s ease}
     .stage-kicker{display:inline-flex;align-items:center;gap:8px;width:fit-content;padding:7px 13px;border-radius:999px;background:#fff;
       color:var(--accent);font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--line);transition:color .3s}
     .stage-kicker svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-    .stage-copy h3{position:relative;width:fit-content;font-size:clamp(27px,2.7vw,36px);letter-spacing:-.042em;margin:4px 0 12px}
+    .stage-copy h3{position:relative;width:fit-content;font-size:clamp(28px,3.1vw,40px);letter-spacing:-.042em;margin:5px 0 14px}
     .stage-copy h3::after{content:"";position:absolute;left:0;bottom:-11px;width:68px;height:4px;border-radius:999px;
       background:linear-gradient(90deg,var(--accent),#8BD72D)}
     .stage-story{color:#56655B;font-size:15.5px;line-height:1.62;max-width:46ch}
@@ -369,18 +302,18 @@
     .speech::after{content:"";position:absolute;left:32px;bottom:-9px;width:17px;height:17px;transform:rotate(45deg);
       border-radius:0 0 4px 0;background:#fff;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
 
-    .stage-visual{position:relative;padding:clamp(20px,2.2vw,26px) clamp(18px,2vw,24px) clamp(18px,2vw,24px);
-      display:flex;flex-direction:column;gap:13px;
+    .stage-visual{position:relative;padding:clamp(22px,2.4vw,30px) clamp(18px,2vw,24px) clamp(18px,2vw,24px);
+      display:flex;flex-direction:column;gap:15px;
       background:radial-gradient(circle at 88% 8%,#fff,transparent 30%),var(--soft);transition:background .4s ease}
-    .appshot{position:relative;isolation:isolate;overflow:hidden;padding:42px 14px 14px;border-radius:var(--r);background:rgba(255,255,255,.94);
+    .appshot{position:relative;overflow:hidden;padding:46px 14px 16px;border-radius:var(--r);background:rgba(255,255,255,.94);
       border:1px solid var(--line);box-shadow:0 22px 48px -35px rgba(5,18,10,.55)}
     .appshot::after{content:"";position:absolute;right:-48px;top:-58px;width:160px;height:160px;border-radius:999px;
       background:color-mix(in srgb,var(--accent) 12%,transparent);pointer-events:none}
     .applabel{position:absolute;z-index:3;right:15px;top:16px;color:var(--accent);font-size:9.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;transition:color .3s}
-    .shot{display:block;padding:0;width:100%;height:auto;border:0;background:transparent;border-radius:var(--r-xs);cursor:zoom-in}
-    .appshot .web{display:block;width:100%;height:auto!important;aspect-ratio:900/563;object-fit:contain;border-radius:var(--r-xs);border:1px solid var(--line);box-shadow:0 20px 50px -24px rgba(20,40,28,.4)}
-    .shot-phone{position:absolute;z-index:2;right:14px;bottom:14px;width:22%;max-width:112px;height:auto}
-    .shot-phone img{display:block;width:100%;height:auto!important;aspect-ratio:360/757;object-fit:contain;filter:drop-shadow(0 16px 18px rgba(20,40,28,.35))}
+    .shot{display:block;padding:0;width:100%;border-radius:var(--r-xs);cursor:zoom-in}
+    .appshot .web{width:100%;border-radius:var(--r-xs);border:1px solid var(--line);box-shadow:0 20px 50px -24px rgba(20,40,28,.4)}
+    .shot-phone{position:absolute;z-index:2;right:12px;bottom:12px;width:26%;max-width:104px}
+    .shot-phone img{width:100%;filter:drop-shadow(0 20px 26px rgba(20,40,28,.42))}
     .proof{position:absolute;z-index:3;left:14px;bottom:14px;width:158px;padding:11px 13px;border-radius:15px;background:rgba(255,255,255,.97);
       border:1px solid var(--line);border-left:3px solid var(--accent);box-shadow:0 18px 34px -24px rgba(5,18,10,.6);backdrop-filter:blur(6px);
       transition:border-color .4s ease}
@@ -388,7 +321,7 @@
     .proof strong{display:block;font-family:var(--display);font-weight:800;font-size:16px;letter-spacing:-.03em;margin-top:3px}
     .proof small{display:block;color:var(--ink-3);font-size:10px;line-height:1.35;margin-top:3px}
     /* back in the copy column, under the talk box, as the screenshot has it */
-    .stage-photo{position:relative;flex:1;min-height:340px;max-height:390px;margin-top:2px;border-radius:var(--r);overflow:hidden;
+    .stage-photo{position:relative;flex:1;min-height:190px;margin-top:2px;border-radius:var(--r);overflow:hidden;
       border:1px solid var(--line);box-shadow:var(--sh-1)}
     .stage-photo img{width:100%;height:100%;object-fit:cover}
     .fine{text-align:center;font-size:12px;color:#8A978D;margin-top:14px}
@@ -403,10 +336,10 @@
 
     /* ---- life ---- */
     .life{background:#d8e775}
-    .life-grid{display:grid;grid-template-columns:1.12fr .88fr;grid-template-rows:clamp(225px,21vw,285px);min-height:clamp(220px,22vw,290px)}
-    .life-photo{position:relative;overflow:hidden;background:#d8e775}
-    .life-photo img{position:absolute;left:50%;top:50%;width:auto;height:130%;max-width:none;transform:translate(-50%,-50%);object-fit:cover;object-position:center 40%;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 13%,#000 87%,transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 13%,#000 87%,transparent 100%)}
-    .life-photo::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(216,231,117,.55) 0,transparent 22%,transparent 58%,rgba(200,220,73,.92) 92%)}
+    .life-grid{display:grid;grid-template-columns:1.12fr .88fr;min-height:clamp(220px,22vw,290px)}
+    .life-photo{position:relative;overflow:hidden}
+    .life-photo img{width:100%;height:100%;object-fit:cover}
+    .life-photo::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 62%,rgba(200,220,73,.9))}
     .life-copy{display:flex;flex-direction:column;justify-content:center;gap:10px;padding:clamp(20px,2.4vw,30px);background:#c8dc49;color:var(--forest)}
     .life-copy .eyebrow{color:#3b5a12}
     .life-copy h2{font-size:clamp(25px,3vw,34px);letter-spacing:-.045em}
@@ -430,61 +363,6 @@
     .post b::after{content:"→";transition:transform .2s ease}
     .post:hover b::after{transform:translateX(4px)}
 
-    /* ---- reviews + security proof ---- */
-    .proof-section{padding:22px 0 34px;background:#fff}
-    .proof-shell{display:grid;grid-template-columns:minmax(0,3fr) minmax(290px,1fr);gap:16px;align-items:stretch}
-    .reviews-panel{display:grid;grid-template-columns:140px repeat(3,minmax(0,1fr));gap:12px;padding:18px;border:1px solid #eadfbd;border-radius:24px;background:#fffdf7}
-    .review-intro{display:flex;flex-direction:column;justify-content:center;padding:6px 4px}
-    .review-intro h2{font-size:23px;line-height:1.05;margin:0 0 8px}
-    .stars{color:#f59e0b;font-size:17px;letter-spacing:2px;white-space:nowrap}
-    .review-intro p{margin-top:8px;color:var(--ink-2);font-size:12px;font-weight:700;line-height:1.5}
-    .review-card{display:flex;flex-direction:column;min-width:0;min-height:188px;padding:15px;border:1px solid var(--line);border-radius:17px;background:#fff;box-shadow:var(--sh-1)}
-    .review-person{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-    .review-person::before{content:attr(data-initial);display:grid;place-items:center;width:36px;height:36px;flex:0 0 36px;border-radius:50%;background:#eef7df;color:#4d7f1e;font-size:13px;font-weight:900}
-    .review-person strong{display:block;font-size:13px;line-height:1.2}.review-person small{display:block;margin-top:2px;color:var(--ink-3);font-size:10px}
-    .review-card blockquote{margin:0;color:var(--ink-2);font-size:12px;line-height:1.55}
-    .review-card .stars{margin-top:auto;padding-top:10px;font-size:12px}
-    .security-card{position:relative;overflow:hidden;padding:22px;border:1px solid #cfe3b8;border-radius:24px;background:#f2f8eb}
-    .security-card::after{content:"✓";position:absolute;right:-7px;bottom:-40px;color:rgba(93,154,32,.09);font-size:150px;font-weight:900;line-height:1}
-    .security-title{display:flex;align-items:center;gap:11px;margin-bottom:14px}.security-title i{display:grid;place-items:center;width:42px;height:42px;border-radius:13px;background:#5ca40f;color:#fff;font-style:normal;font-size:20px}.security-title h2{font-size:22px;line-height:1.05}
-    .security-card ul{position:relative;z-index:1;display:grid;gap:9px;margin:0 0 15px;padding:0;list-style:none;font-size:12.5px;font-weight:700}
-    .security-card li::before{content:"✓";display:inline-grid;place-items:center;width:20px;height:20px;margin-right:9px;border-radius:50%;background:#5ca40f;color:#fff;font-size:12px}
-    .security-card a{position:relative;z-index:1;color:#44760f;font-size:12px;font-weight:800;text-decoration:underline}
-
-    /* ---- detailed home product story ---- */
-    .detail-suite{background:#fff}
-    .detail-lede{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(280px,.72fr);gap:clamp(24px,5vw,72px);align-items:end}
-    .detail-lede .sub{justify-self:end}
-    .capability-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:28px}
-    .capability{position:relative;overflow:hidden;min-height:285px;padding:25px;border:1px solid var(--line);border-radius:24px;background:#fff;box-shadow:var(--sh-1);transition:transform .2s ease,box-shadow .2s ease}
-    .capability:hover{transform:translateY(-4px);box-shadow:var(--sh-2)}
-    .capability::after{content:"";position:absolute;right:-42px;top:-42px;width:120px;height:120px;border-radius:50%;background:var(--card-soft,#edf7e9);opacity:.9}
-    .cap-icon{position:relative;z-index:1;display:grid;place-items:center;width:48px;height:48px;border-radius:15px;background:var(--card-soft,#edf7e9);font-size:22px}
-    .capability small{display:block;margin:19px 0 7px;color:var(--green);font-size:10px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}
-    .capability h3{font-size:21px;line-height:1.15;margin-bottom:9px}
-    .capability p{color:var(--ink-2);font-size:13.5px;line-height:1.55}
-    .capability ul{display:grid;gap:7px;margin:16px 0 0;padding:0;list-style:none;color:var(--ink-2);font-size:12.5px;font-weight:600}
-    .capability li::before{content:"✓";display:inline-grid;place-items:center;width:18px;height:18px;margin-right:8px;border-radius:50%;background:var(--card-soft,#edf7e9);color:var(--green);font-weight:900}
-    .intake{background:linear-gradient(180deg,#f4f9ef,#fff)}
-    .intake .head-row{align-items:center}
-    .intake-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:25px}
-    .intake-card{position:relative;padding:25px 24px 24px;border:1px solid var(--line);border-radius:24px;background:#fff;box-shadow:var(--sh-1)}
-    .intake-step{display:flex;align-items:center;justify-content:space-between;gap:14px;color:var(--green);font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
-    .intake-step b{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--cream-2);font-size:14px}
-    .intake-card h3{font-size:21px;margin:18px 0 8px}
-    .intake-card p{color:var(--ink-2);font-size:13.5px}
-    .privacy-panel{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:clamp(24px,5vw,70px);align-items:center;margin-top:30px;padding:clamp(27px,4vw,44px);border-radius:30px;color:#fff;background:linear-gradient(132deg,#103821,#176b39);box-shadow:0 30px 60px -42px rgba(12,58,31,.9)}
-    .privacy-panel .eyebrow{color:#b7ee83}
-    .privacy-panel h2{margin:7px 0 12px;color:#fff}
-    .privacy-panel p{color:#d7eadc}
-    .privacy-list{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .privacy-list span{display:flex;align-items:flex-start;gap:10px;min-height:78px;padding:15px;border:1px solid rgba(255,255,255,.14);border-radius:16px;background:rgba(255,255,255,.07);font-size:13px;font-weight:700;line-height:1.45}
-    .privacy-list i{font-style:normal;font-size:18px}
-    @media(max-width:1080px){.proof-shell{grid-template-columns:1fr}.security-card{min-height:250px}}
-    @media(max-width:900px){.reviews-panel{grid-template-columns:1fr 1fr}.review-intro{grid-column:1/-1}}
-    @media(max-width:980px){.capability-grid{grid-template-columns:1fr 1fr}.detail-lede,.privacy-panel{grid-template-columns:1fr}.detail-lede .sub{justify-self:start}}
-    @media(max-width:700px){.capability-grid,.intake-grid,.privacy-list,.reviews-panel{grid-template-columns:1fr}.capability{min-height:auto}.review-intro{grid-column:auto}}
-
     /* ---- cta ---- */
     .cta{padding:var(--section) 0}
     .cta-band{position:relative;overflow:hidden;border-radius:var(--r-xl);padding:clamp(30px,4vw,48px) clamp(24px,4vw,48px);text-align:center;color:#fff;
@@ -506,8 +384,6 @@
     @media(max-width:1080px){.feature-grid{grid-template-columns:1fr}.people-grid,.blog-grid{grid-template-columns:repeat(2,1fr)}}
     @media(max-width:980px){
       .hero-grid{grid-template-columns:1fr}
-      .hero-image-only>.hero-family-only{transform:none}
-      .hero-image-only>.hero-phone-inline{right:3%;bottom:3%;height:62%;max-width:22%}
       .hero-showcase{min-height:590px;margin-top:12px}
       .family-hero{right:12%}
       .phone-motion{right:-1%;width:42%;min-width:250px}
@@ -523,18 +399,13 @@
       .life-photo{min-height:190px}
       .life-photo::after{background:linear-gradient(0deg,rgba(200,220,73,.85),transparent 46%)}
     }
-    @media(max-width:820px){.links{display:none}.trust{grid-template-columns:1fr 1fr}.flow-under{align-items:flex-start;flex-wrap:wrap;gap:10px}.flow-under .sub{white-space:normal}.flow-under .flow-link{margin-left:0}}
+    @media(max-width:820px){.links{display:none}.trust{grid-template-columns:1fr 1fr}}
     @media(max-width:560px){
       .nav{height:64px}
       .hero h1{font-size:clamp(31px,8.6vw,40px)}
       .actions{display:grid}.actions .btn{width:100%}
       .scene{height:390px;border-radius:var(--r-lg) var(--r-lg) var(--r-lg) 12px}
-      .family-scene{height:440px;border-radius:var(--r-lg) var(--r-lg) var(--r-lg) 12px}
-      .family-scene .scene-title{font-size:28px;left:6%;top:5%}
-      .family-scene .quick-snap{left:6%;top:20%;width:74%;padding:12px}
-      .family-scene .person.main{left:6%;bottom:6%;top:auto;width:70%}
-      .family-scene .phone{right:3%;bottom:7%;top:auto;width:40%;max-width:132px}
-      .concept-three{height:300px;overflow:visible;border:0;background:transparent;box-shadow:none}.concept-three .scene-title{left:0;top:0;font-size:10px}.concept-three .scene-title strong{font-size:15px}.concept-three .person.main{left:0;top:72px;bottom:auto;width:72%}.concept-three .phone{z-index:5;right:0;top:48px;bottom:auto;width:100px;max-width:100px}.concept-three .b1{display:none}.concept-three .b2{right:0;top:126px}.concept-three .b3{right:0;bottom:6px}.concept-three .mascot{left:67%;bottom:0;font-size:38px}
+      .family-scene{height:430px}.family-scene .scene-title{font-size:28px}.quick-snap{top:66px;width:72%;padding:12px}.family-scene .person.main{left:0;top:205px;width:75%}.family-scene .phone{right:-7%;top:210px;bottom:auto;width:48%;max-width:175px}
       .hero-showcase{min-height:470px}.family-hero{right:8%;border-radius:26px 26px 26px 10px}.family-story{left:14px;right:25%;bottom:14px;padding:12px}.family-story strong{font-size:15px}.phone-motion{right:-9%;top:18%;width:48%;min-width:205px}.hero-result{right:0;bottom:4%;width:174px}.hero-spark{display:none}
       .person.main{left:5%;top:20%;width:58%;height:62%}
       .b1{display:none}.b2{top:38%}
@@ -564,13 +435,10 @@
     <div class="wrap nav">
         <a class="logo" href="#top" aria-label="Back to the top"><i>🥑</i>GetGuac</a>
       <nav class="links" aria-label="Primary">
-        <a href="https://getguac.app/marketplace">Marketplace</a>
-        <a href="https://getguac.app/coupons">Coupons</a>
-        <a href="https://getguac.app/games">Games</a>
-        <a href="https://getguac.app/resources">Resources</a>
+        <a href="#benefits">Benefits</a>
         <a href="#how">How it works</a>
-        <a href="#features">Features</a>
-        <a href="https://getguac.app/pricing">Pricing</a>
+        <a href="#guides">Guides</a>
+        <a href="#trust">Security</a>
       </nav>
       <a class="btn primary" href="https://getguac.app/join">Get started</a>
     </div>
@@ -584,8 +452,8 @@
         <div class="hero-grid">
           <div>
             <span class="pill">Guac-AI · personal finance assistant</span>
-            <h1>Keep More Guac <span>in Your Pocket</span> <span class="h1-emoji">🥑</span></h1>
-            <p class="lede">GetGuac reads your receipts and bank statements, scores every purchase, sniffs out hidden fees, and shows you exactly where your money gets eaten. Money's wingman. Keep your guac.</p>
+            <h1>Your bank shows transactions. <span>GetGuac shows what you bought.</span></h1>
+            <p class="lede">Scan or forward a receipt. Guac-AI organizes every item, catches forgotten subscriptions and return windows, and helps you waste less on the next trip.</p>
             <div class="actions">
               <a class="btn primary" href="https://getguac.app/join?try=receipt">📷 Try 1 receipt</a>
               <a class="btn green" href="https://getguac.app/join">Start free with Google</a>
@@ -593,12 +461,18 @@
             <div class="micro"><span>✓ Free forever</span><span>✓ No card required</span><span>✓ Delete anytime</span></div>
           </div>
 
-          <div class="hero-image-only" aria-label="A family happily reviewing GetGuac savings together">
-            <img class="hero-family-only" src="home/story-people/family-tablet-hero-v3.webp" alt="A family happily reviewing GetGuac savings together" width="1200" height="800" loading="eager" fetchpriority="high" decoding="async">
-            <img class="hero-phone-inline" src="home/goals/phone-organized.webp" alt="GetGuac showing organized purchases and spending insights" width="360" height="757" loading="eager" decoding="async">
-            <span class="hero-bubble hb-1"><small>🔄 Subscription spotted</small><strong>Review the renewal</strong></span>
-            <span class="hero-bubble hb-2"><small>↩ Return window</small><strong>5 days left to act</strong></span>
-            <span class="hero-bubble hb-3"><small>🧾 Receipt organized</small><strong>41 items read</strong></span>
+          <div class="scene family-scene" aria-label="A family using GetGuac with a phone preview">
+            <span class="scene-title">One photo. <strong>Nothing lost.</strong></span>
+            <div class="quick-snap">
+              <div class="quick-snap-head"><span class="quick-snap-icon">📸</span><span><small>One quick snap</small><strong>Today’s receipt is already safe</strong></span></div>
+              <p>Paper and digital receipts together</p>
+              <p>Searchable items instead of mystery totals</p>
+            </div>
+            <div class="person main">
+              <img src="home/story-people/family-tablet.webp" alt="A family happily reviewing GetGuac savings together">
+              <span class="tablet-screen" aria-hidden="true"><img src="marketing/slides/v2/dashboard-web.webp" alt=""></span>
+            </div>
+            <img class="phone" src="home/demo-2/guac-phone-current.png" alt="GetGuac showing Guacanomics, spending trends and a return-window reminder">
           </div>
         </div>
 
@@ -608,8 +482,18 @@
           <span>🗑 Delete everything</span>
           <span>📱 iOS · Android · Web</span>
         </div>
+      </div>
+    </section>
 
-        <div id="benefits" class="feature-grid hero-benefits">
+    <!-- ===================== benefits ===================== -->
+    <section id="benefits" class="section">
+      <div class="wrap">
+        <div class="rise">
+          <span class="eyebrow">The benefit is what happens next</span>
+          <h2>More clarity at the store. More money for real life.</h2>
+          <p class="sub">GetGuac turns receipt clutter into useful decisions—what to return, what to skip, what to remember, and where your money can work harder.</p>
+        </div>
+        <div class="feature-grid">
           <article class="feature rise"><i>💸</i><h3>Catch money waiting</h3><p>See return windows, refunds, forgotten subscriptions, and charges worth reviewing before they disappear.</p></article>
           <article class="feature rise"><i>🛒</i><h3>Make the next trip easier</h3><p>Remember what you bought and use that context to shop with less guessing, duplicate buying, and waste.</p></article>
           <article class="feature rise"><i>🧠</i><h3>Reduce the mental load</h3><p>Receipts become searchable household memory, so the details do not have to live in your head.</p></article>
@@ -617,37 +501,34 @@
       </div>
     </section>
 
-    <!-- ===================== reviews + security ===================== -->
-    <section id="reviews" class="proof-section">
-      <div class="wrap proof-shell">
-        <div class="reviews-panel rise">
-          <div class="review-intro">
-            <h2>Loved by users</h2>
-            <div class="stars" aria-label="Five out of five stars">★★★★★</div>
-            <p>5/5 from our customer ratings</p>
+    <!-- ===================== people ===================== -->
+    <section class="section" style="padding-top:0">
+      <div class="wrap">
+        <div class="head-row rise">
+          <div>
+            <span class="eyebrow">Four people. Four everyday wins.</span>
+            <h2>See GetGuac in real life.</h2>
           </div>
-          <article class="review-card">
-            <div class="review-person" data-initial="R"><span><strong>Rebecca</strong><small>GetGuac user</small></span></div>
-            <blockquote>“I stopped guessing what the Costco trip actually was. It’s the items, not just the total.”</blockquote>
-            <div class="stars" aria-label="Five stars">★★★★★</div>
+          <p class="sub" style="max-width:42ch;font-size:14.5px">Each person starts with a normal shopping moment. GetGuac turns it into something useful.</p>
+        </div>
+        <div class="people-grid">
+          <article class="person-card rise">
+            <img src="home/story-people/capture-phone.webp" alt="A shopper showing a receipt saved in GetGuac" loading="lazy">
+            <div class="person-message"><small>Capture</small><strong>“One photo—and it’s organized.”</strong><span>Every item has a searchable home.</span></div>
           </article>
-          <article class="review-card">
-            <div class="review-person" data-initial="R"><span><strong>Ram</strong><small>Founder</small></span></div>
-            <blockquote>“I built GetGuac because my bank statement could tell me I spent $180 at Target—and nothing else.”</blockquote>
-            <div class="stars" aria-label="Five stars">★★★★★</div>
+          <article class="person-card rise">
+            <img src="home/story-people/prepare.webp" alt="A couple reviewing their shopping together" loading="lazy">
+            <div class="person-message"><small>Understand</small><strong>“Now we know where it went.”</strong><span>Items tell more than a bank total.</span></div>
           </article>
-          <article class="review-card">
-            <div class="review-person" data-initial="S"><span><strong>Steven</strong><small>GetGuac user</small></span></div>
-            <blockquote>“I forwarded a month of receipts from my inbox and it found two subscriptions I’d forgotten I was paying for.”</blockquote>
-            <div class="stars" aria-label="Five stars">★★★★★</div>
+          <article class="person-card rise">
+            <img src="home/story-people/protect.webp" alt="A shopper reviewing a receipt and return details" loading="lazy">
+            <div class="person-message"><small>Protect</small><strong>“We caught the return window.”</strong><span>Money does not disappear quietly.</span></div>
+          </article>
+          <article class="person-card rise">
+            <img src="home/story-people/shop.webp" alt="A parent and child shopping together" loading="lazy">
+            <div class="person-message"><small>Shop smarter</small><strong>“The next trip feels easier.”</strong><span>Less guessing and less repeat buying.</span></div>
           </article>
         </div>
-
-        <aside class="security-card rise" aria-labelledby="securityProofTitle">
-          <div class="security-title"><i aria-hidden="true">🛡</i><h2 id="securityProofTitle">Your security is our priority</h2></div>
-          <ul><li>256-bit bank-level encryption</li><li>Read-only access</li><li>Your data is never sold</li><li>Secure and private by design</li></ul>
-          <a href="https://getguac.app/security">How we protect you →</a>
-        </aside>
       </div>
     </section>
 
@@ -658,6 +539,8 @@
           <div class="flow-head">
             <span class="eyebrow">The GetGuac circle</span>
             <h2>Every receipt makes the next trip smarter.</h2>
+            <p class="sub">GetGuac remembers the shopping so you do not have to.</p>
+            <a class="flow-link" href="https://getguac.app/how-it-works">See how GetGuac works →</a>
           </div>
 
           <div class="tabs-wrap">
@@ -667,25 +550,22 @@
               <path d="M14 4v10q0 8 8 8h956q8 0 8-8V4"/>
               <path d="M14 4 7 12M14 4l7 8"/>
             </svg>
-          </div>
-          <div class="flow-under">
-            <p class="sub">GetGuac remembers the shopping so you do not have to—and learns from every trip.</p>
-            <a class="flow-link" href="https://getguac.app/how-it-works">See how GetGuac works →</a>
+            <p class="loop-caption">Learns from every trip.</p>
           </div>
         </div>
 
         <div class="stage rise" id="stagePanel" role="tabpanel" aria-live="polite">
           <div class="stage-copy">
             <span class="stage-kicker"><span id="kickerIcon" aria-hidden="true"></span><span id="stageKicker">Less to remember</span></span>
-            <h3 id="stageHeadline">One receipt. One quick scan.</h3>
+            <h3 id="stageHeadline">One photo. Nothing lost.</h3>
             <div class="talk">
               <div class="talk-moment">
                 <span class="talk-icon" id="momentIcon" aria-hidden="true">📸</span>
-                <span><small id="momentEyebrow">One quick snap</small><strong id="momentLine">Every item—and every dollar—organized.</strong></span>
+                <span><small id="momentEyebrow">One quick snap</small><strong id="momentLine">Today’s receipt is already safe</strong></span>
               </div>
               <ul class="points"><li id="pointOne">Paper and digital receipts together</li><li id="pointTwo">Searchable items instead of mystery totals</li></ul>
             </div>
-            <div class="stage-photo"><img id="stagePerson" src="home/story-people/capture-blonde-produce-v1.webp" alt="A blonde shopper holding a receipt and displaying the saved GetGuac receipt" width="1200" height="800" loading="lazy" decoding="async"></div>
+            <div class="stage-photo"><img id="stagePerson" src="home/story-people/capture-phone.webp" alt="GetGuac in everyday life" loading="lazy"></div>
           </div>
 
           <div class="stage-visual">
@@ -694,14 +574,14 @@
               <strong id="stageMetric">2 ways in</strong>
               <span class="metric-label" id="stageMetricLabel">Photo scans and email receipts</span>
             </div>
-            <p class="speech" id="stageStory">Snap it once. GetGuac turns one receipt into searchable items, spending context, and a clearer picture of where your money went.</p>
+            <p class="speech" id="stageStory">Receipts disappear in pockets, bags and inboxes. GetGuac gives every purchase one dependable home before life moves on.</p>
             <div class="appshot">
               <span class="applabel">Inside the GetGuac app</span>
               <button type="button" class="shot" id="webShot" aria-label="Enlarge the GetGuac web screen">
-                <img class="web" id="stageWeb" src="home/goals/web-receipts.webp" alt="The GetGuac web app" width="900" height="563" loading="lazy" decoding="async">
+                <img class="web" id="stageWeb" src="home/goals/web-receipts.webp" alt="The GetGuac web app" loading="lazy">
               </button>
               <button type="button" class="shot shot-phone" id="phoneShot" aria-label="Enlarge the GetGuac mobile screen">
-                <img id="stagePhone" src="home/goals/phone-receipts.webp" alt="The GetGuac mobile app" width="360" height="757" loading="lazy" decoding="async">
+                <img id="stagePhone" src="home/goals/phone-receipts.webp" alt="The GetGuac mobile app" loading="lazy">
               </button>
               <span class="proof"><span id="proofTitle">Receipt memory</span><strong id="proofValue">Saved</strong><small id="proofNote">Ready whenever you need it</small></span>
             </div>
@@ -711,125 +591,10 @@
       </div>
     </section>
 
-    <!-- ===================== people ===================== -->
-    <section class="section" style="padding-top:0">
-      <div class="wrap">
-        <div class="head-row rise">
-          <div>
-                        <span class="eyebrow">What GetGuac does</span>
-            <h2>One receipt. Four ways to keep more of your money.</h2>
-          </div>
-        </div>
-        <div class="people-grid">
-          <article class="person-card rise">
-            <img src="home/story-people/capture-phone.webp" alt="A shopper showing a receipt saved in GetGuac" width="1200" height="800" loading="lazy" decoding="async">
-            <div class="person-message"><small>Capture</small><strong>“One photo—and it’s organized.”</strong><span>Every item has a searchable home.</span></div>
-          </article>
-          <article class="person-card rise">
-            <img src="home/story-people/prepare.webp" alt="A couple reviewing their shopping together" width="1200" height="800" loading="lazy" decoding="async">
-            <div class="person-message"><small>Understand</small><strong>“Now we know where it went.”</strong><span>Items tell more than a bank total.</span></div>
-          </article>
-          <article class="person-card rise">
-            <img src="home/campaign-story/sports-payoff-v4-white-friends.webp" alt="Four friends celebrating at a stadium while displaying GetGuac" width="1536" height="1024" loading="lazy" decoding="async">
-            <div class="person-message"><small>Protect</small><strong>“We caught the return window.”</strong><span>Money does not disappear quietly.</span></div>
-          </article>
-          <article class="person-card rise">
-            <img src="home/story-people/family-tablet.webp" alt="A family reviewing their GetGuac savings together on a tablet" width="1200" height="800" loading="lazy" decoding="async">
-            <div class="person-message"><small>Shop smarter</small><strong>“The next shopping trip feels easier.”</strong><span>Less guessing and less repeat buying.</span></div>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <!-- ===================== complete feature details ===================== -->
-    <section id="features" class="section detail-suite">
-      <div class="wrap">
-        <div class="detail-lede rise">
-          <div>
-            <span class="eyebrow">The complete GetGuac toolkit</span>
-            <h2>The details behind every money win.</h2>
-          </div>
-          <p class="sub">GetGuac does more than store receipts. It turns everyday purchases into organized records, useful reminders, money protection, and a smarter plan for what comes next.</p>
-        </div>
-
-        <div class="capability-grid">
-          <article class="capability rise" style="--card-soft:#eaf7eb">
-            <span class="cap-icon" aria-hidden="true">🧾</span><small>Organize</small>
-            <h3>Every purchase becomes searchable.</h3>
-            <p>Store names, dates, taxes, totals, and individual items stop disappearing inside paper piles and bank totals.</p>
-            <ul><li>Photo and email receipts together</li><li>Find an item, store, or purchase later</li></ul>
-          </article>
-          <article class="capability rise" style="--card-soft:#edf5ff">
-            <span class="cap-icon" aria-hidden="true">📊</span><small>Understand</small>
-            <h3>See what your money actually bought.</h3>
-            <p>Guac-AI adds the item-level context a transaction list misses and makes spending easier to explain.</p>
-            <ul><li>Ask questions grounded in receipts</li><li>Spot categories and spending patterns</li></ul>
-          </article>
-          <article class="capability rise" style="--card-soft:#fff5df">
-            <span class="cap-icon" aria-hidden="true">↩️</span><small>Recover</small>
-            <h3>Catch money that should come back.</h3>
-            <p>Return windows, pending refunds, and meaningful price changes stay visible after checkout.</p>
-            <ul><li>Know when a return deadline is close</li><li>Follow money until the refund lands</li></ul>
-          </article>
-          <article class="capability rise" style="--card-soft:#fff0ea">
-            <span class="cap-icon" aria-hidden="true">✂️</span><small>Reduce waste</small>
-            <h3>Stop quiet charges from becoming habits.</h3>
-            <p>Forgotten subscriptions, unusual charges, and avoidable fees become reviewable instead of invisible.</p>
-            <ul><li>Surface recurring subscriptions</li><li>Review fees and spending surprises</li></ul>
-          </article>
-          <article class="capability rise" style="--card-soft:#f1edff">
-            <span class="cap-icon" aria-hidden="true">🛒</span><small>Prepare</small>
-            <h3>Begin the next trip with what you know.</h3>
-            <p>Stash remembers what came home. Smashlist turns that memory into a more useful shopping plan.</p>
-            <ul><li>Reduce duplicate buying</li><li>Remember what may be running low</li></ul>
-          </article>
-          <article class="capability rise" style="--card-soft:#eef8e4">
-            <span class="cap-icon" aria-hidden="true">⭐</span><small>Learn</small>
-            <h3>Let every trip improve the next one.</h3>
-            <p>Worth-It ratings and shopping history teach GetGuac which purchases delivered value—and which did not.</p>
-            <ul><li>Remember the buys you genuinely loved</li><li>Turn regret into better guidance</li></ul>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <!-- ===================== receipt entry and privacy ===================== -->
-    <section class="section intake">
-      <div class="wrap">
-        <div class="head-row rise">
-          <div>
-            <span class="eyebrow">Start with what you already have</span>
-            <h2>Receipts can arrive three easy ways.</h2>
-            <p class="sub">Use the quickest option for each purchase. Everything meets in the same organized household record.</p>
-          </div>
-          <a class="btn line" href="https://getguac.app/join?try=receipt">Try one receipt →</a>
-        </div>
-        <div class="intake-grid">
-          <article class="intake-card rise"><div class="intake-step"><span>Paper receipts</span><b>01</b></div><h3>Take a photo.</h3><p>Open the camera, capture the full receipt, and let GetGuac read the store, date, total, tax, and items.</p></article>
-          <article class="intake-card rise"><div class="intake-step"><span>Digital purchases</span><b>02</b></div><h3>Forward the email.</h3><p>Send order confirmations and emailed receipts to GetGuac so online shopping joins the same history.</p></article>
-          <article class="intake-card rise"><div class="intake-step"><span>Statements and files</span><b>03</b></div><h3>Upload the document.</h3><p>Add receipt images, PDFs, or supported statements when a camera is not the best source.</p></article>
-        </div>
-
-        <div id="security" class="privacy-panel rise">
-          <div>
-            <span class="eyebrow">Private by design</span>
-            <h2>Your shopping memory stays yours.</h2>
-            <p>Use GetGuac without handing over a bank password. Keep the records you want, remove what you do not, and delete your trial data when you are finished.</p>
-          </div>
-          <div class="privacy-list">
-            <span><i>🏦</i>No bank login required to try receipt organization</span>
-            <span><i>🔒</i>Encrypted while moving and while stored</span>
-            <span><i>🗑️</i>Delete trial data and account records when you choose</span>
-            <span><i>📱</i>Use the same experience on iPhone, Android, and web</span>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <!-- ===================== life ===================== -->
     <section class="life">
-      <div class="wrap life-grid">
-        <div class="life-photo"><img src="home/story-people/family-tablet.webp" alt="A family reviewing their GetGuac savings together on a tablet" width="1200" height="800" loading="lazy" decoding="async"></div>
+      <div class="life-grid">
+        <div class="life-photo"><img src="home/story-people/shop.webp" alt="A parent and child shopping together" loading="lazy"></div>
         <div class="life-copy">
           <span class="eyebrow">Shopping is part of life</span>
           <h2>Keep more of the moments you shop for.</h2>
@@ -852,19 +617,19 @@
         </div>
         <div class="blog-grid">
           <a class="post rise" href="https://getguac.app/articles/track-spending-with-receipts">
-            <div class="thumb"><img src="home/story-people/capture-phone.webp" alt="" width="1200" height="800" loading="lazy" decoding="async"></div>
+            <div class="thumb"><img src="home/story-people/capture-phone.webp" alt="" loading="lazy"></div>
             <div class="body"><small>Shopping</small><h3>Why tracking your receipts beats guessing</h3><p>Your memory underestimates your spending—receipts reveal the truth.</p><b>Read the guide</b></div>
           </a>
           <a class="post rise" href="https://getguac.app/articles/cancel-unused-subscriptions">
-            <div class="thumb"><img src="home/story-people/guide-subscription-hispanic-couple-v1.webp" alt="A Hispanic couple reviewing a receipt and their subscriptions together" width="1200" height="800" loading="lazy" decoding="async"></div>
+            <div class="thumb"><img src="home/story-people/prepare.webp" alt="" loading="lazy"></div>
             <div class="body"><small>Shopping</small><h3>The subscription audit that pays for itself</h3><p>Free trials, forgotten apps, and duplicate streaming add up quietly.</p><b>Read the guide</b></div>
           </a>
           <a class="post rise" href="https://getguac.app/articles/get-the-refund-youre-owed">
-            <div class="thumb"><img src="home/story-people/protect.webp" alt="" width="1200" height="800" loading="lazy" decoding="async"></div>
+            <div class="thumb"><img src="home/story-people/protect.webp" alt="" loading="lazy"></div>
             <div class="body"><small>Shopping</small><h3>How to actually get the refund you’re owed</h3><p>Return windows and price drops can leave money waiting to be claimed.</p><b>Read the guide</b></div>
           </a>
           <a class="post rise" href="https://getguac.app/articles/emergency-fund-size">
-            <div class="thumb"><img src="home/story-people/family-tablet.webp" alt="" width="1200" height="800" loading="lazy" decoding="async"></div>
+            <div class="thumb"><img src="home/story-people/family-tablet.webp" alt="" loading="lazy"></div>
             <div class="body"><small>Saving</small><h3>How big should your emergency fund be?</h3><p>The right number depends on your household and the life you are protecting.</p><b>Read the guide</b></div>
           </a>
         </div>
@@ -915,13 +680,13 @@
     const BASE = 'https://getguac.app';
     const STAGES = [
       { key:'capture', name:'Capture', slug:'receipts', accent:'#168A4B', soft:'#EAF6ED',
-        kicker:'Less to remember', headline:'One receipt. One quick scan.',
-        story:'Snap it once. GetGuac turns one receipt into searchable items, spending context, and a clearer picture of where your money went.',
+        kicker:'Less to remember', headline:'One photo. Nothing lost.',
+        story:'Receipts disappear in pockets, bags and inboxes. GetGuac gives every purchase one dependable home before life moves on.',
         metric:'2 ways in', metricLabel:'Photo scans and email receipts',
         points:['Paper and digital receipts together','Searchable items instead of mystery totals'],
         proofTitle:'Receipt memory', proofValue:'Saved', proofNote:'Ready whenever you need it',
-        image:'capture-blonde-produce-v1.webp', imageAlt:'A blonde shopper holding a receipt and displaying the saved GetGuac receipt',
-        momentIcon:'📸', momentEyebrow:'One quick snap', momentLine:'Every item—and every dollar—organized.',
+        image:'capture-phone.webp', imageAlt:'A smiling shopper holding a receipt and displaying the GetGuac receipt screen',
+        momentIcon:'📸', momentEyebrow:'One quick snap', momentLine:'Today’s receipt is already safe',
         cta:'Photo + email capture', href:BASE+'/how-email-works' },
       { key:'understand', name:'Understand', slug:'guac-ai', accent:'#2563A8', soft:'#EDF5FF',
         kicker:'See the full story', headline:'Know what the total cannot tell you.',
@@ -965,7 +730,7 @@
         metric:'$192 open', metricLabel:'Refundable purchases still in range',
         points:['Deadlines before they quietly expire','Refunds followed until the money returns'],
         proofTitle:'Return window', proofValue:'5 days left', proofNote:'Still enough time to act',
-        image:'protect-couple-tablet.webp', imageAlt:'A couple reviewing a receipt and GetGuac together on a tablet',
+        image:'protect.webp', imageAlt:'A customer happily finding money to reclaim',
         momentIcon:'🛡️', momentEyebrow:'Money still yours', momentLine:'Five days left to bring it back',
         cta:'Claim your refunds', href:BASE+'/features' },
       { key:'learn', name:'Worth it', slug:'worth-it', accent:'#A17300', soft:'#FFF9DD',

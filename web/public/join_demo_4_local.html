@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>GetGuac — Try 1 receipt</title>
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+  <style>
+    /* ------------------------------------------------------------------
+       demo 4 — the ad landing page, not another marketing page.
+
+       Built for the traffic in the Meta report: 207 taps, 78 arrivals.
+       Everything here is in service of the click surviving the trip.
+
+         · No nav. demo_2 gave paid traffic seven ways to leave before
+           converting. This page has one exit and it is the CTA.
+         · Three sections instead of seven — hero, the loop, close. The
+           loop is the strongest proof in the whole demo set, so it sits
+           directly under the hero rather than at 45% scroll depth.
+         · Two images above the fold, both WebP, 90KB combined. The eight
+           loop screenshots swap in on demand, two at a time.
+         · No people-with-quote-marks cards. Nothing on this page is
+           attributable to a customer who did not say it.
+
+       Stage data is the shipped set from src/components/ReceiptFlow.jsx
+       with the CTA and slug from its matching GoalsShowcase.jsx card.
+       ------------------------------------------------------------------ */
+
+    :root{
+      --ink:#12261B; --ink-2:#45564A; --ink-3:#6A7D70;
+      --forest:#12341f; --green:#1B8A4B; --green-ink:#0F5C2C; --lime:#65a30d; --lime-2:#a3e635;
+      --cream:#F5FAEF; --cream-2:#EEF4EA;
+      --line:rgba(20,83,45,.11); --line-2:rgba(20,83,45,.06);
+      --sh-1:0 1px 2px rgba(15,36,24,.05), 0 8px 20px -14px rgba(15,36,24,.28);
+      --sh-2:0 2px 4px rgba(15,36,24,.04), 0 18px 40px -26px rgba(15,36,24,.36);
+      --sh-3:0 4px 8px rgba(15,36,24,.04), 0 40px 80px -48px rgba(15,36,24,.5);
+      --r-sm:14px; --r:20px; --r-lg:28px; --r-xl:34px;
+      --display:"Bricolage Grotesque",ui-sans-serif,system-ui,"Segoe UI",sans-serif;
+      --text:"Plus Jakarta Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+      --accent:#168A4B; --soft:#EAF6ED;
+    }
+    *,*::before,*::after{box-sizing:border-box}
+    html{-webkit-text-size-adjust:100%}
+    body{margin:0;background:#fff;color:var(--ink);font-family:var(--text);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+    h1,h2,h3{font-family:var(--display);font-weight:800;letter-spacing:-.04em;line-height:1.04;margin:0}
+    p{margin:0} img{display:block;max-width:100%} a{color:inherit;text-decoration:none}
+    button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+    :focus-visible{outline:2.5px solid var(--green);outline-offset:3px;border-radius:6px}
+    .wrap{width:min(1140px,calc(100% - clamp(24px,5vw,52px)));margin-inline:auto}
+    .eyebrow{display:inline-block;color:var(--green);font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.14em}
+
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;border-radius:999px;padding:15px 26px;
+      font-weight:700;font-size:15.5px;letter-spacing:-.01em;white-space:nowrap;transition:transform .18s,box-shadow .18s,background .18s}
+    .btn:hover{transform:translateY(-2px)}
+    .btn.primary{background:var(--forest);color:#fff;box-shadow:0 14px 26px -16px rgba(18,52,31,.9)}
+    .btn.primary:hover{background:#183f26}
+    .btn.green{background:#4D9A2A;color:#fff;box-shadow:0 14px 26px -16px rgba(77,154,42,.85)}
+    .btn.green:hover{background:#438723}
+    .btn.ghost{background:#fff;color:var(--forest);box-shadow:var(--sh-1)}
+    .btn.sm{padding:11px 19px;font-size:14px}
+
+    /* ---- header: a logo and one exit ---- */
+    .head{border-bottom:1px solid var(--line-2)}
+    .head .wrap{height:66px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .logo{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:-.03em}
+    .logo i{display:grid;place-items:center;width:34px;height:34px;border-radius:12px;font-style:normal;font-size:18px;
+      background:linear-gradient(150deg,var(--lime-2),#15965a);box-shadow:inset 0 0 0 1px rgba(255,255,255,.45)}
+
+    /* ---- hero ---- */
+    .hero{position:relative;overflow:hidden;padding:clamp(30px,3.6vw,50px) 0 clamp(28px,3.4vw,44px);
+      background:linear-gradient(180deg,#fff,#FBFDF7 60%,var(--cream))}
+    .hero-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.04fr);gap:clamp(24px,3.4vw,50px);align-items:start}
+    .pill{display:inline-flex;align-items:center;gap:9px;border:1px solid #d8e9c2;background:rgba(255,255,255,.8);color:var(--green-ink);
+      border-radius:999px;padding:7px 14px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}
+    .pill::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--lime-2);box-shadow:0 0 0 4px rgba(132,204,22,.22)}
+    .hero h1{font-size:clamp(33px,4.4vw,54px);letter-spacing:-.05em;margin:18px 0 16px;max-width:15ch}
+    .hero h1 span{background:linear-gradient(96deg,var(--green) 10%,var(--lime) 90%);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .lede{max-width:48ch;color:var(--ink-2);font-size:clamp(15.5px,1.3vw,17.5px);line-height:1.6}
+    .actions{display:flex;flex-wrap:wrap;gap:11px;margin-top:24px}
+    .micro{display:flex;flex-wrap:wrap;gap:7px 20px;margin-top:16px;color:var(--green-ink);font-size:12.5px;font-weight:700}
+
+    /* The scene: no panel behind it. The family photo carries the composition
+       and every other element is anchored to the photo or the phone, so
+       nothing is left floating on bare white. */
+    /* photo and caption stack in normal flow so the caption always sits right
+       under the image; only the phone is absolute. padding-top is the 1in drop. */
+    /* 52px = the pill height plus the h1 margin, so the photo and the phone start
+       on exactly the same line as the headline rather than floating below it */
+    .scene{position:relative;padding-top:52px}
+    .scene-photo{position:relative;z-index:2;width:65%;aspect-ratio:3/2;
+      border-radius:26px;box-shadow:0 26px 48px -28px rgba(15,45,26,.55)}
+    .scene-photo img{width:100%;height:100%;object-fit:cover;object-position:center 45%;border-radius:26px}
+    /* a caption under the photo, not a card floating on it — so it drops the
+       white pill and picks up the page's own type system instead */
+    .scene-note{position:relative;z-index:6;display:block;margin:14px 0 0 0;max-width:72%;
+      font-size:13px;font-weight:600;color:var(--ink-3);line-height:1.3}
+    .scene-note strong{position:relative;display:block;margin-top:5px;padding-bottom:11px;
+      font-family:var(--display);font-weight:800;color:var(--forest);
+      font-size:clamp(19px,1.7vw,24px);letter-spacing:-.038em;line-height:1.1}
+    .scene-note strong::after{content:"";position:absolute;left:0;bottom:0;width:58px;height:4px;border-radius:999px;
+      background:linear-gradient(90deg,var(--green),var(--lime-2))}
+    /* top:96px is the same 1in drop as .scene padding-top, so the phone and the
+       photo start on exactly the same line. transform-origin keeps the tilt from
+       nudging that top edge. */
+    .scene-phone{position:absolute;z-index:3;right:0;top:52px;width:31%;max-width:180px;
+      transform:rotate(2deg);transform-origin:top center;filter:drop-shadow(0 24px 26px rgba(20,47,31,.4))}
+    .chip{position:absolute;z-index:5;max-width:46%;padding:10px 13px;background:#fff;border:1px solid var(--line);
+      border-radius:14px;box-shadow:var(--sh-2)}
+    .chip b{display:block;font-size:11.5px;font-weight:800;letter-spacing:-.01em}
+    .chip small{display:block;font-size:9.5px;color:var(--ink-3);margin-top:2px}
+    .c1{left:0;bottom:2%}
+    .c2{left:14px;bottom:14px;right:auto;top:auto;z-index:6;max-width:64%}
+    .c3{right:1%;bottom:4%}
+    /* the avocado sits behind the composition, the way the original /join hero
+       carries it — big, low contrast, not competing with the product shots */
+    .scene-avo{position:absolute;z-index:1;right:2%;top:44%;font-size:clamp(90px,9vw,140px);line-height:1;
+      opacity:.22;filter:drop-shadow(0 14px 12px rgba(23,67,29,.18));pointer-events:none}
+
+    .trust{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin-top:clamp(20px,2.4vw,30px);
+      border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--line);box-shadow:var(--sh-1)}
+    .trust span{background:#fff;padding:15px 12px;text-align:center;font-size:13px;font-weight:700;color:var(--ink-2)}
+
+    /* ---- the loop ---- */
+    .loop{padding:clamp(38px,4.4vw,60px) 0;background:linear-gradient(180deg,var(--cream-2),#fff)}
+    .loop-head{max-width:66ch}
+    .loop-head h2{font-size:clamp(26px,3.1vw,40px);letter-spacing:-.045em;margin:10px 0 10px}
+    .loop-head p{color:var(--ink-2);font-size:15.5px;line-height:1.55}
+    .tabs{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px;margin-top:clamp(20px,2.4vw,28px)}
+    .tab{display:grid;justify-items:center;gap:8px;min-width:0;text-align:center;color:var(--ink-3);
+      font-size:9.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;transition:color .2s}
+    .tab .puck{display:grid;place-items:center;width:56px;height:56px;border-radius:999px;background:#fff;color:var(--ink);
+      border:1px solid var(--line-2);box-shadow:var(--sh-1);transition:transform .2s cubic-bezier(.2,.9,.3,1.4),background .2s,box-shadow .2s,border-color .2s,color .2s}
+    .tab .puck svg{width:27px;height:27px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+    .tab:hover{color:var(--ink)} .tab:hover .puck{transform:translateY(-3px);border-color:#9fc57a}
+    .tab[aria-selected="true"]{color:var(--ink)}
+    .tab[aria-selected="true"] .puck{background:var(--accent);border-color:transparent;color:#fff;transform:scale(1.06);
+      box-shadow:0 12px 24px -12px var(--accent),0 0 0 5px color-mix(in srgb,var(--accent) 11%,transparent)}
+    .tab.is-done .puck{background:#F4FAEE;border-color:color-mix(in srgb,var(--green) 30%,transparent)}
+    .progress{position:relative;height:2px;margin:18px 6px 0;border-radius:999px;background:rgba(27,138,75,.14);overflow:hidden}
+    .progress span{position:absolute;inset:0 auto 0 0;width:12.5%;border-radius:999px;background:var(--accent);transition:width .45s ease,background .4s ease}
+
+    .stage{display:grid;grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr);margin-top:clamp(20px,2.4vw,28px);
+      border:1px solid var(--line);border-radius:var(--r-xl);overflow:hidden;background:#fff;box-shadow:var(--sh-3)}
+    .stage-copy{padding:clamp(24px,2.6vw,36px);display:flex;flex-direction:column;justify-content:center;gap:15px;
+      background:linear-gradient(150deg,var(--soft),color-mix(in srgb,var(--soft) 26%,#fff) 82%);
+      border-right:1px solid color-mix(in srgb,var(--accent) 13%,transparent);transition:background .4s}
+    .kicker{display:inline-flex;align-items:center;gap:8px;width:fit-content;padding:7px 13px;border-radius:999px;background:#fff;
+      color:var(--accent);font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--line);transition:color .3s}
+    .kicker svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+    .stage-copy h3{position:relative;width:fit-content;font-size:clamp(25px,2.7vw,35px);letter-spacing:-.042em;margin:4px 0 13px}
+    .stage-copy h3::after{content:"";position:absolute;left:0;bottom:-11px;width:64px;height:4px;border-radius:999px;
+      background:linear-gradient(90deg,var(--accent),#8BD72D)}
+    .stage-story{color:#56655B;font-size:15px;line-height:1.6;max-width:46ch}
+    .points{display:grid;gap:9px;margin:0;padding:0;list-style:none}
+    .points li{display:flex;align-items:flex-start;gap:9px;color:#45564A;font-size:13.5px;line-height:1.4}
+    .points li::before{content:"✓";flex:0 0 19px;width:19px;height:19px;display:grid;place-items:center;border-radius:999px;
+      background:var(--soft);color:var(--accent);font-size:12px;font-weight:800}
+    .metric{display:flex;align-items:center;gap:12px;padding:12px 15px;border-radius:16px;background:#fff;border:1px solid var(--line);box-shadow:var(--sh-1)}
+    .metric-icon{flex:0 0 34px;width:34px;height:34px;display:grid;place-items:center;border-radius:11px;
+      background:color-mix(in srgb,var(--accent) 13%,transparent);color:var(--accent);transition:background .4s,color .4s}
+    .metric-icon svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+    .metric strong,.metric .metric-label{font-family:var(--display);font-weight:800;color:var(--ink);
+      font-size:clamp(13.5px,1.2vw,15.5px);letter-spacing:-.03em;line-height:1.3}
+    .metric strong{position:relative;flex:0 0 auto}
+    .metric strong::after{content:"";position:absolute;left:0;bottom:-5px;width:100%;height:3px;border-radius:999px;
+      background:linear-gradient(90deg,var(--accent),#8BD72D)}
+    .metric .metric-label{flex:1;min-width:0}
+    .stage-actions{display:flex;flex-wrap:wrap;align-items:center;gap:13px;margin-top:3px}
+    .stage-cta{display:inline-flex;align-items:center;padding:11px 19px;border-radius:999px;background:var(--accent);color:#fff;
+      font-size:13.5px;font-weight:800;box-shadow:0 12px 24px -15px var(--accent);transition:transform .18s}
+    .stage-cta:hover{transform:translateY(-2px)}
+
+    .stage-visual{position:relative;padding:clamp(20px,2.2vw,28px);display:flex;flex-direction:column;justify-content:center;
+      background:radial-gradient(circle at 88% 8%,#fff,transparent 30%),var(--soft);transition:background .4s}
+    .appshot{position:relative;overflow:hidden;padding:44px 14px 16px;border-radius:var(--r);background:rgba(255,255,255,.94);
+      border:1px solid var(--line);box-shadow:0 22px 48px -35px rgba(5,18,10,.55)}
+    .appshot::after{content:"";position:absolute;right:-48px;top:-58px;width:160px;height:160px;border-radius:999px;
+      background:color-mix(in srgb,var(--accent) 12%,transparent);pointer-events:none}
+    .applabel{position:absolute;z-index:3;right:15px;top:16px;color:var(--accent);font-size:9.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;transition:color .3s}
+    .shot{display:block;padding:0;width:100%;border-radius:10px;cursor:zoom-in}
+    .appshot .web{width:100%;border-radius:10px;border:1px solid var(--line);box-shadow:0 20px 50px -24px rgba(20,40,28,.4)}
+    .shot-phone{position:absolute;z-index:2;right:12px;bottom:12px;width:25%;max-width:100px}
+    .shot-phone img{width:100%;filter:drop-shadow(0 20px 26px rgba(20,40,28,.42))}
+    .proof{position:absolute;z-index:3;left:14px;bottom:14px;width:152px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.97);
+      border:1px solid var(--line);border-left:3px solid var(--accent);box-shadow:0 18px 34px -24px rgba(5,18,10,.6);transition:border-color .4s}
+    .proof span{display:block;color:var(--accent);font-size:8.5px;font-weight:800;letter-spacing:.11em;text-transform:uppercase}
+    .proof strong{display:block;font-family:var(--display);font-weight:800;font-size:15px;letter-spacing:-.03em;margin-top:3px}
+    .proof small{display:block;color:var(--ink-3);font-size:10px;line-height:1.35;margin-top:3px}
+    .fine{text-align:center;font-size:12px;color:#8A978D;margin-top:12px}
+    .swap{animation:swapIn .4s cubic-bezier(.22,.8,.3,1) both}
+    @keyframes swapIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+    .zoom{position:fixed;inset:0;z-index:120;display:none;align-items:center;justify-content:center;padding:4vh 4vw;background:rgba(10,20,14,.86);cursor:zoom-out}
+    .zoom.open{display:flex}
+    .zoom img{max-width:100%;max-height:92vh;border-radius:12px;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+    .zoom button{position:fixed;top:18px;right:20px;background:#fff;color:var(--ink);border-radius:999px;padding:9px 18px;font-weight:700;font-size:13px}
+
+    /* ---- close ---- */
+    .close{padding:clamp(34px,4vw,56px) 0}
+    .band{position:relative;overflow:hidden;border-radius:var(--r-xl);padding:clamp(32px,4vw,52px) clamp(22px,3.4vw,44px);text-align:center;color:#fff;
+      background:linear-gradient(128deg,#0d4a2a,#177a3c 52%,var(--lime));box-shadow:0 40px 80px -50px rgba(13,74,42,.9)}
+    .band::before{content:"🥑";position:absolute;left:24px;bottom:-42px;font-size:clamp(100px,13vw,160px);opacity:.28;line-height:1}
+    .band>*{position:relative;z-index:1}
+    .band h2{font-size:clamp(26px,3.4vw,42px);letter-spacing:-.045em;margin:0 0 11px}
+    .band p{margin:0 auto 22px;max-width:50ch;color:#eafcd8;font-size:15.5px}
+    .band .micro{justify-content:center;margin-top:16px;color:#dcf5c1}
+    .foot{border-top:1px solid var(--line-2);padding:20px 0 34px;color:var(--ink-3);font-size:12px;text-align:center}
+
+    @media(max-width:980px){
+      .hero-grid{grid-template-columns:1fr}
+      .tabs{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px 6px}
+      .stage{grid-template-columns:1fr}
+      .stage-copy{border-right:0}
+    }
+    @media(max-width:820px){.trust{grid-template-columns:1fr 1fr}}
+    @media(max-width:560px){
+      .head .wrap{height:60px}
+      .hero h1{font-size:clamp(28px,8vw,37px)}
+      .actions{display:grid}.actions .btn{width:100%}
+      .scene{padding-top:22px}
+      .scene-photo{width:78%}
+      .scene-note{max-width:72%;font-size:12px}
+      .scene-note strong{font-size:19px}
+      .scene-phone{width:42%;max-width:130px;right:0;top:22px}
+      .trust{grid-template-columns:1fr}
+      .tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .tab .puck{width:50px;height:50px}
+      .stage-copy,.stage-visual{padding:20px 17px}
+      .proof{width:132px;left:10px;bottom:10px}
+    }
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}}
+  </style>
+</head>
+<body>
+
+  <header class="head">
+    <div class="wrap">
+      <span class="logo"><i>🥑</i>GetGuac</span>
+      <a class="btn primary sm" href="https://getguac.app/join?try=receipt">📷 Try 1 receipt</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="wrap">
+        <div class="hero-grid">
+          <div>
+            <span class="pill">Guac-AI · personal finance assistant</span>
+            <h1>Keep More <span>Guac</span><br>in Your Pocket 🥑</h1>
+            <p class="lede">GetGuac reads your receipts and bank statements, scores every purchase, sniffs out hidden fees, and shows you exactly where your money gets eaten. Money’s wingman. Keep your guac.</p>
+            <div class="actions">
+              <a class="btn primary" href="https://getguac.app/join?try=receipt">📷 Try 1 receipt</a>
+              <a class="btn green" href="https://getguac.app/join">Start free with Google</a>
+            </div>
+            <div class="micro"><span>✓ Free forever</span><span>✓ No card required</span><span>✓ Delete anytime</span></div>
+          </div>
+
+          <div class="scene">
+            <span class="scene-avo" aria-hidden="true">🥑</span>
+            <div class="scene-photo"><img src="home/story-people/family-tablet.webp" alt="A family reviewing their GetGuac savings together on a tablet" fetchpriority="high" width="1200" height="800"><span class="chip c2"><b>↩ Return window found</b><small>before time runs out</small></span></div>
+            <span class="scene-note">One receipt. One quick scan.<strong>Every item—and every dollar—organized.</strong></span>
+            <!-- the clean Guacanomics screen. home/demo-2/guac-phone-current has
+                 the same screen but with background text, arrows and an avocado
+                 photo baked into its pixels — they show through the phone and no
+                 crop can remove them. -->
+            <img class="scene-phone" src="home/goals/phone-guacscore.webp" alt="GetGuac showing the Guacanomics spending breakdown">
+          </div>
+        </div>
+
+        <div class="trust">
+          <span>🏦 No bank login</span>
+          <span>🔒 Encrypted</span>
+          <span>🗑 Delete everything</span>
+          <span>📱 iOS · Android · Web</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="loop" id="how">
+      <div class="wrap">
+        <div class="loop-head">
+          <span class="eyebrow">The GetGuac circle</span>
+          <h2>Every receipt makes the next trip smarter.</h2>
+          <p>GetGuac remembers the shopping so you do not have to.</p>
+        </div>
+
+        <div class="tabs" id="tabs" role="tablist" aria-label="The GetGuac circle"></div>
+        <div class="progress" aria-hidden="true"><span id="progFill"></span></div>
+
+        <div class="stage" id="stagePanel" role="tabpanel" aria-live="polite">
+          <div class="stage-copy">
+            <span class="kicker"><span id="kickerIcon" aria-hidden="true"></span><span id="stageKicker">Less to remember</span></span>
+            <h3 id="stageHeadline">One photo. Nothing lost.</h3>
+            <p class="stage-story" id="stageStory">Receipts disappear in pockets, bags and inboxes. GetGuac gives every purchase one dependable home before life moves on.</p>
+            <ul class="points"><li id="pointOne">Paper and digital receipts together</li><li id="pointTwo">Searchable items instead of mystery totals</li></ul>
+            <div class="metric">
+              <span class="metric-icon" id="metricIcon" aria-hidden="true"></span>
+              <strong id="stageMetric">2 ways in</strong>
+              <span class="metric-label" id="stageMetricLabel">Photo scans and email receipts</span>
+            </div>
+            <div class="stage-actions">
+              <a class="stage-cta" id="stageCta" href="https://getguac.app/join?try=receipt">📷 Try 1 receipt</a>
+            </div>
+          </div>
+
+          <div class="stage-visual">
+            <div class="appshot">
+              <span class="applabel">Inside the GetGuac app</span>
+              <button type="button" class="shot" id="webShot" aria-label="Enlarge the GetGuac web screen">
+                <img class="web" id="stageWeb" src="home/goals/web-receipts.webp" alt="The GetGuac web app" loading="lazy">
+              </button>
+              <button type="button" class="shot shot-phone" id="phoneShot" aria-label="Enlarge the GetGuac mobile screen">
+                <img id="stagePhone" src="home/goals/phone-receipts.webp" alt="The GetGuac mobile app" loading="lazy">
+              </button>
+              <span class="proof"><span id="proofTitle">Receipt memory</span><strong id="proofValue">Saved</strong><small id="proofNote">Ready whenever you need it</small></span>
+            </div>
+          </div>
+        </div>
+        <p class="fine">Real screens from the live app (demo data) — web and mobile.</p>
+      </div>
+    </section>
+
+    <section class="close">
+      <div class="wrap">
+        <div class="band">
+          <h2>Start the circle with one receipt.</h2>
+          <p>See your purchases clearly, keep more of your money, and make the next trip a little smarter.</p>
+          <a class="btn ghost" href="https://getguac.app/join?try=receipt">📷 Try 1 receipt</a>
+          <div class="micro"><span>✓ Free forever</span><span>✓ No card required</span><span>✓ Delete anytime</span></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">🥑 GetGuac · Your money’s wingman · Local offline design preview · demo 4 · <span id="srcBadge">source: —</span></footer>
+
+  <div class="zoom" id="zoom" role="dialog" aria-modal="true" aria-label="Enlarged screenshot">
+    <button type="button" id="zoomClose">Close ✕</button>
+    <img id="zoomImg" alt="">
+  </div>
+
+  <script>
+    const ICONS={
+      capture:'<svg viewBox="0 0 24 24"><path d="M14.5 4 16 6h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3l1.5-2z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+      understand:'<svg viewBox="0 0 24 24"><path d="M6 2h9l4 4v16H6z"/><path d="M14 2v5h5M9 11h6M9 15h6"/><path d="m3 7 1 2 2 1-2 1-1 2-1-2-2-1 2-1z"/></svg>',
+      remember:'<svg viewBox="0 0 24 24"><path d="M9.5 4.5A3 3 0 0 0 5 7a3 3 0 0 0 0 6 3 3 0 0 0 4.5 2.5M14.5 4.5A3 3 0 0 1 19 7a3 3 0 0 1 0 6 3 3 0 0 1-4.5 2.5M9.5 4.5v15M14.5 4.5v15M9.5 9h5M9.5 15h5"/></svg>',
+      prepare:'<svg viewBox="0 0 24 24"><path d="M7 3h10v3H7zM5 5h14v17H5zM8 11l2 2 4-4M8 17h8"/></svg>',
+      shop:'<svg viewBox="0 0 24 24"><path d="M20 13 13 20l-9-9V4h7z"/><circle cx="8.5" cy="8.5" r="1"/><path d="m14 8 3 3M17 8l-3 3"/></svg>',
+      protect:'<svg viewBox="0 0 24 24"><path d="M12 2 20 5v6c0 5-3.4 9-8 11-4.6-2-8-6-8-11V5z"/><path d="m9 12 2 2 4-5"/></svg>',
+      learn:'<svg viewBox="0 0 24 24"><path d="m12 2 3 6 6 .9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 8.9 9 8z"/></svg>',
+      next:'<svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg>',
+    }
+    const CTA='https://getguac.app/join?try=receipt'
+    const STAGES=[
+      {key:'capture',name:'Capture',slug:'receipts',accent:'#168A4B',soft:'#EAF6ED',kicker:'Less to remember',headline:'One photo. Nothing lost.',
+       story:'Receipts disappear in pockets, bags and inboxes. GetGuac gives every purchase one dependable home before life moves on.',
+       metric:'2 ways in',metricLabel:'Photo scans and email receipts',points:['Paper and digital receipts together','Searchable items instead of mystery totals'],
+       proofTitle:'Receipt memory',proofValue:'Saved',proofNote:'Ready whenever you need it'},
+      {key:'understand',name:'Understand',slug:'guac-ai',accent:'#2563A8',soft:'#EDF5FF',kicker:'See the full story',headline:'Know what the total cannot tell you.',
+       story:'A bank sees one charge. Guac-AI sees the groceries, fees, subscriptions and choices hiding inside it.',
+       metric:'Every line',metricLabel:'Items, stores and spending understood',points:['Ask questions grounded in your receipts','Spot patterns a transaction list misses'],
+       proofTitle:'Guac-AI found',proofValue:'The why',proofNote:'Behind where the money went'},
+      {key:'remember',name:'Remember',slug:'stash',accent:'#6D4BC3',soft:'#F3EFFF',kicker:'A lighter mental load',headline:'Your shopping memory, without the work.',
+       story:'GetGuac remembers what came home, what you liked and what you already own—so the household does not have to.',
+       metric:'39 items',metricLabel:'Remembered and easy to find',points:['Re-find a purchase in seconds','Avoid buying what is already at home'],
+       proofTitle:'Before you rebuy',proofValue:'Already owned',proofNote:'Stash remembered it for you'},
+      {key:'prepare',name:'Prepare',slug:'smashlist',accent:'#A16207',soft:'#FFF7E6',kicker:'Leave home ready',headline:'Walk in with a plan, not a guess.',
+       story:'Your real buying rhythm becomes a useful Smashlist—what may be running low, what can wait and what you already have.',
+       metric:'15 items',metricLabel:'Ready for the next trip',points:['Running-low suggestions from purchase history','One focused list instead of forgotten notes'],
+       proofTitle:'Next trip',proofValue:'Ready',proofNote:'Less guessing in every aisle'},
+      {key:'shop',name:'Shop smart',slug:'steals',accent:'#C25D13',soft:'#FFF1E7',kicker:'Keep more at checkout',headline:'Pause before you overpay.',
+       story:'Price context and fresh Steals help you compare, wait or buy with confidence—without turning shopping into homework.',
+       metric:'$38 less',metricLabel:'On an item already being watched',points:['Useful price drops for saved searches','Better context before the purchase'],
+       proofTitle:'Price changed',proofValue:'Worth the wait',proofNote:'A smarter moment to buy'},
+      {key:'protect',name:'Protect',slug:'returns',accent:'#0F766E',soft:'#E9F8F5',kicker:'After checkout',headline:'Money owed to you should come back.',
+       story:'GetGuac keeps watching return windows, pending refunds and price changes after the shopping bag reaches home.',
+       metric:'$192 open',metricLabel:'Refundable purchases still in range',points:['Deadlines before they quietly expire','Refunds followed until the money returns'],
+       proofTitle:'Return window',proofValue:'5 days left',proofNote:'Still enough time to act'},
+      {key:'learn',name:'Worth it',slug:'worth-it',accent:'#A17300',soft:'#FFF9DD',kicker:'Buy with intention',headline:'Turn regret into a better next choice.',
+       story:'A quick Worth-It rating teaches GetGuac what truly improved your life—and what does not deserve another dollar.',
+       metric:'4.4★',metricLabel:'Your purchases, judged by real value',points:['Remember the buys you genuinely loved','Let a regret become useful guidance'],
+       proofTitle:'Worth-It verdict',proofValue:'Keep buying',proofNote:'A choice that earned its place'},
+      {key:'next',name:'Next trip',slug:'predictions',accent:'#168A4B',soft:'#ECF8EE',kicker:'The circle closes',headline:'The next trip starts smarter.',
+       story:'What happened this time becomes less waste, less stress and better timing next time. Then one new receipt teaches the loop again.',
+       metric:'~3 days',metricLabel:'Until milk may run out',points:['Purchase rhythm becomes a useful forecast','Every trip improves the one after it'],
+       proofTitle:'Shopping rhythm',proofValue:'Learned',proofNote:'The next list starts itself'},
+    ]
+
+    const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches
+    const el=id=>document.getElementById(id)
+    const tabs=el('tabs'), prog=el('progFill')
+
+    STAGES.forEach((s,i)=>{
+      const b=document.createElement('button')
+      b.type='button'; b.className='tab'; b.dataset.index=i
+      b.setAttribute('role','tab'); b.setAttribute('aria-controls','stagePanel')
+      b.setAttribute('aria-selected', i===0?'true':'false')
+      b.setAttribute('aria-label','Stage '+(i+1)+' of 8: '+s.name)
+      b.tabIndex = i===0?0:-1
+      b.innerHTML='<span class="puck" aria-hidden="true">'+ICONS[s.key]+'</span><span>'+s.name+'</span>'
+      b.addEventListener('click',()=>{showStage(i); stopAuto()})
+      tabs.appendChild(b)
+    })
+
+    tabs.addEventListener('keydown',(e)=>{
+      const step={ArrowRight:1,ArrowDown:1,ArrowLeft:-1,ArrowUp:-1}[e.key]
+      let next=null
+      if(step) next=(current+step+STAGES.length)%STAGES.length
+      else if(e.key==='Home') next=0
+      else if(e.key==='End') next=STAGES.length-1
+      if(next===null) return
+      e.preventDefault(); showStage(next); stopAuto()
+      tabs.querySelector('.tab[data-index="'+next+'"]')?.focus()
+    })
+
+    let current=-1
+    const setText=(id,v)=>{const n=el(id); if(n.textContent===v)return; n.textContent=v
+      if(reduce)return; n.classList.remove('swap'); void n.offsetWidth; n.classList.add('swap')}
+
+    function showStage(i){
+      if(i===current) return
+      current=i
+      const s=STAGES[i]
+      document.documentElement.style.setProperty('--accent',s.accent)
+      document.documentElement.style.setProperty('--soft',s.soft)
+      tabs.querySelectorAll('.tab').forEach(b=>{
+        const n=Number(b.dataset.index), on=n===i
+        b.setAttribute('aria-selected',on?'true':'false'); b.tabIndex=on?0:-1
+        b.classList.toggle('is-done',n<i)
+      })
+      el('kickerIcon').innerHTML=ICONS[s.key]
+      el('metricIcon').innerHTML=ICONS[s.key]
+      setText('stageKicker',s.kicker); setText('stageHeadline',s.headline); setText('stageStory',s.story)
+      setText('pointOne',s.points[0]); setText('pointTwo',s.points[1])
+      setText('stageMetric',s.metric); setText('stageMetricLabel',s.metricLabel)
+      setText('proofTitle',s.proofTitle); setText('proofValue',s.proofValue); setText('proofNote',s.proofNote)
+      el('stageCta').href=CTA
+      const web=el('stageWeb'), phone=el('stagePhone')
+      web.src='home/goals/web-'+s.slug+'.webp'
+      phone.src='home/goals/phone-'+s.slug+'.webp'
+      if(!reduce)[web,phone].forEach(n=>{n.classList.remove('swap'); void n.offsetWidth; n.classList.add('swap')})
+      prog.style.width=((i+1)/STAGES.length*100)+'%'
+    }
+
+    const zoom=el('zoom'), zoomImg=el('zoomImg')
+    const open=img=>{zoomImg.src=img.src; zoomImg.alt=img.alt; zoom.classList.add('open'); document.body.style.overflow='hidden'; stopAuto()}
+    const close=()=>{zoom.classList.remove('open'); document.body.style.overflow=''}
+    el('webShot').addEventListener('click',()=>open(el('stageWeb')))
+    el('phoneShot').addEventListener('click',()=>open(el('stagePhone')))
+    zoom.addEventListener('click',close)
+    addEventListener('keydown',e=>{if(e.key==='Escape')close()})
+
+    const DWELL=5200
+    let auto=null
+    const startAuto=()=>{if(auto||reduce)return; auto=setInterval(()=>showStage((current+1)%STAGES.length),DWELL)}
+    function stopAuto(){if(auto){clearInterval(auto); auto=null}}
+    const how=el('how')
+    ;['pointerenter','focusin'].forEach(ev=>how.addEventListener(ev,stopAuto))
+    if('IntersectionObserver' in window){
+      new IntersectionObserver(es=>es.forEach(e=>e.isIntersecting?startAuto():stopAuto()),{threshold:.3}).observe(how)
+    }
+
+    showStage(0)
+
+    /* ---- where did this visitor come from? -----------------------------
+       Decided once, then stamped onto every outbound CTA so the destination
+       can tell paid Facebook traffic apart from a direct visit or someone
+       opening the file locally.
+
+         fb      — Meta appended ?fbclid=, or the referrer is facebook /
+                   instagram / an fb redirector (l.facebook.com, lm.fb.com)
+         local   — opened from disk (file://) or a localhost dev server
+         direct  — no referrer and no click id
+         referral— anything else, with the host kept for the record
+
+       Meta's own fbclid is the reliable signal: the in-app browser often
+       sends no referrer at all, so referrer alone would under-count fb.
+       Any existing utm_source / src on the incoming URL wins over the guess,
+       so a link you tagged yourself is never overwritten.
+
+       ⚠️ A query parameter alone did not survive the trip last time this was
+       tried on /join. If that repeats, give the ad its own PATH (a distinct
+       landing route) rather than relying on ?src= — the path cannot be
+       stripped by a redirect or an in-app browser the way a param can. */
+    const source = (() => {
+      const q = new URLSearchParams(location.search)
+      const tagged = q.get('src') || q.get('utm_source')
+      if (tagged) return tagged.toLowerCase()
+      if (q.get('fbclid')) return 'fb'
+      if (location.protocol === 'file:') return 'local'
+      if (/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) return 'local'
+      const ref = document.referrer
+      if (!ref) return 'direct'
+      try {
+        const host = new URL(ref).hostname.replace(/^www\./, '')
+        if (/(^|\.)(facebook\.com|fb\.com|fb\.me|instagram\.com|l\.facebook\.com|lm\.fb\.com)$/.test(host)) return 'fb'
+        if (/^(localhost|127\.0\.0\.1)$/.test(host)) return 'local'
+        return 'referral:' + host
+      } catch { return 'direct' }
+    })()
+
+    // stamp it on every link that leaves for getguac.app, preserving fbclid
+    // so Meta can still attribute the click on the other side
+    const fbclid = new URLSearchParams(location.search).get('fbclid')
+    document.querySelectorAll('a[href*="getguac.app"]').forEach((a) => {
+      const u = new URL(a.href)
+      u.searchParams.set('src', source)
+      u.searchParams.set('utm_source', source === 'fb' ? 'facebook' : source)
+      u.searchParams.set('utm_medium', source === 'fb' ? 'paid_social' : 'referral')
+      u.searchParams.set('utm_campaign', 'join_demo_4')
+      if (fbclid) u.searchParams.set('fbclid', fbclid)
+      a.href = u.toString()
+    })
+
+    const badge = document.getElementById('srcBadge')
+    if (badge) badge.textContent = 'source: ' + source
+  </script>
+</body>
+</html>

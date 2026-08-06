@@ -1,0 +1,1065 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>GetGuac — Detailed local homepage demo</title>
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+  <style>
+    /* ------------------------------------------------------------------
+       demo_2 — a design pass over join_demo_1_local.html.
+       Nothing is invented: every stage, number, screenshot, icon and CTA
+       below is lifted from what the app already ships — the eight STAGES
+       in src/components/ReceiptFlow.jsx and their matching CARDS entries
+       in src/components/GoalsShowcase.jsx.
+       What changed is the design system:
+         · one token ramp instead of a dozen ad-hoc greens
+         · Bricolage + Jakarta instead of Inter
+         · the loop is drawn as a circle, because the copy promises one
+         · each stage carries its real accent colour through the card
+         · the real line-art icons replace the emoji pucks
+       ------------------------------------------------------------------ */
+
+    /* ---- tokens ---- */
+    :root{
+      --ink:#12261B;
+      --ink-2:#45564A;
+      --ink-3:#6A7D70;
+
+      --forest:#12341f;
+      --green:#1B8A4B;
+      --green-ink:#0F5C2C;
+      --lime:#65a30d;
+      --lime-2:#a3e635;
+
+      --paper:#fff;
+      --cream:#F5FAEF;
+      --cream-2:#EEF4EA;
+      --line:rgba(20,83,45,.11);
+      --line-2:rgba(20,83,45,.06);
+
+      --sh-1:0 1px 2px rgba(15,36,24,.05), 0 8px 20px -14px rgba(15,36,24,.28);
+      --sh-2:0 2px 4px rgba(15,36,24,.04), 0 18px 40px -26px rgba(15,36,24,.36);
+      --sh-3:0 4px 8px rgba(15,36,24,.04), 0 40px 80px -48px rgba(15,36,24,.5);
+
+      --r-xs:10px; --r-sm:14px; --r:20px; --r-lg:28px; --r-xl:36px;
+      --gap:clamp(18px,2.2vw,26px);
+      --section:clamp(30px,3.5vw,48px);
+
+      --display:"Bricolage Grotesque",ui-sans-serif,system-ui,"Segoe UI",sans-serif;
+      --text:"Plus Jakarta Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+
+      /* overwritten per stage from the real STAGES accents */
+      --accent:#168A4B;
+      --soft:#EAF6ED;
+    }
+
+    /* ---- base ---- */
+    *,*::before,*::after{box-sizing:border-box}
+    html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+    body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--text);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+    h1,h2,h3{font-family:var(--display);font-weight:800;letter-spacing:-.035em;line-height:1.05;margin:0}
+    p{margin:0}
+    img{max-width:100%;display:block}
+    a{color:inherit;text-decoration:none}
+    button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+    :focus-visible{outline:2.5px solid var(--green);outline-offset:3px;border-radius:6px}
+
+    .wrap{width:min(1180px,calc(100% - clamp(24px,5vw,56px)));margin-inline:auto}
+    .eyebrow{display:inline-block;color:var(--green);font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.14em}
+    .sub{color:var(--ink-2);font-size:clamp(15px,1.35vw,17.5px);line-height:1.6;max-width:62ch}
+
+    /* ---- buttons ---- */
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;border-radius:999px;padding:14px 24px;font-weight:700;font-size:15px;letter-spacing:-.01em;white-space:nowrap;
+      transition:transform .18s ease,box-shadow .18s ease,background .18s ease,border-color .18s ease}
+    .btn:hover{transform:translateY(-2px)}
+    .btn:active{transform:translateY(0)}
+    .btn.primary{background:var(--forest);color:#fff;box-shadow:0 14px 26px -16px rgba(18,52,31,.9)}
+    .btn.primary:hover{background:#183f26}
+    .btn.green{background:#4D9A2A;color:#fff;box-shadow:0 14px 26px -16px rgba(77,154,42,.85)}
+    .btn.green:hover{background:#438723}
+    .btn.ghost{background:#fff;color:var(--forest);box-shadow:var(--sh-1)}
+    .btn.line{border:1.5px solid var(--line);color:var(--forest)}
+    .btn.line:hover{border-color:var(--green);color:var(--green)}
+    .btn.accent{background:var(--accent);color:#fff;font-size:13.5px;padding:12px 20px;box-shadow:0 12px 24px -15px var(--accent)}
+
+    /* ---- header ---- */
+    .site-head{position:sticky;top:0;z-index:60;background:rgba(255,255,255,.82);backdrop-filter:saturate(180%) blur(14px);border-bottom:1px solid transparent;transition:box-shadow .25s,border-color .25s}
+    .site-head.is-stuck{box-shadow:0 14px 30px -28px rgba(15,36,24,.5);border-bottom-color:var(--line-2)}
+    .nav{height:72px;display:flex;align-items:center;justify-content:space-between;gap:24px}
+    .logo{display:flex;align-items:center;gap:11px;font-family:var(--display);font-weight:800;font-size:21px;letter-spacing:-.03em}
+    .logo i{display:grid;place-items:center;width:36px;height:36px;border-radius:13px;font-style:normal;font-size:19px;
+      background:linear-gradient(150deg,var(--lime-2),#15965a);box-shadow:inset 0 0 0 1px rgba(255,255,255,.45),0 8px 16px -10px rgba(21,150,90,.9)}
+    .links{display:flex;align-items:center;gap:4px;font-size:14.5px;font-weight:600;color:var(--ink-2)}
+    .links a{padding:9px 13px;border-radius:999px;transition:background .16s,color .16s}
+    .links a:hover{background:var(--cream-2);color:var(--green-ink)}
+    .nav .btn{padding:12px 20px}
+
+    /* ---- hero (same cast as demo_1 / the live gj-market collage) ---- */
+    .hero{position:relative;overflow:hidden;padding:clamp(28px,3.8vw,48px) 0 clamp(26px,3.6vw,42px);background:#fff}
+    .hero>.wrap{width:min(1280px,calc(100% - 24px))}
+    .hero::before{display:none}
+    .hero .wrap{position:relative}
+    .hero-grid{display:grid;grid-template-columns:minmax(0,526px) minmax(0,1fr);gap:clamp(20px,2.4vw,34px);align-items:center}
+    .pill{display:inline-flex;align-items:center;gap:9px;border:1px solid #d8e9c2;background:rgba(255,255,255,.78);color:var(--green-ink);
+      border-radius:999px;padding:8px 15px;font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}
+    .pill::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--lime-2);box-shadow:0 0 0 4px rgba(132,204,22,.22)}
+    .hero h1{font-size:clamp(38px,5.4vw,66px);letter-spacing:-.05em;margin:22px 0 20px;max-width:15ch}
+    .hero h1 span{background:linear-gradient(96deg,var(--green) 10%,var(--lime) 90%);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .hero h1 span.h1-emoji{background:none;-webkit-background-clip:border-box;background-clip:border-box;color:initial}
+    .lede{max-width:53ch;color:var(--ink-2);font-size:clamp(16px,1.4vw,18.5px);line-height:1.62}
+    .actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
+    .micro{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:20px;color:var(--green-ink);font-size:13px;font-weight:700}
+
+    .scene{position:relative;height:clamp(400px,44vw,540px);border-radius:var(--r-xl) var(--r-xl) var(--r-xl) var(--r-sm);overflow:hidden;
+      border:1px solid var(--line);box-shadow:var(--sh-3);
+      background:radial-gradient(circle at 16% 86%,rgba(245,181,27,.32),transparent 34%),linear-gradient(152deg,#e4f7cd 0%,#c3ecb4 52%,#f4f8d8 100%)}
+    .scene::before{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(21,80,38,.26) 1px,transparent 1px);background-size:23px 23px;opacity:.5;
+      -webkit-mask-image:linear-gradient(135deg,#000,transparent 72%);mask-image:linear-gradient(135deg,#000,transparent 72%)}
+    .scene-title{position:absolute;z-index:9;left:22px;top:20px;padding:12px 16px;border-radius:var(--r-sm) var(--r-sm) var(--r-sm) 5px;
+      background:rgba(255,255,255,.95);font-size:12.5px;font-weight:600;color:var(--ink-2);box-shadow:var(--sh-1);backdrop-filter:blur(6px)}
+    .scene-title strong{display:block;font-family:var(--display);font-weight:800;color:var(--forest);font-size:19px;letter-spacing:-.03em;margin-top:3px}
+    .person{position:absolute;overflow:hidden;background:#fff;border:5px solid rgba(255,255,255,.92);box-shadow:0 30px 50px -32px rgba(15,45,26,.7)}
+    .person img{width:100%;height:100%;object-fit:cover}
+    .person.main{left:5%;top:19%;width:56%;max-width:310px;height:66%;border-radius:160px 160px 30px 30px}
+    .person.main img{object-position:64% center}
+    .person.family{right:4%;top:5%;width:29%;max-width:158px;aspect-ratio:1;border-radius:50%}
+    .phone{position:absolute;z-index:6;right:16%;bottom:3%;width:30%;max-width:168px;transform:rotate(3deg);filter:drop-shadow(0 22px 20px rgba(20,47,31,.42))}
+    .benefit{position:absolute;z-index:8;min-width:148px;padding:11px 13px;background:rgba(255,255,255,.96);border:1px solid var(--line);
+      border-radius:var(--r-sm);box-shadow:var(--sh-2);backdrop-filter:blur(4px)}
+    .benefit b{display:block;font-size:11.5px;font-weight:800;letter-spacing:-.01em}
+    .benefit small{display:block;font-size:9.5px;color:var(--ink-3);margin-top:2px}
+    .b1{left:12px;bottom:22px}
+    .b2{right:10px;top:42%}
+    .b3{right:12px;bottom:14px}
+    .mascot{position:absolute;z-index:9;left:58%;bottom:1%;font-size:clamp(44px,6vw,66px);filter:drop-shadow(0 12px 9px rgba(23,67,29,.32))}
+    .family-scene .scene-title{left:0;top:0;padding:0;background:transparent;box-shadow:none;backdrop-filter:none;color:var(--forest);font-family:var(--display);font-size:clamp(27px,3vw,38px);font-weight:800;letter-spacing:-.045em;line-height:1.05}
+    .family-scene .scene-title strong{display:inline;font-size:inherit;margin:0;color:inherit}
+    .family-scene .scene-title::after{content:"";display:block;width:68px;height:4px;margin-top:12px;border-radius:999px;background:linear-gradient(90deg,var(--green),var(--lime-2))}
+    .quick-snap{position:absolute;z-index:6;left:0;top:78px;width:56%;padding:14px 16px 16px;border:1px solid #cfe5d2;border-radius:22px 22px 22px 8px;background:linear-gradient(145deg,#fff,#f4fbf5);box-shadow:0 16px 30px -28px rgba(15,45,26,.45)}
+    .quick-snap::after{content:"";position:absolute;left:32px;bottom:-12px;width:22px;height:22px;background:#f4fbf5;border-right:1px solid #cfe5d2;border-bottom:1px solid #cfe5d2;transform:rotate(45deg)}
+    .quick-snap-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+    .quick-snap-icon{display:grid;place-items:center;width:34px;height:34px;border-radius:11px;background:var(--green);color:#fff;font-size:16px}
+    .quick-snap-head small{display:block;color:var(--green);font-size:8.5px;font-weight:900;letter-spacing:.11em;text-transform:uppercase}
+    .quick-snap-head strong{display:block;font-size:11px;line-height:1.25}
+    .quick-snap p{position:relative;padding-left:24px;color:var(--ink-2);font-size:11px;line-height:1.45}
+    .quick-snap p+p{margin-top:5px}
+    .quick-snap p::before{content:"✓";position:absolute;left:0;top:0;display:grid;place-items:center;width:17px;height:17px;border-radius:50%;background:#e6f6e9;color:var(--green);font-weight:900}
+    /* ---- hero scene -----------------------------------------------------
+       The scene had been left with no surface of its own — overflow:visible,
+       transparent, no border, no shadow — while its children still sat at
+       left:0 / right:-3%. The result was four loose objects on white with the
+       phone bleeding past the edge. This keeps the lighter direction (the old
+       saturated green box is gone) but gives it one contained surface and
+       insets every child off the edge.
+
+       object-fit stays `contain`: family-tablet.webp is 1200x800 and the box
+       is aspect-ratio 3/2, so it fits exactly — and .tablet-screen is aligned
+       to that predictable placement. Switching to cover would shift it. */
+    /* The surface is painted by ::after at z-index 0 rather than on the box
+       itself, so the scene keeps overflow:visible. That gives it one contained
+       panel AND lets the phone break past the right edge on purpose — a device
+       crossing the frame reads as depth; the same device floating on bare white
+       reads as a mistake. overflow:hidden would just have clipped it. */
+    .family-scene{height:clamp(450px,43vw,530px);overflow:visible;border:0;background:transparent;box-shadow:none}
+    .family-scene::after{
+      content:"";position:absolute;z-index:0;inset:0;pointer-events:none;
+      border:1px solid var(--line);border-radius:var(--r-xl) var(--r-xl) var(--r-xl) var(--r-sm);
+      box-shadow:var(--sh-2);
+      background:
+        radial-gradient(circle at 88% 12%,rgba(163,230,53,.20),transparent 46%),
+        radial-gradient(circle at 6% 94%,rgba(245,181,27,.12),transparent 42%),
+        linear-gradient(160deg,#FBFDF7 0%,#F1F8E8 100%);
+    }
+    .family-scene::before{display:block;z-index:1;opacity:.28}
+    .family-scene .scene-title{left:7%;top:6%}
+    .family-scene .quick-snap{left:7%;top:21%;width:52%}
+    /* anchored to the bottom, so it never depends on the scene's height */
+    .family-scene .person.main{z-index:3;left:7%;bottom:7%;top:auto;width:60%;max-width:none;height:auto;
+      aspect-ratio:3/2;border-radius:20px;border:0;box-shadow:0 22px 40px -28px rgba(15,45,26,.5)}
+    .family-scene .person.main>img{object-fit:contain;object-position:center}
+    /* multiply was knocking the whites out of a PNG that carries its own alpha,
+       flattening the device into the panel. Normal blend + a real shadow. */
+    .family-scene .phone{z-index:4;right:5%;bottom:8%;top:auto;width:36%;max-width:215px;
+      transform:rotate(4deg);transform-origin:center;mix-blend-mode:normal;
+      filter:drop-shadow(0 22px 24px rgba(20,47,31,.34))}
+    .tablet-screen{position:absolute;z-index:2;left:34%;top:55%;width:22.5%;height:28%;overflow:hidden;clip-path:polygon(5% 0,100% 4%,96% 100%,0 96%);transform:rotate(1deg);transform-origin:center;background:#fff}
+    .tablet-screen img{width:100%;height:100%;object-fit:cover;object-position:left top}
+
+    /* ---- demo 3: one receipt keeps working after checkout ---- */
+    .concept-three{height:clamp(350px,34vw,380px);overflow:visible;border:0;background:transparent;box-shadow:none}
+    .concept-three::before{display:none}
+    .concept-three::after{display:none}
+    .concept-three .scene-title{max-width:13ch;font-size:clamp(30px,3.4vw,44px);line-height:1.01}
+    .concept-three .scene-title strong{color:var(--green)}
+    .concept-three .scene-title::after{width:88px;margin-top:14px}
+    .concept-three .scene-title{display:block;left:0;top:0;max-width:230px;padding:11px 15px;border-radius:16px 16px 16px 5px;background:rgba(255,255,255,.96);box-shadow:0 16px 32px -24px rgba(20,50,26,.55);font-family:var(--text);font-size:12px;font-weight:700;letter-spacing:0;line-height:1.35;color:var(--ink-2)}
+    .concept-three .scene-title strong{display:block;margin-top:2px;color:var(--green-ink);font-family:var(--display);font-size:18px;letter-spacing:-.025em}
+    .concept-three .scene-title::after{display:none}
+    .concept-three .person.main{z-index:3;left:0;top:78px;bottom:auto;width:72%;border-radius:22px}
+    .concept-three .phone{z-index:5;right:0;top:52px;bottom:auto;width:135px;max-width:135px;transform:rotate(3deg);filter:drop-shadow(0 16px 16px rgba(14,38,20,.2));-webkit-mask-image:none;mask-image:none;mix-blend-mode:normal}
+    .concept-three .b1{left:0;bottom:12px}.concept-three .b2{right:-2px;top:145px}.concept-three .b3{right:-2px;bottom:8px}
+    .concept-three .mascot{left:68%;bottom:5px;font-size:50px}
+    .hero-image-only{position:relative;width:100%;aspect-ratio:3/2;overflow:hidden;border-radius:22px;background:#f4f2eb;box-shadow:0 24px 50px -34px rgba(15,45,26,.42)}
+    .hero-image-only>.hero-family-only{display:block;width:100%;height:100%;object-fit:cover;object-position:center;transform:scale(.94);transform-origin:left bottom}
+    .hero-image-only>.hero-bubble{position:absolute;z-index:3;padding:9px 12px;border-radius:14px 14px 14px 5px;
+      background:rgba(255,255,255,.96);border:1px solid rgba(20,83,45,.14);
+      box-shadow:0 14px 26px -18px rgba(15,45,26,.55);backdrop-filter:blur(6px)}
+    .hero-bubble small{display:block;color:var(--green);font-size:9px;font-weight:800;letter-spacing:.07em;text-transform:uppercase}
+    .hero-bubble strong{display:block;margin-top:2px;font-size:12px;line-height:1.2;letter-spacing:-.01em;white-space:nowrap}
+    .hb-1{left:3%;top:8%}
+    .hb-2{right:26%;bottom:12%}
+    .hb-3{right:20%;top:11%}
+    @media(max-width:560px){.hero-bubble strong{font-size:10.5px}.hero-bubble small{font-size:8px}.hb-1{left:2%;top:5%}.hb-2{right:25%;bottom:8%}.hb-3{right:18%;top:8%}}
+    .hero-phone-inline{position:absolute;z-index:2;right:4%;bottom:4%;display:block;width:auto;height:70%;max-width:23%;object-fit:contain;transform:rotate(2deg);filter:drop-shadow(0 18px 16px rgba(17,42,24,.28))}
+    .outcome-row{position:absolute;z-index:8;left:2%;right:0;bottom:0;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .outcome{display:flex;align-items:center;gap:8px;min-height:54px;padding:10px 11px;border:1px solid #dbe9da;border-radius:15px;background:rgba(255,255,255,.96);box-shadow:0 10px 24px -20px rgba(15,45,26,.45);color:var(--forest);font-size:10px;font-weight:800;line-height:1.25}
+    .outcome i{display:grid;place-items:center;flex:0 0 28px;width:28px;height:28px;border-radius:9px;background:#edf8e9;font-style:normal;font-size:14px}
+    .outcome:nth-child(2) i{background:#fff4dd}.outcome:nth-child(3) i{background:#eaf4ff}
+
+    /* ---- demo 2 hero: emotional family visual + floating product story ---- */
+    .hero-showcase{position:relative;min-height:clamp(470px,46vw,575px);isolation:isolate}
+    .family-hero{position:absolute;inset:0 15% 0 0;overflow:hidden;border:1px solid var(--line);border-radius:38px 38px 38px 12px;background:#e9f3df;box-shadow:var(--sh-3)}
+    .family-hero::after{content:"";position:absolute;inset:45% 0 0;background:linear-gradient(transparent,rgba(7,35,20,.62));pointer-events:none}
+    .family-hero img{width:100%;height:100%;object-fit:cover;object-position:center;display:block}
+    .family-story{position:absolute;z-index:3;left:24px;right:32%;bottom:22px;padding:15px 17px;border:1px solid rgba(255,255,255,.38);border-radius:18px 18px 18px 6px;background:rgba(255,255,255,.92);box-shadow:var(--sh-2);backdrop-filter:blur(8px)}
+    .family-story small{display:block;color:var(--green);font-size:9.5px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
+    .family-story strong{display:block;margin-top:5px;font-family:var(--display);font-size:18px;letter-spacing:-.025em}
+    .phone-motion{position:absolute;z-index:5;right:-5%;top:10%;width:51%;min-width:280px;animation:phoneFloat 4.8s ease-in-out infinite;filter:drop-shadow(0 28px 25px rgba(20,47,31,.2))}
+    .phone-motion img{display:block;width:100%;border-radius:26px}
+    .phone-motion::before{content:"";position:absolute;z-index:-1;inset:12% 5% 7% 12%;border-radius:50%;background:radial-gradient(circle,rgba(132,204,22,.25),transparent 67%);animation:phoneGlow 3.7s ease-in-out infinite}
+    .hero-result{position:absolute;z-index:8;right:1%;bottom:7%;width:210px;padding:13px 15px;border:1px solid #c9e399;border-radius:18px 18px 18px 6px;background:rgba(255,255,255,.96);box-shadow:var(--sh-2);animation:resultFloat 4.8s ease-in-out infinite}
+    .hero-result small{display:block;color:var(--ink-3);font-size:9px}.hero-result strong{display:block;margin-top:3px;color:var(--green-ink);font-size:14px}
+    .hero-spark{position:absolute;z-index:7;display:grid;place-items:center;width:37px;height:37px;border-radius:50%;background:#fff;color:var(--green);box-shadow:var(--sh-1);font-size:17px;animation:sparkPulse 2.6s ease-in-out infinite}.hero-spark.s1{right:8%;top:5%}.hero-spark.s2{right:39%;bottom:4%;animation-delay:-1.1s}
+    @keyframes phoneFloat{0%,100%{transform:translate3d(0,0,0) rotate(1.2deg)}50%{transform:translate3d(0,-13px,0) rotate(-.8deg)}}
+    @keyframes resultFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+    @keyframes phoneGlow{0%,100%{opacity:.48;transform:scale(.96)}50%{opacity:1;transform:scale(1.05)}}
+    @keyframes sparkPulse{0%,100%{transform:scale(.94);opacity:.72}50%{transform:scale(1.08);opacity:1}}
+
+    /* ---- trust ---- */
+    .trust{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin-top:clamp(18px,2.2vw,26px);border:1px solid var(--line);
+      border-radius:var(--r);overflow:hidden;background:var(--line);box-shadow:var(--sh-1)}
+    .trust span{background:#fff;padding:18px 14px;text-align:center;font-size:13.5px;font-weight:700;color:var(--ink-2)}
+
+    /* ---- sections ---- */
+    .section{padding:var(--section) 0}
+    .section,.life,.blog,.cta{content-visibility:auto;contain-intrinsic-size:auto 700px}
+    .section.soft{background:linear-gradient(180deg,var(--cream-2),#fff);border-top:1px solid var(--line-2)}
+    .section h2{font-size:clamp(30px,3.8vw,50px);letter-spacing:-.045em;margin:8px 0 10px}
+    .head-row{display:flex;align-items:flex-end;justify-content:space-between;gap:32px;flex-wrap:wrap}
+
+    .feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gap);margin-top:clamp(16px,2vw,24px)}
+    .feature{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:var(--r-lg);padding:30px 28px 32px;background:#fff;box-shadow:var(--sh-1);
+      transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease}
+    .feature::after{content:"";position:absolute;inset:0 0 auto;height:3px;background:linear-gradient(90deg,var(--lime-2),var(--green));opacity:0;transition:opacity .22s}
+    .feature:hover{transform:translateY(-4px);box-shadow:var(--sh-2);border-color:#cfe3b8}
+    .feature:hover::after{opacity:1}
+    .feature i{display:grid;place-items:center;width:52px;height:52px;border-radius:16px;background:var(--cream-2);font-style:normal;font-size:23px;box-shadow:inset 0 0 0 1px rgba(21,128,61,.09)}
+    .feature h3{font-size:21px;margin:20px 0 9px;letter-spacing:-.03em}
+    .feature p{color:var(--ink-2);font-size:14.5px;line-height:1.6}
+
+    .people-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--gap);margin-top:clamp(16px,2vw,24px)}
+    .person-card{position:relative;min-height:392px;overflow:hidden;border-radius:var(--r-lg);background:var(--cream-2);border:1px solid var(--line);
+      box-shadow:var(--sh-1);transition:transform .24s ease,box-shadow .24s ease}
+    .person-card:hover{transform:translateY(-5px);box-shadow:var(--sh-2)}
+    .person-card>img{width:100%;height:100%;object-fit:cover;transition:transform .5s ease}
+    .person-card:hover>img{transform:scale(1.045)}
+    .person-card::after{content:"";position:absolute;inset:auto 0 0;height:62%;background:linear-gradient(to top,rgba(9,28,17,.5),transparent);pointer-events:none}
+    .person-message{position:absolute;min-height:108px;z-index:2;left:13px;right:13px;bottom:13px;padding:14px 15px;border-radius:var(--r-sm) var(--r-sm) var(--r-sm) 6px;
+      background:rgba(255,255,255,.96);border:1px solid rgba(255,255,255,.7);box-shadow:var(--sh-2);backdrop-filter:blur(8px)}
+    .person-message small{display:block;color:var(--green);font-size:9.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;margin-bottom:5px}
+    .person-message strong{display:block;font-family:var(--display);font-weight:700;font-size:15px;line-height:1.25;letter-spacing:-.02em}
+    .person-message span{display:block;color:var(--ink-3);font-size:11px;line-height:1.4;margin-top:5px}
+
+    /* ================= the loop rail (demo_1's layout, restyled) =================
+       Heading on the left, the eight stages on one row, the return arrow under
+       them. Same shape as the live gg-flow section — what changed is the puck
+       treatment, a progress line that shows where autoplay is, and a return
+       arrow drawn as one smooth path instead of three borders. */
+    .flow{display:grid;grid-template-columns:270px minmax(0,1fr);column-gap:clamp(26px,3.4vw,46px);row-gap:4px;align-items:start}
+    .flow-head h2{font-size:clamp(25px,2.5vw,32px);letter-spacing:-.035em;margin:11px 0 12px}
+    .flow-link{display:inline-flex;align-items:center;gap:6px;margin-left:auto;color:var(--green);font-size:13.5px;font-weight:800;white-space:nowrap}
+    .flow-link:hover{text-decoration:underline}
+    .flow-under{grid-column:1/-1;display:flex;align-items:center;gap:24px;margin-top:-4px}
+    .flow-under .sub{margin:0;color:var(--ink-2);font-size:14.5px;line-height:1.5;white-space:nowrap}
+
+    .tabs-wrap{position:relative;min-width:0;padding-top:2px}
+    .tabs{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px}
+    .tab{display:grid;justify-items:center;gap:9px;min-width:0;padding:0 2px;text-align:center;
+      color:var(--ink-3);font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;transition:color .2s ease}
+    .tab .puck{display:grid;place-items:center;width:62px;height:62px;border-radius:999px;background:#fff;color:var(--ink);
+      border:1px solid var(--line-2);box-shadow:var(--sh-1);
+      transition:transform .2s cubic-bezier(.2,.9,.3,1.4),background .2s,box-shadow .2s,border-color .2s,color .2s}
+    .tab .puck svg{width:30px;height:30px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+    .tab:hover{color:var(--ink)}
+    .tab:hover .puck{transform:translateY(-3px);border-color:#9fc57a;box-shadow:var(--sh-2)}
+    .tab[aria-selected="true"]{color:var(--ink)}
+    .tab[aria-selected="true"] .puck{background:var(--accent);border-color:transparent;color:#fff;transform:scale(1.06);
+      box-shadow:0 12px 24px -12px var(--accent),0 0 0 5px color-mix(in srgb,var(--accent) 11%,transparent)}
+    .tab.is-done .puck{background:#F4FAEE;border-color:color-mix(in srgb,var(--green) 30%,transparent)}
+
+    /* how far through the eight the loop has travelled */
+    .progress{position:relative;height:2px;margin:20px 6px 0;border-radius:999px;background:rgba(27,138,75,.14);overflow:hidden}
+    .progress span{position:absolute;inset:0 auto 0 0;width:12.5%;border-radius:999px;background:var(--accent);transition:width .45s ease,background .4s ease}
+    .loop-arrow{display:block;width:100%;height:34px;margin-top:2px;overflow:visible}
+    .loop-arrow path{fill:none;stroke:var(--accent);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;opacity:.55;transition:opacity .4s ease,stroke .4s ease}
+    .flow.is-closing .loop-arrow path{opacity:1}
+
+    /* ---- stage card (mirrors the real story card, restyled) ---- */
+    .stage{display:grid;grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr);margin-top:clamp(18px,2.3vw,26px);
+      border:1px solid var(--line);border-radius:var(--r-xl);overflow:hidden;background:#fff;box-shadow:var(--sh-3)}
+    /* The gradient keeps a tint at its far end instead of going pure white — a
+       hard white-to-cream seam down the middle of the card read as a bug. */
+    .stage-copy{padding:clamp(24px,2.5vw,34px);display:flex;flex-direction:column;gap:14px;
+      background:linear-gradient(150deg,var(--soft),color-mix(in srgb,var(--soft) 26%,#fff) 82%);
+      border-right:1px solid color-mix(in srgb,var(--accent) 13%,transparent);transition:background .4s ease}
+    .stage-kicker{display:inline-flex;align-items:center;gap:8px;width:fit-content;padding:7px 13px;border-radius:999px;background:#fff;
+      color:var(--accent);font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--line);transition:color .3s}
+    .stage-kicker svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+    .stage-copy h3{position:relative;width:fit-content;font-size:clamp(27px,2.7vw,36px);letter-spacing:-.042em;margin:4px 0 12px}
+    .stage-copy h3::after{content:"";position:absolute;left:0;bottom:-11px;width:68px;height:4px;border-radius:999px;
+      background:linear-gradient(90deg,var(--accent),#8BD72D)}
+    .stage-story{color:#56655B;font-size:15.5px;line-height:1.62;max-width:46ch}
+    .talk{position:relative;padding:18px 19px 20px;border-radius:26px 26px 26px 8px;background:linear-gradient(145deg,#fff 36%,var(--soft));
+      border:1px solid color-mix(in srgb,var(--accent) 20%,transparent);box-shadow:0 22px 46px -34px rgba(14,45,25,.55)}
+    /* the quote watermark and the tail are what make this read as a spoken
+       moment rather than one more bordered box — both are in the live card. */
+    .talk::before{content:"“";position:absolute;z-index:0;right:18px;top:2px;color:var(--accent);opacity:.11;
+      font-family:Georgia,serif;font-size:68px;line-height:1;pointer-events:none}
+    .talk::after{content:"";position:absolute;left:36px;bottom:-12px;width:22px;height:22px;transform:rotate(45deg);border-radius:0 0 5px 0;
+      background:color-mix(in srgb,#fff 74%,var(--soft));
+      border-right:1px solid color-mix(in srgb,var(--accent) 20%,transparent);
+      border-bottom:1px solid color-mix(in srgb,var(--accent) 20%,transparent)}
+    .talk>*{position:relative;z-index:1}
+    .talk-moment{display:flex;align-items:center;gap:10px;margin-bottom:13px}
+    .talk-icon{flex:0 0 34px;width:34px;height:34px;display:grid;place-items:center;border-radius:11px;background:var(--accent);color:#fff;font-size:17px;transition:background .3s}
+    .talk-moment small{display:block;color:var(--accent);font-size:8.5px;font-weight:800;letter-spacing:.11em;text-transform:uppercase}
+    .talk-moment strong{display:block;margin-top:2px;font-size:13px;line-height:1.28}
+    .points{display:grid;gap:9px;margin:0;padding:0;list-style:none}
+    .points li{display:flex;align-items:flex-start;gap:9px;color:#45564A;font-size:13px;line-height:1.4}
+    .points li::before{content:"✓";flex:0 0 19px;width:19px;height:19px;display:grid;place-items:center;border-radius:999px;
+      background:var(--soft);color:var(--accent);font-size:12px;font-weight:800}
+    /* HEADING 2 — the stat. Same bar, same place, same width as before. Both
+       halves now share one treatment: same font, same size, same weight, same
+       colour, led by the stage's own glyph — so it reads as one line rather
+       than a big green number with a caption bolted beside it. */
+    .metric{display:flex;align-items:center;gap:12px;width:min(92%,500px);margin:0 auto;padding:13px 16px;
+      border-radius:18px;background:#fff;border:1px solid var(--line);
+      box-shadow:0 16px 34px -30px rgba(5,18,10,.55)}
+    .metric-icon{flex:0 0 34px;width:34px;height:34px;display:grid;place-items:center;border-radius:11px;
+      background:color-mix(in srgb,var(--accent) 13%,transparent);color:var(--accent);transition:background .4s ease,color .4s ease}
+    .metric-icon svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+    /* Same style as the headline: Bricolage 800 in ink, with the accent rule
+       underneath. Class, not `.metric span` — the icon is a span too and was
+       being stretched by the label's flex:1. */
+    .metric strong,.metric .metric-label{font-family:var(--display);font-weight:800;color:var(--ink);
+      font-size:clamp(14px,1.25vw,16px);letter-spacing:-.03em;line-height:1.3}
+    .metric strong{position:relative;flex:0 0 auto}
+    .metric strong::after{content:"";position:absolute;left:0;bottom:-5px;width:100%;height:3px;border-radius:999px;
+      background:linear-gradient(90deg,var(--accent),#8BD72D)}
+    .metric .metric-label{flex:1;min-width:0}
+
+    /* the story, as the spoken line it is */
+    .speech{position:relative;width:min(92%,500px);margin:0 auto;padding:14px 17px;border-radius:19px 19px 19px 7px;
+      background:#fff;border:1px solid var(--line);color:#4A5A50;font-size:14px;line-height:1.55;
+      box-shadow:0 18px 36px -31px rgba(5,18,10,.55)}
+    .speech::after{content:"";position:absolute;left:32px;bottom:-9px;width:17px;height:17px;transform:rotate(45deg);
+      border-radius:0 0 4px 0;background:#fff;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+
+    .stage-visual{position:relative;padding:clamp(20px,2.2vw,26px) clamp(18px,2vw,24px) clamp(18px,2vw,24px);
+      display:flex;flex-direction:column;gap:13px;
+      background:radial-gradient(circle at 88% 8%,#fff,transparent 30%),var(--soft);transition:background .4s ease}
+    .appshot{position:relative;isolation:isolate;overflow:hidden;padding:42px 14px 14px;border-radius:var(--r);background:rgba(255,255,255,.94);
+      border:1px solid var(--line);box-shadow:0 22px 48px -35px rgba(5,18,10,.55)}
+    .appshot::after{content:"";position:absolute;right:-48px;top:-58px;width:160px;height:160px;border-radius:999px;
+      background:color-mix(in srgb,var(--accent) 12%,transparent);pointer-events:none}
+    .applabel{position:absolute;z-index:3;right:15px;top:16px;color:var(--accent);font-size:9.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;transition:color .3s}
+    .shot{display:block;padding:0;width:100%;height:auto;border:0;background:transparent;border-radius:var(--r-xs);cursor:zoom-in}
+    .appshot .web{display:block;width:100%;height:auto!important;aspect-ratio:900/563;object-fit:contain;border-radius:var(--r-xs);border:1px solid var(--line);box-shadow:0 20px 50px -24px rgba(20,40,28,.4)}
+    .shot-phone{position:absolute;z-index:2;right:14px;bottom:14px;width:22%;max-width:112px;height:auto}
+    .shot-phone img{display:block;width:100%;height:auto!important;aspect-ratio:360/757;object-fit:contain;filter:drop-shadow(0 16px 18px rgba(20,40,28,.35))}
+    .proof{position:absolute;z-index:3;left:14px;bottom:14px;width:158px;padding:11px 13px;border-radius:15px;background:rgba(255,255,255,.97);
+      border:1px solid var(--line);border-left:3px solid var(--accent);box-shadow:0 18px 34px -24px rgba(5,18,10,.6);backdrop-filter:blur(6px);
+      transition:border-color .4s ease}
+    .proof span{display:block;color:var(--accent);font-size:8.5px;font-weight:800;letter-spacing:.11em;text-transform:uppercase}
+    .proof strong{display:block;font-family:var(--display);font-weight:800;font-size:16px;letter-spacing:-.03em;margin-top:3px}
+    .proof small{display:block;color:var(--ink-3);font-size:10px;line-height:1.35;margin-top:3px}
+    /* back in the copy column, under the talk box, as the screenshot has it */
+    .stage-photo{position:relative;flex:1;min-height:340px;max-height:390px;margin-top:2px;border-radius:var(--r);overflow:hidden;
+      border:1px solid var(--line);box-shadow:var(--sh-1)}
+    .stage-photo img{width:100%;height:100%;object-fit:cover}
+    .fine{text-align:center;font-size:12px;color:#8A978D;margin-top:14px}
+    .swap{animation:swapIn .42s cubic-bezier(.22,.8,.3,1) both}
+    @keyframes swapIn{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+
+    /* lightbox — the screenshots are only legible when opened */
+    .zoom{position:fixed;inset:0;z-index:120;display:none;align-items:center;justify-content:center;padding:4vh 4vw;background:rgba(10,20,14,.86);cursor:zoom-out}
+    .zoom.open{display:flex}
+    .zoom img{max-width:100%;max-height:92vh;border-radius:12px;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+    .zoom button{position:fixed;top:18px;right:20px;background:#fff;color:var(--ink);border-radius:999px;padding:9px 18px;font-weight:700;font-size:13px}
+
+    /* ---- life ---- */
+    .life{background:#d8e775}
+    .life-grid{display:grid;grid-template-columns:1.12fr .88fr;grid-template-rows:clamp(225px,21vw,285px);min-height:clamp(220px,22vw,290px)}
+    .life-photo{position:relative;overflow:hidden;background:#d8e775}
+    .life-photo img{position:absolute;left:50%;top:50%;width:auto;height:130%;max-width:none;transform:translate(-50%,-50%);object-fit:cover;object-position:center 40%;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 13%,#000 87%,transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 13%,#000 87%,transparent 100%)}
+    .life-photo::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(216,231,117,.55) 0,transparent 22%,transparent 58%,rgba(200,220,73,.92) 92%)}
+    .life-copy{display:flex;flex-direction:column;justify-content:center;gap:10px;padding:clamp(20px,2.4vw,30px);background:#c8dc49;color:var(--forest)}
+    .life-copy .eyebrow{color:#3b5a12}
+    .life-copy h2{font-size:clamp(25px,3vw,34px);letter-spacing:-.045em}
+    .life-copy p{font-size:clamp(15px,1.4vw,17.5px);line-height:1.58;max-width:44ch;color:#20381f}
+    .life-copy .btn{align-self:flex-start;margin-top:6px}
+
+    /* ---- guides ---- */
+    .blog{background:#faf8f1;border-top:1px solid var(--line-2)}
+    .blog-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--gap);margin-top:clamp(16px,2vw,24px)}
+    .post{display:flex;flex-direction:column;overflow:hidden;border-radius:var(--r-lg);background:#fff;border:1px solid var(--line);
+      box-shadow:var(--sh-1);transition:transform .22s ease,box-shadow .22s ease}
+    .post:hover{transform:translateY(-5px);box-shadow:var(--sh-2)}
+    .post .thumb{overflow:hidden;aspect-ratio:1.4/1}
+    .post .thumb img{width:100%;height:100%;object-fit:cover;transition:transform .5s ease}
+    .post:hover .thumb img{transform:scale(1.05)}
+    .post .body{display:flex;flex-direction:column;flex:1;padding:19px 19px 21px}
+    .post small{color:var(--green);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.11em}
+    .post h3{font-size:17.5px;line-height:1.28;letter-spacing:-.03em;margin:10px 0 9px}
+    .post p{color:var(--ink-3);font-size:13px;line-height:1.5}
+    .post b{display:inline-flex;align-items:center;gap:6px;color:var(--green);font-size:12.5px;font-weight:800;margin-top:auto;padding-top:18px}
+    .post b::after{content:"→";transition:transform .2s ease}
+    .post:hover b::after{transform:translateX(4px)}
+
+    /* ---- detailed home product story ---- */
+    .detail-suite{background:#fff}
+    .detail-lede{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(280px,.72fr);gap:clamp(24px,5vw,72px);align-items:end}
+    .detail-lede .sub{justify-self:end}
+    .capability-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:28px}
+    .capability{position:relative;overflow:hidden;min-height:285px;padding:25px;border:1px solid var(--line);border-radius:24px;background:#fff;box-shadow:var(--sh-1);transition:transform .2s ease,box-shadow .2s ease}
+    .capability:hover{transform:translateY(-4px);box-shadow:var(--sh-2)}
+    .capability::after{content:"";position:absolute;right:-42px;top:-42px;width:120px;height:120px;border-radius:50%;background:var(--card-soft,#edf7e9);opacity:.9}
+    .cap-icon{position:relative;z-index:1;display:grid;place-items:center;width:48px;height:48px;border-radius:15px;background:var(--card-soft,#edf7e9);font-size:22px}
+    .capability small{display:block;margin:19px 0 7px;color:var(--green);font-size:10px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}
+    .capability h3{font-size:21px;line-height:1.15;margin-bottom:9px}
+    .capability p{color:var(--ink-2);font-size:13.5px;line-height:1.55}
+    .capability ul{display:grid;gap:7px;margin:16px 0 0;padding:0;list-style:none;color:var(--ink-2);font-size:12.5px;font-weight:600}
+    .capability li::before{content:"✓";display:inline-grid;place-items:center;width:18px;height:18px;margin-right:8px;border-radius:50%;background:var(--card-soft,#edf7e9);color:var(--green);font-weight:900}
+    .intake{background:linear-gradient(180deg,#f4f9ef,#fff)}
+    .intake .head-row{align-items:center}
+    .intake-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:25px}
+    .intake-card{position:relative;padding:25px 24px 24px;border:1px solid var(--line);border-radius:24px;background:#fff;box-shadow:var(--sh-1)}
+    .intake-step{display:flex;align-items:center;justify-content:space-between;gap:14px;color:var(--green);font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+    .intake-step b{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--cream-2);font-size:14px}
+    .intake-card h3{font-size:21px;margin:18px 0 8px}
+    .intake-card p{color:var(--ink-2);font-size:13.5px}
+    .privacy-panel{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:clamp(24px,5vw,70px);align-items:center;margin-top:30px;padding:clamp(27px,4vw,44px);border-radius:30px;color:#fff;background:linear-gradient(132deg,#103821,#176b39);box-shadow:0 30px 60px -42px rgba(12,58,31,.9)}
+    .privacy-panel .eyebrow{color:#b7ee83}
+    .privacy-panel h2{margin:7px 0 12px;color:#fff}
+    .privacy-panel p{color:#d7eadc}
+    .privacy-list{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .privacy-list span{display:flex;align-items:flex-start;gap:10px;min-height:78px;padding:15px;border:1px solid rgba(255,255,255,.14);border-radius:16px;background:rgba(255,255,255,.07);font-size:13px;font-weight:700;line-height:1.45}
+    .privacy-list i{font-style:normal;font-size:18px}
+    @media(max-width:980px){.capability-grid{grid-template-columns:1fr 1fr}.detail-lede,.privacy-panel{grid-template-columns:1fr}.detail-lede .sub{justify-self:start}}
+    @media(max-width:700px){.capability-grid,.intake-grid,.privacy-list{grid-template-columns:1fr}.capability{min-height:auto}}
+
+    /* ---- cta ---- */
+    .cta{padding:var(--section) 0}
+    .cta-band{position:relative;overflow:hidden;border-radius:var(--r-xl);padding:clamp(30px,4vw,48px) clamp(24px,4vw,48px);text-align:center;color:#fff;
+      background:linear-gradient(128deg,#0d4a2a 0%,#177a3c 52%,var(--lime) 100%);box-shadow:0 40px 80px -50px rgba(13,74,42,.9)}
+    .cta-band::before{content:"🥑";position:absolute;left:26px;bottom:-44px;font-size:clamp(110px,15vw,170px);opacity:.28;line-height:1}
+    .cta-band::after{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.16) 1px,transparent 1px);background-size:24px 24px;opacity:.5;
+      -webkit-mask-image:radial-gradient(closest-side at 82% 18%,#000,transparent);mask-image:radial-gradient(closest-side at 82% 18%,#000,transparent)}
+    .cta-band>*{position:relative;z-index:1}
+    .cta-band h2{font-size:clamp(28px,4vw,46px);letter-spacing:-.045em;margin:0 0 12px}
+    .cta-band p{margin:0 auto 26px;max-width:56ch;color:#eafcd8;font-size:clamp(15px,1.4vw,17px)}
+
+    .footer{border-top:1px solid var(--line-2);padding:28px 0 44px;color:var(--ink-3);font-size:12.5px}
+    .footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+
+    .rise{opacity:0;transform:translateY(18px);transition:opacity .6s cubic-bezier(.22,.8,.3,1),transform .6s cubic-bezier(.22,.8,.3,1)}
+    .rise.in{opacity:1;transform:none}
+
+    /* ---- responsive ---- */
+    @media(max-width:1080px){.feature-grid{grid-template-columns:1fr}.people-grid,.blog-grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:980px){
+      .hero-grid{grid-template-columns:1fr}
+      .hero-image-only>.hero-family-only{transform:none}
+      .hero-image-only>.hero-phone-inline{right:3%;bottom:3%;height:62%;max-width:22%}
+      .hero-showcase{min-height:590px;margin-top:12px}
+      .family-hero{right:12%}
+      .phone-motion{right:-1%;width:42%;min-width:250px}
+      .flow{grid-template-columns:1fr;gap:22px}
+      .tabs{grid-template-columns:repeat(4,minmax(0,1fr));gap:18px 6px}
+      .progress{margin-top:22px}
+      .loop-arrow{display:none}
+      .stage{grid-template-columns:1fr}
+      .stage-copy{border-right:0}
+      .stage-photo{max-height:none}
+      .metric{margin-top:4px}
+      .life-grid{grid-template-columns:1fr}
+      .life-photo{min-height:190px}
+      .life-photo::after{background:linear-gradient(0deg,rgba(200,220,73,.85),transparent 46%)}
+    }
+    @media(max-width:820px){.links{display:none}.trust{grid-template-columns:1fr 1fr}.flow-under{align-items:flex-start;flex-wrap:wrap;gap:10px}.flow-under .sub{white-space:normal}.flow-under .flow-link{margin-left:0}}
+    @media(max-width:560px){
+      .nav{height:64px}
+      .hero h1{font-size:clamp(31px,8.6vw,40px)}
+      .actions{display:grid}.actions .btn{width:100%}
+      .scene{height:390px;border-radius:var(--r-lg) var(--r-lg) var(--r-lg) 12px}
+      .family-scene{height:440px;border-radius:var(--r-lg) var(--r-lg) var(--r-lg) 12px}
+      .family-scene .scene-title{font-size:28px;left:6%;top:5%}
+      .family-scene .quick-snap{left:6%;top:20%;width:74%;padding:12px}
+      .family-scene .person.main{left:6%;bottom:6%;top:auto;width:70%}
+      .family-scene .phone{right:3%;bottom:7%;top:auto;width:40%;max-width:132px}
+      .concept-three{height:300px;overflow:visible;border:0;background:transparent;box-shadow:none}.concept-three .scene-title{left:0;top:0;font-size:10px}.concept-three .scene-title strong{font-size:15px}.concept-three .person.main{left:0;top:72px;bottom:auto;width:72%}.concept-three .phone{z-index:5;right:0;top:48px;bottom:auto;width:100px;max-width:100px}.concept-three .b1{display:none}.concept-three .b2{right:0;top:126px}.concept-three .b3{right:0;bottom:6px}.concept-three .mascot{left:67%;bottom:0;font-size:38px}
+      .hero-showcase{min-height:470px}.family-hero{right:8%;border-radius:26px 26px 26px 10px}.family-story{left:14px;right:25%;bottom:14px;padding:12px}.family-story strong{font-size:15px}.phone-motion{right:-9%;top:18%;width:48%;min-width:205px}.hero-result{right:0;bottom:4%;width:174px}.hero-spark{display:none}
+      .person.main{left:5%;top:20%;width:58%;height:62%}
+      .b1{display:none}.b2{top:38%}
+      .trust{grid-template-columns:1fr}
+      .people-grid,.blog-grid{grid-template-columns:1fr}
+      .person-card{min-height:400px}
+      .tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .tab .puck{width:54px;height:54px}
+      .stage-copy,.stage-visual{padding:22px 18px}
+      .proof{width:136px;left:10px;bottom:10px}
+      .head-row .btn{width:100%}
+    }
+    /* the scroll-reveal must never be what hides content in a print or PDF */
+    @media print{.rise{opacity:1;transform:none}}
+    @media(prefers-reduced-motion:reduce){
+      .phone-motion,.hero-result,.phone-motion::before,.hero-spark{animation:none!important}
+      .family-scene .phone,.family-scene .mascot{animation:none!important}
+      html{scroll-behavior:auto}
+      *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
+      .rise{opacity:1;transform:none}
+    }
+  </style>
+</head>
+<body id="top">
+
+  <header class="site-head" id="siteHead">
+    <div class="wrap nav">
+        <a class="logo" href="#top" aria-label="Back to the top"><i>🥑</i>GetGuac</a>
+      <nav class="links" aria-label="Primary">
+        <a href="#benefits">Benefits</a>
+        <a href="#how">How it works</a>
+        <a href="#features">Features</a>
+        <a href="#guides">Guides</a>
+        <a href="#security">Security</a>
+      </nav>
+      <a class="btn primary" href="https://getguac.app/join">Get started</a>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ===================== hero ===================== -->
+    <section class="hero">
+      <div class="wrap">
+        <div class="hero-grid">
+          <div>
+            <span class="pill">Guac-AI · personal finance assistant</span>
+            <h1>Keep More Guac <span>in Your Pocket</span> <span class="h1-emoji">🥑</span></h1>
+            <p class="lede">GetGuac reads your receipts and bank statements, scores every purchase, sniffs out hidden fees, and shows you exactly where your money gets eaten. Money's wingman. Keep your guac.</p>
+            <div class="actions">
+              <a class="btn primary" href="https://getguac.app/join?try=receipt">📷 Try 1 receipt</a>
+              <a class="btn green" href="https://getguac.app/join">Start free with Google</a>
+            </div>
+            <div class="micro"><span>✓ Free forever</span><span>✓ No card required</span><span>✓ Delete anytime</span></div>
+          </div>
+
+          <div class="hero-image-only" aria-label="A family happily reviewing GetGuac savings together">
+            <img class="hero-family-only" src="home/story-people/family-tablet-hero-v3.webp" alt="A family happily reviewing GetGuac savings together" width="1200" height="800" loading="eager" fetchpriority="high" decoding="async">
+            <img class="hero-phone-inline" src="home/goals/phone-organized.webp" alt="GetGuac showing organized purchases and spending insights" width="360" height="757" loading="eager" decoding="async">
+            <span class="hero-bubble hb-1"><small>🔄 Subscription spotted</small><strong>Review the renewal</strong></span>
+            <span class="hero-bubble hb-2"><small>↩ Return window</small><strong>5 days left to act</strong></span>
+            <span class="hero-bubble hb-3"><small>🧾 Receipt organized</small><strong>41 items read</strong></span>
+          </div>
+        </div>
+
+        <div id="trust" class="trust rise">
+          <span>🏦 No bank login</span>
+          <span>🔒 Encrypted</span>
+          <span>🗑 Delete everything</span>
+          <span>📱 iOS · Android · Web</span>
+        </div>
+
+        <div id="benefits" class="feature-grid hero-benefits">
+          <article class="feature rise"><i>💸</i><h3>Catch money waiting</h3><p>See return windows, refunds, forgotten subscriptions, and charges worth reviewing before they disappear.</p></article>
+          <article class="feature rise"><i>🛒</i><h3>Make the next trip easier</h3><p>Remember what you bought and use that context to shop with less guessing, duplicate buying, and waste.</p></article>
+          <article class="feature rise"><i>🧠</i><h3>Reduce the mental load</h3><p>Receipts become searchable household memory, so the details do not have to live in your head.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== the circle ===================== -->
+    <section id="how" class="section soft">
+      <div class="wrap">
+        <div class="flow rise" id="flow">
+          <div class="flow-head">
+            <span class="eyebrow">The GetGuac circle</span>
+            <h2>Every receipt makes the next trip smarter.</h2>
+          </div>
+
+          <div class="tabs-wrap">
+            <div class="tabs" id="tabs" role="tablist" aria-label="The GetGuac circle"></div>
+            <div class="progress" aria-hidden="true"><span id="progFill"></span></div>
+            <svg class="loop-arrow" viewBox="0 0 1000 34" preserveAspectRatio="none" aria-hidden="true">
+              <path d="M14 4v10q0 8 8 8h956q8 0 8-8V4"/>
+              <path d="M14 4 7 12M14 4l7 8"/>
+            </svg>
+          </div>
+          <div class="flow-under">
+            <p class="sub">GetGuac remembers the shopping so you do not have to—and learns from every trip.</p>
+            <a class="flow-link" href="https://getguac.app/how-it-works">See how GetGuac works →</a>
+          </div>
+        </div>
+
+        <div class="stage rise" id="stagePanel" role="tabpanel" aria-live="polite">
+          <div class="stage-copy">
+            <span class="stage-kicker"><span id="kickerIcon" aria-hidden="true"></span><span id="stageKicker">Less to remember</span></span>
+            <h3 id="stageHeadline">One receipt. One quick scan.</h3>
+            <div class="talk">
+              <div class="talk-moment">
+                <span class="talk-icon" id="momentIcon" aria-hidden="true">📸</span>
+                <span><small id="momentEyebrow">One quick snap</small><strong id="momentLine">Every item—and every dollar—organized.</strong></span>
+              </div>
+              <ul class="points"><li id="pointOne">Paper and digital receipts together</li><li id="pointTwo">Searchable items instead of mystery totals</li></ul>
+            </div>
+            <div class="stage-photo"><img id="stagePerson" src="home/story-people/capture-blonde-produce-v1.webp" alt="A blonde shopper holding a receipt and displaying the saved GetGuac receipt" width="1200" height="800" loading="lazy" decoding="async"></div>
+          </div>
+
+          <div class="stage-visual">
+            <div class="metric">
+              <span class="metric-icon" id="metricIcon" aria-hidden="true"></span>
+              <strong id="stageMetric">2 ways in</strong>
+              <span class="metric-label" id="stageMetricLabel">Photo scans and email receipts</span>
+            </div>
+            <p class="speech" id="stageStory">Snap it once. GetGuac turns one receipt into searchable items, spending context, and a clearer picture of where your money went.</p>
+            <div class="appshot">
+              <span class="applabel">Inside the GetGuac app</span>
+              <button type="button" class="shot" id="webShot" aria-label="Enlarge the GetGuac web screen">
+                <img class="web" id="stageWeb" src="home/goals/web-receipts.webp" alt="The GetGuac web app" width="900" height="563" loading="lazy" decoding="async">
+              </button>
+              <button type="button" class="shot shot-phone" id="phoneShot" aria-label="Enlarge the GetGuac mobile screen">
+                <img id="stagePhone" src="home/goals/phone-receipts.webp" alt="The GetGuac mobile app" width="360" height="757" loading="lazy" decoding="async">
+              </button>
+              <span class="proof"><span id="proofTitle">Receipt memory</span><strong id="proofValue">Saved</strong><small id="proofNote">Ready whenever you need it</small></span>
+            </div>
+          </div>
+        </div>
+        <p class="fine">Real screens from the live app (demo data) — web and mobile.</p>
+      </div>
+    </section>
+
+    <!-- ===================== people ===================== -->
+    <section class="section" style="padding-top:0">
+      <div class="wrap">
+        <div class="head-row rise">
+          <div>
+                        <span class="eyebrow">What GetGuac does</span>
+            <h2>One receipt. Four ways to keep more of your money.</h2>
+          </div>
+        </div>
+        <div class="people-grid">
+          <article class="person-card rise">
+            <img src="home/story-people/capture-phone.webp" alt="A shopper showing a receipt saved in GetGuac" width="1200" height="800" loading="lazy" decoding="async">
+            <div class="person-message"><small>Capture</small><strong>“One photo—and it’s organized.”</strong><span>Every item has a searchable home.</span></div>
+          </article>
+          <article class="person-card rise">
+            <img src="home/story-people/prepare.webp" alt="A couple reviewing their shopping together" width="1200" height="800" loading="lazy" decoding="async">
+            <div class="person-message"><small>Understand</small><strong>“Now we know where it went.”</strong><span>Items tell more than a bank total.</span></div>
+          </article>
+          <article class="person-card rise">
+            <img src="home/campaign-story/sports-payoff-v4-white-friends.webp" alt="Four friends celebrating at a stadium while displaying GetGuac" width="1536" height="1024" loading="lazy" decoding="async">
+            <div class="person-message"><small>Protect</small><strong>“We caught the return window.”</strong><span>Money does not disappear quietly.</span></div>
+          </article>
+          <article class="person-card rise">
+            <img src="home/story-people/family-tablet.webp" alt="A family reviewing their GetGuac savings together on a tablet" width="1200" height="800" loading="lazy" decoding="async">
+            <div class="person-message"><small>Shop smarter</small><strong>“The next shopping trip feels easier.”</strong><span>Less guessing and less repeat buying.</span></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== complete feature details ===================== -->
+    <section id="features" class="section detail-suite">
+      <div class="wrap">
+        <div class="detail-lede rise">
+          <div>
+            <span class="eyebrow">The complete GetGuac toolkit</span>
+            <h2>The details behind every money win.</h2>
+          </div>
+          <p class="sub">GetGuac does more than store receipts. It turns everyday purchases into organized records, useful reminders, money protection, and a smarter plan for what comes next.</p>
+        </div>
+
+        <div class="capability-grid">
+          <article class="capability rise" style="--card-soft:#eaf7eb">
+            <span class="cap-icon" aria-hidden="true">🧾</span><small>Organize</small>
+            <h3>Every purchase becomes searchable.</h3>
+            <p>Store names, dates, taxes, totals, and individual items stop disappearing inside paper piles and bank totals.</p>
+            <ul><li>Photo and email receipts together</li><li>Find an item, store, or purchase later</li></ul>
+          </article>
+          <article class="capability rise" style="--card-soft:#edf5ff">
+            <span class="cap-icon" aria-hidden="true">📊</span><small>Understand</small>
+            <h3>See what your money actually bought.</h3>
+            <p>Guac-AI adds the item-level context a transaction list misses and makes spending easier to explain.</p>
+            <ul><li>Ask questions grounded in receipts</li><li>Spot categories and spending patterns</li></ul>
+          </article>
+          <article class="capability rise" style="--card-soft:#fff5df">
+            <span class="cap-icon" aria-hidden="true">↩️</span><small>Recover</small>
+            <h3>Catch money that should come back.</h3>
+            <p>Return windows, pending refunds, and meaningful price changes stay visible after checkout.</p>
+            <ul><li>Know when a return deadline is close</li><li>Follow money until the refund lands</li></ul>
+          </article>
+          <article class="capability rise" style="--card-soft:#fff0ea">
+            <span class="cap-icon" aria-hidden="true">✂️</span><small>Reduce waste</small>
+            <h3>Stop quiet charges from becoming habits.</h3>
+            <p>Forgotten subscriptions, unusual charges, and avoidable fees become reviewable instead of invisible.</p>
+            <ul><li>Surface recurring subscriptions</li><li>Review fees and spending surprises</li></ul>
+          </article>
+          <article class="capability rise" style="--card-soft:#f1edff">
+            <span class="cap-icon" aria-hidden="true">🛒</span><small>Prepare</small>
+            <h3>Begin the next trip with what you know.</h3>
+            <p>Stash remembers what came home. Smashlist turns that memory into a more useful shopping plan.</p>
+            <ul><li>Reduce duplicate buying</li><li>Remember what may be running low</li></ul>
+          </article>
+          <article class="capability rise" style="--card-soft:#eef8e4">
+            <span class="cap-icon" aria-hidden="true">⭐</span><small>Learn</small>
+            <h3>Let every trip improve the next one.</h3>
+            <p>Worth-It ratings and shopping history teach GetGuac which purchases delivered value—and which did not.</p>
+            <ul><li>Remember the buys you genuinely loved</li><li>Turn regret into better guidance</li></ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== receipt entry and privacy ===================== -->
+    <section class="section intake">
+      <div class="wrap">
+        <div class="head-row rise">
+          <div>
+            <span class="eyebrow">Start with what you already have</span>
+            <h2>Receipts can arrive three easy ways.</h2>
+            <p class="sub">Use the quickest option for each purchase. Everything meets in the same organized household record.</p>
+          </div>
+          <a class="btn line" href="https://getguac.app/join?try=receipt">Try one receipt →</a>
+        </div>
+        <div class="intake-grid">
+          <article class="intake-card rise"><div class="intake-step"><span>Paper receipts</span><b>01</b></div><h3>Take a photo.</h3><p>Open the camera, capture the full receipt, and let GetGuac read the store, date, total, tax, and items.</p></article>
+          <article class="intake-card rise"><div class="intake-step"><span>Digital purchases</span><b>02</b></div><h3>Forward the email.</h3><p>Send order confirmations and emailed receipts to GetGuac so online shopping joins the same history.</p></article>
+          <article class="intake-card rise"><div class="intake-step"><span>Statements and files</span><b>03</b></div><h3>Upload the document.</h3><p>Add receipt images, PDFs, or supported statements when a camera is not the best source.</p></article>
+        </div>
+
+        <div id="security" class="privacy-panel rise">
+          <div>
+            <span class="eyebrow">Private by design</span>
+            <h2>Your shopping memory stays yours.</h2>
+            <p>Use GetGuac without handing over a bank password. Keep the records you want, remove what you do not, and delete your trial data when you are finished.</p>
+          </div>
+          <div class="privacy-list">
+            <span><i>🏦</i>No bank login required to try receipt organization</span>
+            <span><i>🔒</i>Encrypted while moving and while stored</span>
+            <span><i>🗑️</i>Delete trial data and account records when you choose</span>
+            <span><i>📱</i>Use the same experience on iPhone, Android, and web</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== life ===================== -->
+    <section class="life">
+      <div class="wrap life-grid">
+        <div class="life-photo"><img src="home/story-people/family-tablet.webp" alt="A family reviewing their GetGuac savings together on a tablet" width="1200" height="800" loading="lazy" decoding="async"></div>
+        <div class="life-copy">
+          <span class="eyebrow">Shopping is part of life</span>
+          <h2>Keep more of the moments you shop for.</h2>
+          <p>Less money lost to forgotten returns and duplicate purchases means more room for family, plans, and the things that matter after checkout.</p>
+          <a class="btn ghost" href="https://getguac.app/join">See what GetGuac remembers →</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== guides ===================== -->
+    <section id="guides" class="section blog">
+      <div class="wrap">
+        <div class="head-row rise">
+          <div>
+            <span class="eyebrow">Smarter shopping starts here</span>
+            <h2>Small money lessons. Real-life wins.</h2>
+            <p class="sub">Practical guides to help every receipt teach you something useful.</p>
+          </div>
+          <a class="btn line" href="https://getguac.app/articles">Explore all guides →</a>
+        </div>
+        <div class="blog-grid">
+          <a class="post rise" href="https://getguac.app/articles/track-spending-with-receipts">
+            <div class="thumb"><img src="home/story-people/capture-phone.webp" alt="" width="1200" height="800" loading="lazy" decoding="async"></div>
+            <div class="body"><small>Shopping</small><h3>Why tracking your receipts beats guessing</h3><p>Your memory underestimates your spending—receipts reveal the truth.</p><b>Read the guide</b></div>
+          </a>
+          <a class="post rise" href="https://getguac.app/articles/cancel-unused-subscriptions">
+            <div class="thumb"><img src="home/story-people/guide-subscription-hispanic-couple-v1.webp" alt="A Hispanic couple reviewing a receipt and their subscriptions together" width="1200" height="800" loading="lazy" decoding="async"></div>
+            <div class="body"><small>Shopping</small><h3>The subscription audit that pays for itself</h3><p>Free trials, forgotten apps, and duplicate streaming add up quietly.</p><b>Read the guide</b></div>
+          </a>
+          <a class="post rise" href="https://getguac.app/articles/get-the-refund-youre-owed">
+            <div class="thumb"><img src="home/story-people/protect.webp" alt="" width="1200" height="800" loading="lazy" decoding="async"></div>
+            <div class="body"><small>Shopping</small><h3>How to actually get the refund you’re owed</h3><p>Return windows and price drops can leave money waiting to be claimed.</p><b>Read the guide</b></div>
+          </a>
+          <a class="post rise" href="https://getguac.app/articles/emergency-fund-size">
+            <div class="thumb"><img src="home/story-people/family-tablet.webp" alt="" width="1200" height="800" loading="lazy" decoding="async"></div>
+            <div class="body"><small>Saving</small><h3>How big should your emergency fund be?</h3><p>The right number depends on your household and the life you are protecting.</p><b>Read the guide</b></div>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== cta ===================== -->
+    <section class="cta">
+      <div class="wrap">
+        <div class="cta-band rise">
+          <h2>Start the circle with one receipt.</h2>
+          <p>See your purchases clearly, keep more of your money, and make the next trip a little smarter.</p>
+          <a class="btn ghost" href="https://getguac.app/join?try=receipt">📷 Try 1 receipt</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap">
+      <span>🥑 GetGuac · Your money’s wingman</span>
+      <span>Local offline design preview · demo 2 · No server required</span>
+    </div>
+  </footer>
+
+  <div class="zoom" id="zoom" role="dialog" aria-modal="true" aria-label="Enlarged screenshot">
+    <button type="button" id="zoomClose">Close ✕</button>
+    <img id="zoomImg" src="" alt="">
+  </div>
+
+  <script>
+    /* ==================================================================
+       Stage data — copied from the shipped components, not invented.
+       STAGES  → src/components/ReceiptFlow.jsx
+       cta/href/slug → the matching CARDS entry in GoalsShowcase.jsx
+       ================================================================== */
+    const ICONS = {
+      capture:'<svg viewBox="0 0 24 24"><path d="M14.5 4 16 6h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3l1.5-2z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+      understand:'<svg viewBox="0 0 24 24"><path d="M6 2h9l4 4v16H6z"/><path d="M14 2v5h5M9 11h6M9 15h6"/><path d="m3 7 1 2 2 1-2 1-1 2-1-2-2-1 2-1z"/></svg>',
+      remember:'<svg viewBox="0 0 24 24"><path d="M9.5 4.5A3 3 0 0 0 5 7a3 3 0 0 0 0 6 3 3 0 0 0 4.5 2.5M14.5 4.5A3 3 0 0 1 19 7a3 3 0 0 1 0 6 3 3 0 0 1-4.5 2.5M9.5 4.5v15M14.5 4.5v15M9.5 9h5M9.5 15h5"/></svg>',
+      prepare:'<svg viewBox="0 0 24 24"><path d="M7 3h10v3H7zM5 5h14v17H5zM8 11l2 2 4-4M8 17h8"/></svg>',
+      shop:'<svg viewBox="0 0 24 24"><path d="M20 13 13 20l-9-9V4h7z"/><circle cx="8.5" cy="8.5" r="1"/><path d="m14 8 3 3M17 8l-3 3"/></svg>',
+      protect:'<svg viewBox="0 0 24 24"><path d="M12 2 20 5v6c0 5-3.4 9-8 11-4.6-2-8-6-8-11V5z"/><path d="m9 12 2 2 4-5"/></svg>',
+      learn:'<svg viewBox="0 0 24 24"><path d="m12 2 3 6 6 .9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 8.9 9 8z"/></svg>',
+      next:'<svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg>',
+    };
+
+    const BASE = 'https://getguac.app';
+    const STAGES = [
+      { key:'capture', name:'Capture', slug:'receipts', accent:'#168A4B', soft:'#EAF6ED',
+        kicker:'Less to remember', headline:'One receipt. One quick scan.',
+        story:'Snap it once. GetGuac turns one receipt into searchable items, spending context, and a clearer picture of where your money went.',
+        metric:'2 ways in', metricLabel:'Photo scans and email receipts',
+        points:['Paper and digital receipts together','Searchable items instead of mystery totals'],
+        proofTitle:'Receipt memory', proofValue:'Saved', proofNote:'Ready whenever you need it',
+        image:'capture-blonde-produce-v1.webp', imageAlt:'A blonde shopper holding a receipt and displaying the saved GetGuac receipt',
+        momentIcon:'📸', momentEyebrow:'One quick snap', momentLine:'Every item—and every dollar—organized.',
+        cta:'Photo + email capture', href:BASE+'/how-email-works' },
+      { key:'understand', name:'Understand', slug:'guac-ai', accent:'#2563A8', soft:'#EDF5FF',
+        kicker:'See the full story', headline:'Know what the total cannot tell you.',
+        story:'A bank sees one charge. Guac-AI sees the groceries, fees, subscriptions and choices hiding inside it.',
+        metric:'Every line', metricLabel:'Items, stores and spending understood',
+        points:['Ask questions grounded in your receipts','Spot patterns a transaction list misses'],
+        proofTitle:'Guac-AI found', proofValue:'The why', proofNote:'Behind where the money went',
+        image:'protect.webp', imageAlt:'A customer reviewing a purchase on her phone',
+        momentIcon:'✨', momentEyebrow:'The total becomes a story', momentLine:'Every item finally makes sense',
+        cta:'Meet Guac-AI', href:BASE+'/login?demo=1' },
+      { key:'remember', name:'Remember', slug:'stash', accent:'#6D4BC3', soft:'#F3EFFF',
+        kicker:'A lighter mental load', headline:'Your shopping memory, without the work.',
+        story:'GetGuac remembers what came home, what you liked and what you already own—so the household does not have to.',
+        metric:'39 items', metricLabel:'Remembered and easy to find',
+        points:['Re-find a purchase in seconds','Avoid buying what is already at home'],
+        proofTitle:'Before you rebuy', proofValue:'Already owned', proofNote:'Stash remembered it for you',
+        image:'prepare.webp', imageAlt:'A couple planning their shopping together at home',
+        momentIcon:'🧠', momentEyebrow:'Already at home', momentLine:'No duplicate buy this time',
+        cta:'Stock your Stash', href:BASE+'/features' },
+      { key:'prepare', name:'Prepare', slug:'smashlist', accent:'#A16207', soft:'#FFF7E6',
+        kicker:'Leave home ready', headline:'Walk in with a plan, not a guess.',
+        story:'Your real buying rhythm becomes a useful Smashlist—what may be running low, what can wait and what you already have.',
+        metric:'15 items', metricLabel:'Ready for the next trip',
+        points:['Running-low suggestions from purchase history','One focused list instead of forgotten notes'],
+        proofTitle:'Next trip', proofValue:'Ready', proofNote:'Less guessing in every aisle',
+        image:'family-tablet.webp', imageAlt:'A laughing family planning together on a tablet displaying the GetGuac app',
+        momentIcon:'🛒', momentEyebrow:'Family trip ready', momentLine:'A calmer list before the aisle',
+        cta:'Optimize your list', href:BASE+'/features' },
+      { key:'shop', name:'Shop smart', slug:'steals', accent:'#C25D13', soft:'#FFF1E7',
+        kicker:'Keep more at checkout', headline:'Pause before you overpay.',
+        story:'Price context and fresh Steals help you compare, wait or buy with confidence—without turning shopping into homework.',
+        metric:'$38 less', metricLabel:'On an item already being watched',
+        points:['Useful price drops for saved searches','Better context before the purchase'],
+        proofTitle:'Price changed', proofValue:'Worth the wait', proofNote:'A smarter moment to buy',
+        image:'shop.webp', imageAlt:'A father and daughter looking at GetGuac together while shopping',
+        momentIcon:'💬', momentEyebrow:'Shopping together', momentLine:'“GetGuac found the better price — let’s get this one.”',
+        cta:'View price drops', href:BASE+'/steals' },
+      { key:'protect', name:'Protect', slug:'returns', accent:'#0F766E', soft:'#E9F8F5',
+        kicker:'After checkout', headline:'Money owed to you should come back.',
+        story:'GetGuac keeps watching return windows, pending refunds and price changes after the shopping bag reaches home.',
+        metric:'$192 open', metricLabel:'Refundable purchases still in range',
+        points:['Deadlines before they quietly expire','Refunds followed until the money returns'],
+        proofTitle:'Return window', proofValue:'5 days left', proofNote:'Still enough time to act',
+        image:'protect-couple-tablet.webp', imageAlt:'A couple reviewing a receipt and GetGuac together on a tablet',
+        momentIcon:'🛡️', momentEyebrow:'Money still yours', momentLine:'Five days left to bring it back',
+        cta:'Claim your refunds', href:BASE+'/features' },
+      { key:'learn', name:'Worth it', slug:'worth-it', accent:'#A17300', soft:'#FFF9DD',
+        kicker:'Buy with intention', headline:'Turn regret into a better next choice.',
+        story:'A quick Worth-It rating teaches GetGuac what truly improved your life—and what does not deserve another dollar.',
+        metric:'4.4★', metricLabel:'Your purchases, judged by real value',
+        points:['Remember the buys you genuinely loved','Let a regret become useful guidance'],
+        proofTitle:'Worth-It verdict', proofValue:'Keep buying', proofNote:'A choice that earned its place',
+        image:'capture-phone.webp', imageAlt:'A delighted shopper holding a receipt and displaying the GetGuac result',
+        momentIcon:'⭐', momentEyebrow:'Worth it remembered', momentLine:'More joy, less buyer’s remorse',
+        cta:'Review your purchases', href:BASE+'/features' },
+      { key:'next', name:'Next trip', slug:'predictions', accent:'#168A4B', soft:'#ECF8EE',
+        kicker:'The circle closes', headline:'The next trip starts smarter.',
+        story:'What happened this time becomes less waste, less stress and better timing next time. Then one new receipt teaches the loop again.',
+        metric:'~3 days', metricLabel:'Until milk may run out',
+        points:['Purchase rhythm becomes a useful forecast','Every trip improves the one after it'],
+        proofTitle:'Shopping rhythm', proofValue:'Learned', proofNote:'The next list starts itself',
+        image:'family-tablet.webp', imageAlt:'Parents, a child and a baby laughing around a tablet displaying the GetGuac app',
+        momentIcon:'🥑', momentEyebrow:'One less thing to remember', momentLine:'The next list starts itself',
+        cta:'See upcoming refills', href:BASE+'/features' },
+    ];
+
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const el = (id) => document.getElementById(id);
+
+    /* ---------- build the rail ---------- */
+    const tabs = el('tabs'), prog = el('progFill');
+
+    STAGES.forEach((s, i) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'tab';
+      b.dataset.index = i;
+      b.setAttribute('role','tab');
+      b.setAttribute('aria-controls','stagePanel');
+      b.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
+      b.setAttribute('aria-label', 'Stage ' + (i + 1) + ' of 8: ' + s.name);
+      b.tabIndex = i === 0 ? 0 : -1;
+      b.innerHTML = '<span class="puck" aria-hidden="true">' + ICONS[s.key] + '</span><span>' + s.name + '</span>';
+      b.addEventListener('click', () => { showStage(i); stopAuto(); });
+      tabs.appendChild(b);
+    });
+
+    /* arrows walk the loop; Home/End jump to its ends */
+    tabs.addEventListener('keydown', (e) => {
+      const step = {ArrowRight:1, ArrowDown:1, ArrowLeft:-1, ArrowUp:-1}[e.key];
+      let next = null;
+      if (step) next = (current + step + STAGES.length) % STAGES.length;
+      else if (e.key === 'Home') next = 0;
+      else if (e.key === 'End') next = STAGES.length - 1;
+      if (next === null) return;
+      e.preventDefault();
+      showStage(next); stopAuto();
+      const target = tabs.querySelector('.tab[data-index="' + next + '"]');
+      if (target) target.focus();
+    });
+
+    /* ---------- stage swap ---------- */
+    let current = -1;
+    const setText = (id, value) => {
+      const n = el(id);
+      if (n.textContent === value) return;
+      n.textContent = value;
+      if (reduce) return;
+      n.classList.remove('swap'); void n.offsetWidth; n.classList.add('swap');
+    };
+
+    function showStage(index){
+      if (index === current) return;
+      current = index;
+      const s = STAGES[index];
+
+      document.documentElement.style.setProperty('--accent', s.accent);
+      document.documentElement.style.setProperty('--soft', s.soft);
+
+      tabs.querySelectorAll('.tab').forEach((b) => {
+        const i = Number(b.dataset.index), on = i === index;
+        b.setAttribute('aria-selected', on ? 'true' : 'false');
+        b.tabIndex = on ? 0 : -1;
+        b.classList.toggle('is-done', i < index);
+      });
+
+      el('kickerIcon').innerHTML = ICONS[s.key];
+      el('metricIcon').innerHTML = ICONS[s.key];
+      setText('stageKicker', s.kicker);
+      setText('stageHeadline', s.headline);
+      setText('stageStory', s.story);
+      setText('momentIcon', s.momentIcon);
+      setText('momentEyebrow', s.momentEyebrow);
+      setText('momentLine', s.momentLine);
+      setText('pointOne', s.points[0]);
+      setText('pointTwo', s.points[1]);
+      setText('stageMetric', s.metric);
+      setText('stageMetricLabel', s.metricLabel);
+      setText('proofTitle', s.proofTitle);
+      setText('proofValue', s.proofValue);
+      setText('proofNote', s.proofNote);
+      const web = el('stageWeb'), phone = el('stagePhone'), person = el('stagePerson');
+      web.src = 'home/goals/web-' + s.slug + '.webp';
+      phone.src = 'home/goals/phone-' + s.slug + '.webp';
+      person.src = 'home/story-people/' + s.image;
+      person.alt = s.imageAlt;
+      if (!reduce) [web, phone, person].forEach((n) => { n.classList.remove('swap'); void n.offsetWidth; n.classList.add('swap'); });
+
+      /* the line fills one eighth per stage; the return arrow lights up on the
+         last one, which is the moment the loop actually closes */
+      prog.style.width = ((index + 1) / STAGES.length * 100) + '%';
+      el('flow').classList.toggle('is-closing', index === STAGES.length - 1);
+    }
+
+    /* ---------- click-to-zoom, same reason as the live page ----------
+       The screens render at roughly half their real size, so the UI they are
+       meant to prove is not legible until one is opened. */
+    const zoom = el('zoom'), zoomImg = el('zoomImg');
+    const openZoom = (img) => {
+      zoomImg.src = img.src; zoomImg.alt = img.alt;
+      zoom.classList.add('open'); document.body.style.overflow = 'hidden'; stopAuto();
+    };
+    const closeZoom = () => { zoom.classList.remove('open'); document.body.style.overflow = ''; };
+    el('webShot').addEventListener('click', () => openZoom(el('stageWeb')));
+    el('phoneShot').addEventListener('click', () => openZoom(el('stagePhone')));
+    zoom.addEventListener('click', closeZoom);
+    addEventListener('keydown', (e) => { if (e.key === 'Escape') closeZoom(); });
+
+    /* ---------- gentle autoplay ----------
+       Runs only while the section is on screen, and any hover, focus or click
+       ends it for good so it never fights someone reading. */
+    const DWELL = 5200;
+    let auto = null;
+    const startAuto = () => { if (auto || reduce) return; auto = setInterval(() => showStage((current + 1) % STAGES.length), DWELL); };
+    function stopAuto(){ if (auto){ clearInterval(auto); auto = null; } }
+
+    const how = el('how');
+    ['pointerenter','focusin'].forEach((ev) => how.addEventListener(ev, stopAuto));
+
+    if ('IntersectionObserver' in window){
+      new IntersectionObserver((entries) => {
+        entries.forEach((e) => { if (e.isIntersecting) startAuto(); else stopAuto(); });
+      }, {threshold:.3}).observe(how);
+
+      const reveal = new IntersectionObserver((entries) => {
+        entries.forEach((e) => { if (e.isIntersecting){ e.target.classList.add('in'); reveal.unobserve(e.target); } });
+      }, {threshold:.12, rootMargin:'0px 0px -40px'});
+      document.querySelectorAll('.rise').forEach((n, i) => { n.style.transitionDelay = (i % 4) * 70 + 'ms'; reveal.observe(n); });
+    } else {
+      document.querySelectorAll('.rise').forEach((n) => n.classList.add('in'));
+    }
+
+    const head = el('siteHead');
+    const onScroll = () => head.classList.toggle('is-stuck', scrollY > 8);
+    addEventListener('scroll', onScroll, {passive:true}); onScroll();
+
+    showStage(0);
+  </script>
+</body>
+</html>

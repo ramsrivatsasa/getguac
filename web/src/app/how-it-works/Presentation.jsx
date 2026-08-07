@@ -376,15 +376,25 @@ const SLIDES = [
   },
 ]
 
-export default function HowItWorksPage({ embedded = false, compact = false }) {
+// Fixed neural narration keeps the tour voice warm and consistent across
+// Chrome, Firefox, Safari, desktop, and mobile. Browser speech synthesis is
+// retained below only as a graceful fallback if a track cannot be loaded.
+const NARRATION_AUDIO = SLIDES.map((_, index) =>
+  `/audio/how-it-works/slide-${String(index + 1).padStart(2, '0')}.mp3`
+)
+
+export default function HowItWorksPage({ embedded = false, compact = false, cinematic = false }) {
   const [playing, setPlaying] = useState(false)
   const [muted, setMuted] = useState(false)
   const [current, setCurrent] = useState(0)
   const [voices, setVoices] = useState([])
   const [selectedVoiceURI, setSelectedVoiceURI] = useState(null)
-  const [voicePickerOpen, setVoicePickerOpen] = useState(false)
   const slideRefs = useRef([])
   const advanceTimer = useRef(null)
+  const speechRun = useRef(0)
+  const narrationAudio = useRef(null)
+  const audioRun = useRef(0)
+  const narrationFinished = useRef(null)
 
   // ─── Load voices + pick the most natural-sounding one available ─────────
   // SpeechSynthesis on most platforms ships both "robotic" baseline voices
@@ -396,17 +406,20 @@ export default function HowItWorksPage({ embedded = false, compact = false }) {
     const load = () => {
       const all = window.speechSynthesis.getVoices()
       const en = all.filter(v => /^en[-_]?/i.test(v.lang))
-      // Sort: highest quality + female + en-US first (heuristic — most demo
-      // narrations sound best with a clear female voice).
+      // Prefer modern online/neural voices. Older desktop voices are a useful
+      // fallback, but their cadence is noticeably more robotic for a long tour.
       const scored = en.map(v => {
         const n = v.name
         let s = 0
-        if (/natural|neural|online|premium|enhanced|wavenet|studio/i.test(n)) s += 50
-        if (/aria|jenny|samantha|karen|joanna|emma|libby|amber|sarah|nova|shimmer/i.test(n)) s += 20
+        if (/natural|neural|online|premium|enhanced|wavenet|studio/i.test(n)) s += 60
+        if (/ava|aria|jenny|emma|samantha|joanna|libby|amber|sarah|nova|shimmer/i.test(n)) s += 30
+        if (/microsoft.*(ava|jenny|emma).*(online|natural)/i.test(n)) s += 45
+        if (!v.localService) s += 18
         if (/google/i.test(n)) s += 10
         if (/en-US/i.test(v.lang)) s += 5
         if (/microsoft.*online/i.test(n)) s += 20
         if (/female/i.test(n)) s += 8
+        if (/desktop|compact|espeak|zira|david|mark/i.test(n)) s -= 35
         return { v, s }
       }).sort((a, b) => b.s - a.s)
       setVoices(scored.map(x => x.v))
@@ -425,9 +438,10 @@ export default function HowItWorksPage({ embedded = false, compact = false }) {
   // Break the narration into sentences and queue them as separate utterances.
   // Most TTS engines apply better intonation at sentence boundaries, and
   // the small inter-utterance gap sounds like a natural breath.
-  const speak = useCallback((text) => {
+  const speakFallback = useCallback((text, onComplete) => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) return
     if (muted) return
+    const run = ++speechRun.current
     window.speechSynthesis.cancel()
     const voice = voices.find(v => v.voiceURI === selectedVoiceURI)
         ?? voices[0]
@@ -437,21 +451,79 @@ export default function HowItWorksPage({ embedded = false, compact = false }) {
       .split(/(?<=[.!?…])\s+/)
       .map(s => s.trim())
       .filter(Boolean)
-    const chunks = sentences.length > 0 ? sentences : [text]
-    chunks.forEach((chunk) => {
+    const chunks = (sentences.length > 0 ? sentences : [text]).flatMap(sentence => {
+      if (sentence.length <= 230) return sentence
+      const clauses = sentence.split(/(?<=[,;:])\s+/).filter(Boolean)
+      return clauses.length > 1 ? clauses : (sentence.match(/.{1,220}(?:\s|$)/g) ?? [sentence])
+    })
+    const speakChunk = (index) => {
+      if (run !== speechRun.current) return
+      if (index >= chunks.length) {
+        onComplete?.()
+        return
+      }
+      const chunk = chunks[index]
       const utter = new SpeechSynthesisUtterance(chunk)
       if (voice) utter.voice = voice
-      utter.rate = 0.95       // slightly slower than default for clarity
-      utter.pitch = 1.0
+      utter.rate = 0.92
+      utter.pitch = 0.98
       utter.volume = 1.0
+      utter.onend = () => {
+        if (run === speechRun.current) setTimeout(() => speakChunk(index + 1), 105)
+      }
+      utter.onerror = () => {
+        if (run === speechRun.current) speakChunk(index + 1)
+      }
       window.speechSynthesis.speak(utter)
-    })
+    }
+    speakChunk(0)
   }, [muted, voices, selectedVoiceURI])
 
   const stopSpeaking = useCallback(() => {
     if (typeof window === 'undefined') return
+    speechRun.current += 1
+    audioRun.current += 1
+    const audio = narrationAudio.current
+    if (audio) {
+      audio.pause()
+      audio.onended = null
+      audio.onerror = null
+      audio.removeAttribute('src')
+      audio.load()
+      narrationAudio.current = null
+    }
     window.speechSynthesis?.cancel()
   }, [])
+
+  const playNarration = useCallback((idx) => {
+    if (typeof window === 'undefined' || muted || !SLIDES[idx]?.narration) return
+
+    stopSpeaking()
+    const run = ++audioRun.current
+    const audio = new Audio(NARRATION_AUDIO[idx])
+    narrationAudio.current = audio
+    audio.preload = 'auto'
+    audio.volume = 1
+
+    let fallbackStarted = false
+    const finish = () => narrationFinished.current?.(idx)
+    const useBrowserFallback = () => {
+      if (fallbackStarted) return
+      fallbackStarted = true
+      if (run !== audioRun.current) return
+      if (narrationAudio.current === audio) narrationAudio.current = null
+      speakFallback(SLIDES[idx].narration, finish)
+    }
+
+    audio.onended = () => {
+      if (run === audioRun.current && narrationAudio.current === audio) {
+        narrationAudio.current = null
+        finish()
+      }
+    }
+    audio.onerror = useBrowserFallback
+    audio.play().catch(useBrowserFallback)
+  }, [muted, speakFallback, stopSpeaking])
 
   // ─── Scroll the active slide into view ──────────────────────────────────
   const scrollTo = useCallback((idx, withNarration = true) => {
@@ -462,17 +534,34 @@ export default function HowItWorksPage({ embedded = false, compact = false }) {
     if (el && !compact) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
     if (withNarration && SLIDES[idx]?.narration) {
       // Slight delay so the scroll lands before the voice starts.
-      setTimeout(() => speak(SLIDES[idx].narration), 600)
+      setTimeout(() => playNarration(idx), 600)
     }
-  }, [speak, compact])
+  }, [playNarration, compact])
 
-  // ─── Auto-advance timer ─────────────────────────────────────────────────
+  // Let each recorded track finish naturally before moving to the next slide.
+  // This keeps the visuals synchronized with the narration instead of cutting
+  // a sentence off because of a fixed-duration timer.
+  useEffect(() => {
+    narrationFinished.current = (idx) => {
+      if (!playing) return
+      if (idx >= SLIDES.length - 1) {
+        setPlaying(false)
+        return
+      }
+      scrollTo(idx + 1)
+    }
+    return () => { narrationFinished.current = null }
+  }, [playing, scrollTo])
+
+  // Muted playback uses the original visual timing. With narration enabled,
+  // the recorded track itself advances the tour when it finishes.
   useEffect(() => {
     if (!playing) {
       if (advanceTimer.current) clearTimeout(advanceTimer.current)
       stopSpeaking()
       return
     }
+    if (!muted) return
     const slide = SLIDES[current]
     if (!slide) return
     advanceTimer.current = setTimeout(() => {
@@ -483,13 +572,13 @@ export default function HowItWorksPage({ embedded = false, compact = false }) {
       scrollTo(current + 1)
     }, slide.durationMs || 11000)
     return () => clearTimeout(advanceTimer.current)
-  }, [playing, current, scrollTo, stopSpeaking])
+  }, [playing, muted, current, scrollTo, stopSpeaking])
 
   const togglePlay = () => {
     if (!playing) {
       // Starting from anywhere — re-narrate current slide.
       setPlaying(true)
-      if (SLIDES[current]?.narration) speak(SLIDES[current].narration)
+      if (SLIDES[current]?.narration) playNarration(current)
     } else {
       setPlaying(false)
     }
@@ -527,7 +616,14 @@ export default function HowItWorksPage({ embedded = false, compact = false }) {
   }, [current])
 
   return (
-    <div className={`${compact ? '' : 'min-h-screen'} bg-gradient-to-br from-emerald-50 via-white to-lime-50 text-gray-800 font-sans`}>
+    <div className={`${compact ? '' : 'min-h-screen'} ${cinematic ? 'gg-tour-shell' : ''} relative overflow-hidden bg-gradient-to-br from-emerald-50 via-white to-lime-50 text-gray-800 font-sans`}>
+      {cinematic && (
+        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+          <span className="gg-tour-blob gg-tour-blob-a" />
+          <span className="gg-tour-blob gg-tour-blob-b" />
+          <span className="gg-tour-blob gg-tour-blob-c" />
+        </div>
+      )}
       {/* Top nav — hidden when embedded in another page (e.g. /tour) */}
       {!embedded && (
       <header className="sticky top-0 z-30 backdrop-blur bg-white/70 border-b border-emerald-100 print:hidden">
@@ -554,16 +650,16 @@ export default function HowItWorksPage({ embedded = false, compact = false }) {
       <main className="max-w-7xl mx-auto px-4 sm:px-6">
         {SLIDES.map((slide, idx) => (
           <section
-            key={idx}
+            key={`${idx}-${current === idx ? 'active' : 'idle'}`}
             ref={el => (slideRefs.current[idx] = el)}
             data-idx={idx}
-            className={`${compact ? 'py-7' : 'min-h-[calc(100vh-4rem)] py-10'} ${compact && current !== idx ? 'hidden' : 'flex items-center'} print:break-after-page print:min-h-0 ${
+            className={`${compact ? 'py-7 sm:py-9' : 'min-h-[calc(100vh-4rem)] py-10'} ${compact && current !== idx ? 'hidden' : 'flex items-center'} ${cinematic && current === idx ? 'gg-tour-enter' : ''} relative z-10 print:break-after-page print:min-h-0 ${
               current === idx ? 'opacity-100' : 'opacity-95'
             } transition-opacity`}
           >
             {slide.type === 'hero' && <HeroSlide slide={slide} />}
             {slide.type === 'closing' && <ClosingSlide slide={slide} />}
-            {!slide.type && <StepSlide slide={slide} idx={idx} />}
+            {!slide.type && <StepSlide slide={slide} idx={idx} cinematic={cinematic} />}
           </section>
         ))}
       </main>
@@ -574,44 +670,19 @@ export default function HowItWorksPage({ embedded = false, compact = false }) {
           host page's other sections. */}
       <div className={compact ? 'flex justify-center pb-8 print:hidden' : 'fixed bottom-5 left-1/2 -translate-x-1/2 z-40 print:hidden'}>
         <div className="flex flex-col items-center gap-2">
-          {/* Voice picker — opens above the control bar */}
-          {voicePickerOpen && voices.length > 0 && (
-            <div className="bg-white rounded-2xl shadow-2xl ring-1 ring-emerald-200 p-3 max-h-72 overflow-y-auto w-72">
-              <div className="text-xs font-bold uppercase tracking-wider text-emerald-700 mb-2 px-1">
-                Narration voice
-              </div>
-              <ul className="space-y-1">
-                {voices.slice(0, 20).map(v => (
-                  <li key={v.voiceURI}>
-                    <button
-                      onClick={() => {
-                        setSelectedVoiceURI(v.voiceURI)
-                        // Preview the new voice on a short phrase.
-                        const utter = new SpeechSynthesisUtterance('Hi, this is how I sound.')
-                        utter.voice = v
-                        utter.rate = 0.95
-                        window.speechSynthesis.cancel()
-                        window.speechSynthesis.speak(utter)
-                      }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition ${
-                        v.voiceURI === selectedVoiceURI
-                          ? 'bg-emerald-100 text-emerald-900 font-bold'
-                          : 'hover:bg-gray-50 text-gray-700'
-                      }`}
-                    >
-                      <div className="font-semibold">{v.name}</div>
-                      <div className="text-[10px] text-gray-500">{v.lang}{v.localService ? '' : ' · online'}</div>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-              <button
-                onClick={() => setVoicePickerOpen(false)}
-                className="mt-2 w-full text-xs text-emerald-700 hover:text-emerald-900 font-semibold py-1"
-              >Close</button>
+          {compact && (
+            <div className="flex max-w-[82vw] flex-wrap items-center justify-center gap-1.5" aria-label={`Slide ${current + 1} of ${SLIDES.length}`}>
+              {SLIDES.map((_, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  aria-label={`Go to slide ${idx + 1}`}
+                  onClick={() => scrollTo(idx, playing)}
+                  className={`h-2 rounded-full transition-all ${idx === current ? 'w-7 bg-emerald-600' : 'w-2 bg-emerald-900/15 hover:bg-emerald-600/40'}`}
+                />
+              ))}
             </div>
           )}
-
           {/* Main control pill */}
           <div className="flex items-center gap-2 bg-emerald-900/95 text-white px-3 py-2 rounded-full shadow-2xl ring-1 ring-emerald-800">
             <button
@@ -637,18 +708,39 @@ export default function HowItWorksPage({ embedded = false, compact = false }) {
               aria-label={muted ? 'Unmute narration' : 'Mute narration'}
               className="w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center transition"
             >{muted ? <VolumeX size={18} /> : <Volume2 size={18} />}</button>
-            <button
-              onClick={() => setVoicePickerOpen(v => !v)}
-              aria-label="Choose narration voice"
-              title="Choose narration voice"
-              className="px-2 h-9 rounded-full hover:bg-white/10 flex items-center justify-center transition text-xs font-bold"
-            >Voice ▾</button>
+            <span
+              className="px-2 h-9 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold"
+              title="Fixed neural narration"
+            >Neural voice</span>
             <span className="text-xs font-mono tabular-nums pr-1 pl-1 opacity-80">
               {current + 1}/{SLIDES.length}
             </span>
           </div>
         </div>
       </div>
+      {cinematic && <style jsx global>{`
+        .gg-tour-shell { isolation: isolate; }
+        .gg-tour-blob { position:absolute; border-radius:999px; filter:blur(1px); opacity:.42; animation:ggBlob 14s ease-in-out infinite; }
+        .gg-tour-blob-a { width:28rem; height:28rem; left:-11rem; top:-10rem; background:#d9f99d; }
+        .gg-tour-blob-b { width:22rem; height:22rem; right:-8rem; top:22%; background:#bbf7d0; animation-delay:-5s; }
+        .gg-tour-blob-c { width:18rem; height:18rem; left:43%; bottom:-10rem; background:#fef3c7; animation-delay:-9s; }
+        .gg-tour-enter { animation:ggTourEnter .62s cubic-bezier(.22,1,.36,1) both; }
+        .gg-screen-stage { animation:ggStageFloat 6s ease-in-out infinite; }
+        .gg-screen-web { animation:ggScreenIn .75s cubic-bezier(.22,1,.36,1) .08s both; }
+        .gg-screen-phone { animation:ggPhoneIn .8s cubic-bezier(.22,1,.36,1) .2s both, ggPhoneFloat 5s ease-in-out 1s infinite; }
+        .gg-art-badge { animation:ggBadgeIn .7s cubic-bezier(.22,1,.36,1) .32s both, ggBadgeFloat 4.4s ease-in-out 1.1s infinite; }
+        @keyframes ggTourEnter { from { opacity:0; transform:translateY(18px) scale(.985); } to { opacity:1; transform:none; } }
+        @keyframes ggScreenIn { from { opacity:0; transform:translateX(28px) scale(.96); } to { opacity:1; transform:none; } }
+        @keyframes ggPhoneIn { from { opacity:0; transform:translate(28px,20px) rotate(4deg); } to { opacity:1; transform:translate(0,0) rotate(0); } }
+        @keyframes ggBadgeIn { from { opacity:0; transform:translate(-18px,16px) scale(.9); } to { opacity:1; transform:none; } }
+        @keyframes ggStageFloat { 0%,100% { transform:translateY(-3px); } 50% { transform:translateY(4px); } }
+        @keyframes ggPhoneFloat { 0%,100% { margin-top:0; } 50% { margin-top:-8px; } }
+        @keyframes ggBadgeFloat { 0%,100% { margin-bottom:0; } 50% { margin-bottom:7px; } }
+        @keyframes ggBlob { 0%,100% { transform:translate3d(0,0,0) scale(1); } 50% { transform:translate3d(24px,-18px,0) scale(1.08); } }
+        @media (prefers-reduced-motion: reduce) {
+          .gg-tour-blob,.gg-tour-enter,.gg-screen-stage,.gg-screen-web,.gg-screen-phone,.gg-art-badge { animation:none!important; }
+        }
+      `}</style>}
     </div>
   )
 }
@@ -732,18 +824,19 @@ function ClosingSlide({ slide }) {
   )
 }
 
-function StepSlide({ slide, idx }) {
+function StepSlide({ slide, idx, cinematic = false }) {
   const A = ACCENTS[slide.accent] || ACCENTS.emerald
   const reverse = idx % 2 === 0
+  const screens = SCREEN_PAIRS[slide.title]
   return (
-    <article className={`w-full ${A.bg} rounded-3xl ring-1 ${A.ring} p-6 sm:p-10 shadow-sm`}>
-      <div className={`flex gap-8 items-center flex-wrap ${reverse ? 'sm:flex-row-reverse' : ''}`}>
-        <div className="flex-1 min-w-[280px]">
+    <article className={`w-full ${A.bg} rounded-[2rem] ring-1 ${A.ring} p-5 sm:p-8 lg:p-10 shadow-[0_22px_70px_-42px_rgba(20,83,45,.45)] overflow-hidden`}>
+      <div className={`grid gap-7 lg:gap-10 items-center ${cinematic ? 'lg:grid-cols-[minmax(0,1.02fr)_minmax(420px,.98fr)]' : 'lg:grid-cols-2'} ${reverse && !cinematic ? 'sm:[direction:rtl]' : ''}`}>
+        <div className={`min-w-0 ${reverse && !cinematic ? 'sm:[direction:ltr]' : ''}`}>
           <div className="flex items-center gap-3 mb-2">
             <div className={`${A.num} text-white w-9 h-9 rounded-full flex items-center justify-center font-black text-base shadow`}>{slide.n}</div>
             <span className={`${A.sub} text-xs font-bold uppercase tracking-wider`}>{slide.subtitle}</span>
           </div>
-          <h3 className="text-2xl sm:text-4xl font-black text-gray-900 flex items-center gap-3 mb-4">
+          <h3 className="text-2xl sm:text-4xl font-black text-gray-900 flex items-center gap-3 mb-4 leading-[1.05]">
             {slide.icon}{slide.title}
           </h3>
           <ul className="space-y-3">
@@ -759,36 +852,55 @@ function StepSlide({ slide, idx }) {
           </ul>
           {slide.aiPeople && <AiPeopleStrip people={slide.aiPeople} />}
         </div>
-        <div className="flex-shrink-0 mx-auto sm:mx-0 flex flex-col sm:flex-row items-center justify-center gap-5">
-          <Art name={slide.art} />
-          {SHOTS[slide.title] && (
-            <div className="bg-gray-900 p-1.5 rounded-[1.8rem] shadow-xl flex-shrink-0" style={{ width: 168 }}>
-              {/* Small real app screenshot, in a phone frame, beside the illustration. */}
+        {screens ? (
+          <div className="gg-screen-stage relative mx-auto w-full max-w-[610px] min-h-[330px] sm:min-h-[390px] rounded-[1.8rem] border border-white/80 bg-white/55 p-4 sm:p-6 shadow-[0_26px_70px_-38px_rgba(15,23,42,.55)] backdrop-blur-sm">
+            {/* Real desktop screen is the visual anchor. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={screens.web} alt={`${slide.title} on GetGuac web`} className="gg-screen-web block w-[88%] rounded-2xl border border-white/90 bg-white shadow-xl" loading="lazy" />
+            {/* Real mobile screen overlaps like a product demo, not a second card. */}
+            <div className="gg-screen-phone absolute bottom-3 right-3 w-[30%] min-w-[118px] max-w-[170px] rounded-[1.8rem] bg-slate-900 p-1.5 shadow-2xl">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={SHOTS[slide.title]} alt={slide.title} className="block w-full rounded-[1.4rem]" loading="lazy" />
+              <img src={screens.phone} alt={`${slide.title} on the GetGuac app`} className="block w-full rounded-[1.4rem]" loading="lazy" />
             </div>
-          )}
-        </div>
+            <div className="gg-art-badge absolute -bottom-3 left-3 sm:left-5 origin-bottom-left scale-[.58] sm:scale-[.66] rounded-3xl bg-white/86 p-2 shadow-xl ring-1 ring-white/90 backdrop-blur-md">
+              <Art name={slide.art} />
+            </div>
+            <span className="absolute right-5 top-4 rounded-full bg-white/86 px-3 py-1.5 text-[10px] font-black uppercase tracking-[.15em] text-emerald-700 shadow-sm backdrop-blur">
+              Real GetGuac screens
+            </span>
+          </div>
+        ) : (
+          <div className="mx-auto flex items-center justify-center"><Art name={slide.art} /></div>
+        )}
       </div>
     </article>
   )
 }
 
-// Real app screenshots paired (small) with the illustration on slides where
-// one fits. Keyed by slide title.
-const SHOTS = {
-  'Get a receipt': '/showcase/receipts.png',
-  'Guac-AI reads it': '/showcase/items.png',
-  'Duplicates get caught': '/showcase/receipts.png',
-  'Auto-categorize': '/showcase/reports.png',
-  'See where it all went': '/showcase/dashboard.png',
-  'Smashlist — your list writes itself': '/showcase/shopping.png',
-  'Steals — pay less for what you rebuy': '/showcase/steals.png',
-  'Your Stash — every product you own': '/showcase/stash.png',
-  'GuacMoney — watch your wins add up': '/showcase/dashboard.png',
-  'Worth it?': '/showcase/bites.png',
-  'Returns & refunds, finally tracked': '/showcase/returns.png',
-  'GuacWizard — magically protects your money': '/showcase/guacwizard.png',
+// Every chapter pairs a real web screen with its mobile counterpart. The
+// animated metaphor remains as a small supporting cue, while the actual app
+// stays visually dominant.
+const SCREEN_PAIRS = {
+  'Get a receipt': { web: '/home/goals/web-receipts.webp', phone: '/home/goals/phone-receipts.webp' },
+  'Your @getguac.app inbox': { web: '/home/goals/web-organized.webp', phone: '/home/goals/phone-organized.webp' },
+  'Guac-AI reads it': { web: '/home/goals/web-organized.webp', phone: '/home/goals/phone-organized.webp' },
+  'Duplicates get caught': { web: '/home/goals/web-receipts.webp', phone: '/home/goals/phone-receipts.webp' },
+  'Auto-categorize': { web: '/marketing/slides/v2/reports-web.webp', phone: '/home/goals/phone-tax.webp' },
+  'See where it all went': { web: '/marketing/slides/v2/dashboard-web.webp', phone: '/home/goals/phone-guacscore.webp' },
+  'Smashlist — your list writes itself': { web: '/home/goals/web-smashlist.webp', phone: '/home/goals/phone-smashlist.webp' },
+  'Steals — pay less for what you rebuy': { web: '/home/goals/web-steals.webp', phone: '/home/goals/phone-steals.webp' },
+  'Your Stash — every product you own': { web: '/home/goals/web-stash.webp', phone: '/home/goals/phone-stash.webp' },
+  'Worth it?': { web: '/home/goals/web-worth-it.webp', phone: '/home/goals/phone-worth-it.webp' },
+  'Returns & refunds, finally tracked': { web: '/home/goals/web-returns.webp', phone: '/home/goals/phone-returns.webp' },
+  'GuacWizard — magically protects your money': { web: '/home/goals/web-fees.webp', phone: '/home/goals/phone-fees.webp' },
+  'Car Miles — track every drive': { web: '/home/goals/web-car-miles.webp', phone: '/home/goals/phone-car-miles.webp' },
+  'GuacMoney — watch your wins add up': { web: '/home/goals/web-guacmoney.webp', phone: '/home/goals/phone-guacmoney.webp' },
+  'Guac AI — ask your receipts anything': { web: '/home/goals/web-guac-ai.webp', phone: '/home/goals/phone-guac-ai.webp' },
+  'Bills & planning, one calendar ahead': { web: '/home/goals/web-bills.webp', phone: '/home/goals/phone-bills.webp' },
+  'Marketplace — deals for everyone': { web: '/home/goals/web-marketplace.webp', phone: '/home/goals/phone-marketplace.webp' },
+  'Guac Arcade — 15 free games': { web: '/home/goals/web-games.webp', phone: '/home/goals/phone-games.webp' },
+  'Security you can audit': { web: '/home/goals/web-bank.webp', phone: '/home/goals/phone-bank.webp' },
+  'Your data, your call': { web: '/home/goals/web-organized.webp', phone: '/home/goals/phone-organized.webp' },
 }
 
 const ACCENTS = {

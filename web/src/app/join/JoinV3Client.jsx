@@ -18,10 +18,11 @@
 // single source of truth: edit the demo, rerun the port, done.
 //
 // The eight-stage loop's behaviour is the demo's own script, run once on mount.
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import './join-v3.css'
 import { MARKUP, BEHAVIOUR } from './joinV3Content'
 import MetaPixel from '../../components/MetaPixel'
+import JoinReceiptTrial from './JoinReceiptTrial'
 import { trackClick } from '../../lib/track-click'
 
 // Click counters. JoinClient.jsx wired these on 26 elements; this port dropped
@@ -53,6 +54,9 @@ const JOIN_MARKUP = MARKUP
 
 export default function JoinV3Client() {
   const host = useRef(null)
+  // Incremented by the "Try 1 receipt" CTAs. A counter, not a boolean, so a
+  // second press re-opens the trial after the visitor has closed it.
+  const [trialSignal, setTrialSignal] = useState(0)
 
   useEffect(() => {
     // The demo's script queries the document directly and wires the loop rail,
@@ -65,6 +69,17 @@ export default function JoinV3Client() {
       const a = e.target.closest?.('a[href]')
       if (!a) return
       const href = a.getAttribute('href') || ''
+
+      // "Try 1 receipt" must OPEN THE SCANNER, not navigate. It used to point at
+      // /register?try=receipt — a parameter nothing reads, on a page that just
+      // asks for an account, so the ad's headline promise led to a signup wall.
+      if (/\/register\?try=receipt/.test(href)) {
+        e.preventDefault()
+        trackClick('join-try-one-receipt')
+        setTrialSignal((n) => n + 1)
+        return
+      }
+
       const hit = CLICK_MAP.find(([re]) => re.test(href))
       if (hit) trackClick(hit[1])
     }
@@ -94,6 +109,7 @@ export default function JoinV3Client() {
           never runs on a signed-in receipts page. */}
       <MetaPixel />
       <div ref={host} dangerouslySetInnerHTML={{ __html: JOIN_MARKUP }} />
+      <JoinReceiptTrial startSignal={trialSignal} />
     </>
   )
 }

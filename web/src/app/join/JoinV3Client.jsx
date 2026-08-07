@@ -21,6 +21,15 @@
 import { useEffect, useRef } from 'react'
 import './join-v3.css'
 import { MARKUP, BEHAVIOUR } from './joinV3Content'
+import MetaPixel from '../../components/MetaPixel'
+
+// The current generated port still has the store badges below the hero image.
+// Move that same row below the primary CTAs, matching the source demo and the
+// requested layout, without hand-editing the generated file.
+const STORE_ROW = MARKUP.match(/\s*<div class="store-row">[\s\S]*?<\/div>/)?.[0] || ''
+const JOIN_MARKUP = MARKUP
+  .replace(STORE_ROW, '')
+  .replace('<div class="micro">', `${STORE_ROW}\n            <div class="micro">`)
 
 export default function JoinV3Client() {
   const host = useRef(null)
@@ -41,5 +50,15 @@ export default function JoinV3Client() {
     }
   }, [])
 
-  return <div ref={host} dangerouslySetInnerHTML={{ __html: MARKUP }} />
+  return (
+    <>
+      {/* The ad's landing page. This port replaced JoinClient.jsx, which carried
+          the pixel — without it here /join was the ONE page the tracker missed,
+          so every paid click landed untracked and never entered the retargeting
+          audience. Mounted per-page, not in the root layout, so the tracker
+          never runs on a signed-in receipts page. */}
+      <MetaPixel />
+      <div ref={host} dangerouslySetInnerHTML={{ __html: JOIN_MARKUP }} />
+    </>
+  )
 }

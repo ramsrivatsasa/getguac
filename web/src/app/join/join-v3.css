@@ -101,6 +101,7 @@
     .hero h1{font-size:clamp(38px,5.4vw,66px);letter-spacing:-.05em;margin:22px 0 20px;max-width:15ch}
     .hero h1 span{background:linear-gradient(96deg,var(--green) 10%,var(--lime) 90%);-webkit-background-clip:text;background-clip:text;color:transparent}
     .hero h1 span.h1-emoji{background:none;-webkit-background-clip:border-box;background-clip:border-box;color:initial}
+    .hero h1 span.h1-line2{background:none;-webkit-background-clip:border-box;background-clip:border-box;color:inherit;white-space:nowrap}
     .lede{max-width:53ch;color:var(--ink-2);font-size:clamp(16px,1.4vw,18.5px);line-height:1.62}
     .actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
     .micro{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:20px;color:var(--green-ink);font-size:13px;font-weight:700}

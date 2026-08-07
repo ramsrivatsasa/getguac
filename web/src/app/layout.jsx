@@ -9,7 +9,14 @@ const bricolage = Bricolage_Grotesque({ subsets: ['latin'], weight: ['600', '700
 const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700'], variable: '--font-jakarta', display: 'swap' })
 // Roboto Mono = the mockup's number/date typeface. Wired as Tailwind `font-mono`
 // (see tailwind.config.js) so every `.gg-num` figure across the app matches.
-const robotoMono = Roboto_Mono({ subsets: ['latin'], weight: ['500', '600', '700'], variable: '--font-roboto-mono', display: 'swap' })
+// 🔑 preload:false — measured on /join, 2026-08-06. next/font preloads every
+// family declared in this layout, so the ad landing page was downloading Roboto
+// Mono (32 kB) and Caveat (50 kB) at top priority while rendering NEITHER. On a
+// throttled mobile connection those 82 kB competed with the render-blocking CSS
+// that gates first paint (FCP was 4.15s against a ~3s abandon threshold).
+// preload:false keeps both usable — the browser fetches them when an element
+// actually asks for that family — it only stops the unconditional preload.
+const robotoMono = Roboto_Mono({ subsets: ['latin'], weight: ['500', '600', '700'], variable: '--font-roboto-mono', display: 'swap', preload: false })
 // Caveat = the mockup's handwritten annotation face, used ONLY for the two
 // pointer callouts flanking the hero phone on /join.
 // ⚠️ This is a FOURTH family on a site whose typography lock is Bricolage +
@@ -18,7 +25,12 @@ const robotoMono = Roboto_Mono({ subsets: ['latin'], weight: ['500', '600', '700
 // reach for it for headings, body copy, or anything on a signed-in page: one
 // decorative script face used twice reads as art direction, the same face used
 // six times reads as a template. One weight only, so the payload is ~10 kB.
-const caveat = Caveat({ subsets: ['latin'], weight: ['600'], variable: '--font-caveat', display: 'swap' })
+// ⚠️ The callouts this was added for lived in JoinClient.jsx, which the demo_3
+// port (JoinV3Client) replaced — so as of 2026-08-06 Caveat renders nowhere on
+// the live /join, yet it was still the single largest font downloaded there.
+// Kept declared because JoinClient.jsx is still on disk and one import swap in
+// page.jsx reverts to it. See the preload:false note above.
+const caveat = Caveat({ subsets: ['latin'], weight: ['600'], variable: '--font-caveat', display: 'swap', preload: false })
 import UpdatePrompt from '../components/UpdatePrompt'
 import PosthogProvider from '../components/PosthogProvider'
 import VisitBeacon from '../components/VisitBeacon'

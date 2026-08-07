@@ -294,7 +294,7 @@
     .feature:hover{transform:translateY(-4px);box-shadow:var(--sh-2);border-color:#cfe3b8}
     .feature:hover::after{opacity:1}
     .feature i{display:grid;place-items:center;width:52px;height:52px;border-radius:16px;background:var(--cream-2);font-style:normal;font-size:23px;box-shadow:inset 0 0 0 1px rgba(21,128,61,.09)}
-    .feature h3{font-size:21px;margin:20px 0 9px;letter-spacing:-.03em}
+    .feature h3{font-size:21px;margin:20px 0 9px;letter-spacing:-.03em;line-height:1.25;min-height:2.5em}
     .feature p{color:var(--ink-2);font-size:14.5px;line-height:1.6}
 
     .people-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--gap);margin-top:clamp(16px,2vw,24px)}
@@ -484,7 +484,7 @@
     .rise.in{opacity:1;transform:none}
 
     /* ---- responsive ---- */
-    @media(max-width:1080px){.feature-grid{grid-template-columns:1fr}.people-grid,.blog-grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:1080px){.feature-grid{grid-template-columns:1fr}.feature h3{min-height:0}.people-grid,.blog-grid{grid-template-columns:repeat(2,1fr)}}
     @media(max-width:980px){
       .hero-grid{grid-template-columns:1fr}
       .hero-image-only>.hero-family-only{transform:none}

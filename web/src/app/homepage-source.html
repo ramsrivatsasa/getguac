@@ -339,10 +339,9 @@
     .goal-card:focus-visible{outline:3px solid color-mix(in srgb,var(--goal-accent) 42%,transparent);outline-offset:3px}
     .goal-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .5s ease}.goal-card:hover .goal-photo{transform:scale(1.035)}
     .goal-card-video{background:#0b1410}
-    .goal-card-video::before{display:none}
-    .goal-card-video .goal-story-box{top:14px;bottom:auto;height:auto;transition:opacity .25s ease}
+    .goal-card-video .goal-story-box{transition:opacity .25s ease}
     .goal-card-video.is-playing .goal-story-box{opacity:0;pointer-events:none}
-    .goal-card-video video.goal-photo{object-fit:contain;background:#0b1410}
+    .goal-card-video video.goal-photo{object-fit:cover;background:#0b1410}
     .goal-card-video:hover video.goal-photo{transform:none}
     .goal-story-box{position:absolute;z-index:2;left:14px;right:14px;bottom:14px;height:146px;box-sizing:border-box;display:flex;flex-direction:column;padding:9px 13px 8px;border:1px solid rgba(255,255,255,.68);
       border-radius:18px 18px 18px 6px;background:rgba(255,255,255,.76);box-shadow:var(--sh-2);-webkit-backdrop-filter:blur(11px);backdrop-filter:blur(11px);text-align:left}
@@ -721,7 +720,7 @@
 
           <div class="goals-track" id="goalsTrack">
             <div class="goal-card goal-card-video" style="--goal-accent:#15803d;--goal-soft:#eefbf3">
-              <video class="goal-photo" src="/how-it-works-tour.mp4" poster="/how-it-works-tour-poster.jpg" controls playsinline preload="none" onplay="this.closest('.goal-card-video').classList.add('is-playing')" onpause="this.closest('.goal-card-video').classList.remove('is-playing')" onended="this.closest('.goal-card-video').classList.remove('is-playing')"></video>
+              <video class="goal-photo" src="/getguac-tour-card.mp4" poster="/getguac-tour-card-poster.jpg" controls playsinline preload="none" onplay="this.closest('.goal-card-video').classList.add('is-playing')" onpause="this.closest('.goal-card-video').classList.remove('is-playing')" onended="this.closest('.goal-card-video').classList.remove('is-playing')"></video>
               <span class="goal-story-box"><span class="goal-story-top"><span class="goal-icon" aria-hidden="true">▶️</span><small>Watch</small></span>
                 <h3>See GetGuac work in 4 minutes</h3><p>The full tour, narrated.</p></span>
             </div>

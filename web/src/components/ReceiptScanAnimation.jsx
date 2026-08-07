@@ -9,27 +9,20 @@
 // (number of docs in flight, 0 = hidden) is the stable contract.
 //
 // Visual: the detective avocado roves a magnifier over the document while a
-// loader ring orbits and a green beam sweeps the page. It narrates a live
-// "reading…" dialogue in a speech bubble, and the fields it spots pop in as
-// coloured chips. The copy + chips + the scanned page shape switch on `variant`
-// (a receipt has the zigzag tear edge; a statement is a flat page). Single
-// mascot — art lives in /public/scan-mascots/scan-detective.png.
+// green beam sweeps the page, narrating progress in a speech bubble. The copy
+// and the page shape switch on `variant` (a receipt has the zigzag tear edge;
+// a statement is flat). Single mascot — /public/scan-mascots/scan-detective.png.
+//
+// 🔒 NOTHING HERE MAY SHOW A VALUE. It once displayed sample chips reading
+// "Walmart" and "$8.90" over a real scan in progress, which looked like a wrong
+// answer. The parse returns one JSON blob at the end, so no true value exists
+// while this is on screen. Values belong in the result, not the spinner.
 //
 // Mounts at the very top of the z-stack — beats toasts, modals, FABs. Self-hides
 // instantly when `count` drops to 0. Rendered via dangerouslySetInnerHTML so the
 // keyframes aren't HTML-escaped (matches the rest of the codebase's inline CSS).
 
 import { useEffect, useState } from 'react'
-
-// Chip slots are fixed (position + colour + reveal delay); each variant only
-// swaps the emoji + label so the layout stays tuned. Slot order: who · amount ·
-// date · tax/fee. Values are illustrative (like the homepage's 87 GuacScore).
-const CHIP_SLOTS = [
-  { t: 150, x: 250, bg: '#EEF4FF', bd: '#9DBCF5', c: '#2563EB', d: '0.4s' },
-  { t: 192, x: 256, bg: '#FEF6E7', bd: '#F4C766', c: '#B45309', d: '1s' },
-  { t: 234, x: 252, bg: '#F3ECFF', bd: '#C9AEF7', c: '#7C3AED', d: '1.6s' },
-  { t: 276, x: 246, bg: '#FCE9F1', bd: '#F2A9C8', c: '#BE185D', d: '2.2s' },
-]
 
 // The detective narrates as it scans. Single voice. Smashlist voice ("smashed
 // it in"), no competitor vocab.
@@ -39,19 +32,24 @@ const VARIANTS = {
     status: 'Guac-AI is reading your receipt',
     noun: 'receipts',
     zigzag: true,
+    // 🔴 NO INVENTED VALUES HERE. These used to read "Store spotted: Walmart",
+    // "$8.90 total", "Tax $0.32" — placeholder numbers shown over somebody's
+    // real receipt while it was still parsing. Someone scanning a Costco
+    // receipt saw Walmart and $8.90 and reasonably concluded it had got it
+    // wrong, at the exact moment you want them confident.
+    //
+    // Real values are impossible here anyway: parseReceiptFromFile makes ONE
+    // Gemini call and returns a single JSON blob at the end — there is no
+    // streaming and no partial output, so nothing true exists until it lands.
+    // The real store and total appear a moment later in the result panel,
+    // which is the honest place for them.
     dialogue: [
-      'Fresh receipt — magnifier out 🔍',
-      'Store spotted: Walmart 🏪',
-      'Date reads 06/22 📅',
-      'Totting up the line items…',
-      'Tax sorted — $0.32 🧾',
-      '$8.90 total — smashed it in! 🥑',
-    ],
-    chips: [
-      { e: '🏪', txt: 'Walmart' },
-      { e: '💲', txt: '$8.90' },
-      { e: '📅', txt: '06/22' },
-      { e: '🧾', txt: 'Tax $0.32' },
+      'Magnifier out 🔍',
+      'Reading the header…',
+      'Finding the line items…',
+      'Working out the totals…',
+      'Sorting it into categories…',
+      'Almost there 🥑',
     ],
   },
   statement: {
@@ -59,19 +57,15 @@ const VARIANTS = {
     status: 'Guac-AI is reading your statement',
     noun: 'statements',
     zigzag: false,
+    // Same rule as above — no bank name, no amounts, no transaction counts
+    // until they are real.
     dialogue: [
-      'New statement — scanning the rows 🔍',
-      'Chase · Mar 1–31 📅',
+      'Scanning the rows 🔍',
+      'Reading the statement period…',
       'Sorting purchases, refunds & fees…',
       'Counting every transaction…',
-      'Fees flagged — $42 💸',
-      '142 transactions — smashed in! 🥑',
-    ],
-    chips: [
-      { e: '🏦', txt: 'Chase' },
-      { e: '💲', txt: '$3,204' },
-      { e: '📅', txt: 'Mar 1–31' },
-      { e: '💸', txt: 'Fees $42' },
+      'Checking for hidden fees…',
+      'Almost there 🥑',
     ],
   },
 }
@@ -100,7 +94,6 @@ export default function ReceiptScanAnimation({ count = 0, variant = 'receipt' })
       <div className="absolute inset-0 bg-white/75 backdrop-blur-md" />
 
       <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes ggScanSpin { to { transform: rotate(360deg); } }
         @keyframes ggBeamDrop { 0% { transform: translateY(-30px); opacity: 0; } 14% { opacity: 1; } 86% { opacity: 1; } 100% { transform: translateY(168px); opacity: 0; } }
         @keyframes ggMagScan  { 0% { transform: translate(0,0) rotate(-5deg); } 25% { transform: translate(26px,20px) rotate(3deg); } 50% { transform: translate(6px,52px) rotate(7deg); } 75% { transform: translate(-12px,24px) rotate(-2deg); } 100% { transform: translate(0,0) rotate(-5deg); } }
         @keyframes ggPopIn    { 0% { opacity: 0; transform: scale(0.62) translateY(9px); } 58% { opacity: 1; transform: scale(1.06) translateY(0); } 100% { opacity: 1; transform: scale(1); } }
@@ -129,11 +122,6 @@ export default function ReceiptScanAnimation({ count = 0, variant = 'receipt' })
 
         {/* ===== animation stage ===== */}
         <div style={{ position: 'relative', width: 354, height: 372 }}>
-          {/* orbit / loader ring */}
-          <div style={{ position: 'absolute', left: '50%', top: 198, transform: 'translate(-50%,-50%)', width: 250, height: 250, borderRadius: '50%', border: '4px solid rgba(20,83,45,0.06)' }} />
-          <div style={{ position: 'absolute', left: '50%', top: 198, transform: 'translate(-50%,-50%)', width: 250, height: 250, borderRadius: '50%', border: '4px solid transparent', borderTopColor: '#84CC16', borderRightColor: '#A3E635', animation: 'ggScanSpin 3.4s linear infinite' }} />
-          <div style={{ position: 'absolute', left: '50%', top: 198, transform: 'translate(-50%,-50%)', width: 196, height: 196, borderRadius: '50%', border: '3px dashed rgba(101,163,13,0.18)', animation: 'ggScanSpin 9s linear infinite reverse' }} />
-
           {/* document being scanned — receipt has a torn zigzag edge, statement is flat */}
           <div style={{ position: 'absolute', left: '50%', top: 116, transform: 'translateX(-50%) rotate(-5deg)', width: 132, height: 166, background: '#FFFFFF', boxShadow: '0 22px 38px -18px rgba(20,40,28,0.4)', overflow: 'hidden', borderRadius: cfg.zigzag ? 0 : 6, clipPath: cfg.zigzag ? 'polygon(0 0, 132px 0, 132px 154px, 110px 162px, 88px 154px, 66px 162px, 44px 154px, 22px 162px, 0 154px)' : 'none', animation: 'ggFloatY 4s ease-in-out infinite' }}>
             <div style={{ padding: '13px 12px' }}>
@@ -185,15 +173,6 @@ export default function ReceiptScanAnimation({ count = 0, variant = 'receipt' })
             <div style={{ position: 'absolute', left: 20, bottom: -8, width: 16, height: 16, background: '#fff', borderRight: '1.5px solid rgba(20,83,45,0.16)', borderBottom: '1.5px solid rgba(20,83,45,0.16)', transform: 'rotate(45deg)' }} />
           </div>
 
-          {/* detected field chips */}
-          {CHIP_SLOTS.map((slot, k) => {
-            const chip = cfg.chips[k]
-            return (
-              <div key={k} style={{ position: 'absolute', left: slot.x, top: slot.t, zIndex: 7, display: 'inline-flex', alignItems: 'center', gap: 5, background: slot.bg, border: `1.5px solid ${slot.bd}`, color: slot.c, borderRadius: 999, padding: '5px 11px 5px 9px', fontSize: 11, fontWeight: 800, boxShadow: '0 8px 16px -10px rgba(20,40,28,0.4)', whiteSpace: 'nowrap', animation: `ggPopIn 0.5s cubic-bezier(.34,1.56,.64,1) ${slot.d} both` }}>
-                <span style={{ fontSize: 12 }}>{chip.e}</span>{chip.txt}
-              </div>
-            )
-          })}
         </div>
 
         {/* ===== status + progress ===== */}

@@ -71,8 +71,19 @@ class _InviteScreenState extends State<InviteScreen> {
     }
   }
 
+  // 🔴 WAS https://getguac.app/?ref=$_code — and that link no longer works.
+  // The ?ref= param is read by <ReferralCapture>, which used to sit on the
+  // homepage but is now mounted ONLY on /register: the standalone homepage
+  // that shipped 2026-08-07 does not include it, and /join (the demo_3 port)
+  // never did. So a shared homepage link silently dropped the code.
+  //
+  // The link now points at /join — the real landing page, the one carrying the
+  // pixel and the click counters, so referral traffic is measurable — and the
+  // CODE IS SPELLED OUT IN THE MESSAGE TEXT rather than trusted to a query
+  // param surviving the trip. A friend can read it and type it into the
+  // referral box even if the link is stripped by a messaging app.
   String get _shareUrl =>
-      _code == null ? '' : 'https://getguac.app/?ref=$_code';
+      _code == null ? '' : 'https://getguac.app/join?ref=$_code';
 
   Future<void> _copy(String text, String label) async {
     await Clipboard.setData(ClipboardData(text: text));

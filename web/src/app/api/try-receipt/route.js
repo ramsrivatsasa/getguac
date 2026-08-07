@@ -48,6 +48,11 @@ export async function POST(request) {
       date: parsed.date || null,
       total_amount: Number(parsed.total_amount || 0),
       tax_paid: Number(parsed.tax_paid || 0),
+      // 🔑 The engine sets this (parse-receipt-engine.js:193) and the prompt is
+      // explicit: "for returns, all money is negative AND is_return true". It
+      // was NOT being passed on, so the trial rendered a refund as
+      // "TOTAL SPEND $-6.50" — the model had it right and this route lost it.
+      is_return: Boolean(parsed.is_return),
       payment_method: parsed.payment_method || null,
       payment_last4: parsed.payment_last4 || null,
       category: parsed.category || null,

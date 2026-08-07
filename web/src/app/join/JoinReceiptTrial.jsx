@@ -47,6 +47,32 @@ async function prepareTrialUpload(file) {
   }
 }
 
+// Money, formatted so a refund reads as one. `$${n.toFixed(2)}` produces the
+// malformed "$-6.50" for any negative — which is exactly what a Cinemark refund
+// rendered as. Negatives get the sign OUTSIDE the symbol: −$6.50.
+const money = (n) => {
+  const v = Number(n || 0)
+  return v < 0 ? `−$${Math.abs(v).toFixed(2)}` : `$${v.toFixed(2)}`
+}
+
+// A receipt is a refund if the engine says so, or if the money is negative.
+// Both are checked because is_return only started being passed through the
+// trial API today — an older cached result would only have the negative.
+const isRefund = (r) => Boolean(r?.is_return) || Number(r?.total_amount || 0) < 0
+
+// Things worth telling the visitor about rather than rendering as a bare
+// number. A refund shown under "TOTAL SPEND" reads as a parsing failure; a
+// $0.00 total looks like nothing happened.
+function anomaliesFor(r) {
+  const out = []
+  if (!r) return out
+  if (isRefund(r)) out.push({ tone: 'info', text: `This looks like a refund or return — the amounts are negative, which is why you see ${money(r.total_amount)}.` })
+  if (Number(r.total_amount || 0) === 0) out.push({ tone: 'warn', text: 'We could not read a total on this one. The store and items still came through — a brighter, straighter photo usually fixes the total.' })
+  if (!(r.items || []).length) out.push({ tone: 'warn', text: 'No line items were readable on this receipt, so only the header details came through.' })
+  if (!r.date) out.push({ tone: 'info', text: 'No date was printed clearly, so this one is undated.' })
+  return out
+}
+
 // One of the three figures under the result headline (items read / sales tax /
 // categories). Lived further down JoinClient.jsx, outside the extracted range.
 function ResultStat({ value, label }) {
@@ -75,6 +101,9 @@ export default function JoinReceiptTrial({ startSignal = 0 }) {
   const [trialError, setTrialError] = useState('')
   const [busy, setBusy] = useState('')
   const [err, setErr] = useState('')
+  // Shown only when navigator.share is unavailable (desktop). sms: and mailto:
+  // actually open the Messages / Mail app, which a clipboard copy never did.
+  const [trialShareChoices, setTrialShareChoices] = useState(false)
   const trialMobileInputRef = useRef(null)
   const trialGalleryInputRef = useRef(null)
   const trialFileInputRef = useRef(null)
@@ -175,26 +204,47 @@ export default function JoinReceiptTrial({ startSignal = 0 }) {
     setTrialDeleted(true)
   }
 
+  // 🔴 WAS /join_demo — which 404s in production. Every "refer a friend" share
+  // has been sending people to a dead page. /join is the real landing page, and
+  // it is the one carrying the pixel and the click counters, so referral traffic
+  // is now measurable too.
+  // 🔴 Pinned to production, NOT window.location.origin. A share sent from a
+  // preview or localhost would hand the recipient a dead link — the destination
+  // of a shared link must not depend on where the sharer happened to be.
+  const SHARE_URL = 'https://getguac.app/join'
+  const SHARE_TEXT = 'One photo of a receipt → every item, the tax, and the date, sorted in about a minute. That is GetGuac. Free, and it never asks for your bank login.'
+
   async function shareTrialPage(mode) {
     trackClick(mode === 'refer' ? 'join-trial-refer' : 'join-trial-save')
-    const url = `${window.location.origin}/join_demo`
     const referring = mode === 'refer'
     const shareData = {
       title: 'Try GetGuac',
-      text: referring
-        ? 'Try a receipt with GetGuac—it turns one photo into organized spending.'
-        : 'Save GetGuac and come back when you are ready.',
-      url,
+      text: referring ? SHARE_TEXT : 'Save GetGuac and come back when you are ready.',
+      url: SHARE_URL,
     }
     try {
+      // navigator.share opens the OS sheet — Messages, Mail, WhatsApp — and is
+      // the right answer on a phone. It does NOT exist on most desktop
+      // browsers, where this used to fall through to a silent clipboard copy
+      // that felt like nothing had happened.
       if (navigator.share) {
         await navigator.share(shareData)
-        setTrialShareMessage(referring ? 'Thanks for sharing GetGuac!' : 'GetGuac is ready in your share/save menu.')
-      } else {
-        await navigator.clipboard.writeText(url)
-        setTrialShareMessage(referring ? 'Referral link copied.' : 'Link copied—bookmark this page to save it.')
+        setTrialShareMessage(referring ? 'Thanks for sharing GetGuac!' : 'GetGuac is ready in your share menu.')
+        window.setTimeout(() => setTrialShareMessage(''), 3500)
+        return
       }
-      window.setTimeout(() => setTrialShareMessage(''), 3500)
+      if (referring) {
+        // No share sheet: offer the two things that DO open something.
+        setTrialShareChoices(true)
+        return
+      }
+      // Saving, no share sheet. A page cannot add its own bookmark — every
+      // browser removed that on purpose — so copy the link and say the one
+      // thing that actually works.
+      await navigator.clipboard.writeText(SHARE_URL)
+      const mac = /Mac|iPhone|iPad/.test(navigator.platform || '')
+      setTrialShareMessage(`Link copied — press ${mac ? '⌘' : 'Ctrl'}+D to bookmark it.`)
+      window.setTimeout(() => setTrialShareMessage(''), 5000)
     } catch (error) {
       if (error?.name !== 'AbortError') setTrialShareMessage('Copy this page link to save or share GetGuac.')
     }
@@ -354,23 +404,66 @@ export default function JoinReceiptTrial({ startSignal = 0 }) {
         <div role="dialog" aria-modal="true" aria-labelledby="trial-result-title" className="fixed inset-0 z-[110] overflow-y-auto bg-[#07110C]/80 p-0 backdrop-blur-sm sm:p-4">
           <div className="mx-auto min-h-[100dvh] w-full max-w-lg overflow-hidden bg-[#F8FBF4] shadow-2xl sm:my-4 sm:min-h-0 sm:rounded-3xl">
             <div className="bg-gradient-to-br from-[#315F17] to-[#65A30D] px-6 py-7 text-white">
-              <div className="flex items-center gap-2 text-sm font-extrabold uppercase tracking-wider text-lime-100"><Sparkles size={17} aria-hidden /> Guac-AI found it</div>
+              <div className="flex items-center gap-2 text-sm font-extrabold uppercase tracking-wider text-lime-100"><Sparkles size={17} aria-hidden /> {isRefund(trialResult) ? 'Guac-AI read your refund' : 'Guac-AI found it'}</div>
               <h2 id="trial-result-title" className="mt-3 text-3xl font-black">Nice, {tryName.trim()}.</h2>
-              <p className="mt-1 text-lime-50">One photo became organized spending—without typing a line.</p>
+              <p className="mt-1 text-lime-50">{isRefund(trialResult)
+                ? 'A refund, read and filed — money coming back to you.'
+                : 'One photo became organized spending—without typing a line.'}</p>
               <div className="mt-5 flex items-end justify-between gap-4 rounded-2xl bg-white/15 p-4 ring-1 ring-white/20">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-wider text-lime-100">{trialResult.store_name}</p>
                   <p className="mt-1 text-sm text-white/80">{trialResult.date || 'Date ready to confirm'}</p>
                 </div>
-                <p className="text-3xl font-black">${Number(trialResult.total_amount || 0).toFixed(2)}</p>
+                <p className="text-3xl font-black">{money(trialResult.total_amount)}</p>
               </div>
             </div>
 
             <div className="space-y-4 p-5 sm:p-6">
+              {/* ANOMALY MESSAGES. A refund rendered as "TOTAL SPEND $-6.50"
+                  reads as a parsing failure when the model was actually right —
+                  it detected the return and returned negative amounts, exactly
+                  as the prompt instructs. Say what happened instead of leaving
+                  the visitor to interpret a negative number. Same for a total
+                  we could not read, or a receipt with no legible line items. */}
+              {anomaliesFor(trialResult).map((a, k) => (
+                <div key={k} className={`flex gap-2 rounded-2xl p-3 text-sm leading-5 ${a.tone === 'warn' ? 'bg-amber-50 text-amber-900 ring-1 ring-amber-200' : 'bg-sky-50 text-sky-900 ring-1 ring-sky-200'}`}>
+                  <span aria-hidden className="shrink-0">{a.tone === 'warn' ? '⚠️' : 'ℹ️'}</span>
+                  <span>{a.text}</span>
+                </div>
+              ))}
+
+              {/* THE ASK, MOVED UP. It used to live at the very bottom of this
+                  panel, below the "what Guac does every time" copy and the saved-
+                  receipts list. Over 90 days, 11 people reached this result and 5
+                  pressed a tab — but join-trial-signup, join-trial-save and
+                  join-trial-refer were ALL zero. Those three sit in that buried
+                  block; the tabs sit high. The likeliest read is that nobody
+                  scrolled that far, not that they saw the ask and declined.
+                  The moment of most intent is right here, immediately after the
+                  total lands. So the ask is here now, and the buried buttons stay
+                  where they are as a second chance.
+
+                  🔒 COPY IS DELIBERATELY NOT "save this receipt". The trial keeps
+                  results in localStorage only; registering does NOT import them.
+                  Promising that would be false the moment someone signs up. */}
+              <div className="rounded-2xl border-2 border-[#65A30D]/30 bg-white p-4 text-center">
+                <p className="text-[15px] font-extrabold leading-snug text-[#15281C]">
+                  That took about a minute. Do it for every receipt.
+                </p>
+                <p className="mt-1 text-xs text-gray-500">Free forever · no card · delete anytime</p>
+                <Link
+                  href="/register"
+                  onClick={() => trackClick('join-trial-signup')}
+                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#65A30D] px-4 py-3 font-extrabold text-white no-underline"
+                >
+                  <Sparkles size={17} aria-hidden /> Create your free account
+                </Link>
+              </div>
+
               <div className="grid grid-cols-3 gap-2">
-                <ResultStat value={trialResult.items?.length || 0} label="items read" />
-                <ResultStat value={`$${Number(trialResult.tax_paid || 0).toFixed(2)}`} label="sales tax" />
-                <ResultStat value={new Set((trialResult.items || []).map((item) => item.category).filter(Boolean)).size || (trialResult.category ? 1 : 0)} label="categories" />
+                <ResultStat value={trialResult.items?.length || 0} label={(trialResult.items?.length || 0) === 1 ? "item read" : "items read"} />
+                <ResultStat value={money(trialResult.tax_paid)} label="sales tax" />
+                <ResultStat value={new Set((trialResult.items || []).map((item) => item.category).filter(Boolean)).size || (trialResult.category ? 1 : 0)} label={(new Set((trialResult.items || []).map((item) => item.category).filter(Boolean)).size || (trialResult.category ? 1 : 0)) === 1 ? "category" : "categories"} />
               </div>
               <p className="text-center text-sm font-bold text-[#4D7C0F]">{trialReceipts.length} receipt{trialReceipts.length === 1 ? '' : 's'} processed for {tryName.trim()}</p>
 
@@ -405,7 +498,7 @@ export default function JoinReceiptTrial({ startSignal = 0 }) {
                     <li key={`${item.item_name}-${index}`} className="flex items-center gap-3 py-2.5">
                       <span className="flex h-7 w-7 flex-none items-center justify-center rounded-lg bg-lime-50 text-xs font-black text-lime-700">{Number(item.qty || 1)}</span>
                       <span className="min-w-0 flex-1 truncate text-sm font-semibold text-gray-700">{item.item_name || 'Receipt item'}</span>
-                      <span className="text-sm font-extrabold text-[#15281C]">${Number(item.price || 0).toFixed(2)}</span>
+                      <span className="text-sm font-extrabold text-[#15281C]">{money(item.price)}</span>
                     </li>
                   ))}
                 </ul>
@@ -423,7 +516,7 @@ export default function JoinReceiptTrial({ startSignal = 0 }) {
                     <li key={`${item.item_name}-smash-${index}`} className="flex items-center gap-3 rounded-xl bg-[#F6F8F3] p-3">
                       <span className="flex h-8 w-8 flex-none items-center justify-center rounded-full border-2 border-lime-300 bg-white text-lime-700"><Check size={16} aria-hidden /></span>
                       <span className="min-w-0 flex-1 truncate text-sm font-bold text-gray-700">{item.item_name || 'Receipt item'}</span>
-                      <span className="text-sm font-extrabold text-[#315F17]">${Number(item.price || 0).toFixed(2)}</span>
+                      <span className="text-sm font-extrabold text-[#315F17]">{money(item.price)}</span>
                     </li>
                   ))}
                 </ul>
@@ -444,11 +537,11 @@ export default function JoinReceiptTrial({ startSignal = 0 }) {
                       <div className="h-2 overflow-hidden rounded-full bg-gray-100"><div className={`h-full rounded-full ${index % 2 ? 'bg-amber-400' : 'bg-[#65A30D]'}`} style={{ width: `${percentage}%` }} /></div>
                     </div>
                   })}
-                  {!((trialResult.items || []).some((item) => item.category)) && <div className="rounded-xl bg-lime-50 p-4 text-sm font-semibold text-lime-900">${Number(trialResult.total_amount || 0).toFixed(2)} organized from {trialResult.items?.length || 0} items at {trialResult.store_name || 'this store'}.</div>}
+                  {!((trialResult.items || []).some((item) => item.category)) && <div className="rounded-xl bg-lime-50 p-4 text-sm font-semibold text-lime-900">{money(trialResult.total_amount)} organized from {trialResult.items?.length || 0} {(trialResult.items?.length || 0) === 1 ? "item" : "items"} at {trialResult.store_name || 'this store'}.</div>}
                 </div>
                 <div className="mt-4 grid grid-cols-2 gap-2 border-t border-gray-100 pt-4 text-center">
-                  <div><p className="text-xl font-black text-[#315F17]">${Number(trialResult.total_amount || 0).toFixed(2)}</p><p className="text-[10px] font-bold uppercase text-gray-400">Total spend</p></div>
-                  <div><p className="text-xl font-black text-[#315F17]">${Number(trialResult.tax_paid || 0).toFixed(2)}</p><p className="text-[10px] font-bold uppercase text-gray-400">Tax tracked</p></div>
+                  <div><p className="text-xl font-black text-[#315F17]">{money(trialResult.total_amount)}</p><p className="text-[10px] font-bold uppercase text-gray-400">{isRefund(trialResult) ? "Refunded" : "Total spend"}</p></div>
+                  <div><p className="text-xl font-black text-[#315F17]">{money(trialResult.tax_paid)}</p><p className="text-[10px] font-bold uppercase text-gray-400">Tax tracked</p></div>
                 </div>
               </div>}
 
@@ -464,7 +557,7 @@ export default function JoinReceiptTrial({ startSignal = 0 }) {
                     {trialReceipts.slice(-3).reverse().map((receipt) => (
                       <div key={receipt.trial_id} className="flex items-center justify-between gap-3 rounded-xl bg-gray-50 px-3 py-2 text-sm">
                         <span className="min-w-0 truncate font-semibold text-gray-700">{receipt.store_name || 'Receipt'}</span>
-                        <span className="font-extrabold text-[#15281C]">${Number(receipt.total_amount || 0).toFixed(2)}</span>
+                        <span className="font-extrabold text-[#15281C]">{money(receipt.total_amount)}</span>
                       </div>
                     ))}
                   </div>
@@ -482,6 +575,31 @@ export default function JoinReceiptTrial({ startSignal = 0 }) {
                     <Share2 size={17} aria-hidden /> Refer a friend
                   </button>
                 </div>
+                {/* Desktop fallback. navigator.share does not exist in most
+                    desktop browsers, so "Refer a friend" used to quietly copy a
+                    link and look broken. These two DO open something: sms: hands
+                    off to Messages, mailto: to the mail client. */}
+                {trialShareChoices && (
+                  <div className="mt-3 rounded-xl bg-emerald-50 p-3">
+                    <p className="text-xs font-bold text-emerald-900">Send it how you like:</p>
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                      <a
+                        href={`sms:?&body=${encodeURIComponent(`${SHARE_TEXT} ${SHARE_URL}`)}`}
+                        onClick={() => setTrialShareChoices(false)}
+                        className="flex items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm font-extrabold text-emerald-800 no-underline"
+                      >
+                        <Share2 size={15} aria-hidden /> Text it
+                      </a>
+                      <a
+                        href={`mailto:?subject=${encodeURIComponent('Try GetGuac')}&body=${encodeURIComponent(`${SHARE_TEXT}\n\n${SHARE_URL}`)}`}
+                        onClick={() => setTrialShareChoices(false)}
+                        className="flex items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm font-extrabold text-emerald-800 no-underline"
+                      >
+                        <Share2 size={15} aria-hidden /> Email it
+                      </a>
+                    </div>
+                  </div>
+                )}
                 {trialShareMessage && <p role="status" className="mt-2 text-xs font-bold text-[#4D7C0F]">{trialShareMessage}</p>}
               </div>
 

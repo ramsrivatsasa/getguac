@@ -34,11 +34,11 @@ export default async function Home() {
               GetGuac reads your receipts and bank statements, scores every purchase, sniffs out hidden fees, and shows you exactly where your money gets eaten. Money&apos;s wingman. Keep your guac.
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginBottom: 16 }}>
-              <Link href="/register" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#65A30D', color: '#fff', fontWeight: 700, fontSize: 16, padding: '15px 26px', borderRadius: 999, textDecoration: 'none', boxShadow: '0 10px 24px -10px rgba(101,163,13,0.6)' }}>🥑 Meet your sidekick</Link>
-              {/* Try-before-you-register: /login?demo=1 prefills the shared
-                  demo account (captcha-gated) so the curious can poke around
-                  real pre-loaded data without creating anything. */}
-              <Link href="/login?demo=1" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#fff', color: '#1A2E22', fontWeight: 700, fontSize: 16, padding: '15px 26px', borderRadius: 999, textDecoration: 'none', border: '1.5px solid rgba(20,83,45,0.16)' }}>🔎 Try the demo</Link>
+              <Link href="/join?try=receipt&from=home" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#65A30D', color: '#fff', fontWeight: 700, fontSize: 16, padding: '15px 26px', borderRadius: 999, textDecoration: 'none', boxShadow: '0 10px 24px -10px rgba(101,163,13,0.6)' }}>📸 Try 1 receipt</Link>
+              <Link href="/register" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#fff', color: '#1A2E22', fontWeight: 700, fontSize: 16, padding: '15px 26px', borderRadius: 999, textDecoration: 'none', border: '1.5px solid rgba(20,83,45,0.16)' }}>🥑 Meet your sidekick</Link>
+            </div>
+            <div style={{ margin: '-2px 0 22px', fontSize: 14, color: '#56655B' }}>
+              No account needed. We read it, show the result, and let you delete the trial data. <Link href="/login?demo=1" style={{ color: '#4D7C0F', fontWeight: 700, textDecoration: 'none' }}>Or explore the full dashboard →</Link>
             </div>
             {/* Store badges — both live. */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 24 }}>
@@ -199,6 +199,7 @@ export default async function Home() {
                 star ratings or savings figures on this page. */}
             <p style={{ fontSize: 18, lineHeight: 1.5, color: 'rgba(255,255,255,0.9)', margin: '0 auto 30px', maxWidth: 520, position: 'relative' }}>Save money, track spending, and never miss a refund. Free forever — no card, no fees, no spam.</p>
             <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap', position: 'relative' }}>
+              <Link href="/join?try=receipt&from=home" style={{ background: '#fff', color: '#15281C', fontWeight: 700, fontSize: 16, padding: '16px 30px', borderRadius: 999, textDecoration: 'none' }}>📸 Try 1 receipt</Link>
               <Link href="/register" style={{ background: '#fff', color: '#15281C', fontWeight: 700, fontSize: 16, padding: '16px 30px', borderRadius: 999, textDecoration: 'none' }}>Get Started Free</Link>
               <Link href="/login?demo=1" style={{ background: 'rgba(255,255,255,0.18)', color: '#fff', fontWeight: 700, fontSize: 16, padding: '16px 30px', borderRadius: 999, textDecoration: 'none', border: '1px solid rgba(255,255,255,0.4)' }}>🔎 Try the demo</Link>
               <Link href="/login" style={{ background: 'rgba(255,255,255,0.18)', color: '#fff', fontWeight: 700, fontSize: 16, padding: '16px 30px', borderRadius: 999, textDecoration: 'none', border: '1px solid rgba(255,255,255,0.4)' }}>Sign in</Link>

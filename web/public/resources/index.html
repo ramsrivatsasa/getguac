@@ -14,11 +14,11 @@
 <body>
 <header>
 <div class="wrap nav">
-<a class="brand" href="../index.html">
+<a class="brand" href="/">
 <i>🥑</i>GetGuac</a>
 <a href="#tools">Tools</a>
 <a href="#guides">Guides</a>
-<a href="../index.html#benefits">Stories</a>
+<a href="/#benefits">Stories</a>
 <a class="btn" href="https://getguac.app/join">Get started</a>
 </div>
 </header>
@@ -169,7 +169,7 @@
 <div class="wrap">
 <span>🥑 GetGuac · Your money’s wingman</span>
 <span>
-<a href="../index.html">Home</a> · <a href="https://getguac.app/security">Security</a> · <a href="https://getguac.app/contact">Contact</a>
+<a href="/">Home</a> · <a href="https://getguac.app/security">Security</a> · <a href="https://getguac.app/contact">Contact</a>
 </span>
 </div>
 </footer>
@@ -181,11 +181,11 @@
   const root = inGuide ? '../../' : '../';
   const cta = document.querySelector('.nav .btn');
   if (cta && !document.querySelector('.nav a[data-local-tour]')) {
-    cta.insertAdjacentHTML('beforebegin', `<a data-local-tour href="${root}how-it-works.html">How it works</a><a href="${root}sitemap.html">Sitemap</a>`);
+    cta.insertAdjacentHTML('beforebegin', `<a data-local-tour href="/how-it-works">How it works</a><a href="${root}sitemap.html">Sitemap</a>`);
   }
   const footerLinks = document.querySelector('.footer span:last-child');
   if (footerLinks && !footerLinks.querySelector('a[href$="sitemap.html"]')) {
-    footerLinks.insertAdjacentHTML('beforeend', ` · <a href="${root}how-it-works.html">How it works</a> · <a href="${root}sitemap.html">Sitemap</a>`);
+    footerLinks.insertAdjacentHTML('beforeend', ` · <a href="/how-it-works">How it works</a> · <a href="${root}sitemap.html">Sitemap</a>`);
   }
 })();
 

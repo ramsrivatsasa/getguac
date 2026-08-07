@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<meta name="description" content="See how GetGuac Steals finds current prices for the exact products you rebuy.">
+<link rel="stylesheet" href="goal-story.css">
+<title>Find a real Steal | GetGuac</title>
+</head>
+<body data-goal="steals">
+<div id="storyApp">
+</div>
+<!-- GOAL_STORY_INLINE START -->
+<script>
+const GOALS = {
+  organize: {
+    accent:'#76a5ff', soft:'#edf4ff', stage:'capture', eyebrow:'Organize every purchase',
+    title:'Leave checkout with less to remember.',
+    lede:'Maya snaps paper receipts and uses her free @getguac.app address for merchant accounts, store rewards and online shopping—keeping purchase mail out of her personal inbox.',
+    image:'../home/story-people/capture-blonde-produce-v1.webp', imageAlt:'Maya happily saving a grocery receipt with GetGuac', result:'2 ways in: photo + email',
+    beats:[['Before','Paper receipts disappeared, while store offers and rewards crowded her personal email.'],['The GetGuac moment','She snapped paper receipts and used her @getguac.app inbox for merchant signups, loyalty rewards and online orders.'],['After','Every purchase became searchable, reward messages stayed together and her personal inbox felt lighter.']],
+    proofTitle:'Two addresses. One smart inbox.', proofText:'Use your free @getguac.app address for stores and rewards. Send receipts to your +g address and Guac-AI auto-files the store, items, tax and total.',
+    checks:['Photo and email receipts together','A dedicated inbox for stores and rewards','Auto-file +g receipts in under 10 minutes'],
+    web:'../home/goals/web-receipts.webp', phone:'../home/goals/phone-receipts.webp', screenNote:'Receipt memory: saved'
+  },
+  understand: {
+    accent:'#8a7cf4', soft:'#f1efff', stage:'understand', eyebrow:'Understand where it went',
+    title:'End the “where did it go?” conversation.',
+    lede:'A $180 charge told Elena and Marcus almost nothing. GetGuac showed the groceries, household items and repeat spending hiding inside it.',
+    image:'../home/story-people/protect-couple-tablet.webp', imageAlt:'A couple understanding their purchases together', result:'The mystery total explained',
+    beats:[['Before','Their transaction list showed a merchant and a total—but not what they brought home.'],['The GetGuac moment','Guac-AI connected the receipt lines to categories, patterns and questions they could actually ask.'],['After','They discussed real choices instead of guessing where the money went.']],
+    proofTitle:'See what your money actually bought.', proofText:'Item-level context makes spending easier to explain and gives Guac-AI something real to reason from.',
+    checks:['Ask questions grounded in receipts','Spot categories and spending patterns','Compare trips using actual items'],
+    web:'../home/goals/web-guac-ai.webp', phone:'../home/goals/phone-guac-ai.webp', screenNote:'Guac-AI found the why'
+  },
+  recover: {
+    accent:'#f0b84a', soft:'#fff5dc', stage:'protect', eyebrow:'Recover money still yours',
+    title:'Bring money owed to you back home.',
+    lede:'Nina nearly missed a return deadline. GetGuac kept the purchase visible while there was still time to act—and followed the refund afterward.',
+    image:'../home/campaign-story/protect-return-v2.webp', imageAlt:'Nina checking a return window before it expires', result:'5 days left to act',
+    beats:[['Before','The product was still sitting at home while its return window quietly counted down.'],['The GetGuac moment','A reminder surfaced the purchase, policy and deadline while the choice was still hers.'],['After','She returned it on time and could watch for the money to land.']],
+    proofTitle:'Checkout is not the end of the purchase.', proofText:'Return windows, pending refunds and meaningful price changes stay visible after the shopping bag reaches home.',
+    checks:['Know when a return deadline is close','Follow money until the refund lands','Keep the proof of purchase ready'],
+    web:'../home/goals/web-returns.webp', phone:'../home/goals/phone-returns.webp', screenNote:'Return window protected'
+  },
+  'reduce-waste': {
+    accent:'#f48c78', soft:'#fff0ec', stage:'remember', eyebrow:'Reduce quiet waste',
+    title:'Stop paying for what life moved past.',
+    lede:'Luis and Sofia found subscriptions they barely remembered and a monthly charge that had quietly increased. Seeing them together made the decision easy.',
+    image:'../home/story-people/guide-subscription-hispanic-couple-v1.webp', imageAlt:'A couple reviewing subscriptions and household spending', result:'Two subscriptions reviewed',
+    beats:[['Before','Small recurring charges blended into a long statement and escaped attention.'],['The GetGuac moment','GetGuac grouped repeat merchants and showed which charges had changed or gone unused.'],['After','They kept what mattered and stopped paying for what no longer did.']],
+    proofTitle:'Bring quiet charges back into view.', proofText:'Forgotten subscriptions, unusual charges and avoidable fees become reviewable instead of invisible.',
+    checks:['Surface recurring subscriptions','Notice price increases and unusual charges','Review waste without checking every statement line'],
+    web:'../home/goals/web-subs.webp', phone:'../home/goals/phone-subs.webp', screenNote:'Recurring charge spotted'
+  },
+  prepare: {
+    accent:'#a78bf5', soft:'#f3efff', stage:'prepare', eyebrow:'Prepare the next trip',
+    title:'Shop together, even when you’re apart.',
+    lede:'Daniel and his daughter stopped rebuilding the list from memory. GetGuac used what came home before to make the next trip calmer, then let them share the list with friends and family.',
+    image:'../home/story-people/shop.webp', imageAlt:'A parent and child preparing for a smarter shopping trip', result:'Next trip ready',
+    beats:[['Before','They guessed what was running low and sometimes bought the same thing twice.'],['The GetGuac moment','Stash and Smashlist turned purchase history into a shared plan for the next trip.'],['After','Family or friends could add what they needed, and everyone shopped from the same list.']],
+    proofTitle:'Remember together before anyone leaves.', proofText:'Household memory becomes a smarter shared list—what may be running low, what can wait and what you already have.',
+    checks:['Reduce duplicate buying','Remember what may be running low','Share the shopping list with friends and family'],
+    web:'../home/goals/web-smashlist.webp', phone:'../home/goals/phone-smashlist.webp', screenNote:'Smashlist is ready'
+  },
+  learn: {
+    accent:'#93c95f', soft:'#eff8e7', stage:'learn', eyebrow:'Learn from every trip',
+    title:'Spend less on regret. More on real life.',
+    lede:'The Johnson family used quick Worth-It ratings to remember what genuinely helped—and what did not deserve another dollar next time.',
+    image:'../home/story-people/openai-hero-giggling-family-baby-v2.webp', imageAlt:'A happy family learning together from their purchases', result:'The next choice gets smarter',
+    beats:[['Before','A few disappointing purchases became forgotten mistakes instead of useful lessons.'],['The GetGuac moment','A quick Worth-It rating connected the receipt to how the purchase actually felt later.'],['After','Their next choice carried forward what worked—and left more room for moments together.']],
+    proofTitle:'Let every trip teach the next one.', proofText:'Worth-It ratings and shopping history help GetGuac learn which purchases delivered real value and which did not.',
+    checks:['Remember the buys you genuinely loved','Turn regret into better guidance','Make the next decision with real context'],
+    web:'../home/goals/web-worth-it.webp', phone:'../home/goals/phone-worth-it.webp', screenNote:'Worth-It verdict remembered'
+  },
+  inbox: {
+    accent:'#8fd35f', soft:'#eff9e8', stage:'capture', eyebrow:'A shopping inbox of your own',
+    title:'Shop online without crowding your real inbox.',
+    lede:'Avery gave stores a permanent @getguac.app address instead of her personal email. Rewards, promos and order receipts stayed useful without taking over her day.',
+    image:'../home/campaign-story/subscription-renter-v2.webp', imageAlt:'Avery using a private GetGuac shopping inbox', result:'Two addresses. One smart inbox.',
+    beats:[['Before','Merchant mail, loyalty messages and receipts competed with family and work email.'],['The GetGuac moment','She used her free @getguac.app address for stores and sent receipt mail to the +g version for automatic filing.'],['After','Her personal inbox stayed quiet while every online purchase still reached GetGuac.']],
+    proofTitle:'A real mailbox built for shopping.', proofText:'Read, reply and send from your GetGuac inbox. Mail addressed to +g is auto-filed and parsed within ten minutes.',
+    checks:['A permanent free @getguac.app address','A +g address for receipt auto-processing','Merchant and reward mail outside your personal inbox'],
+    web:'../home/goals/web-receipts.webp', phone:'../home/goals/phone-receipts.webp', screenNote:'Shopping mail contained'
+  },
+  read: {
+    accent:'#79c94b', soft:'#eff9e8', stage:'capture', eyebrow:'Guac-AI reads the fine print',
+    title:'Turn one photo into searchable memory.',
+    lede:'Jordan stopped typing totals into notes. In seconds, Guac-AI pulled the store, date, tax, payment details and every line item into one dependable record.',
+    image:'../home/campaign-story/capture-kitchen-v2.webp', imageAlt:'Jordan watching Guac-AI read a receipt', result:'Receipt organized in 5–15 seconds',
+    beats:[['Before','The paper total said what left the bank, but not what came home.'],['The GetGuac moment','Guac-AI read the receipt image and extracted its items, prices, taxes and policies.'],['After','A faded piece of paper became searchable household memory.']],
+    proofTitle:'Every useful detail, without the typing.', proofText:'Item names, quantities, prices, tax and return context move from the receipt into the app together.',
+    checks:['Store, date, total and payment details','Searchable itemized line items','Return-policy context when available'],
+    web:'../home/goals/web-organized.webp', phone:'../home/goals/phone-organized.webp', screenNote:'5–15 seconds to clarity'
+  },
+  duplicates: {
+    accent:'#f0b84a', soft:'#fff5dc', stage:'remember', eyebrow:'Duplicate receipts removed',
+    title:'Remove duplicate receipts automatically.',
+    lede:'The same dinner appeared three times: in a receipt photo, a receipt email and a bank statement. GetGuac matched those records and removed the duplicate entries before they inflated the spending total.',
+    image:'../home/campaign-story/understand-couple-v2.webp', imageAlt:'A couple reviewing how GetGuac detected duplicate receipts', result:'Duplicate receipts detected and removed',
+    beats:[['Before','The same dinner receipt arrived through several channels and made the spending history look higher than it was.'],['The GetGuac moment','GetGuac compared the store, date and total, recognized the matching receipts and removed the duplicates.'],['After','The spending total stayed accurate without asking the couple to find and delete extra records.']],
+    proofTitle:'The same receipt is not added twice.', proofText:'Receipt photos, forwarded emails and statement entries are compared as they arrive and during later duplicate checks.',
+    checks:['Camera-to-camera duplicate checks','Email and photo matching','Normalized merchant names and totals'],
+    web:'../home/goals/web-receipts.webp', phone:'../home/goals/phone-receipts.webp', screenNote:'Duplicate receipt removed. Total corrected.'
+  },
+  categories: {
+    accent:'#68b9ee', soft:'#eaf7ff', stage:'understand', eyebrow:'Rules and Guac-AI organize it',
+    title:'Let spending sort itself.',
+    lede:'Camila wanted categories that matched real life—not a generic spreadsheet. GetGuac sorted the obvious purchases and let her add the labels her household actually uses.',
+    image:'../home/story-people/capture-phone.webp', imageAlt:'Camila seeing purchases sort into useful categories', result:'12 built-in categories plus her own',
+    beats:[['Before','Unsorted purchases made monthly patterns difficult to see.'],['The GetGuac moment','Rules and AI handled groceries, gas and dining while custom categories covered the rest.'],['After','Her reports reflected the way her household really thinks about money.']],
+    proofTitle:'Useful categories, not busywork.', proofText:'Auto-categorize handles the clear matches in bulk, while every result remains easy to confirm or change.',
+    checks:['Twelve practical categories out of the box','Custom labels, colors and emoji','Bulk categorization with human control'],
+    web:'../home/goals/web-organized.webp', phone:'../home/goals/phone-organized.webp', screenNote:'Spending sorted in seconds'
+  },
+  reports: {
+    accent:'#7284ef', soft:'#eef1ff', stage:'understand', eyebrow:'Dashboard and reports',
+    title:'See the whole month, not one total.',
+    lede:'The Lewis family stopped reading their month as a pile of bank rows. GetGuac grouped stores correctly, separated tax and surfaced the items they bought again.',
+    image:'../home/story-people/family-tablet.webp', imageAlt:'A family seeing their month clearly in GetGuac reports', result:'$2,291 across 62 receipts',
+    beats:[['Before','Merchant names and totals made the month feel fragmented.'],['The GetGuac moment','Reports connected stores, categories, taxes and repeat items across every receipt.'],['After','The family could explain the month and decide what to change next.']],
+    proofTitle:'A month that tells a coherent story.', proofText:'Store-name variants become one merchant, time filters stay simple and repeat purchases reveal price drift.',
+    checks:['Spending by store and category','One month through all-time views','Repeat-purchase and tax context'],
+    web:'../home/goals/web-bank.webp', phone:'../home/goals/phone-bank.webp', screenNote:'The month finally explained'
+  },
+  steals: {
+    accent:'#f0b84a', soft:'#fff5dc', stage:'shop', eyebrow:'Live price hunting',
+    title:'Know when the better price is real.',
+    lede:'Elaine and Robert searched the exact brand and size they already rebuy. Steals compared live store prices instead of making them guess from an old promotion.',
+    image:'../home/campaign-story/price-drop-senior-v2.webp', imageAlt:'A couple finding a better live price with GetGuac Steals', result:'$38 less across two watched items',
+    beats:[['Before','A sale badge did not prove the price was actually better.'],['The GetGuac moment','Steals used receipt detail to compare the same brand, count and size across stores.'],['After','They bought with evidence instead of urgency.']],
+    proofTitle:'Compare the product you actually buy.', proofText:'Live searches start from receipt history and keep size, count and flavor comparisons honest.',
+    checks:['Current prices across real stores','Exact brand and size context','Fast results for popular searches'],
+    web:'../home/goals/web-steals.webp', phone:'../home/goals/phone-steals.webp', screenNote:'A real Steal found'
+  },
+  stash: {
+    accent:'#68b9ee', soft:'#eaf7ff', stage:'remember', eyebrow:'A living product library',
+    title:'Remember what is already at home.',
+    lede:'Three roommates stopped buying duplicates because Stash quietly built a history of what had come home, what it cost and when it usually needed replacing.',
+    image:'../home/campaign-story/roommates-plan-v2.webp', imageAlt:'Housemates using GetGuac Stash to remember what is already home', result:'39 household items remembered',
+    beats:[['Before','No one was sure who last bought detergent or what was already in the cupboard.'],['The GetGuac moment','Every receipt item became a product card with price and repurchase history.'],['After','They could send an item to Smashlist or search Steals without rebuilding context.']],
+    proofTitle:'Your household memory builds itself.', proofText:'Stash connects products across stores, remembers price history and turns past purchases into next actions.',
+    checks:['One product card across every store','Price and repurchase history','One tap to Smashlist or Steals'],
+    web:'../home/goals/web-stash.webp', phone:'../home/goals/phone-stash.webp', screenNote:'Already owned. Still remembered.'
+  },
+  wizard: {
+    accent:'#8a7cf4', soft:'#f1efff', stage:'protect', eyebrow:'Calm money protection',
+    title:'Catch the fees your bank hopes you miss.',
+    lede:'The Parkers found interest, an avoidable monthly fee and a pattern of low-rated spending. GuacWizard explained the next useful move without a lecture.',
+    image:'../home/campaign-story/family-payoff-v2.webp', imageAlt:'A family finding fees and spending patterns with GuacWizard', result:'$60 found in one statement',
+    beats:[['Before','Fees and regrets blended into a long statement.'],['The GetGuac moment','GuacWizard separated avoidable charges from costs they could not change.'],['After','A calm, specific explanation made the next decision obvious.']],
+    proofTitle:'Insights that sound like a helpful friend.', proofText:'Bank Bite, Top Regrets and recurring patterns become specific actions—without shame or generic advice.',
+    checks:['Interest, fees and penalties by card','Avoidable versus unavoidable costs','Plain-English next steps'],
+    web:'../home/goals/web-fees.webp', phone:'../home/goals/phone-fees.webp', screenNote:'The hidden cost surfaced'
+  },
+  miles: {
+    accent:'#68b9ee', soft:'#eaf7ff', stage:'prepare', eyebrow:'A tax-ready mileage habit',
+    title:'Make every eligible mile count.',
+    lede:'Sam shared a destination from Maps instead of writing down a trip later. GetGuac captured the route once and kept a clean log for reimbursements and tax time.',
+    image:'../home/campaign-story/park-trail-payoff-v3-getguac.webp', imageAlt:'A family making everyday drives count with GetGuac', result:'358.5 miles logged year to date',
+    beats:[['Before','Business and charity drives were easy to forget by year-end.'],['The GetGuac moment','A shared Maps destination supplied the from, to, distance and date.'],['After','Every eligible trip stayed categorized and ready to export.']],
+    proofTitle:'Track the trip, not your whole life.', proofText:'Location is read once when you share—never continuously in the background.',
+    checks:['Business, medical, charity and personal tags','One-tap Maps sharing','Audit-ready year-end logs'],
+    web:'../home/goals/web-car-miles.webp', phone:'../home/goals/phone-car-miles.webp', screenNote:'A drive worth remembering'
+  },
+  guacmoney: {
+    accent:'#3eaa62', soft:'#eaf8ef', stage:'learn', eyebrow:'A scoreboard for money kept',
+    title:'See every small win add up.',
+    lede:'The Martins wanted saving to feel visible. GuacMoney turned receipts, refunds and smarter decisions into a running record of value they had kept.',
+    image:'../home/campaign-story/playground-payoff-v2.webp', imageAlt:'A family enjoying the real-life wins tracked by GuacMoney', result:'12,400 GuacMoney earned',
+    beats:[['Before','Good habits disappeared without a satisfying sign of progress.'],['The GetGuac moment','Receipts, refunds, referrals and money-saving decisions added to one tally.'],['After','Saving felt like winning because the scoreboard reflected real value kept.']],
+    proofTitle:'Make the wins visible.', proofText:'Each captured receipt adds 100 GM, and each dollar kept through refunds or smarter choices represents 1,000 GM.',
+    checks:['100 GM for each receipt','1,000 GM per dollar kept','A clear tally—not a locked coupon'],
+    web:'../home/goals/web-guacmoney.webp', phone:'../home/goals/phone-guacmoney.webp', screenNote:'Good decisions, counted'
+  },
+  bills: {
+    accent:'#f0b84a', soft:'#fff5dc', stage:'prepare', eyebrow:'One calendar ahead',
+    title:'Meet next month before it arrives.',
+    lede:'The Brooks family stopped discovering renewals after they posted. Recurring charges appeared on a calendar beside the bigger plans they were building toward.',
+    image:'../home/story-people/openai-hero-family-expanded-v1.webp', imageAlt:'A family looking ahead at bills together', result:'Three bills visible in the next 30 days',
+    beats:[['Before','A renewal felt invisible until the charge reached the account.'],['The GetGuac moment','Recurring spending projected onto upcoming due dates.'],['After','The family could plan for the bill—or cancel it—before it landed.']],
+    proofTitle:'Clarity about next month.', proofText:'The Bills calendar turns recurring charges into a readable schedule, while planning tools keep longer goals nearby.',
+    checks:['Projected subscription due dates','A calendar view of upcoming bills','Retirement, college and emergency tools'],
+    web:'../home/goals/web-bills.webp', phone:'../home/goals/phone-bills.webp', screenNote:'The renewal arrived early—in the plan'
+  },
+  marketplace: {
+    accent:'#8fd35f', soft:'#eff9e8', stage:'shop', eyebrow:'Deals open to everyone',
+    title:'Check one more price before checkout.',
+    lede:'Marco and Ana compared current prices and coupons before buying. The same deal engine behind Steals worked without requiring an account.',
+    image:'../home/campaign-story/shop-aisle-v2.webp', imageAlt:'A parent and child comparing live marketplace prices', result:'Twenty-plus stores compared',
+    beats:[['Before','The first price was convenient, but not necessarily good.'],['The GetGuac moment','Marketplace lined up live store prices and current coupons side by side.'],['After','One quick check protected the shopping budget without adding homework.']],
+    proofTitle:'Start saving before signup.', proofText:'Marketplace, store directories and coupons remain public, so anyone can check before checkout.',
+    checks:['Live price comparisons','Store directories and current coupons','Saved searches for planned purchases'],
+    web:'../home/goals/web-marketplace.webp', phone:'../home/goals/phone-marketplace.webp', screenNote:'A better checkout found'
+  },
+  arcade: {
+    accent:'#f48c78', soft:'#fff0ec', stage:'learn', eyebrow:'Money does not have to be homework',
+    title:'Take a break that still counts.',
+    lede:'Four friends turned a quick break into playful progress. The Guac Arcade made goals feel lighter and rewarded the first completed round each day.',
+    image:'../home/campaign-story/sports-payoff-v4-white-friends.webp', imageAlt:'Friends enjoying a playful money win together', result:'Fifteen free games in the browser',
+    beats:[['Before','Money goals felt like another task after a long day.'],['The GetGuac moment','Classic and goal-based games turned a break into something playful.'],['After','Finished rounds added GuacMoney and friendly leaderboard momentum.']],
+    proofTitle:'A break can still reinforce the goal.', proofText:'Fifteen browser games mix familiar play with debt, home, college and retirement themes.',
+    checks:['No download or coins required','Goal games and remade classics','50 GM for the first finished round daily'],
+    web:'../home/goals/web-games.webp', phone:'../home/goals/phone-games.webp', screenNote:'Playful progress earned'
+  },
+  security: {
+    accent:'#0d8d72', soft:'#e7f7f3', stage:'protect', eyebrow:'Security you can audit',
+    title:'Keep the household story private.',
+    lede:'The Wilsons wanted receipt detail without trading away privacy. GetGuac protects every record with database-level access rules, encryption and mobile biometrics.',
+    image:'../home/story-people/family-tablet-hero-v3.webp', imageAlt:'A household using GetGuac with private account controls', result:'Row-level protection, end to end',
+    beats:[['Before','Household purchases contained details that should not become advertising data.'],['The GetGuac moment','Access rules, encrypted storage and device security guarded every layer.'],['After','The family could use the product without third-party trackers following them.']],
+    proofTitle:'Privacy enforced below the interface.', proofText:'Rows are gated by account identity in the database itself, while photos and credentials remain encrypted.',
+    checks:['Postgres row-level security','Encryption at rest and TLS in transit','No analytics pixel or ad SDK'],
+    web:'../home/goals/web-bank.webp', phone:'../home/goals/phone-bank.webp', screenNote:'The data stays inside the household'
+  },
+  data: {
+    accent:'#f48c78', soft:'#fff0ec', stage:'protect', eyebrow:'Your data, your call',
+    title:'Leave with everything—or delete it.',
+    lede:'Diane wanted a product she could leave cleanly. GetGuac let her remove one receipt, clear a category, export everything or delete the whole account herself.',
+    image:'../home/story-people/protect.webp', imageAlt:'A shopper controlling and deleting her GetGuac data', result:'One-click control over every category',
+    beats:[['Before','Data deletion often meant emailing support and hoping someone followed through.'],['The GetGuac moment','Privacy controls put export, category wipes and account deletion in her hands.'],['After','She knew the data was useful only for as long as she chose to keep it.']],
+    proofTitle:'A delete button that means delete.', proofText:'Receipts, items, emails, statements, photos and logs can be cleared individually or together.',
+    checks:['Delete one receipt or email','Export a complete JSON archive','One-click account and data purge'],
+    web:'../home/goals/web-organized.webp', phone:'../home/goals/phone-organized.webp', screenNote:'Useful by choice—not by lock-in'
+  }
+};
+
+const STORY_COPY = {
+  organize:{title:'A receipt should become useful before it becomes clutter.',body:'Maya’s quick photo turns a paper total into searchable items, dates and store details. The win is not simply saving a receipt—it is knowing the purchase will be there when the household needs it.'},
+  understand:{title:'A bank total tells you how much. The receipt tells you why.',body:'A single transaction amount cannot explain the groceries, gifts or household needs inside it. Item-level context replaces guessing with a calmer, more honest conversation about where the money went.'},
+  recover:{title:'Money that is still yours should not quietly expire.',body:'Nina’s receipt keeps the return deadline, item and refund value together. A timely reminder protects the choice to return it, while refund tracking follows the money until it actually comes home.'},
+  'reduce-waste':{title:'A small recurring charge is easy to ignore—until you see a year of it.',body:'Luis and Sofia bring forgotten subscriptions and price increases into one review. They keep what still adds value and stop paying for the parts of life they already moved past.'},
+  prepare:{title:'The easiest shopping trip begins with what the household already knows.',body:'A shared list, household memory and secure family chat turn planning into coordination. Everyone can add what is needed, see what is already home and shop together even when they are apart.'},
+  learn:{title:'Better purchases are learned, not guessed.',body:'Worth-It ratings connect the feeling after a purchase to the next decision. Over time, the family sees what genuinely helped, what became regret and where their money creates more room for real life.'},
+  inbox:{title:'Shopping mail can stay useful without taking over your personal inbox.',body:'A private GetGuac address receives store sign-ups, rewards and receipts while keeping promotions away from personal mail. The useful details stay searchable without adding more inbox noise.'},
+  read:{title:'A receipt only helps when every line becomes searchable.',body:'Guac-AI turns a photo into the store, items, tax, total and purchase date in seconds. The result is organized purchase memory that can answer a question long after the paper fades.'},
+  duplicates:{title:'Duplicate receipts should never inflate what you spent.',body:'A receipt photo, forwarded email and statement entry can all describe the same checkout. GetGuac matches and removes those duplicates so your history and spending totals stay accurate without manual cleanup.'},
+  categories:{title:'When purchases sort themselves, the month becomes easier to understand.',body:'Built-in and custom categories organize the obvious purchases first. The user confirms what matters, corrects what does not and gets a useful view without categorizing every line alone.'},
+  reports:{title:'The clearest monthly report starts with real items, not mystery totals.',body:'Stores, categories, taxes and repeat purchases add meaning to a transaction list. A family can see what changed, where money concentrated and which pattern deserves the next conversation.'},
+  steals:{title:'A lower price matters most when it is for the exact thing you need.',body:'Steals watches matching brands, sizes and repeat buys instead of showing random discounts. The goal is a useful comparison before checkout—not another feed designed to make people buy more.'},
+  stash:{title:'Remembering what is already home prevents buying it twice.',body:'Every receipt quietly builds a searchable household Stash. Before the next trip, roommates or family members can check what they own, what may be running low and what should stay off the list.'},
+  wizard:{title:'Hidden fees become actionable when the statement tells a story.',body:'GuacWizard looks for interest, monthly fees, unusual charges and spending patterns that a balance alone will not explain. Each finding points to a specific review instead of adding another vague warning.'},
+  miles:{title:'A forgotten drive can become a documented deduction.',body:'Shared destinations, dates and trip purpose turn eligible driving into a clean mileage record. The value is less reconstruction at tax time and more confidence that useful miles were not lost.'},
+  guacmoney:{title:'Small good decisions deserve to feel visible.',body:'GuacMoney turns useful actions—saving receipts, reviewing purchases and learning from a trip—into visible progress. The score makes consistency feel rewarding without turning spending into a contest.'},
+  bills:{title:'A bill is less stressful when you meet it before the due date.',body:'Recurring charges land on a calendar before they can surprise the household. Seeing the next thirty days creates room to plan, question a renewal or move money with less urgency.'},
+  marketplace:{title:'One more comparison can keep more money in your pocket.',body:'Marketplace, store prices and coupons put the final check close to the shopping decision. The shopper can compare with purpose and leave checkout knowing the price earned its place.'},
+  arcade:{title:'Money habits can feel lighter when progress includes a little play.',body:'Short games create a friendly break while reinforcing everyday money ideas and earning GuacMoney. It is not a replacement for action—it is a low-pressure way to stay engaged.'},
+  security:{title:'Useful money context should never cost a household its privacy.',body:'Row-level access, encryption and private account controls keep each household’s data separated and protected. The product should earn trust every time it remembers something useful.'},
+  data:{title:'Your data should stay only as long as it helps you.',body:'Export, category-level clearing and full deletion keep control with the user. GetGuac can remember the details, but the household decides what remains and when it is time to let everything go.'}
+};
+
+const key = document.body.dataset.goal;
+const goal = GOALS[key] || GOALS.organize;
+const storyCopy = STORY_COPY[key] || STORY_COPY.organize;
+document.documentElement.style.setProperty('--accent', goal.accent);
+document.documentElement.style.setProperty('--soft', goal.soft);
+document.title = `${goal.title} | GetGuac`;
+
+const beatHtml = goal.beats.map((beat, index) => `<article class="beat" data-step="${index + 1}"><span class="eyebrow">${beat[0]}</span><h3>${beat[1]}</h3><p>${index === 0 ? 'A normal shopping moment becomes the start of a better money story.' : index === 1 ? 'GetGuac connects the receipt to something useful.' : 'The benefit shows up in the next decision—not only in a dashboard.'}</p></article>`).join('');
+const checksHtml = goal.checks.map((check) => `<li>${check}</li>`).join('');
+
+document.getElementById('storyApp').innerHTML = `
+  <header><div class="wrap nav"><a class="brand" href="../index.html"><i>🥑</i>GetGuac</a><nav class="nav-links"><a href="../index.html#benefits">All goals</a><a href="../how-it-works.html">How it works</a><a href="../sitemap.html">Sitemap</a><a class="btn accent" href="https://getguac.app/join">Get started</a></nav></div></header>
+  <main>
+    <section class="hero"><div class="wrap hero-grid">
+      <div class="hero-copy"><span class="eyebrow">${goal.eyebrow}</span><h1>${goal.title}</h1><p>${goal.lede}</p>
+        <div class="hero-actions"><a class="btn accent" href="https://getguac.app/join?try=receipt">📷 Try 1 receipt</a><a class="btn line" href="../index.html?stage=${goal.stage}#how">Open this in the GetGuac Circle →</a></div>
+        <div class="store-links"><a class="store" href="https://apps.apple.com/us/app/getguac/id6790993237" target="_blank" rel="noopener noreferrer"><b>●</b><span><small>Download on the</small><strong>App Store</strong></span></a><a class="store" href="https://play.google.com/store/apps/details?id=app.getguac.getguac" target="_blank" rel="noopener noreferrer"><b>▶</b><span><small>Get it on</small><strong>Google Play</strong></span></a></div>
+      </div>
+      <figure class="hero-photo"><img src="${goal.image}" alt="${goal.imageAlt}" width="1536" height="1024"><figcaption class="hero-result"><small>GetGuac helped</small><strong>${goal.result}</strong></figcaption></figure>
+    </div></section>
+    <section class="story"><div class="wrap"><header class="section-head"><span class="eyebrow">The real-life reason behind ${goal.eyebrow}</span><h2>${storyCopy.title}</h2><p>${storyCopy.body}</p></header><div class="story-grid">${beatHtml}</div></div></section>
+    <section class="proof"><div class="wrap proof-grid"><div class="proof-copy"><span class="eyebrow">Inside GetGuac</span><h2>${goal.proofTitle}</h2><p>${goal.proofText}</p><ul class="checklist">${checksHtml}</ul></div><div class="screens"><button class="zoom-shot web-zoom" type="button" data-zoom-src="${goal.web}" data-zoom-alt="GetGuac web screen for ${goal.eyebrow}" aria-label="Zoom the GetGuac web screen"><img class="webshot" src="${goal.web}" alt="GetGuac web screen for ${goal.eyebrow}"></button><button class="zoom-shot phone-zoom" type="button" data-zoom-src="${goal.phone}" data-zoom-alt="GetGuac mobile screen for ${goal.eyebrow}" aria-label="Zoom the GetGuac phone screen"><img class="phoneshot" src="${goal.phone}" alt="GetGuac mobile screen for ${goal.eyebrow}"></button><span class="zoom-hint">⌕ Tap a screen to zoom</span><span class="screen-note">${goal.screenNote}</span></div></div></section>
+    <section class="next-tools"><div class="wrap"><header class="section-head"><span class="eyebrow">Keep the momentum</span><h2>You have already started. Choose what helps next.</h2><p>Go deeper only where it feels useful. Every option below turns what you learned here into a practical next step.</p></header><div class="next-tools-grid">
+      <article class="next-tool"><span class="next-tool-icon" aria-hidden="true">📖</span><h3>Read a practical guide</h3><p>Get short, plain-language help with refunds, subscriptions, spending and smarter shopping.</p><a class="btn" href="../resources/index.html#guides">Explore guides</a></article>
+      <article class="next-tool"><span class="next-tool-icon" aria-hidden="true">🧮</span><h3>Try a free money tool</h3><p>Use calculators, the bills calendar and Worth-It tools to turn a question into a clear answer.</p><a class="btn" href="../resources/index.html#tools">Open free tools</a></article>
+      <article class="next-tool"><span class="next-tool-icon" aria-hidden="true">▶</span><h3>Watch GetGuac work</h3><p>Follow the complete 22-moment tour from capture and inbox to reports, sharing and the next trip.</p><a class="btn" href="../how-it-works.html">Watch the tour</a></article>
+      <article class="next-tool"><span class="next-tool-icon" aria-hidden="true">✨</span><h3>Choose your next win</h3><p>Explore another money goal and see the real-life story, screens and outcome behind it.</p><a class="btn" href="../index.html#benefits">See all goals</a></article>
+    </div></div></section>
+    <section class="final"><div class="wrap"><div class="final-card"><h2>Start this story with one receipt.</h2><p>Try the real GetGuac capture flow, or return to the homepage to explore another money goal.</p><a class="btn" href="https://getguac.app/join?try=receipt">Try 1 receipt</a> <a class="btn" href="../index.html#benefits">Explore another goal</a></div></div></section>
+  </main>
+  <footer class="footer"><div class="wrap"><span>🥑 GetGuac · Your money’s wingman</span><span><a href="../how-it-works.html">How it works</a> · <a href="https://getguac.app/games">Games</a> · <a href="../resources/index.html">Resources</a> · <a href="../sitemap.html">Sitemap</a> · <a href="https://getguac.app/security">Security</a> · <a href="https://getguac.app/contact">Contact</a></span></div></footer>
+  <dialog class="zoom-dialog" id="zoomDialog" aria-label="Expanded GetGuac screen"><div class="zoom-dialog-inner"><button class="zoom-close" type="button" aria-label="Close expanded screen">×</button><img id="zoomImage" alt=""></div></dialog>`;
+
+const zoomDialog = document.getElementById('zoomDialog');
+const zoomImage = document.getElementById('zoomImage');
+document.querySelectorAll('[data-zoom-src]').forEach((button) => {
+  button.addEventListener('click', () => {
+    zoomImage.src = button.dataset.zoomSrc;
+    zoomImage.alt = button.dataset.zoomAlt || 'Expanded GetGuac screen';
+    zoomDialog.showModal();
+  });
+});
+zoomDialog.querySelector('.zoom-close').addEventListener('click', () => zoomDialog.close());
+zoomDialog.addEventListener('click', (event) => {
+  if (event.target === zoomDialog) zoomDialog.close();
+});
+
+</script>
+<!-- GOAL_STORY_INLINE END -->
+</body>
+</html>

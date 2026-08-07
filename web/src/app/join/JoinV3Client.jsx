@@ -22,6 +22,26 @@ import { useEffect, useRef } from 'react'
 import './join-v3.css'
 import { MARKUP, BEHAVIOUR } from './joinV3Content'
 import MetaPixel from '../../components/MetaPixel'
+import { trackClick } from '../../lib/track-click'
+
+// Click counters. JoinClient.jsx wired these on 26 elements; this port dropped
+// them along with the pixel, so every button on the live ad landing page went
+// uncounted — and "0 clicks" reads identically to "nobody clicked", which is
+// the exact ambiguity track-click.js exists to remove.
+//
+// Delegated rather than per-element: the markup is injected as a static string,
+// so there are no React handlers to hang off. Names match the old page's so the
+// history stays continuous instead of restarting under new labels.
+//
+// ORDER MATTERS — /register?try=receipt must be tested before bare /register.
+const CLICK_MAP = [
+  [/apps\.apple\.com/, 'join-app-store'],
+  [/play\.google\.com/, 'join-google-play'],
+  [/\/register\?try=receipt/, 'join-try-one-receipt'],
+  [/\/how-it-works/, 'join-how-it-works'],
+  [/\/articles/, 'join-guides'],
+  [/\/register(\?|$)/, 'join-signup-google'],
+]
 
 // The current generated port still has the store badges below the hero image.
 // Move that same row below the primary CTAs, matching the source demo and the
@@ -39,7 +59,17 @@ export default function JoinV3Client() {
     // the lightbox and the header shadow. It is idempotent per mount; guard so
     // a fast-refresh double-invoke cannot bind the listeners twice.
     if (!host.current || host.current.dataset.wired === '1') return
-    host.current.dataset.wired = '1'
+    const node = host.current
+    node.dataset.wired = '1'
+    const onClick = (e) => {
+      const a = e.target.closest?.('a[href]')
+      if (!a) return
+      const href = a.getAttribute('href') || ''
+      const hit = CLICK_MAP.find(([re]) => re.test(href))
+      if (hit) trackClick(hit[1])
+    }
+    node.addEventListener('click', onClick)
+
     try {
       // eslint-disable-next-line no-new-func
       new Function(BEHAVIOUR)()
@@ -47,6 +77,11 @@ export default function JoinV3Client() {
       // A broken widget must never take the page down — the content above it is
       // the part that has to render for an ad click to be worth anything.
       console.error('[join-v3] behaviour failed to initialise', err)
+    }
+
+    return () => {
+      node.removeEventListener('click', onClick)
+      delete node.dataset.wired
     }
   }, [])
 

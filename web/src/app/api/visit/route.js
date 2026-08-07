@@ -46,6 +46,15 @@ export async function POST(request) {
   try {
     if (!process.env.SUPABASE_SERVICE_ROLE_KEY || !process.env.NEXT_PUBLIC_SUPABASE_URL) return NO_CONTENT()
 
+    // Development and Vercel preview traffic used to write into the same
+    // production counter as customers, making QA indistinguishable from real
+    // clicks. Count production traffic only. The hostname guard also covers a
+    // production-mode server started locally.
+    if (process.env.NODE_ENV !== 'production' || process.env.VERCEL_ENV === 'preview') return NO_CONTENT()
+    const forwardedHost = request.headers.get('x-forwarded-host') || request.headers.get('host') || ''
+    const hostname = forwardedHost.split(',')[0].trim().toLowerCase().replace(/:\d+$/, '').replace(/^\[|\]$/g, '')
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1' || hostname.endsWith('.local')) return NO_CONTENT()
+
     const ua = request.headers.get('user-agent') || ''
     if (!ua || BOT_RE.test(ua)) return NO_CONTENT()
 

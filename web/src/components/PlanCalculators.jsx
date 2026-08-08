@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '../lib/supabase/client'
 import AdSlot from './AdSlot'
+import { CALCULATOR_COUNT } from '../lib/static-pages'
 import {
   PiggyBank, HeartPulse, GraduationCap, Umbrella, Save, Check, Loader2, Sparkles, BookOpen,
   Home, Car, CreditCard, Landmark, TrendingUp, Target, Wallet, Scale,
@@ -397,10 +398,19 @@ const CALCS = [
   },
 ]
 
-// Exported so the /plan landing copy cannot drift from the real list. The
-// design mockup's pill read "14 plain-English calculators"; there are 16.
+// Exported so the /calculators landing copy cannot drift from the real list.
+// The design mockup's pill read "14 plain-English calculators"; there are 16.
 // Anything quoting a count must read it from here rather than retype it.
 export const CALC_COUNT = CALCS.length
+
+// /resources also quotes the number, and it is a server component — importing
+// this client module for one integer would ship the whole hub into its bundle.
+// So the value is duplicated in lib/static-pages.js (a plain module) and this
+// asserts the two agree. Throwing at import time is deliberate: a silently
+// wrong count on a marketing page is a false claim, and the build should stop.
+if (CALC_COUNT !== CALCULATOR_COUNT) {
+  throw new Error(`CALCULATOR_COUNT in lib/static-pages.js is ${CALCULATOR_COUNT} but CALCS has ${CALC_COUNT}`)
+}
 
 export default function PlanCalculators() {
   const [authed, setAuthed] = useState(null)

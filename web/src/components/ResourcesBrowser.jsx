@@ -1,26 +1,27 @@
 'use client'
-// Resources hub content + a "Search resources" filter across GetGuac tools,
-// money articles, and trusted .gov guides. Client component (holds the search
-// state + the icon components).
+// The articles + trusted-.gov-guides half of the /resources hub.
+//
+// It used to also render a "GetGuac tools" grid and its own search box. Both
+// are gone:
+//   - the tools grid is now the photographic card section the server page
+//     renders from lib/static-pages.js, so this was the same six tools twice on
+//     one page, in two different visual languages.
+//   - two of those six links (/bills and /validate) are DASHBOARD routes. On a
+//     public marketing page they bounced a logged-out visitor to the sign-in
+//     screen, which is not what "Bills calendar" on a resources hub promises.
+//     The card section points at the public /resources/*.html pages instead.
+//   - the search box was the page's second one, halfway down, filtering a
+//     different half of the page from the one in the hero. ResourceSearch owns
+//     it now and filters everything via data-search.
 //
 // The article list arrives as a prop, deliberately. Importing lib/articles
 // here would drag every article BODY into the client bundle (~128 KB of prose)
 // when this component only ever reads slug/title/excerpt/category. The server
 // page owns the heavy module and hands down just those four fields.
 
-import { useState } from 'react'
 import Link from 'next/link'
-import { Search, ExternalLink, CalendarDays, TrendingUp, ShoppingBag, Ticket, Receipt, Shield, Newspaper } from 'lucide-react'
+import { ExternalLink, Newspaper } from 'lucide-react'
 import AdSlot from './AdSlot'
-
-const TOOLS = [
-  { href: '/calculators', icon: TrendingUp, title: 'Calculators', desc: 'Retirement, college, mortgage, debt payoff — 16 calculators with Guac-AI strategy.' },
-  { href: '/bills', icon: CalendarDays, title: 'Bills calendar', desc: 'See every recurring bill laid out on the days it’s due.' },
-  { href: '/marketplace', icon: ShoppingBag, title: 'Marketplace', desc: 'Compare live prices across major retailers in one search.' },
-  { href: '/coupons', icon: Ticket, title: 'Coupons', desc: 'Live promo codes for the biggest stores, all in one place.' },
-  { href: '/validate', icon: Receipt, title: 'Worth It?', desc: 'Rate purchases and spot the regret spending fast.' },
-  { href: '/security', icon: Shield, title: 'Your data & security', desc: 'How GetGuac keeps your money data private and locked down.' },
-]
 
 const GUIDES = [
   { title: 'Build a budget that sticks', source: 'consumerfinance.gov', url: 'https://www.consumerfinance.gov/consumer-tools/budgeting/', desc: 'A simple, proven way to plan where your money goes each month.' },
@@ -31,58 +32,21 @@ const GUIDES = [
   { title: 'Understand credit, interest & fees', source: 'consumerfinance.gov', url: 'https://www.consumerfinance.gov/consumer-tools/', desc: 'How interest and fees quietly add up — and how to dodge them.' },
 ]
 
-export default function ResourcesBrowser({ articles: allArticles = [] }) {
-  const [q, setQ] = useState('')
-  const t = q.trim().toLowerCase()
-  const m = (...vals) => !t || vals.some((v) => String(v || '').toLowerCase().includes(t))
-
-  const tools = TOOLS.filter((x) => m(x.title, x.desc))
-  const articles = allArticles.filter((x) => m(x.title, x.excerpt, x.category))
-  const guides = GUIDES.filter((x) => m(x.title, x.desc, x.source))
-  const total = tools.length + articles.length + guides.length
-
+export default function ResourcesBrowser({ articles = [] }) {
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 pb-16">
-      <div className="relative max-w-md mx-auto mb-10">
-        <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Search resources…"
-          className="w-full pl-11 pr-4 py-3 rounded-full border border-guac-line2 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-guac-600"
-        />
-      </div>
-
       <div className="space-y-10">
-        {tools.length > 0 && (
-          <section>
-            <h2 className="gg-h2 mb-3">GetGuac tools</h2>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {tools.map((x) => {
-                const Icon = x.icon
-                return (
-                  <Link key={x.href} href={x.href} className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-guac-line2 p-4 transition-all">
-                    <div className="w-10 h-10 rounded-xl bg-guac-100 text-guac-700 flex items-center justify-center mb-2"><Icon size={18} /></div>
-                    <h3 className="gg-h3">{x.title}</h3>
-                    <p className="text-sm text-gray-500 mt-0.5">{x.desc}</p>
-                  </Link>
-                )
-              })}
-            </div>
-          </section>
-        )}
-
         <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_BOTTOM || '9142744455'} minHeight={90} />
 
         {articles.length > 0 && (
-          <section>
+          <section data-search-group>
             <div className="flex items-center justify-between mb-3">
               <h2 className="gg-h2 inline-flex items-center gap-2"><Newspaper size={18} className="text-guac-600" /> Articles</h2>
               <Link href="/articles" className="text-xs font-bold text-guac-700 hover:underline">All articles →</Link>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {articles.map((a) => (
-                <Link key={a.slug} href={`/articles/${a.slug}`} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-guac-line2 p-4 transition-all flex flex-col">
+                <Link key={a.slug} href={`/articles/${a.slug}`} data-search={`${a.category} ${a.title} ${a.excerpt}`} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-guac-line2 p-4 transition-all flex flex-col">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-guac-700">{a.category}</span>
                   <h3 className="gg-h3 leading-snug mt-1">{a.title}</h3>
                   <p className="text-sm text-gray-500 mt-1">{a.excerpt}</p>
@@ -92,23 +56,19 @@ export default function ResourcesBrowser({ articles: allArticles = [] }) {
           </section>
         )}
 
-        {guides.length > 0 && (
-          <section>
-            <h2 className="gg-h2 mb-1">Money guides</h2>
-            <p className="text-xs text-gray-400 mb-3">Trusted, non-commercial sources (no affiliate links).</p>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {guides.map((g) => (
-                <a key={g.title} href={g.url} target="_blank" rel="noreferrer" className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-guac-line2 p-4 transition-all flex flex-col">
-                  <h3 className="gg-h3 leading-snug">{g.title}</h3>
-                  <p className="text-sm text-gray-500 mt-1 flex-1">{g.desc}</p>
-                  <p className="text-[11px] font-semibold text-guac-700 mt-2 inline-flex items-center gap-1">{g.source} <ExternalLink size={11} /></p>
-                </a>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {total === 0 && <p className="text-center text-gray-500 py-10">No resources match “{q}”.</p>}
+        <section data-search-group>
+          <h2 className="gg-h2 mb-1">Money guides</h2>
+          <p className="text-xs text-gray-400 mb-3">Trusted, non-commercial sources (no affiliate links).</p>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {GUIDES.map((g) => (
+              <a key={g.title} href={g.url} target="_blank" rel="noreferrer" data-search={`${g.title} ${g.desc} ${g.source}`} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-guac-line2 p-4 transition-all flex flex-col">
+                <h3 className="gg-h3 leading-snug">{g.title}</h3>
+                <p className="text-sm text-gray-500 mt-1 flex-1">{g.desc}</p>
+                <p className="text-[11px] font-semibold text-guac-700 mt-2 inline-flex items-center gap-1">{g.source} <ExternalLink size={11} /></p>
+              </a>
+            ))}
+          </div>
+        </section>
       </div>
     </div>
   )

@@ -250,7 +250,7 @@ document.getElementById('storyApp').innerHTML = `
   <main>
     <section class="hero"><div class="wrap hero-grid">
       <div class="hero-copy"><span class="eyebrow">${goal.eyebrow}</span><h1>${goal.title}</h1><p>${goal.lede}</p>
-        <div class="hero-actions"><a class="btn accent" href="https://getguac.app/join?try=receipt">📷 Try 1 receipt</a><a class="btn line" href="/?stage=${goal.stage}#how">Open this in the GetGuac Circle →</a></div>
+        <div class="hero-actions"><a class="btn accent" href="/join?try=receipt">📷 Try 1 receipt</a><a class="btn line" href="/?stage=${goal.stage}#how">Open this in the GetGuac Circle →</a></div>
         <div class="store-links"><a class="store" href="https://apps.apple.com/us/app/getguac/id6790993237" target="_blank" rel="noopener noreferrer"><b>●</b><span><small>Download on the</small><strong>App Store</strong></span></a><a class="store" href="https://play.google.com/store/apps/details?id=app.getguac.getguac" target="_blank" rel="noopener noreferrer"><b>▶</b><span><small>Get it on</small><strong>Google Play</strong></span></a></div>
       </div>
       <figure class="hero-photo"><img src="${goal.image}" alt="${goal.imageAlt}" width="1536" height="1024"><figcaption class="hero-result"><small>GetGuac helped</small><strong>${goal.result}</strong></figcaption></figure>
@@ -263,7 +263,7 @@ document.getElementById('storyApp').innerHTML = `
       <article class="next-tool"><span class="next-tool-icon" aria-hidden="true">▶</span><h3>Watch GetGuac work</h3><p>Follow the complete 22-moment tour from capture and inbox to reports, sharing and the next trip.</p><a class="btn" href="/how-it-works">Watch the tour</a></article>
       <article class="next-tool"><span class="next-tool-icon" aria-hidden="true">✨</span><h3>Choose your next win</h3><p>Explore another money goal and see the real-life story, screens and outcome behind it.</p><a class="btn" href="/#benefits">See all goals</a></article>
     </div></div></section>
-    <section class="final"><div class="wrap"><div class="final-card"><h2>Start this story with one receipt.</h2><p>Try the real GetGuac capture flow, or return to the homepage to explore another money goal.</p><a class="btn" href="https://getguac.app/join?try=receipt">Try 1 receipt</a> <a class="btn" href="/#benefits">Explore another goal</a></div></div></section>
+    <section class="final"><div class="wrap"><div class="final-card"><h2>Start this story with one receipt.</h2><p>Try the real GetGuac capture flow, or return to the homepage to explore another money goal.</p><a class="btn" href="/join?try=receipt">Try 1 receipt</a> <a class="btn" href="/#benefits">Explore another goal</a></div></div></section>
   </main>
   <footer class="footer"><div class="wrap"><span>🥑 GetGuac · Your money’s wingman</span><span>${ggFooterHtml()}</span></div></footer>
   <dialog class="zoom-dialog" id="zoomDialog" aria-label="Expanded GetGuac screen"><div class="zoom-dialog-inner"><button class="zoom-close" type="button" aria-label="Close expanded screen">×</button><img id="zoomImage" alt=""></div></dialog>`;

@@ -127,8 +127,16 @@ function ggNavBaseCss() {
     + BARS.join(',') + '{height:64px}'
     + inBar('.ggnav a') + '{color:#5C6B60;font-weight:700;font-size:14.5px;text-decoration:none}'
     + inBar('.ggdd-card a') + '{font-weight:600;font-size:14px}'
-    + inBar('.ggbrand') + '{font-family:' + GG_DISPLAY + ';font-size:21px;font-weight:800;'
-    + 'color:#12261B;letter-spacing:-0.02em}'
+    + inBar('.ggbrand') + '{display:inline-flex;align-items:center;gap:9px;font-family:' + GG_DISPLAY
+    + ';font-size:21px;font-weight:800;color:#12261B;letter-spacing:-0.02em;text-decoration:none}'
+    // The avocado itself. It was drawn three ways: a bare emoji on the homepage,
+    // a 22px emoji in the React header, and a 36-38px green gradient rounded
+    // TILE on the static pages. Same six letters beside three different marks.
+    // The homepage is the reference, so the tile goes; the emoji is untouched.
+    // Every property the tile set is reset explicitly, because these rules land
+    // on pages whose own .brand i rule is still in their stylesheet.
+    + inBar('.ggmark') + '{display:inline-block;width:auto;height:auto;margin:0;padding:0;'
+    + 'border-radius:0;background:none;font-style:normal;font-size:22px;line-height:1}'
     // a.ggcta, not .ggcta. The CTA sits INSIDE nav.ggnav on the static pages, so
     // it is also matched by the link rule above at (0,3,1); a bare .ggcta is
     // (0,3,0) and loses by that one element selector, which rendered the button
@@ -183,7 +191,7 @@ export function ggMenuHtml() {
 /* Full contents of `.wrap.nav` for the static pages, which ship no header of
  * their own worth keeping. */
 export function ggNavHtml() {
-  return '<a class="brand ggbrand" href="/"><i>🥑</i>GetGuac</a>'
+  return '<a class="brand ggbrand" href="/"><i class="ggmark">🥑</i>GetGuac</a>'
     + '<nav class="nav-links ggnav" aria-label="Main">' + ggMenuHtml()
     + '<a class="btn accent ggcta" href="' + esc(GG_CTA.href) + '">' + esc(GG_CTA.label) + '</a></nav>'
 }

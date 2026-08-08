@@ -3,7 +3,7 @@ import { useState } from 'react'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
 import { createClient } from '../../../lib/supabase/client'
-import { ShieldCheck, Search, Upload, Trash2, Bug, TrendingUp } from 'lucide-react'
+import { ShieldCheck, Search, Upload, Trash2, Bug, TrendingUp, LineChart } from 'lucide-react'
 import { displayStoreName } from '../../../lib/store-name-normalize'
 import { useConfirm } from '../../../components/ConfirmDialog'
 export default function AdminPage() {
@@ -60,6 +60,17 @@ export default function AdminPage() {
           <div className="min-w-0">
             <p className="font-bold text-gray-900">Cost monitoring</p>
             <p className="text-[11px] text-gray-500">Distance to free-tier ceilings</p>
+          </div>
+        </Link>
+
+        {/* Growth. This page and its API existed but were linked from nowhere,
+            so the only way in was to type the URL. The other two admin tools
+            are listed here; this one being absent is why it went unused. */}
+        <Link href="/admin/growth" className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white border border-gray-200 hover:border-guac-line2 hover:shadow-sm">
+          <div className="w-9 h-9 rounded-lg bg-guac-50 flex items-center justify-center shrink-0"><LineChart size={18} className="text-guac-700" /></div>
+          <div className="min-w-0">
+            <p className="font-bold text-gray-900">Growth</p>
+            <p className="text-[11px] text-gray-500">Traffic, signups, activation &amp; retention</p>
           </div>
         </Link>
       </div>

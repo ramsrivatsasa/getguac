@@ -63,9 +63,16 @@ const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } })
 
 async function measure(p) {
   const page = await ctx.newPage()
+  // Wait for the nav to actually exist, not for a fixed number of milliseconds.
+  // The static pages build their whole body client-side from goal-story.js /
+  // resource-page.js, and their stylesheet lands with it — measuring on a timer
+  // caught one of them mid-render and reported a phantom h2 variant on one run
+  // in three. A flaky audit is worse than no audit: it trains you to re-run
+  // until it goes green.
   try {
-    await page.goto(BASE + p, { waitUntil: 'domcontentloaded', timeout: 40000 })
-    await page.waitForTimeout(500)
+    await page.goto(BASE + p, { waitUntil: 'load', timeout: 40000 })
+    await page.waitForSelector('.ggnav', { timeout: 15000 }).catch(() => {})
+    await page.waitForTimeout(400)
   } catch { await page.close(); return null }
   // Task 3, measured rather than eyeballed: does page content begin on the
   // same vertical line as the logo, and end on the same line as the CTA?

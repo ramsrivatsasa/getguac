@@ -174,12 +174,14 @@ export default function MarketingShell({ subtitle, hideSearch = true, headerTitl
             homepage onto any of these 20 pages. Measured at 1280px wide, logo
             x=78 here against x=50 there. */}
         <div className="gg-header-row" style={{ width: 'min(1180px, calc(100% - clamp(24px, 5vw, 56px)))', margin: '0 auto', display: 'flex', alignItems: 'center', gap: 18 }}>
-          {/* ggbrand, not inline styles. The wordmark was 20px/#15281C here,
-              21px/#12261B on the homepage and 22px/#102819 on the static pages —
-              three sizes and three greens for the same six letters. */}
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 9, flexShrink: 0, textDecoration: 'none' }}>
-            <span style={{ fontSize: 22 }}>🥑</span>
-            <span className="hidden sm:block ggbrand">GetGuac</span>
+          {/* ggbrand on the anchor, ggmark on the avocado — the whole lockup
+              comes from ggNavCss now. It was inline styles here: 20px/#15281C
+              wordmark against 21px/#12261B on the homepage and 22px/#102819 on
+              the static pages, with the avocado bare here and set in a green
+              gradient tile there. Three sizes, three greens, two marks. */}
+          <Link href="/" className="ggbrand" style={{ flexShrink: 0 }}>
+            <span className="ggmark">🥑</span>
+            <span className="hidden sm:block">GetGuac</span>
           </Link>
           {hideSearch
             ? (headerTitle

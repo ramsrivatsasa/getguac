@@ -26,7 +26,7 @@ const COLS = [
   { heading: 'Learn', links: [
     { href: '/resources', label: 'Resources' },
     { href: '/articles', label: 'Articles' },
-    { href: '/plan', label: 'Calculators' },
+    { href: '/calculators', label: 'Calculators' },
     { href: '/faq', label: 'FAQ' },
     { href: '/how-email-works', label: 'How email works' },
     { href: '/security', label: 'Security & privacy' },

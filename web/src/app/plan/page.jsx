@@ -1,19 +1,10 @@
-import MarketingShell from '../../components/MarketingShell'
-import PlanCalculators from '../../components/PlanCalculators'
+import { redirect } from 'next/navigation'
 
-export const metadata = {
-  title: 'Plan & forecast — retirement, college, healthcare calculators',
-  description:
-    'Free calculators to forecast retirement, healthcare in retirement, a college fund, and an emergency fund. Enter your numbers — no account needed to plan.',
-  alternates: { canonical: '/plan' },
-}
+// /plan was renamed to /calculators — the nav, the resources hub and the page
+// itself all called it Calculators while the route said Plan. This permanent
+// redirect keeps every existing link, bookmark and indexed URL working.
+export const metadata = { alternates: { canonical: '/calculators' } }
 
-export default function PlanPage() {
-  return (
-    <MarketingShell subtitle="money's wingman" hideSearch headerTitle="🎯 Plan & forecast">
-      <div className="pb-16 pt-4">
-        <PlanCalculators />
-      </div>
-    </MarketingShell>
-  )
+export default function PlanRedirect() {
+  redirect('/calculators')
 }

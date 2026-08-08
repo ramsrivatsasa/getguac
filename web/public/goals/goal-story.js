@@ -246,11 +246,11 @@ const beatHtml = goal.beats.map((beat, index) => `<article class="beat" data-ste
 const checksHtml = goal.checks.map((check) => `<li>${check}</li>`).join('');
 
 document.getElementById('storyApp').innerHTML = `
-  <header><div class="wrap nav"><a class="brand" href="../index.html"><i>🥑</i>GetGuac</a><nav class="nav-links"><a href="../index.html#benefits">All goals</a><a href="../how-it-works.html">How it works</a><a href="../sitemap.html">Sitemap</a><a class="btn accent" href="https://getguac.app/join">Get started</a></nav></div></header>
+  <header><div class="wrap nav">${ggNavHtml()}</div></header>
   <main>
     <section class="hero"><div class="wrap hero-grid">
       <div class="hero-copy"><span class="eyebrow">${goal.eyebrow}</span><h1>${goal.title}</h1><p>${goal.lede}</p>
-        <div class="hero-actions"><a class="btn accent" href="https://getguac.app/join?try=receipt">📷 Try 1 receipt</a><a class="btn line" href="../index.html?stage=${goal.stage}#how">Open this in the GetGuac Circle →</a></div>
+        <div class="hero-actions"><a class="btn accent" href="https://getguac.app/join?try=receipt">📷 Try 1 receipt</a><a class="btn line" href="/?stage=${goal.stage}#how">Open this in the GetGuac Circle →</a></div>
         <div class="store-links"><a class="store" href="https://apps.apple.com/us/app/getguac/id6790993237" target="_blank" rel="noopener noreferrer"><b>●</b><span><small>Download on the</small><strong>App Store</strong></span></a><a class="store" href="https://play.google.com/store/apps/details?id=app.getguac.getguac" target="_blank" rel="noopener noreferrer"><b>▶</b><span><small>Get it on</small><strong>Google Play</strong></span></a></div>
       </div>
       <figure class="hero-photo"><img src="${goal.image}" alt="${goal.imageAlt}" width="1536" height="1024"><figcaption class="hero-result"><small>GetGuac helped</small><strong>${goal.result}</strong></figcaption></figure>
@@ -258,15 +258,17 @@ document.getElementById('storyApp').innerHTML = `
     <section class="story"><div class="wrap"><header class="section-head"><span class="eyebrow">The real-life reason behind ${goal.eyebrow}</span><h2>${storyCopy.title}</h2><p>${storyCopy.body}</p></header><div class="story-grid">${beatHtml}</div></div></section>
     <section class="proof"><div class="wrap proof-grid"><div class="proof-copy"><span class="eyebrow">Inside GetGuac</span><h2>${goal.proofTitle}</h2><p>${goal.proofText}</p><ul class="checklist">${checksHtml}</ul></div><div class="screens"><button class="zoom-shot web-zoom" type="button" data-zoom-src="${goal.web}" data-zoom-alt="GetGuac web screen for ${goal.eyebrow}" aria-label="Zoom the GetGuac web screen"><img class="webshot" src="${goal.web}" alt="GetGuac web screen for ${goal.eyebrow}"></button><button class="zoom-shot phone-zoom" type="button" data-zoom-src="${goal.phone}" data-zoom-alt="GetGuac mobile screen for ${goal.eyebrow}" aria-label="Zoom the GetGuac phone screen"><img class="phoneshot" src="${goal.phone}" alt="GetGuac mobile screen for ${goal.eyebrow}"></button><span class="zoom-hint">⌕ Tap a screen to zoom</span><span class="screen-note">${goal.screenNote}</span></div></div></section>
     <section class="next-tools"><div class="wrap"><header class="section-head"><span class="eyebrow">Keep the momentum</span><h2>You have already started. Choose what helps next.</h2><p>Go deeper only where it feels useful. Every option below turns what you learned here into a practical next step.</p></header><div class="next-tools-grid">
-      <article class="next-tool"><span class="next-tool-icon" aria-hidden="true">📖</span><h3>Read a practical guide</h3><p>Get short, plain-language help with refunds, subscriptions, spending and smarter shopping.</p><a class="btn" href="../resources/index.html#guides">Explore guides</a></article>
-      <article class="next-tool"><span class="next-tool-icon" aria-hidden="true">🧮</span><h3>Try a free money tool</h3><p>Use calculators, the bills calendar and Worth-It tools to turn a question into a clear answer.</p><a class="btn" href="../resources/index.html#tools">Open free tools</a></article>
-      <article class="next-tool"><span class="next-tool-icon" aria-hidden="true">▶</span><h3>Watch GetGuac work</h3><p>Follow the complete 22-moment tour from capture and inbox to reports, sharing and the next trip.</p><a class="btn" href="../how-it-works.html">Watch the tour</a></article>
-      <article class="next-tool"><span class="next-tool-icon" aria-hidden="true">✨</span><h3>Choose your next win</h3><p>Explore another money goal and see the real-life story, screens and outcome behind it.</p><a class="btn" href="../index.html#benefits">See all goals</a></article>
+      <article class="next-tool"><span class="next-tool-icon" aria-hidden="true">📖</span><h3>Read a practical guide</h3><p>Get short, plain-language help with refunds, subscriptions, spending and smarter shopping.</p><a class="btn" href="/resources#guides">Explore guides</a></article>
+      <article class="next-tool"><span class="next-tool-icon" aria-hidden="true">🧮</span><h3>Try a free money tool</h3><p>Use calculators, the bills calendar and Worth-It tools to turn a question into a clear answer.</p><a class="btn" href="/resources#tools">Open free tools</a></article>
+      <article class="next-tool"><span class="next-tool-icon" aria-hidden="true">▶</span><h3>Watch GetGuac work</h3><p>Follow the complete 22-moment tour from capture and inbox to reports, sharing and the next trip.</p><a class="btn" href="/how-it-works">Watch the tour</a></article>
+      <article class="next-tool"><span class="next-tool-icon" aria-hidden="true">✨</span><h3>Choose your next win</h3><p>Explore another money goal and see the real-life story, screens and outcome behind it.</p><a class="btn" href="/#benefits">See all goals</a></article>
     </div></div></section>
-    <section class="final"><div class="wrap"><div class="final-card"><h2>Start this story with one receipt.</h2><p>Try the real GetGuac capture flow, or return to the homepage to explore another money goal.</p><a class="btn" href="https://getguac.app/join?try=receipt">Try 1 receipt</a> <a class="btn" href="../index.html#benefits">Explore another goal</a></div></div></section>
+    <section class="final"><div class="wrap"><div class="final-card"><h2>Start this story with one receipt.</h2><p>Try the real GetGuac capture flow, or return to the homepage to explore another money goal.</p><a class="btn" href="https://getguac.app/join?try=receipt">Try 1 receipt</a> <a class="btn" href="/#benefits">Explore another goal</a></div></div></section>
   </main>
-  <footer class="footer"><div class="wrap"><span>🥑 GetGuac · Your money’s wingman</span><span><a href="../how-it-works.html">How it works</a> · <a href="https://getguac.app/games">Games</a> · <a href="../resources/index.html">Resources</a> · <a href="../sitemap.html">Sitemap</a> · <a href="https://getguac.app/security">Security</a> · <a href="https://getguac.app/contact">Contact</a></span></div></footer>
+  <footer class="footer"><div class="wrap"><span>🥑 GetGuac · Your money’s wingman</span><span>${ggFooterHtml()}</span></div></footer>
   <dialog class="zoom-dialog" id="zoomDialog" aria-label="Expanded GetGuac screen"><div class="zoom-dialog-inner"><button class="zoom-close" type="button" aria-label="Close expanded screen">×</button><img id="zoomImage" alt=""></div></dialog>`;
+
+ggNavStyles();
 
 const zoomDialog = document.getElementById('zoomDialog');
 const zoomImage = document.getElementById('zoomImage');

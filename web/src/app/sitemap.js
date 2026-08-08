@@ -27,7 +27,7 @@ export default function sitemap() {
     // single strongest "useful free tools" asset had never been submitted to
     // Google at all. Priority matches /articles: these are the two things on the
     // site worth ranking for.
-    { path: '/plan', priority: 0.9, changeFrequency: 'monthly' },
+    { path: '/calculators', priority: 0.9, changeFrequency: 'monthly' },
     { path: '/resources', priority: 0.8, changeFrequency: 'monthly' },
     { path: '/faq', priority: 0.8, changeFrequency: 'monthly' },
     { path: '/pricing', priority: 0.8, changeFrequency: 'monthly' },

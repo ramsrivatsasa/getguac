@@ -6,6 +6,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '../lib/supabase/client'
+import { GG_CTA } from '../lib/gg-nav-def'
 
 export default function MarketingAuthButtons() {
   const [authed, setAuthed] = useState(null) // null = checking, true/false = known
@@ -31,8 +32,22 @@ export default function MarketingAuthButtons() {
   // Checking or logged-out → marketing CTAs.
   return (
     <>
-      <Link href="/login" className="hidden sm:inline btn-secondary">Sign in</Link>
-      <Link href="/register" className="btn-primary">Get started</Link>
+      {/* Plain link, not btn-secondary — the homepage renders Sign in as text
+          next to the Get started pill, and every marketing header now matches
+          it. A bordered Sign in put two buttons of near-equal weight side by
+          side and blunted the one CTA that matters. */}
+      <Link
+        href="/login"
+        className="hidden sm:inline"
+        style={{ color: '#5C6B60', fontWeight: 700, fontSize: 14.5, textDecoration: 'none' }}
+      >
+        Sign in
+      </Link>
+      {/* GG_CTA, not a literal /register. The homepage and all 33 static pages
+          send Get started to /join; only this header went straight to the signup
+          form, so the same button did two different things depending on which
+          page you happened to be on. */}
+      <Link href={GG_CTA.href} className="btn-primary">{GG_CTA.label}</Link>
     </>
   )
 }

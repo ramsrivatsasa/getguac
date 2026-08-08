@@ -52,7 +52,12 @@ const securityHeaders = [
       // (households realtime in HouseholdPanel.jsx). CSP treats wss: as
       // a distinct scheme from https:, so the wildcard https entry above
       // does not cover it — must be listed explicitly.
-      "connect-src 'self' https://*.supabase.co https://*.supabase.in wss://*.supabase.co wss://*.supabase.in https://api.migadu.com https://dns.google https://pagead2.googlesyndication.com https://*.googlesyndication.com https://googleads.g.doubleclick.net https://*.google.com https://*.adtrafficquality.google https://connect.facebook.net https://www.facebook.com https://va.vercel-scripts.com https://vitals.vercel-insights.com",
+      // csi.gstatic.com = AdSense's latency beacon. It fires on every marketing
+      // page that carries an ad and was throwing two blocked-connection errors
+      // into the console on each one, which buries the errors worth reading.
+      // *.google.com does not cover it — gstatic.com is a different registrable
+      // domain, which is why the existing wildcard let it through unnoticed.
+      "connect-src 'self' https://*.supabase.co https://*.supabase.in wss://*.supabase.co wss://*.supabase.in https://api.migadu.com https://dns.google https://pagead2.googlesyndication.com https://*.googlesyndication.com https://googleads.g.doubleclick.net https://*.google.com https://csi.gstatic.com https://*.adtrafficquality.google https://connect.facebook.net https://www.facebook.com https://va.vercel-scripts.com https://vitals.vercel-insights.com",
       // Ad creatives render inside Google ad iframes; Turnstile renders its
       // challenge in a challenges.cloudflare.com iframe.
       // youtube-nocookie.com / youtube.com = the how-it-works video embed;

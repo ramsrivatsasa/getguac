@@ -15,6 +15,53 @@
 </div>
 <!-- GOAL_STORY_INLINE START -->
 <script>
+/* GENERATED FILE — DO NOT EDIT.
+ *
+ * Source: web/src/lib/gg-nav-def.js
+ * Rebuild: node scripts/build-gg-nav.mjs && pwsh scripts/build-standalone-pages.ps1
+ *
+ * Hand-editing this file puts the static pages back out of step with the React
+ * header and the homepage, which is the bug the single definition exists to
+ * kill. Edit gg-nav-def.js instead.
+ *
+ * The links are absolute on purpose. These pages are served from /goals/*.html
+ * and /resources/**, so /how-it-works has to resolve the same from every depth;
+ * the old relative-prefix scheme is what left 31 pages pointing at .html files
+ * that had become real routes.
+ */
+var GG_NAV_HTML = "<a class=\"brand\" href=\"/\"><i>🥑</i>GetGuac</a><nav class=\"nav-links ggnav\" aria-label=\"Main\"><span class=\"ggdd\"><a class=\"ggdd-top\" href=\"/how-it-works\">Why GetGuac<i class=\"ggdd-caret\" aria-hidden=\"true\">▾</i></a><span class=\"ggdd-menu\"><span class=\"ggdd-card\"><a href=\"/why-getguac\">Why GetGuac is different</a><a href=\"/how-it-works\">How it works</a><a href=\"/get-started\">The get-started guide</a><a href=\"/features\">Features</a><a href=\"/resources#goals\">Goal stories</a><a href=\"/security\">Security</a><a href=\"/pricing\">Pricing</a></span></span></span><span class=\"ggdd\"><a class=\"ggdd-top\" href=\"/resources\">Learn<i class=\"ggdd-caret\" aria-hidden=\"true\">▾</i></a><span class=\"ggdd-menu\"><span class=\"ggdd-card\"><a href=\"/resources#guides\">Guides</a><a href=\"/articles\">Articles</a><a href=\"/calculators\">Calculators</a><a href=\"/resources#tools\">Tools</a><a href=\"/faq\">FAQ</a></span></span></span><span class=\"ggdd\"><a class=\"ggdd-top\" href=\"/marketplace\">Shopping<i class=\"ggdd-caret\" aria-hidden=\"true\">▾</i></a><span class=\"ggdd-menu\"><span class=\"ggdd-card\"><a href=\"/marketplace\">Marketplace</a><a href=\"/coupons\">Coupons</a></span></span></span><a href=\"/games\">Games</a><a href=\"/login\">Sign in</a><a class=\"btn accent\" href=\"/join\">Get started</a></nav>";
+var GG_FOOTER_HTML = "<a href=\"/how-it-works\">How it works</a> · <a href=\"/resources\">Resources</a> · <a href=\"/games\">Games</a> · <a href=\"/security\">Security</a> · <a href=\"/contact\">Contact</a> · <a href=\"/sitemap.html\">Sitemap</a>";
+var GG_NAV_CSS = ".ggnav{display:flex;align-items:center;gap:18px;flex-wrap:wrap}.ggnav a{color:#5C6B60;font-weight:700;font-size:14.5px;text-decoration:none}.ggnav a:hover{color:#15281C}.ggnav .btn.accent{color:#fff}.ggdd{position:relative;display:inline-flex}.ggdd-top{display:inline-flex;align-items:center;gap:4px}.ggdd-caret{font-size:11px;font-style:normal;opacity:.75}.ggdd-menu{position:absolute;left:0;top:100%;padding-top:10px;opacity:0;visibility:hidden;transform:translateY(-4px);transition:opacity .15s,transform .15s,visibility .15s;z-index:60}.ggdd:hover .ggdd-menu,.ggdd:focus-within .ggdd-menu{opacity:1;visibility:visible;transform:none}.ggdd-card{min-width:232px;background:#fff;border:1px solid #E4EDE4;border-radius:16px;padding:8px;box-shadow:0 22px 44px -28px rgba(16,40,26,.55);display:flex;flex-direction:column;gap:2px}.ggdd-card a{padding:9px 12px;border-radius:10px;font-weight:600;font-size:14px;white-space:nowrap}.ggdd-card a:hover{background:#F1F8EE;color:#15281C}@media(max-width:900px){.ggnav .ggdd-menu{display:none}.ggnav{gap:12px}}";
+
+/* Inner HTML for `.wrap.nav`. Both static page engines use that same container,
+ * so one builder serves the goals pages and the resources pages alike. */
+function ggNavHtml() { return GG_NAV_HTML; }
+function ggFooterHtml() { return GG_FOOTER_HTML; }
+function ggNavCss() { return GG_NAV_CSS; }
+
+function ggNavStyles() {
+  if (document.getElementById('gg-nav-style')) return;
+  var el = document.createElement('style');
+  el.id = 'gg-nav-style';
+  el.textContent = GG_NAV_CSS;
+  document.head.appendChild(el);
+}
+
+/* Replace whatever nav a page shipped with the standard one. Safe to call more
+ * than once and safe to call before the page body exists — it no-ops rather
+ * than throwing, so a page that renders its shell asynchronously can call it
+ * again after rendering. */
+function ggMountNav() {
+  ggNavStyles();
+  var bar = document.querySelector('.wrap.nav');
+  if (bar && !bar.querySelector('.ggnav')) bar.innerHTML = GG_NAV_HTML;
+  var footerLinks = document.querySelector('.footer span:last-child');
+  if (footerLinks && !footerLinks.dataset.ggFooter) {
+    footerLinks.dataset.ggFooter = '1';
+    footerLinks.innerHTML = GG_FOOTER_HTML;
+  }
+}
+
 const GOALS = {
   organize: {
     accent:'#76a5ff', soft:'#edf4ff', stage:'capture', eyebrow:'Organize every purchase',
@@ -263,7 +310,7 @@ const beatHtml = goal.beats.map((beat, index) => `<article class="beat" data-ste
 const checksHtml = goal.checks.map((check) => `<li>${check}</li>`).join('');
 
 document.getElementById('storyApp').innerHTML = `
-  <header><div class="wrap nav"><a class="brand" href="/"><i>🥑</i>GetGuac</a><nav class="nav-links"><a href="/#benefits">All goals</a><a href="/how-it-works">How it works</a><a href="../sitemap.html">Sitemap</a><a class="btn accent" href="https://getguac.app/join">Get started</a></nav></div></header>
+  <header><div class="wrap nav">${ggNavHtml()}</div></header>
   <main>
     <section class="hero"><div class="wrap hero-grid">
       <div class="hero-copy"><span class="eyebrow">${goal.eyebrow}</span><h1>${goal.title}</h1><p>${goal.lede}</p>
@@ -275,15 +322,17 @@ document.getElementById('storyApp').innerHTML = `
     <section class="story"><div class="wrap"><header class="section-head"><span class="eyebrow">The real-life reason behind ${goal.eyebrow}</span><h2>${storyCopy.title}</h2><p>${storyCopy.body}</p></header><div class="story-grid">${beatHtml}</div></div></section>
     <section class="proof"><div class="wrap proof-grid"><div class="proof-copy"><span class="eyebrow">Inside GetGuac</span><h2>${goal.proofTitle}</h2><p>${goal.proofText}</p><ul class="checklist">${checksHtml}</ul></div><div class="screens"><button class="zoom-shot web-zoom" type="button" data-zoom-src="${goal.web}" data-zoom-alt="GetGuac web screen for ${goal.eyebrow}" aria-label="Zoom the GetGuac web screen"><img class="webshot" src="${goal.web}" alt="GetGuac web screen for ${goal.eyebrow}"></button><button class="zoom-shot phone-zoom" type="button" data-zoom-src="${goal.phone}" data-zoom-alt="GetGuac mobile screen for ${goal.eyebrow}" aria-label="Zoom the GetGuac phone screen"><img class="phoneshot" src="${goal.phone}" alt="GetGuac mobile screen for ${goal.eyebrow}"></button><span class="zoom-hint">⌕ Tap a screen to zoom</span><span class="screen-note">${goal.screenNote}</span></div></div></section>
     <section class="next-tools"><div class="wrap"><header class="section-head"><span class="eyebrow">Keep the momentum</span><h2>You have already started. Choose what helps next.</h2><p>Go deeper only where it feels useful. Every option below turns what you learned here into a practical next step.</p></header><div class="next-tools-grid">
-      <article class="next-tool"><span class="next-tool-icon" aria-hidden="true">📖</span><h3>Read a practical guide</h3><p>Get short, plain-language help with refunds, subscriptions, spending and smarter shopping.</p><a class="btn" href="../resources/index.html#guides">Explore guides</a></article>
-      <article class="next-tool"><span class="next-tool-icon" aria-hidden="true">🧮</span><h3>Try a free money tool</h3><p>Use calculators, the bills calendar and Worth-It tools to turn a question into a clear answer.</p><a class="btn" href="../resources/index.html#tools">Open free tools</a></article>
+      <article class="next-tool"><span class="next-tool-icon" aria-hidden="true">📖</span><h3>Read a practical guide</h3><p>Get short, plain-language help with refunds, subscriptions, spending and smarter shopping.</p><a class="btn" href="/resources#guides">Explore guides</a></article>
+      <article class="next-tool"><span class="next-tool-icon" aria-hidden="true">🧮</span><h3>Try a free money tool</h3><p>Use calculators, the bills calendar and Worth-It tools to turn a question into a clear answer.</p><a class="btn" href="/resources#tools">Open free tools</a></article>
       <article class="next-tool"><span class="next-tool-icon" aria-hidden="true">▶</span><h3>Watch GetGuac work</h3><p>Follow the complete 22-moment tour from capture and inbox to reports, sharing and the next trip.</p><a class="btn" href="/how-it-works">Watch the tour</a></article>
       <article class="next-tool"><span class="next-tool-icon" aria-hidden="true">✨</span><h3>Choose your next win</h3><p>Explore another money goal and see the real-life story, screens and outcome behind it.</p><a class="btn" href="/#benefits">See all goals</a></article>
     </div></div></section>
     <section class="final"><div class="wrap"><div class="final-card"><h2>Start this story with one receipt.</h2><p>Try the real GetGuac capture flow, or return to the homepage to explore another money goal.</p><a class="btn" href="https://getguac.app/join?try=receipt">Try 1 receipt</a> <a class="btn" href="/#benefits">Explore another goal</a></div></div></section>
   </main>
-  <footer class="footer"><div class="wrap"><span>🥑 GetGuac · Your money’s wingman</span><span><a href="/how-it-works">How it works</a> · <a href="https://getguac.app/games">Games</a> · <a href="../resources/index.html">Resources</a> · <a href="../sitemap.html">Sitemap</a> · <a href="https://getguac.app/security">Security</a> · <a href="https://getguac.app/contact">Contact</a></span></div></footer>
+  <footer class="footer"><div class="wrap"><span>🥑 GetGuac · Your money’s wingman</span><span>${ggFooterHtml()}</span></div></footer>
   <dialog class="zoom-dialog" id="zoomDialog" aria-label="Expanded GetGuac screen"><div class="zoom-dialog-inner"><button class="zoom-close" type="button" aria-label="Close expanded screen">×</button><img id="zoomImage" alt=""></div></dialog>`;
+
+ggNavStyles();
 
 const zoomDialog = document.getElementById('zoomDialog');
 const zoomImage = document.getElementById('zoomImage');

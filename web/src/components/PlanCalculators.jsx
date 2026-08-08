@@ -397,6 +397,11 @@ const CALCS = [
   },
 ]
 
+// Exported so the /plan landing copy cannot drift from the real list. The
+// design mockup's pill read "14 plain-English calculators"; there are 16.
+// Anything quoting a count must read it from here rather than retype it.
+export const CALC_COUNT = CALCS.length
+
 export default function PlanCalculators() {
   const [authed, setAuthed] = useState(null)
   const [saved, setSaved] = useState({})

@@ -11,37 +11,19 @@ import MarketingAuthButtons from './MarketingAuthButtons'
 import MarketingMobileMenu from './MarketingMobileMenu'
 import MarketingFooter from './MarketingFooter'
 import AdSenseScript from './AdSenseScript'
+import { GG_NAV, GG_NAV_FLAT, GG_CARET, ggNavCss } from '../lib/gg-nav-def'
 
-// Flat list — feeds the mobile hamburger menu (and keeps every page reachable).
-const NAV = [
-  { href: '/marketplace', label: 'Marketplace' },
-  { href: '/coupons', label: 'Coupons' },
-  { href: '/resources', label: 'Resources' },
-  { href: '/articles', label: 'Articles' },
-  { href: '/plan', label: 'Calculators' },
-  { href: '/games', label: 'Games' },
-  { href: '/how-it-works', label: 'How it works' },
-  { href: '/features', label: 'Features' },
-  { href: '/pricing', label: 'Pricing' },
-  { href: '/faq', label: 'FAQ' },
-  { href: '/security', label: 'Security' },
-]
-
-// Desktop header row. Articles + Calculators live under the Resources
-// submenu (hover/focus dropdown) instead of cluttering the top level.
-const NAV_TOP = [
-  { href: '/marketplace', label: 'Marketplace' },
-  { href: '/coupons', label: 'Coupons' },
-  { href: '/games', label: 'Games' },
-  { href: '/resources', label: 'Resources', children: [
-    { href: '/resources', label: 'Resources hub' },
-    { href: '/articles', label: 'Articles' },
-    { href: '/plan', label: 'Calculators' },
-  ]},
-  { href: '/how-it-works', label: 'How it works' },
-  { href: '/features', label: 'Features' },
-  { href: '/pricing', label: 'Pricing' },
-]
+// The nav is NOT defined here any more. It lives in src/lib/gg-nav-def.js, the
+// one file that also generates public/gg-nav.js (33 static pages) and the markup
+// in homepage-source.html. There used to be a copy in each of those three
+// places, "kept in sync" by comments, and they weren't: the order, the caret
+// glyph, the dropdown padding and the hover colours had all drifted apart, so
+// clicking from the homepage into a React page visibly changed the header.
+//
+// Sign in is dropped from both lists because MarketingAuthButtons renders it —
+// it has to, since a signed-in visitor gets Sign out / Dashboard there instead.
+const NAV_TOP = GG_NAV.filter((n) => n.href !== '/login')
+const NAV = GG_NAV_FLAT.filter((n) => n.href !== '/login')
 
 const FOOTER = [
   { heading: 'Product', links: [
@@ -56,7 +38,7 @@ const FOOTER = [
   { heading: 'Learn', links: [
     { href: '/resources', label: 'Resources' },
     { href: '/articles', label: 'Articles' },
-    { href: '/plan', label: 'Calculators' },
+    { href: '/calculators', label: 'Calculators' },
     { href: '/games', label: 'Games' },
     { href: '/faq', label: 'FAQ' },
     { href: '/how-email-works', label: 'How email works' },
@@ -72,7 +54,28 @@ const FOOTER = [
 
 const DISPLAY = { fontFamily: 'var(--font-bricolage), sans-serif' }
 
-export default function MarketingShell({ subtitle, hideSearch = false, headerTitle, ads = true, children }) {
+// Shell-only chrome. The nav rules are NOT here — ggNavCss() supplies those and
+// this string is concatenated with it at render time. Same ASCII-only, flat-
+// selector rule applies: this goes inside a React <style>.
+const SHELL_CSS = `
+html.gg-embedded .gg-embed-hide { display: none !important; }
+.gg-marketing { overflow-x: clip; }
+.gg-marketing h1, .gg-marketing h2, .gg-marketing h3, .gg-marketing h4 { font-family: var(--font-bricolage), sans-serif; letter-spacing: -0.02em; }
+.gg-marketing a { transition: color .15s ease; }
+@media (max-width: 639px) {
+  .gg-header-row { padding-left: 18px !important; padding-right: 14px !important; gap: 10px !important; }
+  .gg-header-search, .gg-header-auth { display: none !important; }
+  .gg-header-nav { margin-left: auto; }
+}
+`
+
+// hideSearch defaults to TRUE so every marketing page's header matches the
+// homepage, which has no search box. It used to default to false, which is why
+// a product search appeared on pages like /how-it-works where there is nothing
+// to search — marketplace, plan, resources and the join pages were all already
+// passing hideSearch to switch it back off one page at a time. A shopping
+// surface that genuinely wants it can opt in with hideSearch={false}.
+export default function MarketingShell({ subtitle, hideSearch = true, headerTitle, ads = true, children }) {
   // In-app (mobile WebView) the native shell already provides the top app bar +
   // logo, so rendering the marketing nav here stacks a SECOND avocado logo/header
   // under it. The /embed handshake drops guac_embedded=1 — when set, hide the
@@ -145,26 +148,19 @@ export default function MarketingShell({ subtitle, hideSearch = false, headerTit
           __html: "try{if(document.cookie.split('; ').indexOf('guac_embedded=1')>-1)document.documentElement.classList.add('gg-embedded')}catch(e){}",
         }}
       />
-      {/* Scope the new typography + accents to marketing pages only. */}
-      <style>{`
-        html.gg-embedded .gg-embed-hide { display: none !important; }
-        .gg-marketing { overflow-x: clip; }
-        .gg-marketing h1, .gg-marketing h2, .gg-marketing h3, .gg-marketing h4 { font-family: var(--font-bricolage), sans-serif; letter-spacing: -0.02em; }
-        .gg-marketing a { transition: color .15s ease; }
-        @media (max-width: 1024px) { .gg-navlinks { display: none !important; } }
-        @media (max-width: 639px) {
-          .gg-header-row { padding-left: 18px !important; padding-right: 14px !important; gap: 10px !important; }
-          .gg-header-search, .gg-header-auth { display: none !important; }
-          .gg-header-nav { margin-left: auto; }
-        }
-        .gg-dd { position: relative; }
-        .gg-ddmenu { display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); padding-top: 12px; z-index: 40; }
-        .gg-dd:hover .gg-ddmenu, .gg-dd:focus-within .gg-ddmenu { display: block; }
-        .gg-ddcard { background: #fff; border: 1px solid rgba(20,83,45,0.10); border-radius: 14px; box-shadow: 0 14px 34px rgba(21,40,28,0.13); padding: 8px; min-width: 176px; }
-        .gg-ddcard a { display: block; padding: 9px 13px; border-radius: 9px; font-size: 14px; font-weight: 600; color: #3d4a42; text-decoration: none; white-space: nowrap; }
-        .gg-ddcard a:hover { background: #f2fbf3; color: #065f46; }
-        .gg-ddcaret { font-size: 9px; margin-left: 3px; color: #8a978d; }
-      `}</style>
+      {/* Scope the new typography + accents to marketing pages only, then append
+          the shared nav stylesheet. The dropdown rules used to be written out a
+          second time here as .gg-dd/.gg-ddcard with subtly different padding,
+          radius and hover colours; they come from ggNavCss() now so the React
+          header, the homepage and the 33 static pages resolve to the same
+          computed values.
+
+          One string, not two children — a <style> with two text children is a
+          hydration mismatch waiting to happen. And nothing non-ASCII or
+          commented goes inside it: React escapes >, &, ' and " in style text
+          differently on the server than the client, which has broken this page
+          in production twice. See the note on ggNavCss(). */}
+      <style>{SHELL_CSS + ggNavCss('hamburger')}</style>
 
       {/* Nav — hidden in-app so it doesn't duplicate the native app bar/logo. */}
       <header className="gg-embed-hide" style={{ position: 'sticky', top: 0, zIndex: 30, backdropFilter: 'blur(12px)', background: 'rgba(255,255,255,0.88)', borderBottom: '1px solid rgba(20,83,45,0.08)' }}>
@@ -179,23 +175,26 @@ export default function MarketingShell({ subtitle, hideSearch = false, headerTit
                 : <div className="flex-1" />)
             : <HeaderSearch className="gg-header-search flex-1 min-w-0 max-w-xl" />}
           <nav className="gg-header-nav" style={{ display: 'flex', alignItems: 'center', gap: 18, flexShrink: 0 }}>
+            {/* Class names, not inline styles. The colour/size/weight of these
+                links used to be repeated inline here AND in ggNavCss(); the
+                shared classes mean there is exactly one rule to change. */}
             {!headerTitle && (
-              <div className="gg-navlinks" style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+              <div className="ggnav">
                 {NAV_TOP.map((n) => n.children ? (
-                  <div key={n.href} className="gg-dd">
-                    <Link href={n.href} style={{ color: '#5C6B60', fontWeight: 500, fontSize: 14.5, textDecoration: 'none' }}>
-                      {n.label}<span className="gg-ddcaret">▼</span>
+                  <span key={n.href} className="ggdd">
+                    <Link className="ggdd-top" href={n.href}>
+                      {n.label}<i className="ggdd-caret" aria-hidden="true">{GG_CARET}</i>
                     </Link>
-                    <div className="gg-ddmenu">
-                      <div className="gg-ddcard">
+                    <span className="ggdd-menu">
+                      <span className="ggdd-card">
                         {n.children.map((c) => (
                           <Link key={c.href + c.label} href={c.href}>{c.label}</Link>
                         ))}
-                      </div>
-                    </div>
-                  </div>
+                      </span>
+                    </span>
+                  </span>
                 ) : (
-                  <Link key={n.href} href={n.href} style={{ color: '#5C6B60', fontWeight: 500, fontSize: 14.5, textDecoration: 'none' }}>{n.label}</Link>
+                  <Link key={n.href} href={n.href}>{n.label}</Link>
                 ))}
               </div>
             )}

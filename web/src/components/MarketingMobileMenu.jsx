@@ -11,7 +11,10 @@ import { Menu, X } from 'lucide-react'
 export default function MarketingMobileMenu({ nav }) {
   const [open, setOpen] = useState(false)
   return (
-    <div className="xl:hidden">
+    // lg:hidden (>=1024px) pairs with the max-width:1023px rule ggNavCss()
+    // emits for .ggnav, so the desktop links and this hamburger are never both
+    // on screen. It was xl:hidden, which double-rendered from 1024-1280px.
+    <div className="lg:hidden">
       <button
         type="button"
         aria-label={open ? 'Close menu' : 'Open menu'}

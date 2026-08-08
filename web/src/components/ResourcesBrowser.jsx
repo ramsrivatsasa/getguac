@@ -14,7 +14,7 @@ import { Search, ExternalLink, CalendarDays, TrendingUp, ShoppingBag, Ticket, Re
 import AdSlot from './AdSlot'
 
 const TOOLS = [
-  { href: '/plan', icon: TrendingUp, title: 'Calculators', desc: 'Retirement, college, mortgage, debt payoff — 14 calculators with Guac-AI strategy.' },
+  { href: '/calculators', icon: TrendingUp, title: 'Calculators', desc: 'Retirement, college, mortgage, debt payoff — 16 calculators with Guac-AI strategy.' },
   { href: '/bills', icon: CalendarDays, title: 'Bills calendar', desc: 'See every recurring bill laid out on the days it’s due.' },
   { href: '/marketplace', icon: ShoppingBag, title: 'Marketplace', desc: 'Compare live prices across major retailers in one search.' },
   { href: '/coupons', icon: Ticket, title: 'Coupons', desc: 'Live promo codes for the biggest stores, all in one place.' },

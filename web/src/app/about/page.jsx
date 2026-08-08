@@ -106,7 +106,7 @@ export default function AboutPage() {
             <p>
               Our <Link href="/articles" className="text-emerald-700 font-semibold hover:underline">money guides</Link>{' '}
               are written and reviewed by the GetGuac team, dated so you can see when they were last
-              updated, and paired with <Link href="/plan" className="text-emerald-700 font-semibold hover:underline">free calculators</Link>{' '}
+              updated, and paired with <Link href="/calculators" className="text-emerald-700 font-semibold hover:underline">free calculators</Link>{' '}
               so you can run your own numbers instead of taking ours. They are educational, not
               financial advice: we explain how things like 401(k) matches, high-yield savings, and
               debt-payoff methods work, and we leave the decisions to you. If we ever get something

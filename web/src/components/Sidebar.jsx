@@ -32,7 +32,7 @@ const sections = [
       { href: '/receipts', icon: Receipt,        label: 'Receipts', emoji: '🧾', hoverMascot: 'happy' },
       { href: '/reports',  icon: BarChart3,      label: 'Reports',  emoji: '📊', hoverMascot: 'celebrating' },
       { href: '/bills',    icon: CalendarDays,   label: 'Bills',    emoji: '🗓️', hoverMascot: 'sitting' },
-      { href: '/plan',     icon: TrendingUp,     label: 'Plan',     emoji: '🎯', hoverMascot: 'rich' },
+      { href: '/calculators', icon: TrendingUp, label: 'Plan',     emoji: '🎯', hoverMascot: 'rich' },
       { href: '/bank',     icon: Banknote,       label: 'Bank',     emoji: '🏦', hoverMascot: 'rich' },
       { href: '/returns',  icon: Undo2,          label: 'Returns',  emoji: '↩️', hoverMascot: 'surprised' },
       { href: '/rewards',  icon: Gift,           label: 'Rewards',  emoji: '🎁', hoverMascot: 'celebrating' },

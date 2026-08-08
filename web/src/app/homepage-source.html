@@ -641,6 +641,16 @@
       *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
       .rise{opacity:1;transform:none}
     }
+  
+    /* GG_NAV_CSS START */.ggnav{display:flex;align-items:center;gap:18px;flex-wrap:wrap}.ggnav a{color:#5C6B60;font-weight:700;font-size:14.5px;text-decoration:none}.ggnav a:hover{color:#15281C}.ggnav .btn.accent{color:#fff}.ggdd{position:relative;display:inline-flex}.ggdd-top{display:inline-flex;align-items:center;gap:4px}.ggdd-caret{font-size:11px;font-style:normal;opacity:.75}.ggdd-menu{position:absolute;left:0;top:100%;padding-top:10px;opacity:0;visibility:hidden;transform:translateY(-4px);transition:opacity .15s,transform .15s,visibility .15s;z-index:60}.ggdd:hover .ggdd-menu,.ggdd:focus-within .ggdd-menu{opacity:1;visibility:visible;transform:none}.ggdd-card{min-width:232px;background:#fff;border:1px solid #E4EDE4;border-radius:16px;padding:8px;box-shadow:0 22px 44px -28px rgba(16,40,26,.55);display:flex;flex-direction:column;gap:2px}.ggdd-card a{padding:9px 12px;border-radius:10px;font-weight:600;font-size:14px;white-space:nowrap}.ggdd-card a:hover{background:#F1F8EE;color:#15281C}@media(max-width:900px){.ggnav .ggdd-menu{display:none}.ggnav{gap:12px}}
+.site-head .wrap.nav{height:64px;gap:18px}
+.links{gap:18px;font-size:14.5px;font-weight:700;color:#5C6B60}
+.links a{padding:0;border-radius:0}
+.links a:hover{background:transparent;color:#15281C}
+.links .ggdd-card a{padding:9px 12px;border-radius:10px;font-weight:600;font-size:14px}
+.links .ggdd-card a:hover{background:#F1F8EE;color:#15281C}
+.site-head .btn.primary{padding:10px 18px;font-size:14.5px;border-radius:999px}
+/* GG_NAV_CSS END */
   </style>
 </head>
 <body id="top">
@@ -648,17 +658,14 @@
   <header class="site-head" id="siteHead">
     <div class="wrap nav">
         <a class="logo" href="#top" aria-label="Back to the top"><i>🥑</i>GetGuac</a>
-      <nav class="links" aria-label="Primary">
-        <a href="https://getguac.app/marketplace">Marketplace</a>
-        <a href="https://getguac.app/coupons">Coupons</a>
-        <a href="https://getguac.app/games">Games</a>
-        <a href="resources/index.html">Resources</a>
-        <a href="https://getguac.app/how-it-works">How it works</a>
-        <a href="#benefits">Features</a>
-        <a href="https://getguac.app/pricing">Pricing</a>
-        <a href="https://getguac.app/login">Sign in</a>
+      <!-- Generated from public/gg-nav.js by scripts/build-homepage-nav.mjs.
+           Do not hand-edit: the homepage used to carry its own separate link
+           list, which is how it drifted out of step with the rest of the site
+           and kept pointing at resources/index.html instead of /resources. -->
+      <nav class="links ggnav" aria-label="Primary">
+        <!-- GG_NAV START --><span class="ggdd"><a class="ggdd-top" href="/how-it-works">Why GetGuac<i class="ggdd-caret" aria-hidden="true">▾</i></a><span class="ggdd-menu"><span class="ggdd-card"><a href="/why-getguac">Why GetGuac is different</a><a href="/how-it-works">How it works</a><a href="/get-started">The get-started guide</a><a href="/features">Features</a><a href="/resources#goals">Goal stories</a><a href="/security">Security</a><a href="/pricing">Pricing</a></span></span></span><span class="ggdd"><a class="ggdd-top" href="/resources">Learn<i class="ggdd-caret" aria-hidden="true">▾</i></a><span class="ggdd-menu"><span class="ggdd-card"><a href="/resources#guides">Guides</a><a href="/articles">Articles</a><a href="/calculators">Calculators</a><a href="/resources#tools">Tools</a><a href="/faq">FAQ</a></span></span></span><span class="ggdd"><a class="ggdd-top" href="/marketplace">Shopping<i class="ggdd-caret" aria-hidden="true">▾</i></a><span class="ggdd-menu"><span class="ggdd-card"><a href="/marketplace">Marketplace</a><a href="/coupons">Coupons</a></span></span></span><a href="/games">Games</a><a href="/login">Sign in</a><!-- GG_NAV END -->
       </nav>
-      <a class="btn primary" href="https://getguac.app/join">Get started</a>
+      <a class="btn primary" href="/join">Get started</a>
     </div>
   </header>
 
@@ -673,8 +680,8 @@
             <h1>Keep More Guac <span>in Your Pocket</span> <span class="h1-emoji">🥑</span></h1>
             <p class="lede">You work hard for every dollar. GetGuac reads your receipts and bank statements, remembers what your household bought, catches money that can come back, and helps the next shopping trip feel lighter. Your money’s wingman. Keep your guac.</p>
             <div class="actions">
-              <a class="btn primary" href="https://getguac.app/join?try=receipt">📷 Try 1 receipt</a>
-              <a class="btn green" href="https://getguac.app/join">Start free with Google</a>
+              <a class="btn primary" href="/join?try=receipt">📷 Try 1 receipt</a>
+              <a class="btn green" href="/join">Start free with Google</a>
             </div>
             <div class="app-links hero-store-links" aria-label="Download GetGuac">
               <a class="store-btn" href="https://apps.apple.com/us/app/getguac/id6790993237" target="_blank" rel="noopener noreferrer" aria-label="Download GetGuac on the App Store">
@@ -859,7 +866,7 @@
           </div>
           <div class="flow-under">
             <p class="sub">GetGuac remembers the shopping so you do not have to—and learns from every trip.</p>
-            <a class="flow-link" href="https://getguac.app/how-it-works">See how GetGuac works →</a>
+            <a class="flow-link" href="/how-it-works">See how GetGuac works →</a>
           </div>
         </div>
 
@@ -935,7 +942,7 @@
         <aside class="security-card rise" aria-labelledby="securityProofTitle">
           <div class="security-title"><i aria-hidden="true">🛡</i><h2 id="securityProofTitle">Your security is our priority</h2></div>
           <ul><li>256-bit bank-level encryption</li><li>Read-only access</li><li>Your data is never sold</li><li>Secure and private by design</li></ul>
-          <a href="https://getguac.app/security">How we protect you →</a>
+          <a href="/security">How we protect you →</a>
         </aside>
       </div>
     </section>
@@ -973,7 +980,7 @@
           <span class="eyebrow">Build more room for real life</span>
           <h2>Keep more for the life you are building together.</h2>
           <p>Money can feel heavy when the useful details disappear. GetGuac remembers what your household bought, catches money that can come back and makes the next shopping trip easier—without judgment or another spreadsheet.</p>
-          <a class="btn ghost" href="https://getguac.app/join">Start with one receipt →</a>
+          <a class="btn ghost" href="/join">Start with one receipt →</a>
         </div>
       </div>
     </section>
@@ -987,22 +994,22 @@
             <h2>Small money lessons. Real-life wins.</h2>
             <p class="sub">Practical guides to help every receipt teach you something useful.</p>
           </div>
-          <a class="btn line" href="https://getguac.app/articles">Explore all guides →</a>
+          <a class="btn line" href="/articles">Explore all guides →</a>
         </div>
         <div class="blog-grid">
-          <a class="post rise" href="https://getguac.app/articles/track-spending-with-receipts">
+          <a class="post rise" href="/articles/track-spending-with-receipts">
             <div class="thumb"><img src="home/story-people/capture.webp" alt="A shopper checking an organized receipt in GetGuac" width="1200" height="800" loading="lazy" decoding="async"></div>
             <div class="body"><small>Shopping</small><h3>Why tracking your receipts beats guessing</h3><p>Your memory underestimates your spending—receipts reveal the truth.</p><b>Read the guide</b></div>
           </a>
-          <a class="post rise" href="https://getguac.app/articles/cancel-unused-subscriptions">
+          <a class="post rise" href="/articles/cancel-unused-subscriptions">
             <div class="thumb"><img src="home/campaign-story/subscription-renter-v2.webp" alt="A renter reviewing subscriptions and recurring charges" width="1536" height="1024" loading="lazy" decoding="async"></div>
             <div class="body"><small>Shopping</small><h3>The subscription audit that pays for itself</h3><p>Free trials, forgotten apps, and duplicate streaming add up quietly.</p><b>Read the guide</b></div>
           </a>
-          <a class="post rise" href="https://getguac.app/articles/get-the-refund-youre-owed">
+          <a class="post rise" href="/articles/get-the-refund-youre-owed">
             <div class="thumb"><img src="home/story-people/protect.webp" alt="A shopper using GetGuac to protect a return window" width="1200" height="800" loading="lazy" decoding="async"></div>
             <div class="body"><small>Shopping</small><h3>How to actually get the refund you’re owed</h3><p>Return windows and price drops can leave money waiting to be claimed.</p><b>Read the guide</b></div>
           </a>
-          <a class="post rise" href="https://getguac.app/articles/emergency-fund-size">
+          <a class="post rise" href="/articles/emergency-fund-size">
             <div class="thumb"><img src="home/story-people/family.webp" alt="A family enjoying the security of a stronger emergency fund" width="1200" height="800" loading="lazy" decoding="async"></div>
             <div class="body"><small>Saving</small><h3>How big should your emergency fund be?</h3><p>The right number depends on your household and the life you are protecting.</p><b>Read the guide</b></div>
           </a>
@@ -1016,7 +1023,7 @@
         <div class="cta-band rise">
           <h2>Start the circle with one receipt.</h2>
           <p>One small scan can protect a return, uncover a quiet charge, and help your household face the next shopping trip with less stress.</p>
-          <a class="btn ghost" href="https://getguac.app/join?try=receipt">📷 Try 1 receipt</a>
+          <a class="btn ghost" href="/join?try=receipt">📷 Try 1 receipt</a>
         </div>
       </div>
     </section>
@@ -1025,9 +1032,9 @@
   <footer class="footer">
     <div class="wrap">
       <div><b>🥑 GetGuac</b><span>Your money’s wingman. Keep more guac in your pocket.</span></div>
-      <div><b>Product</b><a href="https://getguac.app/marketplace">Marketplace</a><a href="https://getguac.app/coupons">Coupons</a><a href="https://getguac.app/games">Games</a><a href="https://getguac.app/features">Features</a><a href="https://getguac.app/how-it-works">How it works</a><a href="https://getguac.app/pricing">Pricing</a></div>
-      <div><b>Learn</b><a href="resources/index.html">Resources</a><a href="https://getguac.app/articles">Articles</a><a href="resources/calculators.html">Calculators</a><a href="https://getguac.app/faq">FAQ</a><a href="https://getguac.app/how-email-works">How email works</a><a href="https://getguac.app/security">Security</a></div>
-      <div><b>Company</b><a href="https://getguac.app/about">About</a><a href="https://getguac.app/contact">Contact</a><a href="https://getguac.app/privacy">Privacy</a><a href="https://getguac.app/terms">Terms</a><a href="sitemap.html">Sitemap</a><a href="https://getguac.app/join">Get started</a></div>
+      <div><b>Product</b><a href="/marketplace">Marketplace</a><a href="/coupons">Coupons</a><a href="/games">Games</a><a href="/features">Features</a><a href="/how-it-works">How it works</a><a href="/pricing">Pricing</a></div>
+      <div><b>Learn</b><a href="resources/index.html">Resources</a><a href="/articles">Articles</a><a href="resources/calculators.html">Calculators</a><a href="/faq">FAQ</a><a href="/how-email-works">How email works</a><a href="/security">Security</a></div>
+      <div><b>Company</b><a href="/about">About</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="sitemap.html">Sitemap</a><a href="/join">Get started</a></div>
     </div>
   </footer>
 

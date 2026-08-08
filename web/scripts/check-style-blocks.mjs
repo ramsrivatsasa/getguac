@@ -20,6 +20,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { ggNavCss } from '../src/lib/gg-nav-def.js'
 
 const SRC = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'src')
 
@@ -46,6 +47,22 @@ const STYLE_TAG = /<style(?![^>]*\bjsx\b)[^>]*>\s*\{([\s\S]*?)\}\s*<\/style>/g
 
 let failures = 0
 let checked = 0
+
+// ggNavCss() is a CALL, so the static pass below can only report it as
+// unresolvable — and it is the single largest block of CSS injected into a
+// React <style> on every marketing page. Check its actual output.
+for (const collapse of ['inline', 'hamburger']) {
+  checked++
+  const css = ggNavCss(collapse)
+  const chars = [...new Set([...css].filter((c) => HAZARD.test(c)))]
+  if (chars.length) {
+    failures++
+    console.log(`X  lib/gg-nav-def.js ggNavCss(${collapse}): ${JSON.stringify(chars)}`)
+    for (const frag of css.split('}').filter((f) => HAZARD.test(f)).slice(0, 4)) {
+      console.log(`      ${frag.trim().slice(0, 110)}}`)
+    }
+  }
+}
 
 for (const file of walk(SRC)) {
   const src = fs.readFileSync(file, 'utf8')

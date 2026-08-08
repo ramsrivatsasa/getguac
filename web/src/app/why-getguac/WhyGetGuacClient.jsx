@@ -478,7 +478,7 @@ export default function WhyGetGuacClient() {
                   has no bank linking, so every receipt is photographed or
                   forwarded BY HAND — against a bank-linked competitor we are
                   the MORE manual product. */}
-              <h1 className="gj-subline" style={{ ...DISPLAY, fontWeight: 800, color: '#15281C', fontSize: 44, lineHeight: 1.08, letterSpacing: '-0.035em', margin: '18px 0 0' }}>
+              <h1 className="gj-subline" style={{ ...DISPLAY, fontWeight: 800, color: '#15281C', fontSize: 44, lineHeight: 1.08, letterSpacing: '-0.05em', margin: '18px 0 0' }}>
                 Your bank shows transactions.{' '}
                 <span style={{ color: '#4D7C0F' }}>GetGuac shows what you bought.</span>
               </h1>
@@ -954,7 +954,7 @@ export default function WhyGetGuacClient() {
               this same page ("Most apps track. Guac-AI thinks."), and "Budget
               Beyond Bank Transactions" uses "budget" as a verb for a product
               with NO budgeting feature. */}
-          <h2 className="gj-secth2" style={{ ...DISPLAY, fontWeight: 800, fontSize: 34, letterSpacing: '-0.03em', margin: '0 0 12px', color: '#15281C' }}>Know what you bought. Not just where you spent.</h2>
+          <h2 className="gj-secth2" style={{ ...DISPLAY, fontWeight: 800, fontSize: 34, letterSpacing: '-0.045em', margin: '0 0 12px', color: '#15281C' }}>Know what you bought. Not just where you spent.</h2>
           <p style={{ fontSize: 17, lineHeight: 1.55, color: '#56655B', margin: 0 }}>
             Most money apps only see the merchant and the total, because that is all a bank
             feed carries. GetGuac reads the receipt — so it knows the items, and it never

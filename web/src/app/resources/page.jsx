@@ -114,7 +114,7 @@ const RES_CSS = `
 .rs-wrap { width: min(1180px, calc(100% - 36px)); margin: auto; }
 .rs-hero-grid { display: grid; grid-template-columns: .95fr 1.05fr; align-items: center; gap: 54px; }
 .rs-eyebrow { color: #138a48; font-size: 11px; font-weight: 900; letter-spacing: .13em; text-transform: uppercase; }
-.rs-hero h1 { margin: 9px 0 15px; font-size: clamp(40px,5vw,68px); line-height: .98; font-weight: 800; letter-spacing: -.055em; }
+.rs-hero h1 { margin: 9px 0 15px; font-size: clamp(40px,5vw,68px); line-height: .98; font-weight: 800; letter-spacing: -.05em; }
 .rs-lede { max-width: 650px; color: #405449; font-size: 17px; }
 .rs-hero-image { position: relative; overflow: hidden; border-radius: 30px; box-shadow: 0 18px 40px -30px rgba(10,35,20,.45); aspect-ratio: 16/10; }
 .rs-hero-image img { width: 100%; height: 100%; object-fit: cover; display: block; }

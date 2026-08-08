@@ -61,9 +61,11 @@ const SHELL_CSS = `
 html.gg-embedded .gg-embed-hide { display: none !important; }
 .gg-marketing { overflow-x: clip; }
 .gg-marketing h1, .gg-marketing h2, .gg-marketing h3, .gg-marketing h4 { font-family: var(--font-bricolage), sans-serif; letter-spacing: -0.02em; }
+.gg-marketing h1 { font-weight: 800; letter-spacing: -0.05em; }
+.gg-marketing h2 { font-weight: 800; letter-spacing: -0.045em; }
 .gg-marketing a { transition: color .15s ease; }
 @media (max-width: 639px) {
-  .gg-header-row { padding-left: 18px !important; padding-right: 14px !important; gap: 10px !important; }
+  .gg-header-row { gap: 10px !important; }
   .gg-header-search, .gg-header-auth { display: none !important; }
   .gg-header-nav { margin-left: auto; }
 }
@@ -164,10 +166,20 @@ export default function MarketingShell({ subtitle, hideSearch = true, headerTitl
 
       {/* Nav — hidden in-app so it doesn't duplicate the native app bar/logo. */}
       <header className="gg-embed-hide" style={{ position: 'sticky', top: 0, zIndex: 30, backdropFilter: 'blur(12px)', background: 'rgba(255,255,255,0.88)', borderBottom: '1px solid rgba(20,83,45,0.08)' }}>
-        <div className="gg-header-row" style={{ maxWidth: 1180, margin: '0 auto', padding: '0 28px', height: 64, display: 'flex', alignItems: 'center', gap: 18 }}>
+        {/* height comes from ggNavCss now, with the other two headers.
+            The WIDTH is the homepage's .wrap formula, not max-width + padding.
+            It was maxWidth 1180 with 28px of padding, which puts the logo 28px
+            further in and the content band 56px narrower than the homepage: the
+            wordmark visibly jumped right the moment you clicked off the
+            homepage onto any of these 20 pages. Measured at 1280px wide, logo
+            x=78 here against x=50 there. */}
+        <div className="gg-header-row" style={{ width: 'min(1180px, calc(100% - clamp(24px, 5vw, 56px)))', margin: '0 auto', display: 'flex', alignItems: 'center', gap: 18 }}>
+          {/* ggbrand, not inline styles. The wordmark was 20px/#15281C here,
+              21px/#12261B on the homepage and 22px/#102819 on the static pages —
+              three sizes and three greens for the same six letters. */}
           <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 9, flexShrink: 0, textDecoration: 'none' }}>
             <span style={{ fontSize: 22 }}>🥑</span>
-            <span className="hidden sm:block" style={{ ...DISPLAY, fontWeight: 800, fontSize: 20, color: '#15281C', letterSpacing: '-0.02em' }}>GetGuac</span>
+            <span className="hidden sm:block ggbrand">GetGuac</span>
           </Link>
           {hideSearch
             ? (headerTitle

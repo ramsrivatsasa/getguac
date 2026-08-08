@@ -46,8 +46,11 @@ export default function MarketingAuthButtons() {
       {/* GG_CTA, not a literal /register. The homepage and all 33 static pages
           send Get started to /join; only this header went straight to the signup
           form, so the same button did two different things depending on which
-          page you happened to be on. */}
-      <Link href={GG_CTA.href} className="btn-primary">{GG_CTA.label}</Link>
+          page you happened to be on.
+          ggcta, not btn-primary: the global button is a 14px/12px-radius
+          rounded rect, while the homepage and static headers draw a 14.5px
+          pill. Same button, two shapes, depending on the page. */}
+      <Link href={GG_CTA.href} className="ggcta">{GG_CTA.label}</Link>
     </>
   )
 }

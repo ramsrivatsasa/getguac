@@ -30,14 +30,20 @@ const menu = ggMenuHtml()
 // these overrides pull the homepage onto the shell's values. They live here,
 // appended to the generated block, so they cannot drift from ggNavCss() and so
 // nothing edits homepage-source.html's original stylesheet by hand.
+// What is left after ggNavCss() took over the shared tokens. Height, link
+// type, dropdown metrics, the brand and the CTA all come from the definition
+// now and were deleted from here — they were a second copy of the same numbers,
+// which is how the homepage ended up as the only page with a pill CTA.
+//
+// These three rules are genuinely homepage-only: its .links stylesheet predates
+// the shared nav and draws pill-shaped hover targets, which nothing else has.
 const ALIGN_TO_SHELL = `
-.site-head .wrap.nav{height:64px;gap:18px}
-.links{gap:18px;font-size:14.5px;font-weight:700;color:#5C6B60}
+.site-head .wrap.nav{gap:18px}
+.links{gap:18px}
 .links a{padding:0;border-radius:0}
 .links a:hover{background:transparent;color:#15281C}
-.links .ggdd-card a{padding:9px 12px;border-radius:10px;font-weight:600;font-size:14px}
+.links .ggdd-card a{padding:9px 12px;border-radius:10px}
 .links .ggdd-card a:hover{background:#F1F8EE;color:#15281C}
-.site-head .btn.primary{padding:10px 18px;font-size:14.5px;border-radius:999px}
 `
 
 // 'inline': the homepage has no hamburger either, so like the static pages it

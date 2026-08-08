@@ -95,3 +95,13 @@ mobile-screens/
 
 # Stray output from a script that ran with an undefined output path
 web/undefined/
+
+# ── Scratch that must never be committed ─────────────────────────────────
+# Alternate build outputs from parallel agent sessions. These reached ~1.2 GB
+# across a dozen directories; `git add -A` would have swept them in.
+web/.next-codex*/
+web/src/.next/
+# Throwaway probe scripts and screenshot dumps. The `_` prefix is the existing
+# convention in this repo for "written to answer one question, not shipped".
+web/_*
+!web/_route-backups/

@@ -42,7 +42,7 @@ const COLS = [
 
 export default function MarketingFooter() {
   return (
-    <footer style={{ borderTop: '1px solid rgba(20,83,45,0.10)', background: '#FCFDFA', fontFamily: 'var(--font-jakarta), system-ui, sans-serif' }}>
+    <footer style={{ borderTop: '1px solid rgba(20,83,45,0.10)', background: '#FBFCF8', fontFamily: 'var(--font-jakarta), system-ui, sans-serif' }}>
       <div style={{ maxWidth: 1180, margin: '0 auto', padding: '52px 28px 24px' }}>
         <div className="grid grid-cols-2 md:grid-cols-4" style={{ gap: 40 }}>
           <div className="col-span-2 md:col-span-1">

@@ -65,6 +65,24 @@ export const GG_FOOTER_LINKS = [
 
 export const GG_CTA = { href: '/join', label: 'Get started' }
 
+// The display face, spelled the way each surface can resolve it. The React
+// pages get the family through a CSS variable that next/font defines; the
+// static pages load the webfont themselves and have no such variable, so the
+// literal name has to follow as the fallback.
+//
+// UNQUOTED on purpose. A multi-word family name is legal CSS unquoted, and this
+// string ends up inside a React <style> where a quote would be escaped to
+// &#x27; — a hydration mismatch plus a font-family the server render cannot
+// parse. Same rule as everything else in ggNavCss().
+//
+// The fallback INSIDE var() is load-bearing. `var(--font-bricolage)` with the
+// variable undefined does not fall through to the next family in the list — an
+// unresolved var() makes the whole declaration invalid at computed-value time,
+// so font-family reverts to inherited. next/font only defines that variable on
+// the React pages, so the 16 static pages rendered the wordmark in the body
+// face until this fallback was added.
+const GG_DISPLAY = 'var(--font-bricolage,Bricolage Grotesque),sans-serif'
+
 /* The ONLY nav stylesheet. MarketingShell injects it into its <style>; the
  * static pages get it via the generated gg-nav.js; the homepage gets it written
  * into homepage-source.html. Class names are shared so all three render
@@ -83,12 +101,43 @@ export const GG_CTA = { href: '/join', label: 'Get started' }
  *   'inline'     static pages + homepage — there is no hamburger, so the links
  *                have to stay; only the hover menus (untappable) go.
  * Everything above that line is identical, which is the part that was drifting. */
+// The three header containers, listed once. `.wrap.nav` is the static pages and
+// the homepage, `.gg-header-row` is MarketingShell. Every header rule below is
+// written against all three so one edit lands on all 35 pages.
+//
+// They are SPELLED OUT rather than left as bare class selectors because the
+// page stylesheets get a vote. resource.css carries `.nav a:not(.brand)
+// {font-size:13px}`, specificity (0,2,1), which quietly beat `.ggnav a` at
+// (0,1,1) — so the eleven resources pages rendered a 13px menu while the other
+// 24 rendered 14.5px, for weeks, with the link lists matching perfectly. A
+// container-qualified selector is (0,3,1) and wins outright.
+const BARS = ['.wrap.nav', '.gg-header-row']
+const inBar = (sel) => BARS.map((b) => b + ' ' + sel).join(',')
+
 function ggNavBaseCss() {
   return ''
     + '.ggnav{display:flex;align-items:center;gap:18px;flex-wrap:wrap}'
     + '.ggnav a{color:#5C6B60;font-weight:700;font-size:14.5px;text-decoration:none}'
     + '.ggnav a:hover{color:#15281C}'
     + '.ggnav .btn.accent{color:#fff}'
+    // Header chrome, one definition. The measured values before this were:
+    // bar height 64 / 72 / 74 / 76px, brand 20 / 21 / 22px in three different
+    // greens, and the CTA a pill on the homepage but a 12px rounded rect on
+    // every React page. See scripts/audit-styles.mjs.
+    + BARS.join(',') + '{height:64px}'
+    + inBar('.ggnav a') + '{color:#5C6B60;font-weight:700;font-size:14.5px;text-decoration:none}'
+    + inBar('.ggdd-card a') + '{font-weight:600;font-size:14px}'
+    + inBar('.ggbrand') + '{font-family:' + GG_DISPLAY + ';font-size:21px;font-weight:800;'
+    + 'color:#12261B;letter-spacing:-0.02em}'
+    // a.ggcta, not .ggcta. The CTA sits INSIDE nav.ggnav on the static pages, so
+    // it is also matched by the link rule above at (0,3,1); a bare .ggcta is
+    // (0,3,0) and loses by that one element selector, which rendered the button
+    // label in the menu grey on a dark green pill. Qualifying it with the
+    // element makes it (0,3,1) and later in source order.
+    + inBar('a.ggcta') + '{display:inline-flex;align-items:center;justify-content:center;'
+    + 'padding:10px 18px;border-radius:999px;background:#12341F;color:#fff;'
+    + 'font-size:14.5px;font-weight:700;line-height:1.2;text-decoration:none;border:0}'
+    + inBar('a.ggcta:hover') + '{background:#1B4A2C;color:#fff}'
     + '.ggdd{position:relative;display:inline-flex}'
     + '.ggdd-top{display:inline-flex;align-items:center;gap:4px}'
     + '.ggdd-caret{font-size:11px;font-style:normal;opacity:.75}'
@@ -134,9 +183,9 @@ export function ggMenuHtml() {
 /* Full contents of `.wrap.nav` for the static pages, which ship no header of
  * their own worth keeping. */
 export function ggNavHtml() {
-  return '<a class="brand" href="/"><i>🥑</i>GetGuac</a>'
+  return '<a class="brand ggbrand" href="/"><i>🥑</i>GetGuac</a>'
     + '<nav class="nav-links ggnav" aria-label="Main">' + ggMenuHtml()
-    + '<a class="btn accent" href="' + esc(GG_CTA.href) + '">' + esc(GG_CTA.label) + '</a></nav>'
+    + '<a class="btn accent ggcta" href="' + esc(GG_CTA.href) + '">' + esc(GG_CTA.label) + '</a></nav>'
 }
 
 export function ggFooterHtml() {

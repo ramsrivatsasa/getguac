@@ -21,10 +21,23 @@ const ACCENTS = {
   violet: { tag: 'bg-violet-100 text-violet-800', bar: 'border-violet-500', icon: 'bg-violet-100 text-violet-700', ring: 'hover:border-violet-200' },
 }
 
+// Real screens, the same set /how-it-works and the homepage use. /features
+// listed fourteen capabilities as icon tiles and showed not one of them
+// working, which made the most concrete page on the site the most abstract.
+// Each arc now opens with the screen you would actually be looking at.
+//
+// Paired web + phone deliberately: GetGuac is used on both, the mobile app is
+// the thing being downloaded, and one flat browser shot implies otherwise.
 const SECTIONS = [
   {
     arc: 'See clearly', accent: 'emerald', icon: Eye,
     blurb: 'Capture everything automatically, and finally see where your money goes.',
+    shot: {
+      web: '/home/goals/web-receipts.webp',
+      phone: '/home/goals/phone-guac-ai.webp',
+      alt: 'The GetGuac receipts list with every line item read out of a photographed receipt',
+      caption: 'Every receipt, read and filed — the store, the date, the total and each item.',
+    },
     features: [
       { icon: ScanLine, title: 'Snap or email any receipt', body: 'Photograph a paper receipt, forward an email receipt, or drop in a PDF. Long grocery receipts and faded ink included.' },
       { icon: Mail, title: 'Your free @getguac.app inbox', body: 'Every account gets a permanent address. Forward receipts to you+g@getguac.app and they file themselves — and it shields your real email from spam.' },
@@ -36,6 +49,12 @@ const SECTIONS = [
   {
     arc: 'Keep more', accent: 'amber', icon: Wallet,
     blurb: 'Catch the waste, claw back the refunds, and pay less for the same things.',
+    shot: {
+      web: '/home/goals/web-returns.webp',
+      phone: '/home/goals/phone-worth-it.webp',
+      alt: 'The GetGuac returns screen counting down the return window on a recent purchase',
+      caption: 'Return windows, price drops and repeat charges, each with the deadline attached.',
+    },
     features: [
       { icon: Gauge, title: 'GuacScore & Worth-It', body: 'Rate a purchase in a tap; a single 0–100 score shows how well you’re spending and sharpens as the regrets drop away.' },
       { icon: Sparkles, title: 'GuacWizard finds bank bites', body: 'Reads your statements and surfaces avoidable interest, fees, and penalties — plain-spoken, never a guilt trip.' },
@@ -48,6 +67,12 @@ const SECTIONS = [
   {
     arc: 'Watch it grow', accent: 'violet', icon: TrendingUp,
     blurb: 'Turn the money you save into the things that actually matter to you.',
+    shot: {
+      web: '/marketing/slides/v2/reports-web.webp',
+      phone: '/home/goals/phone-guacmoney.webp',
+      alt: 'A GetGuac spending report next to the GuacMoney total on the mobile app',
+      caption: 'The money you kept, counted — and the trends behind it.',
+    },
     features: [
       { icon: Target, title: 'Savings that add up', body: 'GuacMoney tracks the real money you keep — refunds claimed, better prices found, regrets skipped — and watches it grow toward what matters.' },
       { icon: TrendingUp, title: 'Reports & Guacanomics', body: 'Clean, tax-ready breakdowns for business and charity, and the trends that turn receipts into real insight.' },
@@ -55,6 +80,39 @@ const SECTIONS = [
     ],
   },
 ]
+
+// 🔴 ASCII ONLY, FLAT SELECTORS, NO COMMENTS INSIDE THIS STRING — React escapes
+// the text children of a style element, which is both a hydration mismatch and
+// invalid CSS on the server pass. scripts/check-style-blocks.mjs enforces it.
+const FEAT_CSS = `
+.ft-tour { display: grid; grid-template-columns: 1.05fr .95fr; align-items: center; gap: 42px; margin-bottom: 34px; }
+.ft-tour-flip .ft-shot { order: 2; }
+.ft-frame { position: relative; padding-bottom: 46px; padding-right: 30px; }
+.ft-shot-web { width: 100%; border-radius: 18px; border: 1px solid #E4EDE4; box-shadow: 0 26px 54px -34px rgba(16,40,26,.55); display: block; background: #fff; }
+.ft-shot-phone { position: absolute; right: 0; bottom: 0; width: 27%; min-width: 118px; border-radius: 20px; border: 1px solid #E4EDE4; box-shadow: 0 20px 44px -22px rgba(16,40,26,.6); display: block; background: #fff; }
+.ft-cap { margin: 14px 0 0; font-size: 13px; color: #65736a; }
+@media (max-width: 900px) {
+  .ft-tour { grid-template-columns: 1fr; gap: 26px; }
+  .ft-tour-flip .ft-shot { order: 0; }
+}
+`
+
+// The caption sits OUTSIDE .ft-frame. Inside, it shared a stacking context with
+// the absolutely-positioned phone, which sits at the frame's bottom-right and
+// covered the last third of every caption.
+function TourShot({ shot }) {
+  return (
+    <figure className="ft-shot" style={{ margin: 0 }}>
+      <div className="ft-frame">
+        <img className="ft-shot-web" src={shot.web} alt={shot.alt} width={1200} height={780} loading="lazy" decoding="async" />
+        {/* aria-hidden: the phone is the same product as the screen behind it,
+            so a second description would just repeat the first aloud. */}
+        <img className="ft-shot-phone" src={shot.phone} alt="" aria-hidden="true" width={360} height={757} loading="lazy" decoding="async" />
+      </div>
+      <figcaption className="ft-cap">{shot.caption}</figcaption>
+    </figure>
+  )
+}
 
 export default function FeaturesPage() {
   return (
@@ -78,8 +136,14 @@ export default function FeaturesPage() {
         </div>
       </section>
 
-      {/* Arc sections */}
-      {SECTIONS.map((sec) => {
+      <style>{FEAT_CSS}</style>
+
+      {/* Arc sections. Each opens with a real screen of the thing it describes,
+          then the capabilities underneath it — the /how-it-works pattern, minus
+          the animation, because this page is a reference rather than a story.
+          Sides alternate so three consecutive sections do not read as one
+          repeated block. */}
+      {SECTIONS.map((sec, si) => {
         const A = ACCENTS[sec.accent]
         return (
           <section key={sec.arc} className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
@@ -89,7 +153,18 @@ export default function FeaturesPage() {
               </span>
               <div className="h-px flex-1 bg-gray-200" />
             </div>
-            <p className="text-xl sm:text-2xl font-bold text-gray-800 max-w-3xl mb-7">{sec.blurb}</p>
+            <div className={si % 2 ? 'ft-tour ft-tour-flip' : 'ft-tour'}>
+              <TourShot shot={sec.shot} />
+              {/* Blurb only. This carried a list of the feature TITLES, which
+                  the cards immediately below then repeated with their bodies —
+                  the same six lines twice, one screenful apart. */}
+              <div>
+                <p className="text-xl sm:text-2xl font-bold text-gray-800">{sec.blurb}</p>
+                <p className="mt-3 text-[15px] leading-6 text-gray-600">
+                  {sec.features.length} of the tools that do it are below.
+                </p>
+              </div>
+            </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {sec.features.map((f) => (
                 <div key={f.title} className={`rounded-2xl border border-gray-100 bg-white p-5 shadow-sm hover:shadow-md transition-all border-t-4 ${A.bar} ${A.ring}`}>

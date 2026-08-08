@@ -28,6 +28,29 @@ const NOISE = /gstatic\.com|googlesyndication|doubleclick|adtrafficquality|googl
 // the console is the only place they surface.
 const HYDRATION = /hydrat|did not match|Text content does not match|server-rendered HTML/i
 
+// GUARD: prove the server on this port is serving the build we just made.
+//
+// An orphaned `next start` from an earlier run keeps the port, the new one dies
+// on EADDRINUSE, and every request lands on a process whose .next no longer has
+// the current chunk hashes. Every page then "fails" with 400s on assets that
+// are perfectly fine. That produced two confident, entirely wrong reports
+// before this check existed — the same class of bug as the hardcoded port in
+// test-static-nav.mjs. Assert it rather than eyeballing the log.
+{
+  const html = await fetch(BASE + '/').then((r) => r.text()).catch(() => '')
+  const chunk = html.match(/\/_next\/static\/chunks\/webpack-[a-z0-9]+\.js/)
+  if (!chunk) {
+    console.error(`ABORT: no webpack chunk in the HTML at ${BASE} — is anything serving?`)
+    process.exit(2)
+  }
+  const res = await fetch(BASE + chunk[0]).catch(() => null)
+  if (!res || res.status !== 200) {
+    console.error(`ABORT: ${BASE}${chunk[0]} returned ${res ? res.status : 'nothing'}.`)
+    console.error('A STALE SERVER IS HOLDING THIS PORT. Kill it and restart; do not read the results below.')
+    process.exit(2)
+  }
+}
+
 const browser = await chromium.launch()
 const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } })
 const rows = []

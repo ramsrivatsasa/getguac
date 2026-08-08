@@ -77,6 +77,25 @@ export async function POST(request) {
       || request.headers.get('x-real-ip')
       || ''
 
+    // Our own traffic, excluded by IP. The hostname guard above catches local
+    // and preview servers, but not a real browser on getguac.app — so every
+    // time we opened the live site to check something, it landed in the same
+    // numbers as a customer. On a site with single-digit daily visitors that is
+    // not noise, it is most of the sample.
+    //
+    // 🔒 THE IP IS COMPARED, NEVER STORED. It exists in this function for the
+    // length of one request and is then discarded; the only thing that reaches
+    // the database is the same salted daily hash as before. /privacy says we do
+    // not keep visitor IPs and that has to stay true — do not "improve" this by
+    // logging the address or writing it to a table.
+    //
+    // Set ANALYTICS_IGNORE_IPS in Vercel (no NEXT_PUBLIC_ prefix — it must not
+    // ship to the browser) to a comma-separated list. Empty or unset means
+    // nothing is excluded, which is the current behaviour.
+    const ignored = (process.env.ANALYTICS_IGNORE_IPS || '')
+      .split(',').map((s) => s.trim()).filter(Boolean)
+    if (ip && ignored.includes(ip)) return NO_CONTENT()
+
     // No IP and no UA means there is nothing to distinguish this visitor by.
     // Count the pageview, skip the unique — better an undercount of visitors
     // than every anonymous request collapsing into one shared hash.

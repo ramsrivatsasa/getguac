@@ -7,6 +7,17 @@ import ZoomableImage from './ZoomableImage'
 
 const DISPLAY = { fontFamily: 'var(--font-bricolage), sans-serif' }
 
+// Half of ALL_FEATURES points at /goals/*.html and /resources/*, which are static
+// files in public/, not Next routes. <Link> prefetches an RSC payload for its
+// href and gets a 404 for those. Plain <a> for anything that is not a route.
+const isStaticPage = (href) => href.endsWith('.html') || href.startsWith('/resources')
+
+function FeatureLink({ href, className, children }) {
+  return isStaticPage(href)
+    ? <a href={href} className={className}>{children}</a>
+    : <Link href={href} className={className}>{children}</Link>
+}
+
 const CHAPTERS = [
   {
     title: 'Capture the real picture',
@@ -94,7 +105,7 @@ export default function FeatureExplorer({ features, starts }) {
             <p className="flex items-center gap-2 text-xs font-black uppercase tracking-[.14em] text-emerald-800"><Check size={15}/> How to get started</p>
             <p className="mt-3 text-[15px] leading-7 text-[#31533a]">{starts[feature.title]}</p>
           </div>
-          <Link href={feature.href} className="mt-6 inline-flex items-center gap-2 self-start font-extrabold text-lime-700 hover:text-lime-800">Open {feature.title} <ArrowRight size={17}/></Link>
+          <FeatureLink href={feature.href} className="mt-6 inline-flex items-center gap-2 self-start font-extrabold text-lime-700 hover:text-lime-800">Open {feature.title} <ArrowRight size={17}/></FeatureLink>
           <div className="mt-auto flex items-center justify-between gap-3 pt-8">
             <button type="button" onClick={() => move(-1)} className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-black text-[#31533a] ring-1 ring-emerald-950/10 hover:bg-emerald-50"><ArrowLeft size={16}/> Previous</button>
             <button type="button" onClick={() => move(1)} className="inline-flex items-center gap-2 rounded-full bg-[#173d27] px-4 py-2.5 text-sm font-black text-white hover:bg-[#245334]">Next <ArrowRight size={16}/></button>

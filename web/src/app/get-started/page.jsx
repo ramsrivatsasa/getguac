@@ -270,6 +270,19 @@ const FEATURE_STARTS = {
   'Private by design': 'Review Security and your account controls before importing sensitive records. Use only the optional connections you understand and delete data whenever needed.',
 }
 
+// The /goals and /resources guides are static files in public/, not Next routes.
+// <Link> prefetches an RSC payload for whatever it points at, and for a static
+// file that 404s — 16 links here meant ~17 failed requests on every production
+// load. Dev never shows it, because Next only prefetches in production builds.
+// Anything that is not a real route gets a plain <a>.
+const isStaticPage = (href) => href.endsWith('.html') || href.startsWith('/resources')
+
+function GuideLink({ href, className, children }) {
+  return isStaticPage(href)
+    ? <a href={href} className={className}>{children}</a>
+    : <Link href={href} className={className}>{children}</Link>
+}
+
 function Step({ step }) {
   const Icon = step.icon
   const shots = [step.shot, SECONDARY_SHOTS[step.n]].filter(Boolean).sort((a,b)=>(a[2] === 'phone' ? 1 : 0) - (b[2] === 'phone' ? 1 : 0))
@@ -282,7 +295,7 @@ function Step({ step }) {
       <div className="mt-5 rounded-2xl bg-[#f5f8ed] p-4 text-[15px] leading-6 text-[#31533a]"><strong>Why this matters:</strong> {step.why}</div>
       <div className="mt-3 rounded-2xl border border-lime-700/15 bg-lime-50 p-4 text-[15px] leading-6 text-[#31533a]"><strong className="block text-[#173d27]">How this improves your habits</strong>{HABIT_IMPROVEMENTS[step.n]}</div>
       {step.note && <p className="mt-4 flex gap-2 text-sm leading-6 text-emerald-800"><LockKeyhole className="mt-0.5 shrink-0" size={16}/>{step.note}</p>}
-      <Link href={step.action[0]} className="mt-6 inline-flex items-center gap-2 rounded-full border border-emerald-900/15 bg-white px-4 py-2.5 font-extrabold text-[#4d7c0f] shadow-sm transition hover:-translate-y-0.5 hover:border-lime-500 hover:text-[#365909] hover:shadow-md">{step.action[1]} <ArrowRight size={17}/></Link>
+      <GuideLink href={step.action[0]} className="mt-6 inline-flex items-center gap-2 rounded-full border border-emerald-900/15 bg-white px-4 py-2.5 font-extrabold text-[#4d7c0f] shadow-sm transition hover:-translate-y-0.5 hover:border-lime-500 hover:text-[#365909] hover:shadow-md">{step.action[1]} <ArrowRight size={17}/></GuideLink>
     </div>
     {step.shot && <div className="gg-media"><div className="gg-visual"><div className={`gg-shot-stack ${shots.length > 1 ? 'paired' : ''}`}>{shots.map((shot)=><div className={`gg-shot-card ${shot[2] || ''}`} key={shot[0]}><span className="gg-shot-label">{shot[2] === 'phone' ? 'Mobile app' : 'Web app'} · tap to zoom</span><ZoomableImage src={shot[0]} alt={shot[1]} width={shot[2] ? 420 : 1200} height={shot[2] ? 860 : 780}/></div>)}</div></div><div className="gg-practice"><p className="text-[11px] font-black uppercase tracking-[.16em] text-[#4d7c0f]">Try it now</p><p className="mt-2 text-lg font-black" style={DISPLAY}>One useful action, three small steps.</p><div className="gg-practice-list">{QUICK_ACTIONS[step.n].map((item,index)=><div className="gg-practice-item" key={item}><span className="gg-practice-number">{index+1}</span><span>{item}</span></div>)}</div></div></div>}
   </article>
@@ -359,7 +372,7 @@ export default function GetStartedPage() {
                     ['/tour','Watch the product tour','See the important GetGuac screens and workflows in action.'],
                     ['/security','Security and privacy','Understand how your data is protected and stays under your control.'],
                     ['/features','Browse every feature','Compare the complete toolkit by the benefit it provides.'],
-                  ].map(([href,title,body])=><Link key={href} href={href} className="group rounded-2xl bg-white p-4 ring-1 ring-emerald-950/10 transition hover:-translate-y-0.5 hover:shadow-md"><span className="flex items-center justify-between gap-3 font-black text-[#173d27]">{title}<ArrowRight className="shrink-0 text-lime-700 transition group-hover:translate-x-1" size={16}/></span><span className="mt-1.5 block text-xs leading-5 text-gray-500">{body}</span></Link>)}
+                  ].map(([href,title,body])=><GuideLink key={href} href={href} className="group rounded-2xl bg-white p-4 ring-1 ring-emerald-950/10 transition hover:-translate-y-0.5 hover:shadow-md"><span className="flex items-center justify-between gap-3 font-black text-[#173d27]">{title}<ArrowRight className="shrink-0 text-lime-700 transition group-hover:translate-x-1" size={16}/></span><span className="mt-1.5 block text-xs leading-5 text-gray-500">{body}</span></GuideLink>)}
                 </div>
               </div>
             </section>

@@ -43,6 +43,9 @@ const EXPECTED_LINKS = GG_NAV_FLAT.length
 
 const PHONE = { width: 390, height: 844 }
 const DESKTOP = { width: 1280, height: 900 }
+// One pixel above the hamburger breakpoint: the narrowest width that still has
+// to render the full desktop row, so the first place it would wrap.
+const GG_DESKTOP_MIN = 1024
 
 const browser = await chromium.launch()
 const failures = []
@@ -63,17 +66,29 @@ const probe = () => {
       const r = el.getBoundingClientRect()
       return r.width > 0 && r.height > 0
     })
-    // The open panel's own links are position:fixed BELOW the bar on purpose,
-    // so they are not overflow. Anything else that sits under the bar is.
-    .filter((el) => !el.closest('.ggm-panel'))
+    // Two things hang below the bar BY DESIGN and are not overflow: the mobile
+    // panel (position:fixed under the bar) and an open desktop dropdown
+    // (position:absolute at top:100%). Everything else under the bar is a bug.
+    //
+    // The dropdown exclusion is load-bearing, not defensive. Playwright does not
+    // reset the mouse between viewport changes, so the pointer left over from
+    // clicking the burger at 390px (x~350) lands on "Learn" once the nav is
+    // left-aligned at 1280px, hovering it open. Filtering on the element's own
+    // visibility does not help: opacity does not inherit, so a link inside an
+    // opened menu is genuinely visible.
+    .filter((el) => !el.closest('.ggm-panel') && !el.closest('.ggdd-menu'))
     .map((el) => ({
       label: (el.textContent || '').trim().slice(0, 22) || el.className,
       bottom: Math.round(el.getBoundingClientRect().bottom),
     }))
 
   const panel = document.querySelector('.ggm-panel')
+  // Navigation links only. The CTA at the foot of the panel is counted
+  // separately as panelCta, so it must not inflate this against GG_NAV_FLAT.
   const panelLinks = panel
-    ? [...panel.querySelectorAll('a')].filter((a) => {
+    ? [...panel.querySelectorAll('a')]
+      .filter((a) => !a.classList.contains('ggm-cta'))
+      .filter((a) => {
         const cs = getComputedStyle(a)
         const r = a.getBoundingClientRect()
         return cs.display !== 'none' && cs.visibility !== 'hidden' && r.width > 0 && r.height > 0
@@ -117,6 +132,50 @@ const probe = () => {
     panelOpen: panel ? getComputedStyle(panel).display !== 'none' : null,
     panelTop: panel ? Math.round(panel.getBoundingClientRect().top) : null,
     panelLinks,
+    // The panel CTA. On mobile the bar no longer carries "Get started", so if
+    // this is missing the phone header offers no way to sign up at all.
+    panelCta: (() => {
+      const el = document.querySelector('.ggm-cta')
+      if (!el) return null
+      const r = el.getBoundingClientRect()
+      return { w: Math.round(r.width), visible: getComputedStyle(el).display !== 'none' && r.width > 0 }
+    })(),
+
+    // ---- Row layout, measured against the header's own content band.
+    band: (() => {
+      const bar = document.querySelector('.wrap.nav, .gg-header-row')
+      if (!bar) return null
+      const r = bar.getBoundingClientRect()
+      return { left: Math.round(r.left), right: Math.round(r.right) }
+    })(),
+    brandRight: (() => {
+      const el = document.querySelector('.ggbrand')
+      return el ? Math.round(el.getBoundingClientRect().right) : null
+    })(),
+    // Left edge of the first menu item — the thing that must sit beside the logo.
+    firstItemLeft: (() => {
+      const el = document.querySelector('.ggnav .ggdd, .ggnav a.gglink')
+      if (!el) return null
+      const r = el.getBoundingClientRect()
+      return r.width > 0 ? Math.round(r.left) : null
+    })(),
+    // Right edge of the last thing in the bar: the CTA where there is one, the
+    // burger on mobile. Either way it should hug the band's right edge.
+    lastRight: (() => {
+      const els = [...document.querySelectorAll('a.ggcta, .ggm, .gg-header-nav')]
+        .filter((el) => {
+          const r = el.getBoundingClientRect()
+          return getComputedStyle(el).display !== 'none' && r.width > 0
+        })
+      if (!els.length) return null
+      return Math.round(Math.max(...els.map((el) => el.getBoundingClientRect().right)))
+    })(),
+    barCtaVisible: (() => {
+      const el = document.querySelector('a.ggcta')
+      if (!el) return false
+      const r = el.getBoundingClientRect()
+      return getComputedStyle(el).display !== 'none' && r.width > 0
+    })(),
   }
 }
 
@@ -154,6 +213,11 @@ for (const s of SURFACES) {
       note(s.name, `burger hit target ${closed.burgerBox.w}x${closed.burgerBox.h}, want >=40x40`)
     }
     if (closed.panelOpen !== false) note(s.name, 'panel is open before anything was tapped')
+    // The phone bar is wordmark + burger only, matching both reference sites.
+    if (closed.barCtaVisible) note(s.name, 'the bar CTA is still showing at 390px (should live in the panel)')
+    if (closed.lastRight !== null && closed.band && closed.band.right - closed.lastRight > 6) {
+      note(s.name, `burger is ${closed.band.right - closed.lastRight}px short of the right edge`)
+    }
 
     // 4. Open it. The panel must appear under the bar with every link visible.
     await page.click('.ggm-cb')
@@ -166,9 +230,9 @@ for (const s of SURFACES) {
     if (open.panelTop !== null && Math.abs(open.panelTop - closed.headerBottom) > 2) {
       note(s.name, `panel top ${open.panelTop} does not meet the bar bottom ${closed.headerBottom}`)
     }
-    // 5. Get started survives. On the static pages the CTA lives INSIDE
-    //    nav.ggnav, so hiding the container would have taken it with it.
-    if (!open.ctaVisible) note(s.name, 'Get started CTA is not visible at 390px')
+    // 5. Get started survives — in the PANEL now, not the bar.
+    if (!open.panelCta) note(s.name, 'no Get started CTA in the mobile panel')
+    else if (!open.panelCta.visible) note(s.name, 'the panel Get started CTA is hidden')
   } else {
     // React path: MarketingMobileMenu owns this, .ggnav is display:none.
     const hasReactBurger = await page.locator('header button[aria-label="Open menu"]').count()
@@ -178,20 +242,54 @@ for (const s of SURFACES) {
   // 6. Zero runtime errors. A hydration mismatch has eaten this page twice.
   if (errors.length) note(s.name, `${errors.length} page error(s): ${errors.slice(0, 3).join(' | ')}`)
 
-  // 7. Desktop must be untouched.
-  await page.setViewportSize(DESKTOP)
-  await page.reload({ waitUntil: 'networkidle' })
-  await page.waitForSelector('header .ggbrand', { timeout: 10000 }).catch(() => {})
-  const desk = await page.evaluate(probe)
-  if (s.burger === 'ggm') {
-    if (desk.burgerBox) note(s.name, `burger still showing at 1280px (${desk.burgerBox.w}x${desk.burgerBox.h})`)
-    if (desk.ggnavItems !== 5) note(s.name, `${desk.ggnavItems} .ggnav items at 1280px, want 5`)
-    if (desk.overflowing.length) note(s.name, `${desk.overflowing.length} header item(s) below the bar at 1280px`)
+  // 7. Desktop: links beside the logo, account + action at the far edge.
+  //    1024 is checked as well as 1280 because it is the new tightest desktop
+  //    width — one pixel above the hamburger breakpoint, where the full row has
+  //    the least space and would be the first to wrap back over the hero.
+  let desk = null
+  for (const width of [DESKTOP.width, GG_DESKTOP_MIN]) {
+    await page.setViewportSize({ width, height: 900 })
+    await page.reload({ waitUntil: 'networkidle' })
+    await page.waitForSelector('header .ggbrand', { timeout: 10000 }).catch(() => {})
+    // Park the pointer well clear of the header. Playwright carries the mouse
+    // position across reloads and viewport changes, so without this the desktop
+    // measurement inherits whatever the 390px burger click left hovering.
+    await page.mouse.move(5, 700)
+    const d = await page.evaluate(probe)
+    if (width === DESKTOP.width) desk = d
+
+    if (d.overflowing.length) {
+      note(s.name, `${d.overflowing.length} header item(s) below the bar at ${width}px: `
+        + d.overflowing.map((o) => `"${o.label}"`).join(', '))
+    }
+    if (d.burgerBox) note(s.name, `burger still showing at ${width}px (${d.burgerBox.w}x${d.burgerBox.h})`)
+
+    // Beside the logo, with breathing room but not adrift in the middle.
+    if (d.brandRight !== null && d.firstItemLeft !== null) {
+      const gap = d.firstItemLeft - d.brandRight
+      if (gap < 20 || gap > 48) {
+        note(s.name, `${gap}px between the wordmark and the first link at ${width}px, want 20-48`)
+      }
+    } else {
+      note(s.name, `could not measure the logo-to-links gap at ${width}px`)
+    }
+
+    // The right-hand group actually reaches the right edge.
+    if (d.lastRight !== null && d.band && d.band.right - d.lastRight > 6) {
+      note(s.name, `right-hand group is ${d.band.right - d.lastRight}px short of the right edge at ${width}px`)
+    }
+
+    if (s.burger === 'ggm') {
+      if (d.ggnavItems !== 5) note(s.name, `${d.ggnavItems} .ggnav items at ${width}px, want 5`)
+      if (!d.barCtaVisible) note(s.name, `the bar CTA is missing at ${width}px`)
+    }
   }
 
   const state = failures.filter((f) => f.startsWith(s.name)).length
   console.log(`${state ? 'FAIL' : ' ok '}  ${s.name}  bar ${closed.headerHeight}px  `
     + `mobile items ${closed.ggnavItems}  desktop items ${desk.ggnavItems}  `
+    + `logo-gap ${desk.firstItemLeft - desk.brandRight}px  `
+    + `right-slack ${desk.band.right - desk.lastRight}px  `
     + `burger ${closed.burgerBox ? `${closed.burgerBox.w}x${closed.burgerBox.h}` : (s.burger === 'react' ? 'react' : 'MISSING')}`)
 
   await ctx.close()

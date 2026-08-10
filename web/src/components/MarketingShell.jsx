@@ -64,9 +64,17 @@ html.gg-embedded .gg-embed-hide { display: none !important; }
 .gg-marketing h1 { font-weight: 800; letter-spacing: -0.05em; }
 .gg-marketing h2 { font-weight: 800; letter-spacing: -0.045em; }
 .gg-marketing a { transition: color .15s ease; }
+/* Phone bar = wordmark + burger, nothing else, matching the inline surfaces and
+   both reference sites. The auth pair used to survive down to 640px, so between
+   640 and 1023 the bar carried Sign in AND Get started AND a hamburger. It needs
+   !important because gg-header-auth sets display:contents inline, and only an
+   important declaration beats an inline style. */
+@media (max-width: 1023px) {
+  .gg-header-auth { display: none !important; }
+}
 @media (max-width: 639px) {
   .gg-header-row { gap: 10px !important; }
-  .gg-header-search, .gg-header-auth { display: none !important; }
+  .gg-header-search { display: none !important; }
   .gg-header-nav { margin-left: auto; }
 }
 `
@@ -183,35 +191,43 @@ export default function MarketingShell({ subtitle, hideSearch = true, headerTitl
             <span className="ggmark">🥑</span>
             <span className="hidden sm:block">GetGuac</span>
           </Link>
+          {/* The links sit HERE, immediately after the wordmark, not inside the
+              right-hand nav below. The reference is YNAB's and Rocket Money's
+              header: logo | links ......... account | action. They used to live
+              in gg-header-nav after the flex-1 spacer, which pushed the whole
+              menu against the right edge and left the space beside the logo
+              empty — the primary navigation was the furthest thing from the
+              brand. The spacer stayed where it was and now does the splitting.
+
+              Class names, not inline styles. The colour/size/weight of these
+              links used to be repeated inline here AND in ggNavCss(); the
+              shared classes mean there is exactly one rule to change. */}
+          {!headerTitle && (
+            <div className="ggnav">
+              {NAV_TOP.map((n) => n.children ? (
+                <span key={n.href} className="ggdd">
+                  <Link className="ggdd-top" href={n.href}>
+                    {n.label}<i className="ggdd-caret" aria-hidden="true">{GG_CARET}</i>
+                  </Link>
+                  <span className="ggdd-menu">
+                    <span className="ggdd-card">
+                      {n.children.map((c) => (
+                        <Link key={c.href + c.label} href={c.href}>{c.label}</Link>
+                      ))}
+                    </span>
+                  </span>
+                </span>
+              ) : (
+                <Link key={n.href} href={n.href}>{n.label}</Link>
+              ))}
+            </div>
+          )}
           {hideSearch
             ? (headerTitle
                 ? <div className="flex-1 text-center truncate px-2" style={{ ...DISPLAY, fontWeight: 800, color: '#15281C', fontSize: 17 }}>{headerTitle}</div>
                 : <div className="flex-1" />)
             : <HeaderSearch className="gg-header-search flex-1 min-w-0 max-w-xl" />}
           <nav className="gg-header-nav" style={{ display: 'flex', alignItems: 'center', gap: 18, flexShrink: 0 }}>
-            {/* Class names, not inline styles. The colour/size/weight of these
-                links used to be repeated inline here AND in ggNavCss(); the
-                shared classes mean there is exactly one rule to change. */}
-            {!headerTitle && (
-              <div className="ggnav">
-                {NAV_TOP.map((n) => n.children ? (
-                  <span key={n.href} className="ggdd">
-                    <Link className="ggdd-top" href={n.href}>
-                      {n.label}<i className="ggdd-caret" aria-hidden="true">{GG_CARET}</i>
-                    </Link>
-                    <span className="ggdd-menu">
-                      <span className="ggdd-card">
-                        {n.children.map((c) => (
-                          <Link key={c.href + c.label} href={c.href}>{c.label}</Link>
-                        ))}
-                      </span>
-                    </span>
-                  </span>
-                ) : (
-                  <Link key={n.href} href={n.href}>{n.label}</Link>
-                ))}
-              </div>
-            )}
             <div className="gg-header-auth" style={{ display: 'contents' }}><MarketingAuthButtons /></div>
             {!headerTitle && <MarketingMobileMenu nav={NAV} />}
           </nav>

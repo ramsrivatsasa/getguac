@@ -8,6 +8,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "nav": "node scripts/build-gg-nav.mjs && powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-standalone-pages.ps1 && node scripts/build-homepage-nav.mjs && node scripts/nav-check.mjs",
+    "nav:check": "node scripts/nav-check.mjs",
+    "test:nav-mobile": "node scripts/test-nav-mobile.mjs",
     "test:score-engines": "node scripts/test-score-engines.mjs",
     "test:parity": "echo 'Web side:' && node scripts/test-score-engines.mjs && echo 'Mobile side:' && cd ../mobile && flutter test test/services/wizard_score_test.dart"
   },

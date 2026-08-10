@@ -46,7 +46,10 @@ export const GG_NAV = [
     { href: '/coupons', label: 'Coupons' },
   ]},
   { href: '/games', label: 'Games' },
-  { href: '/login', label: 'Sign in' },
+  // `right` starts the right-hand group. Everything before it sits beside the
+  // logo; this and everything after it (the CTA) is pushed to the far edge, the
+  // layout YNAB and Rocket Money both use — nav left, account + action right.
+  { href: '/login', label: 'Sign in', right: true },
 ]
 
 // Flattened for the mobile hamburger. Derived, never hand-maintained: a phone
@@ -156,6 +159,29 @@ function ggNavBaseCss() {
     + 'box-shadow:0 22px 44px -28px rgba(16,40,26,.55);display:flex;flex-direction:column;gap:2px}'
     + '.ggdd-card a{padding:9px 12px;border-radius:10px;font-weight:600;font-size:14px;white-space:nowrap}'
     + '.ggdd-card a:hover{background:#F1F8EE;color:#15281C}'
+    // ---- Row layout: links beside the logo, account + action at the far edge.
+    //
+    // The reference is YNAB's and Rocket Money's header, which both read
+    // logo | links ......... account | action. Before this the whole menu was
+    // shoved against the right-hand edge and the space next to the wordmark sat
+    // empty, so the primary navigation was the furthest thing from the logo.
+    //
+    // `.brand{margin-right:auto}` in resource.css (0,1,0) is what pushed it
+    // there on the static pages and `.links{margin-left:auto}` in the homepage
+    // stylesheet did the same on the homepage. Both are overridden here rather
+    // than edited in place: those files are not the source of truth, and a
+    // container-qualified selector is (0,3,0) so it wins outright.
+    + inBar('.ggbrand') + '{margin-right:0;flex-shrink:0}'
+    // The breathing room Ram asked for. 18px of container gap + 12px here = 30px
+    // between the wordmark and the first link, enough to read as a separate
+    // group without drifting into the middle of the bar.
+    + inBar('.ggnav') + '{margin-left:12px}'
+    // One element carries the split. `right:true` on the /login entry in GG_NAV
+    // emits this class, and the auto margin eats all the free space, so Sign in
+    // and everything after it (the CTA) land against the right edge while the
+    // rest stay next to the logo. No second flex container, and the DOM order
+    // stays exactly the reading order.
+    + inBar('.ggright') + '{margin-left:auto}'
 }
 
 // One breakpoint for the whole site. MarketingMobileMenu is `lg:hidden`, so the
@@ -198,18 +224,40 @@ const GG_MOBILE_MAX = 1023
  * style.textContent, so neither escapes anything — but the hamburger glyph is
  * still drawn with three <i> bars in MARKUP rather than a non-ASCII character in
  * CSS, so that nothing here breaks if this string is ever handed to React. */
+/* Row stretch, inline surfaces only — NOT shared with MarketingShell.
+ *
+ * `.ggnav` has to absorb the free space here, because on these two surfaces it
+ * is the element that contains the right-hand group (Sign in, and on the static
+ * pages the CTA too). MarketingShell must NOT get this: it has its own
+ * `flex-1` spacer element between the brand and the auth buttons, and a second
+ * growing element would split the row and leave the links floating mid-bar.
+ * This is the same kind of legitimate per-surface difference as the collapse
+ * mode, so it lives in the same branch. */
+function ggInlineRowCss() {
+  return '.wrap.nav .ggnav{flex:1 1 auto;min-width:0}'
+}
+
 function ggMobileCss() {
   return ''
     // Desktop default. The burger only ever exists on the inline surfaces, so
     // this rule lives here rather than in the shared base.
     + inBar('.ggm') + '{display:none}'
     + '@media(max-width:' + GG_MOBILE_MAX + 'px){'
-    // The menu items go; `a.ggcta` deliberately stays. On the static pages the
-    // CTA is INSIDE nav.ggnav, so hiding the container would have taken "Get
-    // started" with it — the one control a phone visitor actually came for.
-    // Hence hiding the items one class at a time instead of the whole row.
+    // Everything in the bar goes except the logo and the burger — the phone
+    // header Ram asked for, and the one both reference sites use.
+    //
+    // The bar CTA goes too, which is a REVERSAL of the first version of this
+    // block: that kept "Get started" in the bar deliberately. It is not lost,
+    // it MOVED — ggBurgerHtml() renders it as a full-width pill at the foot of
+    // the panel, where YNAB also puts it, and the hero CTA is a few hundred
+    // pixels below regardless. A logo and a burger is the whole bar.
     + inBar('.ggdd') + '{display:none}'
     + inBar('a.gglink') + '{display:none}'
+    + inBar('a.ggcta') + '{display:none}'
+    // The burger takes the right edge. It cannot inherit the `.ggright` push:
+    // that class is on Sign in, which is display:none by the rule above, and a
+    // hidden element's auto margin contributes nothing.
+    + inBar('.ggm') + '{margin-left:auto}'
     // goal-story.css sets `.nav{min-height:66px}` at 520px, which beats the
     // shared `height:64px` and would leave the panel overlapping the bar by 2px.
     + BARS.join(',') + '{min-height:64px}'
@@ -251,13 +299,20 @@ function ggMobileCss() {
     + inBar('.ggm-sheet a') + '{display:block;padding:13px 2px;font-size:14.5px;font-weight:700;'
     + 'color:#3D4F44;border-bottom:1px solid #F0F4F0;text-decoration:none}'
     + inBar('.ggm-sheet a:hover') + '{color:#12341F}'
+    // The CTA, moved out of the bar and into the panel. Spans both columns and
+    // overrides the sheet link rule above it (same specificity, later in source
+    // order) so it reads as a button rather than a 17th list row.
+    + inBar('a.ggm-cta') + '{grid-column:1/-1;display:flex;align-items:center;justify-content:center;'
+    + 'margin:14px 0 4px;padding:14px 18px;border-radius:999px;background:#12341F;color:#fff;'
+    + 'font-size:15px;font-weight:700;border-bottom:0;text-decoration:none}'
+    + inBar('a.ggm-cta:hover') + '{background:#1B4A2C;color:#fff}'
     + '}'
 }
 
 export function ggNavCss(collapse = 'inline') {
   return ggNavBaseCss() + (collapse === 'hamburger'
     ? '@media(max-width:' + GG_MOBILE_MAX + 'px){.ggnav{display:none}}'
-    : ggMobileCss())
+    : ggInlineRowCss() + ggMobileCss())
 }
 
 function esc(s) {
@@ -284,11 +339,15 @@ export function ggBurgerHtml() {
   const links = GG_NAV_FLAT
     .map((n) => '<a href="' + esc(n.href) + '">' + esc(n.label) + '</a>')
     .join('')
+  // The CTA lives at the FOOT of the panel because the mobile bar no longer
+  // carries it — see ggMobileCss(). Same href as the bar button, from GG_CTA,
+  // so there is still only one place to change it.
+  const cta = '<a class="ggm-cta" href="' + esc(GG_CTA.href) + '">' + esc(GG_CTA.label) + '</a>'
   return '<span class="ggm">'
     + '<input class="ggm-cb" type="checkbox" id="gg-menu" aria-label="Menu">'
     + '<span class="ggm-ico" aria-hidden="true">'
     + '<i class="ggm-b1"></i><i class="ggm-b2"></i><i class="ggm-b3"></i></span>'
-    + '<span class="ggm-panel"><span class="ggm-sheet">' + links + '</span></span>'
+    + '<span class="ggm-panel"><span class="ggm-sheet">' + links + cta + '</span></span>'
     + '</span>'
 }
 
@@ -304,7 +363,11 @@ export function ggMenuHtml() {
   return GG_NAV.map((n) => {
     // gglink so the mobile query can hide the childless top-level links without
     // also matching a.ggcta, which sits in this same nav on the static pages.
-    if (!n.children) return '<a class="gglink" href="' + esc(n.href) + '">' + esc(n.label) + '</a>'
+    // ggright additionally marks where the right-hand group starts.
+    if (!n.children) {
+      return '<a class="gglink' + (n.right ? ' ggright' : '') + '" href="' + esc(n.href) + '">'
+        + esc(n.label) + '</a>'
+    }
     const kids = n.children.map((c) => '<a href="' + esc(c.href) + '">' + esc(c.label) + '</a>').join('')
     return '<span class="ggdd">'
       + '<a class="ggdd-top" href="' + esc(n.href) + '">' + esc(n.label)

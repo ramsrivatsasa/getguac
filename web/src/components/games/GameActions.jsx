@@ -14,11 +14,15 @@ const base = 'text-sm font-semibold px-4 py-2 rounded-full border bg-white trans
 const off = { borderColor: '#dbe5d8', color: '#3d4a42' }
 const on = { borderColor: '#16a34a', color: '#166534', background: '#f2fbf3' }
 
-export default function GameActions({ slug, stageId = 'gg-stage' }) {
+export default function GameActions({ slug, name, stageId = 'gg-stage' }) {
   const [fav, setFav] = useState(false)
   const [liked, setLiked] = useState(false)
   const [likes, setLikes] = useState(null)     // null = not loaded; 0 renders as no number
   const [needsAuth, setNeedsAuth] = useState(false)
+  const [shared, setShared] = useState(false)
+  // Detected in an effect, not during render: `navigator` does not exist on the
+  // server, so branching on it while rendering is a hydration mismatch.
+  const [canNativeShare, setCanNativeShare] = useState(false)
 
   useEffect(() => { try { setFav(localStorage.getItem('gg-fav-' + slug) === '1') } catch {} }, [slug])
 
@@ -52,6 +56,36 @@ export default function GameActions({ slug, stageId = 'gg-stage' }) {
     return nv
   })
 
+  useEffect(() => {
+    setCanNativeShare(typeof navigator !== 'undefined' && typeof navigator.share === 'function')
+  }, [])
+
+  // Share THIS game, not the arcade. The URL is read from location at click time
+  // rather than rebuilt from the slug: the games are reachable at more than one
+  // path shape and a hand-built URL would eventually point at the wrong one.
+  const share = async () => {
+    const url = window.location.href
+    const label = name || 'this game'
+    const text = `Play ${label} free on GetGuac`
+    if (canNativeShare) {
+      try {
+        await navigator.share({ title: text, text, url })
+        return
+      } catch {
+        /* sheet dismissed - fall through to the clipboard so the click still does something */
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(url)
+      setShared(true)
+      setTimeout(() => setShared(false), 2000)
+    } catch {
+      // Clipboard is permission-gated and blocked in some in-app browsers. Show
+      // the link rather than a success state that did not happen.
+      window.prompt('Copy this link:', url)
+    }
+  }
+
   const fullscreen = () => {
     const el = document.getElementById(stageId)
     if (!el) return
@@ -69,6 +103,11 @@ export default function GameActions({ slug, stageId = 'gg-stage' }) {
       </button>
       <button type="button" onClick={toggleFav} aria-pressed={fav} className={base} style={fav ? on : off}>
         {fav ? '♥ Favorited' : '♡ Favorite'}
+      </button>
+      {/* Every game page gets this, because every game page renders GameActions.
+          One component, 500-odd pages. */}
+      <button type="button" onClick={share} className={base} style={shared ? on : off}>
+        {shared ? '✓ Link copied' : '↗ Share'}
       </button>
       <button type="button" onClick={fullscreen} className={base} style={off}>⛶ Fullscreen</button>
       {needsAuth && (

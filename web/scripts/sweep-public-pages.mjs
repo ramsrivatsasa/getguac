@@ -21,7 +21,7 @@ const BASE = (process.env.BASE_URL || 'https://getguac.app').replace(/\/$/, '')
 const ROUTES = [
   '/', '/about', '/features', '/pricing', '/faq', '/contact', '/demo',
   '/how-it-works', '/how-email-works', '/tour', '/security', '/privacy', '/terms',
-  '/download', '/delete-account', '/resources', '/articles', '/plan', '/coupons',
+  '/download', '/delete-account', '/learn', '/articles', '/plan', '/coupons',
   '/marketplace', '/rakuten', '/games', '/join', '/start', '/login', '/register',
   // a representative deep page from each templated section
   '/articles/compound-interest', '/games/fruit', '/games/splurge',

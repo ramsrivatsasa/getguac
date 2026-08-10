@@ -139,7 +139,9 @@ export default function GamePageShell({ href, title, blurb, how = [], tips = [],
                 <h1 className="font-display font-extrabold m-0" style={{ color: INK, fontSize: 'clamp(22px, 2.6vw, 30px)' }}>{game.name}</h1>
                 {(href === FEATURED_HREF || game.featured) && <span className="text-[11px] font-extrabold tracking-wide px-2.5 py-1 rounded-full" style={{ background: AMBER, color: '#3F3206' }}>FEATURED</span>}
                 {game.isNew && <span className="text-[11px] font-extrabold tracking-wide px-2.5 py-1 rounded-full" style={{ background: '#dcfce7', color: '#166534' }}>NEW</span>}
-                <GameActions slug={href.split('/').pop()} />
+                {/* `name` feeds the Share button's message, so it reads
+                    "Play Fruit Slice free on GetGuac" rather than "this game". */}
+                <GameActions slug={href.split('/').pop()} name={game.name} />
               </div>
               <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 mt-3 text-sm font-semibold" style={{ color: MUTED }}>
                 <span style={{ color: INK }}>⭐ {game.rating ?? 4.6}</span>

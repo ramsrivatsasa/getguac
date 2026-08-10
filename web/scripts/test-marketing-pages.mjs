@@ -13,7 +13,7 @@ import { chromium } from 'playwright'
 const BASE = process.argv[2] || 'http://127.0.0.1:3100'
 
 const PAGES = [
-  '/', '/how-it-works', '/why-getguac', '/get-started', '/features', '/resources',
+  '/', '/how-it-works', '/why-getguac', '/get-started', '/features', '/learn',
   '/security', '/pricing', '/articles', '/calculators', '/faq', '/marketplace',
   '/coupons', '/games', '/join', '/contact', '/about', '/tour', '/download',
   '/privacy', '/terms', '/how-email-works', '/login', '/register',

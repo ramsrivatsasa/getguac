@@ -43,7 +43,12 @@ await new Promise((r) => server.listen(PORT, '127.0.0.1', r))
 PORT = server.address().port
 console.log(`serving ${ROOT} on 127.0.0.1:${PORT}\n`)
 
-const EXPECTED_TOP = ['Why GetGuac', 'Learn', 'Shopping', 'Games', 'Sign in']
+// Derived from the definition, not typed. This was a literal five-label array and
+// went stale the moment "Share GetGuac" was added — the nav was right and the
+// test was wrong, which is the least useful way for a suite to fail. Same lesson
+// as the hardcoded port that once made this file report a confident 0/32.
+const { GG_NAV } = await import('../src/lib/gg-nav-def.js')
+const EXPECTED_TOP = GG_NAV.map((n) => n.label)
 const pages = [
   ...fs.readdirSync(path.join(ROOT, 'goals')).filter((f) => f.endsWith('.html')).map((f) => `/goals/${f}`),
   ...fs.readdirSync(path.join(ROOT, 'resources')).filter((f) => f.endsWith('.html')).map((f) => `/resources/${f}`),

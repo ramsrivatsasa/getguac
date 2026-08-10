@@ -22,10 +22,10 @@ const BASE = process.argv[2] || 'http://127.0.0.1:3123'
 const STRICT = process.argv.includes('--strict')
 
 const REACT_PAGES = [
-  '/', '/how-it-works', '/why-getguac', '/get-started', '/features', '/resources',
+  '/', '/how-it-works', '/why-getguac', '/get-started', '/features', '/learn',
   '/security', '/pricing', '/articles', '/calculators', '/faq', '/marketplace',
   '/coupons', '/about', '/contact', '/editorial-policy', '/privacy', '/terms',
-  '/how-email-works', '/download', '/tour',
+  '/how-email-works', '/download', '/tour', '/share',
 ]
 const STATIC_PAGES = [
   '/sitemap.html', '/resources/index.html', '/resources/calculators.html',

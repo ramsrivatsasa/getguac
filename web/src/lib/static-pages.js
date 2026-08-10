@@ -76,3 +76,20 @@ export const GOALS = [
   { href: '/goals/security.html', title: 'Keep the household story private.', blurb: 'Security you can audit' },
   { href: '/goals/data.html', title: 'Leave with everything—or delete it.', blurb: 'Your data, your call' },
 ]
+
+// Trusted, non-commercial outbound guides. No affiliate links, ever — the value
+// is that these are .gov sources, and one referral link would spend that.
+//
+// Moved here from components/ResourcesBrowser.jsx on 2026-08-09. That component
+// was a Tailwind island on an otherwise .rs-* styled page: max-w-5xl against the
+// page's 1180px band, its own type scale and its own card treatment, so the
+// section visibly read as a different site. The data belongs with GUIDES/TOOLS/
+// GOALS and the rendering belongs to the page.
+export const EXTERNAL_GUIDES = [
+  { title: 'Build a budget that sticks', source: 'consumerfinance.gov', url: 'https://www.consumerfinance.gov/consumer-tools/budgeting/', desc: 'A simple, proven way to plan where your money goes each month.' },
+  { title: 'Start an emergency fund', source: 'consumerfinance.gov', url: 'https://www.consumerfinance.gov/an-essential-guide-to-building-an-emergency-fund/', desc: 'How much to set aside, and how to get there without feeling it.' },
+  { title: 'Saving & investing for retirement', source: 'investor.gov (SEC)', url: 'https://www.investor.gov/financial-tools-calculators', desc: 'Compound-interest calculators and the basics of long-term saving.' },
+  { title: 'Your refund & return rights', source: 'consumer.ftc.gov', url: 'https://consumer.ftc.gov/articles/disputing-credit-card-charges', desc: 'What you are owed when something is wrong — and how to dispute it.' },
+  { title: 'Spot & cancel sneaky subscriptions', source: 'consumer.ftc.gov', url: 'https://consumer.ftc.gov/', desc: 'Find recurring charges you forgot about and shut them down.' },
+  { title: 'Understand credit, interest & fees', source: 'consumerfinance.gov', url: 'https://www.consumerfinance.gov/consumer-tools/', desc: 'How interest and fees quietly add up — and how to dodge them.' },
+]

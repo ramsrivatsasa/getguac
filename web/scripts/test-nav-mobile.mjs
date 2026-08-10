@@ -38,8 +38,12 @@ const SURFACES = [
 // The flat list the panel must offer. Imported rather than retyped: a phone
 // visitor seeing fewer pages than a desktop visitor is the bug the single
 // definition exists to prevent, so the count comes from the definition.
-const { GG_NAV_FLAT } = await import('../src/lib/gg-nav-def.js')
+const { GG_NAV, GG_NAV_FLAT } = await import('../src/lib/gg-nav-def.js')
 const EXPECTED_LINKS = GG_NAV_FLAT.length
+// Derived, not typed. This was hardcoded to 5 and started failing the moment a
+// sixth top-level item ("Share GetGuac") was added — the nav was right and the
+// test was stale, which is the least useful way for a suite to fail.
+const EXPECTED_TOPS = GG_NAV.length
 
 const PHONE = { width: 390, height: 844 }
 const DESKTOP = { width: 1280, height: 900 }
@@ -256,6 +260,11 @@ for (const s of SURFACES) {
     // measurement inherits whatever the 390px burger click left hovering.
     await page.mouse.move(5, 700)
     const d = await page.evaluate(probe)
+    // probe() bails with {missing:true} when there is no <header> yet, which
+    // happens if a dev server is still compiling. Without this guard the loop
+    // read d.overflowing.length off undefined and crashed the whole run with a
+    // TypeError, hiding every other surface's result.
+    if (d.missing) { note(s.name, `no <header> at ${width}px (page did not finish loading)`); continue }
     if (width === DESKTOP.width) desk = d
 
     if (d.overflowing.length) {
@@ -280,12 +289,15 @@ for (const s of SURFACES) {
     }
 
     if (s.burger === 'ggm') {
-      if (d.ggnavItems !== 5) note(s.name, `${d.ggnavItems} .ggnav items at ${width}px, want 5`)
+      if (d.ggnavItems !== EXPECTED_TOPS) {
+        note(s.name, `${d.ggnavItems} .ggnav items at ${width}px, want ${EXPECTED_TOPS}`)
+      }
       if (!d.barCtaVisible) note(s.name, `the bar CTA is missing at ${width}px`)
     }
   }
 
   const state = failures.filter((f) => f.startsWith(s.name)).length
+  if (!desk) { console.log(`FAIL  ${s.name}  desktop measurement never completed`); await ctx.close(); continue }
   console.log(`${state ? 'FAIL' : ' ok '}  ${s.name}  bar ${closed.headerHeight}px  `
     + `mobile items ${closed.ggnavItems}  desktop items ${desk.ggnavItems}  `
     + `logo-gap ${desk.firstItemLeft - desk.brandRight}px  `

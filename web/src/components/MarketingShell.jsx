@@ -36,7 +36,7 @@ const FOOTER = [
     { href: '/download', label: 'Download apps' },
   ]},
   { heading: 'Learn', links: [
-    { href: '/resources', label: 'Resources' },
+    { href: '/learn', label: 'Learn' },
     { href: '/articles', label: 'Articles' },
     { href: '/calculators', label: 'Calculators' },
     { href: '/games', label: 'Games' },

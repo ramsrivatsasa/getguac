@@ -99,6 +99,10 @@ web/undefined/
 # ── Scratch that must never be committed ─────────────────────────────────
 # Alternate build outputs from parallel agent sessions. These reached ~1.2 GB
 # across a dozen directories; `git add -A` would have swept them in.
+# Per-session dev build directories. Two `next dev` processes sharing one
+# distDir delete each other's chunks (see the note in web/next.config.mjs), so
+# each concurrent session sets GG_DIST_DIR to its own folder.
+web/.next-*/
 web/.next-codex*/
 web/src/.next/
 # Throwaway probe scripts and screenshot dumps. The `_` prefix is the existing

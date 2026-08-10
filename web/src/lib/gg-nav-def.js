@@ -30,22 +30,47 @@ export const GG_NAV = [
     { href: '/how-it-works', label: 'How it works' },
     { href: '/get-started', label: 'The get-started guide' },
     { href: '/features', label: 'Features' },
-    { href: '/resources#goals', label: 'Goal stories' },
+    { href: '/learn#goals', label: 'Goal stories' },
     { href: '/security', label: 'Security' },
     { href: '/pricing', label: 'Pricing' },
   ]},
-  { href: '/resources', label: 'Learn', children: [
-    { href: '/resources#guides', label: 'Guides' },
+  // The hub moved from /resources to /learn on 2026-08-09. The label was already
+  // "Learn" while the URL still said resources, so the two finally agree. The
+  // three anchors are the ids in app/learn/page.jsx — renaming one there breaks a
+  // menu item on all 35 pages, and vice versa.
+  { href: '/learn', label: 'Learn', children: [
+    { href: '/learn#guides', label: 'Guides' },
     { href: '/articles', label: 'Articles' },
     { href: '/calculators', label: 'Calculators' },
-    { href: '/resources#tools', label: 'Tools' },
+    { href: '/learn#tools', label: 'Tools' },
     { href: '/faq', label: 'FAQ' },
   ]},
   { href: '/marketplace', label: 'Shopping', children: [
     { href: '/marketplace', label: 'Marketplace' },
     { href: '/coupons', label: 'Coupons' },
   ]},
-  { href: '/games', label: 'Games' },
+  // Games gained a dropdown so "Share a game" has a home, on Ram's instruction.
+  // It points at /share#games rather than a second link to /games: the arcade hub
+  // carries no anchors, so two menu items on the same URL would have been a
+  // duplicate. The per-game Share button lives in games/GameActions.jsx.
+  { href: '/games', label: 'Games', children: [
+    { href: '/games', label: 'Play the arcade' },
+    { href: '/share#games', label: 'Share a game' },
+  ]},
+  // LAST in the left-hand group, on Ram's instruction. It briefly sat after Learn
+  // to mirror YNAB's "Share YNAB", but sharing is the thing a visitor does after
+  // deciding they like the product, so it earns the least prominent slot rather
+  // than the third one.
+  //
+  // Every child is an anchor on the PUBLIC /share page, deliberately: the coded
+  // referral lives at /invite, which is a (dashboard) route, and a dashboard link
+  // in a public menu bounces a logged-out visitor to the sign-in screen (verified
+  // - /invite answers 307). /share explains the referral and hands off from there.
+  { href: '/share', label: 'Share GetGuac', children: [
+    { href: '/share#forward', label: 'Forward to a friend' },
+    { href: '/share#refer', label: 'Refer a friend' },
+    { href: '/share#bookmark', label: 'Save a bookmark' },
+  ]},
   // `right` starts the right-hand group. Everything before it sits beside the
   // logo; this and everything after it (the CTA) is pushed to the far edge, the
   // layout YNAB and Rocket Money both use — nav left, account + action right.
@@ -59,7 +84,7 @@ export const GG_NAV_FLAT = GG_NAV.flatMap((n) => (n.children ? n.children : [n])
 
 export const GG_FOOTER_LINKS = [
   { href: '/how-it-works', label: 'How it works' },
-  { href: '/resources', label: 'Resources' },
+  { href: '/learn', label: 'Learn' },
   { href: '/games', label: 'Games' },
   { href: '/security', label: 'Security' },
   { href: '/contact', label: 'Contact' },

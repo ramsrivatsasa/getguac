@@ -79,6 +79,20 @@ const securityHeaders = [
 ]
 
 const nextConfig = {
+  // 🔴 TWO DEV SERVERS CANNOT SHARE ONE BUILD DIRECTORY.
+  //
+  // Measured 2026-08-09: a second `next dev` in this repo rebuilt `.next` with
+  // fresh chunk hashes, which DELETED the chunks the first server's already-served
+  // HTML pointed at. The result on the first server was 14 chunk 404s
+  // (webpack.js, main-app.js, layout.js, page.js), zero @font-face rules, and
+  // every page rendering in Times New Roman — a symptom that looks exactly like
+  // broken font config but is not. `layout.jsx` was untouched and production was
+  // fine the whole time. Reloading does not fix it; the server has to restart.
+  //
+  // So each concurrent session gets its own directory. Unset means `.next`, which
+  // is the normal single-server case and unchanged:
+  //     GG_DIST_DIR=.next-claude npx next dev -p 3001
+  distDir: process.env.GG_DIST_DIR || '.next',
   // @sparticuz/chromium + puppeteer-core must stay external so webpack doesn't
   // mangle the brotli-packed Chromium binary; Next's file tracer then bundles
   // the binary into the serverless function. Required for the email-snapshot
@@ -138,6 +152,19 @@ const nextConfig = {
       // costs nothing. Same trap applies to any URL that ends a sentence.
       ...['privacy', 'terms', 'security', 'about', 'contact', 'articles', 'plan', 'pricing', 'features', 'editorial-policy']
         .map((p) => ({ source: `/${p}.`, destination: `/${p}`, permanent: true })),
+
+      // The hub moved from /resources to /learn on 2026-08-09 (the nav had said
+      // "Learn" while the URL said resources). /resources has been in the
+      // sitemap, is the canonical some pages still point at, and is linked from
+      // off-site, so it redirects rather than 404s.
+      //
+      // 🔴 EXACT PATH ONLY. It must NOT be `/resources/:path*`. There are ELEVEN
+      // real static pages under public/resources/ — calculators.html,
+      // bills-calendar.html, marketplace.html, coupons.html, worth-it.html,
+      // security.html, index.html and four guides/*.html — and the Learn page
+      // links to every one of them. A wildcard here would bounce all eleven to
+      // /learn and take the tools and guides sections down with it.
+      { source: '/resources', destination: '/learn', permanent: true },
     ]
   },
 }

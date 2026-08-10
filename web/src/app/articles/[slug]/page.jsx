@@ -41,7 +41,19 @@ export function generateMetadata({ params }) {
     title: a.title,
     description: a.excerpt,
     alternates: { canonical: url },
-    openGraph: { title: a.title, description: a.excerpt, url, type: 'article' },
+    // og:image is set explicitly. Declaring an `openGraph` object REPLACES the
+    // inherited one from app/layout.jsx rather than merging into it, so these
+    // pages were shipping with no share image at all -- every article link
+    // pasted into a chat rendered as a bare grey box. /og.png is the same asset
+    // the rest of the site uses.
+    openGraph: {
+      title: a.title,
+      description: a.excerpt,
+      url,
+      type: 'article',
+      images: ['/og.png'],
+      publishedTime: a.updated || undefined,
+    },
   }
 }
 

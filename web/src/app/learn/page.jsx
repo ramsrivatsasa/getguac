@@ -221,7 +221,7 @@ const RES_CSS = `
 .rs-feat:hover { transform: translateY(-4px); box-shadow: 0 26px 50px -30px rgba(10,35,20,.55); }
 .rs-feat-img { position: relative; aspect-ratio: 16/10; }
 .rs-feat-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.rs-scrim { position: absolute; inset: 0; background: linear-gradient(transparent 32%, rgba(9,32,18,.9)); }
+.rs-scrim { position: absolute; inset: auto 0 0; height: 58%; background: linear-gradient(transparent, rgba(11,40,23,.55) 42%, rgba(9,32,18,.86)); }
 .rs-feat-copy { position: absolute; z-index: 2; left: 26px; right: 26px; bottom: 22px; color: #fff; }
 .rs-feat-copy h2 { margin: 8px 0 6px; font-size: clamp(22px,2.3vw,30px); line-height: 1.1; font-weight: 800; }
 .rs-feat-copy p { margin: 0 0 10px; color: #dbe9df; font-size: 14px; line-height: 1.5; }

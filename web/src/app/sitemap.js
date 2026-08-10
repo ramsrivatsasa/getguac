@@ -12,11 +12,33 @@ import { ARTICLES } from '../lib/articles'
 
 const SITE_URL = 'https://getguac.app'
 
+const FEATURE_GUIDES = [
+  '/goals/inbox.html',
+  '/goals/read.html',
+  '/goals/categories.html',
+  '/goals/organize.html',
+  '/goals/reports.html',
+  '/resources/worth-it.html',
+  '/goals/guacmoney.html',
+  '/resources/guides/subscriptions.html',
+  '/goals/bills.html',
+  '/goals/wizard.html',
+  '/goals/recover.html',
+  '/goals/stash.html',
+  '/goals/steals.html',
+  '/goals/marketplace.html',
+  '/goals/prepare.html',
+  '/goals/miles.html',
+  '/goals/arcade.html',
+  '/goals/security.html',
+]
+
 export default function sitemap() {
   const lastModified = '2026-06-30'
   const routes = [
     { path: '/', priority: 1.0, changeFrequency: 'weekly' },
     { path: '/how-it-works', priority: 0.9, changeFrequency: 'monthly' },
+    { path: '/get-started', priority: 0.9, changeFrequency: 'monthly', lastModified: '2026-08-10' },
     { path: '/tour', priority: 0.9, changeFrequency: 'monthly' },
     { path: '/features', priority: 0.9, changeFrequency: 'monthly' },
     { path: '/articles', priority: 0.9, changeFrequency: 'weekly' },
@@ -45,7 +67,7 @@ export default function sitemap() {
   ]
   const pages = routes.map((r) => ({
     url: `${SITE_URL}${r.path}`,
-    lastModified,
+    lastModified: r.lastModified || lastModified,
     changeFrequency: r.changeFrequency,
     priority: r.priority,
   }))
@@ -55,5 +77,11 @@ export default function sitemap() {
     changeFrequency: 'monthly',
     priority: 0.7,
   }))
-  return [...pages, ...articles]
+  const featureGuides = FEATURE_GUIDES.map((path) => ({
+    url: `${SITE_URL}${path}`,
+    lastModified: '2026-08-10',
+    changeFrequency: 'monthly',
+    priority: 0.6,
+  }))
+  return [...pages, ...featureGuides, ...articles]
 }

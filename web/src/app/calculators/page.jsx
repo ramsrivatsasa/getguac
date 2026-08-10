@@ -7,7 +7,7 @@ import PlanCalculators, { CALC_COUNT } from '../../components/PlanCalculators'
 // three names for one page. The visible name is now Calculators everywhere; the
 // /plan URL stays so existing links and the sitemap keep working.
 export const metadata = {
-  title: 'Calculators — retirement, college, debt and emergency-fund planners',
+  title: 'Free calculators: retirement, college, debt payoff',
   description:
     'Free calculators to forecast retirement, healthcare in retirement, a college fund, debt payoff and an emergency fund. Enter your numbers — no account needed.',
   alternates: { canonical: '/calculators' },

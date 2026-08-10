@@ -9,6 +9,14 @@
 <meta name="description" content="See recurring bills and renewals before they hit with the GetGuac calendar.">
 <link rel="stylesheet" href="goal-story.css">
 <title>Meet next month before it arrives | GetGuac</title>
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="GetGuac">
+<meta property="og:title" content="Meet next month before it arrives | GetGuac">
+<meta property="og:description" content="See recurring bills and renewals before they hit with the GetGuac calendar.">
+<meta property="og:url" content="https://getguac.app/goals/bills.html">
+<meta property="og:image" content="https://getguac.app/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://getguac.app/goals/bills.html">
 </head>
 <body data-goal="bills">
 <div id="storyApp">
@@ -161,7 +169,7 @@ const GOALS = {
     beats:[['Before','Unsorted purchases made monthly patterns difficult to see.'],['The GetGuac moment','Rules and AI handled groceries, gas and dining while custom categories covered the rest.'],['After','Her reports reflected the way her household really thinks about money.']],
     proofTitle:'Useful categories, not busywork.', proofText:'Auto-categorize handles the clear matches in bulk, while every result remains easy to confirm or change.',
     checks:['Twelve practical categories out of the box','Custom labels, colors and emoji','Bulk categorization with human control'],
-    web:'../home/goals/web-organized.webp', phone:'../home/goals/phone-organized.webp', screenNote:'Spending sorted in seconds'
+    web:'../home/goals/web-categories.webp', phone:'../home/goals/phone-organized.webp', screenNote:'Spending sorted in seconds'
   },
   reports: {
     accent:'#7284ef', soft:'#eef1ff', stage:'understand', eyebrow:'Dashboard and reports',
@@ -299,6 +307,66 @@ const STORY_COPY = {
   data:{title:'Your data should stay only as long as it helps you.',body:'Export, category-level clearing and full deletion keep control with the user. GetGuac can remember the details, but the household decides what remains and when it is time to let everything go.'}
 };
 
+/* Optional long-form section for goals that deserve more than the three story
+ * beats. Add a key here and that page grows a deep dive; every other goal page
+ * renders exactly as before. Keep every claim checkable against the product —
+ * this is the page people read before deciding whether to trust the feature. */
+const DEEP_DIVE = {
+  steals: {
+    eyebrow: 'How Steals works',
+    title: 'From a product you already buy to a price you can defend.',
+    lede: 'Steals is a comparison you start, not a feed that follows you. It begins with something you actually purchased, sharpens the query until it describes one exact product, then scans current prices at major US retailers so the decision rests on evidence instead of a badge.',
+    flow: [
+      ['Start from what you bought', 'The page opens with products from your Stash and receipt history, plus items likely due for a repeat purchase, so a search starts with a real product instead of an empty box.'],
+      ['Name the exact product', 'When your search matches a known category, spec dropdowns appear — brand, size, storage, capacity and similar. Your choices are folded into the query so the scan targets one configuration.'],
+      ['Scan current prices', 'GetGuac runs a nationwide search across major US retailers and returns each result with its store, current price, any listed original price and rating.'],
+      ['Refine and sort instantly', 'Set a minimum or maximum price, require a minimum rating, and sort by price or rating. The filters apply to results already returned, so they respond immediately.'],
+      ['Decide, then confirm', 'Open the listing at the store to check price, shipping and availability before buying — or save the search and let GetGuac keep watching it.'],
+    ],
+    cards: [
+      { eyebrow: 'Use it now', title: 'Search right before you buy.', body: 'The most useful moment for a comparison is the minute before checkout, when you already know what you need and only the price is still open.', checks: ['Begins from Stash and receipt history', 'Category specs sharpen a vague query', 'Refresh re-runs the scan for current results'] },
+      { eyebrow: 'Use it later', title: 'Save the search and let it watch.', body: 'A saved search is rechecked on a scheduled run. Matching finds collect in your Steals feed with a count of what arrived since your last visit, so nothing depends on you remembering to look.', checks: ['One-tap rerun of any saved search', 'New finds gathered in the Steals feed', 'The new count clears once you have looked'] },
+    ],
+    example: {
+      eyebrow: 'Read the price honestly',
+      title: 'The sale badge is often the worst value.',
+      body: 'A lower sticker price only means a better deal when the two products are genuinely the same. Match brand, size and count first, then compare what one unit actually costs. This illustration shows how easily a promotion wins on the label and loses on the math.',
+      head: ['Option', 'Pack size', 'Price', 'Price per unit'],
+      rows: [
+        ['Store A', '12 count', '$14.40', '$1.20'],
+        ['Store B', '20 count', '$21.00', '$1.05'],
+        ['Store C, marked on sale', '8 count', '$10.00', '$1.25'],
+      ],
+      winRow: 1,
+      note: 'Illustration only — not live prices. Also add shipping, any membership requirement and a pickup trip before deciding which row really wins.',
+    },
+    limits: {
+      title: 'What Steals will not do.',
+      items: [
+        'It never buys anything for you. Every purchase is completed by you, at the store.',
+        'It is not a deal feed. Nothing appears unless you searched for it or saved that search.',
+        'It cannot see every retailer, every local shelf price, or live store inventory.',
+        'Prices and availability change constantly, so treat a result as a snapshot and let the store page be the final word.',
+        'A lower price is only a saving if you were going to buy the item anyway.',
+      ],
+    },
+    faq: [
+      ['Do I need to connect a bank account to use Steals?', 'No. Steals works from the receipts and products you chose to save. GetGuac does not require a bank login for any of it.'],
+      ['Where do the prices come from?', 'A live shopping search across major US retailers, returned with the store, price and rating attached. Recent searches are cached briefly so repeating one stays fast; use Refresh when you want a new scan.'],
+      ['Can I compare one exact configuration?', 'Yes. When your search matches a known category, spec dropdowns appear and your selections are added to the query, so a "laptop" search becomes the brand, processor, memory and screen size you actually want.'],
+      ['What happens when I save a search?', 'It stays on your Steals page for one-tap rerun, and a scheduled check adds new matching finds to your Steals feed with a count of what is new.'],
+      ['Does Steals replace Marketplace and coupons?', 'No. Steals compares current prices for one specific product. Marketplace and coupons cover public store offers and promotion codes. Checking both before a planned purchase is reasonable.'],
+      ['What if the store shows a different price than Steals did?', 'Trust the store. Listings change between the scan and your visit, which is why the result links straight to the retailer instead of quoting a price you cannot verify.'],
+    ],
+    links: [
+      ['/goals/stash.html', 'Stash', 'The product library Steals searches from.'],
+      ['/goals/prepare.html', 'Smashlist', 'Turn a decision into the next shopping trip.'],
+      ['/goals/marketplace.html', 'Marketplace', 'Public store offers and coupons.'],
+      ['/resources/worth-it.html', 'Worth-It', 'Decide whether the purchase earned its price.'],
+    ],
+  },
+};
+
 const key = document.body.dataset.goal;
 const goal = GOALS[key] || GOALS.organize;
 const storyCopy = STORY_COPY[key] || STORY_COPY.organize;
@@ -308,6 +376,20 @@ document.title = `${goal.title} | GetGuac`;
 
 const beatHtml = goal.beats.map((beat, index) => `<article class="beat" data-step="${index + 1}"><span class="eyebrow">${beat[0]}</span><h3>${beat[1]}</h3><p>${index === 0 ? 'A normal shopping moment becomes the start of a better money story.' : index === 1 ? 'GetGuac connects the receipt to something useful.' : 'The benefit shows up in the next decision—not only in a dashboard.'}</p></article>`).join('');
 const checksHtml = goal.checks.map((check) => `<li>${check}</li>`).join('');
+
+const deep = DEEP_DIVE[key];
+const deepHtml = !deep ? '' : `
+    <section class="goal-deep" id="how-it-works"><div class="wrap">
+      <header class="section-head"><span class="eyebrow">${deep.eyebrow}</span><h2>${deep.title}</h2><p>${deep.lede}</p></header>
+      <div class="goal-deep-flow">${deep.flow.map((entry, index) => `<article><b>${index + 1}</b><h3>${entry[0]}</h3><p>${entry[1]}</p></article>`).join('')}</div>
+      <div class="goal-deep-cols">${deep.cards.map((card) => `<article class="goal-deep-card"><span class="eyebrow">${card.eyebrow}</span><h3>${card.title}</h3><p>${card.body}</p><ul class="checklist">${card.checks.map((check) => `<li>${check}</li>`).join('')}</ul></article>`).join('')}</div>
+      <section class="goal-deep-example"><span class="eyebrow">${deep.example.eyebrow}</span><h3>${deep.example.title}</h3><p>${deep.example.body}</p>
+        <div class="goal-deep-scroll"><table class="goal-deep-table"><thead><tr>${deep.example.head.map((cell) => `<th scope="col">${cell}</th>`).join('')}</tr></thead><tbody>${deep.example.rows.map((row, index) => `<tr${index === deep.example.winRow ? ' class="win"' : ''}>${row.map((cell) => `<td>${cell}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+        <p class="goal-deep-note">${deep.example.note}</p></section>
+      <section class="goal-deep-limits"><h3>${deep.limits.title}</h3><ul>${deep.limits.items.map((item) => `<li>${item}</li>`).join('')}</ul></section>
+      <div class="goal-deep-faq">${deep.faq.map((entry) => `<details><summary>${entry[0]}</summary><p>${entry[1]}</p></details>`).join('')}</div>
+      <div class="goal-deep-links">${deep.links.map((link) => `<a class="goal-deep-link" href="${link[0]}"><strong>${link[1]}</strong><span>${link[2]}</span></a>`).join('')}</div>
+    </div></section>`;
 
 document.getElementById('storyApp').innerHTML = `
   <header><div class="wrap nav">${ggNavHtml()}</div></header>
@@ -321,6 +403,7 @@ document.getElementById('storyApp').innerHTML = `
     </div></section>
     <section class="story"><div class="wrap"><header class="section-head"><span class="eyebrow">The real-life reason behind ${goal.eyebrow}</span><h2>${storyCopy.title}</h2><p>${storyCopy.body}</p></header><div class="story-grid">${beatHtml}</div></div></section>
     <section class="proof"><div class="wrap proof-grid"><div class="proof-copy"><span class="eyebrow">Inside GetGuac</span><h2>${goal.proofTitle}</h2><p>${goal.proofText}</p><ul class="checklist">${checksHtml}</ul></div><div class="screens"><button class="zoom-shot web-zoom" type="button" data-zoom-src="${goal.web}" data-zoom-alt="GetGuac web screen for ${goal.eyebrow}" aria-label="Zoom the GetGuac web screen"><img class="webshot" src="${goal.web}" alt="GetGuac web screen for ${goal.eyebrow}"></button><button class="zoom-shot phone-zoom" type="button" data-zoom-src="${goal.phone}" data-zoom-alt="GetGuac mobile screen for ${goal.eyebrow}" aria-label="Zoom the GetGuac phone screen"><img class="phoneshot" src="${goal.phone}" alt="GetGuac mobile screen for ${goal.eyebrow}"></button><span class="zoom-hint">⌕ Tap a screen to zoom</span><span class="screen-note">${goal.screenNote}</span></div></div></section>
+    ${deepHtml}
     <section class="next-tools"><div class="wrap"><header class="section-head"><span class="eyebrow">Keep the momentum</span><h2>You have already started. Choose what helps next.</h2><p>Go deeper only where it feels useful. Every option below turns what you learned here into a practical next step.</p></header><div class="next-tools-grid">
       <article class="next-tool"><span class="next-tool-icon" aria-hidden="true">📖</span><h3>Read a practical guide</h3><p>Get short, plain-language help with refunds, subscriptions, spending and smarter shopping.</p><a class="btn" href="/learn#guides">Explore guides</a></article>
       <article class="next-tool"><span class="next-tool-icon" aria-hidden="true">🧮</span><h3>Try a free money tool</h3><p>Use calculators, the bills calendar and Worth-It tools to turn a question into a clear answer.</p><a class="btn" href="/learn#tools">Open free tools</a></article>
@@ -333,6 +416,24 @@ document.getElementById('storyApp').innerHTML = `
   <dialog class="zoom-dialog" id="zoomDialog" aria-label="Expanded GetGuac screen"><div class="zoom-dialog-inner"><button class="zoom-close" type="button" aria-label="Close expanded screen">×</button><img id="zoomImage" alt=""></div></dialog>`;
 
 ggNavStyles();
+
+/* FAQPage schema for the goals that ship a deep dive. Built with createElement
+ * because a <script> written through innerHTML is inert — the JSON has to be a
+ * real node for a crawler to read it off the rendered page. */
+if (deep) {
+  const faqSchema = document.createElement('script');
+  faqSchema.type = 'application/ld+json';
+  faqSchema.textContent = JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: deep.faq.map((entry) => ({
+      '@type': 'Question',
+      name: entry[0],
+      acceptedAnswer: { '@type': 'Answer', text: entry[1] },
+    })),
+  });
+  document.head.appendChild(faqSchema);
+}
 
 const zoomDialog = document.getElementById('zoomDialog');
 const zoomImage = document.getElementById('zoomImage');

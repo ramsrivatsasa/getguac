@@ -12,6 +12,8 @@
 - Avoid unnecessary statistic cards, repeated promises, and speculative redesigns.
 - Make one precise change at a time and verify it before reporting completion.
 - Keep commentary, tool output, and permission interruptions minimal.
+- Do not ask the owner questions when the requested outcome can be discovered from the repository.
+- Use real feature screenshots in feature guides; lifestyle images may support a story but must not replace product evidence.
 
 ## Mandatory working behavior
 
@@ -25,6 +27,11 @@
 - This `open_ai_getguac_design` agent owns local development port `3000`.
 - Other agents must use separate worktrees and different ports such as `3001`.
 - Never start a second development server on port `3000` when one is already running.
+- Do not start an unnecessary second server on another port; reuse the working server on port `3000`.
+- Never touch or stage sitemap files or other agents' edits unless the owner explicitly requests them.
+- Isolate commits to the files owned by the current task.
+- Treat `push` and `deploy` precisely: push uploads the isolated branch; deploy promotes the verified change to production and requires a live-page check.
+- If the owner requests deployment, do not stop after pushing a branch.
 
 ## Continuous improvement
 
@@ -38,6 +45,8 @@
 
 - `phone-receipts.webp` is the mobile Receipts screen.
 - `phone-guac-ai.webp` is Guac AI chat and must not be labeled as the Receipts page.
+- `web-inbox.png` and `phone-inbox.png` are the approved email Inbox screenshots.
+- `web-subs.webp` and `phone-subs.webp` are the approved subscriptions screenshots; `web-bills.webp` is the approved bills-calendar companion image.
 
 ## Verification expectations
 

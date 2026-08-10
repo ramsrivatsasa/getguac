@@ -22,6 +22,11 @@ These instructions apply to the entire GetGuac repository.
 10. Minimize token usage: avoid unnecessary tools, repeated checks, speculative changes, and repeated explanations.
 11. Treat owner corrections as durable lessons: update `open_ai/memories/getguac-design-memory.md` and do not repeat recorded mistakes.
 12. The `open_ai_getguac_design` agent uses port `3000`. Other agents must use separate worktrees and different ports.
+13. Use the existing server on port `3000`; do not start another local server or request permission to do so.
+14. Do not modify, stage, commit, or deploy sitemap files or another agent's changes unless the owner explicitly includes them.
+15. For feature guides, use verified product screenshots that show the named feature. Never substitute lifestyle or marketing images for app screens.
+16. When the owner says `push`, test and push only the isolated requested files. When the owner says `deploy` or `migrate`, promote the isolated verified change to production and verify the live URL before reporting success.
+17. Do not stop for clarification when the repository and existing assets provide a safe, reasonable answer. Complete the requested work autonomously.
 
 ## Change safety
 
@@ -29,3 +34,4 @@ These instructions apply to the entire GetGuac repository.
 - Never deploy, push, or publish unless explicitly requested.
 - Use local preview URLs for review.
 - If uncertain about a design choice, inspect the repository for an established pattern before inventing one.
+- Keep owner-facing responses direct: outcome, verification, and destination. Do not repeat explanations or apologies.

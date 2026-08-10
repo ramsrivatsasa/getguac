@@ -8,7 +8,16 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
 <link rel="stylesheet" href="../resource.css">
 <link rel="stylesheet" href="../resource-fonts.css">
-<title>A budget grounded in real life</title>
+<title>How to build a budget grounded in real life | GetGuac</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="GetGuac">
+<meta property="og:title" content="How to build a budget grounded in real life | GetGuac">
+<meta property="og:description" content="Build a spending plan from what your household actually buys, instead of an imaginary perfect month you will not keep.">
+<meta property="og:url" content="https://getguac.app/resources/guides/budget.html">
+<meta property="og:image" content="https://getguac.app/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://getguac.app/resources/guides/budget.html">
+<meta name="description" content="Build a spending plan from what your household actually buys, instead of an imaginary perfect month you will not keep.">
 </head>
 <body data-resource="budget">
 <div id="resourceApp">
@@ -42,7 +51,37 @@ const PAGES={
 const key=document.body.dataset.resource;const page=PAGES[key]||PAGES.calculators;const homeBase='/home/';document.title=`${page.title} | GetGuac`;
 const story=page.steps.map((s,i)=>`<article class="story-card"><span>0${i+1}</span><h3>${s[0]}</h3><p>${s[1]}</p></article>`).join('');
 const tool=page.calendar?`<div class="calendar">${['1','2','3','4','5','6','7','8','9','10','11','12','13','14'].map((d)=>`<div class="day"><b>${d}</b>${d==='1'?'<span class="bill">Rent · $1,800</span>':''}${d==='8'?'<span class="bill">Internet · $49</span>':''}${d==='13'?'<span class="bill">Streaming · $17.99</span>':''}</div>`).join('')}</div>`:`<ul class="list">${page.items.map(x=>`<li>✓ ${x}</li>`).join('')}</ul>`;
-document.getElementById('resourceApp').innerHTML=`<header><div class="wrap nav"></div></header><main><section class="page-hero"><div class="wrap page-grid"><div><span class="eyebrow">${page.eyebrow}</span><h1>${page.title}</h1><p>${page.lede}</p><span class="metric">${page.metric}</span></div><figure class="page-photo"><img src="${homeBase}${page.image}" alt="${page.alt}"></figure></div></section><section class="page-section"><div class="wrap"><header class="section-head"><div><span class="eyebrow">A human-sized way through it</span><h2>Three moments. One clearer next step.</h2></div></header><div class="story-grid">${story}</div><div class="tool-panel"><h3>${page.toolTitle}</h3>${tool}</div><p style="margin-top:18px">${page.source.startsWith("/")?`<a class="card-link" href="${page.source}">Open the live tool →</a>`:`<a class="card-link" href="${page.source}" target="_blank" rel="noopener noreferrer">Open the trusted source →</a>`}</p></div></section><div class="wrap"><section class="cta"><h2>Keep the next decision simple.</h2><p>Use the resource now, or start with one receipt and let GetGuac build the context for you.</p><a class="btn" href="/join?try=receipt">Try 1 receipt</a></section></div></main><footer class="footer"><div class="wrap"><span>🥑 GetGuac · Your money’s wingman</span><span></span></div></footer>`;
+
+/* Optional long-form section, keyed by page. This lives HERE, in the source,
+ * because build-standalone-pages.ps1 re-inlines this file into every resources
+ * page on `npm run nav` — anything hand-written into the generated HTML is
+ * silently erased on the next build. Screens must point at files that exist in
+ * public/home/goals and be described as what they actually show. */
+const DEEP={
+  subscriptions:{
+    eyebrow:'How subscriptions work in GetGuac',
+    title:'From a repeated charge to a decision you control.',
+    lede:'GetGuac uses the purchase history you choose to save. As similar merchant charges repeat, it can surface likely subscriptions and recurring bills for review. You confirm what the charge is, notice changes, and decide whether it still deserves a place in the month.',
+    flow:[['Build useful history','Add emailed or photographed receipts. Optional statement imports can fill gaps without requiring a bank login.'],['Find repeat charges','GetGuac compares merchant names, timing, and amounts to surface likely monthly or annual patterns.'],['Review the pattern','Check the service, expected renewal, recent amount, price changes, and whether a second charge looks duplicated.'],['Choose the next action','Keep it, budget for it, investigate it, downgrade it, or cancel directly with the provider.']],
+    screens:[
+      {img:'/home/goals/web-subs.webp',alt:'The GetGuac desktop Subscriptions view listing each detected recurring charge with its cadence, average charge, last charge and monthly cost',eyebrow:'Desktop review',title:'See recurring charges together.',body:'The desktop view puts every detected subscription in one table — cadence, average charge, last charge and what it costs per month — so repeat payments can actually be compared. Start with the largest charges, anything you do not recognize, and services flagged as priced up.',checks:['Compare the current amount with earlier charges','Separate monthly plans from annual renewals','Look for duplicate services serving the same need']},
+      {img:'/home/goals/phone-subs.webp',alt:'The GetGuac mobile home screen showing detected subscriptions and their monthly total',phone:true,reverse:true,eyebrow:'Mobile check-in',title:'Review one charge while it is fresh.',body:'On mobile, use the recurring-charge view for a short decision instead of a long budgeting session. Confirm the merchant, decide whether the service is still used, and record the action you plan to take.',checks:['Investigate unfamiliar merchant names','Check whether a free trial became paid','Revisit subscriptions after a household change']},
+      {img:'/home/goals/web-bills.webp',alt:'The GetGuac bills calendar showing expected recurring payments',eyebrow:'Look ahead',title:'Put known renewals on the calendar.',body:'Subscriptions explain the repeating pattern; the Bills calendar gives the expected charge a future date. Add confirmed due dates so there is time to cancel, downgrade, or prepare before the payment lands.',checks:['Add annual renewals well before their due date','Review the next 30 days once a week','Confirm that a canceled service actually stopped billing']},
+    ],
+    rhythm:[['Weekly: scan what is next','Look at upcoming renewals and act on any trial or cancellation deadline.'],['Monthly: question changes','Review new recurring charges, price increases, and services the household stopped using.'],['Quarterly: simplify','Compare overlapping subscriptions and keep only the combination that still earns its cost.']],
+    note:'<strong>Good to know:</strong> GetGuac helps organize and surface recurring-charge patterns; it does not cancel a subscription for you. Complete cancellation with the merchant, keep the confirmation, and check the next statement or receipt to make sure billing stopped.',
+    actions:[['/reports','Review recurring charges','btn'],['/bills','Open the bills calendar','btn-secondary']],
+  },
+};
+const deep=DEEP[key];
+const deepHtml=!deep?'':`<section class="deep-dive"><div class="wrap"><header class="section-head"><div><span class="eyebrow">${deep.eyebrow}</span><h2>${deep.title}</h2><p class="deep-lede">${deep.lede}</p></div></header>
+<div class="deep-flow">${deep.flow.map((f,i)=>`<article><b>0${i+1}</b><h3>${f[0]}</h3><p>${f[1]}</p></article>`).join('')}</div>
+${deep.screens.map(s=>{const shot=`<figure class="deep-shot${s.phone?' phone':''}"><img src="${s.img}" alt="${s.alt}" loading="lazy"></figure>`;const copy=`<div class="deep-screen-copy"><span class="eyebrow">${s.eyebrow}</span><h3>${s.title}</h3><p>${s.body}</p><ul class="deep-checks">${s.checks.map(c=>`<li>${c}</li>`).join('')}</ul></div>`;return `<div class="deep-screen${s.reverse?' reverse':''}">${s.reverse?copy+shot:shot+copy}</div>`}).join('')}
+<div class="deep-rhythm">${deep.rhythm.map(r=>`<article><h3>${r[0]}</h3><p>${r[1]}</p></article>`).join('')}</div>
+<p class="deep-note">${deep.note}</p>
+<div class="deep-actions">${deep.actions.map(a=>`<a class="${a[2]}" href="${a[0]}">${a[1]}</a>`).join('')}</div>
+</div></section>`;
+document.getElementById('resourceApp').innerHTML=`<header><div class="wrap nav"></div></header><main><section class="page-hero"><div class="wrap page-grid"><div><span class="eyebrow">${page.eyebrow}</span><h1>${page.title}</h1><p>${page.lede}</p><span class="metric">${page.metric}</span></div><figure class="page-photo"><img src="${homeBase}${page.image}" alt="${page.alt}"></figure></div></section><section class="page-section"><div class="wrap"><header class="section-head"><div><span class="eyebrow">A human-sized way through it</span><h2>Three moments. One clearer next step.</h2></div></header><div class="story-grid">${story}</div><div class="tool-panel"><h3>${page.toolTitle}</h3>${tool}</div><p style="margin-top:18px">${page.source.startsWith("/")?`<a class="card-link" href="${page.source}">Open the live tool →</a>`:`<a class="card-link" href="${page.source}" target="_blank" rel="noopener noreferrer">Open the trusted source →</a>`}</p></div></section>${deepHtml}<div class="wrap"><section class="cta"><h2>Keep the next decision simple.</h2><p>Use the resource now, or start with one receipt and let GetGuac build the context for you.</p><a class="btn" href="/join?try=receipt">Try 1 receipt</a></section></div></main><footer class="footer"><div class="wrap"><span>🥑 GetGuac · Your money’s wingman</span><span></span></div></footer>`;
 
 </script>
 <!-- RESOURCE_PAGE_INLINE END -->

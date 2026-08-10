@@ -64,19 +64,21 @@ const GS_CSS = `
 .gg-guide { --ink:#16331f; --lime:#b8ef52; --cream:#fbf8ec; --sage:#eaf4df; font-family:var(--font-jakarta),system-ui,sans-serif; }
 .gg-guide h1,.gg-guide h2,.gg-guide h3,.gg-guide h4 { font-family:var(--font-bricolage),var(--font-jakarta),system-ui,sans-serif; }
 .gg-hero { background:radial-gradient(circle at 82% 12%,rgba(184,239,82,.32),transparent 27%),linear-gradient(145deg,#f7f3df 0%,#eef7e7 58%,#fff 100%); }
-.gg-grid { display:grid; grid-template-columns:240px minmax(0,1fr); gap:52px; align-items:start; }
+.gg-grid { display:grid; grid-template-columns:236px minmax(0,1fr); gap:44px; align-items:start; }
 .gg-toc { position:sticky; top:92px; max-height:calc(100vh - 112px); overflow-y:auto; scrollbar-width:thin; }
 .gg-chapter { scroll-margin-top:100px; }
-.gg-step { display:grid; grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr); gap:40px; align-items:start; }
+.gg-step { display:grid; grid-template-columns:minmax(0,.78fr) minmax(0,1.22fr); gap:36px; align-items:start; }
+.gg-step:nth-child(even) { grid-template-columns:minmax(0,1.22fr) minmax(0,.78fr); }
 .gg-step:nth-child(even) .gg-copy { order:2; }
 .gg-step:nth-child(even) .gg-media { order:1; }
 .gg-media { min-width:0; }
-.gg-visual { position:relative; overflow:hidden; border-radius:28px; padding:16px; background:linear-gradient(145deg,#eef8df,#d8efb1); box-shadow:0 28px 75px -38px rgba(22,51,31,.78); }
-.gg-visual img { width:100%; display:block; border-radius:17px; border:1px solid rgba(22,51,31,.1); background:white; }
-.gg-shot-stack { display:grid; gap:14px; align-items:center; }
-.gg-shot-stack.paired { grid-template-columns:minmax(0,1fr) minmax(118px,.43fr); }
-.gg-shot-card { min-width:0; }
-.gg-shot-card.phone img { width:100%; margin:auto; border-radius:24px; }
+.gg-visual { position:relative; overflow:hidden; border-radius:28px; padding:18px; background:linear-gradient(145deg,#eef8df,#d8efb1); box-shadow:0 28px 75px -38px rgba(22,51,31,.78); }
+.gg-visual img { width:100%; display:block; border-radius:16px; border:1px solid rgba(22,51,31,.1); background:white; }
+.gg-shot-stack { display:grid; gap:16px; align-items:center; justify-items:center; }
+.gg-shot-stack.paired { grid-template-columns:minmax(0,1fr) minmax(104px,.36fr); gap:14px; }
+.gg-shot-card { min-width:0; width:100%; }
+.gg-shot-card.phone img { border:0; border-radius:0; background:transparent; }
+.gg-shot-stack:not(.paired) .gg-shot-card.phone { max-width:268px; }
 .gg-shot-label { display:block; margin:0 0 7px; font-size:10px; font-weight:900; letter-spacing:.14em; text-transform:uppercase; color:#31533a; }
 .gg-practice { position:relative; overflow:hidden; margin-top:18px; border:1px solid rgba(77,124,15,.18); border-radius:24px; padding:20px; background:linear-gradient(145deg,#fbfdf5,#fff 72%); color:#173d27; box-shadow:inset 5px 0 #b8ef52,0 20px 48px -38px rgba(9,32,17,.45); }
 .gg-practice-list { display:grid; gap:10px; margin-top:14px; }
@@ -87,8 +89,8 @@ const GS_CSS = `
 .gg-feature-shot { overflow:hidden; border-radius:24px; background:#eaf4df; padding:14px; }
 .gg-feature-shot img { display:block; border-radius:14px; border:1px solid rgba(22,51,31,.1); background:white; }
 .gg-tip { background:#173d27; color:#fff; box-shadow:0 24px 70px -45px rgba(9,32,17,.8); }
-@media (max-width:900px) { .gg-grid{grid-template-columns:1fr;gap:28px}.gg-toc{position:static;max-height:none;overflow:visible}.gg-step{grid-template-columns:1fr}.gg-step:nth-child(even) .gg-copy,.gg-step:nth-child(even) .gg-media{order:initial} }
-@media (max-width:600px) { .gg-visual{padding:14px;border-radius:22px}.gg-shot-stack.paired{grid-template-columns:minmax(0,1fr) minmax(92px,.42fr);gap:9px} }
+@media (max-width:900px) { .gg-grid{grid-template-columns:1fr;gap:28px}.gg-toc{position:static;max-height:none;overflow:visible}.gg-step,.gg-step:nth-child(even){grid-template-columns:minmax(0,1fr)}.gg-step:nth-child(even) .gg-copy,.gg-step:nth-child(even) .gg-media{order:initial} }
+@media (max-width:600px) { .gg-visual{padding:14px;border-radius:22px}.gg-shot-stack.paired{grid-template-columns:minmax(0,1fr) minmax(84px,.36fr);gap:10px}.gg-shot-stack:not(.paired) .gg-shot-card.phone{max-width:212px} }
 `
 
 const chapters = [
@@ -107,10 +109,10 @@ const steps = [
   { n:'05', chapter:'make-automatic', icon:Receipt, title:'Organize categories and duplicates', body:'GetGuac categorizes the items inside each receipt and flags possible duplicate captures. Review only unusual categories or matches instead of organizing every purchase manually.', why:'Clean categories and duplicate control make reports useful without creating another bookkeeping chore.', action:['/goals/categories.html','See automatic organization'], shot:['/home/goals/web-receipts.webp','Receipt categories and the Find duplicates control on the GetGuac web app'] },
   { n:'06', chapter:'make-automatic', icon:Clock3, title:'Surface subscriptions and recurring charges', body:'As history builds, GetGuac recognizes similar payments that repeat. Review likely subscriptions, expected charges, and changes in amount before deciding what to keep or cancel.', why:'Recurring charges are easier to control when they are visible before another payment lands.', action:['/resources/guides/subscriptions.html','Use the subscription guide'], shot:['/home/goals/phone-subs.webp','Detected subscriptions and recurring charges on mobile','phone'] },
   { n:'07', chapter:'make-automatic', icon:Clock3, title:'Put bills on a forward-looking calendar', body:'Add the recurring bills and due dates you already know. Review the calendar alongside detected recurring charges so the next month feels planned instead of surprising.', why:'A visible bill is easier to prepare for than a charge discovered after it lands.', action:['/goals/bills.html','Learn about the bills calendar'], shot:['/home/goals/web-bills.webp','Upcoming bills displayed on the GetGuac calendar'] },
-  { n:'08', chapter:'read-patterns', icon:Lightbulb, title:'Explore your dashboard and reports', body:'Compare stores, categories, time periods, trends, and tax-ready views. Start with one useful question instead of trying to perfect every record at once.', why:'Reports are valuable when they reveal one decision you can improve next month.', action:['/goals/reports.html','Explore GetGuac reports'], shot:['/marketing/slides/v2/reports-web.webp','GetGuac reports showing spending patterns and comparisons'] },
+  { n:'08', chapter:'read-patterns', icon:Lightbulb, title:'Explore your dashboard and reports', body:'Use the dashboard for scores, anomalies, rewards, recent activity, and timely actions. Open Reports to compare categories, stores, items, subscriptions, business receipts, tax summaries, and time periods.', why:'The dashboard tells you what deserves attention; Reports helps explain why and keeps the source receipts close enough to act.', action:['/dashboard-reports','Explore Dashboard & Reports'], shot:['/marketing/slides/v2/reports-web.webp','GetGuac reports showing spending categories, tax summaries, subscriptions, and period comparisons'] },
   { n:'09', chapter:'read-patterns', icon:Sparkles, title:'Ask Guac AI a question', body:'Ask about one store, category, purchase, or change in your saved history. Guac AI answers from the receipts and records you provided, keeping the conversation grounded in your money.', why:'A specific question turns stored data into an answer you can act on.', action:['/goals/read.html','Open the Guac AI guide'], shot:['/home/goals/web-guac-ai.webp','Guac AI answering a question about saved spending'] },
   { n:'10', chapter:'read-patterns', icon:Lightbulb, title:'Rate purchases with Worth-It', body:'Mark whether a recent purchase was worthwhile while the experience is still fresh. Use quick, honest ratings rather than trying to evaluate every purchase perfectly.', why:'Your own definition of value is more useful than a generic rule about what you should buy.', action:['/resources/worth-it.html','Learn about Worth-It'], shot:['/home/goals/phone-worth-it.webp','Worth-It purchase ratings on mobile','phone'] },
-  { n:'11', chapter:'read-patterns', icon:Lightbulb, title:'Understand and improve your GuacScore', body:'GuacScore answers one personal question: “Was this spending worth it?” It turns your own Worth-It ratings into a simple 0–100 signal, giving more importance to the purchases that cost you more.', why:'The score connects how much you spent with how you felt afterward. It helps you find expensive regrets and repeat patterns worth changing without judging necessary spending.', action:['/features','Explore GuacScore and Worth-It'], shot:['/home/goals/phone-guacscore.webp','The mobile GuacScore view showing the score, grade, spending, refunds, fees, and trend','phone'] },
+  { n:'11', chapter:'read-patterns', icon:Lightbulb, title:'Understand and improve your GuacScore', body:'GuacScore answers one personal question: “Was this spending worth it?” It turns your own Worth-It ratings into a simple 0–100 signal, giving more importance to the purchases that cost you more.', why:'The score connects how much you spent with how you felt afterward. It helps you find expensive regrets and repeat patterns worth changing without judging necessary spending.', action:['/guacscore','Explore the GuacScore guide'], shot:['/home/goals/phone-guacscore.webp','The mobile GuacScore view showing the score, grade, spending, refunds, fees, and trend','phone'] },
   { n:'12', chapter:'read-patterns', icon:Sparkles, title:'Make progress visible with GuacMoney', body:'GuacMoney makes the value of useful actions visible. It separates real dollars GetGuac helped you save from GM points that recognize receipts, recovered money, referrals, and eligible learning activity.', why:'Visible progress makes helpful behavior easier to repeat. GM points are not redeemable today; GetGuac will update customers when planned redemption becomes available.', action:['/goals/guacmoney.html','Explore the GuacMoney guide'], shot:['/home/goals/web-organized.webp','The GuacMoney balance visible in the GetGuac dashboard summary'] },
   { n:'13', chapter:'read-patterns', icon:Receipt, title:'Prepare tax and charity records', body:'Categorize relevant receipts, business purchases, charity records, and mileage as they occur. Review the correct reporting period before using any export.', why:'Organized source records reduce the scramble when reimbursement or tax time arrives.', action:['/goals/reports.html','See reporting tools'], shot:['/home/goals/phone-tax.webp','Business, charity, and sales-tax records on mobile','phone'] },
   { n:'14', chapter:'protect-money', icon:Sparkles, title:'Find quiet leaks with GuacWizard', body:'GuacWizard reads your bank-statement totals and turns avoidable costs into a clear health signal. Instead of showing an unexplained number, it ranks the interest, fees, debt changes, and high-APR cards that deserve attention first.', why:'The benefit is diagnostic: you see the actual dollar costs behind the score and get a focused next step. It is also the only GetGuac engine that rewards debt moving down.', action:['/goals/wizard.html','Explore the GuacWizard guide'], shot:['/home/goals/web-fees.webp','GuacWizard showing ranked interest, fee, debt, and high-APR bank costs'] },
@@ -155,15 +157,20 @@ const SECONDARY_SHOTS = {
   '03':['/home/goals/phone-bank.webp','Optional bank and statement records on mobile','phone'],
   '04':['/home/goals/phone-receipts.webp','Parsed receipt records ready to review on mobile','phone'],
   '05':['/home/goals/phone-receipts.webp','Organized receipt records and categories on mobile','phone'],
+  '06':['/home/goals/web-subs.webp','The GetGuac desktop Subscriptions table showing each recurring charge, its cadence and its monthly cost'],
   '07':['/home/goals/phone-bills.webp','The forward-looking bills calendar on mobile','phone'],
+  '08':['/home/goals/phone-organized.webp','The mobile dashboard with spending totals and daily, weekly, and monthly views','phone'],
   '09':['/home/goals/phone-guac-ai.webp','Guac AI answering from saved money records on mobile','phone'],
+  '10':['/home/goals/web-worth-it.webp','Worth-It ratings and the average rating shown on the GetGuac web app'],
   '11':['/marketing/slides/v2/guacanomics-web.webp','GuacScore and spending-quality insights on the web'],
   '12':['/home/goals/phone-organized.webp','The GuacMoney balance visible in the mobile dashboard','phone'],
+  '13':['/home/goals/web-tax.webp','The GetGuac Tax summary card showing business, charity and sales-tax totals with a CSV export'],
   '14':['/home/goals/phone-fees.webp','GuacWizard Bank Bite reasons on mobile','phone'],
   '15':['/home/goals/phone-returns.webp','Return deadlines and refund status on mobile','phone'],
   '16':['/home/goals/phone-stash.webp','Remembered products in Stash on mobile','phone'],
   '17':['/home/goals/phone-steals.webp','Repeat-purchase price comparisons on mobile','phone'],
   '18':['/home/goals/phone-marketplace.webp','Marketplace offers and coupons on mobile','phone'],
+  '19':['/home/goals/web-bank.webp','The GetGuac web Bank screen showing which statements were uploaded and what they cost'],
   '20':['/home/goals/phone-smashlist.webp','A prepared Smashlist on mobile','phone'],
   '21':['/home/goals/phone-car-miles.webp','Purpose-based Car Miles records on mobile','phone'],
   '22':['/home/goals/phone-games.webp','GetGuac Arcade games on mobile','phone'],
@@ -218,11 +225,11 @@ const ALL_FEATURES = [
   { group:'Capture & organize', title:'GetGuac email inbox', body:'Forward digital receipts to your private @getguac.app address.', href:'/how-email-works', image:'/home/goals/phone-inbox.png', phone:true },
   { group:'Capture & organize', title:'Statement import', body:'Optionally turn bank or card statement PDFs into trackable rows.', href:'/statements', image:'/home/goals/web-bank.webp' },
   { group:'Capture & organize', title:'Guac-AI parsing', body:'Extract stores, dates, totals, tax, payment details, and every line item.', href:'/how-it-works', image:'/home/goals/phone-guac-ai.webp', phone:true },
-  { group:'Capture & organize', title:'Categories and duplicates', body:'Automatically organize purchases and collapse duplicate captures.', href:'/goals/categories.html', image:'/home/goals/web-receipts.webp' },
+  { group:'Capture & organize', title:'Categories and duplicates', body:'Automatically organize purchases and collapse duplicate captures.', href:'/goals/categories.html', image:'/home/goals/web-categories.webp' },
   { group:'Understand your money', title:'Dashboard and reports', body:'Explore stores, categories, time periods, trends, and tax-ready views.', href:'/reports', image:'/marketing/slides/v2/reports-web.webp' },
   { group:'Understand your money', title:'Guac AI questions', body:'Ask conversational questions about the receipts and spending you saved.', href:'/goals/read.html', image:'/home/goals/web-guac-ai.webp' },
   { group:'Understand your money', title:'Worth-It ratings', body:'Rate purchases in seconds and learn which spending was truly worthwhile.', href:'/resources/worth-it.html', image:'/home/goals/phone-worth-it.webp', phone:true },
-  { group:'Understand your money', title:'GuacScore', body:'See a simple score that improves as your spending choices improve.', href:'/validate', image:'/home/goals/phone-guacscore.webp', phone:true },
+  { group:'Understand your money', title:'GuacScore', body:'See a simple score that improves as your spending choices improve.', href:'/guacscore', image:'/home/goals/phone-guacscore.webp', phone:true },
   { group:'Keep more', title:'Subscriptions and recurring charges', body:'Surface repeat payments and see what is likely coming next.', href:'/resources/guides/subscriptions.html', image:'/home/goals/phone-subs.webp', phone:true },
   { group:'Keep more', title:'GuacWizard bank bites', body:'Find avoidable fees, interest, penalties, and other quiet money leaks.', href:'/bites', image:'/home/goals/web-fees.webp' },
   { group:'Keep more', title:'Returns and refunds', body:'Track return windows, policies, refund progress, and price-drop deadlines.', href:'/returns', image:'/home/goals/web-returns.webp' },
@@ -306,7 +313,7 @@ export default function GetStartedPage() {
         </div>
       </section>}
 
-      <section id="guide" className="mx-auto pb-20" style={{ width: 'min(1180px, calc(100% - clamp(24px, 5vw, 56px)))' }}>
+      <section id="guide" className="mx-auto pb-20" style={{ width: 'min(1264px, calc(100% - clamp(24px, 5vw, 56px)))' }}>
         <div className="gg-grid">
           <aside className="gg-toc rounded-3xl bg-[#173d27] p-6 text-white">
             <p className="text-xs font-black uppercase tracking-[.18em] text-[#b8ef52]">Table of contents</p>

@@ -27,6 +27,11 @@ export const metadata = {
   description:
     'Send GetGuac to someone by email, WhatsApp or message, bookmark it for later, or refer a friend with your code and earn Smash days.',
   alternates: { canonical: '/share' },
+  // noindex, FOLLOW. This is a utility page -- share buttons and a keyboard
+  // shortcut -- with nothing a searcher is looking for. `follow` keeps it
+  // crawlable so it still passes link equity to /invite and /games; only the
+  // indexing is declined. It is deliberately absent from the sitemap too.
+  robots: { index: false, follow: true },
 }
 
 // 🔴 ASCII ONLY, FLAT SELECTORS, NO COMMENTS INSIDE THIS STRING.

@@ -383,7 +383,12 @@ const NARRATION_AUDIO = SLIDES.map((_, index) =>
   `/audio/how-it-works/slide-${String(index + 1).padStart(2, '0')}.mp3`
 )
 
-export default function HowItWorksPage({ embedded = false, compact = false, cinematic = false }) {
+// `headingLevel` exists because this deck is the WHOLE page at /tour but a
+// section inside /how-it-works, which has its own h1. Defaulting to h1 means
+// /tour keeps a document heading; /how-it-works passes h2 so the page does not
+// ship two h1s. Both callers pass `embedded`, so that prop cannot tell them
+// apart -- this has to be explicit.
+export default function HowItWorksPage({ embedded = false, compact = false, cinematic = false, headingLevel = 'h1' }) {
   const [playing, setPlaying] = useState(false)
   const [muted, setMuted] = useState(false)
   const [current, setCurrent] = useState(0)
@@ -657,7 +662,7 @@ export default function HowItWorksPage({ embedded = false, compact = false, cine
               current === idx ? 'opacity-100' : 'opacity-95'
             } transition-opacity`}
           >
-            {slide.type === 'hero' && <HeroSlide slide={slide} />}
+            {slide.type === 'hero' && <HeroSlide slide={slide} headingLevel={headingLevel} />}
             {slide.type === 'closing' && <ClosingSlide slide={slide} />}
             {!slide.type && <StepSlide slide={slide} idx={idx} cinematic={cinematic} />}
           </section>
@@ -749,7 +754,10 @@ export default function HowItWorksPage({ embedded = false, compact = false, cine
 /* Slide layouts                                                           */
 /* ─────────────────────────────────────────────────────────────────────── */
 
-function HeroSlide({ slide }) {
+// headingLevel arrives from HowItWorksPage: h1 when this deck IS the page
+// (/tour), h2 when it sits under a page that already has one (/how-it-works).
+function HeroSlide({ slide, headingLevel = 'h1' }) {
+  const Heading = headingLevel
   return (
     <div className="w-full">
       <div className="flex items-center gap-6 flex-wrap">
@@ -758,10 +766,10 @@ function HeroSlide({ slide }) {
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider">
             <Sparkles size={12} /> How GetGuac works
           </span>
-          <h1 className="text-3xl sm:text-6xl font-black tracking-tight text-gray-900 mt-3 leading-tight">
+          <Heading className="text-3xl sm:text-6xl font-black tracking-tight text-gray-900 mt-3 leading-tight">
             From receipt<br />
             <span className="bg-gradient-to-br from-emerald-500 via-lime-500 to-amber-500 bg-clip-text text-transparent">to insight, in seconds.</span>
-          </h1>
+          </Heading>
           <p className="text-lg text-gray-600 mt-3 max-w-2xl">
             Forward an email, snap a photo, or import a credit-card statement — Guac-AI does the rest. Press <strong className="text-emerald-700">Play</strong> to watch the whole flow.
           </p>

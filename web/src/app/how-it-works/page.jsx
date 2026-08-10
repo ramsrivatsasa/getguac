@@ -7,8 +7,8 @@ import MarketingShell from '../../components/MarketingShell'
 import Presentation from './Presentation'
 
 export const metadata = {
-  title: 'How GetGuac works — capture, parse, learn from every receipt',
-  description: 'A visual walkthrough: snap or forward a receipt, Guac-AI extracts every detail, duplicates get caught, the Smashlist predicts your next shopping trip, Steals finds a better price, and GuacMoney keeps score of every dollar you keep.',
+  title: 'How GetGuac works: from receipt to insight',
+  description: 'A visual walkthrough: snap or forward a receipt, Guac-AI reads every line item, duplicates get caught, and you see where the money went.',
   // Self-canonical. Without this the page INHERITS the root layout's
   // alternates and declares itself a duplicate of the homepage.
   alternates: { canonical: '/how-it-works' },
@@ -32,7 +32,8 @@ export default function HowItWorksPage() {
 
       {/* Unified animated tour — 22 chapters, real web/mobile screens, fixed
           neural narration, keyboard/swipe navigation and reduced-motion care. */}
-      <Presentation embedded compact cinematic />
+      {/* headingLevel h2: this page already renders the document h1 above. */}
+      <Presentation embedded compact cinematic headingLevel="h2" />
 
       {/* CTA */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 pb-16 text-center">

@@ -158,10 +158,106 @@ function ggNavBaseCss() {
     + '.ggdd-card a:hover{background:#F1F8EE;color:#15281C}'
 }
 
+// One breakpoint for the whole site. MarketingMobileMenu is `lg:hidden`, so the
+// React shell swaps to its hamburger here; the inline surfaces now swap to their
+// own at the same width. They used to part company at 900px, which meant a
+// 950px-wide tablet got a hamburger on /pricing and a flat link row on
+// /resources/calculators.
+const GG_MOBILE_MAX = 1023
+
+/* The mobile row for the 34 surfaces that have no React hamburger: the homepage
+ * and the 33 static pages.
+ *
+ * Before this they had no mobile treatment at all. ggNavBaseCss() gives .ggnav
+ * `display:flex;flex-wrap:wrap`, so at phone width the five top-level items
+ * wrapped onto three rows and spilled out of the 64px bar over the top of the
+ * hero, with the hover menus behind them untappable. The homepage DID carry
+ * `@media(max-width:820px){.links{display:none}}` from before the shared nav
+ * existed, but `.ggnav{display:flex}` is the same specificity (0,1,0) and the
+ * generated block is appended AFTER the page stylesheet, so source order handed
+ * it the win and the links came back. That is why hiding them is not enough on
+ * its own and why every rule below is container-qualified.
+ *
+ * 🔴 EVERY RULE HERE GOES THROUGH inBar(). The page stylesheets get a vote and
+ * they are more specific than a bare class:
+ *   resource.css    `.nav a:not(.brand):not(.btn){display:none}`   (0,2,1)
+ *   goal-story.css  `.nav-links a:not(.btn){display:none}`         (0,2,1)
+ * Both match the panel's own links, because the panel lives inside `.wrap.nav`.
+ * A bare `.ggm-sheet a` is (0,1,1) and loses to both — the menu would open to an
+ * empty white sheet on 30 of the 33 static pages. inBar() makes it (0,3,1).
+ *
+ * No JS. The homepage cannot have any here: page.jsx extracts only the FIRST
+ * <script> in the body and runs that, and a <script> inside the markup React
+ * injects never executes at all (see build-homepage-nav.mjs). A checkbox plus
+ * `:checked ~` is the one mechanism that works identically on the homepage, on
+ * the client-rendered static pages, and before any script has loaded.
+ *
+ * ASCII only, same as the rest of the file. This branch is not the one that ends
+ * up in a React <style> — MarketingShell asks for 'hamburger', the homepage gets
+ * this through dangerouslySetInnerHTML and the static pages through
+ * style.textContent, so neither escapes anything — but the hamburger glyph is
+ * still drawn with three <i> bars in MARKUP rather than a non-ASCII character in
+ * CSS, so that nothing here breaks if this string is ever handed to React. */
+function ggMobileCss() {
+  return ''
+    // Desktop default. The burger only ever exists on the inline surfaces, so
+    // this rule lives here rather than in the shared base.
+    + inBar('.ggm') + '{display:none}'
+    + '@media(max-width:' + GG_MOBILE_MAX + 'px){'
+    // The menu items go; `a.ggcta` deliberately stays. On the static pages the
+    // CTA is INSIDE nav.ggnav, so hiding the container would have taken "Get
+    // started" with it — the one control a phone visitor actually came for.
+    // Hence hiding the items one class at a time instead of the whole row.
+    + inBar('.ggdd') + '{display:none}'
+    + inBar('a.gglink') + '{display:none}'
+    // goal-story.css sets `.nav{min-height:66px}` at 520px, which beats the
+    // shared `height:64px` and would leave the panel overlapping the bar by 2px.
+    + BARS.join(',') + '{min-height:64px}'
+    + inBar('.ggm') + '{position:relative;display:inline-flex;align-items:center;'
+    + 'justify-content:center;width:42px;height:42px;flex-shrink:0}'
+    // The checkbox IS the hit target: full-size, transparent, on top of the
+    // glyph. A <label for> would not be focusable, and this keeps the control
+    // keyboard-operable (tab to it, space to open) with no script.
+    + inBar('.ggm-cb') + '{position:absolute;left:0;top:0;width:42px;height:42px;'
+    + 'margin:0;padding:0;border:0;opacity:0;cursor:pointer;z-index:2;'
+    + '-webkit-appearance:none;appearance:none}'
+    + inBar('.ggm-ico') + '{position:relative;display:block;width:20px;height:14px}'
+    + inBar('.ggm-ico i') + '{position:absolute;left:0;width:20px;height:2px;border-radius:2px;'
+    + 'background:#15281C;transition:transform .18s,opacity .18s}'
+    + inBar('.ggm-b1') + '{top:0}'
+    + inBar('.ggm-b2') + '{top:6px}'
+    + inBar('.ggm-b3') + '{top:12px}'
+    + inBar('.ggm-cb:focus-visible') + '{opacity:1;outline:2px solid #12341F;outline-offset:-6px;border-radius:10px}'
+    // Bars fold into an X so the open state is legible without a second glyph.
+    + inBar('.ggm-cb:checked ~ .ggm-ico .ggm-b1') + '{transform:translateY(6px) rotate(45deg)}'
+    + inBar('.ggm-cb:checked ~ .ggm-ico .ggm-b2') + '{opacity:0}'
+    + inBar('.ggm-cb:checked ~ .ggm-ico .ggm-b3') + '{transform:translateY(-6px) rotate(-45deg)}'
+    // position:fixed at top:64px lands in the same place on both kinds of
+    // surface, which is why it is fixed rather than absolute. The homepage,
+    // resource.css and goal-story.css all give the header backdrop-filter, and a
+    // backdrop-filter creates a containing block for fixed descendants — so
+    // there the offset is measured from the (full-width, 64px tall) header box.
+    // Where there is no such ancestor it is measured from the viewport, and the
+    // header sits at the top of the document. Both resolve to "directly under
+    // the bar". max-height + scroll because 16 links do not fit a short phone.
+    + inBar('.ggm-panel') + '{position:fixed;left:0;right:0;top:64px;z-index:70;display:none;'
+    + 'background:#fff;border-bottom:1px solid #E4EDE4;'
+    + 'box-shadow:0 22px 44px -28px rgba(16,40,26,.55);max-height:72vh;overflow-y:auto}'
+    + inBar('.ggm-cb:checked ~ .ggm-panel') + '{display:block}'
+    // Two columns and the homepage's own .wrap width formula, so the panel's
+    // links line up with the page content underneath rather than with the bar.
+    + inBar('.ggm-sheet') + '{display:grid;grid-template-columns:1fr 1fr;gap:0 18px;'
+    + 'width:min(1180px,calc(100% - clamp(24px,5vw,56px)));margin:0 auto;padding:4px 0 14px}'
+    + inBar('.ggm-sheet a') + '{display:block;padding:13px 2px;font-size:14.5px;font-weight:700;'
+    + 'color:#3D4F44;border-bottom:1px solid #F0F4F0;text-decoration:none}'
+    + inBar('.ggm-sheet a:hover') + '{color:#12341F}'
+    + '}'
+}
+
 export function ggNavCss(collapse = 'inline') {
   return ggNavBaseCss() + (collapse === 'hamburger'
-    ? '@media(max-width:1023px){.ggnav{display:none}}'
-    : '@media(max-width:900px){.ggnav .ggdd-menu{display:none}.ggnav{gap:12px}}')
+    ? '@media(max-width:' + GG_MOBILE_MAX + 'px){.ggnav{display:none}}'
+    : ggMobileCss())
 }
 
 function esc(s) {
@@ -174,18 +270,48 @@ function esc(s) {
 // moment you clicked from the homepage into a React page.
 export const GG_CARET = '▾'
 
+/* The mobile menu for the inline surfaces: hit target, glyph and panel.
+ *
+ * The panel lists GG_NAV_FLAT, which is what that export was always for — a
+ * phone visitor reaching a different set of pages from a desktop visitor is the
+ * discoverability bug this whole restructure exists to fix, so the flat list is
+ * derived from the same array rather than written out again here.
+ *
+ * The checkbox carries the accessible name because it is the focusable control;
+ * the bars are decorative. See ggMobileCss() for why this is a checkbox and not
+ * a button with a click handler. */
+export function ggBurgerHtml() {
+  const links = GG_NAV_FLAT
+    .map((n) => '<a href="' + esc(n.href) + '">' + esc(n.label) + '</a>')
+    .join('')
+  return '<span class="ggm">'
+    + '<input class="ggm-cb" type="checkbox" id="gg-menu" aria-label="Menu">'
+    + '<span class="ggm-ico" aria-hidden="true">'
+    + '<i class="ggm-b1"></i><i class="ggm-b2"></i><i class="ggm-b3"></i></span>'
+    + '<span class="ggm-panel"><span class="ggm-sheet">' + links + '</span></span>'
+    + '</span>'
+}
+
 /* Menu items only — no brand, no CTA. The homepage already has its own logo and
- * Get-started button and only needs the links swapped. */
+ * Get-started button and only needs the links swapped.
+ *
+ * The burger is appended here, not in ggNavHtml(), so that it lands in the same
+ * place on both surfaces. ggNavHtml() wraps this output plus the CTA in one
+ * <nav>, giving `... [burger][cta]`; on the homepage the CTA is a SIBLING of the
+ * nav and cannot be reordered across containers, so ending the menu with the
+ * burger is what makes the two rows read identically. */
 export function ggMenuHtml() {
   return GG_NAV.map((n) => {
-    if (!n.children) return '<a href="' + esc(n.href) + '">' + esc(n.label) + '</a>'
+    // gglink so the mobile query can hide the childless top-level links without
+    // also matching a.ggcta, which sits in this same nav on the static pages.
+    if (!n.children) return '<a class="gglink" href="' + esc(n.href) + '">' + esc(n.label) + '</a>'
     const kids = n.children.map((c) => '<a href="' + esc(c.href) + '">' + esc(c.label) + '</a>').join('')
     return '<span class="ggdd">'
       + '<a class="ggdd-top" href="' + esc(n.href) + '">' + esc(n.label)
       + '<i class="ggdd-caret" aria-hidden="true">' + GG_CARET + '</i></a>'
       + '<span class="ggdd-menu"><span class="ggdd-card">' + kids + '</span></span>'
       + '</span>'
-  }).join('')
+  }).join('') + ggBurgerHtml()
 }
 
 /* Full contents of `.wrap.nav` for the static pages, which ship no header of

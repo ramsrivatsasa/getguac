@@ -12,6 +12,9 @@ import { Lock, Eye, EyeOff, Database, Trash2, ShieldCheck, Mail } from 'lucide-r
 export const metadata = {
   title: 'Privacy Policy — GetGuac',
   description: 'What GetGuac collects, what it can see, who else can see it, and how to delete it. Plain language.',
+  // Self-canonical. Without this the page INHERITS the root layout's
+  // alternates and declares itself a duplicate of the homepage.
+  alternates: { canonical: '/privacy' },
 }
 
 const LAST_UPDATED = 'July 28, 2026'

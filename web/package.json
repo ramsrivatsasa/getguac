@@ -12,7 +12,8 @@
     "nav:check": "node scripts/nav-check.mjs",
     "test:nav-mobile": "node scripts/test-nav-mobile.mjs",
     "test:score-engines": "node scripts/test-score-engines.mjs",
-    "test:parity": "echo 'Web side:' && node scripts/test-score-engines.mjs && echo 'Mobile side:' && cd ../mobile && flutter test test/services/wizard_score_test.dart"
+    "test:parity": "echo 'Web side:' && node scripts/test-score-engines.mjs && echo 'Mobile side:' && cd ../mobile && flutter test test/services/wizard_score_test.dart",
+    "seo:canonicals": "node scripts/check-canonicals.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.98.0",

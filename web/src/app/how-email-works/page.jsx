@@ -9,6 +9,9 @@ import { Mail, Inbox, Forward, Sparkles, ShieldOff, ShoppingBag, Clock, EyeOff, 
 export const metadata = {
   title: 'How GetGuac email works — your free @getguac.app inbox',
   description: 'Use you@getguac.app for online shopping signups, you+g@getguac.app for auto-receipt processing. Personal mail stays untouched.',
+  // Self-canonical. Without this the page INHERITS the root layout's
+  // alternates and declares itself a duplicate of the homepage.
+  alternates: { canonical: '/how-email-works' },
 }
 
 export default function HowEmailWorksPage() {

@@ -11,6 +11,9 @@ import { Shield, Lock, Eye, EyeOff, Database, Mail, Trash2, KeyRound, CheckCircl
 export const metadata = {
   title: 'Security & Privacy — GetGuac',
   description: 'Plain-language explanation of how GetGuac protects your data, what we can see, and what you control.',
+  // Self-canonical. Without this the page INHERITS the root layout's
+  // alternates and declares itself a duplicate of the homepage.
+  alternates: { canonical: '/security' },
 }
 
 export default function SecurityPage() {

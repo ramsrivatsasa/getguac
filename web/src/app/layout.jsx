@@ -71,7 +71,20 @@ export const metadata = {
   authors: [{ name: 'GetGuac' }],
   creator: 'GetGuac',
   publisher: 'GetGuac',
-  alternates: { canonical: '/' },
+  // 🔴 NO `alternates` HERE. Next.js INHERITS metadata, so a canonical set on the
+  // root layout becomes every page's canonical unless that page overrides it —
+  // and any page that forgets then tells Google "I am a duplicate of the
+  // homepage, do not index me" while still being submitted in the sitemap.
+  //
+  // Measured on production 2026-08-10: 6 of the 45 sitemap URLs were pointing
+  // their canonical at `/` — /how-it-works, /security, /how-email-works,
+  // /download, /privacy and /terms. /how-it-works is a core page. The other 39
+  // only escaped because they happened to declare their own.
+  //
+  // The homepage sets its own in app/page.jsx, so nothing is lost by removing it
+  // here. A page with no canonical at all is self-canonical by default, which is
+  // the safe failure mode; inheriting the wrong one is not.
+  // See scripts/check-canonicals.mjs, which now fails the build on a mismatch.
   openGraph: {
     type: 'website',
     siteName: 'GetGuac',

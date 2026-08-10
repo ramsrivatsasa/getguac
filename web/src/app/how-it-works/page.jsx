@@ -9,6 +9,9 @@ import Presentation from './Presentation'
 export const metadata = {
   title: 'How GetGuac works — capture, parse, learn from every receipt',
   description: 'A visual walkthrough: snap or forward a receipt, Guac-AI extracts every detail, duplicates get caught, the Smashlist predicts your next shopping trip, Steals finds a better price, and GuacMoney keeps score of every dollar you keep.',
+  // Self-canonical. Without this the page INHERITS the root layout's
+  // alternates and declares itself a duplicate of the homepage.
+  alternates: { canonical: '/how-it-works' },
 }
 
 const DISPLAY = { fontFamily: 'var(--font-bricolage), sans-serif' }

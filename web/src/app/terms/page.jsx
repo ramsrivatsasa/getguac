@@ -11,6 +11,9 @@ import { FileText, ShieldCheck } from 'lucide-react'
 export const metadata = {
   title: 'Terms of Service — GetGuac',
   description: 'The rules of using GetGuac. Plain language; no surprise fees, no buried clauses.',
+  // Self-canonical. Without this the page INHERITS the root layout's
+  // alternates and declares itself a duplicate of the homepage.
+  alternates: { canonical: '/terms' },
 }
 
 const LAST_UPDATED = 'June 3, 2026'

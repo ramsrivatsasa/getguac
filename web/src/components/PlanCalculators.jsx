@@ -430,7 +430,7 @@ export default function PlanCalculators() {
     }).catch(() => setAuthed(false))
   }, [])
 
-  // Deep-link from an article: /plan#mortgage preselects that calculator.
+  // Deep-link from an article: /calculators#mortgage preselects that calculator.
   useEffect(() => {
     const h = typeof window !== 'undefined' ? window.location.hash.replace('#', '') : ''
     if (h && CALCS.some((c) => c.id === h)) setSelId(h)

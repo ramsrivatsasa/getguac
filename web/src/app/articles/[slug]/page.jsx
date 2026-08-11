@@ -129,7 +129,7 @@ export default function ArticlePage({ params }) {
         </div>
 
         {a.calc && (
-          <Link href={`/plan#${a.calc}`} className="mt-8 block rounded-2xl bg-gradient-to-br from-emerald-600 to-lime-500 text-white p-5 hover:scale-[1.01] transition-transform shadow-sm">
+          <Link href={`/calculators#${a.calc}`} className="mt-8 block rounded-2xl bg-gradient-to-br from-emerald-600 to-lime-500 text-white p-5 hover:scale-[1.01] transition-transform shadow-sm">
             <div className="font-black inline-flex items-center gap-1.5"><CalcIcon size={16} /> Run the numbers</div>
             <p className="text-emerald-50 text-sm mt-0.5">Try the matching calculator — free, with a Guac-AI strategy built for your numbers.</p>
           </Link>

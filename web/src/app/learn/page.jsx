@@ -1,5 +1,6 @@
 import {
-  CreditCard, FileText, Home, Landmark, PiggyBank, Receipt, ShoppingCart, TrendingUp, Users,
+  BookOpen, Calculator, Compass, CreditCard, FileText, Home, Landmark, PiggyBank,
+  Receipt, ShoppingCart, Sparkles, TrendingUp, Users,
 } from 'lucide-react'
 import AdSlot from '../../components/AdSlot'
 import MarketingShell from '../../components/MarketingShell'
@@ -16,14 +17,15 @@ import { GUIDES, TOOLS, GOALS, CALCULATOR_COUNT, EXTERNAL_GUIDES } from '../../l
 // column of scroll, with nothing to tell a visitor where to start. Ram's words:
 // "every thing is combnied in one page" / "organize properly".
 //
-// THE SHAPE NOW, read -> learn -> use -> proof:
+// THE SHAPE NOW, orient -> read -> learn -> use -> proof:
 //   1. breadcrumb, hero, search, ONE featured article        (Rocket Money)
-//   2. Start here - three numbered links, not three cards
-//   3. Browse by topic - nine icon cards, EACH CARRYING ITS
+//   2. four compact route choices that explain the page
+//   3. Start here - three numbered links, not three cards
+//   4. Browse by topic - nine icon cards, EACH CARRYING ITS
 //      OWN TOP THREE ARTICLE LINKS                           (YNAB help centre)
-//   4. tools, then our guides, then the external .gov guides
-//   5. goal stories as a dense link list
-//   6. closing action row, then the sign-up CTA              (YNAB help centre)
+//   5. tools, then our guides, then the external .gov guides
+//   6. goal stories behind one clear disclosure
+//   7. closing action row, then the sign-up CTA              (YNAB help centre)
 //
 // The second pass took the YNAB idea that a topic card should contain its own
 // article links. That earned its keep twice: the nine cards had all pointed at
@@ -143,6 +145,27 @@ const FEATURED_SLUG = 'how-getguac-helps-you-save'
 // the investing or tax pieces make sense.
 const START_HERE = ['fifty-thirty-twenty', 'emergency-fund-size', 'credit-score']
 
+// The hub carries several resource types. These routes explain that structure
+// before the visitor meets the catalog, without adding another tall section.
+const LEARN_ROUTES = [
+  {
+    href: '#start-here', icon: Compass, label: 'Start with the basics',
+    note: 'Three short reads in a useful order.',
+  },
+  {
+    href: '#topics', icon: BookOpen, label: 'Browse a money topic',
+    note: 'Saving, shopping, debt, taxes and more.',
+  },
+  {
+    href: '#tools', icon: Calculator, label: 'Use a free tool',
+    note: 'Calculate, compare, plan or review.',
+  },
+  {
+    href: '#goals', icon: Sparkles, label: 'See GetGuac in real life',
+    note: 'Short stories built around one useful goal.',
+  },
+]
+
 // One line per real category, in the order a reader is likely to need them.
 // Counts are computed from ARTICLES, never typed — a hand-written count is a
 // claim that goes stale the next time an article is added.
@@ -227,6 +250,16 @@ const RES_CSS = `
 .rs-feat-copy p { margin: 0 0 10px; color: #dbe9df; font-size: 14px; line-height: 1.5; }
 .rs-feat-copy .rs-eyebrow { color: #cbea9d; }
 .rs-feat-more { color: #fff; font-weight: 800; font-size: 13px; }
+.rs-route-shell { padding: 22px 0 10px; background: #fff; }
+.rs-route-head { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 12px; }
+.rs-route-head b { font-size: 16px; font-weight: 800; letter-spacing: -.02em; }
+.rs-route-head span { color: #718078; font-size: 13px; }
+.rs-routes { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; }
+.rs-route { display: grid; grid-template-columns: 38px 1fr; gap: 11px; align-items: start; padding: 15px; border: 1px solid #dce7de; border-radius: 18px; background: #fff; color: inherit; text-decoration: none; transition: .18s; }
+.rs-route:hover { border-color: #a9d7b6; background: #f8fcf6; transform: translateY(-2px); }
+.rs-route-ico { display: inline-grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; background: #eef8e9; color: #138a48; }
+.rs-route b { display: block; font-size: 14px; line-height: 1.2; }
+.rs-route p { margin: 4px 0 0; color: #718078; font-size: 12px; line-height: 1.35; }
 .rs-section { padding: 40px 0; }
 .rs-section.rs-soft { background: #fbf9f2; }
 .rs-head { display: flex; align-items: end; justify-content: space-between; gap: 30px; margin-bottom: 22px; }
@@ -276,7 +309,14 @@ const RES_CSS = `
 .rs-copy p { margin: 0; color: #65736a; font-size: 13px; line-height: 1.45; }
 .rs-link { margin-top: auto; padding-top: 13px; color: #138a48; font-weight: 800; font-size: 13px; }
 .rs-pill { display: inline-flex; align-self: flex-start; padding: 5px 9px; border-radius: 999px; background: #eef8e9; color: #138a48; font-size: 9px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
-.rs-goals { display: grid; grid-template-columns: repeat(3,1fr); gap: 0 34px; }
+.rs-goal-disclosure { padding: 0 22px 18px; border: 1px solid #dce7de; border-radius: 22px; background: #fff; }
+.rs-goal-disclosure summary { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 18px 0 0; cursor: pointer; list-style: none; }
+.rs-goal-disclosure summary::-webkit-details-marker { display: none; }
+.rs-goal-summary b { display: block; font-size: 16px; font-weight: 800; letter-spacing: -.02em; }
+.rs-goal-summary span { display: block; margin-top: 3px; color: #718078; font-size: 12.5px; }
+.rs-goal-toggle { display: inline-grid; place-items: center; flex-shrink: 0; width: 32px; height: 32px; border-radius: 999px; background: #eef8e9; color: #138a48; font-size: 22px; font-style: normal; line-height: 1; transition: .18s; }
+.rs-goal-disclosure[open] .rs-goal-toggle { transform: rotate(45deg); }
+.rs-goals { display: grid; grid-template-columns: repeat(3,1fr); gap: 0 34px; margin-top: 14px; }
 .rs-goal { display: flex; align-items: baseline; gap: 10px; padding: 11px 2px; border-bottom: 1px solid #e9efe9; text-decoration: none; color: inherit; }
 .rs-goal:hover { color: #138a48; }
 .rs-goal b { font-size: 14.5px; font-weight: 700; letter-spacing: -.01em; }
@@ -293,11 +333,15 @@ const RES_CSS = `
   .rs-ext { grid-template-columns: repeat(2,1fr); }
   .rs-hero-grid { grid-template-columns: 1fr; gap: 30px; }
   .rs-hero { padding-top: 26px; }
+  .rs-routes { grid-template-columns: repeat(2,1fr); }
   .rs-cards { grid-template-columns: repeat(2,1fr); }
   .rs-topics { grid-template-columns: repeat(2,1fr); }
 }
 @media (max-width: 540px) {
   .rs-ext { grid-template-columns: 1fr; }
+  .rs-route-head { display: block; }
+  .rs-route-head span { display: block; margin-top: 4px; }
+  .rs-routes { grid-template-columns: 1fr; }
   .rs-start { grid-template-columns: 1fr; }
   .rs-wrap { width: min(100% - 24px, 1180px); }
   .rs-cards { grid-template-columns: 1fr; }
@@ -379,11 +423,11 @@ export default function LearnPage() {
         </div>
         <div className="rs-wrap rs-hero-grid">
           <div>
-            <span className="rs-eyebrow">Learning centre</span>
-            <h1>Learn</h1>
+            <span className="rs-eyebrow">GetGuac learning center</span>
+            <h1>Make one better money move.</h1>
             <p className="rs-lede">
-              Practical money articles, free calculators and short guides — organised so you can
-              find the one thing you need instead of reading everything.
+              Choose what you want to solve today. Find a short answer, use a practical tool or
+              follow a guide without turning money into homework.
             </p>
             <ResourceSearch />
           </div>
@@ -416,6 +460,29 @@ export default function LearnPage() {
           </a>
         </div>
       </section>
+
+      <nav className="rs-route-shell" aria-label="Choose a learning route">
+        <div className="rs-wrap">
+          <div className="rs-route-head">
+            <b>What would help right now?</b>
+            <span>Choose one route. You do not need to read everything.</span>
+          </div>
+          <div className="rs-routes">
+            {LEARN_ROUTES.map((route) => {
+              const Icon = route.icon
+              return (
+                <a className="rs-route" href={route.href} key={route.href}>
+                  <span className="rs-route-ico" aria-hidden="true"><Icon size={18} /></span>
+                  <span>
+                    <b>{route.label}</b>
+                    <p>{route.note}</p>
+                  </span>
+                </a>
+              )
+            })}
+          </div>
+        </div>
+      </nav>
 
       {/* START HERE. One compact strip, not a row of three big cards. It answers
           "where do I begin" in about 120px instead of 393px. */}
@@ -580,13 +647,22 @@ export default function LearnPage() {
             </div>
             <p>{GOALS.length} short stories showing what changes when a receipt stops being clutter.</p>
           </header>
-          <div className="rs-goals">
-            {GOALS.map((g) => (
-              <a className="rs-goal" key={g.href} href={g.href} data-search={`${g.blurb} ${g.title}`}>
-                <b>{g.title}</b>
-              </a>
-            ))}
-          </div>
+          <details className="rs-goal-disclosure" data-search-disclosure>
+            <summary>
+              <span className="rs-goal-summary">
+                <b>Explore all {GOALS.length} goal stories</b>
+                <span>Open the collection, then choose the outcome that sounds like your life.</span>
+              </span>
+              <i className="rs-goal-toggle" aria-hidden="true">+</i>
+            </summary>
+            <div className="rs-goals">
+              {GOALS.map((g) => (
+                <a className="rs-goal" key={g.href} href={g.href} data-search={`${g.blurb} ${g.title}`}>
+                  <b>{g.title}</b>
+                </a>
+              ))}
+            </div>
+          </details>
         </div>
       </section>
 

@@ -31,6 +31,14 @@ export default function ResourceSearch() {
       el.hidden = !hit
       if (hit) shown++
     })
+    // Goal stories are collapsed by default so the hub stays compact. Reveal
+    // the collection when search finds a matching story, then restore the
+    // concise default when the query is cleared.
+    document.querySelectorAll('[data-search-disclosure]').forEach((el) => {
+      const items = [...el.querySelectorAll('[data-search]')]
+      const hasHit = items.some((item) => !item.hidden)
+      el.open = Boolean(t && hasHit)
+    })
     // A section whose every card is hidden leaves a stranded heading, so fold
     // the whole section away with it.
     document.querySelectorAll('[data-search-group]').forEach((g) => {
@@ -55,7 +63,7 @@ export default function ResourceSearch() {
           type="search"
           value={q}
           onChange={(e) => apply(e.target.value)}
-          placeholder="Search tools and guides"
+          placeholder="Search articles, tools and guides"
           aria-label="Search resources"
           style={{ width: '100%', border: 0, outline: 0, background: 'transparent', padding: '8px 0' }}
         />

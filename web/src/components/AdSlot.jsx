@@ -27,6 +27,14 @@ const CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || 'ca-pub-595969167144170
 
 // tier 1 = shown to everyone (including premium). tier 2 = removed for premium
 // subscribers (the ad-free perk they pay for via in-app purchase).
+// An unfilled slot collapses by HEIGHT, not display:none. The <ins> stays
+// mounted so AdSense can still report a late fill, but display:none gives the
+// wrapper zero width — so that late push measures availableWidth=0 and throws
+// "TagError: adsbygoogle.push() error: No slot size for availableWidth=0".
+// Collapsing the height hides it just as completely while leaving a real width
+// to measure. Every ad-bearing page was logging that error, not just /learn.
+const COLLAPSED = { height: 0, overflow: 'hidden', margin: 0, padding: 0 }
+
 export default function AdSlot({ slot = '', format = 'auto', className = '', minHeight = 100, label = 'Advertisement', tier = 1 }) {
   const pushed = useRef(false)
   const insRef = useRef(null)
@@ -153,7 +161,10 @@ export default function AdSlot({ slot = '', format = 'auto', className = '', min
   // AdSense can still report a late fill).
   const filled = status === 'filled'
   return (
-    <div className={className} style={status === 'unfilled' ? { display: 'none' } : undefined}>
+    <div
+      className={className}
+      style={status === 'unfilled' ? COLLAPSED : undefined}
+    >
       {/* The loader lives with the slot, not in the root layout — see
           AdSenseScript. Rendering it here is what keeps Google off every
           signed-in page. Deduped by id, so N slots still load it once. */}

@@ -33,6 +33,26 @@ const FEATURE_GUIDES = [
   '/goals/security.html',
 ]
 
+// Real content under public/resources that was indexable but had never been
+// submitted: the tools hub, four calculators/tools and three long-form guides.
+// scripts/seo-audit.mjs flagged all nine as NOT-IN-SITEMAP — they set no robots
+// meta, so Google was free to index them but had to find them by crawling.
+//
+// NOTE the .html here. The bare /coupons and /marketplace ROUTES stay out on
+// purpose (they are noindexed, see the header comment); these are the static
+// content pages of the same name, which are not.
+const RESOURCE_PAGES = [
+  '/resources/index.html',
+  '/resources/calculators.html',
+  '/resources/bills-calendar.html',
+  '/resources/marketplace.html',
+  '/resources/coupons.html',
+  '/resources/security.html',
+  '/resources/guides/budget.html',
+  '/resources/guides/emergency-fund.html',
+  '/resources/guides/refund-rights.html',
+]
+
 export default function sitemap() {
   const lastModified = '2026-06-30'
   const routes = [
@@ -83,5 +103,11 @@ export default function sitemap() {
     changeFrequency: 'monthly',
     priority: 0.6,
   }))
-  return [...pages, ...featureGuides, ...articles]
+  const resourcePages = RESOURCE_PAGES.map((path) => ({
+    url: `${SITE_URL}${path}`,
+    lastModified: '2026-08-11',
+    changeFrequency: 'monthly',
+    priority: 0.6,
+  }))
+  return [...pages, ...featureGuides, ...resourcePages, ...articles]
 }

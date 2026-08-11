@@ -181,6 +181,45 @@ const GOALS = {
     checks:['Spending by store and category','One month through all-time views','Repeat-purchase and tax context'],
     web:'../home/goals/web-bank.webp', phone:'../home/goals/phone-bank.webp', screenNote:'The month finally explained'
   },
+  /* The three guides below each pair with an article rather than replacing it.
+     A guide is how to do the thing in GetGuac; the article is the explainer.
+     They link to each other and stay separate — merging them turns a short,
+     actionable page into an essay nobody finishes. Every claim maps to a
+     feature that actually ships: returns tracking, recurring-charge detection,
+     the tax summary card, Stash, Smashlist and Steals. */
+  emergency: {
+    accent:'#f0b84a', soft:'#fff5dc', stage:'protect', eyebrow:'Start it with money you already had',
+    title:'Fund the cushion from money already yours.',
+    lede:'The Adeyemis did not find a spare hundred a month. They found a refund that never arrived, a subscription nobody used and a fee that repeated — and sent all three to the same place.',
+    image:'../home/campaign-story/playground-payoff-v2.webp', imageAlt:'A family with breathing room after recovering money they were already owed', result:'Three sources, one cushion',
+    beats:[['Before','Saving meant finding money that was not there, so it never started.'],['The GetGuac moment','A pending refund, an unused recurring charge and an avoidable fee all surfaced in the same week.'],['After','Money that was already theirs had somewhere to go instead of quietly leaking.']],
+    proofTitle:'The first deposit is usually a recovery.', proofText:'Refunds you are owed, subscriptions you stopped using and avoidable bank costs are money already in your budget. GetGuac makes each one visible while there is still time to act on it.',
+    checks:['Return windows tracked until the refund lands','Recurring charges surfaced before they renew','Interest and fees ranked by real dollar cost'],
+    web:'../home/goals/web-returns.webp', phone:'../home/goals/phone-returns.webp', screenNote:'Recovered, not squeezed',
+    article:['/articles/fund-your-emergency-fund','How to fund an emergency fund'],
+  },
+  'tax-records': {
+    accent:'#68b9ee', soft:'#eaf7ff', stage:'understand', eyebrow:'Records that build themselves',
+    title:'Arrive at tax time already organized.',
+    lede:'Priya stopped rebuilding a year of receipts in April. Business purchases, charity donations and sales tax were already separated, because each was tagged the week it happened.',
+    image:'../home/campaign-story/family-payoff-v2.webp', imageAlt:'A household reviewing organized tax records without the shoebox', result:'A year, already sorted',
+    beats:[['Before','Deductible purchases were mixed into a year of ordinary spending, and finding them meant reconstructing months from memory.'],['The GetGuac moment','Each relevant receipt was categorized as it arrived, so business, charity and sales tax stayed separate all year.'],['After','The reporting period was a filter, not a project — and the export was ready when the accountant asked.']],
+    proofTitle:'Small classifications now, no scramble later.', proofText:'The Tax summary keeps business purchases, charity donations and sales tax paid apart from everyday spending, with the source receipts still attached to each number.',
+    checks:['Business, charity and sales-tax totals kept separate','Source receipts stay attached to every figure','Export the period your accountant asked for'],
+    web:'../home/goals/web-tax.webp', phone:'../home/goals/phone-tax.webp', screenNote:'Ready before it is asked for',
+    article:['/articles/receipts-at-tax-time','What receipts you need at tax time'],
+  },
+  grocery: {
+    accent:'#a78bf5', soft:'#f3efff', stage:'prepare', eyebrow:'A food budget that survives the shop',
+    title:'Know the grocery bill before the aisle does.',
+    lede:'The Okonkwos were not overspending on food in general. They were overspending on four items that had quietly crept up — which only became obvious once the receipt was read line by line.',
+    image:'../home/story-people/capture-blonde-produce-v1.webp', imageAlt:'A shopper checking a grocery list built from what the household actually buys', result:'Four items, not the whole shop',
+    beats:[['Before','A grocery total told them the trip cost too much, but not which part of it did.'],['The GetGuac moment','Item-level history showed which products repeated, which had risen in price, and what was bought twice.'],['After','They changed four lines instead of trying to cut the whole category.']],
+    proofTitle:'A grocery budget is decided at item level.', proofText:'Receipts become a product history, so the next list is built from what the household actually finishes — and a repeat purchase can be price-checked before the trip rather than after it.',
+    checks:['Item-level history instead of one merchant total','A list built from what you actually rebuy','Price-check the repeats before you go'],
+    web:'../home/goals/web-smashlist.webp', phone:'../home/goals/phone-smashlist.webp', screenNote:'The list writes itself',
+    article:['/articles/grocery-budget-that-sticks','Build a grocery budget that sticks'],
+  },
   steals: {
     accent:'#f0b84a', soft:'#fff5dc', stage:'shop', eyebrow:'Live price hunting',
     title:'Know when the better price is real.',
@@ -295,6 +334,9 @@ const STORY_COPY = {
   duplicates:{title:'Duplicate receipts should never inflate what you spent.',body:'A receipt photo, forwarded email and statement entry can all describe the same checkout. GetGuac matches and removes those duplicates so your history and spending totals stay accurate without manual cleanup.'},
   categories:{title:'When purchases sort themselves, the month becomes easier to understand.',body:'Built-in and custom categories organize the obvious purchases first. The user confirms what matters, corrects what does not and gets a useful view without categorizing every line alone.'},
   reports:{title:'The clearest monthly report starts with real items, not mystery totals.',body:'Stores, categories, taxes and repeat purchases add meaning to a transaction list. A family can see what changed, where money concentrated and which pattern deserves the next conversation.'},
+  emergency:{title:'The hardest part of an emergency fund is the first deposit.',body:'Advice usually starts with money you do not have spare. A refund still owed to you, a subscription nobody opens and a fee that repeats every month are all money already inside your budget — and each one is easier to redirect than to find.'},
+  'tax-records':{title:'Tax records are cheap to keep and expensive to reconstruct.',body:'Tagging a business purchase or a donation takes seconds in the week it happens. Rebuilding a year of them from a card statement takes a weekend, and still misses the ones where only the receipt knew what was bought.'},
+  grocery:{title:'Groceries are rarely too expensive in general.',body:'A single merchant total cannot tell you which part of the shop moved. Item-level history can: it shows the few products that repeat, the ones that quietly rose in price, and the ones that came home twice.'},
   steals:{title:'A lower price matters most when it is for the exact thing you need.',body:'Steals watches matching brands, sizes and repeat buys instead of showing random discounts. The goal is a useful comparison before checkout—not another feed designed to make people buy more.'},
   stash:{title:'Remembering what is already home prevents buying it twice.',body:'Every receipt quietly builds a searchable household Stash. Before the next trip, roommates or family members can check what they own, what may be running low and what should stay off the list.'},
   wizard:{title:'Hidden fees become actionable when the statement tells a story.',body:'GuacWizard looks for interest, monthly fees, unusual charges and spending patterns that a balance alone will not explain. Each finding points to a specific review instead of adding another vague warning.'},
@@ -365,6 +407,167 @@ const DEEP_DIVE = {
       ['/resources/worth-it.html', 'Worth-It', 'Decide whether the purchase earned its price.'],
     ],
   },
+
+  emergency: {
+    eyebrow: 'How to actually start one',
+    title: 'Three recoveries, then a standing order.',
+    lede: 'Almost every emergency-fund guide starts with money you do not have spare, which is why most of them stall on step one. This starts somewhere else: with money already inside your budget that is leaking out of it. Recover three sources first, and the habit begins with a balance rather than a promise.',
+    flow: [
+      ['Set the baseline', 'Before choosing a target, look at one full month of real spending. A cushion sized against a guess is a guess. One month of actual outgoings is the number the target is built from.'],
+      ['Recover what is already owed', 'Open returns and refunds still inside their window. This is the fastest money in the process because it is not a sacrifice — it is a transaction you already paid for that has not finished.'],
+      ['Stop one repeating charge', 'Review detected recurring charges and cancel one nobody uses. A $14 monthly service is $168 a year, and unlike a budget cut it needs deciding only once.'],
+      ['Remove one avoidable cost', 'Work down the ranked GuacWizard reasons from the highest real-dollar cost — an overdraft, a late charge, a fee a different account would not levy.'],
+      ['Automate the amount you proved', 'Set the transfer to what the first three steps actually freed, not to an ambitious round number. An amount that continues beats an amount that stops in month two.'],
+      ['Review each month', 'Check it once a month against the same three sources. The fund grows from recoveries you keep finding, not from willpower you keep spending.'],
+    ],
+    cards: [
+      { eyebrow: 'Size it honestly', title: 'One month first, then three.', body: 'A three-to-six-month cushion is the destination, not the starting line. A first milestone you will actually reach does more for the habit than a correct target you abandon.', checks: ['Start at one month of essentials', 'Count essentials, not total spending', 'Raise the target once the first is held'] },
+      { eyebrow: 'Keep it separate', title: 'Distance is the whole mechanism.', body: 'The fund needs to be reachable in an emergency and inconvenient at checkout. A separate account does that with no discipline required.', checks: ['Not the account your card draws on', 'Reachable within a day when needed', 'Refill it after every use'] },
+    ],
+    example: {
+      eyebrow: 'Where a first month actually comes from',
+      title: 'The first $400 is usually a recovery.',
+      body: 'None of these lines are a cut to your standard of living. Each is money that was already yours, leaving on a schedule you had stopped noticing.',
+      head: ['Source', 'One-off', 'Per year'],
+      rows: [
+        ['Refund still inside its return window', '$86.00', '—'],
+        ['Recurring charge nobody uses', '$14.00', '$168.00'],
+        ['One avoidable overdraft', '$35.00', '$140.00 at 4 a year'],
+        ['Duplicate subscription for the same need', '$9.99', '$119.88'],
+      ],
+      winRow: 1,
+      note: 'Illustration only. The point is the shape: one-off recoveries start the fund, the annual column is what keeps filling it.',
+    },
+    limits: {
+      title: 'What this will not do.',
+      items: [
+        'GetGuac does not hold your money. It shows you what to move; the transfer happens at your bank.',
+        'There is no bank login and no balance tracking, so it cannot tell you what the fund currently holds.',
+        'It cannot recover a refund past its window — the deadline is the store\'s, and once it passes the money is gone.',
+        'Cancelling a subscription happens with the merchant. GetGuac surfaces the charge; you complete the cancellation and check the next statement.',
+      ],
+    },
+    faq: [
+      ['How big should the fund be?', 'The common guidance is three to six months of essential expenses. Start at one month — a first milestone you reach beats a correct target you abandon, and one month already covers most of what actually goes wrong.'],
+      ['Should I build the fund or pay off debt first?', 'That depends on the interest rate and on how exposed you are, so no guide can answer it for you. A common middle path is a small starter cushion first, so the next surprise does not go back onto the card.'],
+      ['Where should I keep it?', 'Somewhere reachable within a day but not attached to the card you spend from. The separation is doing the work, not the interest rate.'],
+      ['What counts as an emergency?', 'Deciding in advance is most of the value. Writing down two or three things that qualify — car, health, income gap — prevents the fund from quietly becoming a general spending account.'],
+      ['Do I refill it after using it?', 'Yes, and treating the refill as the next goal is what stops one bad month from ending the habit. The same three recovery sources are still there.'],
+    ],
+    links: [
+      ['/articles/fund-your-emergency-fund', 'The explainer', 'Why the first deposit is the hard one.'],
+      ['/goals/recover.html', 'Returns and refunds', 'Recover money still owed to you.'],
+      ['/goals/wizard.html', 'GuacWizard', 'Rank avoidable costs by real dollars.'],
+      ['/calculators#emergency', 'Emergency fund calculator', 'Size the target against your own essentials.'],
+    ],
+  },
+
+  'tax-records': {
+    eyebrow: 'How to keep them as you go',
+    title: 'Tag it in the week it happens.',
+    lede: 'Tax records are cheap to keep and expensive to reconstruct. A purchase takes seconds to classify while you still remember why you made it, and a weekend to reconstruct in April from a card statement that never knew what was in the bag.',
+    flow: [
+      ['Decide what you actually track', 'Business purchases, charity donations, mileage and sales tax are separate categories with separate rules. Knowing which apply to you keeps the habit small.'],
+      ['Capture the receipt, not the charge', 'A statement line proves money moved to a merchant. Only the receipt shows what was bought — which is the part a deduction depends on.'],
+      ['Classify it the same week', 'Add the purpose while it is still in your head. "Client lunch, March pitch" costs seconds now and is unrecoverable eight months later.'],
+      ['Let the summary accumulate', 'Business, charity and sales-tax totals build across the year with the source receipts attached, so no number is ever a figure you cannot trace.'],
+      ['Review the period before exporting', 'Set the reporting period first, check the totals look like the year you remember, then export. A review before the export catches the miscategorised line while it is still easy to fix.'],
+      ['Hand over records, not a shoebox', 'The export is a CSV your accountant can work from, with the receipts still behind each row.'],
+    ],
+    cards: [
+      { eyebrow: 'The habit', title: 'Seconds now, or a weekend later.', body: 'The whole method is front-loading a tiny classification into the moment of purchase, when the context is free. Everything else follows from that.', checks: ['Classify in the same week', 'Record the purpose, not just the amount', 'Keep the image with the record'] },
+      { eyebrow: 'The trap', title: 'Reconstruction always loses detail.', body: 'Rebuilding a year from a statement finds the merchants but not the reasons, and misses every mixed purchase where only part of the basket qualified.', checks: ['Statements cannot itemise a basket', 'Memory fades faster than the tax year', 'Mixed purchases need the line items'] },
+    ],
+    example: {
+      eyebrow: 'What a classified year looks like',
+      title: 'Three totals instead of one pile.',
+      body: 'Same spending, sorted as it happened. The value is not the totals — it is that each one can be traced back to the receipts behind it.',
+      head: ['Category', 'Total', 'Behind it'],
+      rows: [
+        ['Business purchases', '$185.78', '4 receipts, $10.72 tax'],
+        ['Charity donations', '$158.00', '2 donations'],
+        ['Sales tax paid', '$98.23', 'across 24 receipts'],
+      ],
+      winRow: 0,
+      note: 'Figures from the demo account, shown to illustrate the shape of the summary. GetGuac organizes records; it does not give tax advice, and what qualifies is between you and your accountant.',
+    },
+    limits: {
+      title: 'What this will not do.',
+      items: [
+        'GetGuac is not a tax preparer and does not decide what is deductible. It organizes the records the decision is made from.',
+        'It cannot classify a purchase you never captured — the receipt has to exist.',
+        'Rules differ by country, state and situation, and they change. Check the current rules or ask an accountant.',
+        'Mileage is added manually by design; there is no background location tracking.',
+      ],
+    },
+    faq: [
+      ['How long should I keep receipts?', 'It depends on your jurisdiction and the type of record, and the retention periods differ for business and personal. Keep the digital copy — storage is the cheap part, and the copy does not fade like thermal paper.'],
+      ['Does a photo of a receipt count?', 'Many tax authorities accept legible digital copies, but the rules vary by country and by record type. Check yours rather than assuming, and keep the image legible either way.'],
+      ['What if a purchase was part business, part personal?', 'That is exactly the case a statement cannot answer and a receipt can, because the split is visible at line-item level.'],
+      ['Do I need to track sales tax separately?', 'If you can reclaim it or need it reported, yes. It accumulates quietly — small amounts across many receipts add to a number worth knowing.'],
+      ['Can I export for my accountant?', 'Yes. Set the reporting period, review the totals, then export a CSV with the business and charity rows separated.'],
+    ],
+    links: [
+      ['/articles/receipts-at-tax-time', 'The explainer', 'Which receipts matter, and why.'],
+      ['/goals/reports.html', 'Reports', 'Where the summary and export live.'],
+      ['/goals/miles.html', 'Car Miles', 'Purpose-tagged mileage records.'],
+      ['/articles/understanding-sales-tax', 'Sales tax', 'What that line on the receipt is.'],
+    ],
+  },
+
+  grocery: {
+    eyebrow: 'How to cut the bill without eating worse',
+    title: 'Find the four items, not the whole category.',
+    lede: 'Groceries are rarely too expensive in general — a handful of items moved, and the total moved with them. A merchant total cannot show you which. Item-level history can, and it turns "spend less on food" into four specific decisions.',
+    flow: [
+      ['Save a month of grocery receipts', 'One month is enough to see a pattern. Item-level detail is what makes the rest possible, so the capture habit comes first.'],
+      ['Find what actually repeats', 'A product library builds itself from the receipts. The repeat buyers are where the money is — a $2 rise on something bought weekly outweighs a $20 one-off.'],
+      ['Price-check only the repeats', 'Compare the exact brand, size and count on the few items you buy again. Comparing everything is a hobby; comparing repeats is a decision.'],
+      ['Check the unit price, not the label', 'Divide before you decide. The bigger box is not automatically cheaper, and a promotion is sometimes genuinely the better buy.'],
+      ['Build the next list from history', 'Let the list start from what the household actually finishes, grouped by store, and shared with whoever is shopping. A prepared list is what prevents the duplicate buy and the impulse add.'],
+      ['Review once a month', 'Check which items rose, which came home twice, and which never got eaten. Change a few lines rather than cutting the category.'],
+    ],
+    cards: [
+      { eyebrow: 'Where the money leaks', title: 'Duplicates and drift.', body: 'Two failures account for most grocery overspend: buying something already at home, and a repeat item quietly rising in price over months.', checks: ['Check the cupboard before the list', 'Watch price drift on repeat items', 'Note what gets thrown away'] },
+      { eyebrow: 'Where it does not', title: 'The heroic weekly cut.', body: 'Big across-the-board reductions fail because they need constant willpower at the exact moment it is lowest — mid-shop, hungry, in a hurry.', checks: ['Decide before you leave, not in the aisle', 'Change four items, not forty', 'Keep the food you actually like'] },
+    ],
+    example: {
+      eyebrow: 'Why item level matters',
+      title: 'The same $180 shop, read two ways.',
+      body: 'A statement gives you the first row. The receipt gives you the rest — and only the rest can be acted on.',
+      head: ['What you see', 'Detail', 'What you can do'],
+      rows: [
+        ['Statement', 'SUPERMARKET $180.42', 'Spend less on food, somehow'],
+        ['Receipt', 'Coffee up $3.10 since March', 'Price-check one repeat item'],
+        ['Receipt', 'Second bag of rice, one already home', 'Check before adding to the list'],
+        ['Receipt', 'Fresh produce thrown out twice', 'Buy the smaller pack'],
+      ],
+      winRow: 1,
+      note: 'Illustration only. The point is that three of these four actions are impossible from the statement row alone.',
+    },
+    limits: {
+      title: 'What this will not do.',
+      items: [
+        'GetGuac does not set a food budget for you, and it will not tell you what to eat.',
+        'Price comparisons are a snapshot from a live search — the store page is the final word before you buy.',
+        'It only knows the items on receipts you saved, so a missed receipt is a gap in the history.',
+        'A lower price is only a saving if you were going to buy the item anyway.',
+      ],
+    },
+    faq: [
+      ['Do I need to scan every grocery receipt?', 'No, but the pattern needs enough to be real. A month of the shops you actually do is far more useful than a year of occasional ones.'],
+      ['How does it know what I usually buy?', 'Line items from saved receipts build a product history, so a repeat purchase is recognised across trips and stores rather than treated as new each time.'],
+      ['Is a bigger pack always cheaper?', 'No, and assuming so is one of the most reliable ways to overpay. Divide the price by the count or the weight before deciding.'],
+      ['Can I share the list?', 'Yes — a shared list is what stops two people buying the same thing, which is a large share of grocery duplication.'],
+      ['Will this tell me if I am overspending?', 'It shows what changed and what repeats. Whether that is overspending depends on your household, and GetGuac does not pretend to know that.'],
+    ],
+    links: [
+      ['/articles/grocery-budget-that-sticks', 'The explainer', 'Why grocery budgets fail, and what holds.'],
+      ['/goals/stash.html', 'Stash', 'The product library the list is built from.'],
+      ['/goals/prepare.html', 'Smashlist', 'Turn history into the next trip.'],
+      ['/goals/steals.html', 'Steals', 'Price-check the repeats.'],
+    ],
+  },
 };
 
 const key = document.body.dataset.goal;
@@ -402,6 +605,7 @@ document.getElementById('storyApp').innerHTML = `
       <figure class="hero-photo"><img src="${goal.image}" alt="${goal.imageAlt}" width="1536" height="1024"><figcaption class="hero-result"><small>GetGuac helped</small><strong>${goal.result}</strong></figcaption></figure>
     </div></section>
     <section class="story"><div class="wrap"><header class="section-head"><span class="eyebrow">The real-life reason behind ${goal.eyebrow}</span><h2>${storyCopy.title}</h2><p>${storyCopy.body}</p></header><div class="story-grid">${beatHtml}</div></div></section>
+    ${goal.article ? `<section class="goal-article"><div class="wrap"><a class="goal-article-link" href="${goal.article[0]}"><span><span class="eyebrow">The explainer behind this guide</span><strong>${goal.article[1]}</strong><small>This page is how to do it in GetGuac. The article is the reasoning, in full.</small></span><i aria-hidden="true">&rarr;</i></a></div></section>` : ''}
     <section class="proof"><div class="wrap proof-grid"><div class="proof-copy"><span class="eyebrow">Inside GetGuac</span><h2>${goal.proofTitle}</h2><p>${goal.proofText}</p><ul class="checklist">${checksHtml}</ul></div><div class="screens"><button class="zoom-shot web-zoom" type="button" data-zoom-src="${goal.web}" data-zoom-alt="GetGuac web screen for ${goal.eyebrow}" aria-label="Zoom the GetGuac web screen"><img class="webshot" src="${goal.web}" alt="GetGuac web screen for ${goal.eyebrow}"></button><button class="zoom-shot phone-zoom" type="button" data-zoom-src="${goal.phone}" data-zoom-alt="GetGuac mobile screen for ${goal.eyebrow}" aria-label="Zoom the GetGuac phone screen"><img class="phoneshot" src="${goal.phone}" alt="GetGuac mobile screen for ${goal.eyebrow}"></button><span class="zoom-hint">⌕ Tap a screen to zoom</span><span class="screen-note">${goal.screenNote}</span></div></div></section>
     ${deepHtml}
     <section class="next-tools"><div class="wrap"><header class="section-head"><span class="eyebrow">Keep the momentum</span><h2>You have already started. Choose what helps next.</h2><p>Go deeper only where it feels useful. Every option below turns what you learned here into a practical next step.</p></header><div class="next-tools-grid">

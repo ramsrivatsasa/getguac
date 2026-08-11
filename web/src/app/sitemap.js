@@ -31,6 +31,9 @@ const FEATURE_GUIDES = [
   '/goals/miles.html',
   '/goals/arcade.html',
   '/goals/security.html',
+  '/goals/emergency.html',
+  '/goals/tax-records.html',
+  '/goals/grocery.html',
 ]
 
 // Real content under public/resources that was indexable but had never been

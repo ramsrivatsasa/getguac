@@ -26,3 +26,11 @@
  * <header class="section-head"> sticky, so it drifted over the section it
  * introduces. Only the page header should stick. */
 header.section-head{position:static;z-index:auto;background:none;backdrop-filter:none;border-bottom:0}
+
+.goal-article{padding:0 0 4px}
+.goal-article-link{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:20px 24px;border:1px solid var(--line);border-radius:22px;background:linear-gradient(145deg,#fff,var(--soft));box-shadow:var(--shadow);text-decoration:none;transition:.18s}
+.goal-article-link:hover{border-color:var(--accent);transform:translateY(-1px)}
+.goal-article-link strong{display:block;margin:6px 0 4px;font-family:"Bricolage Grotesque",sans-serif;font-size:clamp(19px,2vw,23px);line-height:1.15}
+.goal-article-link small{display:block;max-width:62ch;color:var(--muted);font-size:13.5px;line-height:1.55}
+.goal-article-link i{flex:0 0 auto;display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:var(--accent);color:#fff;font-style:normal;font-size:18px}
+@media(max-width:540px){.goal-article-link{padding:18px;gap:14px}.goal-article-link i{width:34px;height:34px}}

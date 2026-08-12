@@ -106,34 +106,44 @@ export default function AnomaliesPanel({ receipts = [] }) {
 
   return (
     <div className={`card border-l-4 ${tone.border} ${tone.bg} py-2 px-3`}>
-      {/* Collapsed header — entire row clickable to expand */}
-      <button
-        type="button"
-        onClick={() => setExpanded(v => !v)}
-        className="w-full flex items-center gap-2.5 text-left"
-      >
-        <div className={`w-7 h-7 rounded-full ${tone.iconBg} flex items-center justify-center shrink-0`}>
-          <AlertTriangle size={13} className={tone.iconColor} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className={`text-[13px] font-bold ${tone.heading} truncate`}>
-            {anomalies.length === 1 ? '1 spending anomaly' : `${anomalies.length} spending anomalies`}
-            {previewStores && (
-              <span className={`font-normal ${tone.body}`}> · {previewStores}</span>
-            )}
-          </p>
-        </div>
-        {expanded ? <ChevronUp size={14} className={tone.iconColor} /> : <ChevronDown size={14} className={tone.iconColor} />}
+      {/* Collapsed header — the row expands, the eye dismisses.
+          The two buttons are SIBLINGS inside a flex row, not nested. A <button>
+          inside a <button> is invalid HTML: the browser reparents it, so the
+          server markup and the client tree disagree and React throws
+          "Hydration failed", discards the server HTML and re-renders the whole
+          dashboard on the client. It cost 13 console errors and a first paint on
+          the most-visited signed-in screen. */}
+      <div className="w-full flex items-center gap-2.5">
         <button
           type="button"
-          onClick={(e) => { e.stopPropagation(); dismiss() }}
-          className={`w-7 h-7 rounded-lg ${tone.linkColor} ${tone.linkBg} flex items-center justify-center transition-colors ml-1`}
+          onClick={() => setExpanded(v => !v)}
+          aria-expanded={expanded}
+          className="flex-1 min-w-0 flex items-center gap-2.5 text-left"
+        >
+          <div className={`w-7 h-7 rounded-full ${tone.iconBg} flex items-center justify-center shrink-0`}>
+            <AlertTriangle size={13} className={tone.iconColor} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className={`text-[13px] font-bold ${tone.heading} truncate`}>
+              {anomalies.length === 1 ? '1 spending anomaly' : `${anomalies.length} spending anomalies`}
+              {previewStores && (
+                <span className={`font-normal ${tone.body}`}> · {previewStores}</span>
+              )}
+            </p>
+          </div>
+          {expanded ? <ChevronUp size={14} className={tone.iconColor} /> : <ChevronDown size={14} className={tone.iconColor} />}
+        </button>
+        {/* No stopPropagation needed now that this is not inside the toggle. */}
+        <button
+          type="button"
+          onClick={dismiss}
+          className={`w-7 h-7 shrink-0 rounded-lg ${tone.linkColor} ${tone.linkBg} flex items-center justify-center transition-colors ml-1`}
           aria-label="Dismiss for this session"
           title="Hide until next session"
         >
           <EyeOff size={12} />
         </button>
-      </button>
+      </div>
 
       {expanded && (
         <div className="mt-2 space-y-1 pt-2 border-t border-current/10">

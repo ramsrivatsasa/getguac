@@ -359,7 +359,8 @@
     #goalsNext{border-color:var(--forest);background:var(--forest);color:#fff}
     #goalsNext:hover{background:var(--green-ink);border-color:var(--green-ink);color:#fff}
     .goals-dots{display:flex;align-items:center;justify-content:center;gap:8px}
-    .goals-dot{width:7px;height:7px;padding:0;border-radius:999px;background:#d8d8d2;transition:width .2s,background .2s}
+    .goals-dot{position:relative;width:7px;height:7px;padding:0;border-radius:999px;background:#d8d8d2;transition:width .2s,background .2s}
+    .goals-dot::before{content:"";position:absolute;left:50%;top:50%;width:15px;height:24px;transform:translate(-50%,-50%)}
     .goals-dot[aria-current="true"]{width:22px;background:var(--green)}
 
     .ai-output-strip{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:0 clamp(18px,2.4vw,28px) clamp(18px,2.4vw,26px);background:var(--soft)}
@@ -697,7 +698,7 @@
           </div>
 
           <div class="hero-image-only" aria-label="A family happily reviewing GetGuac savings together">
-            <img class="hero-family-only" src="home/story-people/openai-hero-giggling-family-baby-v2.webp" alt="A joyful family laughing together with a giggling baby while using a tablet" width="1536" height="1024" loading="eager" fetchpriority="high" decoding="async">
+            <img class="hero-family-only" src="home/story-people/openai-hero-giggling-family-baby-v2.webp" alt="A joyful family laughing together with a giggling baby while using a tablet" width="1536" height="1024" loading="eager" fetchpriority="high" decoding="async" srcset="home/story-people/openai-hero-giggling-family-baby-v2-768.webp 768w, home/story-people/openai-hero-giggling-family-baby-v2-1152.webp 1152w, home/story-people/openai-hero-giggling-family-baby-v2.webp 1536w" sizes="(max-width: 900px) 100vw, 720px">
             <img class="hero-phone-inline" src="home/goals/phone-organized.webp" alt="GetGuac showing organized purchases and spending insights" width="360" height="757" loading="eager" decoding="async">
             <span class="hero-bubble hb-1"><small>🔄 Subscription spotted</small><strong>Review the renewal</strong></span>
             <span class="hero-bubble hb-2"><small>↩ Return window</small><strong>5 days left to act</strong></span>
@@ -732,12 +733,12 @@
                 <h3>See GetGuac work in 4 minutes</h3><p>The full tour, narrated.</p></span>
             </div>
             <a class="goal-card" href="goals/organize.html" style="--goal-accent:#76a5ff;--goal-soft:#edf4ff">
-              <img class="goal-photo" src="home/story-people/capture-blonde-produce-v1.webp" alt="A shopper happily saving her receipt with GetGuac" width="1536" height="1024" loading="lazy" decoding="async">
+              <img class="goal-photo" src="home/story-people/capture-blonde-produce-v1.webp" alt="A shopper happily saving her receipt with GetGuac" width="1536" height="1024" loading="lazy" decoding="async" srcset="home/story-people/capture-blonde-produce-v1-768.webp 768w, home/story-people/capture-blonde-produce-v1-1152.webp 1152w, home/story-people/capture-blonde-produce-v1.webp 1536w" sizes="(max-width: 900px) 100vw, 720px">
               <span class="goal-story-box"><span class="goal-story-top"><span class="goal-icon" aria-hidden="true">🧾</span><small>Organize</small></span>
                 <h3>Leave checkout with less to remember</h3><p>Receipts get a home—and your personal inbox gets quieter.</p><span class="goal-metric">Photo + email <small>receipts organized together</small></span><span class="goal-link">See how receipts get organized →</span></span>
             </a>
             <a class="goal-card" href="goals/understand.html" style="--goal-accent:#8a7cf4;--goal-soft:#f1efff">
-              <img class="goal-photo" src="home/story-people/protect-couple-tablet.webp" alt="A couple understanding their purchases together" width="1536" height="1024" loading="lazy" decoding="async">
+              <img class="goal-photo" src="home/story-people/protect-couple-tablet.webp" alt="A couple understanding their purchases together" width="1536" height="1024" loading="lazy" decoding="async" srcset="home/story-people/protect-couple-tablet-768.webp 768w, home/story-people/protect-couple-tablet-1152.webp 1152w, home/story-people/protect-couple-tablet.webp 1536w" sizes="(max-width: 900px) 100vw, 720px">
               <span class="goal-story-box"><span class="goal-story-top"><span class="goal-icon" aria-hidden="true">🧠</span><small>Understand</small></span>
                 <h3>End the “where did it go?” conversation</h3><p>Real items replace guesses about the bank total.</p><span class="goal-metric">$2,291 <small>explained by items and categories</small></span><span class="goal-link">See how GetGuac explains spending →</span></span>
             </a>
@@ -747,12 +748,12 @@
                 <h3>Bring money owed to you back home</h3><p>Return windows stay visible while there is time to act.</p><span class="goal-metric">$192 <small>still eligible for return</small></span><span class="goal-link">See how GetGuac protects returns →</span></span>
             </a>
             <a class="goal-card" href="goals/reduce-waste.html" style="--goal-accent:#f48c78;--goal-soft:#fff0ec">
-              <img class="goal-photo" src="home/story-people/guide-subscription-hispanic-couple-v1.webp" alt="A couple reviewing subscriptions and household spending" width="1536" height="1024" loading="lazy" decoding="async">
+              <img class="goal-photo" src="home/story-people/guide-subscription-hispanic-couple-v1.webp" alt="A couple reviewing subscriptions and household spending" width="1536" height="1024" loading="lazy" decoding="async" srcset="home/story-people/guide-subscription-hispanic-couple-v1-768.webp 768w, home/story-people/guide-subscription-hispanic-couple-v1-1152.webp 1152w, home/story-people/guide-subscription-hispanic-couple-v1.webp 1536w" sizes="(max-width: 900px) 100vw, 720px">
               <span class="goal-story-box"><span class="goal-story-top"><span class="goal-icon" aria-hidden="true">✂️</span><small>Reduce waste</small></span>
                 <h3>Stop paying for what life moved past</h3><p>Quiet subscriptions come back into view together.</p><span class="goal-metric">$111/month <small>in subscriptions reviewed</small></span><span class="goal-link">See how recurring charges are found →</span></span>
             </a>
             <a class="goal-card" href="goals/prepare.html" style="--goal-accent:#a78bf5;--goal-soft:#f3efff">
-              <img class="goal-photo" src="home/story-people/shop.webp" alt="A parent and child preparing for a smarter shopping trip" width="1200" height="800" loading="lazy" decoding="async">
+              <img class="goal-photo" src="home/story-people/shop.webp" alt="A parent and child preparing for a smarter shopping trip" width="1200" height="800" loading="lazy" decoding="async" srcset="home/story-people/shop-768.webp 768w, home/story-people/shop-1152.webp 1152w, home/story-people/shop.webp 1536w" sizes="(max-width: 900px) 100vw, 720px">
               <span class="goal-story-box"><span class="goal-story-top"><span class="goal-icon" aria-hidden="true">🛒</span><small>Prepare</small></span>
                 <h3>Shop together, even when you’re apart</h3><p>Share the list and coordinate in secure family chat.</p><span class="goal-metric">15 shared items <small>organized across 3 stores</small></span><span class="goal-link">See how shared shopping works →</span></span>
             </a>
@@ -767,7 +768,7 @@
                 <h3>Keep store mail out of your personal inbox.</h3><p>Stores, rewards and receipt mail get a dependable home.</p><span class="goal-metric">Store email separated <small>personal inbox stays quieter</small></span><span class="goal-link">See how the shopping inbox works →</span></span>
             </a>
             <a class="goal-card" href="goals/read.html" style="--goal-accent:#79c94b;--goal-soft:#eff9e8">
-              <img class="goal-photo" src="home/campaign-story/capture-kitchen-v2.webp" alt="A shopper watching Guac-AI read a receipt" width="1536" height="1024" loading="lazy" decoding="async">
+              <img class="goal-photo" src="home/campaign-story/capture-kitchen-v2.webp" alt="A shopper watching Guac-AI read a receipt" width="1536" height="1024" loading="lazy" decoding="async" srcset="home/campaign-story/capture-kitchen-v2-768.webp 768w, home/campaign-story/capture-kitchen-v2-1152.webp 1152w, home/campaign-story/capture-kitchen-v2.webp 1536w" sizes="(max-width: 900px) 100vw, 720px">
               <span class="goal-story-box"><span class="goal-story-top"><span class="goal-icon" aria-hidden="true">✨</span><small>Read</small></span>
                 <h3>Turn one photo into searchable memory.</h3><p>Store, items, tax, total and policies arrive together.</p><span class="goal-metric">5–15 seconds <small>typical receipt processing time</small></span><span class="goal-link">See how Guac-AI reads a receipt →</span></span>
             </a>

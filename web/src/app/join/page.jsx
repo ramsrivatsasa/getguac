@@ -13,7 +13,7 @@
 // homepage. `follow` so links out still count.
 import MarketingShell from '../../components/MarketingShell'
 // JoinClient.jsx is untouched on disk — swap this import back to revert.
-import JoinV3Client from './JoinV3Client'
+import JoinDemoClient from '../join-demo/JoinDemoClient'
 
 // Tagline instead of a keyword title: this page is noindex, so the title does no
 // search work — its only jobs are the browser tab and the share card.
@@ -66,7 +66,7 @@ export const metadata = {
 export default function Page() {
   return (
     <MarketingShell ads={false} hideSearch>
-      <JoinV3Client />
+      <JoinDemoClient />
     </MarketingShell>
   )
 }

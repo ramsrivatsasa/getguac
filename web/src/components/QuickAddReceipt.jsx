@@ -124,15 +124,23 @@ export default function QuickAddReceipt() {
       depth = 0
       setPageDragging(false)
     }
+    // Lets anything on the page open the capture sheet without importing this
+    // component or duplicating its camera/upload handling. FirstReceiptPanel
+    // uses it so a brand-new account can start receipt #1 in one click instead
+    // of being sent to another screen to look for a button.
+    const onOpenRequest = () => setCameraOpen(true)
+
     window.addEventListener('dragenter', onEnter)
     window.addEventListener('dragover', onOver)
     window.addEventListener('dragleave', onLeave)
     window.addEventListener('drop', onDrop)
+    window.addEventListener('gg:add-receipt', onOpenRequest)
     return () => {
       window.removeEventListener('dragenter', onEnter)
       window.removeEventListener('dragover', onOver)
       window.removeEventListener('dragleave', onLeave)
       window.removeEventListener('drop', onDrop)
+      window.removeEventListener('gg:add-receipt', onOpenRequest)
     }
   }, [])
 

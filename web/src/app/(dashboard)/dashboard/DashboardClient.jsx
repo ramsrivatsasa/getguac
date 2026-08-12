@@ -21,6 +21,7 @@ import { displayStoreName, storeGroupKey } from '../../../lib/store-name-normali
 import { StoreLogo } from '../../../components/StoreLogo'
 import { periodToReceiptsChip, buildReceiptsUrl } from '../../../lib/receipts-deeplink'
 import { isPaymentReceipt } from '../../../lib/payment-rows'
+import FirstReceiptPanel from './FirstReceiptPanel'
 import PaymentTile, { PAYMENT_TILE_CONFIGS } from '../../../components/PaymentTile'
 import { computeDashboardAnalysis } from '../../../lib/analysisEngine'
 import { periodStartDate } from '../../../lib/timeframe'
@@ -193,6 +194,10 @@ export default function DashboardClient({ initialReceipts, initialRewards, first
           first dashboard load to credit 3 Smash days to both sides.
           Renders nothing — pure side-effect island. */}
       <PostSignupReferralApply />
+      {/* First-run only: zero receipts means every tile below reads $0 and there
+          is nothing to interpret yet. Replaced by nothing at all once the first
+          receipt exists — the tiles themselves are untouched either way. */}
+      {initialReceipts.length === 0 && <FirstReceiptPanel firstName={firstName} />}
       <FeatureHeader
         expression="standing"
         title={<>

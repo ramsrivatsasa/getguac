@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { redirect } from 'next/navigation'
 import { createClient } from '../lib/supabase/server'
-import HomeStandaloneClient from './HomeStandaloneClient'
+import HomeInteractions from './HomeInteractions'
 
 export const metadata = {
   title: 'GetGuac: Free Receipt Scanner & Spending Tracker',
@@ -31,6 +31,16 @@ export default async function Home() {
   const { data: { user } } = await supabase.auth.getUser()
   if (user) redirect('/dashboard')
 
-  const homepage = loadHomepage()
-  return <HomeStandaloneClient {...homepage} />
+  const { css, markup, script } = loadHomepage()
+  // Markup and styles are rendered HERE, by the server component, so React never
+  // owns or re-creates them on hydration. That is what lets the browser record a
+  // Largest Contentful Paint against the real first paint instead of waiting for
+  // the client to take over. Only the behaviour is an island.
+  return (
+    <>
+      <style dangerouslySetInnerHTML={{ __html: css }} />
+      <div dangerouslySetInnerHTML={{ __html: markup }} />
+      <HomeInteractions script={script} />
+    </>
+  )
 }

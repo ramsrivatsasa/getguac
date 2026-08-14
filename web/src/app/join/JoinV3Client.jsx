@@ -86,8 +86,10 @@ export default function JoinV3Client() {
     node.addEventListener('click', onClick)
 
     try {
-      // eslint-disable-next-line no-new-func
-      new Function(BEHAVIOUR)()
+      const scriptElement = document.createElement('script')
+      scriptElement.textContent = BEHAVIOUR
+      document.body.appendChild(scriptElement)
+      scriptElement.remove()
     } catch (err) {
       // A broken widget must never take the page down — the content above it is
       // the part that has to render for an ad click to be worth anything.

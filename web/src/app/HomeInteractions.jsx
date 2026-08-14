@@ -22,8 +22,10 @@ export default function HomeInteractions({ script }) {
     if (initialized.current) return
     initialized.current = true
     try {
-      const runHomepage = new Function(script)
-      runHomepage()
+      const scriptElement = document.createElement('script')
+      scriptElement.textContent = script
+      document.body.appendChild(scriptElement)
+      scriptElement.remove()
     } catch (error) {
       console.error('Homepage interaction initialization failed', error)
     }

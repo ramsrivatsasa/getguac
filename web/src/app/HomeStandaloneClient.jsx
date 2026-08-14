@@ -13,8 +13,10 @@ export default function HomeStandaloneClient({ markup, css, script }) {
       // The approved standalone design already contains the carousel, receipt
       // circle, zoom dialog and reveal behaviour. Execute it after React has
       // mounted the matching markup.
-      const runHomepage = new Function(script)
-      runHomepage()
+      const scriptElement = document.createElement('script')
+      scriptElement.textContent = script
+      document.body.appendChild(scriptElement)
+      scriptElement.remove()
     } catch (error) {
       console.error('Homepage interaction initialization failed', error)
     }

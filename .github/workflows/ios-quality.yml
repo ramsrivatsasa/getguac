@@ -45,7 +45,16 @@ jobs:
           grep -q remote-notification ios/Runner/Info.plist
       - name: Install CocoaPods
         working-directory: mobile/ios
-        run: pod install --repo-update
+        shell: bash
+        run: |
+          set +e
+          pod install --repo-update 2>&1 | tee pod-install.log
+          status=${PIPESTATUS[0]}
+          if [ "$status" -ne 0 ]; then
+            message=$(grep -Ei "error|invalid|unable|could not|requires" pod-install.log | tail -n 8 | sed ':a;N;$!ba;s/%/%25/g;s/\r//g;s/\n/%0A/g')
+            echo "::error title=CocoaPods installation failed::$message"
+          fi
+          exit "$status"
       - name: Build release app for simulator
         working-directory: mobile
         shell: bash
@@ -84,4 +93,5 @@ jobs:
             mobile/build/ios-launch.log
             mobile/build/ios-launch.png
             mobile/build-ios-release.log
+            mobile/ios/pod-install.log
           if-no-files-found: warn

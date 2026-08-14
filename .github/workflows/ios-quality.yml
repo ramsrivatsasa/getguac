@@ -48,7 +48,16 @@ jobs:
         run: pod install --repo-update
       - name: Build release app for simulator
         working-directory: mobile
-        run: flutter build ios --release --simulator --no-codesign
+        shell: bash
+        run: |
+          set +e
+          flutter build ios --release --simulator --no-codesign 2>&1 | tee build-ios-release.log
+          status=${PIPESTATUS[0]}
+          if [ "$status" -ne 0 ]; then
+            message=$(tail -n 40 build-ios-release.log | sed ':a;N;$!ba;s/%/%25/g;s/\r//g;s/\n/%0A/g')
+            echo "::error title=iOS release-simulator build failed::$message"
+          fi
+          exit "$status"
       - name: Cold-launch on iPhone simulator
         working-directory: mobile
         run: |

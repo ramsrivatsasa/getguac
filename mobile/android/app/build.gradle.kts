@@ -5,9 +5,13 @@ plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
-    // Google Services — processes app/google-services.json so the
-    // firebase_messaging runtime can find its project credentials.
-    id("com.google.gms.google-services")
+}
+
+// CI and local test builds intentionally work without Firebase credentials.
+// Configured production builds still apply Google Services and generate the
+// Firebase resources when the ignored google-services.json file is present.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
 }
 
 // Release signing — read from android/key.properties (gitignored) when present.

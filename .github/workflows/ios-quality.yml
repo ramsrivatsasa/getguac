@@ -1,0 +1,77 @@
+name: iOS quality gates
+
+on:
+  pull_request:
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/ios-quality.yml'
+      - '.github/workflows/release-ios.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/ios-quality.yml'
+      - '.github/workflows/release-ios.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  analyze-test-build-launch:
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Install dependencies
+        working-directory: mobile
+        run: flutter pub get
+      - name: Check formatting
+        working-directory: mobile
+        run: dart format --output=none --set-exit-if-changed lib test
+      - name: Static analysis
+        working-directory: mobile
+        run: flutter analyze --no-fatal-warnings --no-fatal-infos
+      - name: Unit and widget tests
+        working-directory: mobile
+        run: flutter test --coverage
+      - name: Validate iOS metadata
+        working-directory: mobile
+        run: |
+          plutil -lint ios/Runner/Info.plist
+          plutil -lint ios/Runner/Runner.entitlements
+          plutil -lint ios/Runner/PrivacyInfo.xcprivacy
+          grep -q NSPrivacyTracking ios/Runner/PrivacyInfo.xcprivacy
+          grep -q remote-notification ios/Runner/Info.plist
+      - name: Install CocoaPods
+        working-directory: mobile/ios
+        run: pod install --repo-update
+      - name: Build release app for simulator
+        working-directory: mobile
+        run: flutter build ios --release --simulator --no-codesign
+      - name: Cold-launch on iPhone simulator
+        working-directory: mobile
+        run: |
+          DEVICE_ID=$(xcrun simctl list devices available | awk -F '[()]' '/iPhone 16 Pro \(/ {print $2; exit}')
+          test -n "$DEVICE_ID"
+          trap 'xcrun simctl shutdown "$DEVICE_ID" >/dev/null 2>&1 || true' EXIT
+          xcrun simctl boot "$DEVICE_ID"
+          xcrun simctl bootstatus "$DEVICE_ID" -b
+          xcrun simctl install "$DEVICE_ID" build/ios/iphonesimulator/Runner.app
+          xcrun simctl launch --console-pty "$DEVICE_ID" app.getguac.getguac > build/ios-launch.log 2>&1 &
+          sleep 15
+          xcrun simctl io "$DEVICE_ID" screenshot build/ios-launch.png
+          xcrun simctl get_app_container "$DEVICE_ID" app.getguac.getguac app >/dev/null
+          ! grep -E "Terminating app due to uncaught exception|Fatal error" build/ios-launch.log
+      - name: Upload launch evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-simulator-launch-evidence
+          path: |
+            mobile/build/ios-launch.log
+            mobile/build/ios-launch.png
+          if-no-files-found: warn

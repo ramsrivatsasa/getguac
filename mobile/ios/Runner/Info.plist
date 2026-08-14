@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Getguac</string>
+	<string>GetGuac</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -49,6 +49,10 @@
 	</dict>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
@@ -132,12 +136,6 @@
 	     Real GetGuac iOS app id under publisher ca-app-pub-5959691671441705. -->
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-5959691671441705~2306457499</string>
-
-	<!-- App Tracking Transparency: iOS 14.5+ shows this when we request the
-	     tracking prompt (for personalized ads). Decline = non-personalized
-	     ads still serve. -->
-	<key>NSUserTrackingUsageDescription</key>
-	<string>GetGuac uses this to show more relevant ads. You can keep ads non-personalized — they'll still work.</string>
 
 	<!-- Export compliance: GetGuac only uses HTTPS/TLS provided by the OS, which
 	     is exempt. Declaring it here stops App Store Connect from holding every

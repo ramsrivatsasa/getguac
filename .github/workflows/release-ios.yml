@@ -1,0 +1,107 @@
+name: Release iOS
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Git tag or commit to submit'
+        required: true
+      physical_device_tests_passed:
+        description: 'The complete IOS_RELEASE_GATE.md checklist passed on a physical iPhone'
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  release-gate:
+    runs-on: macos-15
+    steps:
+      - name: Require physical-device test attestation
+        env:
+          DEVICE_TESTS_PASSED: ${{ inputs.physical_device_tests_passed }}
+        run: test "$DEVICE_TESTS_PASSED" = "true"
+
+  build-and-upload:
+    needs: release-gate
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref }}
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Require App Store credentials
+        env:
+          CERTIFICATE_BASE64: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_PASSWORD }}
+          PROFILE_BASE64: ${{ secrets.IOS_APP_STORE_PROFILE_BASE64 }}
+          APP_STORE_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+          APP_STORE_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
+          IOS_PROFILE_NAME: ${{ secrets.IOS_APP_STORE_PROFILE_NAME }}
+        run: |
+          test -n "$CERTIFICATE_BASE64"
+          test -n "$CERTIFICATE_PASSWORD"
+          test -n "$PROFILE_BASE64"
+          test -n "$APP_STORE_KEY_BASE64"
+          test -n "$APP_STORE_KEY_ID"
+          test -n "$APP_STORE_ISSUER_ID"
+          test -n "$IOS_TEAM_ID"
+          test -n "$IOS_PROFILE_NAME"
+      - name: Install signing identity and profile
+        env:
+          CERTIFICATE_BASE64: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_PASSWORD }}
+          PROFILE_BASE64: ${{ secrets.IOS_APP_STORE_PROFILE_BASE64 }}
+          KEYCHAIN_PASSWORD: ${{ secrets.IOS_CI_KEYCHAIN_PASSWORD }}
+        run: |
+          test -n "$KEYCHAIN_PASSWORD"
+          echo "$CERTIFICATE_BASE64" | base64 --decode > certificate.p12
+          echo "$PROFILE_BASE64" | base64 --decode > profile.mobileprovision
+          security create-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+          security set-keychain-settings -lut 21600 build.keychain
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+          security import certificate.p12 -P "$CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k build.keychain
+          security list-keychain -d user -s build.keychain
+          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+          cp profile.mobileprovision "$HOME/Library/MobileDevice/Provisioning Profiles/getguac.mobileprovision"
+      - name: Install, analyze, and test
+        working-directory: mobile
+        run: |
+          flutter pub get
+          dart format --output=none --set-exit-if-changed lib test
+          flutter analyze --no-fatal-warnings --no-fatal-infos
+          flutter test --coverage
+          cd ios && pod install --repo-update
+      - name: Build signed IPA
+        working-directory: mobile
+        env:
+          DEVELOPMENT_TEAM: ${{ secrets.IOS_TEAM_ID }}
+          PROVISIONING_PROFILE_SPECIFIER: ${{ secrets.IOS_APP_STORE_PROFILE_NAME }}
+          CODE_SIGN_STYLE: Manual
+        run: |
+          /usr/libexec/PlistBuddy -c "Add :teamID string $DEVELOPMENT_TEAM" ios/ExportOptions.plist
+          /usr/libexec/PlistBuddy -c "Add :provisioningProfiles dict" ios/ExportOptions.plist
+          /usr/libexec/PlistBuddy -c "Add :provisioningProfiles:app.getguac.getguac string $PROVISIONING_PROFILE_SPECIFIER" ios/ExportOptions.plist
+          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
+      - name: Verify archive contents
+        working-directory: mobile
+        run: |
+          unzip -l build/ios/ipa/*.ipa | grep -q PrivacyInfo.xcprivacy
+          codesign --verify --deep --strict build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app
+      - name: Upload to App Store Connect
+        env:
+          APP_STORE_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+          APP_STORE_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          mkdir -p "$HOME/.appstoreconnect/private_keys"
+          echo "$APP_STORE_KEY_BASE64" | base64 --decode > "$HOME/.appstoreconnect/private_keys/AuthKey_${APP_STORE_KEY_ID}.p8"
+          xcrun altool --upload-app --type ios --file mobile/build/ios/ipa/*.ipa --apiKey "$APP_STORE_KEY_ID" --apiIssuer "$APP_STORE_ISSUER_ID"

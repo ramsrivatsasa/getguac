@@ -56,12 +56,12 @@ jobs:
             echo "::error title=CocoaPods installation failed::$message"
           fi
           exit "$status"
-      - name: Build release app for simulator
+      - name: Build unsigned release app for iPhone
         working-directory: mobile
         shell: bash
         run: |
           set +e
-          flutter build ios --release --simulator --no-codesign 2>&1 | tee build-ios-release.log
+          flutter build ios --release --no-codesign 2>&1 | tee build-ios-release.log
           status=${PIPESTATUS[0]}
           if [ "$status" -ne 0 ]; then
             message=$(grep -Ei "error:|failed|could not|requires" build-ios-release.log | tail -n 8 | sed ':a;N;$!ba;s/%/%25/g;s/\r//g;s/\n/%0A/g')
@@ -71,6 +71,9 @@ jobs:
             echo "::error title=iOS release-simulator build failed::$message"
           fi
           exit "$status"
+      - name: Build debug app for simulator
+        working-directory: mobile
+        run: flutter build ios --debug --simulator --no-codesign
       - name: Cold-launch on iPhone simulator
         working-directory: mobile
         run: |

@@ -54,7 +54,10 @@ jobs:
           flutter build ios --release --simulator --no-codesign 2>&1 | tee build-ios-release.log
           status=${PIPESTATUS[0]}
           if [ "$status" -ne 0 ]; then
-            message=$(tail -n 40 build-ios-release.log | sed ':a;N;$!ba;s/%/%25/g;s/\r//g;s/\n/%0A/g')
+            message=$(grep -Ei "error:|failed|could not|requires" build-ios-release.log | tail -n 8 | sed ':a;N;$!ba;s/%/%25/g;s/\r//g;s/\n/%0A/g')
+            if [ -z "$message" ]; then
+              message=$(tail -n 8 build-ios-release.log | sed ':a;N;$!ba;s/%/%25/g;s/\r//g;s/\n/%0A/g')
+            fi
             echo "::error title=iOS release-simulator build failed::$message"
           fi
           exit "$status"
@@ -80,4 +83,5 @@ jobs:
           path: |
             mobile/build/ios-launch.log
             mobile/build/ios-launch.png
+            mobile/build-ios-release.log
           if-no-files-found: warn

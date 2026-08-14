@@ -58,23 +58,31 @@ class _LinkRetailerScreenState extends State<LinkRetailerScreen> {
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(Colors.white)
-      ..setNavigationDelegate(NavigationDelegate(
-        onPageStarted: (url) {
-          setState(() => _status = 'Loading $url');
-        },
-        onPageFinished: (url) async {
-          setState(() => _status = 'Signed in? Tap "Preview orders" when on your orders page');
-          if (_extractor!.isOrdersPage(url)) await _runExtractor();
-        },
-        onNavigationRequest: (request) {
-          if (!request.isMainFrame) return NavigationDecision.navigate;
-          final uri = Uri.tryParse(request.url);
-          final trusted = uri != null &&
-              uri.scheme == 'https' &&
-              _extractor!.allowedHosts.contains(uri.host.toLowerCase());
-          return trusted ? NavigationDecision.navigate : NavigationDecision.prevent;
-        },
-      ));
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageStarted: (url) {
+            setState(() => _status = 'Loading $url');
+          },
+          onPageFinished: (url) async {
+            setState(
+              () => _status =
+                  'Signed in? Tap "Preview orders" when on your orders page',
+            );
+            if (_extractor!.isOrdersPage(url)) await _runExtractor();
+          },
+          onNavigationRequest: (request) {
+            if (!request.isMainFrame) return NavigationDecision.navigate;
+            final uri = Uri.tryParse(request.url);
+            final trusted =
+                uri != null &&
+                uri.scheme == 'https' &&
+                _extractor!.allowedHosts.contains(uri.host.toLowerCase());
+            return trusted
+                ? NavigationDecision.navigate
+                : NavigationDecision.prevent;
+          },
+        ),
+      );
     _controller.loadRequest(Uri.parse(_extractor!.loginUrl));
     setState(() => _initialized = true);
   }
@@ -86,12 +94,17 @@ class _LinkRetailerScreenState extends State<LinkRetailerScreen> {
       // Execute the per-retailer extractor JS. Returns a JSON string
       // of { orders: [...] }. We DO NOT inject any code that reads
       // form fields; the extractor only walks the rendered DOM.
-      final raw = await _controller.runJavaScriptReturningResult(_extractor!.extractScript);
+      final raw = await _controller.runJavaScriptReturningResult(
+        _extractor!.extractScript,
+      );
       final extracted = raw is String ? raw : raw.toString();
       // TODO(phase 2): POST to /api/connections/import here.
       // For now, just show the extracted preview to the user.
       if (!mounted) return;
-      setState(() => _status = 'Preview found ${_estimateOrderCount(extracted)} orders. Import is not available yet.');
+      setState(
+        () => _status =
+            'Preview found ${_estimateOrderCount(extracted)} orders. Import is not available yet.',
+      );
     } catch (e) {
       if (!mounted) return;
       setState(() => _status = 'Could not read orders: $e');
@@ -122,43 +135,70 @@ class _LinkRetailerScreenState extends State<LinkRetailerScreen> {
         appBar: AppBar(title: Text('Link ${_retailer!.name}')),
         body: Padding(
           padding: const EdgeInsets.all(24),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            const SizedBox(height: 12),
-            Text('⚠️ Account linking not yet available for this retailer',
-              style: TextStyle(fontWeight: FontWeight.w900, fontVariations: ggWght(FontWeight.w900), fontSize: 16)),
-            const SizedBox(height: 8),
-            Text(
-              "We don't have a custom order-page extractor for ${_retailer!.name} yet. "
-              "Each retailer's order page has a different layout, so we build them one "
-              "at a time as we ship. In the meantime, use the email-forwarding setup "
-              "steps on the previous screen.",
-              style: const TextStyle(fontSize: 13, color: Colors.black54, height: 1.5),
-            ),
-            const SizedBox(height: 24),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Back to setup steps'),
-            ),
-          ]),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 12),
+              Text(
+                '⚠️ Account linking not yet available for this retailer',
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontVariations: ggWght(FontWeight.w900),
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "We don't have a custom order-page extractor for ${_retailer!.name} yet. "
+                "Each retailer's order page has a different layout, so we build them one "
+                "at a time as we ship. In the meantime, use the email-forwarding setup "
+                "steps on the previous screen.",
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: Colors.black54,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 24),
+              FilledButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Back to setup steps'),
+              ),
+            ],
+          ),
         ),
       );
     }
     return Scaffold(
       appBar: AppBar(
-        title: Row(mainAxisSize: MainAxisSize.min, children: [
-          Flexible(child: Text('Link ${_retailer!.name}', overflow: TextOverflow.ellipsis)),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: const Color(0xFFfef3c7),
-              borderRadius: BorderRadius.circular(4),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: Text(
+                'Link ${_retailer!.name}',
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-            child: Text('BETA',
-              style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, fontVariations: ggWght(FontWeight.w900), color: Color(0xFF92400e)),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: const Color(0xFFfef3c7),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                'BETA',
+                style: TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w900,
+                  fontVariations: ggWght(FontWeight.w900),
+                  color: Color(0xFF92400e),
+                ),
+              ),
             ),
-          ),
-        ]),
+          ],
+        ),
         actions: [
           if (_initialized)
             TextButton(
@@ -168,33 +208,56 @@ class _LinkRetailerScreenState extends State<LinkRetailerScreen> {
           signOutAction(context),
         ],
       ),
-      body: Column(children: [
-        Container(
-          width: double.infinity,
-          color: const Color(0xFFfef3c7),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Text(
-            '⚠️  Preview only — this checks visible orders but does not import receipts yet.',
-            style: TextStyle(fontSize: 11, color: Color(0xFF92400e), fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700)),
+      body: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            color: const Color(0xFFfef3c7),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Text(
+              '⚠️  Preview only — this checks visible orders but does not import receipts yet.',
+              style: TextStyle(
+                fontSize: 11,
+                color: Color(0xFF92400e),
+                fontWeight: FontWeight.w700,
+                fontVariations: ggWght(FontWeight.w700),
+              ),
+            ),
           ),
-        ),
-        Container(
-          color: const Color(0xFFf0fdf4),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Row(children: [
-            const Icon(Icons.lock_outline, size: 14, color: Color(0xFF065f46)),
-            const SizedBox(width: 6),
-            Expanded(child: Text(_status,
-              style: TextStyle(fontSize: 11, color: Color(0xFF065f46), fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700)),
-              maxLines: 2, overflow: TextOverflow.ellipsis,
-            )),
-          ]),
-        ),
-        Expanded(child: _initialized
-          ? WebViewWidget(controller: _controller)
-          : const Center(child: CircularProgressIndicator()),
-        ),
-      ]),
+          Container(
+            color: const Color(0xFFf0fdf4),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.lock_outline,
+                  size: 14,
+                  color: Color(0xFF065f46),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    _status,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Color(0xFF065f46),
+                      fontWeight: FontWeight.w700,
+                      fontVariations: ggWght(FontWeight.w700),
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: _initialized
+                ? WebViewWidget(controller: _controller)
+                : const Center(child: CircularProgressIndicator()),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -26,14 +26,13 @@ import 'theme/gg_design.dart';
 // --dart-define=SENTRY_DSN=... and --dart-define=POSTHOG_KEY=... at build.
 // sentry_flutter SDK pulled — Gradle compile error. Re-add when sorted.
 
-
 // Brand palette — the clean "new design" avocado look (see theme/gg_design.dart).
 // Repointed from the old emerald tones to the lime-forward home-page palette so
 // every screen inheriting the theme picks up the refreshed accent in one place.
-const kBrandPrimary    = ggLime;   // lime-600 — main brand
-const kBrandPrimaryDk  = ggInk;    // deep forest green — accents
-const kBrandAccent     = ggAccent; // lime-500 — pop
-const kBrandSurface    = ggBgTint; // soft green — tinted surface
+const kBrandPrimary = ggLime; // lime-600 — main brand
+const kBrandPrimaryDk = ggInk; // deep forest green — accents
+const kBrandAccent = ggAccent; // lime-500 — pop
+const kBrandSurface = ggBgTint; // soft green — tinted surface
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -71,20 +70,24 @@ Future<void> _loadBundledFonts() async {
       }
       await loader.load();
     } catch (e) {
-      DebugLog.event('font-load', 'FontLoader FAILED: ${entry.key}: $e', level: 'error');
+      DebugLog.event(
+        'font-load',
+        'FontLoader FAILED: ${entry.key}: $e',
+        level: 'error',
+      );
     }
   }
 }
 
 Future<void> _bootstrap() async {
-
   const supabaseUrl = String.fromEnvironment(
     'SUPABASE_URL',
     defaultValue: 'https://qchkwojgvfhlbdtpzzig.supabase.co',
   );
   const supabaseAnonKey = String.fromEnvironment(
     'SUPABASE_ANON_KEY',
-    defaultValue: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjaGt3b2pndmZobGJkdHB6emlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1NzE0ODUsImV4cCI6MjA5NTE0NzQ4NX0.0aDoZO4-p8XBfdJx8lpK8jmOy02hFG15gXFc7HpcwKs',
+    defaultValue:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjaGt3b2pndmZobGJkdHB6emlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1NzE0ODUsImV4cCI6MjA5NTE0NzQ4NX0.0aDoZO4-p8XBfdJx8lpK8jmOy02hFG15gXFc7HpcwKs',
   );
 
   // Global error capture — FlutterError.onError for framework errors,
@@ -92,13 +95,16 @@ Future<void> _bootstrap() async {
   // DebugLog so we get the full trace next time it crashes / parser
   // fails / a connection blows up.
   FlutterError.onError = (FlutterErrorDetails details) {
-    DebugLog.event('flutter-error', details.exceptionAsString(),
+    DebugLog.event(
+      'flutter-error',
+      details.exceptionAsString(),
       level: 'error',
       meta: {
         'library': details.library,
         'context': details.context?.toString(),
         'stack': details.stack?.toString().split('\n').take(20).join('\n'),
-      });
+      },
+    );
     FlutterError.presentError(details); // keep the default behaviour
   };
   PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
@@ -108,31 +114,32 @@ Future<void> _bootstrap() async {
     // 'error' to 'info' so the audit log isn't drowning in expected
     // sign-out / token-rotation events.
     final msg = error.toString();
-    final isExpectedAuth = error is AuthException &&
+    final isExpectedAuth =
+        error is AuthException &&
         (msg.contains('refresh_token_not_found') ||
-         msg.contains('Invalid Refresh Token') ||
-         msg.contains('Auth session missing'));
-    DebugLog.event('zone-error', msg,
+            msg.contains('Invalid Refresh Token') ||
+            msg.contains('Auth session missing'));
+    DebugLog.event(
+      'zone-error',
+      msg,
       level: isExpectedAuth ? 'info' : 'error',
-      meta: {
-        'stack': stack.toString().split('\n').take(20).join('\n'),
-      });
+      meta: {'stack': stack.toString().split('\n').take(20).join('\n')},
+    );
     return true; // mark as handled — we don't want the platform to crash us
   };
 
-  await Supabase.initialize(
-    url: supabaseUrl,
-    anonKey: supabaseAnonKey,
-  );
+  await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
 
   // Diagnostic event log — hydrates the persistent buffer from
   // SharedPreferences before any biometric / app-lock event runs, so we
   // capture the cold-start flow.
   await DebugLog.init();
   final hasSession = Supabase.instance.client.auth.currentSession != null;
-  DebugLog.event('main', 'app start', meta: {
-    'has_supabase_session': hasSession,
-  });
+  DebugLog.event(
+    'main',
+    'app start',
+    meta: {'has_supabase_session': hasSession},
+  );
 
   // Cache the biometric "enabled" flag synchronously so the router's redirect
   // can read it on the first frame. Without this, the lock-screen gate would
@@ -239,9 +246,9 @@ class GetGuacApp extends StatelessWidget {
           pageTransitionsTheme: const PageTransitionsTheme(
             builders: {
               TargetPlatform.android: CupertinoPageTransitionsBuilder(),
-              TargetPlatform.iOS:     CupertinoPageTransitionsBuilder(),
-              TargetPlatform.linux:   CupertinoPageTransitionsBuilder(),
-              TargetPlatform.macOS:   CupertinoPageTransitionsBuilder(),
+              TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+              TargetPlatform.linux: CupertinoPageTransitionsBuilder(),
+              TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
               TargetPlatform.windows: CupertinoPageTransitionsBuilder(),
             },
           ),
@@ -283,7 +290,10 @@ class GetGuacApp extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: kBrandPrimary, width: 2),
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 12,
+            ),
           ),
           // Pill-shaped buttons in brand lime — the home-page CTA style.
           elevatedButtonTheme: ElevatedButtonThemeData(
@@ -322,9 +332,9 @@ class GetGuacApp extends StatelessWidget {
           navigationBarTheme: NavigationBarThemeData(
             backgroundColor: Colors.white,
             indicatorColor: kBrandPrimary.withValues(alpha: 0.15),
-            labelTextStyle: WidgetStateProperty.all(const TextStyle(
-              fontSize: 12, fontWeight: FontWeight.w700,
-            )),
+            labelTextStyle: WidgetStateProperty.all(
+              const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+            ),
           ),
         ),
         routerConfig: appRouter,

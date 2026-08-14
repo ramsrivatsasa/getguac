@@ -18,8 +18,10 @@ class RetailerExtractor {
   /// Where the WebView should land first.
   final String loginUrl;
   final Set<String> allowedHosts;
+
   /// Predicate that recognizes the user has reached an orders page.
   final bool Function(String url) isOrdersPage;
+
   /// JavaScript executed against the rendered orders page. Should
   /// `return JSON.stringify({orders:[...]})`.
   final String extractScript;
@@ -42,7 +44,8 @@ final Map<String, RetailerExtractor> retailerExtractors = {
   'amazon': RetailerExtractor(
     loginUrl: 'https://www.amazon.com/gp/your-account/order-history',
     allowedHosts: const {'amazon.com', 'www.amazon.com'},
-    isOrdersPage: (url) => url.contains('order-history') || url.contains('your-orders'),
+    isOrdersPage: (url) =>
+        url.contains('order-history') || url.contains('your-orders'),
     extractScript: r'''
       (() => {
         const orders = [];

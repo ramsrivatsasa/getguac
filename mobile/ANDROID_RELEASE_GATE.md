@@ -5,7 +5,6 @@ checks below pass for the exact tagged commit.
 
 ## Automated gates
 
-- Formatting check
 - Static analysis with all compile errors treated as release blockers
 - Complete unit and widget test suite
 - Universal release APK build

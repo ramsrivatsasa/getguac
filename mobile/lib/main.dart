@@ -78,6 +78,15 @@ Future<void> _loadBundledFonts() async {
 
 Future<void> _bootstrap() async {
 
+  const supabaseUrl = String.fromEnvironment(
+    'SUPABASE_URL',
+    defaultValue: 'https://qchkwojgvfhlbdtpzzig.supabase.co',
+  );
+  const supabaseAnonKey = String.fromEnvironment(
+    'SUPABASE_ANON_KEY',
+    defaultValue: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjaGt3b2pndmZobGJkdHB6emlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1NzE0ODUsImV4cCI6MjA5NTE0NzQ4NX0.0aDoZO4-p8XBfdJx8lpK8jmOy02hFG15gXFc7HpcwKs',
+  );
+
   // Global error capture — FlutterError.onError for framework errors,
   // PlatformDispatcher.onError for uncaught async errors. Both feed the
   // DebugLog so we get the full trace next time it crashes / parser
@@ -112,8 +121,8 @@ Future<void> _bootstrap() async {
   };
 
   await Supabase.initialize(
-    url: 'https://qchkwojgvfhlbdtpzzig.supabase.co',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjaGt3b2pndmZobGJkdHB6emlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1NzE0ODUsImV4cCI6MjA5NTE0NzQ4NX0.0aDoZO4-p8XBfdJx8lpK8jmOy02hFG15gXFc7HpcwKs',
+    url: supabaseUrl,
+    anonKey: supabaseAnonKey,
   );
 
   // Diagnostic event log — hydrates the persistent buffer from

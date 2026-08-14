@@ -10,12 +10,13 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { toggleLike, hasLiked, fetchLikeCount, formatLikes } from '../../lib/gameLikes'
 
-const base = 'text-sm font-semibold px-4 py-2 rounded-full border bg-white transition-colors'
+const base = 'text-sm font-semibold rounded-xl border bg-white transition-all grid place-items-center'
 const off = { borderColor: '#dbe5d8', color: '#3d4a42' }
 const on = { borderColor: '#16a34a', color: '#166534', background: '#f2fbf3' }
 
 export default function GameActions({ slug, name, stageId = 'gg-stage' }) {
   const [fav, setFav] = useState(false)
+  const [disliked, setDisliked] = useState(false)
   const [liked, setLiked] = useState(false)
   const [likes, setLikes] = useState(null)     // null = not loaded; 0 renders as no number
   const [needsAuth, setNeedsAuth] = useState(false)
@@ -25,6 +26,7 @@ export default function GameActions({ slug, name, stageId = 'gg-stage' }) {
   const [canNativeShare, setCanNativeShare] = useState(false)
 
   useEffect(() => { try { setFav(localStorage.getItem('gg-fav-' + slug) === '1') } catch {} }, [slug])
+  useEffect(() => { try { setDisliked(localStorage.getItem('gg-dislike-' + slug) === '1') } catch {} }, [slug])
 
   useEffect(() => {
     let dead = false
@@ -55,6 +57,13 @@ export default function GameActions({ slug, name, stageId = 'gg-stage' }) {
     try { localStorage.setItem('gg-fav-' + slug, nv ? '1' : '0') } catch {}
     return nv
   })
+
+  const toggleDislike = async () => {
+    const next = !disliked
+    setDisliked(next)
+    try { localStorage.setItem('gg-dislike-' + slug, next ? '1' : '0') } catch {}
+    if (next && liked) await onLike()
+  }
 
   useEffect(() => {
     setCanNativeShare(typeof navigator !== 'undefined' && typeof navigator.share === 'function')
@@ -95,21 +104,16 @@ export default function GameActions({ slug, name, stageId = 'gg-stage' }) {
 
   return (
     <div className="ml-auto flex flex-wrap items-center gap-2">
-      <button type="button" onClick={onLike} aria-pressed={liked} className={base} style={liked ? on : off}>
-        {liked ? '👍' : '👍'} Like
-        {/* Only shown once there is something to show — a fresh game reads
-            "Like", not "Like 0". */}
-        {likes > 0 && <span className="ml-1.5 font-extrabold">{formatLikes(likes)}</span>}
+      <button type="button" onClick={onLike} aria-label="Like this game" aria-pressed={liked} className={base} style={{ ...(liked ? on : off), width: 52, height: 46 }}>
+        <span className="text-lg leading-none">👍</span>
+        {likes > 0 && <span className="text-[9px] font-extrabold leading-none">{formatLikes(likes)}</span>}
       </button>
-      <button type="button" onClick={toggleFav} aria-pressed={fav} className={base} style={fav ? on : off}>
-        {fav ? '♥ Favorited' : '♡ Favorite'}
+      <button type="button" onClick={toggleDislike} aria-label="Dislike this game" aria-pressed={disliked} className={base} style={{ ...(disliked ? { borderColor: '#fb7185', color: '#be123c', background: '#fff1f2' } : off), width: 52, height: 46 }}>
+        <span className="text-lg leading-none">👎</span><span className="text-[9px] font-bold leading-none">{disliked ? 'Noted' : 'Dislike'}</span>
       </button>
-      {/* Every game page gets this, because every game page renders GameActions.
-          One component, 500-odd pages. */}
-      <button type="button" onClick={share} className={base} style={shared ? on : off}>
-        {shared ? '✓ Link copied' : '↗ Share'}
-      </button>
-      <button type="button" onClick={fullscreen} className={base} style={off}>⛶ Fullscreen</button>
+      <button type="button" onClick={toggleFav} aria-label={fav ? 'Remove from favorites' : 'Add to favorites'} aria-pressed={fav} className={base} style={{ ...(fav ? on : off), width: 46, height: 46 }}><span className="text-xl leading-none">{fav ? '♥' : '♡'}</span></button>
+      <button type="button" onClick={share} aria-label="Share game" className={base} style={{ ...(shared ? on : off), width: 46, height: 46 }}><span className="text-xl leading-none">{shared ? '✓' : '↗'}</span></button>
+      <button type="button" onClick={fullscreen} aria-label="Full screen" className={base} style={{ ...off, width: 46, height: 46 }}><span className="text-xl leading-none">⛶</span></button>
       {needsAuth && (
         <span className="text-xs w-full sm:w-auto" style={{ color: '#5a6a60' }}>
           <Link href="/login" style={{ color: '#166534', fontWeight: 700 }}>Sign in</Link> to like games.

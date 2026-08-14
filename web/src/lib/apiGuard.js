@@ -127,15 +127,14 @@ export async function rateLimit(key, { limit = 20, windowMs = 60_000 } = {}) {
 }
 
 /**
- * Best-effort key extraction for rate limiting. Mixes IP + route + auth header.
- * Routes that have user auth get a per-user key; anonymous routes get per-IP.
+ * Best-effort network key extraction for rate limiting. Verified user identity
+ * must be added separately with userRateKey().
  */
 export function rateKey(request, suffix = '') {
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim()
     || request.headers.get('x-real-ip')
     || 'local'
-  const auth = request.headers.get('authorization')?.slice(0, 32) || ''
-  return `${ip}|${auth}|${suffix}`
+  return `${ip}|${suffix}`
 }
 
 /**

@@ -23,7 +23,7 @@ const SIGNUP_BENEFITS = [
 // TURNSTILE_SITE_KEY removed 2026-08-03 with the widget — registration
 // now uses the distorted-image sum in lib/demo-challenge.js.
 
-export default function RegisterPage() {
+export default function RegisterPage({ testBypassCaptcha = false }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
@@ -105,13 +105,14 @@ export default function RegisterPage() {
   // Fetch the signed challenge once on mount. One ~1 KB JSON response, no
   // third-party script, nothing an ad-blocker can break.
   useEffect(() => {
+    if (testBypassCaptcha) return
     let live = true
     fetch('/api/auth/demo-challenge', { cache: 'no-store' })
       .then((r) => r.json())
       .then((d) => { if (live && d?.token) setChallenge(d) })
       .catch(() => {})
     return () => { live = false }
-  }, [])
+  }, [testBypassCaptcha])
 
   // Live availability check for username
   const [usernameStatus, setUsernameStatus] = useState(null)  // 'available' | 'taken' | 'reserved' | 'invalid' | null
@@ -328,7 +329,7 @@ export default function RegisterPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Username = sign-in handle AND @getguac.app email alias */}
             <div className="rounded-2xl border-2 border-emerald-200 bg-emerald-50/40 p-3">
-              <label className="text-[11px] uppercase tracking-wider font-bold text-emerald-800 flex items-center gap-1.5">
+              <label htmlFor="register-username" className="text-[11px] uppercase tracking-wider font-bold text-emerald-800 flex items-center gap-1.5">
                 <AtSign size={12} /> Pick your GetGuac handle
               </label>
               <p className="text-[11px] text-emerald-900/80 mt-1 mb-2">
@@ -336,6 +337,7 @@ export default function RegisterPage() {
               </p>
               <div className="flex items-stretch rounded-xl border-2 border-white focus-within:border-emerald-400 transition-colors overflow-hidden bg-white">
                 <input
+                  id="register-username"
                   required
                   autoCapitalize="off"
                   spellCheck={false}
@@ -368,19 +370,20 @@ export default function RegisterPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <div><label className="label">First Name</label><input required className="input" placeholder="Alex" value={form.firstName} onChange={s('firstName')} /></div>
-              <div><label className="label">Last Name</label><input required className="input" placeholder="Smith" value={form.lastName} onChange={s('lastName')} /></div>
+              <div><label htmlFor="register-first-name" className="label">First Name</label><input id="register-first-name" required className="input" placeholder="Alex" value={form.firstName} onChange={s('firstName')} /></div>
+              <div><label htmlFor="register-last-name" className="label">Last Name</label><input id="register-last-name" required className="input" placeholder="Smith" value={form.lastName} onChange={s('lastName')} /></div>
             </div>
             <div>
-              <label className="label">Email Address</label>
-              <input type="email" required autoComplete="email" className="input" placeholder="you@example.com" value={form.email} onChange={s('email')} />
+              <label htmlFor="register-email" className="label">Email Address</label>
+              <input id="register-email" type="email" required autoComplete="email" className="input" placeholder="you@example.com" value={form.email} onChange={s('email')} />
               <p className="text-[11px] text-gray-400 mt-1">Used for password resets — never shown publicly.</p>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="label">Password</label>
+                <label htmlFor="register-password" className="label">Password</label>
                 <div className="relative">
                   <input
+                    id="register-password"
                     type={showPassword ? 'text' : 'password'}
                     required minLength={10} autoComplete="new-password"
                     className="input pr-10"
@@ -392,16 +395,17 @@ export default function RegisterPage() {
                     type="button"
                     onClick={() => setShowPassword(v => !v)}
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    className="absolute inset-y-0 right-0 px-3 text-gray-400 hover:text-emerald-700"
+                    className="absolute -inset-y-px right-0 min-w-11 px-3 text-gray-400 hover:text-emerald-700"
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
               </div>
               <div>
-                <label className="label">Confirm Password</label>
+                <label htmlFor="register-confirm-password" className="label">Confirm Password</label>
                 <div className="relative">
                   <input
+                    id="register-confirm-password"
                     type={showConfirm ? 'text' : 'password'}
                     required autoComplete="new-password"
                     aria-invalid={passwordMismatch}
@@ -413,7 +417,7 @@ export default function RegisterPage() {
                     type="button"
                     onClick={() => setShowConfirm(v => !v)}
                     aria-label={showConfirm ? 'Hide password' : 'Show password'}
-                    className="absolute inset-y-0 right-0 px-3 text-gray-400 hover:text-emerald-700"
+                    className="absolute -inset-y-px right-0 min-w-11 px-3 text-gray-400 hover:text-emerald-700"
                   >
                     {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
@@ -427,8 +431,9 @@ export default function RegisterPage() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="label">Birth Date</label>
+                <label htmlFor="register-birth-date" className="label">Birth Date</label>
                 <input
+                  id="register-birth-date"
                   type="date"
                   required
                   aria-invalid={underage}
@@ -444,8 +449,9 @@ export default function RegisterPage() {
                 )}
               </div>
               <div>
-                <label className="label">Age <span className="text-gray-400 normal-case font-normal">(auto)</span></label>
+                <label htmlFor="register-age" className="label">Age <span className="text-gray-400 normal-case font-normal">(auto)</span></label>
                 <input
+                  id="register-age"
                   type="number"
                   readOnly
                   tabIndex={-1}
@@ -455,13 +461,14 @@ export default function RegisterPage() {
                 />
               </div>
             </div>
-            <div><label className="label">Mobile No <span className="text-gray-400 normal-case font-normal">(Optional)</span></label><input type="tel" className="input" value={form.mobileNo} onChange={s('mobileNo')} /></div>
+            <div><label htmlFor="register-mobile" className="label">Mobile No <span className="text-gray-400 normal-case font-normal">(Optional)</span></label><input id="register-mobile" type="tel" className="input" value={form.mobileNo} onChange={s('mobileNo')} /></div>
 
             {/* Referral code (optional). A friend's 6-char code — applies the
                 same as clicking their ?ref= link. */}
             <div>
-              <label className="label">Referral code <span className="text-gray-400 normal-case font-normal">(optional)</span></label>
+              <label htmlFor="register-referral" className="label">Referral code <span className="text-gray-400 normal-case font-normal">(optional)</span></label>
               <input
+                id="register-referral"
                 type="text"
                 autoCapitalize="characters"
                 spellCheck={false}
@@ -485,8 +492,9 @@ export default function RegisterPage() {
               )}
             </div>
 
-            <label className="flex items-start gap-2 pt-1 cursor-pointer select-none">
+            <label htmlFor="register-terms" className="flex items-start gap-2 pt-1 cursor-pointer select-none">
               <input
+                id="register-terms"
                 type="checkbox"
                 required
                 checked={acceptTerms}
@@ -527,7 +535,7 @@ export default function RegisterPage() {
                 ⚠️ Not screen-reader readable: that is the real cost of any
                 image CAPTCHA. If a blind user is blocked, add an audio or
                 email fallback — do NOT weaken the image. */}
-            <div>
+            {!testBypassCaptcha && <div>
               <label htmlFor="signup-answer" className="block text-sm font-semibold text-gray-700 mb-1">
                 Solve this to continue
               </label>
@@ -548,9 +556,10 @@ export default function RegisterPage() {
                 aria-describedby="signup-answer-help"
               />
               <p id="signup-answer-help" className="text-[11px] text-gray-500 mt-1">
-                Confirms you are a person. No tracking, no third-party script. Stuck? Contact support.
+                Confirms you are a person. No tracking or third-party script. Cannot use the visual challenge?{' '}
+                <Link href="/contact" className="font-semibold text-emerald-700 underline underline-offset-2">Contact support for accessible registration</Link>.
               </p>
-            </div>
+            </div>}
 
             {/* In-page error — red, persistent, right where the user is looking. */}
             {errorMsg && (
@@ -562,7 +571,7 @@ export default function RegisterPage() {
 
             <button
               type="submit"
-              disabled={loading || usernameStatus !== 'available' || !acceptTerms || underage || !answer.trim()}
+              disabled={loading || usernameStatus !== 'available' || !acceptTerms || underage || (!testBypassCaptcha && !answer.trim())}
               className="btn-primary w-full justify-center py-2.5 mt-1"
             >
               {loading ? 'Creating account…' : 'Create my free account'}

@@ -523,7 +523,7 @@ export default function ExpenseInvaders() {
               <div className="text-4xl mb-1">👾</div>
               <div className="font-display font-extrabold text-xl" style={{ color: INK }}>Expense Invaders</div>
               <p className="text-sm mt-2" style={{ color: BODY }}>
-                An eight-round <b style={{ color: GREEN }}>money journey</b>. Every row is one of your spending categories — the more you spent, the more armor its invaders carry.
+                A seven-round <b style={{ color: GREEN }}>money journey</b>. Every row is one of your spending categories — the more you spent, the more armor its invaders carry.
               </p>
               <p className="text-sm mt-1" style={{ color: BODY }}>
                 Move with your finger or mouse (auto-fire) and blast each round&apos;s goal out of the sky before the expenses reach your wallet.

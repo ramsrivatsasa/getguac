@@ -180,9 +180,10 @@ export default function MarketplaceClient({ initialQuery = '', initialTab = 'dea
         {tab === 'deals' && (
           <button
             type="submit"
-            className="absolute right-1.5 top-1/2 -translate-y-1/2 btn-primary rounded-full px-5 py-2.5"
+            disabled={status === 'loading'}
+            className="absolute right-1.5 top-1/2 -translate-y-1/2 btn-primary rounded-full min-h-11 px-5 py-2.5"
           >
-            Search
+            {status === 'loading' ? <><Loader2 size={15} className="animate-spin" /> Searching</> : 'Search'}
           </button>
         )}
       </form>
@@ -214,7 +215,7 @@ export default function MarketplaceClient({ initialQuery = '', initialTab = 'dea
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
-              className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold transition-all ${
+              className={`inline-flex min-h-11 items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold transition-all ${
                 active ? 'bg-guac-700 text-white shadow' : 'bg-white text-gray-600 border border-gray-200 hover:border-guac-line2 hover:text-guac-700'
               }`}
             >
@@ -271,7 +272,9 @@ function DealsTab({ status, error, results, meta, query, onRetry }) {
   }
   if (status === 'loading') {
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div role="status" aria-live="polite">
+        <p className="mb-4 text-center text-sm font-semibold text-guac-700">Searching live prices for “{query}”…</p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4" aria-hidden="true">
         {Array.from({ length: 8 }).map((_, i) => (
           <div key={i} className="bg-white rounded-2xl border border-gray-100 overflow-hidden animate-pulse">
             <div className="bg-gray-100" style={{ aspectRatio: '1.1 / 1' }} />
@@ -281,6 +284,7 @@ function DealsTab({ status, error, results, meta, query, onRetry }) {
             </div>
           </div>
         ))}
+        </div>
       </div>
     )
   }

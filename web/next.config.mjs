@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 import { withSentryConfig } from '@sentry/nextjs'
 
+const scriptEvalDirective = process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''
+
 // Security headers — applied to every response. The CSP is deliberately tight
 // for app pages; we relax it only where third-party scripts are required
 // (currently nowhere). HSTS preloading is enabled with a 1-year max-age which
@@ -30,7 +32,7 @@ const securityHeaders = [
       // *.adtrafficquality.google = AdSense's invalid-traffic checks (sodar).
       // Google won't reliably serve ads while these are CSP-blocked, so it
       // must be in script-src + connect-src + frame-src per Google's CSP docs.
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.googleadservices.com https://adservice.google.com https://*.google.com https://*.adtrafficquality.google https://cdn.ampproject.org https://connect.facebook.net https://va.vercel-scripts.com",   // 'unsafe-eval' needed by some Next.js dev features; safe in prod
+      `script-src 'self' 'unsafe-inline'${scriptEvalDirective} https://challenges.cloudflare.com https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.googleadservices.com https://adservice.google.com https://*.google.com https://*.adtrafficquality.google https://cdn.ampproject.org https://connect.facebook.net https://va.vercel-scripts.com`,
       // connect.facebook.net = Meta Pixel loader, va.vercel-scripts.com =
       // Vercel Analytics. Both ALSO need connect-src below to report events —
       // a script that loads but can't POST is a silently broken counter, which

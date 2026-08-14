@@ -1,6 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
-import Script from 'next/script'
+import { useEffect } from 'react'
 
 // The AdSense loader, rendered only where an ad can actually appear.
 //
@@ -36,21 +35,17 @@ const CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || 'ca-pub-595969167144170
 // after mount. Do not "optimise" that into reading the cookie during render:
 // that is exactly what caused React #418/#423/#425 in the currency sweep.
 export default function AdSenseScript() {
-  const [allowed, setAllowed] = useState(false)
   useEffect(() => {
     const embedded = document.cookie.split('; ').some((c) => c === 'guac_embedded=1')
-    if (!embedded) setAllowed(true)
+    if (embedded || !CLIENT || document.getElementById('adsbygoogle-init')) return
+    const script = document.createElement('script')
+    script.id = 'adsbygoogle-init'
+    script.async = true
+    script.crossOrigin = 'anonymous'
+    script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${CLIENT}`
+    script.dataset.adFrequencyHint = '120s'
+    document.head.appendChild(script)
   }, [])
 
-  if (!CLIENT || !allowed) return null
-  return (
-    <Script
-      id="adsbygoogle-init"
-      async
-      strategy="afterInteractive"
-      src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${CLIENT}`}
-      data-ad-frequency-hint="120s"
-      crossOrigin="anonymous"
-    />
-  )
+  return null
 }

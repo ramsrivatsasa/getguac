@@ -31,7 +31,10 @@ function unauthorized() {
 
 function verifyCron(req) {
   const expected = process.env.CRON_SECRET
-  if (!expected) return true                          // dev mode — no secret set
+  if (!expected) {
+    console.error('[notify/dispatch] CRON_SECRET is not configured; refusing dispatch')
+    return false
+  }
   const hdr = req.headers.get('authorization') || ''
   return hdr === `Bearer ${expected}`
 }

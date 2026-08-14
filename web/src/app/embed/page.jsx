@@ -21,7 +21,10 @@ export default function EmbedBootstrap() {
         const access_token = hash.get('access_token')
         const refresh_token = hash.get('refresh_token')
         const next = hash.get('next') || '/dashboard'
-        const safeNext = next.startsWith('/') ? next : '/dashboard'
+        const safeNext = /^\/(?!\/)/.test(next) ? next : '/dashboard'
+
+        // Remove credentials from visible history before any asynchronous work.
+        window.history.replaceState(null, '', '/embed')
 
         // Mark this WebView context as embedded for a year.
         document.cookie = `guac_embedded=1; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`

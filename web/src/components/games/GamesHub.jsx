@@ -8,7 +8,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import GameCover from './GameCover'
-import { GAMES, CATEGORIES, FEATURED_HREF, POPULAR_HREFS, shotFor, gameIdFor } from './gamesList'
+import {
+  GAMES, OWN_GAMES, CATEGORIES, FEATURED_HREF, POPULAR_HREFS,
+  shotFor, gameIdFor, isExternal,
+} from './gamesList'
 import { createClient } from '../../lib/supabase/client'
 import { fetchLikeCounts } from '../../lib/gameLikes'
 
@@ -26,13 +29,15 @@ const BORDER = '1px solid #e4ebe2'
 const CARD = { background: '#fff', border: BORDER }
 
 const CHIPS = [
+  { id: 'home', label: 'Arcade home', emoji: '🥑' },
   { id: 'all', label: 'All games', emoji: '🎮' },
   { id: 'new', label: 'New', emoji: '✨' },
   ...CATEGORIES.map((c) => ({ id: c.id, label: c.title, emoji: c.emoji })),
 ]
 
 const countFor = (id) =>
-  id === 'all' ? GAMES.length
+  id === 'home' ? OWN_GAMES.length
+  : id === 'all' ? GAMES.length
   : id === 'new' ? GAMES.filter((g) => g.isNew).length
   : GAMES.filter((g) => g.cat === id).length
 
@@ -259,7 +264,7 @@ function Row({ title, blurb, games, size }) {
 }
 
 export default function GamesHub() {
-  const [cat, setCat] = useState('all')
+  const [cat, setCat] = useState('home')
   const [query, setQuery] = useState('')
   const [resume, setResume] = useState([])
   // Starts expanded and is corrected after mount from localStorage. Reading
@@ -310,17 +315,19 @@ export default function GamesHub() {
   const featured = GAMES.find((g) => g.href === FEATURED_HREF) || GAMES[0]
   const popular = useMemo(() => POPULAR_HREFS.map((h) => GAMES.find((g) => g.href === h)).filter(Boolean), [])
   const heroSide = popular.slice(0, 2)
+  const partnerPicks = useMemo(() => GAMES.filter(isExternal).slice(0, 12), [])
 
   // Typing searches the whole catalog regardless of the selected category;
   // picking a category clears the query (and vice versa via the active state).
   const q = query.trim().toLowerCase()
   const filtered = useMemo(() => GAMES.filter((g) => {
     if (q) return `${g.name} ${g.tag} ${g.desc}`.toLowerCase().includes(q)
+    if (cat === 'home') return !isExternal(g)
     if (cat === 'new') return !!g.isNew
     if (cat !== 'all') return g.cat === cat
     return true
   }), [cat, q])
-  const browsing = q !== '' || cat !== 'all'
+  const browsing = q !== '' || cat !== 'home'
 
   const pick = (id) => { setCat(id); setQuery('') }
 
@@ -396,6 +403,23 @@ export default function GamesHub() {
         </section>
       ) : (
         <>
+          <section className="mb-5 rounded-3xl px-6 py-6 sm:px-8 sm:py-7" style={{ background: 'linear-gradient(120deg, #f8f5e9, #eff9e8)', border: '1px solid #dce7d5' }}>
+            <span className="text-[11px] font-extrabold tracking-widest" style={{ color: GREEN }}>GETGUAC ARCADE</span>
+            <div className="mt-2 flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+              <div style={{ maxWidth: 720 }}>
+                <h1 className="font-display font-extrabold m-0" style={{ color: INK, fontSize: 'clamp(30px, 4vw, 48px)', lineHeight: 1.02 }}>Play a little. Learn what keeps your guac.</h1>
+                <p className="mt-3 mb-0 text-base leading-relaxed" style={{ color: BODY }}>
+                  Start with a GetGuac original built around spending, saving and real-life goals—or browse the full free arcade when you simply need a break.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2 text-xs font-bold">
+                <span className="rounded-full bg-white px-3 py-2" style={{ border: BORDER, color: GREEN }}>{OWN_GAMES.length} GetGuac originals</span>
+                <span className="rounded-full bg-white px-3 py-2" style={{ border: BORDER, color: GREEN }}>{GAMES.length} free games</span>
+                <span className="rounded-full bg-white px-3 py-2" style={{ border: BORDER, color: GREEN }}>No download</span>
+              </div>
+            </div>
+          </section>
+
           {/* Featured band: hero + two companions */}
           <section className="grid gap-4 lg:grid-cols-[1.7fr_1fr]">
             <FeaturedCard game={featured} />
@@ -446,25 +470,31 @@ export default function GamesHub() {
             </section>
           )}
 
-          <Row title="✨ New this week" games={GAMES.filter((g) => g.isNew)} />
+          <section className="mt-11 rounded-3xl px-6 py-6 sm:px-8" style={{ background: '#f8fbf6', border: BORDER }}>
+            <span className="text-[11px] font-extrabold tracking-widest" style={{ color: GREEN }}>MADE BY GETGUAC</span>
+            <h2 className="font-display font-extrabold text-2xl mt-1 mb-2" style={{ color: INK }}>Original games with a money purpose.</h2>
+            <p className="m-0 text-sm leading-relaxed" style={{ color: BODY, maxWidth: 760 }}>
+              Play against your own spending, practice a real goal or take on a familiar arcade challenge with a GetGuac twist. Signed-in players earn +50 GuacMoney for the first completed round of each original every day.
+            </p>
+          </section>
+
           {CATEGORIES.map((c) => (
-            <Row key={c.id} title={`${c.emoji} ${c.title}`} blurb={c.blurb} games={GAMES.filter((g) => g.cat === c.id)} />
+            <Row key={c.id} title={`${c.emoji} ${c.title}`} blurb={c.blurb} games={OWN_GAMES.filter((g) => g.cat === c.id)} />
           ))}
 
-          {/* All games — the dense tile wall, the way MSN Play and Poki present
-              a catalog this size. The curated rows above answer "what should I
-              play"; this answers "show me everything" without making anyone
-              page through categories. Deliberately last: it's a browse surface,
-              not the first thing to look at. */}
-          <section className="mt-12">
-            <div className="flex items-baseline gap-2.5 mb-3.5">
-              <h2 className="font-display font-extrabold text-xl" style={{ color: INK }}>🎮 All games</h2>
-              <span className="text-sm font-semibold" style={{ color: FAINT }}>{GAMES.length} games</span>
-            </div>
-            <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(144px, 1fr))' }}>
-              {GAMES.map((g) => <GameCover key={g.href} game={g} size="sm" likes={likes[gameIdFor(g.href)]} />)}
-            </div>
-          </section>
+          <Row
+            title="🎮 More free games"
+            blurb="A small preview from the partner catalog. Open All games when you want the complete collection."
+            games={partnerPicks}
+          />
+
+          <div className="mt-8 flex flex-col items-center rounded-3xl px-6 py-7 text-center" style={{ background: '#fff', border: BORDER }}>
+            <h2 className="font-display font-extrabold text-2xl m-0" style={{ color: INK }}>Want the whole arcade?</h2>
+            <p className="mt-2 mb-4 text-sm" style={{ color: BODY }}>Search or filter the complete catalog only when you need it—without loading the same hundreds of tiles twice on the homepage.</p>
+            <button type="button" onClick={() => pick('all')} className="rounded-full px-6 py-3 text-sm font-extrabold" style={{ background: GREEN, color: '#fff' }}>
+              Browse all {GAMES.length} games →
+            </button>
+          </div>
 
           <div className="mt-12 rounded-2xl px-6 py-5 text-center text-sm" style={{ ...CARD, color: '#5a6a60' }}>
             Like beating games? Beating your own grocery bill feels better —{' '}

@@ -5,9 +5,9 @@ import { createClient } from '../lib/supabase/server'
 import HomeInteractions from './HomeInteractions'
 
 export const metadata = {
-  title: 'GetGuac: Free Receipt Scanner & Spending Tracker',
+  title: 'GetGuac: Make Every Dollar Worth It',
   description:
-    'Scan receipts, see where your money goes, catch hidden fees, and never miss a refund. GetGuac is a free AI receipt scanner and spending tracker.',
+    'Turn receipts and statements into smarter money decisions. Find spending patterns, hidden fees, missed refunds, better prices, and purchases truly worth repeating.',
   alternates: { canonical: '/' },
 }
 

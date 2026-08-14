@@ -22,7 +22,8 @@
 // varies by accent / background noise / mumbled brand names, so we
 // always want a human-in-the-loop step.
 
-import { rateLimit, rateKey } from '../../../../lib/apiGuard'
+import { createClient } from '../../../../lib/supabase/server'
+import { rateLimitComposite, rateKey, userRateKey } from '../../../../lib/apiGuard'
 import { autoCategorize } from '../../../../lib/auto-categorize'
 
 export const runtime = 'nodejs'
@@ -103,8 +104,19 @@ async function callGeminiText({ apiKey, transcript, today }) {
 
 export async function POST(request) {
   try {
-    // Same per-IP+session rate budget as /api/parse-receipt (10/min).
-    const rl = await rateLimit(rateKey(request, 'receipts-from-voice'), { limit: 10, windowMs: 60_000 })
+    const supabase = createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return Response.json({ error: 'Sign in required to capture voice receipts.' }, { status: 401 })
+    }
+
+    const rl = await rateLimitComposite({
+      ipKey: rateKey(request, 'receipts-from-voice'),
+      userKey: userRateKey(user.id, 'receipts-from-voice'),
+      ipLimit: 30,
+      userLimit: 10,
+      windowMs: 60_000,
+    })
     if (!rl.ok) {
       return Response.json(
         { error: `Too many voice captures. Try again in ${rl.retryAfter}s.` },

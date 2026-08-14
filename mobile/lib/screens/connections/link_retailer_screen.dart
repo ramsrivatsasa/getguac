@@ -13,12 +13,11 @@
 // === FLOW ===
 // 1. User taps "Link account" on a retailer in /connections
 // 2. Disclosure dialog confirms the trust model
-// 3. WebView opens retailer's login URL with isolated cookies
+// 3. WebView opens the retailer's login URL with a strict HTTPS host allowlist
 // 4. User signs in (their session, their browser within the WebView)
 // 5. Once on the orders page, we inject the per-retailer JS extractor
-// 6. Extractor reads order data and POSTs it to /api/connections/import
-// 7. Backend parses each order into a receipt
-// 8. WebView closes, cookies discarded, "Imported N receipts" shown.
+// 6. Extractor previews visible order data; import remains disabled
+// 7. WebView closes and retailer cookies are cleared
 
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -37,6 +36,7 @@ class LinkRetailerScreen extends StatefulWidget {
 
 class _LinkRetailerScreenState extends State<LinkRetailerScreen> {
   late final WebViewController _controller;
+  final WebViewCookieManager _cookieManager = WebViewCookieManager();
   Retailer? _retailer;
   RetailerExtractor? _extractor;
   bool _initialized = false;
@@ -63,8 +63,16 @@ class _LinkRetailerScreenState extends State<LinkRetailerScreen> {
           setState(() => _status = 'Loading $url');
         },
         onPageFinished: (url) async {
-          setState(() => _status = 'Signed in? Tap "Pull receipts" when on your orders page');
+          setState(() => _status = 'Signed in? Tap "Preview orders" when on your orders page');
           if (_extractor!.isOrdersPage(url)) await _runExtractor();
+        },
+        onNavigationRequest: (request) {
+          if (!request.isMainFrame) return NavigationDecision.navigate;
+          final uri = Uri.tryParse(request.url);
+          final trusted = uri != null &&
+              uri.scheme == 'https' &&
+              _extractor!.allowedHosts.contains(uri.host.toLowerCase());
+          return trusted ? NavigationDecision.navigate : NavigationDecision.prevent;
         },
       ));
     _controller.loadRequest(Uri.parse(_extractor!.loginUrl));
@@ -83,7 +91,7 @@ class _LinkRetailerScreenState extends State<LinkRetailerScreen> {
       // TODO(phase 2): POST to /api/connections/import here.
       // For now, just show the extracted preview to the user.
       if (!mounted) return;
-      setState(() => _status = 'Found ${_estimateOrderCount(extracted)} orders. Server import lands in Phase 2.');
+      setState(() => _status = 'Preview found ${_estimateOrderCount(extracted)} orders. Import is not available yet.');
     } catch (e) {
       if (!mounted) return;
       setState(() => _status = 'Could not read orders: $e');
@@ -93,6 +101,12 @@ class _LinkRetailerScreenState extends State<LinkRetailerScreen> {
   int _estimateOrderCount(String raw) {
     final n = RegExp(r'"order_id"').allMatches(raw).length;
     return n;
+  }
+
+  @override
+  void dispose() {
+    _cookieManager.clearCookies();
+    super.dispose();
   }
 
   @override
@@ -149,7 +163,7 @@ class _LinkRetailerScreenState extends State<LinkRetailerScreen> {
           if (_initialized)
             TextButton(
               onPressed: _runExtractor,
-              child: const Text('Pull receipts'),
+              child: const Text('Preview orders'),
             ),
           signOutAction(context),
         ],
@@ -160,7 +174,7 @@ class _LinkRetailerScreenState extends State<LinkRetailerScreen> {
           color: const Color(0xFFfef3c7),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Text(
-            '⚠️  Beta feature — may break without notice. Reach out to support if a pull fails.',
+            '⚠️  Preview only — this checks visible orders but does not import receipts yet.',
             style: TextStyle(fontSize: 11, color: Color(0xFF92400e), fontWeight: FontWeight.w700, fontVariations: ggWght(FontWeight.w700)),
           ),
         ),

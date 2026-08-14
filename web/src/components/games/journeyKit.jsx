@@ -321,7 +321,7 @@ export function ChapterComplete({ round, banked, unit = '$', caption = 'banked t
 // the HUD score pill). pointer-events:none so canvas input still lands. Drop it
 // into any game's arena alongside its <ArcadeHud/>. Stage pips show the
 // sub-levels inside the round filling up as the goal bar climbs.
-export function JourneyBar({ round, banked, target, stage = 1, stages = round?.stages || 1, top = 78, unit = '$' }) {
+export function JourneyBar({ round, banked, target, stage = 1, stages = round?.stages || 1, top = 78, unit = '$', levelLabel = 'R', showIcon = true }) {
   const pct = target > 0 ? Math.max(0, Math.min(1, banked / target)) : 0
   const show = (v) => (unit === '$' ? `$${Number(v).toLocaleString()}` : `${Number(v).toLocaleString()}`)
   return (
@@ -329,7 +329,7 @@ export function JourneyBar({ round, banked, target, stage = 1, stages = round?.s
       <div className="flex items-center justify-between mb-1" style={{ fontFamily: BODY_FONT }}>
         <span className="inline-flex items-center gap-1 text-[12px] font-bold px-2.5 py-1 rounded-full"
           style={{ background: 'rgba(255,255,255,0.92)', color: round.dark || round.color }}>
-          <span aria-hidden>{round.emoji}</span> R{round.n} · {round.title}
+          {showIcon && <span aria-hidden>{round.emoji}</span>} {levelLabel}{round.n} · {round.title}
         </span>
         <span className="text-[12px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(0,0,0,0.4)', color: '#fff' }}>
           {show(banked)} / {show(target)}{unit === '$' ? '' : ` ${unit}`}

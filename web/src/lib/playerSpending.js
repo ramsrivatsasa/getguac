@@ -164,15 +164,15 @@ export async function loadPlayerSpending() {
   }
 }
 
-// Hook wrapper — returns { data, loading }. `data` is null until the first
-// load resolves; games can render a start card immediately and read data on
-// Start, or gate the Start button on !loading.
+// Hook wrapper — demo data is playable immediately while the signed-in data
+// loads in the background. A slow auth/network request must never freeze an
+// arcade start button.
 export function usePlayerSpending() {
-  const [data, setData] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [data, setData] = useState(DEMO)
+  const [loading, setLoading] = useState(false)
   useEffect(() => {
     let alive = true
-    loadPlayerSpending().then((d) => { if (alive) { setData(d); setLoading(false) } })
+    loadPlayerSpending().then((d) => { if (alive) setData(d) })
     return () => { alive = false }
   }, [])
   return { data, loading }

@@ -1,11 +1,12 @@
 import MarketingShell from '../../components/MarketingShell'
 import { ARCADE_ADS_ENABLED } from '../../lib/arcadeAds'
 import GamesHub from '../../components/games/GamesHub'
+import { GAMES, OWN_GAMES } from '../../components/games/gamesList'
 
 export const metadata = {
-  title: 'Guac Arcade — 15 free games: maze muncher, asteroids, darts & more',
+  title: `Guac Arcade — ${OWN_GAMES.length} GetGuac originals and ${GAMES.length} free games`,
   description:
-    'Free browser games from GetGuac: a coin-chomping maze classic, asteroids, darts, brick-breaker, invaders, tower stacking, daily word puzzles and more. No download, phone-friendly — and playing earns GuacMoney.',
+    'Play GetGuac originals built around spending, saving and real-life goals, plus hundreds of free browser games. No download, phone-friendly, and completed original rounds earn GuacMoney.',
   alternates: { canonical: '/games' },
 }
 

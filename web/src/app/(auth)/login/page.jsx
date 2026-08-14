@@ -59,6 +59,7 @@ function LoginPageInner() {
   // Sign-in error message — shown inline and used to highlight both fields red.
   // Cleared the moment the user edits either field.
   const [signinError, setSigninError] = useState('')
+  const resetEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resetEmail.trim())
 
   // Surface OAuth-callback errors as a toast. /auth/callback bounces
   // failed Google logins back to /login?oauth_error=... so we read it
@@ -285,8 +286,9 @@ function LoginPageInner() {
           <h2 className="text-xl font-bold text-gray-900 mb-6">{isDemo ? 'Try the demo' : 'Sign In'}</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="label">Username or email</label>
+              <label htmlFor="login-identifier" className="label">Username or email</label>
               <input
+                id="login-identifier"
                 type="text"
                 required
                 autoComplete="username"
@@ -300,15 +302,16 @@ function LoginPageInner() {
             </div>
             <div>
               <div className="flex items-center justify-between">
-                <label className="label mb-0">Password</label>
+                <label htmlFor="login-password" className="label mb-0">Password</label>
                 <button type="button"
                   onClick={() => { setResetEmail(form.identifier.includes('@') ? form.identifier : ''); setResetOpen(true) }}
-                  className="text-[11px] font-semibold text-emerald-700 hover:text-emerald-900 hover:underline mb-1">
+                  className="min-h-11 inline-flex items-center text-[11px] font-semibold text-emerald-700 hover:text-emerald-900 hover:underline">
                   Forgot password?
                 </button>
               </div>
               <div className="relative">
                 <input
+                  id="login-password"
                   type={showPassword ? 'text' : 'password'}
                   required autoComplete="current-password"
                   aria-invalid={!!signinError}
@@ -321,7 +324,7 @@ function LoginPageInner() {
                   type="button"
                   onClick={() => setShowPassword(v => !v)}
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  className="absolute inset-y-0 right-0 px-3 text-gray-400 hover:text-emerald-700"
+                  className="absolute -inset-y-px right-0 min-w-11 px-3 text-gray-400 hover:text-emerald-700"
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -422,7 +425,7 @@ function LoginPageInner() {
                 setResetEmail(form.identifier?.includes('@') ? form.identifier : '')
                 setResetOpen(true)
               }}
-              className="text-xs text-gray-500 hover:text-emerald-700 hover:underline">
+              className="min-h-11 inline-flex items-center justify-center text-xs text-gray-500 hover:text-emerald-700 hover:underline">
               Trouble logging in?
             </button>
           </div>
@@ -443,22 +446,28 @@ function LoginPageInner() {
               </div>
             </div>
             <div>
-              <label className="label">Email</label>
+              <label htmlFor="reset-email" className="label">Email</label>
               <input
+                id="reset-email"
                 type="email"
                 required
                 autoFocus
                 className="input"
                 placeholder="you@example.com"
                 value={resetEmail}
+                aria-describedby={!resetEmailValid && resetEmail.length > 0 ? 'reset-email-error' : undefined}
+                aria-invalid={!resetEmailValid && resetEmail.length > 0}
                 onChange={e => setResetEmail(e.target.value)}
               />
+              {!resetEmailValid && resetEmail.length > 0 && (
+                <p id="reset-email-error" className="mt-1 text-xs font-semibold text-rose-600">Enter a valid email address.</p>
+              )}
             </div>
             <div className="flex gap-2">
-              <button type="submit" disabled={resetting || !resetEmail.trim()} className="btn-primary">
+              <button type="submit" disabled={resetting || !resetEmailValid} className="btn-primary min-h-11">
                 {resetting ? 'Sending…' : 'Send reset link'}
               </button>
-              <button type="button" className="btn-secondary" onClick={() => setResetOpen(false)}>
+              <button type="button" className="btn-secondary min-h-11" onClick={() => setResetOpen(false)}>
                 Cancel
               </button>
             </div>

@@ -328,9 +328,9 @@ export function AvocadoPip({ size = 18, filled = true }) {
 export function ArcadeHud({
   score, scoreLabel = 'SCORE', scorePrefix = '', best,
   status, statusTone = 'neutral',
-  lives, livesMax = 3, livesIcon = '🥑',
+  lives, livesMax = 3, livesIcon = '🥑', livesRenderer,
   hint, dark = true,
-  onPause, muted, onMute, children,
+  onPause, muted, onMute, plainControls = false, children,
 }) {
   const pillBg = dark ? 'rgba(255,255,255,0.12)' : 'rgba(21,40,28,0.06)'
   const scoreColor = dark ? '#bbf7d0' : GREEN
@@ -364,14 +364,16 @@ export function ArcadeHud({
           {lives != null && (
             <div aria-label={`${lives} lives left`} className="flex items-center" style={{ fontSize: 18, gap: livesIcon === '🥑' || livesIcon === 'avocado' ? 3 : 1 }}>
               {Array.from({ length: livesMax }).map((_, i) => (
-                livesIcon === '🥑' || livesIcon === 'avocado'
+                livesRenderer
+                  ? <span key={i}>{livesRenderer({ filled: i < lives, index: i })}</span>
+                  : livesIcon === '🥑' || livesIcon === 'avocado'
                   ? <AvocadoPip key={i} size={18} filled={i < lives} />
                   : <span key={i} style={{ opacity: i < lives ? 1 : 0.2, filter: i < lives ? 'none' : 'grayscale(1)' }}>{livesIcon}</span>
               ))}
             </div>
           )}
-          {onMute && <button onClick={onMute} aria-label={muted ? 'Unmute' : 'Mute'} style={btn}>{muted ? '🔇' : '🔊'}</button>}
-          {onPause && <button onClick={onPause} aria-label="Pause" style={btn}>⏸</button>}
+          {onMute && <button onClick={onMute} aria-label={muted ? 'Unmute' : 'Mute'} style={btn}>{plainControls ? <span style={{ fontSize: 9, fontWeight: 900 }}>{muted ? 'SND OFF' : 'SND ON'}</span> : (muted ? '🔇' : '🔊')}</button>}
+          {onPause && <button onClick={onPause} aria-label="Pause" style={btn}>{plainControls ? <span style={{ display: 'flex', gap: 4 }}><i style={{ width: 4, height: 15, borderRadius: 2, background: 'currentColor' }} /><i style={{ width: 4, height: 15, borderRadius: 2, background: 'currentColor' }} /></span> : '⏸'}</button>}
         </div>
       </div>
       {children}

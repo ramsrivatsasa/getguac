@@ -56,11 +56,11 @@ const SITE_URL = 'https://getguac.app'
 export const metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'GetGuac: Free Receipt Scanner & Spending Tracker',
+    default: 'GetGuac: Make Every Dollar Worth It',
     template: '%s · GetGuac',
   },
   description:
-    'Scan receipts, see where your money goes, catch hidden fees, and never miss a refund. GetGuac is a free AI receipt scanner and spending tracker — no cashback gimmicks.',
+    'Turn receipts and statements into smarter money decisions. Find spending patterns, hidden fees, missed refunds, better prices, and purchases truly worth repeating.',
   applicationName: 'GetGuac',
   keywords: [
     'receipt scanner app', 'free receipt scanner', 'spending tracker', 'expense tracker',

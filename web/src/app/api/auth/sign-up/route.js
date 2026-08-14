@@ -146,12 +146,14 @@ export async function POST(request) {
     const sbAdmin = admin()
 
     // ── Pre-flight: username availability ──
-    const [{ data: reserved }, { data: taken }] = await Promise.all([
+    const [{ data: reserved }, { data: taken }, { data: pending }] = await Promise.all([
       sbAdmin.from('reserved_email_aliases').select('alias').eq('alias', username).maybeSingle(),
       sbAdmin.from('profiles').select('id').eq('email_alias', username).maybeSingle(),
+      sbAdmin.from('signups').select('user_id').ilike('requested_username', username).is('confirmed_at', null).limit(1).maybeSingle(),
     ])
     if (reserved) return Response.json({ error: 'That username is reserved', status: 'reserved' }, { status: 409 })
     if (taken)    return Response.json({ error: 'That username is already taken', status: 'taken' },  { status: 409 })
+    if (pending)  return Response.json({ error: 'That username is awaiting confirmation', status: 'taken' }, { status: 409 })
 
     // ── Create the auth user ──
     // Required: Supabase Auth project setting "Confirm email" must be ENABLED
@@ -200,8 +202,6 @@ export async function POST(request) {
     // Writing it here means an account that is created but NEVER confirmed is
     // still a queryable row — and those are precisely the ones worth chasing.
     //
-    // Best-effort: a failure here must never fail a signup that Supabase has
-    // already accepted, so it is logged and swallowed.
     async function recordSignup(uid) {
       try {
         const { error: sErr } = await sbAdmin.from('signups').upsert({
@@ -215,14 +215,29 @@ export async function POST(request) {
           mobile_no: body.mobile_no || null,
           signup_method: 'email',
         }, { onConflict: 'user_id' })
-        if (sErr) console.error('[auth/sign-up] signups insert failed:', sErr.message)
+        if (sErr) {
+          console.error('[auth/sign-up] signups insert failed:', sErr.message)
+          return sErr
+        }
+        return null
       } catch (e) {
         console.error('[auth/sign-up] signups insert threw:', e.message)
+        return e
       }
     }
 
     const userId = data?.user?.id
-    if (userId) await recordSignup(userId)
+    if (userId) {
+      const signupError = await recordSignup(userId)
+      if (signupError?.code === '23505') {
+        try {
+          await sbAdmin.auth.admin.deleteUser(userId)
+        } catch (cleanupError) {
+          console.error('[auth/sign-up] duplicate reservation cleanup failed:', cleanupError.message)
+        }
+        return Response.json({ error: 'That username is already reserved', status: 'taken' }, { status: 409 })
+      }
+    }
 
     if (!userId) {
       // Some GoTrue/SDK combinations return { user: null, session: null }

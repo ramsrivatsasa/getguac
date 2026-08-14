@@ -107,7 +107,9 @@ class _WebAppScreenState extends State<WebAppScreen> with SingleTickerProviderSt
           // screen. (target="_blank" is also inert here: no onCreateWindow.)
           final forceExternal = navUri?.queryParameters['play'] == 'browser';
           // Keep our own pages in the WebView; send everything else out.
-          if (!forceExternal && (host.isEmpty || host.endsWith('getguac.app'))) {
+          final isTrustedGetGuac = navUri?.scheme == 'https' &&
+              (host == 'getguac.app' || host.endsWith('.getguac.app'));
+          if (!forceExternal && (host.isEmpty || isTrustedGetGuac)) {
             return NavigationDecision.navigate;
           }
           // Ground truth for the iOS "Steals opens an ad" report — record

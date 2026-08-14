@@ -35,12 +35,14 @@ export async function GET(request) {
     if (!VALID_RE.test(username)) return Response.json({ username, status: 'invalid' })
 
     const sb = admin()
-    const [{ data: reserved }, { data: taken }] = await Promise.all([
+    const [{ data: reserved }, { data: taken }, { data: pending }] = await Promise.all([
       sb.from('reserved_email_aliases').select('alias').eq('alias', username).maybeSingle(),
       sb.from('profiles').select('id').eq('email_alias', username).maybeSingle(),
+      sb.from('signups').select('user_id').ilike('requested_username', username).is('confirmed_at', null).limit(1).maybeSingle(),
     ])
     if (reserved) return Response.json({ username, status: 'reserved' })
     if (taken)    return Response.json({ username, status: 'taken' })
+    if (pending)  return Response.json({ username, status: 'taken' })
     return Response.json({ username, status: 'available' })
   } catch (err) {
     console.error('[auth/check-username]', err)

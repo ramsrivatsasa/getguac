@@ -11,12 +11,13 @@
 // already visible to the signed-in user — same data a screen-reader
 // would surface.
 //
-// TODO(phase 2): wire the extracted JSON to /api/connections/import
-// so each order becomes a receipt.
+// The current mobile experience is explicitly preview-only. Do not claim an
+// import occurred until a reviewed backend ingestion contract is implemented.
 
 class RetailerExtractor {
   /// Where the WebView should land first.
   final String loginUrl;
+  final Set<String> allowedHosts;
   /// Predicate that recognizes the user has reached an orders page.
   final bool Function(String url) isOrdersPage;
   /// JavaScript executed against the rendered orders page. Should
@@ -24,6 +25,7 @@ class RetailerExtractor {
   final String extractScript;
   const RetailerExtractor({
     required this.loginUrl,
+    required this.allowedHosts,
     required this.isOrdersPage,
     required this.extractScript,
   });
@@ -39,6 +41,7 @@ final Map<String, RetailerExtractor> retailerExtractors = {
   // this HTML occasionally; when it breaks, update these selectors.
   'amazon': RetailerExtractor(
     loginUrl: 'https://www.amazon.com/gp/your-account/order-history',
+    allowedHosts: const {'amazon.com', 'www.amazon.com'},
     isOrdersPage: (url) => url.contains('order-history') || url.contains('your-orders'),
     extractScript: r'''
       (() => {

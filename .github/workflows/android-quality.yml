@@ -50,3 +50,19 @@ jobs:
             echo "::error title=Android release build failed::$message"
           fi
           exit "$status"
+      - name: Launch release APK on Android emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          script: |
+            adb install -r mobile/build/app/outputs/flutter-apk/app-release.apk
+            adb logcat -c
+            adb shell monkey -p app.getguac.getguac -c android.intent.category.LAUNCHER 1
+            sleep 15
+            adb shell uiautomator dump /sdcard/getguac-window.xml
+            adb pull /sdcard/getguac-window.xml mobile/build/getguac-window.xml
+            grep -Eq "GetGuac|Sign in|Welcome" mobile/build/getguac-window.xml
+            ! adb logcat -d '*:E' | grep -E "FATAL EXCEPTION|Process: app.getguac.getguac"

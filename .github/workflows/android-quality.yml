@@ -1,0 +1,47 @@
+name: Android quality gates
+
+on:
+  pull_request:
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/android-quality.yml'
+      - '.github/workflows/release-apk.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/android-quality.yml'
+      - '.github/workflows/release-apk.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  analyze-test-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Install dependencies
+        working-directory: mobile
+        run: flutter pub get
+      - name: Verify formatting
+        working-directory: mobile
+        run: dart format --output=none --set-exit-if-changed lib test
+      - name: Static analysis
+        working-directory: mobile
+        run: flutter analyze --fatal-infos
+      - name: Unit and widget tests
+        working-directory: mobile
+        run: flutter test --coverage
+      - name: Build release APK
+        working-directory: mobile
+        run: flutter build apk --release
+

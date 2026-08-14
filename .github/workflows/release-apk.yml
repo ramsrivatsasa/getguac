@@ -11,20 +11,31 @@ name: Release APK
 # a signature-mismatch reinstall on the first CI-built update.
 
 on:
-  push:
-    tags:
-      - 'v*'
   workflow_dispatch:
     inputs:
       tag:
         description: 'Tag to build (e.g. v0.2.76). Must already exist.'
         required: true
+      manual_device_tests_passed:
+        description: 'Auth, password reset, receipt capture, and WebView checks passed on a physical Android device'
+        required: true
+        type: boolean
+        default: false
 
 permissions:
   contents: write
 
 jobs:
+  release-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require physical-device test attestation
+        env:
+          DEVICE_TESTS_PASSED: ${{ inputs.manual_device_tests_passed }}
+        run: test "$DEVICE_TESTS_PASSED" = "true"
+
   build:
+    needs: release-gate
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
@@ -44,18 +55,70 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Resolve tag
+      - name: Resolve and verify tag
         id: tag
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "ref=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
-          else
-            echo "ref=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
-          fi
+          git rev-parse "refs/tags/$RELEASE_TAG"
+          echo "ref=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
 
       - name: Install pub deps
         working-directory: mobile
         run: flutter pub get
+
+      - name: Configure release signing
+        working-directory: mobile/android
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+        run: |
+          test -n "$ANDROID_KEYSTORE_BASE64"
+          test -n "$ANDROID_KEY_ALIAS"
+          test -n "$ANDROID_KEY_PASSWORD"
+          test -n "$ANDROID_STORE_PASSWORD"
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > app/getguac-release.jks
+          {
+            echo "storeFile=getguac-release.jks"
+            echo "storePassword=$ANDROID_STORE_PASSWORD"
+            echo "keyAlias=$ANDROID_KEY_ALIAS"
+            echo "keyPassword=$ANDROID_KEY_PASSWORD"
+          } > key.properties
+
+      - name: Verify formatting
+        working-directory: mobile
+        run: dart format --output=none --set-exit-if-changed lib test
+
+      - name: Static analysis
+        working-directory: mobile
+        run: flutter analyze --fatal-infos
+
+      - name: Unit and widget tests
+        working-directory: mobile
+        run: flutter test --coverage
+
+      - name: Build universal release APK for emulator gate
+        working-directory: mobile
+        run: flutter build apk --release
+
+      - name: Launch release APK on Android emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          script: |
+            adb install -r mobile/build/app/outputs/flutter-apk/app-release.apk
+            adb logcat -c
+            adb shell monkey -p app.getguac.getguac -c android.intent.category.LAUNCHER 1
+            sleep 15
+            adb shell uiautomator dump /sdcard/getguac-window.xml
+            adb pull /sdcard/getguac-window.xml mobile/build/getguac-window.xml
+            grep -Eq "GetGuac|Sign in|Welcome" mobile/build/getguac-window.xml
+            ! adb logcat -d '*:E' | grep -E "FATAL EXCEPTION|Process: app.getguac.getguac"
 
       - name: Build split-per-ABI release APKs
         working-directory: mobile
@@ -76,7 +139,7 @@ jobs:
             echo "body<<__EOF__"
             echo "Mobile release ${{ steps.tag.outputs.ref }}"
             echo ""
-            echo "**Install:** download \`app-arm64-v8a-release.apk\` (for most phones) and tap to install. The in-app updater will pick this up automatically on next launch."
+            echo "**Install:** download \`app-arm64-v8a-release.apk\` (for most phones) and tap to install. This artifact passed analysis, tests, an emulator launch, and the required physical-device checklist."
             echo ""
             echo "---"
             echo ""

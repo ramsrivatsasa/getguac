@@ -48,6 +48,7 @@ jobs:
         shell: bash
         run: |
           set +e
+          (cd .. && flutter build ios --config-only --no-codesign)
           pod install --repo-update 2>&1 | tee pod-install.log
           status=${PIPESTATUS[0]}
           if [ "$status" -ne 0 ]; then

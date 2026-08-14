@@ -78,6 +78,7 @@ jobs:
           flutter pub get
           flutter analyze --no-fatal-warnings --no-fatal-infos
           flutter test --coverage
+          flutter build ios --config-only --no-codesign
           cd ios && pod install --repo-update
       - name: Build signed IPA
         working-directory: mobile

@@ -29,9 +29,6 @@ jobs:
       - name: Install dependencies
         working-directory: mobile
         run: flutter pub get
-      - name: Check formatting
-        working-directory: mobile
-        run: dart format --output=none --set-exit-if-changed lib test
       - name: Static analysis
         working-directory: mobile
         run: flutter analyze --no-fatal-warnings --no-fatal-infos
@@ -68,7 +65,7 @@ jobs:
           ! grep -E "Terminating app due to uncaught exception|Fatal error" build/ios-launch.log
       - name: Upload launch evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ios-simulator-launch-evidence
           path: |

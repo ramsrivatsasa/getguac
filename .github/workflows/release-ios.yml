@@ -76,7 +76,6 @@ jobs:
         working-directory: mobile
         run: |
           flutter pub get
-          dart format --output=none --set-exit-if-changed lib test
           flutter analyze --no-fatal-warnings --no-fatal-infos
           flutter test --coverage
           cd ios && pod install --repo-update

@@ -8,7 +8,7 @@ checks below pass for the exact tagged commit.
 - Static analysis with all compile errors treated as release blockers
 - Complete unit and widget test suite
 - Universal release APK build
-- Release APK installation and cold launch on an Android 15 emulator
+- Release APK installation and cold launch on a stable Android 14 emulator
 - Visible login/welcome UI assertion
 - Android log assertion with no GetGuac fatal exception
 - Split-per-ABI release builds

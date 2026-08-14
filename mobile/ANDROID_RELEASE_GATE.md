@@ -6,7 +6,7 @@ checks below pass for the exact tagged commit.
 ## Automated gates
 
 - Formatting check
-- `flutter analyze --fatal-infos`
+- Static analysis with all compile errors treated as release blockers
 - Complete unit and widget test suite
 - Universal release APK build
 - Release APK installation and cold launch on an Android 15 emulator

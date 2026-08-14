@@ -58,11 +58,14 @@ jobs:
           profile: pixel_6
           disable-animations: true
           script: |
-            adb install -r mobile/build/app/outputs/flutter-apk/app-release.apk
+            adb install -r mobile/build/app/outputs/flutter-apk/app-release.apk || { echo "::error title=Android emulator install failed::adb could not install the release APK"; exit 1; }
             adb logcat -c
-            adb shell monkey -p app.getguac.getguac -c android.intent.category.LAUNCHER 1
+            adb shell monkey -p app.getguac.getguac -c android.intent.category.LAUNCHER 1 || { echo "::error title=Android emulator launch failed::adb monkey could not launch GetGuac"; exit 1; }
             sleep 15
-            adb shell uiautomator dump /sdcard/getguac-window.xml
-            adb pull /sdcard/getguac-window.xml mobile/build/getguac-window.xml
-            grep -Eq "GetGuac|Sign in|Welcome" mobile/build/getguac-window.xml
-            ! adb logcat -d '*:E' | grep -E "FATAL EXCEPTION|Process: app.getguac.getguac"
+            adb shell uiautomator dump /sdcard/getguac-window.xml || { echo "::error title=Android UI inspection failed::uiautomator could not dump the app window"; exit 1; }
+            adb pull /sdcard/getguac-window.xml mobile/build/getguac-window.xml || { echo "::error title=Android UI inspection failed::could not retrieve the UI dump"; exit 1; }
+            grep -Eq "GetGuac|Sign in|Welcome" mobile/build/getguac-window.xml || { echo "::error title=Android launch UI missing::GetGuac did not show its login or welcome UI"; exit 1; }
+            if adb logcat -d '*:E' | grep -E "FATAL EXCEPTION|Process: app.getguac.getguac"; then
+              echo "::error title=Android fatal exception::GetGuac produced a fatal exception after cold launch"
+              exit 1
+            fi

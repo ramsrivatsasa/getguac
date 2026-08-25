@@ -24,7 +24,7 @@
 
 import { useEffect, useState } from 'react'
 
-// The detective narrates as it scans. Single voice. Smashlist voice ("smashed
+// The detective narrates as it scans. Single voice. Shopping List voice ("smashed
 // it in"), no competitor vocab.
 const VARIANTS = {
   receipt: {

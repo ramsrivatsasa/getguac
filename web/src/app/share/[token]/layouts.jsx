@@ -371,7 +371,7 @@ function FilterChips({ tiles, sharedBy }) {
 }
 
 // ─── List layout ────────────────────────────────────────────────────
-// Smashlist-style — items grouped per store, totals per group, with
+// Shopping List-style — items grouped per store, totals per group, with
 // a "switch stores and save" callout when applicable. Used when the
 // payload kind is 'list'.
 export function ShareListLayout({ share }) {

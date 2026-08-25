@@ -1,5 +1,5 @@
 // Consecutive-day count of receipt activity — branded "Smash days" to
-// fit the GetGuac voice (Smashlist, "smash that buy"). Powers the 🥑
+// fit the GetGuac voice (Shopping List, "smash that buy"). Powers the 🥑
 // counter chip on the dashboard and the social-proof line on public
 // share-landing pages.
 //

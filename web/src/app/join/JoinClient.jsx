@@ -2058,14 +2058,14 @@ const MATRIX = [
   // e.g. "Itemizes what your bank charged you" (the Bank Bite tile), which is
   // true for GetGuac and false for all five.
   ['Smart savings insights', true, true, true, true, true, true],
-  // Smashlist — lib/predict-smashlist.js. NOT just a shopping list: it reads
+  // Shopping List — lib/predict-smashlist.js. NOT just a shopping list: it reads
   // receipt_items with purchase dates and predicts what is running out, using
   // embedding-centroid merging so "Coke 12pk" and "Coca-Cola 12 Pack" count as
   // the same thing. The five competitors cannot do this at any price — it
   // needs item-level history and a bank feed does not carry items. That is
   // what makes it the strongest row in the table, so it is worded as the
   // prediction rather than as "shopping lists".
-  ['Smashlist — predicts what you are running out of', true, false, false, false, false, false],
+  ['Shopping List — predicts what you are running out of', true, false, false, false, false, false],
   // Every account gets a free @getguac.app address to forward receipts to —
   // see /how-email-works and lib/email-to-receipt.js. No one else on this list
   // gives you an inbox.

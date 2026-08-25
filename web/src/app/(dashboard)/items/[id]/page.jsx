@@ -175,7 +175,7 @@ export default function ItemDetailPage() {
         qty: item.qty || 1,
         price: item.price ?? null,
       })
-      toast.success(`Added "${item.item_name}" to Smashlist`)
+      toast.success(`Added "${item.item_name}" to Shopping List`)
     } catch (e) { toast.error(e.message) }
   }
 
@@ -223,7 +223,7 @@ export default function ItemDetailPage() {
   const totalQty = sortedRows.reduce((s, r) => s + (r.qty || 0), 0)
   const totalSpent = sortedRows.reduce((s, r) => s + (r.price || 0), 0)
 
-  // 90-day window — used both for the Smashlist "Buy N" badge and to decide
+  // 90-day window — used both for the Shopping List "Buy N" badge and to decide
   // which pill segments render filled.
   const now = Date.now()
   const NINETY_DAYS_MS = 90 * 24 * 60 * 60 * 1000
@@ -258,7 +258,7 @@ export default function ItemDetailPage() {
           the white block a 320ms entrance so it lands AFTER the hero
           has painted — the page assembles itself top-down. */}
       <SlideUp className="relative -mt-8 bg-white rounded-3xl shadow-sm px-5 pt-5 pb-6 space-y-4">
-        {/* Status pill — Smashlist "Buy N" signal if any 90-day buys, else "In your kitchen" */}
+        {/* Status pill — Shopping List "Buy N" signal if any 90-day buys, else "In your kitchen" */}
         {buys90 > 0 ? (
           <span className="inline-flex px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-violet-100 text-violet-700">
             Buy {buys90}
@@ -300,13 +300,13 @@ export default function ItemDetailPage() {
         {/* Six-pill cadence strip — last 6 receipts; filled when within 90d */}
         <CadenceStrip rows={sortedRows.slice(0, 6)} within90={within90} />
 
-        {/* Add-to-Smashlist primary action (mirrors the old design) */}
+        {/* Add-to-Shopping List primary action (mirrors the old design) */}
         {!isCharity && !isReturn && (
           <button
             onClick={handleAddToSmashlist}
             className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 text-white font-bold shadow hover:shadow-lg transition"
           >
-            <ShoppingCart size={15} /> Add to Smashlist
+            <ShoppingCart size={15} /> Add to Shopping List
           </button>
         )}
       </SlideUp>

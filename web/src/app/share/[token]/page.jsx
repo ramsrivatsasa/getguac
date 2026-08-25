@@ -3,7 +3,7 @@
 // Reads a row from public.shared_items by token (RLS hides expired
 // rows automatically, so we don't have to filter manually). Branches
 // on payload.kind to render either the Google-Shopping-style item
-// layout or the Smashlist-style list layout. Lives OUTSIDE
+// layout or the Shopping List-style list layout. Lives OUTSIDE
 // (dashboard) so it renders for non-logged-in visitors.
 //
 // Fire-and-forget view_count bump after render (best-effort, no-await).

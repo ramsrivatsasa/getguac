@@ -8,7 +8,7 @@
 // default card until the concept is approved.
 //
 // The eight stages map onto cards that already have both screenshots:
-//   capture→receipts  understand→guac-ai  remember→stash    prepare→smashlist
+//   capture→receipts  understand→guac-ai  remember→stash    prepare→shopping list
 //   shop→steals       protect→returns     learn→worth-it    next→predictions
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
@@ -68,7 +68,7 @@ const STAGES = [
   {
     key: 'prepare', name: 'Prepare', slug: 'smashlist', accent: '#A16207', soft: '#FFF7E6',
     kicker: 'Leave home ready', headline: 'Walk in with a plan, not a guess.',
-    story: 'Your real buying rhythm becomes a useful Smashlist—what may be running low, what can wait and what you already have.',
+    story: 'Your real buying rhythm becomes a useful Shopping List—what may be running low, what can wait and what you already have.',
     metric: '15 items', metricLabel: 'Ready for the next trip',
     points: ['Running-low suggestions from purchase history', 'One focused list instead of forgotten notes'],
     proofTitle: 'Next trip', proofValue: 'Ready', proofNote: 'Less guessing in every aisle',

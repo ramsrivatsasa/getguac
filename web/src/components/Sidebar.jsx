@@ -44,7 +44,7 @@ const sections = [
     // e-receipts land) + Chat (in-app assistant). Pulled out of Money
     // + More so users see them as one category instead of buried in
     // two unrelated places. "Chatter" picked over "Messages" / "Mail"
-    // to stay on the Guac brand voice (Smashlist / Stash / Guac...)
+    // to stay on the Guac brand voice (Shopping List / Stash / Guac...)
     // without colliding with competitor vocabulary (Fetch's "Inbox"
     // means something different).
     title: 'Chatter',
@@ -58,7 +58,7 @@ const sections = [
     items: [
       { href: '/stash',       icon: Package,        label: 'Stash',       emoji: '📦', hoverMascot: 'sitting' },
       { href: '/bites',       icon: Utensils,       label: 'Bites',       emoji: '🍽️', hoverMascot: 'eating' },
-      { href: '/shopping',    icon: ShoppingCart,   label: 'Smashlist',   emoji: '🛒', hoverMascot: 'thumbsup' },
+      { href: '/shopping',    icon: ShoppingCart,   label: 'Shopping List',   emoji: '🛒', hoverMascot: 'thumbsup' },
       { href: '/steals',      icon: BadgeDollarSign, label: 'Steals',     emoji: '💎', hoverMascot: 'rich' },
       { href: '/marketplace', icon: ShoppingBag,    label: 'Marketplace', emoji: '🛍️', hoverMascot: 'rich' },
       { href: '/coupons',     icon: Ticket,         label: 'Coupons',     emoji: '🎟️', hoverMascot: 'happy' },

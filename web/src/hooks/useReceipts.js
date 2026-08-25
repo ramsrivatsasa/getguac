@@ -19,6 +19,11 @@ export function useReceipt(id) {
     queryKey: ['receipts', id],
     queryFn: () => getReceipt(id),
     enabled: !!id,
+    // A dropped connection or a mid-reload PostgREST schema cache used to
+    // paint the raw error straight onto the detail page. Retry twice with a
+    // short backoff first — the second attempt almost always succeeds.
+    retry: 2,
+    retryDelay: attempt => 400 * (attempt + 1),
   })
 }
 

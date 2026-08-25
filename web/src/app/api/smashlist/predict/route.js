@@ -1,4 +1,4 @@
-// GuacWizard predictive Smashlist runner.
+// GuacWizard predictive Shopping List runner.
 //
 // POST /api/smashlist/predict
 //   - As a signed-in user: predicts for the current user only.
@@ -130,7 +130,7 @@ async function upsertNewAliases(sbAdmin, userId, newAliases) {
   const { error } = await sbAdmin.from('product_aliases')
     .upsert(safeRows, { onConflict: 'user_id,alias_key' })
   if (error) {
-    console.error('[smashlist/predict] alias upsert failed', { userId, msg: error.message })
+    console.error('[shopping list/predict] alias upsert failed', { userId, msg: error.message })
     return 0
   }
   return safeRows.length
@@ -177,7 +177,7 @@ async function predictForUser(sbAdmin, userId) {
 
   const { error: insErr } = await sbAdmin.from('shopping_list').insert(inserts)
   if (insErr) {
-    console.error('[smashlist/predict] insert failed', { userId, msg: insErr.message })
+    console.error('[shopping list/predict] insert failed', { userId, msg: insErr.message })
     return { user_id: userId, predictions: predictions.length, inserted: 0, aliases_added: aliasesAdded, error: insErr.message }
   }
   return { user_id: userId, predictions: predictions.length, inserted: inserts.length, aliases_added: aliasesAdded }
@@ -248,7 +248,7 @@ async function handle(request) {
     const result = await predictForUser(sbAdmin, user.id)
     return Response.json({ ok: true, mode: 'user', ...result })
   } catch (err) {
-    console.error('[smashlist/predict]', err)
+    console.error('[shopping list/predict]', err)
     return Response.json({ error: err.message || 'Predict failed' }, { status: 500 })
   }
 }

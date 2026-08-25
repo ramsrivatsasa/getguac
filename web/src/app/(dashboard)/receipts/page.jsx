@@ -206,6 +206,17 @@ export default function ReceiptsPage() {
     if (dl.period && dl.period !== period) setPeriod(dl.period)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams])
+
+  // Persist the selected duration in the list URL. Opening a receipt and
+  // navigating back now restores the exact same filter instead of rebuilding
+  // the page with the default 1M chip.
+  const selectPeriod = useCallback((nextPeriod) => {
+    setPeriod(nextPeriod)
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('period', nextPeriod)
+    router.replace(`/receipts?${params.toString()}`, { scroll: false })
+  }, [router, searchParams])
+
   const startResize = useCallback((e, colId) => {
     e.preventDefault()
     e.stopPropagation()
@@ -1309,7 +1320,7 @@ export default function ReceiptsPage() {
         </div>
       )}
 
-      {/* Pre-trip prompt — surfaces pending Smashlist predictions
+      {/* Pre-trip prompt — surfaces pending Shopping List predictions
           grouped by store so the user can glance before walking
           in. Self-hides when nothing pending; session-dismissable. */}
       <PreTripPanel />
@@ -1322,7 +1333,7 @@ export default function ReceiptsPage() {
             <button
               key={id}
               type="button"
-              onClick={() => setPeriod(id)}
+              onClick={() => selectPeriod(id)}
               className={`text-[12.5px] px-3.5 py-1.5 rounded-lg transition-colors ${
                 period === id
                   ? 'bg-white text-[#14532D] font-extrabold shadow-[0_1px_3px_rgba(20,40,28,0.08)]'
@@ -1662,6 +1673,13 @@ export default function ReceiptsPage() {
 
 // Inline expansion: fetches the receipt + its items for the receipts-list row
 function ReceiptLineItems({ receiptId }) {
+  // Declared here, NOT inherited: this is a module-scope component, so the
+  // page-level `__cur` is out of scope. Without it the price cell below threw
+  // "__cur is not defined" the moment a row was expanded, which took the whole
+  // /receipts tree down through global-error — and the next navigation then
+  // died on a null router cache node ("t.parallelRoutes is null").
+  // Must sit above the early returns: it's a hook.
+  const __cur = useCurrencySymbol()
   const { data, isLoading, error } = useReceipt(receiptId)
   const updateItem = useUpdateReceiptItem()
   // Pull every receipt for the user once — only used by the
@@ -1760,7 +1778,7 @@ function ReceiptLineItems({ receiptId }) {
         price: parseFloat(item.price || 0) || null,
         store_name_id: data?.store_id || null,
       })
-      toast.success(`Added "${item.item_name}" to Smashlist 🛒`)
+      toast.success(`Added "${item.item_name}" to Shopping List 🛒`)
     } catch (e) { toast.error(e.message) }
   }
 
@@ -2018,8 +2036,8 @@ function ReceiptLineItems({ receiptId }) {
                   <button
                     type="button"
                     onClick={() => handleAddToSmashlist(it)}
-                    title="Add to Smashlist"
-                    aria-label="Add to Smashlist"
+                    title="Add to Shopping List"
+                    aria-label="Add to Shopping List"
                     className="relative w-6 h-6 rounded-full bg-gradient-to-br from-amber-400 to-rose-500 text-white shadow-sm hover:shadow-md hover:scale-110 active:scale-95 transition-all flex items-center justify-center">
                     <span className="absolute -top-1 -right-1 text-[8px]">🥑</span>
                     <ShoppingCart size={11} />

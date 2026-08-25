@@ -21,7 +21,7 @@
 // Animation taxonomy
 // ------------------
 //   bounce    — single quick pop. Receipt-saved / connection-active.
-//   wiggle    — small rotation shake. Smashlist "Smashed!".
+//   wiggle    — small rotation shake. Shopping List "Smashed!".
 //   pulse     — soft heartbeat. Ambient ack.
 //   celebrate — combo + confetti. Worth-It rating / referral applied
 //               / smash-days milestone.

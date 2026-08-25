@@ -8,7 +8,7 @@ import {
 const DELETE_CATEGORIES = [
   { key: 'embeddings',     label: 'Item embeddings (semantic vectors)', emoji: '🧠', danger: false, desc: 'Inferred AI data — safe to clear, regeneratable from your items.' },
   { key: 'search_history', label: 'Search history',                     emoji: '🔍', danger: false, desc: 'Queries you have run against your data.' },
-  { key: 'shopping_list',  label: 'Smashlist items',                    emoji: '🛒', danger: false },
+  { key: 'shopping_list',  label: 'Shopping List items',                    emoji: '🛒', danger: false },
   { key: 'car_trips',      label: 'Car miles / trips',                  emoji: '🚗', danger: false },
   { key: 'receipt_items',  label: 'Receipt line items',                  emoji: '📋', danger: true,  desc: 'Drops the line items but keeps the receipt header (totals, store, date).' },
   { key: 'receipts',       label: 'Receipts (header + items)',           emoji: '🧾', danger: true,  desc: 'Permanent. The full receipt + all of its items + refund policies.' },
@@ -20,7 +20,7 @@ const DELETE_CATEGORIES = [
 const RETENTION_FIELDS = [
   { key: 'receipts_retention_days',       label: 'Receipts',          recommend: 'Keep forever' },
   { key: 'receipt_items_retention_days',  label: 'Receipt line items', recommend: 'Keep forever' },
-  { key: 'shopping_list_retention_days',  label: 'Smashlist',         recommend: '180 days' },
+  { key: 'shopping_list_retention_days',  label: 'Shopping List',         recommend: '180 days' },
   { key: 'car_trip_retention_days',       label: 'Car trips',         recommend: '730 days (tax season)' },
   { key: 'embeddings_retention_days',     label: 'AI embeddings',     recommend: '365 days' },
   { key: 'search_history_retention_days', label: 'Search history',    recommend: '30 days' },

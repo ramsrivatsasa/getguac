@@ -7,7 +7,7 @@
 //   - Cron (GET/POST with Bearer/x-cron-secret matching $CRON_SECRET):
 //     iterates active users via active_user_ids RPC and does ONE batch each.
 //     Designed to run frequently (every 6h via vercel.json) so embeddings
-//     stay current before the daily smashlist predict cron at 06:00 UTC.
+//     stay current before the daily shopping list predict cron at 06:00 UTC.
 
 import { createClient } from '../../../../lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'

@@ -146,7 +146,7 @@ export default function QuickAddReceipt() {
 
   // The "Quick Add Receipt" FAB only makes sense on Dashboard + Receipts.
   // Other pages have their own context-appropriate add buttons (Bank →
-  // Add Statement, Rewards → Add Reward, Smashlist → Add Item, etc.).
+  // Add Statement, Rewards → Add Reward, Shopping List → Add Item, etc.).
   const showOn = (
     pathname === '/dashboard' ||
     pathname?.startsWith('/receipts')

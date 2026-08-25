@@ -1,4 +1,4 @@
-// Dismiss a predicted Smashlist item.
+// Dismiss a predicted Shopping List item.
 //
 // Two effects:
 //   1. Insert the item's normalized key into smashlist_predict_dismissed so
@@ -45,14 +45,14 @@ export async function POST(request) {
     const { error: insErr } = await sb.from('smashlist_predict_dismissed')
       .upsert({ user_id: user.id, item_key: itemKey }, { onConflict: 'user_id,item_key' })
     if (insErr) {
-      console.error('[smashlist/dismiss] dismiss upsert failed', insErr.message)
+      console.error('[shopping list/dismiss] dismiss upsert failed', insErr.message)
       return Response.json({ error: insErr.message }, { status: 500 })
     }
 
     // Remove from the visible list.
     const { error: delErr } = await sb.from('shopping_list').delete().eq('id', checked.data.id)
     if (delErr) {
-      console.error('[smashlist/dismiss] delete failed', delErr.message)
+      console.error('[shopping list/dismiss] delete failed', delErr.message)
       return Response.json({ error: delErr.message }, { status: 500 })
     }
 
@@ -69,7 +69,7 @@ export async function POST(request) {
 
     return Response.json({ ok: true, item_key: itemKey })
   } catch (err) {
-    console.error('[smashlist/dismiss]', err)
+    console.error('[shopping list/dismiss]', err)
     return Response.json({ error: err.message }, { status: 500 })
   }
 }

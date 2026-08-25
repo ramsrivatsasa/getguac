@@ -31,7 +31,7 @@ export async function GET() {
     if (error) return Response.json({ error: error.message }, { status: 500 })
     return Response.json({ aliases: data || [] })
   } catch (err) {
-    console.error('[smashlist/aliases GET]', err)
+    console.error('[shopping list/aliases GET]', err)
     return Response.json({ error: err.message }, { status: 500 })
   }
 }
@@ -64,7 +64,7 @@ export async function PATCH(request) {
     if (error) return Response.json({ error: error.message }, { status: 500 })
     return Response.json({ ok: true, alias: data })
   } catch (err) {
-    console.error('[smashlist/aliases PATCH]', err)
+    console.error('[shopping list/aliases PATCH]', err)
     return Response.json({ error: err.message }, { status: 500 })
   }
 }

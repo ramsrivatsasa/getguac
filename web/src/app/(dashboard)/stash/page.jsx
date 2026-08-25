@@ -433,7 +433,7 @@ export default function StashPage() {
         store_name_id: chosen?.id || null,
         comments: chosen?.web ? `From web: ${chosen.name}${chosen.url ? ` — ${chosen.url}` : ''}` : null,
       })
-      toast.success(`Added "${it.item_name}" to Smashlist${chosen?.name ? ` (from ${chosen.name})` : ''} 🛒`)
+      toast.success(`Added "${it.item_name}" to Shopping List${chosen?.name ? ` (from ${chosen.name})` : ''} 🛒`)
     } catch (e) { toast.error(e.message) }
   }
 
@@ -756,7 +756,7 @@ export default function StashPage() {
  * StashCard — production wrapper around the centralized ItemRowCard.
  * Maps a Stash `item` (from the aggregator) onto the card's prop
  * contract and surfaces the rich expand panel (multi-store list,
- * deal hunt, smashlist add) under a ⋮-toggleable region.
+ * deal hunt, shopping list add) under a ⋮-toggleable region.
  *
  * Visual parity with mobile FetchCard: tinted tile + sentence
  * subtitle + value top-right + dual rating chips + on-hand pill.
@@ -912,7 +912,7 @@ const StashCard = memo(function StashCard({ item, expanded, onToggle, onAddToSma
               </button>
               <button onClick={() => onAddToSmashlist?.()}
                 className="text-xs font-bold text-rose-700 hover:text-rose-900">
-                🛒 Smashlist
+                🛒 Shopping List
               </button>
             </div>
           </div>
@@ -1411,8 +1411,8 @@ const ProductCard = memo(function ProductCard({ item, expanded, onToggle, onAddT
             <button
               type="button"
               onClick={onAddToSmashlist}
-              title="Add to Smashlist"
-              aria-label="Add to Smashlist"
+              title="Add to Shopping List"
+              aria-label="Add to Shopping List"
               className="relative w-10 h-10 rounded-full bg-gradient-to-br from-amber-300 via-rose-500 to-fuchsia-600 text-white shadow-md hover:shadow-xl hover:scale-110 active:scale-95 transition-all flex items-center justify-center ring-2 ring-white hover:ring-amber-200">
               <span className="absolute -top-1 -right-1 text-[10px]">🥑</span>
               <ShoppingCart size={14} className="drop-shadow-sm" />

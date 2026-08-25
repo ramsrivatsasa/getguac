@@ -26,7 +26,7 @@ export const CIRCLE_STEPS = [
   { k: 'CAPTURE', s: 'Receipt, email or statement', Icon: Camera },
   { k: 'UNDERSTAND', s: 'Items, stores, fees and spending', Icon: ScanSearch },
   { k: 'REMEMBER', s: 'Stash knows what you own and liked', Icon: Boxes },
-  { k: 'PREPARE', s: 'Predictions build the next Smashlist', Icon: ListChecks },
+  { k: 'PREPARE', s: 'Predictions build the next Shopping List', Icon: ListChecks },
   { k: 'SHOP SMARTER', s: 'Compare prices and find Steals', Icon: ShoppingCart },
   { k: 'PROTECT THE PURCHASE', s: 'Track returns, refunds and price drops', Icon: ShieldCheck },
   { k: 'LEARN AND MEASURE', s: 'Worth-It + GuacMoney', Icon: Star },

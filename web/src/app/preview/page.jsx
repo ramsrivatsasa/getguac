@@ -168,7 +168,7 @@ export default function PreviewPage() {
           </div>
           <div className="grid sm:grid-cols-2 gap-3 mt-4">
             <Trigger label="bounce"    sub="Receipt save · -24% lift"      icon={Zap}     color="emerald" onClick={() => fire('bounce',    () => mascotBus.bounce())} />
-            <Trigger label="wiggle"    sub="Smashlist mark · ±8% sideways" icon={Heart}   color="rose"    onClick={() => fire('wiggle',    () => mascotBus.wiggle())} />
+            <Trigger label="wiggle"    sub="Shopping List mark · ±8% sideways" icon={Heart}   color="rose"    onClick={() => fire('wiggle',    () => mascotBus.wiggle())} />
             <Trigger label="pulse"     sub="Heartbeat × 3 · with bob"      icon={Sparkles} color="amber"  onClick={() => fire('pulse',     () => mascotBus.pulse())} />
             <Trigger label="celebrate" sub="Worth-It · referral · 24-dot"  icon={Trophy}  color="violet"  onClick={() => fire('celebrate', () => mascotBus.celebrate('Rated!'))} />
             <Trigger label="spin"      sub="Full 360° · 1.5s"              icon={RotateCw} color="emerald" onClick={() => fire('spin',      () => mascotBus.spin())} />
@@ -289,7 +289,7 @@ export default function PreviewPage() {
         {/* ── SHIMMER BOX ────────────────────────────────────────────── */}
         <Showcase
           title="ShimmerBox"
-          sub="Loading skeleton — replaces spinners on receipts / smashlist / inbox / connections / stash."
+          sub="Loading skeleton — replaces spinners on receipts / shopping list / inbox / connections / stash."
           file="components/animated/ShimmerBox.jsx"
         >
           <div className="space-y-2">
@@ -368,11 +368,11 @@ export default function PreviewPage() {
               <tr><th className="text-left px-3 py-2">Primitive</th><th className="text-left px-3 py-2">Where it ships</th></tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              <Row p="Mascot events"  where="Receipt save, smashlist tap, Worth-It rate, referral apply, every 7-day Smash days milestone" />
+              <Row p="Mascot events"  where="Receipt save, shopping list tap, Worth-It rate, referral apply, every 7-day Smash days milestone" />
               <Row p="CountUp"        where="GuacScore card, GuacMoney total, dashboard PaymentTile dollars, Bank-Bite hero, item-detail lifetime spend, GuacWizard score" />
-              <Row p="FadeUpStagger"  where="Receipts list, Smashlist rows, Inbox messages, Stash grid, Activity feed, Predictions, Recent receipts on item detail" />
+              <Row p="FadeUpStagger"  where="Receipts list, Shopping List rows, Inbox messages, Stash grid, Activity feed, Predictions, Recent receipts on item detail" />
               <Row p="TapScale"       where="Receipt detail rating chips, hero action icons" />
-              <Row p="ShimmerBox"     where="Receipts / Smashlist / Inbox / Connections / Stash / Rewards loading states" />
+              <Row p="ShimmerBox"     where="Receipts / Shopping List / Inbox / Connections / Stash / Rewards loading states" />
               <Row p="SlideUp"        where="Item-detail hero, reset-password done state, profile page entrance" />
               <Row p="PulseRing"      where="Reserved primitive — ready to wire" />
               <Row p="SuccessPop"     where="Invite-code copy button, receipt rating chips on selection" />

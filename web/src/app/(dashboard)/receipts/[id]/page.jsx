@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useReceipt, useUpdateReceipt, useAddReceiptItem, useUpdateReceiptItem } from '../../../../hooks/useReceipts'
 import { createClient } from '../../../../lib/supabase/client'
 import toast from 'react-hot-toast'
@@ -32,7 +33,7 @@ const PRESET_TAGS = [
 export default function ReceiptDetailPage() {
   const { id } = useParams()
   const router = useRouter()
-  const { data: receipt, isLoading } = useReceipt(id)
+  const { data: receipt, isLoading, isError, error: receiptError, refetch: refetchReceipt } = useReceipt(id)
   const updateReceipt = useUpdateReceipt()
   const addItem = useAddReceiptItem()
   const updateItem = useUpdateReceiptItem()
@@ -48,7 +49,9 @@ export default function ReceiptDetailPage() {
   const [emailMsg, setEmailMsg] = useState(null)
   const [showEmail, setShowEmail] = useState(false)
 
-  const current = localReceipt ?? receipt
+  // Next can reuse this client component while browser history changes the
+  // dynamic route. Never render edits from the previously opened receipt.
+  const current = localReceipt?.id === id ? localReceipt : receipt
 
   // ── Hooks must all be called unconditionally before any early returns ──
   // Bulk recategorize: when user changes an item's category here, propagate to every
@@ -77,6 +80,11 @@ export default function ReceiptDetailPage() {
   useEffect(() => {
     if (!id) return
     let cancelled = false
+    setLocalReceipt(null)
+    setEmailMsg(null)
+    setShowEmail(false)
+    setShowItemForm(false)
+    setNewItem({ sku: '', model: '', item_name: '', purchase_date: '', qty: 1, price: '', warranty_info: '', item_manual: '', return_date: '', returned: false })
     ;(async () => {
       try {
         const sb = createClient()
@@ -174,10 +182,23 @@ export default function ReceiptDetailPage() {
   }
 
   if (isLoading) return <MascotLoading label="Loading receipt…" />
-  if (!current) return (
-    <div className="py-16 text-center text-red-500 flex flex-col items-center gap-3">
-      <p>Receipt not found</p>
-      <Link href="/receipts" className="text-sm text-guac-700 font-semibold hover:underline">Back to receipts</Link>
+  if (isError || !current) return (
+    <div className="py-16 text-center flex flex-col items-center gap-3">
+      <p className="text-red-500 font-semibold">
+        {isError ? "We couldn't load this receipt" : 'Receipt not found'}
+      </p>
+      {/* Keep the raw reason visible but secondary — users were reading the
+          PostgREST wording ("...in the schema cache") as the whole message. */}
+      {isError && receiptError?.message && (
+        <p className="text-xs text-gray-500 max-w-md">{receiptError.message}</p>
+      )}
+      <div className="flex items-center gap-4">
+        {isError && (
+          <button type="button" onClick={() => refetchReceipt()}
+            className="text-sm text-guac-700 font-semibold hover:underline">Try again</button>
+        )}
+        <Link href="/receipts" className="text-sm text-guac-700 font-semibold hover:underline">Back to receipts</Link>
+      </div>
     </div>
   )
 
@@ -200,7 +221,7 @@ export default function ReceiptDetailPage() {
         price: parseFloat(item.price || 0) || null,
         store_name_id: current.store_id || null,
       })
-      toast.success(`Added "${item.item_name}" to Smashlist 🛒`)
+      toast.success(`Added "${item.item_name}" to Shopping List 🛒`)
     } catch (e) { toast.error(e.message) }
   }
 
@@ -524,7 +545,9 @@ export default function ReceiptDetailPage() {
                     'receipt':       { label: 'On receipt',      cls: 'bg-guac-50 text-guac-700 border-guac-line', tip: 'Printed on the receipt body' },
                     'store-default': { label: 'Store default',   cls: 'bg-sky-50 text-sky-700 border-sky-100',             tip: 'Looked up from the merchant’s published policy' },
                     'manual':        { label: 'You set this',    cls: 'bg-amber-50 text-amber-800 border-amber-100',       tip: 'Manually entered' },
-                  }[p.source || 'receipt']
+                  }[p.source || 'receipt'] || {
+                    label: 'Policy source', cls: 'bg-gray-50 text-gray-600 border-gray-200', tip: 'Receipt policy source',
+                  }
                   return (
                     <tr key={p.id}>
                       <td className="px-3 py-1 font-medium">{p.policy_id || '—'}</td>
@@ -604,7 +627,7 @@ export default function ReceiptDetailPage() {
           <div className="overflow-x-auto">
             <table className="gg-tbl w-full text-sm">
               <thead className="border-b border-guac-line gg-colhead">
-                <tr>{['SKU','Model','Name','Category','Date','Qty','Price','Worth It?','Policy','Warranty','Return Date','Returned','Smashlist'].map(h =>
+                <tr>{['SKU','Model','Name','Category','Date','Qty','Price','Worth It?','Policy','Warranty','Return Date','Returned','Shopping List'].map(h =>
                   <th key={h} className="px-3 py-1 text-left">{h}</th>
                 )}</tr>
               </thead>
@@ -728,8 +751,8 @@ export default function ReceiptDetailPage() {
                         <button
                           type="button"
                           onClick={() => handleAddToSmashlist(item)}
-                          title="Add to Smashlist"
-                          aria-label="Add to Smashlist"
+                          title="Add to Shopping List"
+                          aria-label="Add to Shopping List"
                           className="relative w-10 h-10 rounded-full bg-gradient-to-br from-amber-300 via-rose-500 to-fuchsia-600 text-white shadow-md hover:shadow-xl hover:scale-110 active:scale-95 transition-all flex items-center justify-center ring-2 ring-white hover:ring-amber-200 group">
                           <span className="absolute -top-1 -right-1 text-[10px] drop-shadow-sm">🥑</span>
                           <ShoppingCart size={15} className="drop-shadow-sm" />

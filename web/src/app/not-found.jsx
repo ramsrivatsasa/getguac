@@ -1,5 +1,5 @@
 // Custom 404 page — replaces Next.js's default with our mascot
-// (holding a magnifying glass, "searching" for the page) + Smashlist-
+// (holding a magnifying glass, "searching" for the page) + Shopping List-
 // style copy. Renders for any URL that doesn't match a route.
 
 import Link from 'next/link'

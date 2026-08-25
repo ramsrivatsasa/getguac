@@ -46,7 +46,7 @@ export default function GuacScorePage() {
                 [Camera,'Capture what happened','Receipts and email records preserve the items, store, tax, total, and return context.'],
                 [Brain,'Understand the pattern','Guac AI, reports, categories, and subscriptions turn scattered purchases into something explainable.'],
                 [Star,'Decide what was worth it','A two-second Worth-It rating teaches GuacScore what value means in your real life.'],
-                [ShieldCheck,'Protect the progress','Bills, returns, GuacWizard, Stash, Steals, and Smashlist help the next decision arrive with more context.'],
+                [ShieldCheck,'Protect the progress','Bills, returns, GuacWizard, Stash, Steals, and Shopping List help the next decision arrive with more context.'],
               ].map(([Icon,title,body],index)=><article key={title} className={`rounded-2xl border border-[#E4EDE4] p-5 ${['bg-[#fff5dc]','bg-[#eaf7ff]','bg-[#fff0ec]','bg-[#f1efff]'][index]}`}><Icon className={['text-[#d97706]','text-[#168A4B]','text-[#f48c78]','text-[#8a7cf4]'][index]} size={22}/><h3 className="mt-3 font-black">{title}</h3><p className="mt-2 text-sm leading-6 text-[#5C6B60]">{body}</p></article>)}
             </div>
           </div>

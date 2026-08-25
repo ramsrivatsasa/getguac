@@ -28,7 +28,7 @@ const FEATURES = [
     body: 'Keep the wins, skip the regrets — every dish and product you’ve tried, one tap to reorder the good ones.' },
   { img: '/showcase/stash.png', title: 'Your whole Stash',
     body: 'Everything you’ve bought, searchable in one place, with the best price per item.' },
-  { img: '/showcase/shopping.png', title: 'Your Smashlist, automatic',
+  { img: '/showcase/shopping.png', title: 'Your Shopping List, automatic',
     body: 'GetGuac predicts what you’re about to run out of and builds your shopping list for you.' },
   { img: '/showcase/reports.png', title: 'Taxes, sorted',
     body: 'Business and charity spend, categorized and export-ready when tax time comes.' },

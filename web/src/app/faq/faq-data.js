@@ -197,8 +197,8 @@ export const FAQ_GROUPS = {
       "body": "Yes.\n\nThe current website includes:\n\n* Steals\n* Marketplace\n* Coupons\n* shopping lists\n* family shopping functionality\n\nThe Marketplace can surface shopping information and deals without requiring a login."
     },
     {
-      "q": "What Is Smashlist?",
-      "body": "Smashlist is the shared shopping-list functionality.\n\nThe current website demonstrates a shopping list that can:\n\n* contain multiple items\n* route items to stores\n* identify potentially cheaper stores\n* be shared with family\n\nThe purpose is to make household shopping more coordinated."
+      "q": "What Is Shopping List?",
+      "body": "Shopping List is the shared shopping-list functionality.\n\nThe current website demonstrates a shopping list that can:\n\n* contain multiple items\n* route items to stores\n* identify potentially cheaper stores\n* be shared with family\n\nThe purpose is to make household shopping more coordinated."
     },
     {
       "q": "Can GetGuac Predict When I'll Need to Buy Something Again?",

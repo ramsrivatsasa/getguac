@@ -4,7 +4,7 @@
 // cards) can reuse the same visual. Both surfaces want the same shape:
 //   - Store name, count, min/last price
 //   - "Best" badge on the cheapest entry
-//   - Optional add-to-Smashlist button per row
+//   - Optional add-to-Shopping List button per row
 //   - Optional "web" badge + external URL for live web-price hits
 
 'use client'
@@ -39,7 +39,7 @@ export function StoreList({ stores, best, onAddToSmashlist }) {
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); onAddToSmashlist(s) }}
-                title={`Add to Smashlist (from ${s.name})`}
+                title={`Add to Shopping List (from ${s.name})`}
                 className="w-6 h-6 rounded-full bg-gradient-to-br from-amber-300 to-fuchsia-500 text-white shadow-sm hover:scale-110 active:scale-95 transition-all flex items-center justify-center shrink-0">
                 <ShoppingCart size={10} />
               </button>

@@ -10,7 +10,7 @@ export function useUpsertShoppingItem() {
   return useMutation({
     mutationFn: upsertShoppingItem,
     // Optimistic update: patch the cache the moment the user clicks
-    // "Add to Smashlist" so the row leaves Buy Again instantly,
+    // "Add to Shopping List" so the row leaves Buy Again instantly,
     // instead of waiting ~300ms for the round-trip + refetch.
     onMutate: async (next) => {
       await qc.cancelQueries({ queryKey: ['shopping'] })

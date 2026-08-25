@@ -57,8 +57,38 @@ export async function getReceipt(id) {
     .select('*, receipt_items(*), receipt_refund_policies(*), store_locations(*)')
     .eq('id', id)
     .single()
-  if (error) throw error
-  return data
+  if (!error) return data
+
+  // PostgREST resolves those embeds against ITS OWN cached copy of the schema.
+  // While that cache is reloading — right after a migration, or a project
+  // restart — the embed fails with PGRST200 "Could not find a relationship
+  // between 'receipts' and '…' in the schema cache" and the detail page
+  // rendered that raw message straight at the user. Every one of those tables
+  // is still readable on its own, so fall back to separate reads and stitch
+  // the exact shape the embed would have returned. Same fix shape as
+  // getShoppingList() below.
+  const msg = (error.message || '').toLowerCase()
+  const code = String(error.code || '')
+  const schemaCacheMiss = code === 'PGRST200' || code === 'PGRST204' || code === 'PGRST205'
+    || msg.includes('schema cache') || msg.includes('relationship')
+  if (!schemaCacheMiss) throw error
+
+  const { data: receipt, error: rErr } = await sb
+    .from('receipts').select('*').eq('id', id).single()
+  if (rErr) throw rErr
+  const [items, policies, loc] = await Promise.all([
+    sb.from('receipt_items').select('*').eq('receipt_id', id),
+    sb.from('receipt_refund_policies').select('*').eq('receipt_id', id),
+    receipt.store_location_id
+      ? sb.from('store_locations').select('*').eq('id', receipt.store_location_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+  ])
+  return {
+    ...receipt,
+    receipt_items: items.data || [],
+    receipt_refund_policies: policies.data || [],
+    store_locations: loc.data || null,
+  }
 }
 
 // Only these keys exist as columns on the receipts table. Anything else (e.g. embedded
@@ -397,16 +427,39 @@ export async function upsertShoppingItem(item) {
     'predicted_avg_cadence_days', 'predicted_last_purchase_date',
     'predicted_at', 'household_id',
   ]
+  // The "Add item" form seeds every optional field with '' (empty string).
+  // Postgres will not accept '' for a date / numeric / uuid column — it
+  // rejects the whole upsert with "invalid input syntax for type date"
+  // (order_date), so a manual add always failed. Blank means "not set",
+  // so coerce '' to null and cast the numeric columns.
+  const NUMERIC_COLS = ['qty', 'price', 'predicted_avg_cadence_days']
   const clean = {}
   for (const k of SHOPPING_LIST_COLS) {
-    if (item[k] !== undefined) clean[k] = item[k]
+    if (item[k] === undefined) continue
+    let v = item[k]
+    if (typeof v === 'string' && v.trim() === '') v = null
+    if (v !== null && NUMERIC_COLS.includes(k)) {
+      const n = Number(v)
+      v = Number.isFinite(n) ? n : null
+    }
+    clean[k] = v
+  }
+  if (clean.id == null) delete clean.id
+  if (clean.qty == null) clean.qty = 1
+  // user_id is NOT NULL with no default, so the insert half of the upsert
+  // needs it. Rows read back from getShoppingList already carry it; a row
+  // built by the add form does not.
+  if (!clean.user_id) {
+    const { data: { user } } = await sb.auth.getUser()
+    if (!user) throw new Error('Not signed in')
+    clean.user_id = user.id
   }
   const { data, error } = await sb.from('shopping_list').upsert(clean).select().single()
   if (error) throw error
   return data
 }
 
-// Add a single item to the Smashlist (shopping list) from a receipt line or catalog row.
+// Add a single item to the shopping list from a receipt line or catalog row.
 // Returns the newly-created shopping_list row.
 export const SHOPPING_LISTS = ['Pantry', 'Cravings', 'Snack Stack', 'Grub & Grab']
 export const SHOPPING_LIST_META = {

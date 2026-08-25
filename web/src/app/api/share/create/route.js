@@ -2,7 +2,7 @@
 //
 // Creates a public share record so the caller can hand a non-logged-in
 // recipient a /share/<token> URL. Used by the Buy Again card Share menu
-// (kind='item') and the Smashlist top-level Share menu (kind='list').
+// (kind='item') and the Shopping List top-level Share menu (kind='list').
 //
 // Request:
 //   {

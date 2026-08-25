@@ -234,7 +234,7 @@ function weekKeyFor(d) {
   return `${t.getFullYear()}-w${week}`
 }
 
-// ── Trigger 5: smashlist day (predicted-purchase reminder) ──────────
+// ── Trigger 5: shopping list day (predicted-purchase reminder) ──────────
 async function dispatchSmashlistDay() {
   // Soft trigger — relies on the `shopping_list` table populated by
   // /api/smashlist/predict. We just pick rows where the next_due
@@ -276,8 +276,8 @@ async function dispatchSmashlistDay() {
     if (!topStore) continue
     const title = `🛒 ${topStore} day`
     const body  = topN === 1
-      ? `1 item you usually buy is due. Tap to see your Smashlist.`
-      : `${topN} items you usually buy are due. Tap to see your Smashlist.`
+      ? `1 item you usually buy is due. Tap to see your Shopping List.`
+      : `${topN} items you usually buy are due. Tap to see your Shopping List.`
     attempted++
     const res = await sendPushToUser(userId, {
       title, body, route: `/shopping`,
@@ -386,13 +386,13 @@ async function dispatchStealsFound() {
 // TWICE (a second nudge 2–4 days later), on pseudo-random days — never
 // a fixed day, and de-duped per assigned day so the daily cron stays
 // idempotent. The message rotates so it stays fresh: a scan reminder,
-// a games break, a general come-back, or a Smashlist peek.
+// a games break, a general come-back, or a Shopping List peek.
 const INACTIVE_DAYS = 7
 const REENGAGE_VARIANTS = [
   { title: '📸 Snap a receipt',       body: "It's been a minute — scan a receipt and see where your money's going.", route: '/receipts' },
   { title: '🎮 Take a guac break',    body: 'Jump into the Guac Arcade and beat your best score.',                    route: '/dashboard' },
   { title: '🥑 Your guac misses you', body: "Come see what's new — deals, rewards and your GuacScore.",               route: '/dashboard' },
-  { title: '🛒 Plan your next smash', body: 'Peek at your Smashlist before your next shop.',                          route: '/shopping' },
+  { title: '🛒 Plan your next smash', body: 'Peek at your Shopping List before your next shop.',                          route: '/shopping' },
 ]
 
 // Deterministic 32-bit hash of a salted (userId, week) key. No randomness,

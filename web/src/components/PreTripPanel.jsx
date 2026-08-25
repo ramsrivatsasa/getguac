@@ -8,7 +8,7 @@ import { groupPredictionsByStore } from '../lib/prediction-feedback'
 import { displayStoreName } from '../lib/store-name-normalize'
 
 // Pre-trip "you usually buy" panel for the /receipts surface.
-// Surfaces pending Smashlist predictions grouped by store BEFORE the
+// Surfaces pending Shopping List predictions grouped by store BEFORE the
 // user captures a receipt — so if they're about to walk into Costco,
 // they can glance at "you usually buy 4 things here" without leaving
 // the receipts page. Session-dismissable.

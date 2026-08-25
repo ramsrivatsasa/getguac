@@ -9,7 +9,7 @@
 //      receipts. The model is instructed to use ONLY these numbers and to
 //      say when an answer needs data the snapshot doesn't carry.
 //   2. "How do I…" app questions — a short feature map in the system prompt
-//      covers capture, Steals, Smashlist, Returns, Reports, Bank, etc.
+//      covers capture, Steals, Shopping List, Returns, Reports, Bank, etc.
 //
 // Same AI plumbing as the other Guac-AI routes: Gemini first, Groq fallback,
 // plain-text reply (no JSON mode — this is conversation, not extraction).
@@ -46,7 +46,7 @@ HARD RULES:
 SHOWING DATA — always give a clickable link when the user wants to SEE, FIND, SHOW, PULL UP, OPEN, or SEARCH their own records. Use this exact markdown link format so the app renders it as a button: [label](/path). ONLY these real in-app paths — never invent a URL, never link to an external site:
 - Receipts (this is a full-text SEARCH — the value matches store names AND line-item text, so it works for a store OR a product): "show me my Costco receipts" -> [See your Costco receipts](/receipts?store=Costco); "find where I bought milk" -> [Receipts with "milk"](/receipts?store=milk); all receipts -> [Open receipts](/receipts). Use the store/keyword as the user said it (URL-encode spaces as %20).
 - Reports & analytics (spending by category, tax/business summaries, CSV) -> [Open your reports](/reports); trends & GuacScore -> [Guacanomics](/guacanomics).
-- Products you own / rebuy -> [Open your Stash](/stash); restaurant dishes -> [Bites](/bites); cheaper prices -> [Find deals](/steals); return windows -> [Returns](/returns); statement fees -> [Bank](/bank); upcoming bills -> [Bills](/bills); shopping list -> [Smashlist](/shopping).
+- Products you own / rebuy -> [Open your Stash](/stash); restaurant dishes -> [Bites](/bites); cheaper prices -> [Find deals](/steals); return windows -> [Returns](/returns); statement fees -> [Bank](/bank); upcoming bills -> [Bills](/bills); shopping list -> [Shopping List](/shopping).
 - Money guides & tools for how-to topics: retirement -> [401(k) basics](/articles/401k-basics) + [Calculators](/plan); debt payoff -> [Avalanche vs snowball](/articles/avalanche-vs-snowball); credit score -> [Credit score guide](/articles/credit-score); emergency fund -> [Emergency fund size](/articles/emergency-fund-size); or the hub [All money guides](/articles).
 - Games — when the user wants to play, is bored, or names a game, link straight to it so they can play (each first finished game a day earns +50 GuacMoney). Use /games/<slug>, e.g. [Play Coin Snake](/games/snake), [Play Guac Hill Climb](/games/climb), [Play Bubble Pop](/games/bubbles), [Splurge Slicer](/games/splurge). Real slugs: snake, climb, bike, nitro, bubbles, splurge, invaders, budget, fling, muncher, penalty, hoops, darts, solitaire, sweeper, crush, sudoku, wordsearch, pairs, simon, flappy, whack, breaker, nestegg, house, tuition, rocks, pong, merge, rope, guacdle, chess. Or the whole arcade: [Guac Arcade](/games).
 Answer the question in words first (with the numbers from the snapshot), THEN add the link on its own line. Always include the matching link when the user asks to see or search their data.
@@ -57,7 +57,7 @@ APP MAP (for "how do I…" questions):
 - Receipts: snap a photo, drop a PDF/screenshot, or forward email receipts to the address on the Inbox page; Guac-AI reads store, date, total, and every line item.
 - Worth It?: rate purchases (Essential → Regret) — feeds the GuacScore.
 - Steals: scans the live web for a cheaper price on things they buy; saved searches live on the dashboard too.
-- Smashlist: the self-building shopping list with restock heads-ups (Shopping page).
+- Shopping List: the self-building shopping list with restock heads-ups (Shopping page).
 - Stash: every product ever bought, with rebuy cadence and best store.
 - Bites: every restaurant dish they've tried — like it or pass, reorder lists.
 - Returns: return-window countdowns and store policies.

@@ -1003,6 +1003,8 @@ function FinanceCell({ label, value, accent = 'gray', emoji }) {
 }
 
 function StatementDetail({ statement, fees, transactions }) {
+  // Module-scope component — the page-level `__cur` is not in scope here.
+  const __cur = useCurrencySymbol()
   const t = statement.totals || {}
   const [kindFilter, setKindFilter] = useState('all')
 
@@ -1296,6 +1298,8 @@ const BIG_TOTAL_TONE = {
   amber:  { bg: 'bg-amber-50',  border: 'border-amber-200',  text: 'text-amber-900',  icon: 'text-amber-600',  accent: 'text-amber-700'  },
 }
 function BigTotal({ label, value, icon: Icon, tone, sub }) {
+  // Module-scope component — the page-level `__cur` is not in scope here.
+  const __cur = useCurrencySymbol()
   const t = BIG_TOTAL_TONE[tone] || BIG_TOTAL_TONE.sky
   return (
     <div className={`card ${t.bg} ${t.border} border`}>

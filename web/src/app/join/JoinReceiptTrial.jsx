@@ -470,7 +470,7 @@ export default function JoinReceiptTrial({ startSignal = 0 }) {
               <div className="grid grid-cols-3 gap-2 rounded-2xl bg-[#EAF2E1] p-1.5" aria-label="Preview trial results">
                 {[
                   { id: 'receipt', label: 'Receipts', icon: Receipt },
-                  { id: 'smashlist', label: 'Smashlist', icon: Scissors },
+                  { id: 'smashlist', label: 'Shopping List', icon: Scissors },
                   { id: 'report', label: 'Report', icon: BarChart3 },
                 ].map(({ id, label, icon: Icon }) => (
                   <button
@@ -506,7 +506,7 @@ export default function JoinReceiptTrial({ startSignal = 0 }) {
               </div>}
 
               {trialView === 'smashlist' && <div className="rounded-2xl bg-white p-4 ring-1 ring-emerald-900/10">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-lime-700">Smashlist preview</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-lime-700">Shopping List preview</p>
                 <div className="mt-1 flex items-end justify-between gap-3">
                   <div><h3 className="font-extrabold text-[#15281C]">Buy again</h3><p className="text-xs text-gray-500">Your receipt starts the list for you.</p></div>
                   <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-extrabold text-amber-800">{trialResult.items?.length || 0} saved</span>

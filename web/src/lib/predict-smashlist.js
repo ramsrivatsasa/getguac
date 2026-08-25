@@ -1,4 +1,4 @@
-// GuacWizard predictive engine for the Smashlist.
+// GuacWizard predictive engine for the Shopping List.
 //
 // Reads a user's `receipt_items` (with `purchase_date`, `store_id`,
 // `category`, `health_tier`, `embedding`) and emits suggestions for items

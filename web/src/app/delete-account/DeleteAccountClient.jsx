@@ -108,7 +108,7 @@ export default function DeleteAccountClient() {
             <li>Your profile and login (you can no longer sign in)</li>
             <li>All receipts, line items, and spending history</li>
             <li>Your GetGuac inbox and any auto-imported email receipts (and your @getguac.app mailbox)</li>
-            <li>Shopping/Smashlists, car-trip logs, saved searches, and price-tracking data</li>
+            <li>Shopping lists, car-trip logs, saved searches, and price-tracking data</li>
             <li>GuacMoney, ratings, and app settings</li>
           </ul>
 

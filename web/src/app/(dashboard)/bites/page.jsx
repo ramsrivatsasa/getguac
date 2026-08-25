@@ -23,7 +23,7 @@ export default function BitesPage() {
     staleTime: 1000 * 60,
   })
 
-  // Smashlist counts so we can show per-list chips
+  // Shopping List counts so we can show per-list chips
   const { data: smashlistItems = [] } = useShoppingList()
   const listCounts = useMemo(() => {
     const m = {}
@@ -107,7 +107,7 @@ export default function BitesPage() {
         <FilterChip active={filter === 'unrated'}  onClick={() => setFilter('unrated')}  label="Untried"  value={unrated}     tone="amber" emoji="❓" />
       </div>
 
-      {/* Smashlist destination chips — tap one to set as the default for one-tap reorders */}
+      {/* Shopping List destination chips — tap one to set as the default for one-tap reorders */}
       <div className="card p-3">
         <div className="flex items-center gap-2 mb-2">
           <ShoppingCart size={12} className="text-guac-600" />

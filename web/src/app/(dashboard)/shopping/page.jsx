@@ -20,7 +20,7 @@ import { useConfirm } from '../../../components/ConfirmDialog'
 import mascotBus from '../../../lib/mascotEventBus'
 
 // Same tone palette as /stash so Buy Again cards visually rhyme with
-// the Stash grid. Maps the per-Smashlist color (Pantry=emerald,
+// the Stash grid. Maps the per-Shopping List color (Pantry=emerald,
 // Cravings=rose, Snack Stack=amber, Grub & Grab=lime).
 const TONE_TINT = {
   emerald: { from: 'from-emerald-50', to: 'to-green-100',   ring: 'ring-guac-100', text: 'text-guac-ink', accent: 'bg-guac-600' },
@@ -90,13 +90,13 @@ export default function ShoppingPage() {
   const [activeList, setActiveList] = useState('all')
   const [predicting, setPredicting] = useState(false)
   const [embedding, setEmbedding] = useState(false)
-  // The curated Smashlist is always grouped by store now — Auto-Add
+  // The curated Shopping List is always grouped by store now — Auto-Add
   // (especially "Cheapest store") routes each item to a different
   // merchant, so reading the list as a per-store trip plan is the
   // only sensible default. The old "By list" toggle was removed.
   // Bulk-add by store modal — open state. When set to a store_id, the
   // modal renders historical items from that store and the user picks
-  // which ones to add to their Smashlist.
+  // which ones to add to their Shopping List.
   const [bulkAddOpen, setBulkAddOpen] = useState(false)
   // Accordion state — which store groups are expanded. Default behavior
   // is "all expanded" so a first-time user sees their whole list without
@@ -104,7 +104,7 @@ export default function ShoppingPage() {
   // so a newly-added store is open by default without us having to
   // re-derive on every group change.
   const [collapsedStores, setCollapsedStores] = useState(() => new Set())
-  // Bulk-select set for the curated Your Smashlist. Empty set = no
+  // Bulk-select set for the curated Your Shopping List. Empty set = no
   // selection mode; non-empty = checkboxes visible + bulk-delete CTA.
   const [bulkSelected, setBulkSelected] = useState(() => new Set())
   // Per-card selection on the Buy Again grid — drives the "Add selected
@@ -126,7 +126,7 @@ export default function ShoppingPage() {
   // the raw UUID input it used to be. Sorted alphabetically; cached
   // for 5 min since stores rarely change.
   //
-  // Also drives the per-store accordion header on Your Smashlist (so we
+  // Also drives the per-store accordion header on Your Shopping List (so we
   // can show address/phone/website next to the store name) — that's why
   // we pull the contact columns here rather than re-querying.
   const { data: knownStores = [] } = useQuery({
@@ -186,7 +186,10 @@ export default function ShoppingPage() {
   function handleSave(e) {
     e.preventDefault()
     const list_name = form.list_name || (activeList !== 'all' ? activeList : 'Pantry')
-    upsert.mutate({ ...form, list_name }, {
+    // The form has no date field, so stamp today rather than sending the
+    // '' placeholder (which Postgres rejects for a date column).
+    const order_date = form.order_date || new Date().toISOString().slice(0, 10)
+    upsert.mutate({ ...form, list_name, order_date }, {
       onSuccess: () => { toast.success(`Added to ${list_name} 🛒`); setForm(EMPTY); setShowForm(false) },
       onError: err => toast.error(err.message),
     })
@@ -199,7 +202,7 @@ export default function ShoppingPage() {
           // Was approved → now back to "pending"; goes back into Buy Again.
           toast.success('Moved back to Buy Again')
         } else {
-          // Was a Buy Again suggestion → now on the curated Smashlist —
+          // Was a Buy Again suggestion → now on the curated Shopping List —
           // the user just "smashed" it. Mascot wiggles in response.
           const list = item.list_name || 'Pantry'
           toast.success(`Added to ${list} ✓`)
@@ -210,14 +213,14 @@ export default function ShoppingPage() {
   }
 
   // Build a human-friendly, dated, grouped text representation of the
-  // current Smashlist (curated + Buy Again together). Used by both the
+  // current Shopping List (curated + Buy Again together). Used by both the
   // native share sheet on phones AND the clipboard fallback on desktop.
   function buildShareText(items, activeListLabel = 'all') {
     const today = new Date().toLocaleDateString('en-US', {
       weekday: 'long', month: 'long', day: 'numeric',
     })
     const header = activeListLabel === 'all'
-      ? `🥑 GetGuac Smashlist · ${today}`
+      ? `🥑 GetGuac Shopping List · ${today}`
       : `🥑 GetGuac ${activeListLabel} · ${today}`
     if (!items.length) return `${header}\n\n(empty list)`
     // Group by STORE so the recipient can plan one stop per merchant
@@ -246,7 +249,7 @@ export default function ShoppingPage() {
   }
 
   // Build a JSON snapshot payload for the public /share/<token> page
-  // when the user shares their whole Smashlist. Shape matches what
+  // when the user shares their whole Shopping List. Shape matches what
   // ShareListLayout reads — stores[] with items[] per store, plus
   // top-line totals so the landing page header has accurate counts
   // without recomputing.
@@ -269,7 +272,7 @@ export default function ShoppingPage() {
     const total_cost = itemsToShare.reduce((n, it) => n + (Number(it.price) || 0), 0)
     return {
       kind: 'list',
-      title: activeListLabel === 'all' ? 'GetGuac Smashlist' : `GetGuac ${activeListLabel}`,
+      title: activeListLabel === 'all' ? 'GetGuac Shopping List' : `GetGuac ${activeListLabel}`,
       stores,
       store_count: stores.length,
       total_items,
@@ -278,7 +281,7 @@ export default function ShoppingPage() {
   }
 
   // Mint a public share URL by calling /api/share/create with the
-  // current Smashlist payload. Returns the URL the user can hand to a
+  // current Shopping List payload. Returns the URL the user can hand to a
   // recipient via any channel. On failure we return null so the share
   // helpers fall back to a text-only share (no broken UX).
   async function createListShareUrl(channel) {
@@ -322,7 +325,7 @@ export default function ShoppingPage() {
     }
   }
   function shareViaEmail(text, url) {
-    const subject = 'My GetGuac Smashlist'
+    const subject = 'My GetGuac Shopping List'
     const body = url ? `${text}\n\n${url}` : text
     window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
   }
@@ -340,7 +343,7 @@ export default function ShoppingPage() {
   async function shareNative(text, url) {
     if (typeof navigator?.share === 'function') {
       try {
-        const payload = { title: 'My GetGuac Smashlist', text }
+        const payload = { title: 'My GetGuac Shopping List', text }
         if (url) payload.url = url
         await navigator.share(payload)
         return
@@ -374,7 +377,7 @@ export default function ShoppingPage() {
   //   1. backfill embeddings for any unembedded items (so the similarity
   //      merge in step 2 actually works — "KS Whole Milk" + "GV 2% Milk"
   //      collapse into one cadence signal)
-  //   2. run the smashlist predictor
+  //   2. run the shopping list predictor
   // No need for a separate "Embed" button — the user shouldn't have to
   // know about the embedding step.
   // Bulk-approve every Buy Again suggestion in one click. The criteria
@@ -473,7 +476,7 @@ export default function ShoppingPage() {
           : 'chosen store')
       : criteria === 'cheapest' ? 'cheapest store'
       : criteria === 'frequent' ? 'most-used store'
-      : 'Smashlist'
+      : 'Shopping List'
 
     // GuacMoney accounting — only "cheapest" routing actually proves a
     // save. For "frequent" / "asis" / fixed-store flows we still added
@@ -598,7 +601,7 @@ export default function ShoppingPage() {
   // Smart "remove" — predicted rows go back to Buy Again (approved=false)
   // so the user doesn't have to wait for the next predictor pass to see
   // them again, while hand-added rows actually get deleted. The user
-  // asked for this explicitly: removing from Smashlist should round-trip
+  // asked for this explicitly: removing from Shopping List should round-trip
   // back to the top grid for the predicted items.
   async function removeFromSmashlist(item) {
     if (item.predicted) {
@@ -624,7 +627,7 @@ export default function ShoppingPage() {
       ? `Move ${predictedCount} predicted item${predictedCount === 1 ? '' : 's'} back to Buy Again and delete ${deletedCount} other${deletedCount === 1 ? '' : 's'}?`
       : predictedCount
         ? `Move ${predictedCount} item${predictedCount === 1 ? '' : 's'} back to Buy Again?`
-        : `Delete ${deletedCount} item${deletedCount === 1 ? '' : 's'} from your Smashlist?`
+        : `Delete ${deletedCount} item${deletedCount === 1 ? '' : 's'} from your Shopping List?`
     if (!(await confirm({ title: 'Bulk delete?', body: msg, confirmText: 'Confirm', danger: true }))) return
     let ok = 0
     for (const t of targets) {
@@ -735,14 +738,14 @@ export default function ShoppingPage() {
     <div className="space-y-5 max-w-7xl font-sans">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="page-title">Smashlist</h1>
+          <h1 className="page-title">Shopping List</h1>
           <p className="text-sm text-gray-500">Stocked, themed, ready to grab</p>
         </div>
         <div className="flex flex-wrap gap-2">
           {/* Refresh List — re-runs the predictor on demand so the user
               can regenerate Buy Again suggestions without waiting for
               the nightly cron. Especially needed after the user deletes
-              from Smashlist and wants those predictions to come back. */}
+              from Shopping List and wants those predictions to come back. */}
           <button
             onClick={predictNow}
             disabled={predicting || embedding}
@@ -850,7 +853,7 @@ export default function ShoppingPage() {
 
       {/* Errand Plan — predictions grouped by store. Only renders when
           there are 2+ stores with predictions (1 store doesn't need a
-          "plan"). Click-through filters the Smashlist to that store. */}
+          "plan"). Click-through filters the Shopping List to that store. */}
       {errandPlan.length >= 2 && (
         <section className="space-y-2">
           <div className="flex items-center gap-2">
@@ -894,7 +897,7 @@ export default function ShoppingPage() {
 
       {/* Buy Again section — items the predictor thinks are due for a
           restock. Renders below the Errand Plan, above the curated list,
-          so it's the first thing the user sees inside the Smashlist tabs. */}
+          so it's the first thing the user sees inside the Shopping List tabs. */}
       {filteredSuggestions.length > 0 && (
         <section className="space-y-2">
           <div className="flex items-center gap-2 flex-wrap">
@@ -968,7 +971,7 @@ export default function ShoppingPage() {
 
           {/* Card grid — Stash-style: gradient background per list tone,
               color stripe header, emoji avatar, 3 stat tiles, expandable
-              best-price hunter, and Qty + Add to Smashlist footer. Mirrors
+              best-price hunter, and Qty + Add to Shopping List footer. Mirrors
               ProductCard from /stash so the two surfaces feel like one
               app. */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -991,13 +994,13 @@ export default function ShoppingPage() {
         </section>
       )}
 
-      {/* Your Smashlist — the items the user has actually committed to
+      {/* Your Shopping List — the items the user has actually committed to
           buying. Renders below the Buy Again strip, always with a
           visible header so the user can find where Approved items go. */}
       <section className="space-y-2">
         <div className="flex items-center gap-2 flex-wrap">
           <ShoppingCart size={16} className="text-guac-700" />
-          <h2 className="gg-h2">Your Smashlist</h2>
+          <h2 className="gg-h2">Your Shopping List</h2>
           <span className="text-xs text-gray-500">
             {filteredOwn.length} item{filteredOwn.length === 1 ? '' : 's'} ready to grab
           </span>
@@ -1060,8 +1063,8 @@ export default function ShoppingPage() {
               <p className="text-gray-500 max-w-sm">
                 {activeList === 'all'
                   ? (filteredSuggestions.length > 0
-                      ? 'Nothing on your Smashlist yet — tap "Add to Smashlist" on any Buy Again row above to start.'
-                      : 'Smashlist is empty. Drop items from receipts or pick from your Stash.')
+                      ? 'Nothing on your Shopping List yet — tap "Add to Shopping List" on any Buy Again row above to start.'
+                      : 'Shopping List is empty. Drop items from receipts or pick from your Stash.')
                   : `Nothing in ${activeList} yet.`}
               </p>
             </div>
@@ -1251,7 +1254,7 @@ function AlertModal({ title, body, onClose }) {
 // criterion (cheapest store / most-used store / as-is) OR sends them
 // all to a single store the user picks from a sublist. Sits next to
 // the Refresh List button so the user can refresh then one-tap to
-// fill their Smashlist without manually tapping each card.
+// fill their Shopping List without manually tapping each card.
 function AutoAddMenu({ count, stores = [], onPick }) {
   const [open, setOpen] = useState(false)
   // When the user clicks "Pick a store…" we slide the dropdown into a
@@ -1379,7 +1382,7 @@ function ShareMenu({ buildText, getShareUrl, handlers }) {
         type="button"
         onClick={() => setOpen(v => !v)}
         className="btn-secondary inline-flex items-center gap-1.5 text-sm"
-        title="Share this Smashlist"
+        title="Share this Shopping List"
       >
         <Share2 size={16} /> Share <ChevronDown size={12} />
       </button>
@@ -1412,7 +1415,7 @@ function ShareMenu({ buildText, getShareUrl, handlers }) {
   )
 }
 
-// Curated Smashlist row — used by the per-store accordion view. The
+// Curated Shopping List row — used by the per-store accordion view. The
 // `omitStoreCol` flag skips the Store cell when the parent renders rows
 // grouped under a per-store header (the header already shows the store
 // name). selected/onToggleSelect drive the leading bulk-select checkbox.
@@ -1480,7 +1483,7 @@ function SmashRow({ item, omitStoreCol = false, selected = false, onToggleSelect
 // Buy Again card — Stash-styled visual: gradient background by list
 // tone, color stripe header, emoji avatar, 3 stat tiles, expandable
 // best-price hunter (calls /api/best-price with geolocation), and a
-// Qty + Add to Smashlist footer. The optional checkbox in the top-left
+// Qty + Add to Shopping List footer. The optional checkbox in the top-left
 // drives the per-card selection flow ("Add selected to <store>").
 function BuyAgainCard({ item, selected = false, onToggleSelect, onAdd, onQty }) {
   const meta = SHOPPING_LIST_META[item.list_name || 'Pantry'] || {}
@@ -1737,7 +1740,7 @@ function BuyAgainCard({ item, selected = false, onToggleSelect, onAdd, onQty }) 
           </div>
         )}
 
-        {/* Footer — qty stepper + Share + Add to Smashlist CTA */}
+        {/* Footer — qty stepper + Share + Add to Shopping List CTA */}
         <div className="flex items-center justify-between mt-4 pt-3 border-t border-white/50 gap-2">
           <div className="flex items-center gap-2">
             <span className="text-[9px] uppercase tracking-wider text-gray-500 font-bold">Qty</span>
@@ -1749,7 +1752,7 @@ function BuyAgainCard({ item, selected = false, onToggleSelect, onAdd, onQty }) 
               type="button"
               onClick={onAdd}
               className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-guac-600 hover:bg-guac-700 text-white text-xs font-bold shadow-sm hover:shadow-md transition-all"
-              title="Add to Smashlist"
+              title="Add to Shopping List"
             >
               <ShoppingCart size={13} /> Add
             </button>

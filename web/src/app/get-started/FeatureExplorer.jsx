@@ -42,7 +42,7 @@ const CHAPTERS = [
   {
     title: 'Keep the habit easy',
     description: 'Use lightweight planning and learning tools that fit real life without turning money into a daily chore.',
-    features: ['Smashlist', 'Car Miles', 'Guac Arcade'],
+    features: ['Shopping List', 'Car Miles', 'Guac Arcade'],
   },
 ]
 

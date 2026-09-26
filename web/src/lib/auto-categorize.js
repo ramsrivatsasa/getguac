@@ -51,3 +51,22 @@ export function autoCategorize(items) {
     return match ? { ...it, category: match.slug } : it
   })
 }
+
+// A receipt-level category is only meaningful when all categorized line
+// items agree. A mixed basket (groceries + pharmacy + household in one
+// Target run) is not "groceries" — calling it that would hand the whole
+// total to one category on every by-receipt view. Mixed baskets are
+// therefore MISC at the receipt level, and keep their per-item categories,
+// which is what the by-item lens on /reports and /guacanomics reads.
+export const MIXED_BASKET_CATEGORY = 'misc'
+
+export function receiptCategoryFromItems(items, suggestedCategory = null) {
+  const categories = new Set(
+    (Array.isArray(items) ? items : [])
+      .filter(it => it && !it.returned && it.category)
+      .map(it => it.category),
+  )
+  if (categories.size > 1) return MIXED_BASKET_CATEGORY
+  if (categories.size === 1) return [...categories][0]
+  return suggestedCategory || null
+}

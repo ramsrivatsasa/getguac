@@ -11,7 +11,7 @@ import { DollarSign, TrendingUp, Undo2, Receipt as ReceiptIcon, Banknote } from 
 import GuacoScoreCard from '../../../components/GuacoScoreCard'
 import MascotLoading from '../../../components/MascotLoading'
 import FeatureHeader from '../../../components/FeatureHeader'
-import { CATEGORY_BY_SLUG } from '../../../lib/categories'
+import { aggregateCategorySpend } from '../../../lib/category-spend'
 // Lazy-load the chart-heavy section (~all of recharts) so the initial
 // Guacanomics shell doesn't ship the chart bundle to viewers who bounce.
 const Charts = dynamic(() => import('./Charts'), {
@@ -49,7 +49,10 @@ const RANGES = [
 export default function GuacanomicsPage() {
   const __cur = useCurrencySymbol()
   const [range, setRange] = useState('90d')
-  const { data: rawReceipts = [], isLoading } = useReceipts()
+  // withItemDetail widens the embedded receipt_items projection to carry
+  // category + price, which the item lens of Spend by Category needs. The
+  // receipts LIST page keeps the narrow projection — see lib/db.js.
+  const { data: rawReceipts = [], isLoading } = useReceipts({ withItemDetail: true })
 
   // Strip payment-receipt rows (statement imports paying down a card)
   // exactly the way the dashboard does. Without this, /guacanomics
@@ -156,35 +159,43 @@ export default function GuacanomicsPage() {
     }
     const topTags = [...tagCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8)
 
-    const byCategory = new Map()
-    for (const r of purchases) {
-      const slug = r.category || 'misc'
-      if (!byCategory.has(slug)) {
-        const meta = CATEGORY_BY_SLUG[slug] || CATEGORY_BY_SLUG['misc']
-        byCategory.set(slug, {
-          slug, label: meta.label, emoji: meta.emoji,
-          color: CATEGORY_COLORS[meta.color] || CATEGORY_COLORS.gray,
-          spend: 0, count: 0,
+    // Spend by category, both lenses. The split maths lives in
+    // lib/category-spend.js so this page and /reports never disagree about
+    // what a category is worth; here we only decorate the rows with the
+    // chart palette and bolt on the synthetic Bank Bite slice.
+    //
+    // Receipt lens = the receipt's own category gets the whole total.
+    // Item lens    = each line item's category gets its line amount, so a
+    //                mixed Target run splits instead of landing in one slice.
+    const decorate = (agg) => {
+      const buckets = agg.rows.map(row => ({
+        slug: row.slug,
+        label: row.label,
+        emoji: row.emoji,
+        color: CATEGORY_COLORS[row.color] || CATEGORY_COLORS.gray,
+        spend: row.amount,
+        count: row.count,
+      }))
+      // Synthetic "Bank Bite" slice — interest + bank fees in this range, shown
+      // alongside real spending categories so users see what their cards cost
+      // them next to what they actually bought. It is not a receipt or a line
+      // item, so it is added to both lenses identically.
+      if (bankBiteTotal > 0) {
+        buckets.push({
+          slug:  'bank-bite',
+          label: 'Bank Bite',
+          emoji: '🦷',
+          color: '#9f1239',   // rose-800 — calls it out as a leak
+          spend: bankBiteTotal,
+          count: 0,
         })
       }
-      const e = byCategory.get(slug)
-      e.spend += parseFloat(r.total_amount || 0)
-      e.count += 1
+      return buckets.sort((a, b) => b.spend - a.spend)
     }
-    // Synthetic "Bank Bite" slice — interest + bank fees in this range, shown
-    // alongside real spending categories so users see what their cards cost
-    // them next to what they actually bought.
-    if (bankBiteTotal > 0) {
-      byCategory.set('bank-bite', {
-        slug:  'bank-bite',
-        label: 'Bank Bite',
-        emoji: '🦷',
-        color: '#9f1239',   // rose-800 — calls it out as a leak
-        spend: bankBiteTotal,
-        count: 0,
-      })
-    }
-    const categoryBuckets = [...byCategory.values()].sort((a, b) => b.spend - a.spend)
+    const receiptLens = aggregateCategorySpend(inRange, 'receipt')
+    const itemLens = aggregateCategorySpend(inRange, 'item')
+    const categoryBuckets = decorate(receiptLens)
+    const itemCategoryBuckets = decorate(itemLens)
 
     return {
       grossSpend, refunded, netSpend, totalTax, avgTicket, businessSpend,
@@ -197,8 +208,14 @@ export default function GuacanomicsPage() {
       ratingBuckets, ratedCount: rated.length, unratedCount: unrated,
       avgRating, regretSpend, topTags,
       categoryBuckets,
+      itemCategoryBuckets,
+      itemLens,
     }
-  }, [receipts, since])
+    // bankBite is read inside (Bank Bite slice + the Regret bucket) so it MUST
+    // be a dependency — bank_fees resolves after receipts on a cold load, and
+    // without it the memo kept the first, empty value and the Bank Bite slice
+    // appeared or vanished depending on which query won the race.
+  }, [receipts, since, bankBite])
 
   return (
     <div className="space-y-6 max-w-7xl">

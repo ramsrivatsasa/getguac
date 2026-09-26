@@ -18,6 +18,16 @@ const RECEIPTS_LIST_COLS =
   // `r.receipt_items?.length`.
   'is_return, receipt_items(item_name)'
 
+// Same row projection, but each line item carries the fields the item-level
+// category lens needs (lib/category-spend.js). Opt-in via
+// getReceipts({ withItemDetail: true }) — the list pages keep the narrow
+// projection above so the receipts table doesn't pay for analytics columns
+// it never renders.
+const RECEIPTS_WITH_ITEM_DETAIL_COLS =
+  RECEIPTS_LIST_COLS.replace(
+    'receipt_items(item_name)',
+    'receipt_items(id, item_name, sku, qty, price, returned, category)')
+
 // Bank statements — small set per user, used by list pages to show which
 // statement / bank a receipt was imported from or reconciled against.
 export async function getBankStatements() {
@@ -38,9 +48,10 @@ export async function getBankStatements() {
 }
 
 // Receipts
-export async function getReceipts({ dateFrom, dateTo, storeId, storeLocationId } = {}) {
+export async function getReceipts({ dateFrom, dateTo, storeId, storeLocationId, withItemDetail = false } = {}) {
   const sb = createClient()
-  let q = sb.from('receipts').select(RECEIPTS_LIST_COLS).order('date', { ascending: false })
+  const cols = withItemDetail ? RECEIPTS_WITH_ITEM_DETAIL_COLS : RECEIPTS_LIST_COLS
+  let q = sb.from('receipts').select(cols).order('date', { ascending: false })
   if (dateFrom) q = q.gte('date', dateFrom)
   if (dateTo) q = q.lte('date', dateTo)
   if (storeId) q = q.eq('store_id', storeId)

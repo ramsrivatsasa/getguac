@@ -167,8 +167,8 @@ const GOALS = {
     lede:'Camila wanted categories that matched real life—not a generic spreadsheet. GetGuac sorted the obvious purchases and let her add the labels her household actually uses.',
     image:'../home/story-people/capture-phone.webp', imageAlt:'Camila seeing purchases sort into useful categories', result:'12 built-in categories plus her own',
     beats:[['Before','Unsorted purchases made monthly patterns difficult to see.'],['The GetGuac moment','Rules and AI handled groceries, gas and dining while custom categories covered the rest.'],['After','Her reports reflected the way her household really thinks about money.']],
-    proofTitle:'Useful categories, not busywork.', proofText:'Auto-categorize handles the clear matches in bulk, while every result remains easy to confirm or change.',
-    checks:['Twelve practical categories out of the box','Custom labels, colors and emoji','Bulk categorization with human control'],
+    proofTitle:'Useful categories, not busywork.', proofText:'Auto-categorize handles the clear matches in bulk, while every result remains easy to confirm or change. Reports then read your spending two ways - by receipt for the complete total, or by item to see what a mixed basket was really made of.',
+    checks:['Twelve practical categories out of the box','Custom labels, colors and emoji','Read spending by receipt or by item','Mixed baskets stay Misc, and the items keep the detail'],
     web:'../home/goals/web-categories.webp', phone:'../home/goals/phone-organized.webp', screenNote:'Spending sorted in seconds'
   },
   reports: {
@@ -354,6 +354,59 @@ const STORY_COPY = {
  * renders exactly as before. Keep every claim checkable against the product —
  * this is the page people read before deciding whether to trust the feature. */
 const DEEP_DIVE = {
+  categories: {
+    eyebrow: 'How categories work',
+    title: 'One shop, two honest answers.',
+    lede: 'A trip to the shop is rarely one kind of thing. GetGuac reads spending by category two ways - by receipt and by item - and always says which one you are looking at, because the two do not add up to the same number and pretending they do is how a report starts to lie.',
+    flow: [
+      ['Every line item is categorized on its own', 'Each line on a receipt gets its own category, so a basket is never forced into a single label just because it was one trip.'],
+      ['The receipt takes the category its items agree on', 'When every item is groceries, the receipt is groceries. Most receipts are this easy case, and nothing about them changes.'],
+      ['A mixed basket is Misc, on purpose', 'When the items disagree - nappies, groceries and a lightbulb in one trip - the receipt itself is Misc. Calling it groceries would hand the entire total to one category.'],
+      ['Read it by receipt', 'The by-receipt view puts the whole total, tax and tips included, in the category the receipt carries. Complete, but coarse.'],
+      ['Read it by item', 'The by-item view puts each line in its own category. Precise, but never the full total - tax, tips and any line that did not parse are not line items.'],
+      ['The gap is shown, not hidden', 'The by-item view prints how much of your receipt totals it actually covers, so you can see what is missing from it rather than guess.'],
+    ],
+    cards: [
+      { eyebrow: 'Two views, two questions', title: 'Ask the right one.', body: '"Where did the money go this month?" is a by-receipt question - it needs every dollar, including tax. "How much do we really spend on snacks?" is a by-item question, and a receipt-level total cannot answer it.', checks: ['By receipt for the complete total', 'By item for what was really in the basket', 'Both on the same screen, one click apart'] },
+      { eyebrow: 'Why Misc is an answer', title: 'Misc is not a shrug.', body: 'A mixed basket marked Misc is not a receipt GetGuac failed to understand. It is a receipt whose detail lives on its items, where the by-item view reads it. A category you set yourself is never overwritten.', checks: ['Mixed baskets stay Misc at the receipt level', 'The items keep their own categories', 'Your own category always wins'] },
+    ],
+    example: {
+      eyebrow: 'Why one label was never enough',
+      title: 'The same $92 shop, read two ways.',
+      body: 'One receipt, one trip, two legitimate answers. Neither view is wrong; they answer different questions, which is why GetGuac shows both instead of picking for you.',
+      head: ['View', 'What you see', 'What it answers'],
+      rows: [
+        ['By receipt', 'Misc $92.40', 'The complete total, with nothing left out'],
+        ['By item', 'Household $41.10', 'What the trip was actually for'],
+        ['By item', 'Snacks $18.60', 'The habit you cannot see in a store total'],
+        ['By item', 'Tea $12.25', 'The small repeat buy, on its own line'],
+      ],
+      winRow: 0,
+      note: 'Illustration only. The by-item rows deliberately do not add up to $92.40 - tax and any line that did not parse are not line items. That gap is printed on the screen rather than quietly absorbed.',
+    },
+    limits: {
+      title: 'What this will not do.',
+      items: [
+        'The by-item view can never show your full total. Tax, tips, discounts and any unreadable line are not line items.',
+        'A receipt saved without its line items has nothing to split, so it appears only in the by-receipt view.',
+        'Automatic categories are a starting point, not a verdict. Change any of them, and GetGuac will not overwrite a category you set yourself.',
+        'Misc on a mixed basket is the deliberate answer, not a sign that categorization failed.',
+      ],
+    },
+    faq: [
+      ['Why does my Target receipt say Misc?', 'Because its items span several categories. Marking the whole basket "groceries" would hand a lightbulb and the nappies to the grocery total, so the receipt stays Misc and the items keep the real breakdown.'],
+      ['Do the two views add up to the same number?', 'No, and they are not meant to. The by-item total is always the smaller one, because tax, tips and unparsed lines are not line items. The by-item view prints how much of your receipt totals it covers.'],
+      ['Can I still set the category myself?', 'Yes, and that setting wins. Neither the automatic pass nor the bulk categorizer will overwrite a category you chose.'],
+      ['Which view do reports open with?', 'By receipt, because it is the complete number. Switching to by item is one click, and the switch is remembered for as long as you are on the page.'],
+      ['What about items I returned?', 'Returned items are excluded from both views, the same way a refunded receipt is. You are not charged for them, so they are not spending.'],
+    ],
+    links: [
+      ['/goals/reports.html', 'Reports', 'See the whole month, not one total.'],
+      ['/goals/grocery.html', 'Groceries', 'Find the four items, not the whole category.'],
+      ['/goals/understand.html', 'Understand', 'Turn receipts into a picture you can act on.'],
+      ['/faq', 'FAQ', 'Short answers about how GetGuac works.'],
+    ],
+  },
   steals: {
     eyebrow: 'How Steals works',
     title: 'From a product you already buy to a price you can defend.',

@@ -97,7 +97,7 @@ export default function GuacScorePage() {
               ['Spending Trend','Plots purchases and refunds month by month. Use it to see whether a spike was lasting spending or money that later came back.'],
               ['Top Stores','Ranks up to eight merchants by purchase dollars. The bars make concentration visible before individual transactions blur together.'],
               ['Purchases vs Refunds','Compares gross purchases with returned money and places Net Out in the center of the chart.'],
-              ['Spend by Category','Shows category receipts, dollars, and percentage share. Bank Bite appears as its own category when fees or interest exist.'],
+              ['Spend by Category','Reads two ways: by receipt, where the whole total sits in the category the receipt carries, or by item, where every line counts in its own. Shows dollars, share and the count behind each. Bank Bite appears as its own category when fees or interest exist.'],
             ].map(([title,body])=><article key={title} className="rounded-3xl border border-[#E4EDE4] bg-white p-6"><h3 className="text-xl font-black">{title}</h3><p className="mt-3 leading-7 text-[#5C6B60]">{body}</p></article>)}
           </div></div>
 

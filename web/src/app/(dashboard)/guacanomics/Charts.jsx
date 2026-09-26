@@ -1,4 +1,5 @@
 'use client'
+import { useState } from 'react'
 import { formatDateShort } from '../../../lib/dateFormat'
 import useCurrencySymbol from '../../../hooks/useCurrencySymbol'
 import Link from 'next/link'
@@ -8,6 +9,7 @@ import {
 import { Sparkles, TrendingDown, Tag, Calendar, ShoppingBag } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
 import { displayStoreName } from '../../../lib/store-name-normalize'
+import { CATEGORY_MODES, itemLensNote } from '../../../lib/category-spend'
 
 // Money formatters — thousands separators, Bricolage (never mono), matching
 // the KPI cards on the page. money2 → cents; money0 → whole dollars.
@@ -24,6 +26,14 @@ const HEAT_GRADIENT = 'linear-gradient(90deg,#16a34a,#f59e0b,#dc2626)'
 
 export default function Charts({ insights }) {
   const __cur = useCurrencySymbol()
+  // Spend by Category reads two ways — 'receipt' puts each receipt total in
+  // the receipt's category, 'item' splits every line item into its own. Same
+  // toggle, same wording and same maths as /reports (lib/category-spend.js).
+  const [categoryMode, setCategoryMode] = useState('receipt')
+  const categoryBuckets = categoryMode === 'item'
+    ? (insights.itemCategoryBuckets || [])
+    : (insights.categoryBuckets || [])
+  const itemLens = insights.itemLens || null
   return (
     <>
       <div className="grid lg:grid-cols-3 gap-6">
@@ -189,21 +199,51 @@ export default function Charts({ insights }) {
         </div>
       </div>
 
-      {insights.categoryBuckets.length > 0 && (
+      {(insights.categoryBuckets || []).length > 0 && (
         <div className="card !rounded-[22px]">
-          <h3 className="gg-h2 mb-4 flex items-center gap-2.5">
-            <span className="inline-flex items-center justify-center w-[30px] h-[30px] rounded-[9px] bg-guac-50 text-guac-700 shrink-0">
-              <Tag size={15} />
-            </span>
-            Spend by Category
-          </h3>
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <h3 className="gg-h2 flex items-center gap-2.5">
+              <span className="inline-flex items-center justify-center w-[30px] h-[30px] rounded-[9px] bg-guac-50 text-guac-700 shrink-0">
+                <Tag size={15} />
+              </span>
+              Spend by Category
+            </h3>
+            <div className="inline-flex rounded-lg border border-guac-line bg-guac-50 p-1" role="group" aria-label="Category grouping">
+              {CATEGORY_MODES.map(({ key: mode, label }) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setCategoryMode(mode)}
+                  aria-pressed={categoryMode === mode}
+                  className={`rounded-md px-3 py-1.5 text-xs font-bold transition-colors ${categoryMode === mode ? 'bg-white text-guac-800 shadow-sm' : 'text-gray-500 hover:text-guac-700'}`}
+                >{label}</button>
+              ))}
+            </div>
+          </div>
+          {categoryMode === 'item' && itemLens && (
+            <p className="-mt-1 mb-4 text-xs text-guac-faint">
+              {itemLensNote(itemLens, (n) => `${__cur}${money2(n)}`)}
+              {/* The donut total is the line-item total PLUS the synthetic
+                  Bank Bite slice, so say so — otherwise the note and the
+                  number in the middle of the ring disagree. */}
+              {categoryBuckets.some(c => c.slug === 'bank-bite')
+                ? ' Bank Bite is added as its own slice on top of that.'
+                : ''}
+            </p>
+          )}
+          {categoryBuckets.length === 0 ? (
+            <div className="h-40 flex items-center justify-center text-center text-gray-400 text-sm px-6">
+              No itemised line items in this range yet — scan a receipt with its
+              items, or switch back to By receipt.
+            </div>
+          ) : (
           <div className="grid lg:grid-cols-2 gap-6">
             <div className="relative">
               <ResponsiveContainer width="100%" height={240}>
                 <PieChart>
-                  <Pie data={insights.categoryBuckets} dataKey="spend" nameKey="label"
+                  <Pie data={categoryBuckets} dataKey="spend" nameKey="label"
                     cx="50%" cy="50%" innerRadius={62} outerRadius={92} paddingAngle={2} strokeWidth={0} isAnimationActive={false}>
-                    {insights.categoryBuckets.map((c, i) => <Cell key={i} fill={c.color} />)}
+                    {categoryBuckets.map((c, i) => <Cell key={i} fill={c.color} />)}
                   </Pie>
                   <Tooltip
                     contentStyle={{ borderRadius: 14, border: '1px solid #d1fae5', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', fontSize: 12 }}
@@ -213,15 +253,15 @@ export default function Charts({ insights }) {
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <span className="text-[10px] uppercase tracking-wider text-guac-muted font-bold">Total</span>
-                <span className="gg-num text-xl font-extrabold text-guac-ink leading-tight">{__cur}{money0(insights.categoryBuckets.reduce((n, c) => n + c.spend, 0))}</span>
-                <span className="text-[10px] text-guac-muted mt-0.5">this range</span>
+                <span className="gg-num text-xl font-extrabold text-guac-ink leading-tight">{__cur}{money0(categoryBuckets.reduce((n, c) => n + c.spend, 0))}</span>
+                <span className="text-[10px] text-guac-muted mt-0.5">{categoryMode === 'item' ? 'this range · items' : 'this range'}</span>
               </div>
             </div>
             <table className="gg-tbl w-full text-sm">
               <thead className="border-b border-guac-line gg-colhead">
                 <tr>
                   <th className="py-2 pr-2 text-left font-semibold">Category</th>
-                  <th className="py-2 px-2 text-right font-semibold">Receipts</th>
+                  <th className="py-2 px-2 text-right font-semibold">{categoryMode === 'item' ? 'Items' : 'Receipts'}</th>
                   <th className="py-2 px-2 text-right font-semibold">Spend</th>
                   <th className="py-2 pl-2 text-right font-semibold">Share</th>
                 </tr>
@@ -230,8 +270,8 @@ export default function Charts({ insights }) {
                 {(() => {
                   // Use the pie's own total so the % column matches the slice
                   // sizes (Bank Bite is a synthetic slice that isn't in grossSpend).
-                  const pieTotal = insights.categoryBuckets.reduce((n, c) => n + c.spend, 0)
-                  return insights.categoryBuckets.map(c => {
+                  const pieTotal = categoryBuckets.reduce((n, c) => n + c.spend, 0)
+                  return categoryBuckets.map(c => {
                     const pct = pieTotal ? (c.spend / pieTotal) * 100 : 0
                     return (
                       <tr key={c.slug} className="hover:bg-guac-row">
@@ -252,6 +292,7 @@ export default function Charts({ insights }) {
               </tbody>
             </table>
           </div>
+          )}
         </div>
       )}
 

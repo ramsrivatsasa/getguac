@@ -45,7 +45,7 @@ HARD RULES:
 
 SHOWING DATA — always give a clickable link when the user wants to SEE, FIND, SHOW, PULL UP, OPEN, or SEARCH their own records. Use this exact markdown link format so the app renders it as a button: [label](/path). ONLY these real in-app paths — never invent a URL, never link to an external site:
 - Receipts (this is a full-text SEARCH — the value matches store names AND line-item text, so it works for a store OR a product): "show me my Costco receipts" -> [See your Costco receipts](/receipts?store=Costco); "find where I bought milk" -> [Receipts with "milk"](/receipts?store=milk); all receipts -> [Open receipts](/receipts). Use the store/keyword as the user said it (URL-encode spaces as %20).
-- Reports & analytics (spending by category, tax/business summaries, CSV) -> [Open your reports](/reports); trends & GuacScore -> [Guacanomics](/guacanomics).
+- Reports & analytics (spending by category — by receipt or by item — tax/business summaries, CSV) -> [Open your reports](/reports); trends & GuacScore -> [Guacanomics](/guacanomics).
 - Products you own / rebuy -> [Open your Stash](/stash); restaurant dishes -> [Bites](/bites); cheaper prices -> [Find deals](/steals); return windows -> [Returns](/returns); statement fees -> [Bank](/bank); upcoming bills -> [Bills](/bills); shopping list -> [Shopping List](/shopping).
 - Money guides & tools for how-to topics: retirement -> [401(k) basics](/articles/401k-basics) + [Calculators](/plan); debt payoff -> [Avalanche vs snowball](/articles/avalanche-vs-snowball); credit score -> [Credit score guide](/articles/credit-score); emergency fund -> [Emergency fund size](/articles/emergency-fund-size); or the hub [All money guides](/articles).
 - Games — when the user wants to play, is bored, or names a game, link straight to it so they can play (each first finished game a day earns +50 GuacMoney). Use /games/<slug>, e.g. [Play Coin Snake](/games/snake), [Play Guac Hill Climb](/games/climb), [Play Bubble Pop](/games/bubbles), [Splurge Slicer](/games/splurge). Real slugs: snake, climb, bike, nitro, bubbles, splurge, invaders, budget, fling, muncher, penalty, hoops, darts, solitaire, sweeper, crush, sudoku, wordsearch, pairs, simon, flappy, whack, breaker, nestegg, house, tuition, rocks, pong, merge, rope, guacdle, chess. Or the whole arcade: [Guac Arcade](/games).
@@ -62,7 +62,7 @@ APP MAP (for "how do I…" questions):
 - Bites: every restaurant dish they've tried — like it or pass, reorder lists.
 - Returns: return-window countdowns and store policies.
 - Bank + GuacWizard: upload statements; GuacWizard flags fees, interest, and leaks ("bank bites").
-- Reports: spending by category, tax-ready business + charity summaries, subscription detection, CSV export.
+- Reports: spending by category — readable two ways, by receipt (whole receipt total in the receipt's category) or by item (each line item in its own category) — plus tax-ready business + charity summaries, subscription detection, CSV export.
 - Guacanomics: trends, GuacScore, spending vs refunds over time.
 - GuacMoney: keeps score of the value they've kept (saved money stays their money — there is nothing to redeem).`
 
@@ -78,7 +78,10 @@ async function buildSnapshot(sb, userId) {
 
   const { data: rows, error } = await sb
     .from('receipts')
-    .select('store_name, date, total_amount, tax_paid, category, business_purchase')
+    // receipt_items carry their OWN category, which is how the two lenses on
+    // /reports and /guacanomics split spending. Pull them so the assistant can
+    // answer "how much on snacks" the same way the screens do.
+    .select('store_name, date, total_amount, tax_paid, category, business_purchase, receipt_items(category, price, returned)')
     .eq('user_id', userId)
     .gte('date', sinceStr)
     .order('date', { ascending: false })
@@ -93,7 +96,8 @@ async function buildSnapshot(sb, userId) {
   const d30 = daysAgo(30), d90 = daysAgo(90)
   const money = (n) => Math.round(n * 100) / 100
 
-  const months = {}, byCategory = {}, byStore = {}, subs = {}
+  const months = {}, byCategory = {}, byItemCategory = {}, byStore = {}, subs = {}
+  let itemTotal90 = 0
   let total30 = 0, total90 = 0, tax90 = 0, business90 = 0
   for (const r of rows || []) {
     const amt = Number(r.total_amount) || 0
@@ -105,6 +109,16 @@ async function buildSnapshot(sb, userId) {
       if (r.business_purchase) business90 += amt
       const cat = r.category || 'misc'
       byCategory[cat] = money((byCategory[cat] || 0) + amt)
+      // Item lens — each line item's own category gets its line amount. Always
+      // ≤ the receipt lens: tax, tips and unparsed lines are not line items.
+      for (const it of (r.receipt_items || [])) {
+        if (it.returned) continue
+        const line = Number(it.price) || 0
+        if (line <= 0) continue
+        const icat = it.category || 'misc'
+        byItemCategory[icat] = money((byItemCategory[icat] || 0) + line)
+        itemTotal90 += line
+      }
       const store = (r.store_name || 'UNKNOWN').toUpperCase()
       byStore[store] = byStore[store] || { total: 0, receipts: 0 }
       byStore[store].total = money(byStore[store].total + amt)
@@ -133,6 +147,9 @@ async function buildSnapshot(sb, userId) {
       taxPaid: money(tax90),
       businessSpend: money(business90),
       byCategory,
+      byCategoryLens: 'receipt — the whole receipt total counts in the category the receipt carries',
+      byItemCategory,
+      byItemCategoryLens: `item — each line item counts in its own category; covers ${money(itemTotal90)} of ${money(total90)} because tax, tips and unparsed lines are not line items`,
       topStores,
       subscriptions: Object.entries(subs).map(([store, v]) => ({ store, ...v })),
     },

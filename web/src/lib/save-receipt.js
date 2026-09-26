@@ -39,6 +39,7 @@ import {
 } from './email-to-receipt'
 import { applyCategoryRules } from './categorizeRules'
 import { categorizeReceiptInline, tagItemsInline } from './guacAiEnrich'
+import { receiptCategoryFromItems, MIXED_BASKET_CATEGORY } from './auto-categorize'
 
 /**
  * @param {object} sb        Supabase client bound to the caller's identity
@@ -101,10 +102,20 @@ export async function saveReceipt(sb, userId, parsed, opts = {}) {
   // More rules slot into RULE_ORDER in lib/categorizeRules.js — each
   // checks items first, store second.
   const ruleCategory = applyCategoryRules(flatParsed, flatParsed.items)
+  const itemCategory = receiptCategoryFromItems(flatParsed.items, flatParsed.category)
+  const categorizedItemKinds = new Set((flatParsed.items || []).filter(it => it && !it.returned && it.category).map(it => it.category))
+  const hasMixedItemCategories = categorizedItemKinds.size > 1
   let finalCategory, categorySource
   if (opts.user_category) {
     finalCategory = opts.user_category
     categorySource = 'user'
+  } else if (hasMixedItemCategories) {
+    // Items disagree → the receipt as a whole is Misc. Storing the first
+    // item's category (or the AI's guess for the shop) would put the entire
+    // basket in one slice of every by-receipt chart; the real breakdown is
+    // on the items, and the by-item lens reads it from there.
+    finalCategory = MIXED_BASKET_CATEGORY
+    categorySource = 'ai'
   } else if (ruleCategory) {
     finalCategory = ruleCategory
     categorySource = 'rule'
@@ -112,7 +123,7 @@ export async function saveReceipt(sb, userId, parsed, opts = {}) {
     finalCategory = inferredCategory
     categorySource = 'inferred'
   } else {
-    finalCategory = flatParsed.category || null
+    finalCategory = itemCategory
     categorySource = 'ai'
   }
 
@@ -243,7 +254,10 @@ export async function saveReceipt(sb, userId, parsed, opts = {}) {
   // Both helpers are guarded — opts.skipEnrichment bypasses them, used by
   // batch backfill routes so we don't recurse from there.
   if (!opts.skipEnrichment) {
-    const needsCat = !finalCategory || finalCategory === 'misc' || finalCategory === 'uncategorized'
+    // A mixed basket is DELIBERATELY Misc — it is an answer, not a gap, so
+    // the enrichment pass must not "fix" it back into a single category.
+    const needsCat = !hasMixedItemCategories
+      && (!finalCategory || finalCategory === 'misc' || finalCategory === 'uncategorized')
     if (needsCat) {
       await categorizeReceiptInline(sb, userId, {
         id: receiptId,
@@ -518,7 +532,7 @@ function normalizeItemRow(receiptId, it, purchaseDate = null) {
     returned: it.category === 'charity' ? false : Boolean(it.returned),
     category: it.category || null,
     health_tier: it.health_tier || null,
-    // Copy the parent receipt's date down to the item so the smashlist
+    // Copy the parent receipt's date down to the item so the shopping list
     // predictor (predict-smashlist.js aggregate()) doesn't skip the
     // row. Without this, every item saved through the central pipeline
     // had purchase_date=null and never participated in cadence

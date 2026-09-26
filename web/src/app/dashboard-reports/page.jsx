@@ -41,7 +41,7 @@ const dashboardFeatures = [
 ]
 
 const reportFeatures = [
-  [PieChart, 'Spending by category', 'A dollar-based category breakdown with amount, share, and short-window trend comparisons.'],
+  [PieChart, 'Spending by category', 'A dollar-based breakdown with amount, share and short-window trend comparisons - readable by receipt for the complete total, or by item to see what a mixed basket was really made of.'],
   [Store, 'Top stores by spend', 'Sortable merchant totals, receipt counts, and average purchase amounts reveal concentration.'],
   [Repeat2, 'Repeat purchases', 'See items bought two or more times, including quantity, dollars, latest date, and stores.'],
   [Search, 'One-time orders', 'Separate single purchases from household staples so experiments and impulse buys are easier to review.'],

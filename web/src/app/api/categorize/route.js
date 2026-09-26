@@ -36,13 +36,13 @@ Allowed slugs (exactly these, no others):
 - "gas-up":    Fuel & auto service (Shell, Chevron, oil change)
 - "fun":       Movies, theme parks, concerts, one-time games (AMC, Ticketmaster, Steam one-time purchase)
 - "gifting":   Items clearly bought as gifts for others
-- "misc":      Mixed-purpose stores when items are ambiguous (Target, Walmart, Amazon)
+- "misc":      Mixed baskets and mixed-purpose stores — a single shop whose items span several categories (Target, Walmart, Amazon)
 
 Rules:
 - Every receipt id MUST be a key in your output. If unsure, return "misc".
 - Subscriptions vs one-time: Netflix monthly → "subs". Buying a Roku → "tech".
 - Bills vs subs: Verizon Wireless monthly → "bills" (utility). Spotify monthly → "subs" (entertainment).
-- Use the line items (when provided) to decide between misc vs a more specific slug. Example: Target receipt with diapers + groceries → "grub".
+- Use the line items (when provided) to decide between misc vs a more specific slug. A receipt whose items ALL belong to one kind takes that slug; a receipt whose items span several kinds is "misc". Example: Target receipt with nappies + groceries + a lightbulb → "misc"; Target receipt of only groceries → "grub".
 - Output JSON only, no prose.`
 
 function safeParseJson(raw) {

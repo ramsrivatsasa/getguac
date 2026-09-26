@@ -45,7 +45,7 @@ Rules:
 - Every receipt id MUST be a key in your output. If unsure, return "misc".
 - Subscriptions vs one-time: Netflix monthly → "subs". Buying a Roku → "tech".
 - Bills vs subs: Verizon Wireless monthly → "bills". Spotify monthly → "subs".
-- Use line items (when provided) to disambiguate misc vs a more specific slug.
+- Use line items (when provided) to disambiguate misc vs a more specific slug — but a genuinely mixed basket (groceries AND pharmacy AND household in one shop) is "misc"; do not pick whichever kind happens to weigh most.
 - Output JSON only, no prose.`
 
 function safeParseJson(raw) {
@@ -132,28 +132,42 @@ export async function POST(request) {
     return Response.json({ matched: 0, updated: 0, dryRun: false })
   }
 
-  // Pull line-item snippets for the targets so the prompt is item-aware
-  // (a Target receipt with diapers + groceries should land in 'grub',
-  // not 'misc').
+  // Pull line items for the targets. Two jobs: the item NAMES make the
+  // prompt item-aware, and the item CATEGORIES decide whether the receipt
+  // is a mixed basket.
   const targetIds = targets.map(r => r.id)
   const { data: itemRows } = await sb
     .from('receipt_items')
-    .select('receipt_id, item_name')
+    .select('receipt_id, item_name, category, returned')
     .in('receipt_id', targetIds)
     .limit(2000)
   const itemsByReceipt = new Map()
+  const itemCategoriesByReceipt = new Map()
   for (const it of (itemRows || [])) {
     if (!itemsByReceipt.has(it.receipt_id)) itemsByReceipt.set(it.receipt_id, [])
     const arr = itemsByReceipt.get(it.receipt_id)
     if (arr.length < 6) arr.push({ item_name: it.item_name })
+    if (it.category && !it.returned) {
+      if (!itemCategoriesByReceipt.has(it.receipt_id)) itemCategoriesByReceipt.set(it.receipt_id, new Set())
+      itemCategoriesByReceipt.get(it.receipt_id).add(it.category)
+    }
   }
+
+  // A receipt whose items span MORE THAN ONE category is Misc on purpose —
+  // that is the receipt-level answer, not a gap waiting to be filled. Drop
+  // those before either pass so this job cannot undo the rule the save path
+  // applies (lib/auto-categorize.js, MIXED_BASKET_CATEGORY). Their real
+  // breakdown lives on the items and shows up in the by-item lens.
+  const mixedBasket = targets.filter(r => (itemCategoriesByReceipt.get(r.id)?.size || 0) > 1)
+  const mixedIds = new Set(mixedBasket.map(r => r.id))
+  const categorizable = targets.filter(r => !mixedIds.has(r.id))
 
   // ── Pass 1: rule engine (free, instant). Many "misc" rows are
   // actually rule-resolvable (we may have inserted them before the
   // rule was added).
   const ruleHits = []
   const stillUnknown = []
-  for (const r of targets) {
+  for (const r of categorizable) {
     const items = itemsByReceipt.get(r.id) || []
     const guess = applyCategoryRules({ store_name: r.store_name }, items)
     if (guess && guess !== 'misc') ruleHits.push({ id: r.id, slug: guess, source: 'rule' })
@@ -200,9 +214,16 @@ export async function POST(request) {
     }
   }
 
-  const all = [...ruleHits, ...aiHits]
+  // Mixed baskets that are still NULL / 'uncategorized' get stamped 'misc'
+  // so the receipt lens has an explicit answer for them rather than an empty
+  // chip. Ones already sitting on 'misc' are left alone — no write needed.
+  const mixedHits = mixedBasket
+    .filter(r => r.category !== 'misc')
+    .map(r => ({ id: r.id, slug: 'misc', source: 'rule' }))
+
+  const all = [...ruleHits, ...aiHits, ...mixedHits]
   if (all.length === 0) {
-    return Response.json({ matched: targets.length, updated: 0, dryRun: false })
+    return Response.json({ matched: targets.length, updated: 0, mixed_basket: mixedBasket.length, dryRun: false })
   }
 
   // ── Persist ─ Update each row with the new category. Best-effort per
@@ -231,6 +252,7 @@ export async function POST(request) {
     updated,
     rule_hits: ruleHits.length,
     ai_hits: aiHits.length,
+    mixed_basket: mixedBasket.length,
     samples,
     dryRun: false,
   })

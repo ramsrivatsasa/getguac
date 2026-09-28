@@ -13,12 +13,13 @@
 
 const SITEVERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify'
 
-export async function verifyTurnstile(token, remoteIp) {
+export async function verifyTurnstile(token, remoteIp, { required = false, hostnames = [] } = {}) {
   const secret = process.env.TURNSTILE_SECRET_KEY
   if (!secret) {
+    if (required) return { ok: false, reason: 'not_configured' }
     return { ok: true, skipped: true, reason: 'no_secret_configured' }
   }
-  if (!token || typeof token !== 'string') {
+  if (!token || typeof token !== 'string' || token.length > 2048) {
     return { ok: false, reason: 'missing_token' }
   }
   try {
@@ -32,9 +33,10 @@ export async function verifyTurnstile(token, remoteIp) {
       signal: AbortSignal.timeout(6000),
     })
     const data = await res.json().catch(() => ({}))
-    if (!data.success) {
+    if (!res.ok || data.success !== true) {
       return { ok: false, reason: 'cf_rejected', codes: data['error-codes'] || [] }
     }
+    if (hostnames.length && !hostnames.includes(data.hostname)) return { ok: false, reason: 'hostname_mismatch' }
     return { ok: true }
   } catch (e) {
     return { ok: false, reason: 'cf_unreachable', error: e.message }

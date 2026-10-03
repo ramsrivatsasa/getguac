@@ -25,58 +25,14 @@
 // shopping surfaces, then Games, then Sign in. A visitor who does not yet know
 // what GetGuac is meets that question first rather than a store link.
 export const GG_NAV = [
-  { href: '/how-it-works', label: 'Why GetGuac', children: [
-    { href: '/why-getguac', label: 'Why GetGuac is different' },
-    { href: '/how-it-works', label: 'How it works' },
-    { href: '/get-started', label: 'The get-started guide' },
-    { href: '/features', label: 'Features' },
-    { href: '/learn#goals', label: 'Goal stories' },
-    { href: '/security', label: 'Security' },
-    { href: '/pricing', label: 'Pricing' },
-  ]},
-  // The hub moved from /resources to /learn on 2026-08-09. The label was already
-  // "Learn" while the URL still said resources, so the two finally agree. The
-  // three anchors are the ids in app/learn/page.jsx — renaming one there breaks a
-  // menu item on all 35 pages, and vice versa.
-  { href: '/learn', label: 'Learn', children: [
-    { href: '/learn#guides', label: 'Guides' },
-    { href: '/articles', label: 'Articles' },
-    { href: '/calculators', label: 'Calculators' },
-    { href: '/learn#tools', label: 'Tools' },
-    { href: '/faq', label: 'FAQ' },
-  ]},
-  { href: '/marketplace', label: 'Shopping', children: [
-    { href: '/marketplace', label: 'Marketplace' },
-    { href: '/coupons', label: 'Coupons' },
-  ]},
-  // Games gained a dropdown so "Share a game" has a home, on Ram's instruction.
-  // It points at /share#games rather than a second link to /games: the arcade hub
-  // carries no anchors, so two menu items on the same URL would have been a
-  // duplicate. The per-game Share button lives in games/GameActions.jsx.
-  { href: '/games', label: 'Games', children: [
-    { href: '/games', label: 'Play the arcade' },
-    { href: '/share#games', label: 'Share a game' },
-  ]},
-  // LAST in the left-hand group, on Ram's instruction. It briefly sat after Learn
-  // to mirror YNAB's "Share YNAB", but sharing is the thing a visitor does after
-  // deciding they like the product, so it earns the least prominent slot rather
-  // than the third one.
-  //
-  // Every child is an anchor on the PUBLIC /share page, deliberately: the coded
-  // referral lives at /invite, which is a (dashboard) route, and a dashboard link
-  // in a public menu bounces a logged-out visitor to the sign-in screen (verified
-  // - /invite answers 307). /share explains the referral and hands off from there.
-  { href: '/share', label: 'Share GetGuac', children: [
-    { href: '/share#forward', label: 'Forward to a friend' },
-    { href: '/share#refer', label: 'Refer a friend' },
-    { href: '/share#bookmark', label: 'Save a bookmark' },
-  ]},
-  // `right` starts the right-hand group. Everything before it sits beside the
-  // logo; this and everything after it (the CTA) is pushed to the far edge, the
-  // layout YNAB and Rocket Money both use — nav left, account + action right.
-  { href: '/login', label: 'Sign in', right: true },
+ {href:'/find-your-10',label:'Find 10%'},
+ {href:'/features/capture',label:'Capture',children:[{href:'/features/capture',label:'All capture tools'},{href:'/features/capture/income',label:'Income and records'},{href:'/features/capture/accounts',label:'Accounts and documents'},{href:'/features/capture/email',label:'Email and connections'},{href:'/features/capture/receipts',label:'Receipt capture'}]},
+ {href:'/features/understand',label:'Understand',children:[{href:'/features/understand',label:'All understand tools'},{href:'/features/understand/dashboard',label:'Dashboard'},{href:'/features/understand/budget',label:'Budget'},{href:'/features/understand/reports',label:'Reports and insights'},{href:'/features/understand/guac-ai',label:'Guac AI'}]},
+ {href:'/features/protect',label:'Protect',children:[{href:'/features/protect',label:'All protect tools'},{href:'/features/protect/goals',label:'Savings and goals'},{href:'/features/protect/bills',label:'Bills and subscriptions'},{href:'/features/protect/returns',label:'Returns and refunds'},{href:'/deals',label:'Deals and shopping'},{href:'/marketplace',label:'Marketplace'},{href:'/coupons',label:'Coupons'}]},
+ {href:'/learn',label:'Learn',children:[{href:'/how-it-works',label:'How GetGuac works'},{href:'/get-started',label:'Get-started guide'},{href:'/articles',label:'Articles'},{href:'/calculators',label:'Calculators'},{href:'/games',label:'Games'},{href:'/faq',label:'FAQ'}]},
+ {href:'/about',label:'About',children:[{href:'/why-getguac',label:'Why GetGuac'},{href:'/pricing',label:'Pricing'},{href:'/security',label:'Security and privacy'},{href:'/download',label:'Download apps'},{href:'/share',label:'Share GetGuac'},{href:'/contact',label:'Contact'}]},
+ {href:'/login',label:'Sign in',right:true},
 ]
-
 // Flattened for the mobile hamburger. Derived, never hand-maintained: a phone
 // user seeing a different set of pages from a desktop user is the exact
 // discoverability bug this whole restructure exists to fix.
@@ -91,7 +47,7 @@ export const GG_FOOTER_LINKS = [
   { href: '/sitemap.html', label: 'Sitemap' },
 ]
 
-export const GG_CTA = { href: '/join', label: 'Get started' }
+export const GG_CTA = { href: '/register', label: 'Start free' }
 
 // The display face, spelled the way each surface can resolve it. The React
 // pages get the family through a CSS variable that next/font defines; the
@@ -156,7 +112,7 @@ function ggNavBaseCss() {
     + inBar('.ggnav a') + '{color:#5C6B60;font-weight:700;font-size:14.5px;text-decoration:none}'
     + inBar('.ggdd-card a') + '{font-weight:600;font-size:14px}'
     + inBar('.ggbrand') + '{display:inline-flex;align-items:center;gap:9px;font-family:' + GG_DISPLAY
-    + ';font-size:21px;font-weight:800;color:#12261B;letter-spacing:-0.02em;text-decoration:none}'
+    + ';min-width:44px;min-height:44px;font-size:21px;font-weight:800;color:#12261B;letter-spacing:-0.02em;text-decoration:none}'
     // The avocado itself. It was drawn three ways: a bare emoji on the homepage,
     // a 22px emoji in the React header, and a 36-38px green gradient rounded
     // TILE on the static pages. Same six letters beside three different marks.
@@ -171,18 +127,21 @@ function ggNavBaseCss() {
     // label in the menu grey on a dark green pill. Qualifying it with the
     // element makes it (0,3,1) and later in source order.
     + inBar('a.ggcta') + '{display:inline-flex;align-items:center;justify-content:center;'
-    + 'padding:10px 18px;border-radius:999px;background:#12341F;color:#fff;'
+    + 'min-height:44px;padding:10px 18px;border-radius:999px;background:#12341F;color:#fff;'
     + 'font-size:14.5px;font-weight:700;line-height:1.2;text-decoration:none;border:0}'
     + inBar('a.ggcta:hover') + '{background:#1B4A2C;color:#fff}'
+    + 'footer a{display:inline-flex;min-width:44px;min-height:44px;align-items:center;padding-left:7px;padding-right:7px}'
+    + '.card-link{display:inline-flex!important;min-height:44px;align-items:center}'
+    + '.eyebrow,.pill,.zoom-hint,.screen-note,.story-card>span,.bill{font-size:12px!important}'
     + '.ggdd{position:relative;display:inline-flex}'
-    + '.ggdd-top{display:inline-flex;align-items:center;gap:4px}'
+    + '.ggdd-top{display:inline-flex;min-height:44px;align-items:center;gap:4px}'
     + '.ggdd-caret{font-size:11px;font-style:normal;opacity:.75}'
     + '.ggdd-menu{position:absolute;left:0;top:100%;padding-top:10px;opacity:0;visibility:hidden;'
     + 'transform:translateY(-4px);transition:opacity .15s,transform .15s,visibility .15s;z-index:60}'
     + '.ggdd:hover .ggdd-menu,.ggdd:focus-within .ggdd-menu{opacity:1;visibility:visible;transform:none}'
     + '.ggdd-card{min-width:232px;background:#fff;border:1px solid #E4EDE4;border-radius:16px;padding:8px;'
     + 'box-shadow:0 22px 44px -28px rgba(16,40,26,.55);display:flex;flex-direction:column;gap:2px}'
-    + '.ggdd-card a{padding:9px 12px;border-radius:10px;font-weight:600;font-size:14px;white-space:nowrap}'
+    + '.ggdd-card a{display:flex;min-height:44px;align-items:center;padding:9px 12px;border-radius:10px;font-weight:600;font-size:14px;white-space:nowrap}'
     + '.ggdd-card a:hover{background:#F1F8EE;color:#15281C}'
     // ---- Row layout: links beside the logo, account + action at the far edge.
     //
@@ -287,11 +246,11 @@ function ggMobileCss() {
     // shared `height:64px` and would leave the panel overlapping the bar by 2px.
     + BARS.join(',') + '{min-height:64px}'
     + inBar('.ggm') + '{position:relative;display:inline-flex;align-items:center;'
-    + 'justify-content:center;width:42px;height:42px;flex-shrink:0}'
+    + 'justify-content:center;width:44px;height:44px;flex-shrink:0}'
     // The checkbox IS the hit target: full-size, transparent, on top of the
     // glyph. A <label for> would not be focusable, and this keeps the control
     // keyboard-operable (tab to it, space to open) with no script.
-    + inBar('.ggm-cb') + '{position:absolute;left:0;top:0;width:42px;height:42px;'
+    + inBar('.ggm-cb') + '{position:absolute;left:0;top:0;width:44px;height:44px;'
     + 'margin:0;padding:0;border:0;opacity:0;cursor:pointer;z-index:2;'
     + '-webkit-appearance:none;appearance:none}'
     + inBar('.ggm-ico') + '{position:relative;display:block;width:20px;height:14px}'
@@ -412,4 +371,5 @@ export function ggNavHtml() {
 
 export function ggFooterHtml() {
   return GG_FOOTER_LINKS.map((l) => '<a href="' + esc(l.href) + '">' + esc(l.label) + '</a>').join(' · ')
+    + '<br><small>Free forever · No card required · No bank login required · Your data stays yours.</small>'
 }

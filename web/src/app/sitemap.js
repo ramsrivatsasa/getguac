@@ -9,6 +9,7 @@
 // sitemap entry for a noindexed URL only sends a contradictory signal.
 // Re-add `...GAMES.map(...)` below once AdSense approves.
 import { ARTICLES } from '../lib/articles'
+import { NATIVE_LESSONS } from '../lib/academy'
 
 const SITE_URL = 'https://getguac.app'
 
@@ -34,6 +35,12 @@ const FEATURE_GUIDES = [
   '/goals/emergency.html',
   '/goals/tax-records.html',
   '/goals/grocery.html',
+  '/goals/take-stock.html',
+  '/goals/first-budget.html',
+  '/goals/money-goals.html',
+  '/goals/pay-down-debt.html',
+  '/goals/credit-cards.html',
+  '/goals/credit-report.html',
 ]
 
 // Real content under public/resources that was indexable but had never been
@@ -112,5 +119,11 @@ export default function sitemap() {
     changeFrequency: 'monthly',
     priority: 0.6,
   }))
-  return [...pages, ...featureGuides, ...resourcePages, ...articles]
+  // The Academy hub plus its Academy-only lessons. Article-backed lessons are
+  // left out on purpose: their canonical is the /articles page already listed.
+  const academy = [
+    { url: `${SITE_URL}/academy`, lastModified: '2026-10-01', changeFrequency: 'monthly', priority: 0.7 },
+    ...NATIVE_LESSONS.map((l) => ({ url: `${SITE_URL}/academy/${l.slug}`, lastModified: l.updated, changeFrequency: 'monthly', priority: 0.6 })),
+  ]
+  return [...pages, ...featureGuides, ...resourcePages, ...articles, ...academy]
 }

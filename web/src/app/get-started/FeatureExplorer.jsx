@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import ToolIcon from '../../components/ToolIcon'
 import { ArrowLeft, ArrowRight, Check, MousePointerClick } from 'lucide-react'
 import ZoomableImage from './ZoomableImage'
 
@@ -42,7 +43,7 @@ const CHAPTERS = [
   {
     title: 'Keep the habit easy',
     description: 'Use lightweight planning and learning tools that fit real life without turning money into a daily chore.',
-    features: ['Shopping List', 'Car Miles', 'Guac Arcade'],
+    features: ['Smashlist', 'Car Miles', 'Guac Arcade'],
   },
 ]
 
@@ -67,7 +68,7 @@ export default function FeatureExplorer({ features, starts }) {
     <div className="flex flex-wrap items-end justify-between gap-4">
       <div>
         <p className="text-xs font-black uppercase tracking-[.18em] text-lime-700">Choose a feature</p>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-600">The same five chapters from the guide organize all 22 tools below. Select any feature for its practical starting step and real GetGuac screen.</p>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-600">Choose a tool to see how it works and where to start.</p>
       </div>
       <p className="rounded-full bg-[#eaf4df] px-4 py-2 text-sm font-black text-[#31533a]">{String(selected + 1).padStart(2, '0')} / {orderedFeatures.length}</p>
     </div>
@@ -85,8 +86,8 @@ export default function FeatureExplorer({ features, starts }) {
               const index = orderedFeatures.findIndex(featureItem => featureItem.title === item.title)
               const isSelected = selectedTitle === item.title
               return <button key={item.title} type="button" onClick={() => select(item.title)} aria-pressed={isSelected} className={`group flex min-h-[82px] items-center gap-3 rounded-2xl border p-3 text-left transition focus:outline-none focus-visible:ring-4 focus-visible:ring-lime-300 ${isSelected ? 'border-[#173d27] bg-[#173d27] text-white shadow-lg shadow-emerald-950/15' : 'border-emerald-950/10 bg-white text-[#31533a] hover:-translate-y-0.5 hover:border-lime-500 hover:shadow-md'}`}>
-                <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-black ${isSelected ? 'bg-[#b8ef52] text-[#173d27]' : 'bg-[#edf5e5] text-lime-700'}`}>{String(index + 1).padStart(2, '0')}</span>
-                <span><span className={`block text-[10px] font-black uppercase tracking-[.12em] ${isSelected ? 'text-[#b8ef52]' : 'text-emerald-700/65'}`}>Chapter {chapterIndex + 1}</span><span className="mt-1 block text-sm font-extrabold leading-5">{item.title}</span></span>
+                <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-black ${isSelected ? 'bg-[#b8ef52] text-[#173d27]' : 'bg-[#edf5e5] text-lime-700'}`}><ToolIcon label={item.title} size={22}/></span>
+                <span><span className="mt-1 block text-sm font-extrabold leading-5">{item.title}</span></span>
               </button>
             })}
           </div>

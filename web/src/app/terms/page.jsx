@@ -28,18 +28,18 @@ export default function TermsPage() {
             <h1 className="text-3xl font-black text-emerald-900 tracking-tight">Terms of Service</h1>
             <p className="text-sm text-gray-500 mt-1">Last updated: {LAST_UPDATED}</p>
             <p className="text-sm text-gray-700 mt-3">
-              These are the rules for using GetGuac. We've kept them short and in plain English.
+              These are the rules for using GetGuac. We&apos;ve kept them short and in plain English.
               By creating an account you agree to them.
             </p>
           </div>
         </section>
 
         <Section icon={FileText} title="1. The Account">
-          <p>You're at least 13 years old and the information you give us at sign-up (name, email, birth date) is accurate. You're responsible for keeping your password private. If someone gets into your account because you reused a password somewhere that got breached, that's on you — we still help if you tell us.</p>
+          <p>You&apos;re at least 13 years old and the information you give us at sign-up (name, email, birth date) is accurate. You&apos;re responsible for keeping your password private. If someone gets into your account because you reused a password somewhere that got breached, that&apos;s on you — we still help if you tell us.</p>
         </Section>
 
         <Section icon={FileText} title="2. What GetGuac Does">
-          <p>GetGuac helps you track receipts, manage rewards programs, share a household shopping list, and predict when you'll need to buy things again. It is <strong>not</strong> a bank, a tax advisor, or a financial planner. Numbers shown in the app are estimates based on the receipts you give us — verify with the actual merchant before making decisions that depend on exact amounts.</p>
+          <p>GetGuac helps you track receipts, manage rewards programs, share a household shopping list, and predict when you&apos;ll need to buy things again. It is <strong>not</strong> a bank, a tax advisor, or a financial planner. Numbers shown in the app are estimates based on the receipts you give us — verify with the actual merchant before making decisions that depend on exact amounts.</p>
         </Section>
 
         <Section icon={FileText} title="3. What You Can Do">
@@ -48,8 +48,8 @@ export default function TermsPage() {
 
         <Section icon={FileText} title="4. What You Can't Do">
           <ul className="list-disc ml-5 space-y-1.5">
-            <li>Try to read or write to someone else's account.</li>
-            <li>Upload receipts that aren't yours (e.g. scraped from someone else).</li>
+            <li>Try to read or write to someone else&apos;s account.</li>
+            <li>Upload receipts that aren&apos;t yours (e.g. scraped from someone else).</li>
             <li>Spam other users via the chat or household features.</li>
             <li>Reverse-engineer the prediction engine to scrape product / pricing data.</li>
             <li>Use the API or automated tooling at a rate that affects other users — talk to us if you need higher limits.</li>
@@ -57,12 +57,12 @@ export default function TermsPage() {
         </Section>
 
         <Section icon={ShieldCheck} title="5. Retailer Connections (Beta)">
-          <p>Our Connections feature lets you forward retailer receipts via email (always supported) or, for selected retailers, link an account by signing into the retailer's site inside our mobile app. <strong>The credential-linking flow is in beta.</strong></p>
+          <p>Our Connections feature lets you forward retailer receipts via email (always supported) or, for selected retailers, link an account by signing into the retailer&apos;s site inside our mobile app. <strong>The credential-linking flow is in beta.</strong></p>
           <p>By using the credential-linking flow you acknowledge:</p>
           <ul className="list-disc ml-5 space-y-1.5">
-            <li>You're authorized to sign into the retailer account on your own behalf, and the order data we read belongs to you.</li>
-            <li>Some retailers' Terms of Service prohibit automated access. You — not GetGuac — are responsible for your relationship with that retailer.</li>
-            <li>The session is held only in your device's WebView and discarded when you close the linking screen. We never store credentials.</li>
+            <li>You&apos;re authorized to sign into the retailer account on your own behalf, and the order data we read belongs to you.</li>
+            <li>Some retailers&apos; Terms of Service prohibit automated access. You — not GetGuac — are responsible for your relationship with that retailer.</li>
+            <li>The session is held only in your device&apos;s WebView and discarded when you close the linking screen. We never store credentials.</li>
             <li>We may disable any retailer linker at any time, including upon request from the retailer.</li>
             <li>The feature may break without notice when a retailer changes their site.</li>
           </ul>
@@ -73,19 +73,19 @@ export default function TermsPage() {
         </Section>
 
         <Section icon={FileText} title="7. Subscriptions & Pricing">
-          <p>Today, GetGuac is free. If we add paid features, you'll see the price and what you get before being charged — never auto-upgraded. If we change these terms, we'll tell you at next sign-in and again the first time the change is relevant to you (e.g. if a free feature moves behind a paywall).</p>
+          <p>Today, GetGuac is free. If we add paid features, you&apos;ll see the price and what you get before being charged — never auto-upgraded. If we change these terms, we&apos;ll tell you at next sign-in and again the first time the change is relevant to you (e.g. if a free feature moves behind a paywall).</p>
         </Section>
 
         <Section icon={FileText} title="8. Termination">
-          <p>You can delete your account and all data at any time from your <Link href="/profile" className="text-emerald-700 font-semibold hover:underline">profile page</Link> — one click, no questions, hard delete in 24 hours. We can terminate accounts that break the rules in section 4, but we'll email you first unless the abuse is severe (e.g. active phishing).</p>
+          <p>You can delete your account and all data at any time from your <Link href="/profile" className="text-emerald-700 font-semibold hover:underline">profile page</Link> — one click, no questions, hard delete in 24 hours. We can terminate accounts that break the rules in section 4, but we&apos;ll email you first unless the abuse is severe (e.g. active phishing).</p>
         </Section>
 
         <Section icon={FileText} title="9. No Warranty (the lawyer part)">
-          <p>GetGuac is provided "as-is." We can't guarantee 100% uptime, perfect receipt parsing, or that predictions will match what you actually buy. Use it as a helpful tool, not as the source of truth for any number that matters legally or financially.</p>
+          <p>GetGuac is provided &quot;as-is.&quot; We can&apos;t guarantee 100% uptime, perfect receipt parsing, or that predictions will match what you actually buy. Use it as a helpful tool, not as the source of truth for any number that matters legally or financially.</p>
         </Section>
 
         <Section icon={FileText} title="10. Changes to These Terms">
-          <p>If we change these terms, we'll post the new version here with a new "last updated" date and notify signed-in users at next sign-in. Continued use after changes means you accept them. If you don't, delete your account — we won't be mad.</p>
+          <p>If we change these terms, we&apos;ll post the new version here with a new &quot;last updated&quot; date and notify signed-in users at next sign-in. Continued use after changes means you accept them. If you don&apos;t, delete your account — we won&apos;t be mad.</p>
         </Section>
 
         <Section icon={FileText} title="11. Contact">

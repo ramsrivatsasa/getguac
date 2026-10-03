@@ -1,48 +1,10 @@
-// Public /how-it-works — one unified, animated 22-moment product story.
-// The richer Presentation deck carries the motion and pacing of the original
-// tour while pairing each chapter with real GetGuac screens.
-
 import Link from 'next/link'
 import MarketingShell from '../../components/MarketingShell'
-import Presentation from './Presentation'
-
-export const metadata = {
-  title: 'How GetGuac works: from receipt to insight',
-  description: 'A visual walkthrough: snap or forward a receipt, Guac-AI reads every line item, duplicates get caught, and you see where the money went.',
-  // Self-canonical. Without this the page INHERITS the root layout's
-  // alternates and declares itself a duplicate of the homepage.
-  alternates: { canonical: '/how-it-works' },
-}
-
-const DISPLAY = { fontFamily: 'var(--font-bricolage), sans-serif' }
-
-export default function HowItWorksPage() {
-  return (
-    <MarketingShell subtitle="how-it-works">
-      {/* HERO */}
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 pt-12 sm:pt-16 pb-10 text-center">
-        <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-gray-900 leading-tight" style={DISPLAY}>
-          From a receipt to
-          <span className="block bg-gradient-to-br from-emerald-500 via-lime-500 to-amber-500 bg-clip-text text-transparent">real clarity about your money.</span>
-        </h1>
-        <p className="text-lg text-gray-600 mt-4 max-w-2xl mx-auto">
-          Press play for one connected story: capture a receipt, understand every purchase, protect money after checkout, and make the next shopping trip smarter.
-        </p>
-      </section>
-
-      {/* Unified animated tour — 22 chapters, real web/mobile screens, fixed
-          neural narration, keyboard/swipe navigation and reduced-motion care. */}
-      {/* headingLevel h2: this page already renders the document h1 above. */}
-      <Presentation embedded compact cinematic headingLevel="h2" />
-
-      {/* CTA */}
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 pb-16 text-center">
-        <div className="flex flex-wrap gap-3 justify-center">
-          <Link href="/register" className="btn-primary">Get Started Free</Link>
-          <Link href="/login?demo=1" className="btn-secondary">🔎 Try the demo first</Link>
-          <Link href="/download" className="btn-secondary">Get the app</Link>
-        </div>
-      </section>
-    </MarketingShell>
-  )
-}
+import MarketingHero from '../../components/MarketingHero'
+import { MONEY_GROUPS } from '../../lib/money-journey'
+import { MoneyAssistant } from '../../components/MoneyJourney'
+import ConversionBand from '../../components/ConversionBand'
+export const metadata={title:'How GetGuac Works: From Records to Decisions and Goals',description:'Capture your money information, understand your budget, and protect everyday value and long-term goals.',alternates:{canonical:'/how-it-works'}}
+export default function HowItWorksPage(){return <MarketingShell><MarketingHero eyebrow="How GetGuac works" title="Get organized." accent="Then choose your next step." description="You can begin with income and a budget, a savings goal, or a record you want to organize. Build the picture at your own pace." primaryHref="/register" primaryLabel="Start free" secondaryHref="/get-started" secondaryLabel="Read the setup guide" imageSrc="/home/story-people/protect-couple-tablet-768.webp" imageAlt="A couple reviewing household information together"/>
+ <section className="mx-auto max-w-6xl py-8"><h2 className="mb-6 text-3xl font-black">A journey you can start anywhere.</h2><ol className="grid gap-6 md:grid-cols-3">{MONEY_GROUPS.map((g,i)=><li key={g.slug} className="border-t-2 pt-5" style={{borderColor:g.color}}><p className="text-sm font-bold" style={{color:g.color}}>0{i+1} · {g.name}</p><h3 className="mt-3 text-2xl font-black">{g.title}</h3><p className="mt-3 text-sm leading-6 text-slate-600">{g.summary}</p><Link href={'/features/'+g.slug} className="mt-4 inline-flex min-h-11 items-center font-bold" style={{color:g.color}}>See {g.name.toLowerCase()} tools →</Link></li>)}</ol></section>
+ <section className="mx-auto max-w-6xl py-8"><div className="rounded-3xl bg-slate-50 p-6 sm:p-8"><p className="text-xs font-bold uppercase tracking-wider text-violet-700">Example journey · saving for a home</p><h2 className="mt-3 text-3xl font-black">Connect this month to a longer-term goal.</h2><ol className="mt-5 grid gap-5 md:grid-cols-3"><li><strong>Capture the starting point.</strong><p className="mt-2 text-sm leading-6 text-slate-600">Record income, balances and the goal you want to reach.</p></li><li><strong>Understand what fits.</strong><p className="mt-2 text-sm leading-6 text-slate-600">Review the budget and explore a contribution that fits your circumstances.</p></li><li><strong>Protect the progress.</strong><p className="mt-2 text-sm leading-6 text-slate-600">Track contributions, review the pace and keep upcoming bills visible.</p></li></ol><p className="mt-5 text-xs leading-5 text-slate-500">GetGuac helps you plan and track. It does not move money or guarantee a result.</p></div></section><MoneyAssistant/><ConversionBand/></MarketingShell>}

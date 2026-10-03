@@ -23,9 +23,9 @@ export default function GuideHeroSlideshow() {
     </div> : <div className="mx-auto w-full max-w-[1400px] px-3 pb-20 pt-8 sm:px-6"><ReceiptFlow variant="story" heading="Every receipt makes the next shopping trip smarter." blurb="GetGuac remembers the shopping so you do not have to—and learns from every trip." href="/how-it-works" linkLabel="See how GetGuac works"/></div>}
 
     <div className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full border border-emerald-900/10 bg-white/90 p-1.5 shadow-lg backdrop-blur sm:bottom-5">
-      <button type="button" onClick={() => choose((slide + 1) % 2)} className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-emerald-50" aria-label="Previous hero slide"><ArrowLeft size={17}/></button>
-      {[0,1].map(index => <button key={index} type="button" onClick={() => choose(index)} className={`h-2.5 rounded-full transition-all ${slide === index ? 'w-7 bg-lime-600' : 'w-2.5 bg-emerald-900/20'}`} aria-label={`Show hero slide ${index + 1}`} aria-current={slide === index ? 'true' : undefined}/>) }
-      <button type="button" onClick={() => choose((slide + 1) % 2)} className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-emerald-50" aria-label="Next hero slide"><ArrowRight size={17}/></button>
+      <button type="button" onClick={() => choose((slide + 1) % 2)} className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-emerald-50" aria-label="Previous hero slide"><ArrowLeft size={17}/></button>
+      {[0,1].map(index => <button key={index} type="button" onClick={() => choose(index)} className="grid h-11 w-11 place-items-center rounded-full hover:bg-emerald-50" aria-label={`Show hero slide ${index + 1}`} aria-current={slide === index ? 'true' : undefined}><span className={`block h-2.5 rounded-full transition-all ${slide === index ? 'w-7 bg-lime-600' : 'w-2.5 bg-emerald-900/20'}`} aria-hidden="true"/></button>) }
+      <button type="button" onClick={() => choose((slide + 1) % 2)} className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-emerald-50" aria-label="Next hero slide"><ArrowRight size={17}/></button>
     </div>
   </section>
 }

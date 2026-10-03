@@ -6,6 +6,7 @@
 // app/dashboard default font is untouched), avocado-green accents, pill CTAs.
 // The fonts come from CSS variables defined in app/layout.jsx.
 import Link from 'next/link'
+import ToolIcon from './ToolIcon'
 import HeaderSearch from './HeaderSearch'
 import MarketingAuthButtons from './MarketingAuthButtons'
 import MarketingMobileMenu from './MarketingMobileMenu'
@@ -64,6 +65,23 @@ html.gg-embedded .gg-embed-hide { display: none !important; }
 .gg-marketing h1 { font-weight: 800; letter-spacing: -0.05em; }
 .gg-marketing h2 { font-weight: 800; letter-spacing: -0.045em; }
 .gg-marketing a { transition: color .15s ease; }
+/* Public sections share the exact outer band used by the header. Full-bleed
+   section backgrounds remain full width; their max-w-6xl content aligns with
+   the logo and primary CTA instead of inventing page-specific gutters. */
+.gg-marketing .max-w-6xl,
+.gg-marketing .max-w-7xl,
+.gg-marketing main > .max-w-5xl {
+  width: min(1180px, calc(100% - clamp(24px, 5vw, 56px)));
+  max-width: 1180px;
+}
+.gg-marketing .max-w-6xl.px-5,
+.gg-marketing .max-w-6xl.sm\:px-8,
+.gg-marketing main > .max-w-5xl { padding-left: 0 !important; padding-right: 0 !important; }
+.gg-marketing main > .max-w-6xl { padding-left: 0 !important; padding-right: 0 !important; }
+.gg-marketing main > .max-w-3xl { width:min(768px,calc(100% - clamp(24px,5vw,56px))); padding-left:0!important; padding-right:0!important; }
+.gg-marketing main > .max-w-2xl,
+.gg-marketing main > article.max-w-2xl { width:min(672px,calc(100% - clamp(24px,5vw,56px))); padding-left:0!important; padding-right:0!important; }
+.gg-marketing main a.inline-flex { min-height: 44px; align-items: center; }
 /* Phone bar = wordmark + burger, nothing else, matching the inline surfaces and
    both reference sites. The auth pair used to survive down to 640px, so between
    640 and 1023 the bar carried Sign in AND Get started AND a hamburger. It needs
@@ -73,6 +91,7 @@ html.gg-embedded .gg-embed-hide { display: none !important; }
   .gg-header-auth { display: none !important; }
 }
 @media (max-width: 639px) {
+  .gg-marketing .max-w-5xl { width:calc(100% - 24px); }
   .gg-header-row { gap: 10px !important; }
   .gg-header-search { display: none !important; }
   .gg-header-nav { margin-left: auto; }
@@ -85,7 +104,7 @@ html.gg-embedded .gg-embed-hide { display: none !important; }
 // to search — marketplace, plan, resources and the join pages were all already
 // passing hideSearch to switch it back off one page at a time. A shopping
 // surface that genuinely wants it can opt in with hideSearch={false}.
-export default function MarketingShell({ subtitle, hideSearch = true, headerTitle, ads = true, children }) {
+export default function MarketingShell({ subtitle, hideSearch = true, headerTitle, ads = true, footerFinePrint, children }) {
   // In-app (mobile WebView) the native shell already provides the top app bar +
   // logo, so rendering the marketing nav here stacks a SECOND avocado logo/header
   // under it. The /embed handshake drops guac_embedded=1 — when set, hide the
@@ -133,7 +152,7 @@ export default function MarketingShell({ subtitle, hideSearch = true, headerTitl
           content page is monetized unless it says otherwise. */}
       {/* AdSenseScript now does the in-app check itself, on the client, so this
           stays a static render. See the privacy note in that file. */}
-      {ads && <AdSenseScript />}
+      {ads && !(process.env.NODE_ENV === 'development' && process.env.FIND10_LOCAL_MODE === '1') && <AdSenseScript />}
 
       {/* Pre-paint in-app detection. Sets the attribute synchronously as the
           parser reaches it — before the header below exists — so there is no
@@ -170,7 +189,7 @@ export default function MarketingShell({ subtitle, hideSearch = true, headerTitl
           commented goes inside it: React escapes >, &, ' and " in style text
           differently on the server than the client, which has broken this page
           in production twice. See the note on ggNavCss(). */}
-      <style>{SHELL_CSS + ggNavCss('hamburger')}</style>
+      <style dangerouslySetInnerHTML={{ __html: SHELL_CSS + ggNavCss('hamburger') }} />
 
       {/* Nav — hidden in-app so it doesn't duplicate the native app bar/logo. */}
       <header className="gg-embed-hide" style={{ position: 'sticky', top: 0, zIndex: 30, backdropFilter: 'blur(12px)', background: 'rgba(255,255,255,0.88)', borderBottom: '1px solid rgba(20,83,45,0.08)' }}>
@@ -212,7 +231,7 @@ export default function MarketingShell({ subtitle, hideSearch = true, headerTitl
                   <span className="ggdd-menu">
                     <span className="ggdd-card">
                       {n.children.map((c) => (
-                        <Link key={c.href + c.label} href={c.href}>{c.label}</Link>
+                        <Link key={c.href + c.label} href={c.href}><span className="inline-flex items-center gap-3"><ToolIcon label={c.label} size={18} className="text-violet-700"/>{c.label}</span></Link>
                       ))}
                     </span>
                   </span>
@@ -236,7 +255,7 @@ export default function MarketingShell({ subtitle, hideSearch = true, headerTitl
 
       <main>{children}</main>
 
-      <div className="gg-embed-hide"><MarketingFooter /></div>
+      <div className="gg-embed-hide"><MarketingFooter finePrint={footerFinePrint} /></div>
     </div>
   )
 }

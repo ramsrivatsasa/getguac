@@ -5,9 +5,9 @@ import { createClient } from '../lib/supabase/server'
 import HomeInteractions from './HomeInteractions'
 
 export const metadata = {
-  title: 'GetGuac: Make Every Dollar Worth It',
+  title: 'Find your 10% | GetGuac',
   description:
-    'Turn receipts and statements into smarter money decisions. Find spending patterns, hidden fees, missed refunds, better prices, and purchases truly worth repeating.',
+    'Build your 10% plan from receipts, bills, and spending records. Explore practical choices, set a monthly target, and track your progress with GetGuac.',
   alternates: { canonical: '/' },
 }
 

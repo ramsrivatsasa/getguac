@@ -65,7 +65,7 @@ export default function ResourceSearch() {
           onChange={(e) => apply(e.target.value)}
           placeholder="Search articles, tools and guides"
           aria-label="Search resources"
-          style={{ width: '100%', border: 0, outline: 0, background: 'transparent', padding: '8px 0' }}
+          style={{ width: '100%', minHeight: 44, border: 0, outline: 0, background: 'transparent', padding: '10px 0' }}
         />
       </label>
       {empty && (

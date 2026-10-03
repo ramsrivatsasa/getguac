@@ -15,7 +15,10 @@
 // true because the renderer makes it structurally impossible. Adding a link node
 // would silently make that page a lie.
 
+import { SAVINGS_ARTICLES } from './savings-articles'
+
 export const ARTICLES = [
+  ...SAVINGS_ARTICLES,
   {
     "slug": "compound-interest",
     "title": "The magic of compound interest",

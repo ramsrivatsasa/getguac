@@ -302,6 +302,53 @@
       border-radius:var(--r);overflow:hidden;background:var(--line);box-shadow:var(--sh-1)}
     .trust span{background:#fff;padding:18px 14px;text-align:center;font-size:13.5px;font-weight:700;color:var(--ink-2)}
 
+
+    /* ---- 10% band (top of page) ---- */
+    .ten{padding:clamp(22px,3vw,34px) 0 clamp(6px,1vw,12px);background:linear-gradient(180deg,#f2f9ec 0%,#fff 100%);border-bottom:1px solid var(--line-2)}
+    .ten-grid{display:grid;grid-template-columns:.85fr 1.15fr;gap:clamp(20px,3vw,40px);align-items:center}
+    .ten-photo{margin:0;position:relative;border-radius:26px;overflow:hidden;box-shadow:var(--sh-2);aspect-ratio:4/3}
+    .ten-photo img{width:100%;height:100%;object-fit:cover;display:block}
+    .ten-photo figcaption{position:absolute;left:14px;bottom:14px;display:flex;align-items:baseline;gap:8px;padding:9px 14px;border-radius:14px;background:rgba(255,255,255,.93);box-shadow:var(--sh-2)}
+    .ten-photo figcaption b{font-family:var(--display);font-size:22px;color:var(--forest);line-height:1}
+    .ten-photo figcaption small{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+    .ten h2{margin:12px 0 0;font-size:clamp(28px,3.6vw,44px);line-height:1.06;color:var(--forest)}
+    .ten h2 em{font-style:normal;color:var(--accent)}
+    .ten h2 span{display:block;color:var(--ink-2);font-size:.62em}
+    .ten-calc{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:18px}
+    .ten-field{display:flex;align-items:center;gap:6px;padding:11px 14px;border:1px solid var(--line);border-radius:14px;background:#fff;box-shadow:var(--sh-2)}
+    .ten-field span{font-weight:800;color:var(--ink-2)}
+    .ten-field input{width:92px;border:0;outline:0;font:inherit;font-weight:800;color:var(--forest);background:transparent}
+    .ten-field b{font-size:12px;font-weight:700;color:var(--ink-2)}
+    .ten-calc button{padding:12px 20px;border:0;border-radius:14px;background:var(--forest);color:#fff;font:inherit;font-weight:800;cursor:pointer}
+    .ten-out{margin:14px 0 0;font-size:15px;line-height:1.6;color:var(--ink-2)}
+    .ten-out strong{color:var(--forest)}
+    .ten-chips{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 0;padding:0;list-style:none}
+    .ten-chip{display:flex;align-items:center;gap:8px;padding:9px 13px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:13px;font-weight:700;color:var(--ink-2)}
+    .ten-chip i{font-style:normal}
+    .ten-chip b{font-family:var(--display);color:var(--forest)}
+    .ten-note{margin:14px 0 0;display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:12px;color:var(--ink-2)}
+    .ten-note a{font-weight:800;color:var(--accent)}
+    .micro .micro-trust{padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink-2);font-size:12.5px}
+    @media(max-width:860px){.ten-grid{grid-template-columns:1fr}.ten-photo{aspect-ratio:16/10}.micro{gap:8px 14px}}
+    /* ---- three-value product promise ---- */
+    .core-values{padding:clamp(28px,4vw,52px) 0;background:linear-gradient(180deg,#fff 0%,#f7fbf2 100%)}
+    .core-values-head{display:flex;align-items:end;justify-content:space-between;gap:28px;margin-bottom:22px}
+    .core-values-head h2{max-width:17ch;font-size:clamp(29px,4vw,46px);color:var(--forest)}
+    .core-values-head p{max-width:51ch;color:var(--ink-2);font-size:15px;line-height:1.65}
+    .core-value-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    .core-value{position:relative;overflow:hidden;min-height:278px;padding:25px;border:1px solid var(--line);border-radius:25px;background:#fff;box-shadow:var(--sh-2);display:flex;flex-direction:column}
+    .core-value::after{content:"";position:absolute;width:150px;height:150px;right:-62px;top:-62px;border-radius:50%;background:var(--value-soft);opacity:.85}
+    .core-value-num{position:relative;z-index:1;display:grid;place-items:center;width:42px;height:42px;border-radius:14px;background:var(--value-soft);color:var(--value);font-family:var(--display);font-size:13px;font-weight:800}
+    .core-value h3{position:relative;z-index:1;margin-top:30px;font-size:clamp(25px,2.4vw,34px);color:var(--forest)}
+    .core-value p{position:relative;z-index:1;margin-top:10px;color:var(--ink-2);font-size:14px;line-height:1.65}
+    .core-value ul{position:relative;z-index:1;margin:17px 0 0;padding:0;list-style:none;display:grid;gap:8px;color:var(--ink-2);font-size:12.5px;font-weight:700}
+    .core-value li{display:flex;align-items:flex-start;gap:8px}
+    .core-value li::before{content:"✓";display:grid;place-items:center;flex:0 0 18px;height:18px;border-radius:50%;background:var(--value-soft);color:var(--value);font-size:10px;font-weight:900}
+    .core-value a{position:relative;z-index:1;margin-top:auto;padding-top:20px;color:var(--value);font-size:13px;font-weight:800}
+    .core-value.capture{--value:#176b33;--value-soft:#e8f6e7}
+    .core-value.understand{--value:#6d45c4;--value-soft:#f0ebff}
+    .core-value.protect{--value:#b36a08;--value-soft:#fff1d5}
+
     /* ---- sections ---- */
     .section{padding:var(--section) 0}
     .section,.life,.blog,.cta{content-visibility:visible;contain:none}
@@ -609,6 +656,7 @@
       .life-photo::after{background:linear-gradient(0deg,rgba(200,220,73,.85),transparent 46%)}
     }
     @media(max-width:820px){.links{display:none}.trust{grid-template-columns:1fr 1fr}.flow-under{align-items:flex-start;flex-wrap:wrap;gap:10px}.flow-under .sub{white-space:normal}.flow-under .flow-link{margin-left:0}}
+    @media(max-width:820px){.core-values-head{align-items:flex-start;flex-direction:column;gap:10px}.core-value-grid{grid-template-columns:1fr}.core-value{min-height:0}.core-value h3{margin-top:20px}}
     @media(max-width:560px){
       .nav{height:64px}
       .hero h1{font-size:clamp(31px,8.6vw,40px)}
@@ -644,7 +692,7 @@
       .rise{opacity:1;transform:none}
     }
   
-    /* GG_NAV_CSS START */.ggnav{display:flex;align-items:center;gap:18px;flex-wrap:wrap}.ggnav a{color:#5C6B60;font-weight:700;font-size:14.5px;text-decoration:none}.ggnav a:hover{color:#15281C}.ggnav .btn.accent{color:#fff}.wrap.nav,.gg-header-row{height:64px}.wrap.nav .ggnav a,.gg-header-row .ggnav a{color:#5C6B60;font-weight:700;font-size:14.5px;text-decoration:none}.wrap.nav .ggdd-card a,.gg-header-row .ggdd-card a{font-weight:600;font-size:14px}.wrap.nav .ggbrand,.gg-header-row .ggbrand{display:inline-flex;align-items:center;gap:9px;font-family:var(--font-bricolage,Bricolage Grotesque),sans-serif;font-size:21px;font-weight:800;color:#12261B;letter-spacing:-0.02em;text-decoration:none}.wrap.nav .ggmark,.gg-header-row .ggmark{display:inline-block;width:auto;height:auto;margin:0;padding:0;border-radius:0;background:none;font-style:normal;font-size:22px;line-height:1}.wrap.nav a.ggcta,.gg-header-row a.ggcta{display:inline-flex;align-items:center;justify-content:center;padding:10px 18px;border-radius:999px;background:#12341F;color:#fff;font-size:14.5px;font-weight:700;line-height:1.2;text-decoration:none;border:0}.wrap.nav a.ggcta:hover,.gg-header-row a.ggcta:hover{background:#1B4A2C;color:#fff}.ggdd{position:relative;display:inline-flex}.ggdd-top{display:inline-flex;align-items:center;gap:4px}.ggdd-caret{font-size:11px;font-style:normal;opacity:.75}.ggdd-menu{position:absolute;left:0;top:100%;padding-top:10px;opacity:0;visibility:hidden;transform:translateY(-4px);transition:opacity .15s,transform .15s,visibility .15s;z-index:60}.ggdd:hover .ggdd-menu,.ggdd:focus-within .ggdd-menu{opacity:1;visibility:visible;transform:none}.ggdd-card{min-width:232px;background:#fff;border:1px solid #E4EDE4;border-radius:16px;padding:8px;box-shadow:0 22px 44px -28px rgba(16,40,26,.55);display:flex;flex-direction:column;gap:2px}.ggdd-card a{padding:9px 12px;border-radius:10px;font-weight:600;font-size:14px;white-space:nowrap}.ggdd-card a:hover{background:#F1F8EE;color:#15281C}.wrap.nav .ggbrand,.gg-header-row .ggbrand{margin-right:0;flex-shrink:0}.wrap.nav .ggnav,.gg-header-row .ggnav{margin-left:12px}.wrap.nav .ggright,.gg-header-row .ggright{margin-left:auto}.wrap.nav .ggnav{flex:1 1 auto;min-width:0}.wrap.nav .ggm,.gg-header-row .ggm{display:none}@media(max-width:1023px){.wrap.nav .ggdd,.gg-header-row .ggdd{display:none}.wrap.nav a.gglink,.gg-header-row a.gglink{display:none}.wrap.nav a.ggcta,.gg-header-row a.ggcta{display:none}.wrap.nav .ggm,.gg-header-row .ggm{margin-left:auto}.wrap.nav,.gg-header-row{min-height:64px}.wrap.nav .ggm,.gg-header-row .ggm{position:relative;display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;flex-shrink:0}.wrap.nav .ggm-cb,.gg-header-row .ggm-cb{position:absolute;left:0;top:0;width:42px;height:42px;margin:0;padding:0;border:0;opacity:0;cursor:pointer;z-index:2;-webkit-appearance:none;appearance:none}.wrap.nav .ggm-ico,.gg-header-row .ggm-ico{position:relative;display:block;width:20px;height:14px}.wrap.nav .ggm-ico i,.gg-header-row .ggm-ico i{position:absolute;left:0;width:20px;height:2px;border-radius:2px;background:#15281C;transition:transform .18s,opacity .18s}.wrap.nav .ggm-b1,.gg-header-row .ggm-b1{top:0}.wrap.nav .ggm-b2,.gg-header-row .ggm-b2{top:6px}.wrap.nav .ggm-b3,.gg-header-row .ggm-b3{top:12px}.wrap.nav .ggm-cb:focus-visible,.gg-header-row .ggm-cb:focus-visible{opacity:1;outline:2px solid #12341F;outline-offset:-6px;border-radius:10px}.wrap.nav .ggm-cb:checked ~ .ggm-ico .ggm-b1,.gg-header-row .ggm-cb:checked ~ .ggm-ico .ggm-b1{transform:translateY(6px) rotate(45deg)}.wrap.nav .ggm-cb:checked ~ .ggm-ico .ggm-b2,.gg-header-row .ggm-cb:checked ~ .ggm-ico .ggm-b2{opacity:0}.wrap.nav .ggm-cb:checked ~ .ggm-ico .ggm-b3,.gg-header-row .ggm-cb:checked ~ .ggm-ico .ggm-b3{transform:translateY(-6px) rotate(-45deg)}.wrap.nav .ggm-panel,.gg-header-row .ggm-panel{position:fixed;left:0;right:0;top:64px;z-index:70;display:none;background:#fff;border-bottom:1px solid #E4EDE4;box-shadow:0 22px 44px -28px rgba(16,40,26,.55);max-height:72vh;overflow-y:auto}.wrap.nav .ggm-cb:checked ~ .ggm-panel,.gg-header-row .ggm-cb:checked ~ .ggm-panel{display:block}.wrap.nav .ggm-sheet,.gg-header-row .ggm-sheet{display:grid;grid-template-columns:1fr 1fr;gap:0 18px;width:min(1180px,calc(100% - clamp(24px,5vw,56px)));margin:0 auto;padding:4px 0 14px}.wrap.nav .ggm-sheet a,.gg-header-row .ggm-sheet a{display:block;padding:13px 2px;font-size:14.5px;font-weight:700;color:#3D4F44;border-bottom:1px solid #F0F4F0;text-decoration:none}.wrap.nav .ggm-sheet a:hover,.gg-header-row .ggm-sheet a:hover{color:#12341F}.wrap.nav a.ggm-cta,.gg-header-row a.ggm-cta{grid-column:1/-1;display:flex;align-items:center;justify-content:center;margin:14px 0 4px;padding:14px 18px;border-radius:999px;background:#12341F;color:#fff;font-size:15px;font-weight:700;border-bottom:0;text-decoration:none}.wrap.nav a.ggm-cta:hover,.gg-header-row a.ggm-cta:hover{background:#1B4A2C;color:#fff}}
+    /* GG_NAV_CSS START */.ggnav{display:flex;align-items:center;gap:18px;flex-wrap:wrap}.ggnav a{color:#5C6B60;font-weight:700;font-size:14.5px;text-decoration:none}.ggnav a:hover{color:#15281C}.ggnav .btn.accent{color:#fff}.wrap.nav,.gg-header-row{height:64px}.wrap.nav .ggnav a,.gg-header-row .ggnav a{color:#5C6B60;font-weight:700;font-size:14.5px;text-decoration:none}.wrap.nav .ggdd-card a,.gg-header-row .ggdd-card a{font-weight:600;font-size:14px}.wrap.nav .ggbrand,.gg-header-row .ggbrand{display:inline-flex;align-items:center;gap:9px;font-family:var(--font-bricolage,Bricolage Grotesque),sans-serif;min-width:44px;min-height:44px;font-size:21px;font-weight:800;color:#12261B;letter-spacing:-0.02em;text-decoration:none}.wrap.nav .ggmark,.gg-header-row .ggmark{display:inline-block;width:auto;height:auto;margin:0;padding:0;border-radius:0;background:none;font-style:normal;font-size:22px;line-height:1}.wrap.nav a.ggcta,.gg-header-row a.ggcta{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 18px;border-radius:999px;background:#12341F;color:#fff;font-size:14.5px;font-weight:700;line-height:1.2;text-decoration:none;border:0}.wrap.nav a.ggcta:hover,.gg-header-row a.ggcta:hover{background:#1B4A2C;color:#fff}footer a{display:inline-flex;min-width:44px;min-height:44px;align-items:center;padding-left:7px;padding-right:7px}.card-link{display:inline-flex!important;min-height:44px;align-items:center}.eyebrow,.pill,.zoom-hint,.screen-note,.story-card>span,.bill{font-size:12px!important}.ggdd{position:relative;display:inline-flex}.ggdd-top{display:inline-flex;min-height:44px;align-items:center;gap:4px}.ggdd-caret{font-size:11px;font-style:normal;opacity:.75}.ggdd-menu{position:absolute;left:0;top:100%;padding-top:10px;opacity:0;visibility:hidden;transform:translateY(-4px);transition:opacity .15s,transform .15s,visibility .15s;z-index:60}.ggdd:hover .ggdd-menu,.ggdd:focus-within .ggdd-menu{opacity:1;visibility:visible;transform:none}.ggdd-card{min-width:232px;background:#fff;border:1px solid #E4EDE4;border-radius:16px;padding:8px;box-shadow:0 22px 44px -28px rgba(16,40,26,.55);display:flex;flex-direction:column;gap:2px}.ggdd-card a{display:flex;min-height:44px;align-items:center;padding:9px 12px;border-radius:10px;font-weight:600;font-size:14px;white-space:nowrap}.ggdd-card a:hover{background:#F1F8EE;color:#15281C}.wrap.nav .ggbrand,.gg-header-row .ggbrand{margin-right:0;flex-shrink:0}.wrap.nav .ggnav,.gg-header-row .ggnav{margin-left:12px}.wrap.nav .ggright,.gg-header-row .ggright{margin-left:auto}.wrap.nav .ggnav{flex:1 1 auto;min-width:0}.wrap.nav .ggm,.gg-header-row .ggm{display:none}@media(max-width:1023px){.wrap.nav .ggdd,.gg-header-row .ggdd{display:none}.wrap.nav a.gglink,.gg-header-row a.gglink{display:none}.wrap.nav a.ggcta,.gg-header-row a.ggcta{display:none}.wrap.nav .ggm,.gg-header-row .ggm{margin-left:auto}.wrap.nav,.gg-header-row{min-height:64px}.wrap.nav .ggm,.gg-header-row .ggm{position:relative;display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;flex-shrink:0}.wrap.nav .ggm-cb,.gg-header-row .ggm-cb{position:absolute;left:0;top:0;width:44px;height:44px;margin:0;padding:0;border:0;opacity:0;cursor:pointer;z-index:2;-webkit-appearance:none;appearance:none}.wrap.nav .ggm-ico,.gg-header-row .ggm-ico{position:relative;display:block;width:20px;height:14px}.wrap.nav .ggm-ico i,.gg-header-row .ggm-ico i{position:absolute;left:0;width:20px;height:2px;border-radius:2px;background:#15281C;transition:transform .18s,opacity .18s}.wrap.nav .ggm-b1,.gg-header-row .ggm-b1{top:0}.wrap.nav .ggm-b2,.gg-header-row .ggm-b2{top:6px}.wrap.nav .ggm-b3,.gg-header-row .ggm-b3{top:12px}.wrap.nav .ggm-cb:focus-visible,.gg-header-row .ggm-cb:focus-visible{opacity:1;outline:2px solid #12341F;outline-offset:-6px;border-radius:10px}.wrap.nav .ggm-cb:checked ~ .ggm-ico .ggm-b1,.gg-header-row .ggm-cb:checked ~ .ggm-ico .ggm-b1{transform:translateY(6px) rotate(45deg)}.wrap.nav .ggm-cb:checked ~ .ggm-ico .ggm-b2,.gg-header-row .ggm-cb:checked ~ .ggm-ico .ggm-b2{opacity:0}.wrap.nav .ggm-cb:checked ~ .ggm-ico .ggm-b3,.gg-header-row .ggm-cb:checked ~ .ggm-ico .ggm-b3{transform:translateY(-6px) rotate(-45deg)}.wrap.nav .ggm-panel,.gg-header-row .ggm-panel{position:fixed;left:0;right:0;top:64px;z-index:70;display:none;background:#fff;border-bottom:1px solid #E4EDE4;box-shadow:0 22px 44px -28px rgba(16,40,26,.55);max-height:72vh;overflow-y:auto}.wrap.nav .ggm-cb:checked ~ .ggm-panel,.gg-header-row .ggm-cb:checked ~ .ggm-panel{display:block}.wrap.nav .ggm-sheet,.gg-header-row .ggm-sheet{display:grid;grid-template-columns:1fr 1fr;gap:0 18px;width:min(1180px,calc(100% - clamp(24px,5vw,56px)));margin:0 auto;padding:4px 0 14px}.wrap.nav .ggm-sheet a,.gg-header-row .ggm-sheet a{display:block;padding:13px 2px;font-size:14.5px;font-weight:700;color:#3D4F44;border-bottom:1px solid #F0F4F0;text-decoration:none}.wrap.nav .ggm-sheet a:hover,.gg-header-row .ggm-sheet a:hover{color:#12341F}.wrap.nav a.ggm-cta,.gg-header-row a.ggm-cta{grid-column:1/-1;display:flex;align-items:center;justify-content:center;margin:14px 0 4px;padding:14px 18px;border-radius:999px;background:#12341F;color:#fff;font-size:15px;font-weight:700;border-bottom:0;text-decoration:none}.wrap.nav a.ggm-cta:hover,.gg-header-row a.ggm-cta:hover{background:#1B4A2C;color:#fff}}
 .site-head .wrap.nav{gap:18px}
 .links{gap:18px}
 .links a{padding:0;border-radius:0}
@@ -652,6 +700,102 @@
 .links .ggdd-card a{padding:9px 12px;border-radius:10px}
 .links .ggdd-card a:hover{background:#F1F8EE;color:#15281C}
 /* GG_NAV_CSS END */
+  
+    /* One combined plan hero; the product story continues below. */
+    .hero h1{font-size:clamp(48px,6vw,78px);max-width:12ch;margin:18px 0}
+    .hero h1 span{display:inline}
+    .hero .lede{font-size:17px;max-width:48ch}
+    .plan-calculator{margin:22px 0 0;padding:18px;border:1px solid var(--line);border-radius:20px;background:rgba(255,255,255,.9);max-width:500px}
+    .plan-calculator label{font-size:13px;font-weight:750;display:block}
+    .plan-calculator .ten-calc{margin-top:10px}
+    .plan-calculator .ten-field{padding:10px;box-shadow:none}
+    .plan-calculator .ten-out{margin-top:12px}
+    .plan-note{font-size:12px;line-height:1.5;color:var(--ink-2);margin:6px 0 0}
+    .plan-secondary{background:transparent;border:1px solid var(--line)}
+    .plan-areas{display:flex;flex-wrap:wrap;gap:4px 14px;margin:16px 0}
+    .plan-areas a{font-size:12px;min-height:32px;display:inline-flex;align-items:center;color:var(--ink-2);text-decoration:underline;text-underline-offset:4px}
+    .ten-field:focus-within{outline:2px solid var(--accent);outline-offset:3px}
+    @media(max-width:600px){.hero h1{font-size:52px}.plan-calculator{padding:14px}.plan-calculator .ten-calc{display:grid;grid-template-columns:1fr}.ten-field input{width:100%;min-width:0}.plan-areas a{min-height:44px}.hero .actions{flex-wrap:wrap}.hero .actions a{min-height:44px}}
+  
+    .hero{padding-bottom:32px}
+    .hero-grid{align-items:center}
+    .hero-trust{font-size:12px;color:var(--ink-2);margin:18px 0 0;line-height:1.7}
+    .plan-paths{padding:36px 0 42px;background:#f6f8f5;border-block:1px solid var(--line)}
+    .plan-paths-heading{display:flex;align-items:end;justify-content:space-between;gap:30px;margin-bottom:22px}
+    .plan-paths-heading h2{font-size:clamp(26px,3vw,38px);max-width:24ch;margin-top:9px}
+    .plan-paths-heading>p{font-size:14px;line-height:1.65;max-width:40ch;color:var(--ink-2);margin:0}
+    .plan-path-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+    .plan-path{display:flex;flex-direction:column;padding:20px 16px;background:white;border:1px solid var(--line);border-radius:18px;color:var(--ink);text-decoration:none;transition:transform .15s,border-color .15s}
+    .plan-path:hover{transform:translateY(-3px);border-color:var(--accent)}
+    .plan-path:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+    .plan-path>span{display:grid;place-items:center;width:40px;height:40px;background:#edf3e9;border-radius:12px;font-size:22px;margin-bottom:18px}
+    .plan-path h3{font-size:19px;line-height:1.2;min-height:46px}
+    .plan-path p{font-size:13px;line-height:1.6;color:var(--ink-2);margin:10px 0 18px}
+    .plan-path b{font-size:12px;margin-top:auto;color:var(--forest)}
+    @media(max-width:1000px){.plan-path-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.plan-path h3{min-height:0}}
+    @media(max-width:600px){.plan-paths-heading{display:block}.plan-paths-heading>p{margin-top:14px}.plan-path-grid{grid-template-columns:1fr}.plan-path{display:grid;grid-template-columns:40px 1fr;gap:5px 14px;padding:16px}.plan-path>span{grid-row:1/4;margin:0}.plan-path h3,.plan-path p,.plan-path b{grid-column:2}.plan-path p{margin:3px 0 7px}.hero .lede{font-size:16px}.ten-field b{white-space:nowrap}.hero h1{font-size:clamp(42px,12vw,52px)}}
+    @media(prefers-reduced-motion:reduce){.plan-path{transition:none}.plan-path:hover{transform:none}}
+
+    .hero-other-options{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+    .hero-other-options .btn{font-size:13px;min-height:44px;padding:10px 17px;box-shadow:none}
+    .hero .hero-downloads{justify-content:flex-start;margin-top:14px;gap:10px}
+    .hero-trust{color:var(--forest);font-weight:700}
+    .homepage-trust-strip{list-style:none;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding:0;margin:0 0 32px;border:1px solid var(--line);border-radius:18px;background:#fff;box-shadow:0 3px 6px #13291b08}
+    .homepage-trust-strip li{text-align:center;padding:18px 10px;font-size:13px;font-weight:700;color:var(--ink-2)}
+    .homepage-trust-strip li+li{border-left:1px solid var(--line)}
+    .hero-bubble{max-width:205px}
+    @media(max-width:600px){.homepage-trust-strip{grid-template-columns:1fr 1fr}.homepage-trust-strip li:nth-child(3){border-left:0}.homepage-trust-strip li:nth-child(n+3){border-top:1px solid var(--line)}.hero-other-options{display:grid;grid-template-columns:1fr 1fr}.hero-other-options .btn{padding:10px 8px;font-size:12px}.hero-bubble{max-width:160px}}
+  
+    /* Clear primary action, with alternative entry points in their own row. */
+    .hero{padding-top:32px;padding-bottom:26px}
+    .hero-grid{align-items:start;gap:clamp(28px,4vw,60px)}
+    .hero .hero-image-only{margin-top:32px}
+    .hero h1{margin-top:16px;font-size:clamp(48px,5.5vw,72px)}
+    .hero .lede{line-height:1.65;margin-bottom:0}
+    .hero .plan-calculator{margin-top:20px;background:#f7faf7;box-shadow:none}
+    .hero .actions{align-items:center;gap:20px;margin-top:22px}
+    .hero-how-link{display:inline-flex;align-items:center;min-height:44px;font-size:14px;font-weight:700;color:var(--forest);text-underline-offset:5px;text-decoration:underline}
+    .start-options{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:20px 0;border-top:1px solid var(--line);margin-bottom:18px}
+    .start-options h2{font-family:var(--font);font-size:15px;letter-spacing:0;line-height:1.4}
+    .start-options-label p{font-size:12px;color:var(--ink-2);margin:5px 0 0;line-height:1.5}
+    .start-options-actions{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+    .start-options .hero-other-options,.start-options .hero-downloads{margin:0;display:flex;gap:10px;justify-content:flex-start}
+    .start-options .hero-other-options .btn{font-size:13px;padding:10px 14px}
+    @media(max-width:1000px){.start-options{align-items:flex-start}.start-options-actions{gap:12px}.hero .hero-image-only{margin-top:0}}
+    @media(max-width:600px){.hero{padding-top:22px}.hero-grid{gap:24px}.hero h1{font-size:clamp(42px,12vw,52px)}.hero .actions{gap:8px 16px}.hero .actions .btn{width:100%}.hero .hero-how-link{justify-content:center;width:100%}.start-options{flex-direction:column;gap:14px}.start-options-actions{width:100%}.start-options .hero-other-options{width:100%;display:grid;grid-template-columns:1fr 1fr}.start-options .hero-other-options .btn{padding:10px 6px;font-size:12px}.start-options .hero-downloads{width:100%}.hero-trust{font-size:11px}.plan-calculator .plan-note{font-size:11px}}
+      .start-options{justify-content:center}.start-options .hero-other-options{width:auto;display:flex}
+  
+    .signup-trust-panel{border:1px solid var(--line);border-radius:20px;background:#fff;box-shadow:0 3px 8px #13291b08;margin-bottom:30px;overflow:hidden}
+    .signup-trust-panel .start-options{border:0;margin:0;padding:18px 20px;justify-content:center}
+    .signup-trust-panel .start-options-actions{justify-content:center}
+    .signup-trust-panel .homepage-trust-strip{border:0;border-top:1px solid var(--line);border-radius:0;margin:0;box-shadow:none;background:#fafcf9}
+    .signup-trust-panel .homepage-trust-strip li{padding:13px 8px}
+    @media(max-width:600px){.signup-trust-panel .start-options{align-items:center;padding:16px}.signup-trust-panel .start-options-actions{flex-direction:column;gap:12px}.signup-trust-panel .hero-downloads{justify-content:center}.signup-trust-panel .homepage-trust-strip li{font-size:12px}}
+  
+    @media(min-width:1001px){.plan-paths-heading{display:block}.plan-paths-heading h2{max-width:none;white-space:nowrap;font-size:clamp(28px,3vw,38px)}.plan-paths-heading>p{max-width:none;margin-top:12px}}
+  
+    .core-values-head{display:block}
+    .core-values-head h2{max-width:none}
+    .core-values-head p{max-width:none;width:100%;margin:14px 0 0;line-height:1.7}
+    @media(min-width:821px){.core-values-head h2{white-space:nowrap;font-size:clamp(30px,3.6vw,46px)}}
+  
+    @media(min-width:1100px){
+      .signup-trust-panel{display:flex;align-items:center;padding:12px 16px;gap:16px}
+      .signup-trust-panel .start-options{padding:0;flex:0 0 auto}
+      .signup-trust-panel .start-options-actions{gap:10px;flex-wrap:nowrap}
+      .signup-trust-panel .homepage-trust-strip{flex:1;min-width:0;border:0;background:transparent;align-items:center}
+      .signup-trust-panel .homepage-trust-strip li{padding:12px 8px;white-space:nowrap;font-size:12px}
+      .signup-trust-panel .hero-other-options .btn{padding:10px 12px}
+      .signup-trust-panel .store-btn{min-height:44px}
+    }
+  
+    @media(min-width:1100px){
+      .signup-trust-panel{width:100%;box-sizing:border-box;gap:0;padding:12px 0}
+      .signup-trust-panel .start-options{padding:0 16px}
+      .signup-trust-panel .homepage-trust-strip{align-self:stretch}
+      .signup-trust-panel .homepage-trust-strip li{display:flex;align-items:center;justify-content:center;padding:12px 6px}
+      .signup-trust-panel .homepage-trust-strip li:first-child{border-left:1px solid var(--line)}
+    }
   </style>
 </head>
 <body id="top">
@@ -664,7 +808,7 @@
            list, which is how it drifted out of step with the rest of the site
            and kept pointing at resources/index.html instead of /resources. -->
       <nav class="links ggnav" aria-label="Primary">
-        <!-- GG_NAV START --><span class="ggdd"><a class="ggdd-top" href="/how-it-works">Why GetGuac<i class="ggdd-caret" aria-hidden="true">▾</i></a><span class="ggdd-menu"><span class="ggdd-card"><a href="/why-getguac">Why GetGuac is different</a><a href="/how-it-works">How it works</a><a href="/get-started">The get-started guide</a><a href="/features">Features</a><a href="/learn#goals">Goal stories</a><a href="/security">Security</a><a href="/pricing">Pricing</a></span></span></span><span class="ggdd"><a class="ggdd-top" href="/learn">Learn<i class="ggdd-caret" aria-hidden="true">▾</i></a><span class="ggdd-menu"><span class="ggdd-card"><a href="/learn#guides">Guides</a><a href="/articles">Articles</a><a href="/calculators">Calculators</a><a href="/learn#tools">Tools</a><a href="/faq">FAQ</a></span></span></span><span class="ggdd"><a class="ggdd-top" href="/marketplace">Shopping<i class="ggdd-caret" aria-hidden="true">▾</i></a><span class="ggdd-menu"><span class="ggdd-card"><a href="/marketplace">Marketplace</a><a href="/coupons">Coupons</a></span></span></span><span class="ggdd"><a class="ggdd-top" href="/games">Games<i class="ggdd-caret" aria-hidden="true">▾</i></a><span class="ggdd-menu"><span class="ggdd-card"><a href="/games">Play the arcade</a><a href="/share#games">Share a game</a></span></span></span><span class="ggdd"><a class="ggdd-top" href="/share">Share GetGuac<i class="ggdd-caret" aria-hidden="true">▾</i></a><span class="ggdd-menu"><span class="ggdd-card"><a href="/share#forward">Forward to a friend</a><a href="/share#refer">Refer a friend</a><a href="/share#bookmark">Save a bookmark</a></span></span></span><a class="gglink ggright" href="/login">Sign in</a><span class="ggm"><input class="ggm-cb" type="checkbox" id="gg-menu" aria-label="Menu"><span class="ggm-ico" aria-hidden="true"><i class="ggm-b1"></i><i class="ggm-b2"></i><i class="ggm-b3"></i></span><span class="ggm-panel"><span class="ggm-sheet"><a href="/why-getguac">Why GetGuac is different</a><a href="/how-it-works">How it works</a><a href="/get-started">The get-started guide</a><a href="/features">Features</a><a href="/learn#goals">Goal stories</a><a href="/security">Security</a><a href="/pricing">Pricing</a><a href="/learn#guides">Guides</a><a href="/articles">Articles</a><a href="/calculators">Calculators</a><a href="/learn#tools">Tools</a><a href="/faq">FAQ</a><a href="/marketplace">Marketplace</a><a href="/coupons">Coupons</a><a href="/games">Play the arcade</a><a href="/share#games">Share a game</a><a href="/share#forward">Forward to a friend</a><a href="/share#refer">Refer a friend</a><a href="/share#bookmark">Save a bookmark</a><a href="/login">Sign in</a><a class="ggm-cta" href="/join">Get started</a></span></span></span><!-- GG_NAV END -->
+        <!-- GG_NAV START --><a class="gglink" href="/find-your-10">Find 10%</a><span class="ggdd"><a class="ggdd-top" href="/features/capture">Capture<i class="ggdd-caret" aria-hidden="true">▾</i></a><span class="ggdd-menu"><span class="ggdd-card"><a href="/features/capture">All capture tools</a><a href="/features/capture/income">Income and records</a><a href="/features/capture/accounts">Accounts and documents</a><a href="/features/capture/email">Email and connections</a><a href="/features/capture/receipts">Receipt capture</a></span></span></span><span class="ggdd"><a class="ggdd-top" href="/features/understand">Understand<i class="ggdd-caret" aria-hidden="true">▾</i></a><span class="ggdd-menu"><span class="ggdd-card"><a href="/features/understand">All understand tools</a><a href="/features/understand/dashboard">Dashboard</a><a href="/features/understand/budget">Budget</a><a href="/features/understand/reports">Reports and insights</a><a href="/features/understand/guac-ai">Guac AI</a></span></span></span><span class="ggdd"><a class="ggdd-top" href="/features/protect">Protect<i class="ggdd-caret" aria-hidden="true">▾</i></a><span class="ggdd-menu"><span class="ggdd-card"><a href="/features/protect">All protect tools</a><a href="/features/protect/goals">Savings and goals</a><a href="/features/protect/bills">Bills and subscriptions</a><a href="/features/protect/returns">Returns and refunds</a><a href="/deals">Deals and shopping</a><a href="/marketplace">Marketplace</a><a href="/coupons">Coupons</a></span></span></span><span class="ggdd"><a class="ggdd-top" href="/learn">Learn<i class="ggdd-caret" aria-hidden="true">▾</i></a><span class="ggdd-menu"><span class="ggdd-card"><a href="/how-it-works">How GetGuac works</a><a href="/get-started">Get-started guide</a><a href="/articles">Articles</a><a href="/calculators">Calculators</a><a href="/games">Games</a><a href="/faq">FAQ</a></span></span></span><span class="ggdd"><a class="ggdd-top" href="/about">About<i class="ggdd-caret" aria-hidden="true">▾</i></a><span class="ggdd-menu"><span class="ggdd-card"><a href="/why-getguac">Why GetGuac</a><a href="/pricing">Pricing</a><a href="/security">Security and privacy</a><a href="/download">Download apps</a><a href="/share">Share GetGuac</a><a href="/contact">Contact</a></span></span></span><a class="gglink ggright" href="/login">Sign in</a><span class="ggm"><input class="ggm-cb" type="checkbox" id="gg-menu" aria-label="Menu"><span class="ggm-ico" aria-hidden="true"><i class="ggm-b1"></i><i class="ggm-b2"></i><i class="ggm-b3"></i></span><span class="ggm-panel"><span class="ggm-sheet"><a href="/find-your-10">Find 10%</a><a href="/features/capture">All capture tools</a><a href="/features/capture/income">Income and records</a><a href="/features/capture/accounts">Accounts and documents</a><a href="/features/capture/email">Email and connections</a><a href="/features/capture/receipts">Receipt capture</a><a href="/features/understand">All understand tools</a><a href="/features/understand/dashboard">Dashboard</a><a href="/features/understand/budget">Budget</a><a href="/features/understand/reports">Reports and insights</a><a href="/features/understand/guac-ai">Guac AI</a><a href="/features/protect">All protect tools</a><a href="/features/protect/goals">Savings and goals</a><a href="/features/protect/bills">Bills and subscriptions</a><a href="/features/protect/returns">Returns and refunds</a><a href="/deals">Deals and shopping</a><a href="/marketplace">Marketplace</a><a href="/coupons">Coupons</a><a href="/how-it-works">How GetGuac works</a><a href="/get-started">Get-started guide</a><a href="/articles">Articles</a><a href="/calculators">Calculators</a><a href="/games">Games</a><a href="/faq">FAQ</a><a href="/why-getguac">Why GetGuac</a><a href="/pricing">Pricing</a><a href="/security">Security and privacy</a><a href="/download">Download apps</a><a href="/share">Share GetGuac</a><a href="/contact">Contact</a><a href="/login">Sign in</a><a class="ggm-cta" href="/register">Start free</a></span></span></span><!-- GG_NAV END -->
       </nav>
       <a class="btn primary ggcta" href="/join">Get started</a>
     </div>
@@ -673,46 +817,97 @@
   <main>
 
     <!-- ===================== hero ===================== -->
-    <section class="hero">
+    <section class="hero" aria-labelledby="tenTitle">
       <div class="wrap">
         <div class="hero-grid">
           <div>
-            <span class="pill">Guac-AI · personal finance assistant</span>
-            <h1>Keep More Guac <span>in Your Pocket<span class="h1-emoji"> 🥑</span></span></h1>
-            <p class="lede">You work hard for every dollar. GetGuac reads your receipts and bank statements, remembers what your household bought, catches money that can come back, and helps the next shopping trip feel lighter. Your money’s wingman. Keep your guac.</p>
+            <span class="pill">Your money. Your priorities. Your 10%.</span>
+            <h1 id="tenTitle">Find your <span>10%.</span></h1>
+            <p class="lede">Keep more of what you bring home. Use your receipts, bills, and spending records to choose practical changes and track your progress.</p>
+            <div class="plan-calculator">
+              <label for="tenIncome">What is your monthly take-home income?</label>
+              <form class="ten-calc" id="tenCalc" autocomplete="off">
+                <div class="ten-field"><span aria-hidden="true">$</span><input id="tenIncome" inputmode="decimal" aria-label="Monthly take-home income" value="4,200"><b>/ month</b></div>
+                <button type="submit">Show my 10%</button>
+              </form>
+              <p class="ten-out" id="tenOut" aria-live="polite">Your 10% target: <strong>$420 a month</strong>.</p>
+              <p class="plan-note">A goal to work toward, not guaranteed savings. This calculation stays on your device.</p>
+            </div>
             <div class="actions">
-              <a class="btn primary" href="/join?try=receipt">📷 Try 1 receipt</a>
-              <a class="btn green" href="/join">Start free with Google</a>
+              <a class="btn primary" href="/register">Start my 10% plan →</a>
+              <a class="hero-how-link" href="/find-your-10">See how it works ↗</a>
             </div>
-            <div class="app-links hero-store-links" aria-label="Download GetGuac">
-              <a class="store-btn" href="https://apps.apple.com/us/app/getguac/id6790993237" target="_blank" rel="noopener noreferrer" aria-label="Download GetGuac on the App Store">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.4 12.7c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.9-3.5.9s-1.8-.9-3-.8c-1.5 0-2.9.9-3.7 2.3-1.6 2.7-.4 6.8 1.1 9 .8 1.1 1.6 2.3 2.8 2.2 1.1 0 1.6-.7 2.9-.7s1.7.7 2.9.7 2-1.1 2.7-2.2c.9-1.2 1.2-2.4 1.2-2.5 0 0-2.4-.9-2.4-3.6zM14.2 5.9c.6-.8 1-1.8.9-2.9-.9 0-2 .6-2.6 1.4-.6.7-1.1 1.8-.9 2.8 1 .1 2-.5 2.6-1.3z"/></svg>
-                <span><small>Download on the</small><strong>App Store</strong></span>
-              </a>
-              <a class="store-btn" href="https://play.google.com/store/apps/details?id=app.getguac.getguac" target="_blank" rel="noopener noreferrer" aria-label="Get GetGuac on Google Play">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.6 2.3c-.3.3-.5.8-.5 1.4v16.6c0 .6.2 1.1.5 1.4l.1.1 9.3-9.3v-.2L3.7 2.9l-.1-.6z"/><path d="M16.2 15.6 13 12.4v-.2l3.2-3.2.1.1 3.8 2.2c1.1.6 1.1 1.6 0 2.2l-3.9 2.1z"/><path d="M16.3 15.5 13 12.2 3.6 21.7c.4.4 1 .4 1.7.1l11-6.3M16.3 8.9 5.3 2.6c-.7-.4-1.3-.3-1.7.1l9.4 9.5 3.3-3.3z"/></svg>
-                <span><small>Get it on</small><strong>Google Play</strong></span>
-              </a>
-            </div>
-            <div class="micro"><span>✓ Free forever</span><span>✓ No card required</span><span>✓ Delete anytime</span></div>
+            
           </div>
 
           <div class="hero-image-only" aria-label="A family happily reviewing GetGuac savings together">
             <img class="hero-family-only" src="home/story-people/openai-hero-giggling-family-baby-v2.webp" alt="A joyful family laughing together with a giggling baby while using a tablet" width="1536" height="1024" loading="eager" fetchpriority="high" decoding="async" srcset="home/story-people/openai-hero-giggling-family-baby-v2-768.webp 768w, home/story-people/openai-hero-giggling-family-baby-v2-1152.webp 1152w, home/story-people/openai-hero-giggling-family-baby-v2.webp 1536w" sizes="(max-width: 900px) 100vw, 720px">
             <img class="hero-phone-inline" src="home/goals/phone-organized.webp" alt="GetGuac showing organized purchases and spending insights" width="360" height="757" loading="eager" decoding="async">
-            <span class="hero-bubble hb-1"><small>🔄 Subscription spotted</small><strong>Review the renewal</strong></span>
-            <span class="hero-bubble hb-2"><small>↩ Return window</small><strong>5 days left to act</strong></span>
-            <span class="hero-bubble hb-3"><small>🧾 Receipt organized</small><strong>41 items read</strong></span>
+            <span class="hero-bubble hb-1"><small>Understand spending</small><strong>See where your money goes</strong></span>
+            <span class="hero-bubble hb-2"><small>Track progress</small><strong>Follow your monthly target</strong></span>
+            <span class="hero-bubble hb-3"><small>Choose an action</small><strong>Review a bill or repeat buy</strong></span>
           </div>
         </div>
 
-        <div id="trust" class="trust rise">
-          <span>🏦 No bank login</span>
-          <span>🔒 Encrypted</span>
-          <span>🗑 Delete everything</span>
-          <span>📱 iOS · Android · Web</span>
-        </div>
+      </div>
+    </section>
 
+    <div class="wrap"><div class="signup-trust-panel"><aside class="start-options" aria-label="Sign up or download GetGuac"><div class="start-options-actions">            <div class="hero-other-options" aria-label="Google signup"><a class="btn plan-secondary" href="/register">Continue with Google →</a></div>
+            <div class="app-links hero-downloads">
+            <a class="store-btn" href="https://apps.apple.com/us/app/getguac/id6790993237" target="_blank" rel="noopener noreferrer" aria-label="Download GetGuac on the App Store">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.4 12.7c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.9-3.5.9s-1.8-.9-3-.8c-1.5 0-2.9.9-3.7 2.3-1.6 2.7-.4 6.8 1.1 9 .8 1.1 1.6 2.3 2.8 2.2 1.1 0 1.6-.7 2.9-.7s1.7.7 2.9.7 2-1.1 2.7-2.2c.9-1.2 1.2-2.4 1.2-2.5 0 0-2.4-.9-2.4-3.6zM14.2 5.9c.6-.8 1-1.8.9-2.9-.9 0-2 .6-2.6 1.4-.6.7-1.1 1.8-.9 2.8 1 .1 2-.5 2.6-1.3z"/></svg>
+              <span><small>Download on the</small><strong>App Store</strong></span>
+            </a>
+            <a class="store-btn" href="https://play.google.com/store/apps/details?id=app.getguac.getguac" target="_blank" rel="noopener noreferrer" aria-label="Get GetGuac on Google Play">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.6 2.3c-.3.3-.5.8-.5 1.4v16.6c0 .6.2 1.1.5 1.4l.1.1 9.3-9.3v-.2L3.7 2.9l-.1-.6z"/><path d="M16.2 15.6 13 12.4v-.2l3.2-3.2.1.1 3.8 2.2c1.1.6 1.1 1.6 0 2.2l-3.9 2.1z"/><path d="M16.3 15.5 13 12.2 3.6 21.7c.4.4 1 .4 1.7.1l11-6.3M16.3 8.9 5.3 2.6c-.7-.4-1.3-.3-1.7.1l9.4 9.5 3.3-3.3z"/></svg>
+              <span><small>Get it on</small><strong>Google Play</strong></span>
+            </a>
+          </div>
+</div></aside>
+    <ul class="homepage-trust-strip" aria-label="Privacy and availability"><li>🏦 No bank login</li><li>🔒 Encrypted</li><li>▣ Delete everything</li><li>▦ iOS · Android · Web</li></ul></div></div>
+    <section class="plan-paths" aria-labelledby="planPathsTitle">
+      <div class="wrap">
+        <div class="plan-paths-heading"><div><span class="eyebrow">Small choices. A clear direction.</span><h2 id="planPathsTitle">Five ways to work toward your 10%.</h2></div><p>Start with the opportunities that fit your life. Your records help you decide what is worth changing.</p></div>
+        <div class="plan-path-grid">
+          <a href="/find-your-10" class="plan-path"><span aria-hidden="true">✂</span><h3>Cut spending</h3><p>Review purchases and keep what was worth it.</p><b>Explore the plan →</b></a>
+          <a href="/find-your-10" class="plan-path"><span aria-hidden="true">🏷</span><h3>Cheaper options</h3><p>Compare repeat purchases using your actual prices.</p><b>Explore the plan →</b></a>
+          <a href="/find-your-10" class="plan-path"><span aria-hidden="true">▤</span><h3>Lower bills</h3><p>Review recurring costs, subscriptions, and fees.</p><b>Explore the plan →</b></a>
+          <a href="/find-your-10" class="plan-path"><span aria-hidden="true">◈</span><h3>Money that earns</h3><p>Understand interest, account costs, and tradeoffs.</p><b>Explore the plan →</b></a>
+          <a href="/find-your-10" class="plan-path"><span aria-hidden="true">▧</span><h3>Build wealth</h3><p>Learn the basics and connect progress to your goals.</p><b>Explore the plan →</b></a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== core values ===================== -->
+    <section class="core-values" aria-labelledby="coreValuesTitle">
+      <div class="wrap">
+        <div class="core-values-head rise">
+          <div><span class="eyebrow">The tools behind your 10% plan</span><h2 id="coreValuesTitle">Capture. Understand. Protect.</h2></div>
+          <p>GetGuac captures the shopping details scattered across receipts, statements, and email. It turns them into a clear money story—and protects what you earned with return reminders, rewards, price intelligence, and better next decisions.</p>
+        </div>
+        <div class="core-value-grid">
+          <article class="core-value capture rise">
+            <span class="core-value-num">01</span>
+            <h3>Capture</h3>
+            <p>Bring the full shopping trail into one private place—without another spreadsheet.</p>
+            <ul><li>Scan paper and digital receipts</li><li>Import statements and purchase email</li><li>Separate real receipts from promotions</li></ul>
+            <a href="/join?try=receipt">Capture your first receipt →</a>
+          </article>
+          <article class="core-value understand rise">
+            <span class="core-value-num">02</span>
+            <h3>Understand</h3>
+            <p>Turn totals into items, categories, patterns, bills, rewards, and answers you can act on.</p>
+            <ul><li>See what each purchase contained</li><li>Connect spending across stores and time</li><li>Find useful offers from email, web, and Guac AI</li></ul>
+            <a href="goals/understand.html">See what GetGuac explains →</a>
+          </article>
+          <article class="core-value protect rise">
+            <span class="core-value-num">03</span>
+            <h3>Protect</h3>
+            <p>Keep more of what you earned by catching the moments that are easy to overlook.</p>
+            <ul><li>Track returns, refunds, and recalls</li><li>Surface expiring rewards and better prices</li><li>Spot fees, duplicates, and recurring costs</li></ul>
+            <a href="goals/recover.html">See how GetGuac protects money →</a>
+          </article>
+        </div>
       </div>
     </section>
 
@@ -895,7 +1090,7 @@
             <div class="appshot">
               <span class="applabel">Inside the GetGuac app</span>
               <button type="button" class="shot" id="webShot" aria-label="Enlarge the GetGuac web screen">
-                <img class="web" id="stageWeb" src="home/goals/web-receipts.webp" alt="The GetGuac web app" width="900" height="563" loading="lazy" decoding="async">
+                <img class="web" id="stageWeb" src="/marketing/current/receipts.webp" alt="The GetGuac web app" width="1440" height="900" loading="lazy" decoding="async">
               </button>
               <button type="button" class="shot shot-phone" id="phoneShot" aria-label="Enlarge the GetGuac mobile screen">
                 <img id="stagePhone" src="home/goals/phone-receipts.webp" alt="The GetGuac mobile app" width="360" height="757" loading="lazy" decoding="async">
@@ -942,7 +1137,7 @@
 
         <aside class="security-card rise" aria-labelledby="securityProofTitle">
           <div class="security-title"><i aria-hidden="true">🛡</i><h2 id="securityProofTitle">Your security is our priority</h2></div>
-          <ul><li>256-bit bank-level encryption</li><li>Read-only access</li><li>Your data is never sold</li><li>Secure and private by design</li></ul>
+          <p class="plan-note">No bank login · Encrypted · Delete everything, anytime · iOS, Android and web</p><ul><li>256-bit bank-level encryption</li><li>Read-only access</li><li>Your data is never sold</li><li>Secure and private by design</li></ul>
           <a href="/security">How we protect you →</a>
         </aside>
       </div>
@@ -1267,7 +1462,7 @@
       setText('proofValue', s.proofValue);
       setText('proofNote', s.proofNote);
       const web = el('stageWeb'), phone = el('stagePhone'), person = el('stagePerson');
-      web.src = 'home/goals/web-' + s.slug + '.webp';
+      web.src = '/marketing/current/' + ({"bank":"bank","bills":"bills","car-miles":"car-miles","categories":"reports","fees":"guacwizard","games":"games","guac-ai":"guac-ai","guacmoney":"dashboard","inbox":"inbox","marketplace":"marketplace","organized":"dashboard","receipts":"receipts","returns":"returns","smashlist":"shopping","stash":"stash","steals":"steals","subs":"subscriptions","tax":"tax","worth-it":"worth-it","predictions":"shopping"}[s.slug] || s.slug) + '.webp';
       phone.src = 'home/goals/phone-' + s.slug + '.webp';
       person.src = s.image;
       person.alt = s.imageAlt;

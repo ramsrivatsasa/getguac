@@ -4,6 +4,8 @@
 
 import MarketingShell from '../../components/MarketingShell'
 import DownloadClient from './DownloadClient'
+import TrustLine from '../../components/TrustLine'
+import ConversionBand from '../../components/ConversionBand'
 
 export const metadata = {
   title: 'Download GetGuac — Android APK, iPhone & web',
@@ -17,6 +19,8 @@ export default function DownloadPage() {
   return (
     <MarketingShell subtitle="download">
       <DownloadClient />
+      <TrustLine />
+      <ConversionBand />
     </MarketingShell>
   )
 }

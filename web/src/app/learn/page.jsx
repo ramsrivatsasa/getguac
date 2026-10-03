@@ -6,7 +6,8 @@ import AdSlot from '../../components/AdSlot'
 import MarketingShell from '../../components/MarketingShell'
 import ResourceSearch from '../../components/ResourceSearch'
 import { ARTICLES } from '../../lib/articles'
-import { GUIDES, TOOLS, GOALS, CALCULATOR_COUNT, EXTERNAL_GUIDES } from '../../lib/static-pages'
+import { TRACKS as ACADEMY_TRACKS, academyLessons } from '../../lib/academy'
+import { GUIDES, BASICS_GUIDES, TOOLS, GOALS, CALCULATOR_COUNT, EXTERNAL_GUIDES } from '../../lib/static-pages'
 
 // The hub the nav calls "Learn", at /learn since 2026-08-09. Reorganised against
 // two references Ram sent: rocketmoney.com/learn and ynab.com/help-center.
@@ -129,6 +130,52 @@ const GUIDE_ART = {
   },
 }
 
+// Photos chosen to avoid any already used elsewhere on this page.
+const BASICS_ART = {
+  '/goals/take-stock.html': {
+    img: '/home/story-people/protect-couple-tablet-768.webp',
+    alt: 'A couple reviewing their finances on a tablet',
+    pill: 'Start here',
+    heading: 'Know where you stand',
+    body: 'Income, spending, what you own and what you owe — the number every plan starts from.',
+  },
+  '/goals/first-budget.html': {
+    img: '/home/campaign-story/roommates-plan-v2-768.webp',
+    alt: 'Roommates planning a budget together',
+    pill: 'Budget',
+    heading: 'Build your first budget',
+    body: '50/30/20 or zero-based, with categories set from a real month of receipts.',
+  },
+  '/goals/money-goals.html': {
+    img: '/home/campaign-story/park-trail-payoff-v2-768.webp',
+    alt: 'A family walking outdoors with room to plan ahead',
+    pill: 'Goals',
+    heading: 'Set money goals with a date',
+    body: 'An amount, a date and a monthly number, in priority order.',
+  },
+  '/goals/pay-down-debt.html': {
+    img: '/home/story-people/family.webp',
+    alt: 'A family relaxing at home with a clear debt plan',
+    pill: 'Debt',
+    heading: 'Pay down debt, one target at a time',
+    body: 'Avalanche or snowball: minimums on every debt, extra on one.',
+  },
+  '/goals/credit-cards.html': {
+    img: '/home/campaign-story/sports-payoff-v2.webp',
+    alt: 'Friends enjoying a game without a card balance',
+    pill: 'Credit cards',
+    heading: 'Use the card, skip the interest',
+    body: 'Pay the statement balance by the due date and keep the grace period.',
+  },
+  '/goals/credit-report.html': {
+    img: '/home/story-people/protect.webp',
+    alt: 'A woman checking a printed record against her phone',
+    pill: 'Credit',
+    heading: 'Check your credit report',
+    body: 'Free weekly reports from all three bureaus, read line by line.',
+  },
+}
+
 /* ---------------------------------------------------------------------------
  * Curation. Slugs, not indexes, so reordering lib/articles.js cannot silently
  * change which article is featured. byslug() throws on a typo rather than
@@ -237,19 +284,19 @@ const RES_CSS = `
 .rs-crumb a { color: #7c8a80; text-decoration: none; }
 .rs-crumb a:hover { color: #138a48; }
 .rs-hero-grid { display: grid; grid-template-columns: .95fr 1.05fr; align-items: center; gap: 54px; }
-.rs-eyebrow { color: #138a48; font-size: 11px; font-weight: 900; letter-spacing: .13em; text-transform: uppercase; }
+.rs-eyebrow { color: #138a48; font-size: 12px; font-weight: 900; letter-spacing: .11em; text-transform: uppercase; }
 .rs-hero h1 { margin: 9px 0 15px; font-size: clamp(40px,5vw,68px); line-height: .98; font-weight: 800; letter-spacing: -.05em; }
 .rs-lede { max-width: 650px; color: #405449; font-size: 17px; }
 .rs-feat { position: relative; display: block; overflow: hidden; border-radius: 30px; box-shadow: 0 18px 40px -30px rgba(10,35,20,.45); text-decoration: none; color: inherit; transition: .2s; }
 .rs-feat:hover { transform: translateY(-4px); box-shadow: 0 26px 50px -30px rgba(10,35,20,.55); }
-.rs-feat-img { position: relative; aspect-ratio: 16/10; }
-.rs-feat-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.rs-scrim { position: absolute; inset: auto 0 0; height: 58%; background: linear-gradient(transparent, rgba(11,40,23,.55) 42%, rgba(9,32,18,.86)); }
-.rs-feat-copy { position: absolute; z-index: 2; left: 26px; right: 26px; bottom: 22px; color: #fff; }
+.rs-feat-img { position: relative; }
+.rs-feat-img img { width: 100%; height: auto; display: block; }
+.rs-scrim { display: none; }
+.rs-feat-copy { position: static; padding: 22px 26px; color: #15281c; background: #fff; }
 .rs-feat-copy h2 { margin: 8px 0 6px; font-size: clamp(22px,2.3vw,30px); line-height: 1.1; font-weight: 800; }
-.rs-feat-copy p { margin: 0 0 10px; color: #dbe9df; font-size: 14px; line-height: 1.5; }
-.rs-feat-copy .rs-eyebrow { color: #cbea9d; }
-.rs-feat-more { color: #fff; font-weight: 800; font-size: 13px; }
+.rs-feat-copy p { margin: 0 0 10px; color: #475569; font-size: 14px; line-height: 1.5; }
+.rs-feat-copy .rs-eyebrow { color: #6d28d9; }
+.rs-feat-more { color: #6d28d9; font-weight: 800; font-size: 13px; }
 .rs-route-shell { padding: 22px 0 10px; background: #fff; }
 .rs-route-head { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 12px; }
 .rs-route-head b { font-size: 16px; font-weight: 800; letter-spacing: -.02em; }
@@ -265,21 +312,22 @@ const RES_CSS = `
 .rs-head { display: flex; align-items: end; justify-content: space-between; gap: 30px; margin-bottom: 22px; }
 .rs-head h2 { margin: 5px 0 0; font-size: clamp(26px,2.8vw,38px); line-height: 1.05; font-weight: 800; }
 .rs-head p { max-width: 560px; color: #65736a; margin: 0; }
-.rs-more { flex-shrink: 0; color: #138a48; font-weight: 800; font-size: 13px; text-decoration: none; white-space: nowrap; }
+.rs-more { display: inline-flex; min-height: 44px; align-items: center; flex-shrink: 0; color: #138a48; font-weight: 800; font-size: 13px; text-decoration: none; white-space: nowrap; }
 .rs-more:hover { text-decoration: underline; }
+.rs-crumb a { display: inline-flex; min-width: 44px; min-height: 44px; align-items: center; }
 .rs-topics { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
 .rs-topic { display: flex; flex-direction: column; padding: 20px; border: 1px solid #dce7de; border-radius: 20px; background: #fff; transition: .18s; }
 .rs-topic:hover { border-color: #b9dcc2; box-shadow: 0 18px 34px -28px rgba(10,35,20,.45); }
 .rs-topic-top { display: flex; align-items: center; gap: 11px; }
 .rs-topic-ico { display: inline-grid; place-items: center; flex-shrink: 0; width: 34px; height: 34px; border-radius: 11px; background: #eef8e9; color: #138a48; }
 .rs-topic h3 { margin: 0; flex: 1; font-size: 17px; font-weight: 800; letter-spacing: -.02em; }
-.rs-topic-n { flex-shrink: 0; color: #8b998f; font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.rs-topic-n { flex-shrink: 0; color: #77877c; font-size: 12px; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; }
 .rs-topic p { margin: 9px 0 0; color: #65736a; font-size: 13px; line-height: 1.45; }
 .rs-topic-links { display: flex; flex-direction: column; margin: 12px 0 0; padding: 12px 0 0; border-top: 1px solid #eef2ee; }
-.rs-topic-link { display: flex; align-items: baseline; gap: 8px; padding: 7px 0; color: #2f4437; font-size: 13.5px; font-weight: 600; line-height: 1.35; text-decoration: none; }
+.rs-topic-link { display: flex; min-height: 44px; align-items: center; gap: 8px; padding: 7px 0; color: #2f4437; font-size: 13.5px; font-weight: 600; line-height: 1.35; text-decoration: none; }
 .rs-topic-link:hover { color: #138a48; }
 .rs-topic-link i { flex-shrink: 0; font-style: normal; color: #b3c3b8; }
-.rs-topic-all { margin-top: auto; padding-top: 11px; color: #138a48; font-size: 12.5px; font-weight: 800; text-decoration: none; }
+.rs-topic-all { display: flex; min-height: 44px; align-items: center; margin-top: auto; padding-top: 11px; color: #138a48; font-size: 12.5px; font-weight: 800; text-decoration: none; }
 .rs-topic-all:hover { text-decoration: underline; }
 .rs-start { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
 .rs-start-item { display: flex; align-items: flex-start; gap: 13px; padding: 17px 19px; border: 1px solid #dce7de; border-radius: 18px; background: #fff; text-decoration: none; color: inherit; transition: .18s; }
@@ -303,12 +351,12 @@ const RES_CSS = `
 .rs-cards-4 { grid-template-columns: repeat(4,1fr); }
 .rs-card { overflow: hidden; border: 1px solid #dce7de; border-radius: 24px; background: #fff; box-shadow: 0 18px 40px -30px rgba(10,35,20,.45); transition: .2s; text-decoration: none; color: inherit; display: flex; flex-direction: column; }
 .rs-card:hover { transform: translateY(-4px); box-shadow: 0 24px 45px -30px rgba(10,35,20,.55); }
-.rs-card img { width: 100%; height: 140px; object-fit: cover; display: block; }
+.rs-card img { width: 100%; height: auto; display: block; }
 .rs-copy { padding: 17px 18px; display: flex; flex-direction: column; flex: 1; }
 .rs-copy h3 { margin: 6px 0 7px; font-size: 19px; line-height: 1.1; font-weight: 800; letter-spacing: -.03em; }
 .rs-copy p { margin: 0; color: #65736a; font-size: 13px; line-height: 1.45; }
 .rs-link { margin-top: auto; padding-top: 13px; color: #138a48; font-weight: 800; font-size: 13px; }
-.rs-pill { display: inline-flex; align-self: flex-start; padding: 5px 9px; border-radius: 999px; background: #eef8e9; color: #138a48; font-size: 9px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+.rs-pill { display: inline-flex; align-self: flex-start; padding: 6px 10px; border-radius: 999px; background: #eef8e9; color: #138a48; font-size: 12px; font-weight: 900; letter-spacing: .07em; text-transform: uppercase; }
 .rs-goal-disclosure { padding: 0 22px 18px; border: 1px solid #dce7de; border-radius: 22px; background: #fff; }
 .rs-goal-disclosure summary { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 18px 0 0; cursor: pointer; list-style: none; }
 .rs-goal-disclosure summary::-webkit-details-marker { display: none; }
@@ -351,7 +399,16 @@ const RES_CSS = `
   .rs-hero h1 { font-size: 40px; }
   .rs-head { display: block; }
   .rs-more { display: inline-block; margin-top: 10px; }
-  .rs-card img { height: 200px; }
+  .rs-card img { height: auto; }
+}
+.rs-academy { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 20px 24px; border: 1px solid #e4e8e4; border-radius: 22px; background: #fff; color: #15281c; text-decoration: none; }
+.rs-academy:hover { border-color: #b9c9bd; }
+.rs-academy-title { display: block; margin: 4px 0 4px; font-size: 22px; font-weight: 800; line-height: 1.2; }
+.rs-academy-text { display: block; color: #5f6d63; font-size: 14px; }
+.rs-academy-cta { flex: 0 0 auto; display: inline-flex; align-items: center; min-height: 44px; padding: 10px 18px; border-radius: 999px; background: #12341f; color: #fff; font-size: 14px; font-weight: 700; }
+@media (max-width: 640px) {
+  .rs-academy { flex-direction: column; align-items: stretch; }
+  .rs-academy-cta { justify-content: center; }
 }
 `
 
@@ -361,7 +418,7 @@ const RES_CSS = `
 function ArtCard({ href, art, cta }) {
   return (
     <a className="rs-card" href={href} data-search={`${art.pill} ${art.heading} ${art.body}`}>
-      <img src={art.img} alt={art.alt} width={760} height={475} loading="lazy" decoding="async" />
+      <img src={art.img} alt={art.alt} width={768} height={512} loading="lazy" decoding="async" />
       <div className="rs-copy">
         <span className="rs-pill">{art.pill}</span>
         <h3>{art.heading}</h3>
@@ -439,9 +496,9 @@ export default function LearnPage() {
           <a className="rs-feat" href={`/articles/${featured.slug}`} data-search={`${featured.category} ${featured.title} ${featured.excerpt}`}>
             <div className="rs-feat-img">
               <img
-                src="/home/story-people/openai-hero-giggling-family-baby-v2.webp"
+                src="/home/story-people/openai-hero-giggling-family-baby-v2-768.webp"
                 alt="A family using GetGuac together"
-                width={1180} height={738} fetchPriority="high" decoding="async"
+                width={768} height={512} fetchPriority="high" decoding="async"
               />
               {/* A real element, not a ::after with content:''. Single quotes
                   inside a React <style> are escaped differently on the server than
@@ -574,6 +631,21 @@ export default function LearnPage() {
         art={TOOL_ART}
       />
 
+      {/* The Academy is the same lessons as one ordered course with progress,
+          so it sits directly above the guides it builds on. */}
+      <section className="rs-section" id="academy" style={{ paddingBottom: 0 }}>
+        <div className="rs-wrap">
+          <a className="rs-academy" href="/academy">
+            <span>
+              <span className="rs-eyebrow">GetGuac Academy</span>
+              <span className="rs-academy-title">Learn it as a course, in order.</span>
+              <span className="rs-academy-text">{academyLessons().length} lessons in {ACADEMY_TRACKS.length} tracks, each with an action plan, a worked example and one thing to try today. Track your progress as you go.</span>
+            </span>
+            <span className="rs-academy-cta">Open the Academy →</span>
+          </a>
+        </div>
+      </section>
+
       <CardSection
         id="guides"
         soft
@@ -584,6 +656,20 @@ export default function LearnPage() {
         art={GUIDE_ART}
         cta="Read the guide"
         cols={4}
+      />
+
+      {/* Money basics sit inside the same soft band as the practical guides —
+          both are our guides — and before the external .gov guides. Six cards
+          fill two rows of the default three-across grid. */}
+      <CardSection
+        id="basics"
+        soft
+        eyebrow="Money basics"
+        heading="The fundamentals, done with your own numbers."
+        sub="Start here if you are new to managing money: where you stand, a first budget, goals, debt and credit."
+        items={BASICS_GUIDES}
+        art={BASICS_ART}
+        cta="Read the guide"
       />
 
       {/* The trusted external .gov guides, directly under our own guides because
@@ -679,11 +765,12 @@ export default function LearnPage() {
 
       <div className="rs-wrap">
         <section className="rs-cta">
-          <h2>Start with one receipt.</h2>
-          <p>See your purchases clearly, keep more of your money and make the next shopping trip a little smarter.</p>
-          <a href="/join?try=receipt">Try 1 receipt</a>
+          <h2>Put what you learn into practice.</h2>
+          <p>Explore your budget, work toward a goal and keep your money decisions connected.</p>
+          <a href="/register">Start free</a>
         </section>
       </div>
     </MarketingShell>
   )
 }
+

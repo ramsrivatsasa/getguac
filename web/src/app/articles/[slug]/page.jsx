@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, Calculator as CalcIcon, Clock } from 'lucide-rea
 import MarketingShell from '../../../components/MarketingShell'
 import AdSlot from '../../../components/AdSlot'
 import ArticleFigure from '../../../components/ArticleFigure'
+import ConversionBand from '../../../components/ConversionBand'
 import { ARTICLES, getArticle } from '../../../lib/articles'
 
 const SITE_URL = 'https://getguac.app'
@@ -108,7 +109,7 @@ export default function ArticlePage({ params }) {
           <span aria-hidden>·</span>
           <span>Updated {prettyDate(updated)}</span>
           <span aria-hidden>·</span>
-          <Link href="/editorial-policy" className="text-emerald-700 hover:underline">Editorial policy</Link>
+          <Link href="/editorial-policy" className="inline-flex min-h-11 items-center text-emerald-700 hover:underline">Editorial policy</Link>
         </div>
 
         <div className="mt-6 space-y-4 text-[15px] text-gray-700 leading-relaxed">
@@ -159,16 +160,8 @@ export default function ArticlePage({ params }) {
             copy. Do not add a user-count line here ("join thousands of…"): that
             claim was cut from /join as false, and it is still false. Every
             feature named below ships today (receipt scan, email pull). */}
-        <div className="mt-10 rounded-2xl border border-emerald-100 bg-emerald-50/60 p-6 text-center">
-          <div className="text-xl sm:text-2xl font-black text-gray-900 leading-snug">Start Saving Today</div>
-          <p className="text-sm text-gray-600 mt-1.5 max-w-md mx-auto">
-            GetGuac scans your receipts, pulls them straight out of your email, and shows you where the money actually went. Free forever — no card, no fees, no spam.
-          </p>
-          <Link href="/register" className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-emerald-600 px-6 py-3 text-white font-bold text-sm hover:bg-emerald-700 transition-colors no-underline">
-            Get Started Free <ArrowRight size={15} />
-          </Link>
-        </div>
       </article>
+      <ConversionBand />
     </MarketingShell>
   )
 }

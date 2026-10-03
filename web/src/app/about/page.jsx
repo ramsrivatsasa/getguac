@@ -1,7 +1,10 @@
+import MarketingHero from '../../components/MarketingHero'
 // Public /about page — the short, honest brand story and what GetGuac stands for.
 import Link from 'next/link'
 import MarketingShell from '../../components/MarketingShell'
 import { Heart, Eye, Lock, Sparkles } from 'lucide-react'
+import TrustLine from '../../components/TrustLine'
+import ConversionBand from '../../components/ConversionBand'
 
 export const metadata = {
   title: 'About: Your Money, Made Clear',
@@ -19,15 +22,7 @@ const VALUES = [
 export default function AboutPage() {
   return (
     <MarketingShell subtitle="about">
-      <section className="max-w-3xl mx-auto px-4 sm:px-6 pt-14 sm:pt-20 pb-6 text-center">
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider">
-          <Sparkles size={12} /> Why we built GetGuac
-        </span>
-        <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-gray-900 mt-4 leading-tight">
-          Your money,
-          <span className="bg-gradient-to-br from-emerald-500 via-lime-500 to-amber-500 bg-clip-text text-transparent"> made clear.</span>
-        </h1>
-      </section>
+      <MarketingHero eyebrow="About GetGuac" title="Your money," accent="made clear." description="A friendly sidekick to help you understand everyday spending and keep more for the things that matter." imageSrc="/home/story-people/protect-couple-tablet-768.webp" imageAlt="A couple reviewing their household records together" />
 
       <section className="max-w-2xl mx-auto px-4 sm:px-6 py-6 text-gray-700 space-y-5 text-lg leading-relaxed">
         <p>
@@ -36,10 +31,7 @@ export default function AboutPage() {
           their own spending and keep more of it.
         </p>
         <p>
-          So we built GetGuac. Snap a receipt and Guac-AI reads every line, scores how you’re
-          spending, catches the fees and subscriptions you forgot about, tracks the refunds you’re
-          owed, and quietly finds you a better price. It’s the kind of help a sharp friend who’s
-          great with money would give you — without the judgment.
+          So we built GetGuac around three connected needs: Capture the information behind your money, Understand your budget and choices, and Protect the savings and goals that matter to you. Receipts add purchase detail; income, accounts, bills and goals give that detail a wider context.
         </p>
         <p>
           It’s free, it’s private, and it’s on your side. Because the money you save isn’t for us —
@@ -54,7 +46,7 @@ export default function AboutPage() {
               <div className="w-11 h-11 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
                 <v.icon size={22} />
               </div>
-              <h3 className="font-bold text-gray-900 mt-4">{v.title}</h3>
+              <h2 className="font-bold text-gray-900 mt-4">{v.title}</h2>
               <p className="text-sm text-gray-600 mt-1.5 leading-snug">{v.body}</p>
             </div>
           ))}
@@ -70,9 +62,8 @@ export default function AboutPage() {
           <div className="mt-3 space-y-4 leading-relaxed">
             <p>
               GetGuac is free to use, and we think you deserve to know how a free product pays its
-              bills. Our answer is boring on purpose: the site shows ordinary advertising, and
-              members who want an ad-free experience can pay for an optional premium upgrade.
-              That&apos;s it.
+              bills. Our answer is boring on purpose: public learning pages may show ordinary,
+              clearly labelled advertising. The GetGuac product itself stays free.
             </p>
             <p>
               What we don&apos;t do matters more. We never sell your data. We don&apos;t require a
@@ -131,6 +122,8 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
+      <TrustLine />
+      <ConversionBand />
     </MarketingShell>
   )
 }

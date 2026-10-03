@@ -22,6 +22,7 @@ import Link from 'next/link'
 import MarketingShell from '../../components/MarketingShell'
 import GuacMascot from '../../components/GuacMascot'
 import { BookOpen, PenLine, Megaphone, RefreshCw, AlertTriangle, Mail } from 'lucide-react'
+import TrustLine from '../../components/TrustLine'
 
 export const metadata = {
   title: 'Editorial policy',
@@ -59,6 +60,7 @@ export default function EditorialPolicyPage() {
           </div>
         </div>
 
+        <img src="/home/story-people/protect-couple-tablet-768.webp" alt="A couple reviewing their household records" width={768} height={512} className="mt-6 h-auto w-full rounded-3xl" />
         <p className="mt-5 text-[15px] text-gray-700 leading-relaxed">
           GetGuac publishes free money guides alongside a receipt scanner and spending tracker.
           This page says who writes them, what they are, what they are not, and where advertising
@@ -129,16 +131,17 @@ export default function EditorialPolicyPage() {
         </Section>
 
         <div className="mt-10 rounded-2xl border border-gray-100 bg-gray-50/60 p-4 text-xs leading-relaxed" style={{ color: MUTED }}>
-          Related: <Link href="/privacy" className="text-emerald-700 font-semibold hover:underline">Privacy</Link>{' · '}
-          <Link href="/security" className="text-emerald-700 font-semibold hover:underline">Security</Link>{' · '}
-          <Link href="/terms" className="text-emerald-700 font-semibold hover:underline">Terms</Link>{' · '}
-          <Link href="/about" className="text-emerald-700 font-semibold hover:underline">About</Link>
+          Related: <Link href="/privacy" className="inline-flex min-h-11 min-w-11 items-center justify-center px-1 text-emerald-700 font-semibold hover:underline">Privacy</Link>{' · '}
+          <Link href="/security" className="inline-flex min-h-11 min-w-11 items-center justify-center px-1 text-emerald-700 font-semibold hover:underline">Security</Link>{' · '}
+          <Link href="/terms" className="inline-flex min-h-11 min-w-11 items-center justify-center px-1 text-emerald-700 font-semibold hover:underline">Terms</Link>{' · '}
+          <Link href="/about" className="inline-flex min-h-11 min-w-11 items-center justify-center px-1 text-emerald-700 font-semibold hover:underline">About</Link>
         </div>
 
         <div className="mt-8">
-          <Link href="/articles" className="text-sm text-emerald-700 font-semibold hover:underline">← Back to all articles</Link>
+          <Link href="/articles" className="inline-flex min-h-11 items-center text-sm text-emerald-700 font-semibold hover:underline">← Back to all articles</Link>
         </div>
       </article>
+      <TrustLine className="pb-14" />
     </MarketingShell>
   )
 }

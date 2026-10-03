@@ -19,6 +19,33 @@ export default function HomeInteractions({ script }) {
   const initialized = useRef(false)
 
   useEffect(() => {
+    // Delegate because the server-rendered homepage can arrive after this island.
+    function calculate(event) {
+      const form = event.target.closest?.('#tenCalc')
+      if (!form) return
+      event.preventDefault()
+      const input = form.querySelector('#tenIncome')
+      const output = document.getElementById('tenOut')
+      if (!input || !output) return
+      const raw = input.value.trim().replace(/,/g, '')
+      const income = /^\d+(\.\d{1,2})?$/.test(raw) ? Number(raw) : NaN
+      if (!Number.isFinite(income) || income <= 0) {
+        input.setAttribute('aria-invalid', 'true')
+        output.textContent = 'Enter a monthly income greater than zero.'
+        return
+      }
+      input.removeAttribute('aria-invalid')
+      output.textContent = `Your 10% target: $${Math.round(income * 0.1).toLocaleString('en-US')} a month.`
+    }
+    document.addEventListener('submit', calculate)
+    document.addEventListener('change', calculate)
+    return () => {
+      document.removeEventListener('submit', calculate)
+      document.removeEventListener('change', calculate)
+    }
+  }, [])
+
+  useEffect(() => {
     if (initialized.current) return
     initialized.current = true
     try {

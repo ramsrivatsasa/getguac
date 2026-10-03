@@ -60,7 +60,7 @@ export const metadata = {
     template: '%s · GetGuac',
   },
   description:
-    'Turn receipts and statements into smarter money decisions. Find spending patterns, hidden fees, missed refunds, better prices, and purchases truly worth repeating.',
+    'Bring money records together, understand your budget and protect savings, goals and everyday value.',
   applicationName: 'GetGuac',
   keywords: [
     'receipt scanner app', 'free receipt scanner', 'spending tracker', 'expense tracker',
@@ -89,15 +89,15 @@ export const metadata = {
     type: 'website',
     siteName: 'GetGuac',
     url: SITE_URL,
-    title: 'GetGuac: Free Receipt Scanner & Spending Tracker',
+    title: 'GetGuac: Capture, Understand & Protect Your Money',
     description:
-      'Scan receipts, see where your money goes, catch hidden fees, and never miss a refund. Free — no cashback gimmicks.',
+      'Organize your money, plan your budget and track progress toward your goals. Free, with no bank login required.',
     images: [{ url: '/og.png', width: 1200, height: 630, alt: 'GetGuac — take control of your money' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'GetGuac: Free Receipt Scanner & Spending Tracker',
-    description: 'Scan receipts, see where your money goes, catch hidden fees, and never miss a refund. Free.',
+    title: 'GetGuac: Capture, Understand & Protect Your Money',
+    description: 'Capture your records. Understand your choices. Protect what matters. Free.',
     images: ['/og.png'],
   },
   manifest: '/site.webmanifest',
@@ -131,7 +131,7 @@ const jsonLd = {
       name: 'GetGuac',
       url: SITE_URL,
       logo: `${SITE_URL}/icon.svg`,
-      description: 'A free AI receipt scanner and spending tracker that helps you see and save your own money.',
+      description: 'A free money app for records, budgeting, goals, spending insights and everyday protection.',
     },
     {
       '@type': 'WebSite',
@@ -146,7 +146,7 @@ const jsonLd = {
       operatingSystem: 'Web, Android, iOS',
       applicationCategory: 'FinanceApplication',
       description:
-        'Scan receipts and bank statements, see where your money goes, catch hidden fees, track returns and refunds, and find better prices. Free.',
+        'Organize money records, plan a budget, track savings goals, and review bills and recoverable value. Free.',
       offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
     },
   ],

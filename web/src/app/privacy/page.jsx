@@ -40,38 +40,38 @@ export default function PrivacyPage() {
           <ul className="list-disc ml-5 space-y-1.5">
             <li><strong>Account basics</strong> — username, email, hashed password (never the plain password), birth date, and optional fields like phone number you choose to add.</li>
             <li><strong>Receipts you give us</strong> — the photo or email, the parsed items, totals, dates, store names, and any tags / categories you assign.</li>
-            <li><strong>Rewards & memberships</strong> — only what's printed on receipts you upload, plus loyalty numbers you enter yourself.</li>
+            <li><strong>Rewards & memberships</strong> — only what&apos;s printed on receipts you upload, plus loyalty numbers you enter yourself.</li>
             <li><strong>Household + chat</strong> — when you create or join a household, the membership record + chat messages you send.</li>
             <li><strong>Usage data</strong> — basic logs (which API endpoint, response time, error counts) tied to your account, kept 30 days for debugging and abuse prevention.</li>
           </ul>
-          <p className="mt-2 text-xs text-gray-500">We do NOT collect: bank credentials, social-security numbers, biometrics, your contacts, your location (beyond a receipt's store address), or your browsing history outside GetGuac.</p>
+          <p className="mt-2 text-xs text-gray-500">We do NOT collect: bank credentials, social-security numbers, biometrics, your contacts, your location (beyond a receipt&apos;s store address), or your browsing history outside GetGuac.</p>
         </Section>
 
         <Section icon={Eye} title="2. Who Can See What">
           <ul className="list-disc ml-5 space-y-1.5">
             <li><strong>You</strong> see all of it.</li>
-            <li><strong>Your household members</strong> see only: the shared shopping list rows you mark as shared, the household chat messages, and other members' display names. They do <strong>not</strong> see your receipts, rewards, totals, categories, or any analytics.</li>
+            <li><strong>Your household members</strong> see only: the shared shopping list rows you mark as shared, the household chat messages, and other members&apos; display names. They do <strong>not</strong> see your receipts, rewards, totals, categories, or any analytics.</li>
             <li><strong>Other GetGuac users</strong> can find you by email to start a 1:1 chat — same disclosure surface as a password reset. They cannot see any of your data unless you send them a message.</li>
             <li><strong>GetGuac employees</strong> — only on-call engineers, only when investigating a specific issue you reported, only the minimum needed to fix it. Every read is logged.</li>
-            <li><strong>Nobody else.</strong> We don't sell data. We don't share your account or receipt data with advertisers — no advertising network ever receives your purchases, totals, categories, email or phone number. We don't train external AI models on your receipts. Our public marketing pages do carry advertising scripts, which see only that a browser loaded a page; section 8 names them.</li>
+            <li><strong>Nobody else.</strong> We don&apos;t sell data. We don&apos;t share your account or receipt data with advertisers — no advertising network ever receives your purchases, totals, categories, email or phone number. We don&apos;t train external AI models on your receipts. Our public marketing pages do carry advertising scripts, which see only that a browser loaded a page; section 8 names them.</li>
           </ul>
         </Section>
 
         <Section icon={Lock} title="3. How It's Protected">
-          <p>Database rows are protected by per-user Row Level Security — even a bug in our application code can't return one user's receipts to another. Connections are HTTPS-only. Passwords are hashed with bcrypt. Storage URLs (the actual receipt photos) are time-limited and signed.</p>
-          <p>The <Link href="/security" className="text-emerald-700 font-semibold hover:underline">Security page</Link> has the technical breakdown — what's encrypted, what RLS policies exist, what we audit-log.</p>
+          <p>Database rows are protected by per-user Row Level Security — even a bug in our application code can&apos;t return one user&apos;s receipts to another. Connections are HTTPS-only. Passwords are hashed with bcrypt. Storage URLs (the actual receipt photos) are time-limited and signed.</p>
+          <p>The <Link href="/security" className="text-emerald-700 font-semibold hover:underline">Security page</Link> has the technical breakdown — what&apos;s encrypted, what RLS policies exist, what we audit-log.</p>
         </Section>
 
         <Section icon={Mail} title="4. Email & Notifications">
           <p>We email you for: account confirmation, password reset, security alerts (e.g. new sign-in from a new device), and household invites. Marketing emails are off by default. You can disable everything except security alerts from your profile page.</p>
-          <p>The free <span className="font-mono">@getguac.app</span> address that comes with your username is for receiving merchant receipts. We parse incoming messages to extract receipts; we do not read message bodies for any other purpose, and we don't send anything from your address without your explicit action.</p>
+          <p>The free <span className="font-mono">@getguac.app</span> address that comes with your username is for receiving merchant receipts. We parse incoming messages to extract receipts; we do not read message bodies for any other purpose, and we don&apos;t send anything from your address without your explicit action.</p>
         </Section>
 
         <Section icon={ShieldCheck} title="5. Retailer Connections (Beta)">
-          <p>If you choose to <strong>link a retailer account</strong> (Connections page → "Link account"), you sign into that retailer's own website inside an isolated browser session on your device. <strong>We never see your credentials.</strong> Username and password are typed into the retailer's own HTML form, on the retailer's own origin.</p>
-          <p>What we do see, only after you've signed in and only on the retailer's order-history page: the order metadata our extractor reads (store name, date, total, line items). We store these as receipts in your account, the same way email-forwarded receipts are stored.</p>
-          <p>The browser session — including any auth cookies the retailer set — is <strong>discarded when you close the linking screen</strong>. We don't store passwords, tokens, or any persistent credential. To pull receipts again later, you sign in again.</p>
-          <p>This feature is <strong>in beta</strong> and may break without notice. Some retailers' Terms of Service prohibit automated access to their sites; by using this feature you accept that risk. If a retailer requests that we disable a linker, we will do so promptly.</p>
+          <p>If you choose to <strong>link a retailer account</strong> (Connections page → &quot;Link account&quot;), you sign into that retailer&apos;s own website inside an isolated browser session on your device. <strong>We never see your credentials.</strong> Username and password are typed into the retailer&apos;s own HTML form, on the retailer&apos;s own origin.</p>
+          <p>What we do see, only after you&apos;ve signed in and only on the retailer&apos;s order-history page: the order metadata our extractor reads (store name, date, total, line items). We store these as receipts in your account, the same way email-forwarded receipts are stored.</p>
+          <p>The browser session — including any auth cookies the retailer set — is <strong>discarded when you close the linking screen</strong>. We don&apos;t store passwords, tokens, or any persistent credential. To pull receipts again later, you sign in again.</p>
+          <p>This feature is <strong>in beta</strong> and may break without notice. Some retailers&apos; Terms of Service prohibit automated access to their sites; by using this feature you accept that risk. If a retailer requests that we disable a linker, we will do so promptly.</p>
         </Section>
 
         <Section icon={Trash2} title="6. Deleting Your Data">
@@ -80,8 +80,8 @@ export default function PrivacyPage() {
         </Section>
 
         <Section icon={ShieldCheck} title="7. Your Rights">
-          <p>If you're in the EU/UK/California or another jurisdiction with data-protection laws, you can request: a copy of your data, correction of inaccurate data, deletion, or a portable export. Most of this is already self-serve in the app (profile → export / delete). For anything else, email us.</p>
-          <p>We respond within 30 days. We don't charge for these requests.</p>
+          <p>If you&apos;re in the EU/UK/California or another jurisdiction with data-protection laws, you can request: a copy of your data, correction of inaccurate data, deletion, or a portable export. Most of this is already self-serve in the app (profile → export / delete). For anything else, email us.</p>
+          <p>We respond within 30 days. We don&apos;t charge for these requests.</p>
         </Section>
 
         <Section icon={Database} title="8. Cookies & Tracking">
@@ -98,10 +98,10 @@ export default function PrivacyPage() {
         <Section icon={ShieldCheck} title="9. Third Parties We Use">
           <ul className="list-disc ml-5 space-y-1.5">
             <li><strong>Supabase</strong> — our database + auth + storage host. They cannot read your row-level-security-protected data; they hold the encrypted-at-rest copy.</li>
-            <li><strong>Google Gemini / Groq</strong> — receipt parsing. Only the receipt photo + text is sent, no account identifiers, and Anthropic's <em>and</em> Google's terms forbid them from training on this data.</li>
+            <li><strong>Google Gemini / Groq</strong> — receipt parsing. Only the receipt photo + text is sent, no account identifiers, and Anthropic&apos;s <em>and</em> Google&apos;s terms forbid them from training on this data.</li>
             <li><strong>Vercel</strong> — runtime hosting + CDN. They see request metadata, not response bodies.</li>
-            <li><strong>Sentry</strong> — crash + error reporting. We send the error stack and a coarse user identifier (so a single user's repeated crashes group together). No receipt content, no balances.</li>
-            <li><strong>PostHog</strong> — behavioral analytics. We send screen-view events and product-action events (e.g. "smashed a list item"). No receipt content, no PII beyond the user ID.</li>
+            <li><strong>Sentry</strong> — crash + error reporting. We send the error stack and a coarse user identifier (so a single user&apos;s repeated crashes group together). No receipt content, no balances.</li>
+            <li><strong>PostHog</strong> — behavioral analytics. We send screen-view events and product-action events (e.g. &quot;smashed a list item&quot;). No receipt content, no PII beyond the user ID.</li>
           </ul>
         </Section>
 
@@ -110,7 +110,7 @@ export default function PrivacyPage() {
         </Section>
 
         <Section icon={ShieldCheck} title="11. Changes to This Policy">
-          <p>If we change what we collect, who can see it, or how it's protected, we'll post the new policy here with a new "last updated" date and email you before the change takes effect for any data we already hold.</p>
+          <p>If we change what we collect, who can see it, or how it&apos;s protected, we&apos;ll post the new policy here with a new &quot;last updated&quot; date and email you before the change takes effect for any data we already hold.</p>
         </Section>
 
         <Section icon={Mail} title="12. Contact">

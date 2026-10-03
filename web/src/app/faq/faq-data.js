@@ -197,16 +197,16 @@ export const FAQ_GROUPS = {
       "body": "Yes.\n\nThe current website includes:\n\n* Steals\n* Marketplace\n* Coupons\n* shopping lists\n* family shopping functionality\n\nThe Marketplace can surface shopping information and deals without requiring a login."
     },
     {
-      "q": "What Is Shopping List?",
-      "body": "Shopping List is the shared shopping-list functionality.\n\nThe current website demonstrates a shopping list that can:\n\n* contain multiple items\n* route items to stores\n* identify potentially cheaper stores\n* be shared with family\n\nThe purpose is to make household shopping more coordinated."
+      "q": "What Is Smashlist?",
+      "body": "Smashlist is the shared shopping-list functionality.\n\nThe current website demonstrates a shopping list that can:\n\n* contain multiple items\n* route items to stores\n* identify potentially cheaper stores\n* be shared with family\n\nThe purpose is to make household shopping more coordinated."
     },
     {
       "q": "Can GetGuac Predict When I'll Need to Buy Something Again?",
       "body": "GetGuac includes purchase-based prediction features.\n\nThe current website demonstrates predictions such as:\n\n**Milk — approximately 3 days**\n\n**Paper towels — approximately 5 days**\n\n**Dog food — approximately 1 week**\n\nThese are predictions based on purchase history and should be treated as estimates rather than guarantees."
     },
     {
-      "q": "What Is Stash?",
-      "body": "Stash is designed to help you keep track of items you've purchased.\n\nThe current website describes it as tracking unique items and purchase information.\n\nIt can become particularly useful for remembering:\n\n* electronics\n* household products\n* frequently purchased items\n* personal purchases"
+      "q": "What Is My Items?",
+      "body": "My Items helps you keep track of products you've purchased.\n\nIt tracks unique items and their purchase information automatically from receipts.\n\nIt can be particularly useful for remembering:\n\n* electronics\n* household products\n* frequently purchased items\n* personal purchases"
     },
     {
       "q": "Can GetGuac Track Mileage?",
@@ -296,6 +296,9 @@ export const FAQ_GROUPS = {
 }
 
 export const PRIORITY_FAQS = [
+ {q:'Is GetGuac only for receipts?',body:'No. Capture brings income, accounts, statements and purchase records together. Understand includes Dashboard, Budget, reports and money insights. Protect includes savings goals, bills, subscriptions and recoverable value. Receipts add useful detail, but they are not the only starting point.'},
+ {q:'Can I start with a budget or a goal?',body:'Yes. After creating an account, open Budget to enter income and plan spending and savings. Open Wealth Path to record accounts and debts or set a savings goal and track progress. You choose what information to add.'},
+ {q:'Does GetGuac move money toward my goals?',body:'No. GetGuac helps you plan and track progress. You record your target, saved amount and contribution pace; it does not transfer funds or guarantee a result.'},
   {
     q: 'I already check my receipt at the store. Why should I scan it?',
     body: `### Picture this

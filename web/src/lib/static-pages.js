@@ -39,6 +39,19 @@ export const GUIDES = [
   { href: '/resources/guides/subscriptions.html', title: 'Audit the subscriptions life moved past', blurb: 'An hour of review that pays for itself, then keeps paying.' },
 ]
 
+// Money-basics guides (2026-10-01). Built on the goals layout like every new
+// guide, so they live in public/goals/ — but they are how-to guides, not goal
+// stories, which is why they are listed here rather than in GOALS. Order is the
+// reading path: take stock → budget → goals → debt → cards → credit report.
+export const BASICS_GUIDES = [
+  { href: '/goals/take-stock.html', title: 'Know where you stand before you plan.', blurb: 'Income, spending, what you own and what you owe.' },
+  { href: '/goals/first-budget.html', title: 'Build a budget from the month you actually had.', blurb: '50/30/20 or zero-based, set from real receipts.' },
+  { href: '/goals/money-goals.html', title: 'Turn “save more” into a goal with a date.', blurb: 'Amount, date, monthly number, order.' },
+  { href: '/goals/pay-down-debt.html', title: 'Pick one debt to beat, then roll the payment forward.', blurb: 'Avalanche or snowball, minimums on all.' },
+  { href: '/goals/credit-cards.html', title: 'Use the card. Skip the interest.', blurb: 'Pay the statement balance by the due date.' },
+  { href: '/goals/credit-report.html', title: 'Check your credit report like a receipt.', blurb: 'Free weekly reports, read line by line.' },
+]
+
 // Order matters and is the design's, not alphabetical: plan → anticipate → shop
 // → save → reflect → protect, which is the order the six cards appear in on
 // public/resources/index.html. The React hub renders from this list, so a
@@ -74,7 +87,6 @@ export const GOALS = [
   { href: '/goals/learn.html', title: 'Spend less on regret. More on real life.', blurb: 'Learn from every trip' },
   { href: '/goals/inbox.html', title: 'Shop online without crowding your real inbox.', blurb: 'A shopping inbox of your own' },
   { href: '/goals/miles.html', title: 'Make every eligible mile count.', blurb: 'A tax-ready mileage habit' },
-  { href: '/goals/guacmoney.html', title: 'See every small win add up.', blurb: 'A scoreboard for money kept' },
   { href: '/goals/arcade.html', title: 'Take a break that still counts.', blurb: 'Money does not have to be homework' },
   { href: '/goals/security.html', title: 'Keep the household story private.', blurb: 'Security you can audit' },
   { href: '/goals/data.html', title: 'Leave with everything—or delete it.', blurb: 'Your data, your call' },

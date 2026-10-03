@@ -1,3 +1,4 @@
+import MarketingHero from '../../components/MarketingHero'
 // Public /how-email-works page — explains the @getguac.app + +receipts pattern,
 // what to forward, what stays untouched, and how the AI parsing works.
 
@@ -5,6 +6,9 @@ import Link from 'next/link'
 import GuacMascot from '../../components/GuacMascot'
 import MarketingShell from '../../components/MarketingShell'
 import { Mail, Inbox, Forward, Sparkles, ShieldOff, ShoppingBag, Clock, EyeOff, CheckCircle2, ArrowRight } from 'lucide-react'
+import StageMarker from '../../components/StageMarker'
+import ConversionBand from '../../components/ConversionBand'
+import ReceiptFlow from '../../components/ReceiptFlow'
 
 export const metadata = {
   title: 'How GetGuac email works — your free @getguac.app inbox',
@@ -18,24 +22,8 @@ export default function HowEmailWorksPage() {
   return (
     <MarketingShell subtitle="how email works">
       {/* Hero */}
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 pt-12 pb-8">
-        <div className="flex items-start gap-5 flex-wrap">
-          <GuacMascot expression="eating" size={120} />
-          <div className="flex-1 min-w-[260px]">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider">
-              <Mail size={12} /> @getguac.app email
-            </span>
-            <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-gray-900 mt-3 leading-tight">
-              Two addresses.<br />
-              <span className="bg-gradient-to-br from-emerald-500 via-lime-500 to-amber-500 bg-clip-text text-transparent">One smart inbox.</span>
-            </h1>
-            <p className="text-lg text-gray-600 mt-3 max-w-2xl">
-              Every GetGuac account comes with a free email at <span className="font-mono">@getguac.app</span>.
-              Use it for merchant signups, store loyalty, online shopping — then let Guac-AI auto-file your receipts.
-            </p>
-          </div>
-        </div>
-      </section>
+      <MarketingHero eyebrow="GetGuac email" title="Two addresses." accent="One smart inbox." description="Keep shopping messages together and send receipt emails for processing. Review the extracted details against the original." imageSrc="/home/story-people/capture-blonde-produce-v1-768.webp" imageAlt="A shopper keeping a purchase record on her phone" />
+      <StageMarker active="capture" />
 
       {/* The two addresses */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
@@ -47,7 +35,7 @@ export default function HowEmailWorksPage() {
             <p className="text-[10px] uppercase tracking-wider font-bold text-emerald-700">Personal</p>
             <p className="font-mono text-lg font-black text-emerald-900 mt-1">you@getguac.app</p>
             <p className="text-sm text-gray-700 mt-3 leading-relaxed">
-              Your free mailbox. Read &amp; reply right inside GetGuac at <Link href="/inbox" className="font-semibold text-emerald-700 hover:underline">/inbox</Link>.
+              Your free mailbox. Read &amp; reply right inside GetGuac at <Link href="/inbox" className="inline-flex min-h-11 items-center font-semibold text-emerald-700 hover:underline">/inbox</Link>.
               We surface your mail in-app so you never have to juggle a separate webmail tab.
               <strong className="text-emerald-700"> You can pause this in Profile → Email settings any time.</strong>
             </p>
@@ -62,7 +50,7 @@ export default function HowEmailWorksPage() {
             <p className="font-mono text-lg font-black text-amber-900 mt-1">you+g@getguac.app</p>
             <p className="text-sm text-gray-700 mt-3 leading-relaxed">
               The magic address. Any email landing here is read by Guac-AI, parsed for store + items + total,
-              and filed into your <Link href="/receipts" className="font-semibold text-amber-800 hover:underline">Receipts</Link> within 10 minutes.
+              and filed into your <Link href="/receipts" className="inline-flex min-h-11 items-center font-semibold text-amber-800 hover:underline">Receipts</Link> within 10 minutes.
             </p>
             <p className="text-xs text-gray-500 mt-3 flex items-center gap-1.5"><Clock size={11} /> Auto-processed · &lt;10 min latency</p>
           </div>
@@ -136,47 +124,18 @@ export default function HowEmailWorksPage() {
         </div>
       </section>
 
-      {/* How it actually works */}
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 py-12">
-        <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-center mb-8">
-          From signup to insights — the full email journey
-        </h2>
-        <ol className="space-y-3">
-          {[
-            { n: '1', t: 'Claim your handle at signup', b: 'Pick a username (e.g. alex). You get alex@getguac.app + alex+g@getguac.app provisioned the moment you sign up — yours forever, no extra setup.' },
-            { n: '2', t: 'Use the address everywhere',  b: 'Sign up for Amazon, Walmart, Target, loyalty programs — anywhere you don\'t want to give out your real Gmail. Order confirmations land in your @getguac.app inbox.' },
-            { n: '3', t: 'Forward to +g',               b: 'Set one auto-forward rule in Gmail/Outlook: "subject contains: order confirmation → forward to alex+g@getguac.app". Or hit Forward on individual emails as they come in.' },
-            { n: '4', t: 'Email arrives at your GetGuac Mail inbox', b: 'Mail sent to your address lands in your GetGuac mailbox — hosted in a privacy-first data centre in Europe. The Delivered-To header is preserved so we know whether it was the bare address or +g.' },
-            { n: '5', t: 'Guac-AI poller picks it up',  b: 'Every 10 minutes our cron job logs in via encrypted IMAP, fetches new messages, and filters for the +g tag. Personal mail is skipped.' },
-            { n: '6', t: 'AI extracts the receipt',     b: 'Store name, line items, total, taxes, payment method — all parsed and saved to your Receipts table. The original message stays in your mailbox.' },
-            { n: '7', t: 'Shows up in your Receipts feed', b: 'You see the receipt within 10 minutes. Tap to edit, rate it, or assign a category. The AI gets sharper with every receipt you process.' },
-          ].map(s => (
-            <li key={s.n} className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm flex items-start gap-4">
-              <span className="text-3xl font-black text-emerald-300 select-none w-10 shrink-0">{s.n}</span>
-              <div className="min-w-0">
-                <h3 className="font-bold text-gray-900">{s.t}</h3>
-                <p className="text-sm text-gray-600 mt-1 leading-relaxed">{s.b}</p>
-              </div>
-            </li>
-          ))}
-        </ol>
+      {/* Approved receipt workflow: one reusable cycle with real product proof. */}
+      <section id="receipt-cycle" className="max-w-6xl mx-auto scroll-mt-24 py-12">
+        <ReceiptFlow
+          heading="Every receipt makes the next trip smarter."
+          blurb="Photo and email receipts become searchable purchase memory, then help every stage that follows."
+          href="/how-it-works"
+          linkLabel="See the complete GetGuac journey"
+          demoHref="/join?try=receipt"
+        />
       </section>
 
-      {/* CTA */}
-      <section className="max-w-3xl mx-auto px-4 sm:px-6 py-12 text-center">
-        <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-          Ready for a smarter inbox?
-        </h2>
-        <p className="text-gray-600 mt-3">
-          Every new account gets a free <span className="font-mono">@getguac.app</span> address — no extra setup.
-        </p>
-        <div className="flex flex-wrap justify-center gap-3 mt-5">
-          <Link href="/register" className="btn-primary text-base px-6 py-3">
-            <span className="text-lg">🥑</span> Claim your handle <ArrowRight size={16} />
-          </Link>
-          <Link href="/security" className="btn-secondary text-base px-6 py-3">Security details</Link>
-        </div>
-      </section>
+      <ConversionBand eyebrow="Capture email receipts without the clutter" title="Claim your free GetGuac address." description="Forward real receipts to your personal GetGuac address. Promotions stay promotions instead of becoming $0 receipts." secondaryHref="/security" secondaryLabel="Read the security details" />
     </MarketingShell>
   )
 }

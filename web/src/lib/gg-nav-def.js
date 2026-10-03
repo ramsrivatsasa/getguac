@@ -25,7 +25,7 @@
 // shopping surfaces, then Games, then Sign in. A visitor who does not yet know
 // what GetGuac is meets that question first rather than a store link.
 export const GG_NAV = [
- {href:'/find-your-10',label:'Find 10%'},
+ {href:'/find-your-10',label:'Find your 10%'},
  {href:'/features/capture',label:'Capture',children:[{href:'/features/capture',label:'All capture tools'},{href:'/features/capture/income',label:'Income and records'},{href:'/features/capture/accounts',label:'Accounts and documents'},{href:'/features/capture/email',label:'Email and connections'},{href:'/features/capture/receipts',label:'Receipt capture'}]},
  {href:'/features/understand',label:'Understand',children:[{href:'/features/understand',label:'All understand tools'},{href:'/features/understand/dashboard',label:'Dashboard'},{href:'/features/understand/budget',label:'Budget'},{href:'/features/understand/reports',label:'Reports and insights'},{href:'/features/understand/guac-ai',label:'Guac AI'}]},
  {href:'/features/protect',label:'Protect',children:[{href:'/features/protect',label:'All protect tools'},{href:'/features/protect/goals',label:'Savings and goals'},{href:'/features/protect/bills',label:'Bills and subscriptions'},{href:'/features/protect/returns',label:'Returns and refunds'},{href:'/deals',label:'Deals and shopping'},{href:'/marketplace',label:'Marketplace'},{href:'/coupons',label:'Coupons'}]},

@@ -11,7 +11,7 @@ import MarketingHero from '../../components/MarketingHero'
 // moved here. page.jsx stays a server component so the metadata and the FAQPage
 // JSON-LD are still generated on the server from the same faq-data module.
 import { useEffect, useMemo, useRef, useState } from 'react'
-import Link from 'next/link'
+import Link from '../../components/SiteLink'
 import Image from 'next/image'
 import {
   HelpCircle, Search, ShieldCheck, ReceiptText, Sparkles,

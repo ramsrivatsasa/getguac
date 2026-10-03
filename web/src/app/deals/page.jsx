@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import Link from '../../components/SiteLink'
 import { ArrowRight, Mail, Search, Sparkles } from 'lucide-react'
 import MarketingShell from '../../components/MarketingShell'
 import StageMarker from '../../components/StageMarker'

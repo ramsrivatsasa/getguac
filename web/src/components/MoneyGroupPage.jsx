@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import Link from './SiteLink'
 import ToolIcon from './ToolIcon'
 import MarketingShell from './MarketingShell'
 import MarketingHero from './MarketingHero'

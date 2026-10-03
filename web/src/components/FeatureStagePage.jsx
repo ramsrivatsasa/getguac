@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import Link from './SiteLink'
 import { ArrowLeft, ArrowRight, Check, LockKeyhole } from 'lucide-react'
 import MarketingShell from './MarketingShell'
 import ProductScreenPair from './ProductScreenPair'

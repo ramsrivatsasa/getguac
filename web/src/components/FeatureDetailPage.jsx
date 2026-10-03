@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import Link from './SiteLink'
 import ToolIcon from './ToolIcon'
 import { ArrowLeft, ArrowRight } from 'lucide-react'
 import MarketingShell from './MarketingShell'

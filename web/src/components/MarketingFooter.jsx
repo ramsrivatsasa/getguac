@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import Link from './SiteLink'
 
 const COLS = [
   { heading: 'Product', links: [['Marketplace','/marketplace'],['Coupons','/coupons'],['Games','/games'],['Features','/features'],['How it works','/how-it-works'],['Pricing','/pricing']] },

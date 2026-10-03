@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
-import Link from 'next/link'
+import Link from './SiteLink'
 import ToolIcon from './ToolIcon'
 import { Menu, X, ChevronDown } from 'lucide-react'
 import { GG_NAV, GG_CTA } from '../lib/gg-nav-def'

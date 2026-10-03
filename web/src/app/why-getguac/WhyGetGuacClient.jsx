@@ -35,7 +35,7 @@
 // RLS-locked and wipeable. Do NOT add member counts, ratings, or savings
 // figures to this page. It is the first thing a stranger ever sees.
 import { useEffect, useRef, useState } from 'react'
-import Link from 'next/link'
+import Link from '../../components/SiteLink'
 import dynamic from 'next/dynamic'
 import { createClient } from '../../lib/supabase/client'
 import MetaPixel from '../../components/MetaPixel'

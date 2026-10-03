@@ -1,7 +1,7 @@
 import MarketingHero from '../../components/MarketingHero'
 // Public /contact page — simple ways to reach us. Uses a mailto so it needs no
 // backend; kept intentionally minimal and honest for a small team.
-import Link from 'next/link'
+import Link from '../../components/SiteLink'
 import MarketingShell from '../../components/MarketingShell'
 import { Mail, MessageCircle, LifeBuoy, ShieldCheck } from 'lucide-react'
 import TrustLine from '../../components/TrustLine'

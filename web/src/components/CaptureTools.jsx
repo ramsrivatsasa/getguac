@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import Link from 'next/link'
+import Link from './SiteLink'
 import { ArrowRight, Camera, Car, Check, FileText, Landmark, Mail, Search, Wallet } from 'lucide-react'
 import ZoomableImage from '../app/get-started/ZoomableImage'
 

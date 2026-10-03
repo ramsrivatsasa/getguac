@@ -1,7 +1,7 @@
 'use client'
 
 import { useId, useState } from 'react'
-import Link from 'next/link'
+import Link from './SiteLink'
 import { ArrowRight, RotateCw } from 'lucide-react'
 import ZoomableImage from '../app/get-started/ZoomableImage'
 

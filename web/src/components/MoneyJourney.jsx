@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import Link from './SiteLink'
 import { ChevronDown, Gamepad2, ReceiptText, Star, WandSparkles, TrendingUp, Ticket, Copy, ArrowRight, Mic, Inbox, Newspaper, ShieldCheck, Download, Sparkles, Tags, Users, FileText, Gauge } from 'lucide-react'
 import { MONEY_GROUPS } from '../lib/money-journey'
 import GuacMascot from './GuacMascot'

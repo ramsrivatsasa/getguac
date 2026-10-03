@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
+import Link from '../../components/SiteLink'
 import ToolIcon from '../../components/ToolIcon'
 import { ArrowLeft, ArrowRight, Check, MousePointerClick } from 'lucide-react'
 import ZoomableImage from './ZoomableImage'

@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import Link from './SiteLink'
 
 export default function MarketingHero({ eyebrow, title, accent, description, primaryHref = '/register', primaryLabel = 'Start free', secondaryHref, secondaryLabel, imageSrc = '/home/story-people/capture-blonde-produce-v1-768.webp', imageAlt = 'A shopper keeping her receipt on her phone', trustText = 'Free forever · No card or bank login required', children }) {
   return (

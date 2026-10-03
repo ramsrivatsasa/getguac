@@ -1,5 +1,5 @@
 import MarketingHero from '../../components/MarketingHero'
-import Link from 'next/link'
+import Link from '../../components/SiteLink'
 import { ArrowRight, Camera, Check, Clock3, Inbox, Lightbulb, LockKeyhole, Receipt, Sparkles } from 'lucide-react'
 import MarketingShell from '../../components/MarketingShell'
 import ZoomableImage from './ZoomableImage'

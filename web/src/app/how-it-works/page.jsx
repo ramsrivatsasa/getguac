@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import Link from '../../components/SiteLink'
 import MarketingShell from '../../components/MarketingShell'
 import MarketingHero from '../../components/MarketingHero'
 import { MONEY_GROUPS } from '../../lib/money-journey'

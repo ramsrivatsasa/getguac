@@ -5,7 +5,7 @@
 // display headings + Plus Jakarta Sans body (scoped to .gg-marketing so the
 // app/dashboard default font is untouched), avocado-green accents, pill CTAs.
 // The fonts come from CSS variables defined in app/layout.jsx.
-import Link from 'next/link'
+import Link from './SiteLink'
 import ToolIcon from './ToolIcon'
 import HeaderSearch from './HeaderSearch'
 import MarketingAuthButtons from './MarketingAuthButtons'

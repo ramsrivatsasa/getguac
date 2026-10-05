@@ -1,0 +1,29 @@
+name: Guac AI background agents
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: guac-ai-scheduler
+  cancel-in-progress: false
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Refresh due agents
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        shell: bash
+        run: |
+          test -n "$APP_URL" && test -n "$CRON_SECRET"
+          case "$APP_URL" in https://*) ;; *) echo 'APP_URL must use HTTPS'; exit 1;; esac
+          for batch in 1 2 3; do
+            curl --fail --silent --show-error --max-time 65 \
+              -X POST -H "Authorization: Bearer $CRON_SECRET" \
+              "$APP_URL/api/cron/guac-ai" > /tmp/guac-ai-result.json
+            cat /tmp/guac-ai-result.json
+          done

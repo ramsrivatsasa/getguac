@@ -18,6 +18,7 @@ try {
  for(const signedIn of [false,true]) {
   const ctx=signedIn?context:await browser.newContext({viewport:{width:390,height:844}})
   const p=await ctx.newPage()
+  p.setDefaultNavigationTimeout(120000)
   await p.goto(base+(signedIn?'/news?tab=watchlist':'/login'),{waitUntil:'networkidle'})
   await p.waitForFunction(()=>window.fetch.name.endsWith('observedFetch'))
   const existing=p.getByRole('dialog');if(await existing.isVisible())await existing.getByRole('button',{name:'Dismiss',exact:true}).click()

@@ -643,6 +643,8 @@
 
     .rise{opacity:1;transform:none;transition:opacity .35s ease,transform .35s ease}
     .rise.in{opacity:1;transform:none}
+    main > section:not(.hero){content-visibility:auto;contain-intrinsic-block-size:auto 800px}
+    @media print{main > section:not(.hero){content-visibility:visible}}
 
     /* ---- responsive ---- */
     @media(max-width:1080px){.goals-track{grid-auto-columns:calc((100% - 16px)/2)}.people-grid,.blog-grid{grid-template-columns:repeat(2,1fr)}}
@@ -1522,12 +1524,6 @@
         entries.forEach((e) => { if (e.isIntersecting) startAuto(); else stopAuto(); });
       }, {threshold:.3}).observe(how);
 
-      const reveal = new IntersectionObserver((entries) => {
-        entries.forEach((e) => { if (e.isIntersecting){ e.target.classList.add('in'); reveal.unobserve(e.target); } });
-      }, {threshold:.12, rootMargin:'0px 0px -40px'});
-      document.querySelectorAll('.rise').forEach((n, i) => { n.style.transitionDelay = (i % 4) * 70 + 'ms'; reveal.observe(n); });
-    } else {
-      document.querySelectorAll('.rise').forEach((n) => n.classList.add('in'));
     }
 
     const head = el('siteHead');

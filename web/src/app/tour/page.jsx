@@ -3,6 +3,9 @@
 // pairs its hand-drawn art with a small real app screenshot.
 import MarketingShell from '../../components/MarketingShell'
 import Presentation from '../how-it-works/Presentation'
+import MarketingHero from '../../components/MarketingHero'
+import StageMarker from '../../components/StageMarker'
+import ConversionBand from '../../components/ConversionBand'
 
 export const metadata = {
   title: 'Watch the GetGuac tour — narrated, end to end',
@@ -24,7 +27,10 @@ export default function TourPage() {
   // settled on 800 at -0.05em.
   return (
     <MarketingShell subtitle="tour">
-      <Presentation embedded />
+      <MarketingHero eyebrow="Capture · Receipt workflow tour" title="See receipt capture" accent="and purchase tools." description="This focused tour covers receipt capture and purchase insights. Explore the feature groups for Budget, Goals and the wider GetGuac toolkit." />
+      
+      <Presentation embedded headingLevel="h2" />
+      <ConversionBand />
     </MarketingShell>
   )
 }

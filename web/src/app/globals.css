@@ -49,7 +49,7 @@
 
 @layer components {
   /* Buttons â€” rounded-rect (12px) like the mockup, not full pills. */
-  .btn           { @apply inline-flex items-center gap-1.5 px-3.5 py-2 sm:px-4 rounded-xl font-bold text-[13px] sm:text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed; }
+  .btn           { @apply inline-flex min-h-11 items-center gap-1.5 px-3.5 py-2 sm:px-4 rounded-xl font-bold text-[13px] sm:text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed; }
   .btn-primary   { @apply btn bg-guac-700 hover:bg-guac-ink text-white shadow-sm hover:shadow; }
   .btn-secondary { @apply btn bg-white text-guac-body border border-guac-line2 hover:bg-guac-50 hover:text-guac-700; }
   .btn-danger    { @apply btn bg-gradient-to-br from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white shadow-sm; }
@@ -146,6 +146,7 @@
 .genie-float { animation: genie-float 2.6s ease-in-out infinite; }
 .genie-twinkle { animation: genie-twinkle 1.8s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .genie-float, .genie-twinkle { animation: none } }
+@media (prefers-reduced-motion: reduce) { .gg-circle-progress { transition: none !important; } }
 
 @layer utilities {
   /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -491,4 +492,136 @@
 @keyframes guacSwapIn {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: none; }
+}
+/* Dashboard edit affordances are only visible while customization mode is active. */
+.dashboard-canvas:not(.dashboard-customizing) .edit-card-control {
+  display: none !important;
+}
+
+@media (min-width: 1280px) {
+  .dashboard-canvas .dashboard-edit-card:nth-child(3) > .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 1.45fr) !important;
+  }
+
+  /* Money overview: safe-to-spend is already stated beside spending, so the
+     repeated budget ring is removed and the chart gets the visual emphasis. */
+  .dashboard-canvas .dashboard-edit-card:first-child > .mt-3.grid {
+    grid-template-columns: 130px minmax(240px, 1fr) !important;
+  }
+  .dashboard-canvas .dashboard-edit-card:first-child > .mt-3.grid > :nth-child(3),
+  .dashboard-canvas .dashboard-edit-card:first-child > .mt-3.grid > :nth-child(4) {
+    display: none;
+  }
+}
+
+/* Goal cards should read as goals, not as a wall of gauges. The amount and
+   funded percentage remain, while feature-colored top rules replace rings. */
+.dashboard-canvas .dashboard-edit-card:nth-child(3) > .grid > a:not(:last-child) {
+  border-top-width: 3px;
+}
+.dashboard-canvas .dashboard-edit-card:nth-child(3) > .grid > a:nth-child(1) { border-top-color: #2563eb; }
+.dashboard-canvas .dashboard-edit-card:nth-child(3) > .grid > a:nth-child(2) { border-top-color: #7c3aed; }
+.dashboard-canvas .dashboard-edit-card:nth-child(3) > .grid > a:nth-child(3) { border-top-color: #f59e0b; }
+.dashboard-canvas .dashboard-edit-card:nth-child(3) > .grid > a:not(:last-child) > .relative {
+  width: auto;
+  height: auto;
+  margin-top: 1rem;
+  background: transparent !important;
+}
+.dashboard-canvas .dashboard-edit-card:nth-child(3) > .grid > a:not(:last-child) > .relative > div {
+  width: auto;
+  height: auto;
+  background: transparent;
+  font-size: 1.25rem;
+}
+
+@media (max-width: 1023px) {
+  .dashboard-canvas .dashboard-edit-card:first-child > .mt-3.grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .dashboard-canvas .dashboard-edit-card:first-child > .mt-3.grid > :nth-child(1),
+  .dashboard-canvas .dashboard-edit-card:first-child > .mt-3.grid > :nth-child(2) {
+    grid-column: 1 / -1;
+  }
+  .dashboard-canvas .dashboard-edit-card:first-child > .mt-3.grid > :nth-child(2) {
+    padding-inline: 0;
+  }
+  .dashboard-canvas .dashboard-edit-card:first-child > .mt-3.grid > :nth-child(2) svg {
+    height: 105px;
+  }
+  .dashboard-canvas .dashboard-edit-card:first-child > .mt-3.grid > :nth-child(3),
+  .dashboard-canvas .dashboard-edit-card:first-child > .mt-3.grid > :nth-child(4) {
+    display: none;
+  }
+}
+.goals-actions-layout {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* One application-wide typography baseline, attached once in app/layout.jsx.
+   Every route—including navigation, account integrations, dialogs, dashboard,
+   and marketing pages—inherits these readability protections. */
+.gg-readable-type .text-xs {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.gg-readable-type .text-sm {
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+
+.gg-readable-type [class~="text-[6px]"],
+.gg-readable-type [class~="text-[7px]"],
+.gg-readable-type [class~="text-[8px]"],
+.gg-readable-type [class~="text-[9px]"],
+.gg-readable-type [class~="text-[10px]"],
+.gg-readable-type [class~="text-[11px]"],
+.gg-readable-type [style*="font-size: 6px"],
+.gg-readable-type [style*="font-size: 7px"],
+.gg-readable-type [style*="font-size: 8px"],
+.gg-readable-type [style*="font-size: 9px"],
+.gg-readable-type [style*="font-size: 10px"],
+.gg-readable-type [style*="font-size: 10.5px"],
+.gg-readable-type [style*="font-size: 11px"],
+.gg-readable-type [style*="font-size: 11.5px"] {
+  font-size: 0.8125rem !important;
+  line-height: 1.125rem !important;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Controls and navigation should inherit the readable application type
+   scale. Padding may grow the control, but must never force clipped text. */
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+.gg-readable-type nav a,
+.gg-readable-type nav button,
+.gg-readable-type [role="menu"] a,
+.gg-readable-type [role="menu"] button,
+.gg-readable-type [role="menuitem"] {
+  font-size: max(0.875rem, 1em);
+  line-height: 1.25rem;
+}
+
+button,
+a,
+label,
+p,
+span {
+  text-size-adjust: 100%;
+}
+
+@media (min-width: 1280px) {
+  .goals-actions-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(0, calc(15% + 80px));
+  }
 }

@@ -15,41 +15,51 @@ import { useState, useEffect, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
-import { ChevronRight, Check, Copy, Mail, Plus, X, Smartphone, Link2 } from 'lucide-react'
+import { ChevronRight, Check, Copy, Mail, Plus, X, Smartphone, Link2, ShoppingCart } from 'lucide-react'
 
 // Retailers that the mobile WebView credential-linker supports.
 // Kept in sync with mobile/lib/data/retailer_extractors.dart.
 // Web can't run cross-origin JS inside the retailer's site (browser
 // same-origin policy), so the web CTA here just points to the mobile
 // app instead of attempting the link itself.
-const LINKABLE_IN_MOBILE = new Set(['amazon'])
+const LINKABLE_IN_MOBILE = new Set(['amazon', 'walmart', 'costco', 'instacart'])
 import { createClient } from '../../../lib/supabase/client'
 import { RETAILERS } from '../../../lib/retailers'
+import { retailerCapability } from '../../../lib/retailer-capabilities'
 import { StoreLogo } from '../../../components/StoreLogo'
-import AnimatedMascot from '../../../components/AnimatedMascot'
 import { track } from '../../../lib/analytics'
 import mascotBus from '../../../lib/mascotEventBus'
+import AnimatedMascot from '../../../components/AnimatedMascot'
 
 export default function ConnectionsPage() {
   const sb = createClient()
   const qc = useQueryClient()
   const [openRetailer, setOpenRetailer] = useState(null)
   const [aliasEmail, setAliasEmail] = useState('')
+  const [aliasLoaded, setAliasLoaded] = useState(false)
+  const alternateAliasEmail = aliasEmail ? aliasEmail.replace('.g@', '+g@') : ''
 
   // Pull the user's email alias (so we can show it in setup steps).
   useEffect(() => {
     (async () => {
+      try {
       const { data: { user } } = await sb.auth.getUser()
       if (!user) return
       // Profile holds the user's GetGuac alias (table: profiles.email_alias)
       const { data: prof } = await sb.from('profiles')
         .select('email_alias').eq('id', user.id).maybeSingle()
       if (prof?.email_alias) {
-        // The `+g` subaddress is the auto-receipt-parsing endpoint
+        // The `.g` address is the retailer-friendly auto-parsing endpoint.
+        // Keep `+g` available as an alternate for mail systems that support
+        // plus addressing; some retailer forms reject the `+` character.
         // (see /how-email-works). The bare `you@getguac.app` is for
         // regular mail that stays in the inbox untouched. Retailers
-        // ALWAYS get the +g variant so Guac-AI runs on every receipt.
-        setAliasEmail(`${prof.email_alias}+g@getguac.app`)
+        // ALWAYS get the .g retailer-friendly variant so Guac-AI runs on
+        // every receipt. +g remains a supported alternate.
+        setAliasEmail(`${prof.email_alias}.g@getguac.app`)
+      }
+      } finally {
+        setAliasLoaded(true)
       }
     })()
   }, [sb])
@@ -109,7 +119,7 @@ export default function ConnectionsPage() {
         <div className="flex-1 min-w-0">
           <h1 className="page-title">Connections</h1>
           <p className="text-sm text-gray-500 mt-1">
-            Set up retailers to email receipts straight to GetGuac — no more snapping every receipt.
+            Import reviewed order history in the mobile app or forward receipt emails from your own inbox.
           </p>
         </div>
       </header>
@@ -125,8 +135,11 @@ export default function ConnectionsPage() {
           <div className="flex-1 min-w-0">
             <p className="text-xs font-bold uppercase tracking-wider text-gray-500">Your GetGuac inbox</p>
             <p className="font-bold text-gray-900 truncate text-base">
-              {aliasEmail || 'Loading your alias…'}
+              {aliasEmail || (aliasLoaded ? 'Choose your GetGuac email first' : 'Loading your alias…')}
             </p>
+            {alternateAliasEmail && (
+              <p className="text-xs text-gray-500 truncate">Also accepts {alternateAliasEmail}</p>
+            )}
           </div>
           {aliasEmail && (
             <button
@@ -136,12 +149,13 @@ export default function ConnectionsPage() {
               <Copy size={13} /> Copy
             </button>
           )}
+          {aliasLoaded && !aliasEmail && <Link href="/profile" className="rounded-lg border border-guac-line2 bg-guac-50 px-3 py-2 text-xs font-black text-guac-700">Set up email</Link>}
         </div>
         <p className="text-xs text-gray-600 mt-3 leading-relaxed">
-          The <span className="font-mono font-bold">+g</span> subaddress auto-parses every receipt that lands
-          here. Your regular <span className="font-mono">@getguac.app</span> address (without the +g) is for
-          signups + personal mail and stays untouched. Each retailer below has step-by-step instructions
-          to wire forwarding to this address from your account settings.
+          The <span className="font-mono font-bold">.g</span> address auto-parses every receipt that lands
+          here. Your regular <span className="font-mono">@getguac.app</span> address (without <span className="font-mono">.g</span> or <span className="font-mono">+g</span>) is for
+          signups + personal mail and stays untouched. For email capture, create a forwarding rule in
+          the email account that already receives your retailer confirmations.
         </p>
       </section>
 
@@ -206,6 +220,7 @@ export default function ConnectionsPage() {
 function RetailerRow({ retailer, conn, onClick, onDismiss }) {
   const isActive = conn?.status === 'active' || conn?.status === 'verified'
   const isVerified = conn?.status === 'verified'
+  const capability = retailerCapability(retailer.id)
   return (
     <div
       onClick={onClick}
@@ -230,6 +245,9 @@ function RetailerRow({ retailer, conn, onClick, onDismiss }) {
               <Link2 size={9} /> LINKABLE
             </span>
           )}
+          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-black bg-violet-50 text-violet-700 border border-violet-100">
+            <ShoppingCart size={9} /> {capability.label.toUpperCase()}
+          </span>
         </div>
         <p className="text-[11px] text-gray-500 mt-0.5 capitalize">
           {retailer.captureOnly ? 'Camera-only — no email setup' : retailer.category.replace('-', ' ')}
@@ -254,6 +272,7 @@ function RetailerRow({ retailer, conn, onClick, onDismiss }) {
 }
 
 function SetupDialog({ retailer, alias, existingStatus, onClose, onMarkActive }) {
+  const capability = retailerCapability(retailer.id)
   return (
     <div
       className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4"
@@ -275,6 +294,21 @@ function SetupDialog({ retailer, alias, existingStatus, onClose, onMarkActive })
         </header>
 
         <div className="p-5">
+          <div className="mb-5 rounded-2xl bg-violet-50 p-4">
+            <div className="flex items-center gap-2">
+              <ShoppingCart size={15} className="text-violet-700" />
+              <p className="text-xs font-black uppercase tracking-wider text-violet-700">Shopping connection</p>
+            </div>
+            <p className="mt-1.5 text-[13px] leading-relaxed text-gray-700">
+              {capability.shopping === 'partner_required'
+                ? `${retailer.name} receipt capture can be configured now. Direct cart access requires retailer partner approval; GetGuac uses a secure store handoff until that access is available.`
+                : capability.shopping === 'instacart'
+                  ? `${retailer.name} items can be prepared for an Instacart shopping-list handoff. Final product selection and checkout stay with the retailer.`
+                  : capability.shopping === 'partner_ready'
+                    ? `${retailer.name} supports a shoppable-list handoff once GetGuac production API credentials are configured.`
+                    : `GetGuac can prepare matching products and hand the user securely to ${retailer.name}. Final checkout remains on the retailer site.`}
+            </p>
+          </div>
           {LINKABLE_IN_MOBILE.has(retailer.id) && (
             <div className="mb-5 p-4 rounded-2xl border-2 border-guac-line2 bg-guac-50/40">
               <div className="flex items-center gap-2 mb-1.5">
@@ -287,18 +321,17 @@ function SetupDialog({ retailer, alias, existingStatus, onClose, onMarkActive })
                 </span>
               </div>
               <p className="text-[13px] text-gray-700 leading-relaxed mb-3">
-                Sign in to {retailer.name} in the GetGuac mobile app — we&apos;ll pull your
-                recent orders in one tap. No email forwarding needed.
+                Sign in directly on {retailer.name}&apos;s page inside the GetGuac mobile app,
+                preview visible completed orders, and confirm which orders to import. This beta never sends your password to GetGuac.
               </p>
-              <Link
-                href="/download"
+              <a
+                href={`io.getguac.app:/connections/link/${encodeURIComponent(retailer.id)}`}
                 className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white border-2 border-guac-line2 text-guac-700 text-sm font-bold hover:bg-guac-50 no-underline"
               >
-                <Smartphone size={15} /> Open in mobile app
-              </Link>
+                <Smartphone size={15} /> Open {retailer.name} import in GetGuac
+              </a>
               <p className="text-[10px] text-gray-500 mt-2 leading-relaxed">
-                Web browsers can&apos;t safely log into other sites on your behalf, so this
-                lives in the mobile app only.
+                This opens the installed GetGuac app. If it does not open, <Link href="/download" className="font-bold text-guac-700 underline">install or update the mobile app</Link> first.
               </p>
             </div>
           )}

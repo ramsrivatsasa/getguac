@@ -1,5 +1,6 @@
 'use client'
-import { useState, useMemo, useRef, Fragment } from 'react'
+import {donutPieProps} from '../../../lib/donut-style.mjs'
+import { useState, useMemo, useRef, useEffect, Fragment } from 'react'
 import useCurrencySymbol from '../../../hooks/useCurrencySymbol'
 import Link from 'next/link'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -70,6 +71,12 @@ const SORT_OPTIONS = [
 
 export default function ValidatePage() {
   const __cur = useCurrencySymbol()
+  const [planContext, setPlanContext] = useState(null)
+  useEffect(() => {
+    const query = new URLSearchParams(window.location.search)
+    const receipt = query.get('receipt'), returnTo = query.get('returnTo')
+    if (/^[a-f0-9-]{36}$/i.test(receipt || '') && /^\/my-plan(?:\/(cut|cheaper)\/review)?$/.test(returnTo || '')) setPlanContext({ receipt, returnTo })
+  }, [])
   const [period, setPeriod] = useState('monthly')
   const [count, setCount] = useState(DEFAULT_COUNT.monthly)
   const [search, setSearch] = useState('')
@@ -170,6 +177,7 @@ export default function ValidatePage() {
       .reduce((s, r) => s + Math.abs(parseFloat(r.total_amount || 0)), 0),
     [filtered])
 
+  if (planContext) return <div className="mx-auto max-w-3xl space-y-5"><a href={planContext.returnTo} className="inline-flex min-h-11 items-center font-bold text-violet-800">← Return to plan</a><FeatureHeader title="Worth It?" subtitle="Rate the original purchases. Your plan uses these same ratings." /><div className="rounded-2xl border bg-slate-50 p-4"><ItemList receiptId={planContext.receipt} search="" /></div><Link href={`/receipts/${planContext.receipt}`} className="inline-flex min-h-11 items-center font-bold text-violet-800">Open original receipt →</Link></div>
   return (
     <div className="space-y-5 max-w-7xl">
       <FeatureHeader
@@ -229,7 +237,7 @@ export default function ValidatePage() {
               <div className="relative w-full sm:w-1/2">
                 <ResponsiveContainer width="100%" height={180}>
                   <PieChart>
-                    <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={48} outerRadius={70} paddingAngle={3} isAnimationActive={false}>
+                    <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" {...donutPieProps(70)}>
                       {pieData.map((d, i) => <Cell key={i} fill={d.fill} />)}
                     </Pie>
                     <RTooltip formatter={(v, _n, p) => [`${__cur}${money(v)} (${p.payload.count})`, p.payload.name]} />
@@ -424,7 +432,7 @@ function ItemRow({ item }) {
     onError: err => toast.error(err.message),
   })
   return (
-    <div className="flex items-center gap-3 bg-white rounded-xl px-3 py-2 shadow-sm">
+    <div className="flex flex-wrap items-center gap-3 bg-white rounded-xl px-3 py-2 shadow-sm">
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold truncate">{item.item_name}</p>
         <p className="text-[11px] text-guac-faint">
@@ -440,7 +448,9 @@ function ItemRow({ item }) {
           return (
             <button key={n} type="button" onClick={() => rate.mutate(n)} disabled={rate.isPending}
               title={info.label}
-              className={`w-7 h-7 rounded-full flex items-center justify-center text-sm transition-all ${
+              aria-label={`${item.item_name}: ${info.label}`}
+              aria-pressed={active}
+              className={`w-11 h-11 rounded-full flex items-center justify-center text-sm transition-all ${
                 active ? 'bg-guac-100 ring-2 ring-guac-600 scale-110' : 'hover:bg-guac-50 opacity-50 hover:opacity-100'
               }`}>
               {info.emoji}
@@ -451,3 +461,4 @@ function ItemRow({ item }) {
     </div>
   )
 }
+

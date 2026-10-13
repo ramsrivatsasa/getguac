@@ -755,7 +755,7 @@ export default function SplurgeSlicer() {
 
   return (
     <div className="mx-auto w-full select-none">
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @keyframes gg-ring-spin { to { transform: rotate(360deg); } }
         @keyframes gg-ring-spin-back { to { transform: rotate(-360deg); } }
         @keyframes gg-token-float { 0%,100% { transform: translateY(0) rotate(-5deg); } 50% { transform: translateY(-18px) rotate(6deg); } }
@@ -788,7 +788,7 @@ export default function SplurgeSlicer() {
           .gg-level-rail { position: absolute; left: 22%; right: 22%; bottom: 3%; width: auto !important; z-index: 7; }
         }
         @media (prefers-reduced-motion: reduce) { .gg-spin,.gg-spin-back,.gg-token-a,.gg-token-b,.gg-icon-bob,.gg-glow { animation: none !important; } }
-      `}</style>
+      ` }} />
       {/* Data source banner */}
       <div className="mb-3 rounded-xl px-3 py-2 text-xs font-semibold flex items-center gap-2"
         style={{ background: real ? '#ecfdf3' : '#fff7ed', color: real ? '#065f46' : '#9a3412', border: CARD_BORDER }}>

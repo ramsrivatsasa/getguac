@@ -81,6 +81,9 @@ export default function EmailAliasPicker({ userId }) {
   if (profileLoading) return <div className="card py-6 text-center text-gray-400 text-sm">Loading…</div>
 
   const currentFull = profile?.email_alias ? `${profile.email_alias}@${EMAIL_DOMAIN}` : null
+  const receiptAddresses = profile?.email_alias
+    ? [`${profile.email_alias}+g@${EMAIL_DOMAIN}`, `${profile.email_alias}.g@${EMAIL_DOMAIN}`]
+    : []
   const status = checkResult?.status
   const draftNorm = draft.toLowerCase().trim()
 
@@ -121,18 +124,21 @@ export default function EmailAliasPicker({ userId }) {
             <p className="text-[10px] uppercase tracking-wider font-bold text-guac-700 flex items-center gap-1">
               <span>🥑</span> Receipts hook
             </p>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="font-mono text-sm font-bold text-guac-ink truncate">
-                {profile.email_alias}+g@{EMAIL_DOMAIN}
-              </span>
-              <button
-                type="button"
-                onClick={() => copyAlias(`${profile.email_alias}+g@${EMAIL_DOMAIN}`)}
-                className="ml-auto text-guac-700 hover:text-guac-ink p-1 rounded-md hover:bg-guac-100/60"
-                title="Copy"
-              >
-                <Copy size={14} />
-              </button>
+            <div className="mt-1 space-y-1">
+              {receiptAddresses.map((address, index) => (
+                <div className="flex items-center gap-2" key={address}>
+                  <span className="font-mono text-sm font-bold text-guac-ink truncate">{address}</span>
+                  <span className="text-[9px] uppercase tracking-wide text-guac-700/60">{index ? 'alternate' : 'primary'}</span>
+                  <button
+                    type="button"
+                    onClick={() => copyAlias(address)}
+                    className="ml-auto text-guac-700 hover:text-guac-ink p-1 rounded-md hover:bg-guac-100/60"
+                    title={`Copy ${address}`}
+                  >
+                    <Copy size={14} />
+                  </button>
+                </div>
+              ))}
             </div>
             <p className="text-[10px] text-guac-700/80 mt-1">
               Forward order confirmations here — GetGuac auto-creates the receipt within 10 minutes.

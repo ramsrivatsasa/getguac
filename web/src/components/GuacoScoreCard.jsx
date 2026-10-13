@@ -1,5 +1,6 @@
 'use client'
 import Link from 'next/link'
+import {DONUT,donutGeometry} from '../lib/donut-style.mjs'
 import { calculateGuacoScore } from '../lib/guacoscore'
 import GuacMascot from './GuacMascot'
 import CountUp from './animated/CountUp'
@@ -29,17 +30,24 @@ export default function GuacoScoreCard({ receipts = [], bankBite = null, size = 
   const displayGrade = isPreRating
     ? { color: 'emerald', emoji: '🥑', label: 'Fresh start' }
     : grade
+  const purchaseCount = receipts.filter(receipt => Number(receipt.total_amount || 0) >= 0).length
+  const unratedCount = Math.max(0, purchaseCount - ratedCount)
+  const ratingCoverage = purchaseCount > 0 ? Math.round(ratedCount / purchaseCount * 100) : 0
+  const nextAction = unratedCount > 0
+    ? `Rate ${unratedCount} purchase${unratedCount === 1 ? '' : 's'}`
+    : bankPenalty > 0
+      ? 'Review bank costs'
+      : 'Keep the streak going'
 
   const tint = GRADE_TINT[displayGrade.color] || GRADE_TINT.emerald
   // Small (dashboard) mode uses a smaller ring so the gauge matches the
   // 44px icon chips on the sibling engagement tiles instead of towering
   // over them, and a neutral slate palette so the tile reads neutral
   // (no green). The large /guacanomics card keeps the colored tint.
-  const R = small ? 16 : 56
-  const STROKE = small ? 4 : 9
+  const svgSize = small ? 44 : 134
+  const {radius:R,stroke:STROKE} = donutGeometry(svgSize)
   const C = 2 * Math.PI * R
   const offset = C * (1 - displayScore / 100)
-  const svgSize = (R + STROKE) * 2 + 4
 
   if (small) {
     return (
@@ -48,9 +56,9 @@ export default function GuacoScoreCard({ receipts = [], bankBite = null, size = 
           <svg viewBox={`0 0 ${svgSize} ${svgSize}`} width={svgSize} height={svgSize}>
             <circle cx={svgSize / 2} cy={svgSize / 2} r={R} fill="white" />
             <circle cx={svgSize / 2} cy={svgSize / 2} r={R}
-              fill="none" stroke="#e5e7eb" strokeWidth={STROKE} />
+              fill="none" stroke={DONUT.track} strokeWidth={STROKE} />
             <circle cx={svgSize / 2} cy={svgSize / 2} r={R}
-              fill="none" stroke="#475569" strokeWidth={STROKE} strokeLinecap="round"
+              fill="none" stroke="#475569" strokeWidth={STROKE} strokeLinecap="butt"
               strokeDasharray={C} strokeDashoffset={offset}
               transform={`rotate(-90 ${svgSize / 2} ${svgSize / 2})`}
               style={{ transition: 'stroke-dashoffset 0.6s ease-out' }}
@@ -74,7 +82,7 @@ export default function GuacoScoreCard({ receipts = [], bankBite = null, size = 
             <p className="text-[10px] font-semibold mt-0.5 text-gray-400">rate to start</p>
           ) : (
             <p className="text-[10px] font-bold mt-0.5 text-gray-500">
-              ▲ Beating ~{Math.min(99, Math.round(40 + displayScore * 0.6))}%{runDays > 0 ? ` · ${runDays}d run` : ''}
+              {ratedCount} rated{runDays > 0 ? ` · ${runDays}d run` : ''}
             </p>
           )}
         </div>
@@ -84,23 +92,15 @@ export default function GuacoScoreCard({ receipts = [], bankBite = null, size = 
 
   return (
     <div className={`card relative overflow-hidden ${className}`}>
-      <div className="flex items-center gap-4">
+      <div className="grid items-center gap-5 md:grid-cols-[minmax(280px,1fr)_minmax(420px,1.35fr)]">
+        <div className="flex items-center gap-4">
         <div className="relative shrink-0" style={{ width: svgSize, height: svgSize }}>
           <svg viewBox={`0 0 ${svgSize} ${svgSize}`} width={svgSize} height={svgSize}>
-            {/* Multicolor ring — same green→lime→amber sweep as the tour deck
-                donut (site-wide chart style); grade tint stays on the number. */}
-            <defs>
-              <linearGradient id="guacoRingGrad" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0" stopColor="#16a34a" />
-                <stop offset="0.55" stopColor="#a8c414" />
-                <stop offset="1" stopColor="#f59e0b" />
-              </linearGradient>
-            </defs>
             <circle cx={svgSize / 2} cy={svgSize / 2} r={R} fill="white" />
             <circle cx={svgSize / 2} cy={svgSize / 2} r={R}
-              fill="none" stroke="#e5e7eb" strokeWidth={STROKE} />
+              fill="none" stroke={DONUT.track} strokeWidth={STROKE} />
             <circle cx={svgSize / 2} cy={svgSize / 2} r={R}
-              fill="none" stroke="url(#guacoRingGrad)" strokeWidth={STROKE} strokeLinecap="round"
+              fill="none" stroke={DONUT.primary} strokeWidth={STROKE} strokeLinecap="butt"
               strokeDasharray={C} strokeDashoffset={offset}
               transform={`rotate(-90 ${svgSize / 2} ${svgSize / 2})`}
               style={{ transition: 'stroke-dashoffset 0.6s ease-out' }}
@@ -130,8 +130,26 @@ export default function GuacoScoreCard({ receipts = [], bankBite = null, size = 
             )}
           </p>
         </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2 border-t border-slate-100 pt-4 md:border-l md:border-t-0 md:pl-5 md:pt-0">
+          <div className="rounded-2xl bg-slate-50 p-3">
+            <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">Rated</p>
+            <p className="mt-1 text-lg font-black text-slate-900">{ratedCount}</p>
+            <p className="text-[10px] text-slate-500">{ratingCoverage}% coverage</p>
+          </div>
+          <div className="rounded-2xl bg-rose-50/70 p-3">
+            <p className="text-[9px] font-black uppercase tracking-wider text-rose-500">Bank Bite</p>
+            <p className="mt-1 text-lg font-black text-rose-700">−{bankPenalty || 0}</p>
+            <p className="text-[10px] text-rose-600">score impact</p>
+          </div>
+          <div className="rounded-2xl bg-emerald-50/70 p-3">
+            <p className="text-[9px] font-black uppercase tracking-wider text-emerald-600">Next move</p>
+            <p className="mt-1 text-xs font-black leading-4 text-emerald-900">{nextAction}</p>
+            <p className="mt-1 text-[10px] text-emerald-700">Open details below</p>
+          </div>
+        </div>
       </div>
     </div>
   )
 }
-

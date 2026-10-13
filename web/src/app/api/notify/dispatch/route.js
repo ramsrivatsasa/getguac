@@ -22,6 +22,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { sendPushToUser } from '../../../../lib/fcm'
 import { getCachedSearch } from '../../../../lib/shoppingCache'
+import { dispatchProductAlerts } from '../../../../lib/dispatch-product-alerts'
 export const dynamic = 'force-dynamic'
 
 // ── Auth helper ─────────────────────────────────────────────────────
@@ -467,6 +468,7 @@ export async function GET(req) {
   if (!verifyCron(req)) return unauthorized()
 
   const results = {}
+  try { results.product_recall = await dispatchProductAlerts(sb(), sendPushToUser) } catch (e) { results.product_recall = { error: e.message } }
   // Run sequentially so logs are linear and one failing trigger
   // doesn't break the others.
   try { results.rewards_expiring  = await dispatchRewardsExpiring() } catch (e) { results.rewards_expiring  = { error: e.message } }

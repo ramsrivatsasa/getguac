@@ -10,6 +10,8 @@ import MascotLoading from '../../../components/MascotLoading'
 import { displayStoreName } from '../../../lib/store-name-normalize'
 import { StoreLogo } from '../../../components/StoreLogo'
 import { useConfirm } from '../../../components/ConfirmDialog'
+import { usePromotions, useUpdatePromotion } from '../../../hooks/usePromotions'
+import PromotionCard from '../../../components/PromotionCard'
 
 const EMPTY = { reward_no: '', expiry_date: '', reward_type: '', reward_title: '', description: '', store_name: '' }
 const today = new Date().toISOString().split('T')[0]
@@ -22,6 +24,8 @@ export default function RewardsPage() {
   const upsert = useUpsertReward()
   const del = useDeleteReward()
   const confirm = useConfirm()
+  const { data: promotions = [] } = usePromotions({ status: 'active' })
+  const updatePromotion = useUpdatePromotion()
   const s = k => e => setForm(p => ({ ...p, [k]: e.target.value }))
 
   function handleSave(e) {
@@ -91,6 +95,11 @@ export default function RewardsPage() {
           </form>
         </div>
       )}
+
+      {promotions.length > 0 && <section className="space-y-3">
+        <div className="flex items-end justify-between gap-3"><div><h2 className="gg-h2">Offers you can use</h2><p className="text-xs text-slate-500">Captured separately from loyalty memberships and reward numbers.</p></div><Link href="/promotions" className="text-xs font-black text-violet-700">See all promotions →</Link></div>
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{promotions.slice(0, 3).map(p => <PromotionCard key={p.id} promotion={p} compact onDismiss={id => updatePromotion.mutate({ id, status: 'dismissed' })}/>)}</div>
+      </section>}
 
       {rewards.length > 0 && (
         <div className="flex items-center gap-2">

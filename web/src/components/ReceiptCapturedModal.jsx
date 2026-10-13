@@ -32,11 +32,6 @@ export default function ReceiptCapturedModal({ open, receipt, onClose, onSnapAno
   const items = receipt.items || []
   const itemCount = items.length
   const total = Number(receipt.total_amount || 0)
-  // GuacMoney value — placeholder formula: $0.25 per matched line
-  // item, $1 base. Real economy lives elsewhere; this is just for
-  // the celebration chip.
-  const guacMoney = Math.max(1, Math.round(itemCount * 0.25 + 1))
-
   return (
     <div
       className="fixed inset-0 z-[280] flex items-center justify-center p-4 bg-black/55 backdrop-blur-sm captured-fade"
@@ -49,7 +44,7 @@ export default function ReceiptCapturedModal({ open, receipt, onClose, onSnapAno
         className="w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden captured-pop"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Torn-edge emerald hero with the GuacMoney value. */}
+        {/* Torn-edge emerald success hero. */}
         <div className="relative bg-gradient-to-br from-emerald-500 via-emerald-600 to-green-700 text-white px-6 pt-5 pb-10 text-center">
           <button
             onClick={onClose}
@@ -60,9 +55,8 @@ export default function ReceiptCapturedModal({ open, receipt, onClose, onSnapAno
           </button>
           <div className="text-5xl mb-1 mascot-pop">🥑</div>
           <p className="text-[11px] font-extrabold uppercase tracking-widest text-guac-100">Receipt captured</p>
-          <p className="text-4xl font-black tabular-nums mt-1 leading-none">
-            +${guacMoney}
-            <span className="text-base font-bold align-top ml-1">GuacMoney</span>
+          <p className="text-2xl font-black tabular-nums mt-1 leading-none">
+            {itemCount ? `${itemCount} item${itemCount === 1 ? '' : 's'} organized` : 'Ready to review'}
           </p>
 
           {/* SVG zig-zag torn-edge — purely decorative */}

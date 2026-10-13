@@ -10,7 +10,7 @@
 
 import { createClient } from '../../../../lib/supabase/server'
 import { rateLimit, rateKey } from '../../../../lib/apiGuard'
-import { createMailbox, mailboxExists, fullEmail, receiptsAddress } from '../../../../lib/migadu'
+import { createMailbox, mailboxExists, ensureReceiptsAlias, fullEmail, receiptsAddresses } from '../../../../lib/migadu'
 import { encryptSecret, generateMailboxPassword } from '../../../../lib/crypto'
 export const runtime = 'nodejs'
 
@@ -25,6 +25,7 @@ async function provisionMailbox(sb, user, alias) {
   try {
     const already = await mailboxExists(alias)
     if (already) {
+      await ensureReceiptsAlias(alias)
       return { provisioned: true, reason: 'already_existed' }
     }
     const password = generateMailboxPassword()
@@ -37,7 +38,7 @@ async function provisionMailbox(sb, user, alias) {
         email_inbox_password_enc: encrypted,
       })
       .eq('id', user.id)
-    return { provisioned: true, password, email: fullEmail(alias), receipts: receiptsAddress(alias) }
+    return { provisioned: true, password, email: fullEmail(alias), receipts: receiptsAddresses(alias) }
   } catch (e) {
     console.error('[email/claim] mailbox provisioning failed:', e.message)
     return { provisioned: false, reason: 'error', error: e.message }

@@ -383,7 +383,7 @@ export default function GoalsShowcase() {
           <div style={{ position: 'relative', paddingBottom: 26 }}>
             {/* web screen */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img key={`w-${c.slug}`} src={`/home/goals/web-${c.slug}.webp`} alt={`${c.name} on the web`} loading="lazy" style={{ width: '100%', display: 'block', borderRadius: 16, border: '1px solid rgba(20,83,45,0.12)', boxShadow: '0 20px 50px -24px rgba(20,40,28,0.4)' }} />
+            <img key={`w-${c.slug}`} src={`/marketing/current/${({"bank":"bank","bills":"bills","car-miles":"car-miles","categories":"reports","fees":"guacwizard","games":"games","guac-ai":"guac-ai","guacmoney":"dashboard","inbox":"inbox","marketplace":"marketplace","organized":"dashboard","receipts":"receipts","returns":"returns","smashlist":"shopping","stash":"stash","steals":"steals","subs":"subscriptions","tax":"tax","worth-it":"worth-it","predictions":"shopping"})[c.slug] || c.slug}.webp`} alt={`${c.name} on the web`} loading="lazy" style={{ width: '100%', display: 'block', borderRadius: 16, border: '1px solid rgba(20,83,45,0.12)', boxShadow: '0 20px 50px -24px rgba(20,40,28,0.4)' }} />
             {/* phone screen overlapping */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img key={`p-${c.slug}`} src={`/home/goals/phone-${c.slug}.webp`} alt={`${c.name} on iPhone`} loading="lazy" style={{ position: 'absolute', right: -6, bottom: 0, width: 148, filter: 'drop-shadow(0 22px 34px rgba(20,40,28,0.4))' }} />

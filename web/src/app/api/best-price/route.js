@@ -41,6 +41,10 @@ export const maxDuration = 30
 const TTL_MS = 24 * 60 * 60 * 1000
 const MODEL = process.env.BEST_PRICE_MODEL || 'gemini-2.5-flash'
 
+function unavailablePrice(reason) {
+  return Response.json({ store_name: null, price: null, url: null, source: 'unavailable', status: 'unavailable', reason, checked_at: new Date().toISOString() })
+}
+
 function admin() {
   return createAdminClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -135,13 +139,14 @@ export async function POST(request) {
     if (!force) {
       const { data: cached } = await sb
         .from('price_lookups')
-        .select('store_name, price, url, checked_at')
+        .select('store_name, price, url, checked_at, source')
         .eq('cache_key', cacheKey)
         .eq('geo_bucket', geoBucket)
         .order('checked_at', { ascending: false })
         .limit(1)
         .maybeSingle()
       if (cached && Date.now() - new Date(cached.checked_at).getTime() < TTL_MS) {
+        if (cached.source === 'gemini') return unavailablePrice('No verified listing price available')
         // Best-effort bump hit counter, no-await so we don't slow the response.
         sb.from('price_lookups')
           .update({ hit_count: undefined })  // intentionally no-op; counter increment is RPC-only
@@ -181,13 +186,14 @@ export async function POST(request) {
 
     if (!result) {
       if (!apiKey) {
-        return Response.json({ error: 'No price source configured — set SERPAPI_KEY or GEMINI_API_KEY.' }, { status: 500 })
+        return unavailablePrice('Price lookup is currently unavailable')
       }
       const g = await fetchFromGemini(itemName, lat, lng, apiKey)
       raw = g.raw
       result = {
         store_name: g.parsed?.store_name ?? null,
-        price: g.parsed?.price != null ? Number(g.parsed.price) : null,
+        // A model-generated amount is a research lead, not a verified listing.
+        price: null,
         url: g.parsed?.url ?? null,
       }
       source = 'gemini'
@@ -208,7 +214,7 @@ export async function POST(request) {
 
     return Response.json({ ...result, source, checked_at: new Date().toISOString() })
   } catch (err) {
-    console.error('[best-price]', err)
-    return Response.json({ error: err.message || 'lookup failed' }, { status: 500 })
+    console.warn('[best-price] optional lookup unavailable')
+    return unavailablePrice('Price lookup failed; try again later')
   }
 }

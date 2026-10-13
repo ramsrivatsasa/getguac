@@ -45,7 +45,7 @@ async function migaduFetch(path, init = {}) {
 // password:  strong random string, also stored encrypted in our DB
 // name:      display name shown in webmail/headers
 export async function createMailbox({ localPart, password, name }) {
-  return migaduFetch(`/domains/${domain()}/mailboxes`, {
+  const mailbox = await migaduFetch(`/domains/${domain()}/mailboxes`, {
     method: 'POST',
     body: JSON.stringify({
       local_part: localPart,
@@ -60,6 +60,33 @@ export async function createMailbox({ localPart, password, name }) {
       may_access_managesieve: false,
       spam_action: 'folder',     // spam goes to Junk, not bounced
     }),
+  })
+  await ensureReceiptsAlias(localPart)
+  return mailbox
+}
+
+// The dot-style receipt address is a real provider alias (Migadu only treats
+// `+tag` addresses specially). Route <handle>.g@ to the user's mailbox and
+// refuse to overwrite an unrelated alias if the name is already occupied.
+export async function ensureReceiptsAlias(localPart) {
+  const aliasPart = `${localPart}.g`
+  const destination = fullEmail(localPart).toLowerCase()
+  try {
+    const existing = await migaduFetch(`/domains/${domain()}/aliases/${encodeURIComponent(aliasPart)}`)
+    const rawDestinations = Array.isArray(existing?.destinations)
+      ? existing.destinations
+      : String(existing?.destinations || '').split(',')
+    const destinations = rawDestinations.map(value => String(value).trim().toLowerCase()).filter(Boolean)
+    if (!destinations.includes(destination)) {
+      throw new Error(`${aliasPart}@${domain()} is already routed to another mailbox`)
+    }
+    return existing
+  } catch (error) {
+    if (!/→ 404/.test(error.message)) throw error
+  }
+  return migaduFetch(`/domains/${domain()}/aliases`, {
+    method: 'POST',
+    body: JSON.stringify({ local_part: aliasPart, destinations: destination, is_internal: false }),
   })
 }
 
@@ -110,4 +137,8 @@ export function fullEmail(localPart) {
 // poller for back-compat (see RECEIPT_TAGS in lib/imap-poll.js).
 export function receiptsAddress(localPart) {
   return `${localPart}+g@${domain()}`
+}
+
+export function receiptsAddresses(localPart) {
+  return [receiptsAddress(localPart), `${localPart}.g@${domain()}`]
 }

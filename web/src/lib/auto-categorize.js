@@ -51,3 +51,17 @@ export function autoCategorize(items) {
     return match ? { ...it, category: match.slug } : it
   })
 }
+
+// A receipt-level category is only meaningful when all categorized line
+// items agree. Mixed baskets (for example groceries + pharmacy + household)
+// stay uncategorized at the receipt level while retaining item categories.
+export function receiptCategoryFromItems(items, suggestedCategory = null) {
+  const categories = new Set(
+    (Array.isArray(items) ? items : [])
+      .filter(it => it && !it.returned && it.category)
+      .map(it => it.category),
+  )
+  if (categories.size > 1) return null
+  if (categories.size === 1) return [...categories][0]
+  return suggestedCategory || null
+}

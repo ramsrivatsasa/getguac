@@ -18,6 +18,9 @@ import { draftReceiptFromEmail } from '../../../../lib/email-to-receipt'
 import { reportServerError } from '../../../../lib/report-error'
 import { isImapAuthFailure, reprovisionMailbox, autoReauthedRecently, recordAutoReauth, describeImapError, retryAfterReauth, recordPollSuccess, recordPollFailure, QUARANTINE_AFTER_FAILURES } from '../../../../lib/mailbox-reauth'
 import { provisionMissingMailboxes } from '../../../../lib/provision-missing'
+import { verifyRetailerReceiptConnection } from '../../../../lib/retailer-connections'
+import { hasSeparateEmailOffer, saveEmailPromotionCandidate } from '../../../../lib/email-promotion'
+import { classifyCommerceEmail } from '../../../../lib/email-classification'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -82,7 +85,7 @@ export async function POST(request) {
     return Response.json({ error: error.message }, { status: 500 })
   }
 
-  const summary = { users: 0, messages: 0, moved_to_guacked: 0, deleted_upstream: 0, provisioned: 0, reauthed: 0, recovered: 0, quarantined: [], failing: [], errors: [] }
+  const summary = { users: 0, messages: 0, offerImports: { added: 0, duplicates: 0, expired: 0, ignored: 0, requiringReview: 0 }, moved_to_guacked: 0, deleted_upstream: 0, provisioned: 0, reauthed: 0, recovered: 0, quarantined: [], failing: [], errors: [] }
 
   for (const u of users || []) {
     summary.users++
@@ -137,6 +140,7 @@ export async function POST(request) {
 
       for (const m of result.messages) {
         const isHook = isReceiptsAddress(m, u.email_alias)
+        const classification = classifyCommerceEmail(m, m.bodyText || m.bodyHtml || '')
         // Cap stored body sizes — 256 KB text, 512 KB html. Beyond that we
         // truncate with a sentinel; UI can offer to fetch full from IMAP later.
         const TEXT_CAP = 256 * 1024, HTML_CAP = 512 * 1024
@@ -166,6 +170,10 @@ export async function POST(request) {
             attachments_summary: m.attachments,
             is_receipts_hook: isHook,
             folder: 'inbox',
+            email_classification: classification.classification,
+            classification_confidence: classification.confidence,
+            classification_reason: classification.reason,
+            offer_candidate: classification.classification === 'promotion',
           })
           .select('id')
           .single()
@@ -184,16 +192,43 @@ export async function POST(request) {
         // parsing fails or no key is configured.
         if (isHook) {
           try {
-            const { receipt_id } = await draftReceiptFromEmail(sb, u.id, m)
+            const draft = await draftReceiptFromEmail(sb, u.id, { ...m, storedId: insertedMsg.id })
+            const { receipt_id } = draft
             if (receipt_id) {
-              await sb.from('email_messages')
-                .update({ receipt_id, processed: true })
-                .eq('id', insertedMsg.id)
+              await verifyRetailerReceiptConnection(sb, u.id, m, receipt_id)
+                .catch(error => console.warn('[email/poll] retailer verification failed:', error.message))
+            }
+            await sb.from('email_messages')
+              .update({
+                receipt_id: receipt_id || null,
+                processed: Boolean(draft.processed),
+                email_classification: draft.classification || 'unknown',
+                classification_confidence: draft.confidence ?? null,
+                classification_reason: draft.reason || null,
+                offer_candidate: draft.classification === 'promotion',
+              })
+              .eq('id', insertedMsg.id)
+            if (draft.classification === 'promotion' || draft.classification === 'purchase_receipt' && hasSeparateEmailOffer(m)) {
+              const promotion = await saveEmailPromotionCandidate(sb, u.id, insertedMsg.id, m, draft)
+              for (const key of Object.keys(summary.offerImports)) summary.offerImports[key] += promotion.importResult?.[key] || 0
+              await sb.from('email_messages').update({ promotion_id: promotion.id }).eq('id', insertedMsg.id)
             }
           } catch (e) {
+            if (classification.classification === 'promotion') await sb.from('email_messages').update({ processed: false }).eq('id', insertedMsg.id).eq('user_id', u.id)
             console.warn('[email/poll] draft from email failed:', e.message)
             summary.errors.push({ user: u.id, uid: m.uid, error: `draft: ${e.message}` })
             await reportServerError({ tag: 'email_draft', action: 'email_failure', level: 'warn', userId: u.id, platform: 'server', message: `draft: ${e.message}`, meta: { uid: m.uid, subject: m.subject } }, sb)
+          }
+        }
+
+        if (!isHook) {
+          if (classification.classification === 'promotion') {
+            try {
+              const promotion = await saveEmailPromotionCandidate(sb, u.id, insertedMsg.id, m, classification)
+              for (const key of Object.keys(summary.offerImports)) summary.offerImports[key] += promotion.importResult?.[key] || 0
+              const { error } = await sb.from('email_messages').update({ promotion_id: promotion.id, processed: true, email_classification: 'promotion', offer_candidate: true }).eq('id', insertedMsg.id).eq('user_id', u.id)
+              if (error) throw error
+            } catch { summary.errors.push({ user: u.id, uid: m.uid, error: 'Offer import incomplete; original message retained.' }) }
           }
         }
 
@@ -231,6 +266,18 @@ export async function POST(request) {
             summary.errors.push({ user: u.id, uid: m.uid, error: `${tag}: ${e.message}` })
           }
         }
+      }
+      // Retry retained promotional messages even when no new mail arrives.
+      // This uses the existing polling job and never invokes a purchase parser.
+      const pendingOffers = await sb.from('email_messages').select('id,subject,from_addr,body_text,body_html,preview').eq('user_id', u.id).eq('email_classification', 'promotion').eq('processed', false).limit(20)
+      if (pendingOffers.error) summary.errors.push({ user: u.id, error: 'Pending offer lookup failed' })
+      for (const message of pendingOffers.data || []) {
+        try {
+          const promotion = await saveEmailPromotionCandidate(sb, u.id, message.id, { subject: message.subject, fromAddr: message.from_addr, bodyText: message.body_text, bodyHtml: message.body_html, preview: message.preview }, { classification: 'promotion' })
+          for (const key of Object.keys(summary.offerImports)) summary.offerImports[key] += promotion.importResult?.[key] || 0
+          const { error } = await sb.from('email_messages').update({ promotion_id: promotion.id, processed: true }).eq('id', message.id).eq('user_id', u.id)
+          if (error) throw error
+        } catch { summary.errors.push({ user: u.id, error: 'Retained offer could not be imported; retry on the next poll.' }) }
       }
 
       // Messages the IMAP server refused to serve, and folders that failed

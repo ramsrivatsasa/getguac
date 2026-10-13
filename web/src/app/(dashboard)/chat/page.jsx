@@ -206,7 +206,7 @@ export default function ChatPage() {
         {/* Selected thread */}
         <section className={`card p-0 ${activeId ? '' : 'hidden lg:block'}`}>
           {activeId === AI_ID ? (
-            <GuacAiThread onBack={() => setActiveId(null)} />
+            <GuacAiThread onBack={() => setActiveId(null)} initialPrompt={sp?.get('starter') === 'spending' ? 'Where did my money go this month? Show the receipt evidence and tell me what is missing.' : ''} />
           ) : activeId ? (
             <Thread
               threadId={activeId}

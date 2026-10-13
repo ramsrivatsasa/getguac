@@ -22,7 +22,8 @@ export const maxDuration = 30
 const DETAIL_COLS =
   'id, uid, imap_folder, message_id, from_addr, to_addr, delivered_to, subject, received_at, ' +
   'preview, body_text, body_html, attachments_summary, has_attachments, ' +
-  'is_receipts_hook, processed, receipt_id, read_at, starred, folder, created_at'
+  'is_receipts_hook, processed, receipt_id, read_at, starred, folder, created_at, email_classification, processing_lease_until, ' +
+  'receipt:receipt_id(store_name, total_amount, date, is_return, processed)'
 
 function adminClient() {
   return createAdminClient(
@@ -33,7 +34,7 @@ function adminClient() {
 }
 
 export async function GET(request, { params }) {
-  const sb = createApiClient()
+  const sb = await createApiClient()
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return Response.json({ error: 'Not signed in' }, { status: 401 })
 
@@ -58,7 +59,7 @@ export async function PATCH(request, { params }) {
   const rl = await rateLimit(rateKey(request, 'email-patch'), { limit: 60, windowMs: 60_000 })
   if (!rl.ok) return Response.json({ error: 'rate limited' }, { status: 429 })
 
-  const sb = createApiClient()
+  const sb = await createApiClient()
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return Response.json({ error: 'Not signed in' }, { status: 401 })
 
@@ -75,7 +76,7 @@ export async function PATCH(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
-  const sb = createApiClient()
+  const sb = await createApiClient()
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return Response.json({ error: 'Not signed in' }, { status: 401 })
 

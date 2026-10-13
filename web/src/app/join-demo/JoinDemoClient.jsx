@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import JoinReceiptTrial from '../join/JoinReceiptTrial'
 import './join-demo.css'
+import JoinPlanHero from '../join/JoinPlanHero'
 
 const CIRCLE_STAGES = [
   { name: 'Capture', icon: '▣', title: 'One receipt. One quick scan.', copy: 'Paper and digital receipts become searchable items instead of mystery totals.', metric: '2 ways in', detail: 'Photo scans and email receipts', slug: 'receipts' },
@@ -15,7 +16,7 @@ const CIRCLE_STAGES = [
   { name: 'Next trip', icon: '↻', title: 'Every trip makes the next one smarter.', copy: 'GetGuac learns your shopping rhythm and turns past receipts into better timing.', metric: 'Learned', detail: 'Your buying rhythm', slug: 'predictions' },
 ]
 
-export default function JoinDemoClient() {
+export default function JoinDemoClient({ showPlanHero = false }) {
   const [trialSignal, setTrialSignal] = useState(0)
   const [heroZoomed, setHeroZoomed] = useState(false)
   const [circleStage, setCircleStage] = useState(0)
@@ -34,7 +35,8 @@ export default function JoinDemoClient() {
 
   return (
     <main className="jd-page">
-      <section className="jd-hero">
+      {showPlanHero && <JoinPlanHero onTryReceipt={goToDemo} />}
+      {!showPlanHero && <section className="jd-hero">
         <div className="jd-wrap jd-hero-grid">
           <div className="jd-copy">
             <span className="jd-kicker">Receipt intelligence · No bank login</span>
@@ -89,7 +91,7 @@ export default function JoinDemoClient() {
             </div>
           </div>
         </div>
-      </section>
+      </section>}
 
       <section id="proof" className="jd-proof jd-wrap">
         <div className="jd-proof-card"><span className="jd-proof-icon">♧</span><div><h2>Every item organized</h2><p>Turn any receipt into a clear list of what you actually bought.</p></div></div>
@@ -102,7 +104,7 @@ export default function JoinDemoClient() {
           <div className="jd-circle-head"><div><span className="jd-kicker">The GetGuac circle</span><h2>Every receipt makes the next trip smarter.</h2></div><div className="jd-circle-tabs" role="tablist">{CIRCLE_STAGES.map((stage, index) => <button key={stage.name} type="button" role="tab" aria-selected={circleStage === index} onClick={() => setCircleStage(index)}><i>{stage.icon}</i><span>{stage.name}</span></button>)}</div></div>
           <div className="jd-circle-line"><span style={{ width: `${((circleStage + 1) / CIRCLE_STAGES.length) * 100}%` }} /></div>
           <div className="jd-circle-sub"><p>GetGuac remembers the shopping so you do not have to—and learns from every trip.</p><a href="/how-it-works">See how GetGuac works →</a></div>
-          <div className="jd-circle-stage"><div className="jd-circle-copy"><span>{circle.icon} {circle.name}</span><h3>{circle.title}</h3><div><b>{circle.copy}</b><p>✓ Real app screens</p><p>✓ Useful after checkout</p></div></div><div className="jd-circle-screen"><header><i>{circle.icon}</i><b>{circle.metric}</b><span>{circle.detail}</span></header><p>{circle.copy}</p><figure><img className="jd-circle-web" src={`/home/goals/web-${circle.slug}.webp`} alt={`${circle.name} in GetGuac web`} /><img className="jd-circle-phone" src={`/home/goals/phone-${circle.slug}.webp`} alt={`${circle.name} in GetGuac mobile`} /></figure></div></div>
+          <div className="jd-circle-stage"><div className="jd-circle-copy"><span>{circle.icon} {circle.name}</span><h3>{circle.title}</h3><div><b>{circle.copy}</b><p>✓ Real app screens</p><p>✓ Useful after checkout</p></div></div><div className="jd-circle-screen"><header><i>{circle.icon}</i><b>{circle.metric}</b><span>{circle.detail}</span></header><p>{circle.copy}</p><figure><img className="jd-circle-web" src={`/marketing/current/${({"bank":"bank","bills":"bills","car-miles":"car-miles","categories":"reports","fees":"guacwizard","games":"games","guac-ai":"guac-ai","guacmoney":"dashboard","inbox":"inbox","marketplace":"marketplace","organized":"dashboard","receipts":"receipts","returns":"returns","smashlist":"shopping","stash":"stash","steals":"steals","subs":"subscriptions","tax":"tax","worth-it":"worth-it","predictions":"shopping"})[circle.slug] || circle.slug}.webp`} alt={`${circle.name} in GetGuac web`} /><img className="jd-circle-phone" src={`/home/goals/phone-${circle.slug}.webp`} alt={`${circle.name} in GetGuac mobile`} /></figure></div></div>
           <p className="jd-circle-note">Real screens from the live app · demo data · web and mobile</p>
         </div>
       </section>
@@ -112,8 +114,8 @@ export default function JoinDemoClient() {
           <div className="jd-intro"><span className="jd-kicker">Beyond receipt storage</span><h2>Your receipts become money intelligence.</h2><p>Understand your habits, decide what deserves another dollar, and know what to do next.</p></div>
           <div className="jd-intel-grid">
             <article className="jd-intel-card jd-score"><div><span>◎ GUACSCORE</span><h3>See how your spending is really doing.</h3><p>A simple score turns scattered purchases into a financial signal you can improve.</p><a href="/guacscore">Explore GuacScore →</a></div><figure className="jd-card-phone"><i aria-hidden="true"/><img src="/home/goals/phone-guacscore.webp" alt="GuacScore inside the real GetGuac app" /></figure></article>
-            <article className="jd-intel-card jd-wizard"><div><span>✦ GUACWIZARD</span><h3>Find the fees and leaks hiding in your money.</h3><p>Wizard Score and personalized insights show where money is slipping away and what to fix first.</p><a href="/goals/wizard.html">Meet GuacWizard →</a></div><figure className="jd-card-phone"><i aria-hidden="true"/><img src="/showcase/guacwizard.png" alt="The actual GuacWizard mobile screen with Wizard Score and money insights" /></figure></article>
-            <article className="jd-intel-card jd-worth"><div><span>★ WORTH IT?</span><h3>Remember what was actually worth buying.</h3><p>Rate purchases so buyer's remorse becomes a better decision next time.</p><a href="/resources/worth-it.html">See Worth It →</a></div><figure className="jd-card-phone"><i aria-hidden="true"/><img src="/home/goals/phone-worth-it.webp" alt="Worth It inside the real GetGuac app" /></figure></article>
+            <article className="jd-intel-card jd-wizard"><div><span>✦ GUACWIZARD</span><h3>Find the fees and leaks hiding in your money.</h3><p>Wizard Score and personalized insights show where money is slipping away and what to fix first.</p><a href="/goals/wizard.html">Meet GuacWizard →</a></div><figure className="jd-card-phone"><i aria-hidden="true"/><img src="/marketing/current/guacwizard.webp" alt="The actual GuacWizard mobile screen with Wizard Score and money insights" /></figure></article>
+            <article className="jd-intel-card jd-worth"><div><span>★ WORTH IT?</span><h3>Remember what was actually worth buying.</h3><p>Rate purchases so buyer&apos;s remorse becomes a better decision next time.</p><a href="/resources/worth-it.html">See Worth It →</a></div><figure className="jd-card-phone"><i aria-hidden="true"/><img src="/home/goals/phone-worth-it.webp" alt="Worth It inside the real GetGuac app" /></figure></article>
           </div>
           <p className="jd-real-note">Real screens from the GetGuac app · demo data</p>
         </div>

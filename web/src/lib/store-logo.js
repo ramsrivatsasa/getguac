@@ -26,6 +26,19 @@
 // big-box stores. Keys are normalized (lowercased, alpha+digits
 // only) so receipt-name variants collapse to one entry.
 const KNOWN_DOMAINS = {
+  verizonfios:'verizon.com', tmobile:'t-mobile.com', coxinternet:'cox.com', attinternetair:'att.com',
+  nike:'nike.com', underarmour:'underarmour.com', ikea:'ikea.com', sony:'sony.com', thehomedepot:'homedepot.com',
+  fidelity: 'fidelity.com',
+  charlesschwab: 'schwab.com',
+  vanguard: 'vanguard.com',
+  treasurydirect: 'treasurydirect.gov',
+  marcus:        'marcus.com',
+  allybank:      'ally.com',
+  americanexpress: 'americanexpress.com',
+  baskbank:      'baskbank.com',
+  liveoakbank:   'liveoak.bank',
+  everbank:      'everbank.com',
+  salliemae:     'salliemae.com',
   costco:        'costco.com',
   costcowholesale: 'costco.com',
   walmart:       'walmart.com',

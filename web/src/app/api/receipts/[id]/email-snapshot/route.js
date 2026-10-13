@@ -28,7 +28,7 @@ export async function POST(_request, { params }) {
   const { id: receiptId } = await params
   if (!receiptId) return Response.json({ error: 'receipt id required' }, { status: 400 })
 
-  const sb = createApiClient()
+  const sb = await createApiClient()
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return Response.json({ error: 'Not signed in' }, { status: 401 })
 

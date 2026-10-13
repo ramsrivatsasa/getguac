@@ -1,3 +1,4 @@
+import { remainingRequestTimeout } from './receipt-time-budget'
 // Shared receipt-parsing engine. Used by:
 //   - /api/parse-receipt: file uploads (PDF / image) from the camera + drag-drop flow
 //   - /api/email/poll + /api/email/backfill: text bodies of forwarded receipt emails
@@ -9,6 +10,46 @@
 // Both paths return the SAME normalized shape, so callers don't branch.
 
 import pdfParse from 'pdf-parse'
+import sharp from 'sharp'
+import { receiptCategoryFromItems } from './auto-categorize'
+import { normalizeReceiptDate } from './receipt-date'
+
+const HEIF_MIME_TYPES = new Set(['image/heic', 'image/heif'])
+
+// Normalise Apple's camera format at the shared parser boundary. Gemini
+// support varies by model and Groq does not reliably decode HEIC. Applying
+// EXIF rotation here also prevents sideways receipt reads.
+export async function normalizeVisionImage({ buffer, base64, mimeType }) {
+  const input = buffer || (base64 ? Buffer.from(base64, 'base64') : null)
+  const type = (mimeType || 'image/jpeg').toLowerCase().split(';', 1)[0]
+  if (!input || !type.startsWith('image/') || type === 'image/gif') {
+    return { buffer: input, base64: base64 || input?.toString('base64'), mimeType: type }
+  }
+
+  try {
+    const image = sharp(input, { failOn: 'none' })
+    const metadata = await image.metadata()
+    const oversized = Math.max(metadata.width || 0, metadata.height || 0) > 2200
+    if (!HEIF_MIME_TYPES.has(type) && !oversized) {
+      return { buffer: input, base64: base64 || input.toString('base64'), mimeType: type }
+    }
+    const jpeg = await image
+      .rotate()
+      .resize({ width: 2200, height: 2200, fit: 'inside', withoutEnlargement: true })
+      .jpeg({ quality: 88, mozjpeg: true })
+      .toBuffer()
+    return { buffer: jpeg, base64: jpeg.toString('base64'), mimeType: 'image/jpeg' }
+  } catch (error) {
+    if (HEIF_MIME_TYPES.has(type)) {
+      const wrapped = new Error(`Could not decode HEIC/HEIF receipt: ${error.message}`)
+      wrapped.code = 'HEIF_DECODE_FAILED'
+      throw wrapped
+    }
+    // A valid provider-supported JPEG/PNG/WebP should still be attempted if
+    // optional optimization fails; preprocessing must not block parsing.
+    return { buffer: input, base64: base64 || input.toString('base64'), mimeType: type }
+  }
+}
 
 // A receipt's transaction date can never be in the future. If the AI misreads
 // it (commonly a MM/DD ↔ DD/MM swap or a digit slip), drop it to null so the
@@ -67,11 +108,16 @@ Return ONLY a single JSON object. No prose, no markdown fences. Schema:
     "zip": string|null,
     "phone_no": string|null,
     "website": string|null,
-    "store_no": string|null
+    "store_no": string|null,
+    "country": string|null                    // ISO 3166-1 alpha-2 inferred from printed store location
   },
   "date": string,                          // YYYY-MM-DD (transaction date PRINTED on the receipt, NOT the email forward date)
+  "date_raw": string|null,                 // EXACT printed date before interpretation
   "total_amount": number,                  // positive purchases, NEGATIVE for returns
   "tax_paid": number,                      // negative on returns
+  "tip_amount": number|null,               // charged tip only; null when absent
+  "service_charge": number|null,            // required service charge, not a tip
+  "gratuity_included": boolean,             // true only if explicitly printed
   "payment_method": string|null,
   "payment_last4": string|null,            // Last 4 of the TENDER/payment card ONLY (from the VISA/MC/DEBIT/ACCT/CARD# payment block). A masked value next to Customer/BonusCard/Rewards or under a /rewards footer URL is a LOYALTY number → put it in member_number and leave this null.
   "member_number": string|null,            // Store loyalty / membership / rewards account number printed on the receipt (Costco "Member:", CVS ExtraCare, Kroger Plus, Sephora Beauty Insider, Giant Food "Customer", etc.). Return digits/chars EXACTLY as printed, INCLUDING mask glyphs — e.g. Giant "Customer 4*****6108" → "4*****6108". This is NOT the payment card — exclude the credit-card last-4 (that's payment_last4). Null when no membership identifier is printed.
@@ -79,6 +125,7 @@ Return ONLY a single JSON object. No prose, no markdown fences. Schema:
   "is_receipt": boolean,                   // TRUE for any receipt / invoice / order confirmation. FALSE for non-receipt images (selfie, pet, landscape, blank paper, screenshot of unrelated content).
   "non_receipt_subject": string|null,      // When is_receipt=false: short 2-3 word lowercase description of what you DID see ("a person", "a cat", "a sunset", "a blank page", "a screenshot"). When is_receipt=true: null.
   "category": string|null,                 // ONE of: "grub", "eats", "bars", "coffee", "tea", "coke", "pepsi", "juice", "milkshake", "subs", "bills", "tech", "big-stuff", "fix-it", "outdoors", "supplies", "fits", "wellness", "gas-up", "fun", "gifting", "charity", "misc"
+  // Preserve specifications that are explicitly printed: brand, model/SKU, apparel size WITH size system, grocery variety/weight/volume, dimensions and pack quantity. Keep sku/model separate; retain other printed specifications in item_name so matching can use them. Never infer a size from a model number, assume a pack size, or invent missing specifications.
   "items": [
     { "sku": string|null, "model": string|null, "item_name": string, "qty": number, "price": number, "category": string|null, "health_tier": "healthy"|"neutral"|"treat"|"harmful"|null, "refund_policy_id": string|null, "returned": boolean }
   ],
@@ -89,6 +136,8 @@ Return ONLY a single JSON object. No prose, no markdown fences. Schema:
 
 Rules:
 - Unknown fields → null (or [] for arrays). Never invent.
+- Determine date order from the printed store country/address/currency/language. Preserve the exact text in date_raw. Support YYYY/MM/DD, DD/MM/YYYY, MM/DD/YYYY, YY/MM/DD, and MM/YY/DD. Example: 07/26/11 on a 2026 receipt is MM/YY/DD → 2026-07-11, not 2011-07-26.
+- Use today's upload date only as a plausibility check. If one interpretation creates a very large gap but another valid component order produces a recent/plausible transaction date, reconsider the order using the printed country and merchant format. Never substitute today's date for the printed transaction date, and do not alter an unambiguous historical date merely because it is old.
 - IGNORE email wrapper text: "---------- Forwarded message ----------", "From: <forwarder>", "Sent from my iPhone", signatures, gmail/yahoo/outlook quote blocks. Only extract the MERCHANT receipt content.
 - store_name MUST be the actual merchant on the receipt (e.g. "Worldgate Athletic Club", "Lowe's", "Amazon"). NEVER use "gmail", "yahoo", "outlook", or the forwarder's email address.
 - Expand abbreviations: "BEGPLANT4" → "Burpee Eggplant #4", "75LM FLASHLI" → "Defiant 75LM Flashlight".
@@ -174,6 +223,13 @@ function safeParseJson(raw) {
 
 function normalizeResult(parsed, provider, model, usage) {
   if (!parsed) return null
+  const items = Array.isArray(parsed.items) ? parsed.items.map(it => ({
+    sku: it.sku || '', model: it.model || '', item_name: it.item_name || '',
+    qty: Number(it.qty || 1),
+    price: it.price == null || it.price === '' ? null : Number(it.price),
+    category: it.category || null,
+    refund_policy_id: it.refund_policy_id || '', returned: Boolean(it.returned),
+  })) : []
   return {
     store_name: parsed.store_name || '',
     store_address: parsed.store?.address || '',
@@ -183,27 +239,23 @@ function normalizeResult(parsed, provider, model, usage) {
     store_phone: parsed.store?.phone_no || '',
     store_website: parsed.store?.website || '',
     store_no: parsed.store?.store_no || '',
+    store_country: parsed.store?.country || '',
     location_name: parsed.store?.location_name || '',
-    date: notFutureDate(parsed.date),
+    date: notFutureDate(normalizeReceiptDate({ raw: parsed.date_raw, parsed: parsed.date, receiptCountry: parsed.store?.country }) || parsed.date),
+    date_raw: parsed.date_raw || null,
     total_amount: Number(parsed.total_amount ?? 0),
     tax_paid: Number(parsed.tax_paid ?? 0),
+    tip_amount: parsed.tip_amount == null ? null : Number(parsed.tip_amount),
+    service_charge: parsed.service_charge == null ? null : Number(parsed.service_charge),
+    gratuity_included: Boolean(parsed.gratuity_included),
     payment_method: parsed.payment_method || '',
     payment_last4: parsed.payment_last4 || '',
     member_number: parsed.member_number || '',
     is_return: Boolean(parsed.is_return),
     is_receipt: parsed.is_receipt === false ? false : true,
     non_receipt_subject: parsed.non_receipt_subject || null,
-    category: parsed.category || null,
-    items: Array.isArray(parsed.items) ? parsed.items.map(it => ({
-      sku: it.sku || '', model: it.model || '', item_name: it.item_name || '',
-      qty: Number(it.qty || 1),
-      // Distinguish "we don't know" (null) from "free" (0). Amazon "Ordered:"
-      // emails list items without per-line prices — we want the UI to show "—"
-      // instead of misleadingly displaying "$0.00".
-      price: it.price == null || it.price === '' ? null : Number(it.price),
-      category: it.category || null,
-      refund_policy_id: it.refund_policy_id || '', returned: Boolean(it.returned),
-    })) : [],
+    category: receiptCategoryFromItems(items, parsed.category),
+    items,
     refund_policies: Array.isArray(parsed.refund_policies) ? parsed.refund_policies.map(p => ({
       policy_id: p.policy_id || '', days: p.days != null ? Number(p.days) : null,
       expiry_date: p.expiry_date || null, eligible: p.eligible !== false,
@@ -279,7 +331,7 @@ async function callGroq({ apiKey, model, messages, timeoutMs = 30_000 }) {
 // Optional `emailDate` is an ISO YYYY-MM-DD or full date string for the email's
 // received_at. When provided, the AI is told to REJECT this date as a candidate
 // — useful when the forwarder's email date isn't the actual transaction date.
-export async function parseReceiptFromText(text, { maxChars = 32_000, emailDate = null, userContextSuffix = '' } = {}) {
+export async function parseReceiptFromText(text, { maxChars = 32_000, emailDate = null, userContextSuffix = '', deadlineAt = Infinity } = {}) {
   if (!text || !text.trim()) return null
 
   const groqKey = process.env.GROQ_API_KEY
@@ -319,7 +371,7 @@ export async function parseReceiptFromText(text, { maxChars = 32_000, emailDate 
           contents: [{ role: 'user', parts: [{ text: `Extract the receipt from this email body. JSON only.${hint}\n\n${body}` }] }],
           generationConfig: { responseMimeType: 'application/json', temperature: 0, maxOutputTokens: 4096 },
         }),
-        signal: AbortSignal.timeout(30_000),
+        signal: AbortSignal.timeout(remainingRequestTimeout(deadlineAt)),
       })
       const json = await res.json()
       if (res.ok) {
@@ -340,6 +392,7 @@ export async function parseReceiptFromText(text, { maxChars = 32_000, emailDate 
       const result = await callGroq({
         apiKey: groqKey,
         model: GROQ_TEXT_MODEL,
+        timeoutMs: remainingRequestTimeout(deadlineAt),
         messages: [
           { role: 'system', content: SYSTEM_PROMPT + userContextSuffix },
           { role: 'user', content: `Extract the receipt from this email body. JSON only.${hint}\n\n${body}` },
@@ -352,6 +405,7 @@ export async function parseReceiptFromText(text, { maxChars = 32_000, emailDate 
     console.warn('[parse-receipt-engine] Groq text fallback failed:', e.message)
   }
 
+  remainingRequestTimeout(deadlineAt)
   return null
 }
 
@@ -405,10 +459,8 @@ export async function parseReceiptFromImages({ images, userContextSuffix = '' })
   if (!Array.isArray(images) || images.length === 0) return null
 
   // Normalise input: accept either { buffer, mimeType } or { base64, mimeType }.
-  const prepared = images.map(img => ({
-    mimeType: img.mimeType || 'image/jpeg',
-    base64: img.base64 || (img.buffer ? img.buffer.toString('base64') : null),
-  })).filter(i => i.base64)
+  const prepared = (await Promise.all(images.map(normalizeVisionImage)))
+    .filter(i => i.base64)
 
   if (prepared.length === 0) return null
 
@@ -480,7 +532,10 @@ export async function parseReceiptFromFile({ buffer, mimeType, userContextSuffix
   const groqKey   = process.env.GROQ_API_KEY
   if (!geminiKey && !groqKey) return null
 
-  const base64 = buffer.toString('base64')
+  const normalized = await normalizeVisionImage({ buffer, mimeType })
+  buffer = normalized.buffer
+  mimeType = normalized.mimeType
+  const base64 = normalized.base64
   let result
   let firstErr = null
 

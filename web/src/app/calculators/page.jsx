@@ -1,6 +1,8 @@
 import Image from 'next/image'
 import MarketingShell from '../../components/MarketingShell'
 import PlanCalculators, { CALC_COUNT } from '../../components/PlanCalculators'
+import TrustLine from '../../components/TrustLine'
+import ConversionBand from '../../components/ConversionBand'
 
 // "Calculators", not "Plan & forecast". The nav's Learn menu calls this
 // Calculators, the resources hub calls it Calculators, and the route is /plan —
@@ -88,6 +90,8 @@ export default function PlanPage() {
       <div className="pb-16 pt-4">
         <PlanCalculators />
       </div>
+      <TrustLine />
+      <ConversionBand />
     </MarketingShell>
   )
 }

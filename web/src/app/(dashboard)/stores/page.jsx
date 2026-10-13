@@ -1,10 +1,10 @@
 'use client'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 import { Store, Phone, Globe, MapPin, ChevronRight, ChevronDown, Search, Trash2, AlertTriangle, Shield, Clock, ExternalLink, Link2 } from 'lucide-react'
-import { getStores, deleteStore, getAllStoreDefaultPolicies, getRewards } from '../../../lib/db'
+import { getStores, getReceipts, deleteStore, getAllStoreDefaultPolicies, getRewards } from '../../../lib/db'
 import { normalizeStoreName, storeGroupKey, displayStoreName } from '../../../lib/store-name-normalize'
 import { useConfirm } from '../../../components/ConfirmDialog'
 import LottieAnimation from '../../../components/LottieAnimation'
@@ -13,6 +13,9 @@ import thinkingLottie from '../../../lottie/thinking.json'
 import MascotLoading from '../../../components/MascotLoading'
 import FeatureHeader from '../../../components/FeatureHeader'
 import { StoreLogo } from '../../../components/StoreLogo'
+import { usePromotions, useUpdatePromotion } from '../../../hooks/usePromotions'
+import PromotionCard from '../../../components/PromotionCard'
+import { currentPromotions } from '../../../lib/promotion-presentation.mjs'
 // Placeholder reward_no shape the server mints before a real member #
 // is known ("GG-" + 8 base36 chars). Mirrors PLACEHOLDER_REWARD_RE in
 // lib/save-receipt.js — we only surface REAL numbers on this page.
@@ -71,6 +74,13 @@ function findDuplicateClusters(stores) {
 export default function StoresPage() {
   const qc = useQueryClient()
   const [search, setSearch] = useState('')
+  const [offerSearch, setOfferSearch] = useState('')
+  const [offerSource, setOfferSource] = useState('')
+  const [offerExpiry, setOfferExpiry] = useState('')
+  const [offerType, setOfferType] = useState('')
+  const [searchingOffers, setSearchingOffers] = useState(false)
+  const [offerMessage, setOfferMessage] = useState('')
+  const offersPanel = useRef(null)
   const [selected, setSelected] = useState(() => new Set())
 
   const { data: stores = [], isLoading } = useQuery({
@@ -132,6 +142,31 @@ export default function StoresPage() {
     onError: (err) => toast.error(err.message),
   })
   const confirm = useConfirm()
+  const { data: promotions = [], isLoading: offersLoading, error: offersError } = usePromotions({ status: 'active,review', q: offerSearch })
+  const updatePromotion = useUpdatePromotion()
+  const visibleOffers = currentPromotions(promotions, { source: offerSource, expiry: offerExpiry, type: offerType })
+  async function searchMerchantOffers() {
+    setSearchingOffers(true); setOfferMessage('')
+    try {
+      const response = await fetch('/api/promotions/search', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: offerSearch }) })
+      const data = await response.json(); if (!response.ok) throw Error(data.error)
+      setOfferMessage(data.message); await qc.invalidateQueries({ queryKey: ['promotions'] })
+    } catch (e) { setOfferMessage(e.message) } finally { setSearchingOffers(false) }
+  }
+  const { data: receipts = [], error: activityError, isLoading: activityLoading } = useQuery({ queryKey: ['store-purchase-activity'], queryFn: () => getReceipts(), staleTime: 5 * 60 * 1000 })
+  const activity = new Map()
+  const unassignedActivity = new Map()
+  for (const receipt of receipts) {
+    if (receipt.is_return) continue
+    const target = receipt.store_id ? activity : unassignedActivity
+    const identity = receipt.store_id || storeGroupKey(receipt.store_name)
+    if (!identity) continue
+    const previous = target.get(identity) || { count: 0, spend: 0, last: '', unassigned: 0 }
+    previous.count++; previous.spend += Number(receipt.total_amount) || 0
+    if (!receipt.store_id) previous.unassigned++
+    if (receipt.date > previous.last) previous.last = receipt.date
+    target.set(identity, previous)
+  }
 
   const filtered = stores.filter(s =>
     s.store_name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -145,7 +180,7 @@ export default function StoresPage() {
   const grouped = (() => {
     const m = new Map()
     for (const s of filtered) {
-      const key = (s.store_name || '').trim().toLowerCase()
+      const key = storeGroupKey(s.store_name) || (s.store_name || '').trim().toLowerCase()
       if (!m.has(key)) m.set(key, [])
       m.get(key).push(s)
     }
@@ -184,7 +219,7 @@ export default function StoresPage() {
   }
 
   return (
-    <div className="space-y-5 max-w-5xl">
+    <div className="space-y-5 max-w-[1500px]">
       <FeatureHeader
         expression="happy"
         title="Stores"
@@ -261,7 +296,8 @@ export default function StoresPage() {
         </div>
       )}
 
-      {isLoading ? (
+      <div className="grid items-start gap-5 2xl:grid-cols-[minmax(0,1fr)_340px]">
+      <div>{isLoading ? (
         <MascotLoading label="Loading stores…" />
       ) : filtered.length === 0 ? (
         <div className="py-12 text-center text-gray-400 flex flex-col items-center gap-3">
@@ -269,116 +305,39 @@ export default function StoresPage() {
           <p>{stores.length === 0 ? 'No stores yet — they are created automatically when you scan receipts.' : 'No results.'}</p>
         </div>
       ) : (
-        <div className="card p-0 divide-y divide-guac-line">
+        <div className="card p-0 divide-y divide-guac-line overflow-hidden">
+          <div className="hidden lg:grid grid-cols-[28px_minmax(0,1.2fr)_minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,.8fr)_164px] gap-3 bg-slate-50 px-4 py-2 text-xs font-semibold text-slate-500">
+            <span /><span>Store</span><span>Location & contact</span><span>Purchases</span><span>Return policy</span><span>Actions</span>
+          </div>
           {grouped.map(g => {
-            const isMulti = g.stores.length > 1
-            const isOpen = expandedGroups.has(g.key)
-            const groupAllSelected = g.stores.every(s => selected.has(s.id))
-            const groupAnyDup = g.stores.some(s => dupIds.has(s.id))
-
-            // Single-location store → render as a normal row, unchanged behavior
-            if (!isMulti) {
-              const store = g.stores[0]
-              return (
-                <div key={store.id}
-                  className={`flex items-center gap-3 px-5 py-4 hover:bg-guac-row transition-colors group ${selected.has(store.id) ? 'bg-guac-50/70' : ''} ${dupIds.has(store.id) ? 'border-l-4 border-l-amber-400' : ''}`}>
-                  {dupIds.has(store.id) && (
-                    <span title="Duplicate detected" className="text-amber-500"><AlertTriangle size={14} /></span>
-                  )}
-                  <input type="checkbox" className="w-4 h-4 rounded cursor-pointer" checked={selected.has(store.id)}
-                    onChange={() => toggleOne(store.id)} aria-label={`Select ${store.store_name}`} />
-                  <StoreLogo storeName={store.store_name} size={40} />
-                  <Link href={`/stores/${store.id}`} className="flex-1 flex items-center justify-between min-w-0">
-                    <div className="space-y-1 min-w-0">
-                      <p className="text-[14.5px] font-bold text-guac-ink group-hover:text-guac-700 transition-colors">{displayStoreName(store.store_name)}</p>
-                      <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-gray-400">
-                        {store.address && <span className="flex items-center gap-1"><MapPin size={11} />{store.address}</span>}
-                        {store.phone_no && <span className="flex items-center gap-1"><Phone size={11} />{store.phone_no}</span>}
-                        {store.website && <span className="flex items-center gap-1"><Globe size={11} />{store.website}</span>}
-                      </div>
-                    </div>
-                    {/* Return-policy chip — pulled from store_return_policies
-                        by normalized name. Click bubbles up to the row's Link
-                        so it lands on the detail page, where the full policy
-                        card lives. */}
-                    <RewardChip reward={rewardFor(store)} className="mr-2" />
-                    <PolicyChip policy={policyFor(store)} className="mr-3" />
-                    <ChevronRight size={16} className="text-guac-mist group-hover:text-guac-600 shrink-0 ml-4" />
-                  </Link>
-                </div>
-              )
-            }
-
-            // Multi-location group → accordion
-            return (
-              <div key={g.key}>
-                <button
-                  type="button"
-                  onClick={() => toggleGroup(g.key)}
-                  className={`w-full flex items-center gap-3 px-5 py-4 hover:bg-guac-row transition-colors text-left ${groupAnyDup ? 'border-l-4 border-l-amber-400' : ''}`}
-                >
-                  {groupAnyDup && <span title="Contains duplicates" className="text-amber-500"><AlertTriangle size={14} /></span>}
-                  <input
-                    type="checkbox"
-                    className="w-4 h-4 rounded cursor-pointer"
-                    checked={groupAllSelected}
-                    onClick={e => e.stopPropagation()}
-                    onChange={() => {
-                      setSelected(prev => {
-                        const n = new Set(prev)
-                        if (groupAllSelected) g.stores.forEach(s => n.delete(s.id))
-                        else g.stores.forEach(s => n.add(s.id))
-                        return n
-                      })
-                    }}
-                    aria-label={`Select all ${g.display} locations`}
-                  />
-                  <StoreLogo storeName={g.display} size={40} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[14.5px] font-bold text-guac-ink">{g.display}</p>
-                    <p className="gg-num text-xs text-guac-faint">{g.stores.length} locations</p>
-                  </div>
-                  {/* Membership # is chain-wide, so it rides on the group
-                      header (same number for every location below). */}
-                  <RewardChip reward={rewardFor(g.stores[0])} className="mr-2" />
-                  {/* Same chip on the merchant-group header; all locations
-                      share the chain's curated policy. */}
-                  <PolicyChip policy={policyFor(g.stores[0])} className="mr-3" />
-                  {isOpen
-                    ? <ChevronDown size={16} className="text-guac-mist shrink-0" />
-                    : <ChevronRight size={16} className="text-guac-mist shrink-0" />}
-                </button>
-                {isOpen && (
-                  <div className="bg-guac-50/40 border-t border-guac-line">
-                    {g.stores.map(store => (
-                      <div key={store.id}
-                        className={`flex items-center gap-3 pl-12 pr-5 py-3 hover:bg-white transition-colors group ${selected.has(store.id) ? 'bg-guac-50/70' : ''} ${dupIds.has(store.id) ? 'border-l-4 border-l-amber-400' : ''}`}>
-                        {dupIds.has(store.id) && (
-                          <span title="Duplicate detected" className="text-amber-500"><AlertTriangle size={12} /></span>
-                        )}
-                        <input type="checkbox" className="w-4 h-4 rounded cursor-pointer" checked={selected.has(store.id)}
-                          onChange={() => toggleOne(store.id)} aria-label={`Select ${store.store_name} location`} />
-                        <Link href={`/stores/${store.id}`} className="flex-1 flex items-center justify-between min-w-0">
-                          <div className="space-y-0.5 min-w-0">
-                            <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-gray-600">
-                              {store.address
-                                ? <span className="flex items-center gap-1 font-medium text-gray-700"><MapPin size={11} />{store.address}</span>
-                                : <span className="text-gray-400 italic">No address</span>}
-                              {store.phone_no && <span className="flex items-center gap-1"><Phone size={11} />{store.phone_no}</span>}
-                              {store.website && <span className="flex items-center gap-1"><Globe size={11} />{store.website}</span>}
-                            </div>
-                          </div>
-                          <ChevronRight size={14} className="text-guac-mist group-hover:text-guac-600 shrink-0 ml-4" />
-                        </Link>
-                      </div>
-                    ))}
-                  </div>
-                )}
+            const multiple = g.stores.length > 1
+            const open = expandedGroups.has(g.key)
+            const aggregate = g.stores.reduce((result, store) => {
+              const a = activity.get(store.id)
+              if (a) { result.count += a.count; result.spend += a.spend; if (a.last > result.last) result.last = a.last }
+              return result
+            }, { ...(unassignedActivity.get(g.key) || { count: 0, spend: 0, last: '', unassigned: 0 }) })
+            function row(store, summary = false) {
+              const a = summary || g.stores.length === 1 ? aggregate : activity.get(store.id)
+              const allSelected = summary ? g.stores.every(s => selected.has(s.id)) : selected.has(store.id)
+              return <div key={store.id} className={`grid grid-cols-[28px_minmax(0,1fr)] gap-x-3 gap-y-2 px-4 py-3 lg:grid-cols-[28px_minmax(0,1.2fr)_minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,.8fr)_164px] lg:items-center ${allSelected ? 'bg-violet-50' : 'hover:bg-slate-50'}`}>
+                <label className="flex min-h-11 items-center"><input type="checkbox" checked={allSelected} aria-label={`Select ${summary ? g.display + ' locations' : store.store_name}`} onChange={() => summary ? setSelected(previous => { const next = new Set(previous); g.stores.forEach(s => allSelected ? next.delete(s.id) : next.add(s.id)); return next }) : toggleOne(store.id)} /></label>
+                <div className="flex min-w-0 items-center gap-2"><StoreLogo storeName={store.store_name} size={28} /><div className="min-w-0"><Link href={`/stores/${store.id}`} className="break-words font-semibold text-violet-700">{summary ? g.display : displayStoreName(store.store_name)}</Link>{summary && <button type="button" aria-expanded={open} onClick={() => toggleGroup(g.key)} className="flex min-h-11 items-center gap-1 text-xs text-slate-500">{g.stores.length} locations <ChevronDown size={13} /></button>}</div></div>
+                <div className="col-start-2 min-w-0 break-words text-xs leading-5 text-slate-500 lg:col-start-auto">{summary ? <span>Multiple locations</span> : <><p>{store.address || 'Address not recorded'}</p>{store.phone_no && <p>Phone: {store.phone_no}</p>}</>}<RewardChip reward={rewardFor(store)} /></div>
+                <div className="col-start-2 text-xs leading-5 text-slate-600 lg:col-start-auto">{activityLoading ? 'Loading purchases…' : activityError ? 'Activity unavailable' : a?.count ? <><p>{a.count} {a.count === 1 ? "purchase" : "purchases"} · ${a.spend.toFixed(2)}</p><p>Latest {a.last}</p>{a.unassigned > 0 && <span title="These receipts identify the merchant but do not have a saved store/location ID.">{a.unassigned} location not recorded</span>}</> : 'No recorded purchases'}</div>
+                <div className="col-start-2 lg:col-start-auto">{policyFor(store) ? <PolicyChip policy={policyFor(store)} /> : <span className="text-xs text-slate-500">Not recorded</span>}</div>
+                <div className="col-start-2 flex flex-wrap items-center gap-3 lg:col-start-auto"><Link href={`/stores/${store.id}`} className="flex min-h-11 items-center whitespace-nowrap text-xs font-semibold text-violet-700">View store →</Link><button type="button" className="min-h-11 text-xs font-semibold text-violet-700 underline" onClick={() => { setOfferSearch(summary ? g.display : displayStoreName(store.store_name)); offersPanel.current?.focus(); offersPanel.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }) }}>Offers</button></div>
               </div>
-            )
+            }
+            return <div key={g.key}>{row(g.stores[0], multiple)}{multiple && open && <div className="border-t border-violet-100 bg-slate-50">{g.stores.map(store => row(store))}</div>}</div>
           })}
         </div>
-      )}
+      )}</div>
+      <aside ref={offersPanel} tabIndex={-1} aria-label="Store promotions and offers" className="space-y-3 2xl:sticky 2xl:top-5">
+        <div className="rounded-2xl border border-violet-200 bg-white p-4"><h2 className="font-bold">Promotions & offers</h2><p className="mt-1 text-sm text-slate-500">Choose Offers on a store or search captured promotions below.</p><Link href="/promotions" className="mt-2 inline-flex min-h-11 items-center text-sm font-semibold text-violet-700">Browse and filter offers →</Link></div>
+        <label className="block text-sm">Search captured offers<input className="input mt-1" placeholder="Merchant, product or offer" value={offerSearch} onChange={e => setOfferSearch(e.target.value)} /></label><select aria-label="Store offer source" className="input" value={offerSource} onChange={e => setOfferSource(e.target.value)}><option value="">All sources</option><option value="email">Email</option><option value="web">Web</option><option value="ai">Guac AI</option></select><div className="grid grid-cols-2 gap-2"><select aria-label="Store offer expiration" className="input" value={offerExpiry} onChange={e => setOfferExpiry(e.target.value)}><option value="">All current offers</option><option value="dated">Confirmed end date</option><option value="week">Ends within 7 days</option></select><select aria-label="Store discount type" className="input" value={offerType} onChange={e => setOfferType(e.target.value)}><option value="">All discounts</option><option value="percent">Percentage off</option><option value="amount">Amount off</option><option value="free">Free benefits</option></select></div><button type="button" className="btn-secondary" disabled={searchingOffers || offerSearch.trim().length < 2} onClick={searchMerchantOffers}>{searchingOffers ? "Searching…" : "Search merchant websites"}</button>{offerMessage && <p role="status" className="text-sm text-slate-600">{offerMessage}</p>}{offersLoading && <p className="text-sm text-slate-500">Loading captured offers…</p>}{offersError && <p role="alert" className="text-sm text-rose-700">Offers could not load. <button type="button" className="underline" onClick={() => qc.invalidateQueries({ queryKey: ["promotions"] })}>Retry</button></p>}{visibleOffers.slice(0, 4).map(p => <PromotionCard key={p.id} promotion={p} compact onDismiss={id => updatePromotion.mutate({ id, status: 'dismissed' }, { onError: e => toast.error(e.message) })} onKeep={id => updatePromotion.mutate({ id, status: 'active' }, { onSuccess: () => toast.success('Offer kept in Rewards'), onError: e => toast.error(e.message) })}/>)}
+        {!offersLoading && !offersError && !visibleOffers.length && <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-5 text-sm text-slate-500">Search a store to find matching captured offers. New promotional emails will appear here automatically after review.</div>}
+      </aside></div>
     </div>
   )
 }
@@ -394,7 +353,7 @@ function RewardChip({ reward, className = '' }) {
       className={`inline-flex items-center gap-1 font-mono text-[11px] font-bold px-2.5 py-1 rounded-md bg-[#F2F4EF] text-guac-faint ${className}`}
       title={`Member / reward number: ${reward.reward_no}`}
     >
-      {reward.reward_no}
+      Member: {reward.reward_no}
     </span>
   )
 }

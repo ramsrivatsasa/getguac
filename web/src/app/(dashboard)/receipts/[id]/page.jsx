@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useReceipt, useUpdateReceipt, useAddReceiptItem, useUpdateReceiptItem } from '../../../../hooks/useReceipts'
 import { createClient } from '../../../../lib/supabase/client'
 import toast from 'react-hot-toast'
@@ -16,6 +17,8 @@ import { displayStoreName } from '../../../../lib/store-name-normalize'
 import mascotBus from '../../../../lib/mascotEventBus'
 import { TapScale, SuccessPop, CountUp } from '../../../../components/animated'
 import MascotLoading from '../../../../components/MascotLoading'
+import AmountReconciliation from '../../../../components/AmountReconciliation'
+import { itemEmoji } from '../../../../lib/itemEmoji'
 
 const RECEIPT_RATING_META = {
   5: { label: 'Essential', emoji: '💎' },
@@ -32,7 +35,7 @@ const PRESET_TAGS = [
 export default function ReceiptDetailPage() {
   const { id } = useParams()
   const router = useRouter()
-  const { data: receipt, isLoading } = useReceipt(id)
+  const { data: receipt, isLoading, isError, error: receiptError } = useReceipt(id)
   const updateReceipt = useUpdateReceipt()
   const addItem = useAddReceiptItem()
   const updateItem = useUpdateReceiptItem()
@@ -48,7 +51,15 @@ export default function ReceiptDetailPage() {
   const [emailMsg, setEmailMsg] = useState(null)
   const [showEmail, setShowEmail] = useState(false)
 
-  const current = localReceipt ?? receipt
+  function returnToReceipts() {
+    let target = '/receipts'
+    try { target = sessionStorage.getItem('getguac.receipts.returnTo') || target } catch {}
+    router.push(target)
+  }
+
+  // Next can reuse this client component while browser history changes the
+  // dynamic route. Never render edits from the previously opened receipt.
+  const current = localReceipt?.id === id ? localReceipt : receipt
 
   // ── Hooks must all be called unconditionally before any early returns ──
   // Bulk recategorize: when user changes an item's category here, propagate to every
@@ -77,16 +88,24 @@ export default function ReceiptDetailPage() {
   useEffect(() => {
     if (!id) return
     let cancelled = false
+    setLocalReceipt(null)
+    setEmailMsg(null)
+    setShowEmail(false)
+    setShowItemForm(false)
+    setNewItem({ sku: '', model: '', item_name: '', purchase_date: '', qty: 1, price: '', warranty_info: '', item_manual: '', return_date: '', returned: false })
     ;(async () => {
       try {
         const sb = createClient()
-        const { data } = await sb
+        const { data, error } = await sb
           .from('email_messages')
           .select('subject, from_addr, body_html, body_text')
           .eq('receipt_id', id)
+          .order('received_at', { ascending: false })
+          .limit(1)
           .maybeSingle()
+        if(error)throw error
         if (!cancelled) setEmailMsg(data || null)
-      } catch { /* best-effort — no email source is fine */ }
+      } catch { if(!cancelled)toast.error('The source email could not be loaded. Please retry.') }
     })()
     return () => { cancelled = true }
   }, [id])
@@ -102,6 +121,7 @@ export default function ReceiptDetailPage() {
       return body
     },
     onSuccess: (data) => {
+      if (data?.skipped) { toast(data.message, { duration: 6000 }); return }
       toast.success(
         `Re-parsed: ${data?.receipt?.store_name || 'updated'} · ${data?.items_parsed || 0} items`,
         { duration: 5000 }
@@ -130,8 +150,7 @@ export default function ReceiptDetailPage() {
       qc.invalidateQueries({ queryKey: ['receipts'] })
       qc.invalidateQueries({ queryKey: ['receipts', id] })
     },
-    // Silent on error: the "View email" fallback still works, no need to nag.
-    onError: () => {},
+    onError: () => toast.error('Receipt image/PDF could not be created. Use View email to see the original.'),
   })
 
   // One-shot per receipt: fire once we've confirmed it's email-sourced
@@ -160,7 +179,7 @@ export default function ReceiptDetailPage() {
 
   async function handleSave() {
     updateReceipt.mutate(current, {
-      onSuccess: () => { toast.success('Saved'); router.push('/receipts') },
+      onSuccess: () => { toast.success('Saved'); returnToReceipts() },
       onError: err => toast.error(err.message),
     })
   }
@@ -174,9 +193,9 @@ export default function ReceiptDetailPage() {
   }
 
   if (isLoading) return <MascotLoading label="Loading receipt…" />
-  if (!current) return (
+  if (isError || !current) return (
     <div className="py-16 text-center text-red-500 flex flex-col items-center gap-3">
-      <p>Receipt not found</p>
+      <p>{isError ? (receiptError?.message || 'Could not load this receipt') : 'Receipt not found'}</p>
       <Link href="/receipts" className="text-sm text-guac-700 font-semibold hover:underline">Back to receipts</Link>
     </div>
   )
@@ -187,6 +206,7 @@ export default function ReceiptDetailPage() {
     const br = b.rating == null ? 0 : 1
     return ar - br
   })
+  const categoryEmoji = Object.fromEntries(CATEGORIES.map(category => [category.slug, category.emoji]))
   const refundPolicies = current.receipt_refund_policies ?? []
   const location = current.store_locations || null
   const si = k => e => setNewItem(p => ({ ...p, [k]: e.target.value }))
@@ -211,7 +231,7 @@ export default function ReceiptDetailPage() {
           like nothing is happening (only a tiny spinner before). */}
       <ReceiptScanAnimation count={reparseFromEmail.isPending ? 1 : 0} />
       <div className="flex items-center gap-3 flex-wrap">
-        <button onClick={() => router.back()} className="btn-ghost p-1.5"><ArrowLeft size={20} /></button>
+        <button onClick={returnToReceipts} className="btn-ghost p-1.5"><ArrowLeft size={20} /></button>
         <h1 className="page-title flex-1 min-w-0 truncate">Receipt — {displayStoreName(current.store_name)}</h1>
         <button
           onClick={() => reparseFromEmail.mutate()}
@@ -223,7 +243,7 @@ export default function ReceiptDetailPage() {
           {reparseFromEmail.isPending ? 'Re-parsing…' : 'Re-parse'}
         </button>
         <button
-          onClick={() => router.back()}
+          onClick={returnToReceipts}
           className="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center transition-colors shrink-0"
           title="Close"
           aria-label="Close"
@@ -239,22 +259,36 @@ export default function ReceiptDetailPage() {
           {[
             { label: 'Store Name', key: 'store_name' },
             { label: 'Date', key: 'date', type: 'date' },
+            { label: 'Subtotal ($)', key: 'subtotal', type: 'number' },
             { label: 'Total Amount ($)', key: 'total_amount', type: 'number' },
             { label: 'Tax Paid ($)', key: 'tax_paid', type: 'number' },
+            { label: 'Tip ($)', key: 'tip_amount', type: 'number' },
+            { label: 'Service Charge ($)', key: 'service_charge', type: 'number' },
+            { label: 'Fees ($)', key: 'other_fees', type: 'number' },
+            { label: 'Discount ($)', key: 'discount_amount', type: 'number' },
             { label: 'Reward No', key: 'reward_no' },
           ].map(({ label, key, type = 'text' }) => (
             <div key={key}>
               <label className="label">{label}</label>
-              <input type={type} className="input" value={current[key] || ''}
+              {/* `?? ''` not `|| ''` — an explicit $0.00 tip is a real value and
+                  must stay visible, unlike a blank "not provided". */}
+              <input type={type} className="input" value={current[key] ?? ''}
                 onChange={e => handleFieldChange(key, e.target.value)} />
             </div>
           ))}
+          <div className="flex items-center gap-2 mt-5">
+            <input type="checkbox" id="gratuity" className="w-4 h-4 rounded" checked={current.gratuity_included || false}
+              onChange={e => handleFieldChange('gratuity_included', e.target.checked)} />
+            <label htmlFor="gratuity" className="text-sm font-medium">Gratuity already included</label>
+          </div>
           <div className="flex items-center gap-2 mt-5">
             <input type="checkbox" id="biz" className="w-4 h-4 rounded" checked={current.business_purchase || false}
               onChange={e => handleFieldChange('business_purchase', e.target.checked)} />
             <label htmlFor="biz" className="text-sm font-medium">Business Purchase</label>
           </div>
         </div>
+
+        <AmountReconciliation receipt={current} />
 
         {/* Category picker — controls what page this receipt feeds into (Bites, etc.) */}
         <div>
@@ -503,7 +537,7 @@ export default function ReceiptDetailPage() {
             <h3 className="gg-h2">Refund Policy</h3>
           </div>
           <div className="overflow-x-auto">
-            <table className="gg-tbl w-full text-sm">
+            <table className="gg-tbl w-full min-w-[1320px] text-sm">
               <thead className="border-b border-guac-line gg-colhead">
                 <tr>
                   <th className="px-3 py-1 text-left">Policy</th>
@@ -524,7 +558,9 @@ export default function ReceiptDetailPage() {
                     'receipt':       { label: 'On receipt',      cls: 'bg-guac-50 text-guac-700 border-guac-line', tip: 'Printed on the receipt body' },
                     'store-default': { label: 'Store default',   cls: 'bg-sky-50 text-sky-700 border-sky-100',             tip: 'Looked up from the merchant’s published policy' },
                     'manual':        { label: 'You set this',    cls: 'bg-amber-50 text-amber-800 border-amber-100',       tip: 'Manually entered' },
-                  }[p.source || 'receipt']
+                  }[p.source || 'receipt'] || {
+                    label: 'Policy source', cls: 'bg-gray-50 text-gray-600 border-gray-200', tip: 'Receipt policy source',
+                  }
                   return (
                     <tr key={p.id}>
                       <td className="px-3 py-1 font-medium">{p.policy_id || '—'}</td>
@@ -620,8 +656,16 @@ export default function ReceiptDetailPage() {
                   <tr key={item.id}>
                     <td className="px-3 py-1 text-gray-400">{item.sku || '—'}</td>
                     <td className="px-3 py-1 text-gray-400">{item.model || '—'}</td>
-                    <td className="px-3 py-1 font-medium">
-                      <span>{item.item_name}</span>
+                    <td className="min-w-[240px] whitespace-nowrap px-3 py-1 font-medium">
+                      <span className="inline-flex items-center gap-2 whitespace-nowrap">
+                        <span
+                          aria-hidden="true"
+                          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-guac-50 text-base"
+                        >
+                          {itemEmoji(item.item_name, categoryEmoji[item.category])}
+                        </span>
+                        <span>{item.item_name}</span>
+                      </span>
                       {/* Guac-AI semantic tag chip — small inline pill, only
                           rendered when the tagger filled ai_tag with a value
                           from the fixed vocabulary (lib/itemTagVocab.js). */}

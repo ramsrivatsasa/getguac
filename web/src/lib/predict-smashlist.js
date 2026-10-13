@@ -1,3 +1,4 @@
+import {eligibleRestockItem} from './restock-eligibility.mjs'
 // GuacWizard predictive engine for the Smashlist.
 //
 // Reads a user's `receipt_items` (with `purchase_date`, `store_id`,
@@ -126,11 +127,12 @@ function refreshDerived(g) {
 function aggregate(rows, aliases = new Map()) {
   const groups = new Map()
   for (const r of rows) {
-    if (!r.item_name || !r.purchase_date) continue
+    if (!r.item_name || !r.purchase_date || !eligibleRestockItem(r)) continue
     const rawKey = normalizeKey(r.item_name)
     if (!rawKey) continue
     // Apply alias redirect — if rawKey has been merged before, route to canonical.
     const key = aliases.get(rawKey) || rawKey
+    if(!eligibleRestockItem(key))continue
     const g = groups.get(key) || {
       key,
       displayName: r.item_name.trim(),

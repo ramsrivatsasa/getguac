@@ -5,6 +5,8 @@
 import MarketingShell from '../../components/MarketingShell'
 import FaqClient from './FaqClient'
 import { ALL_FAQS } from './faq-data'
+import TrustLine from '../../components/TrustLine'
+import ConversionBand from '../../components/ConversionBand'
 
 export const metadata = {
   title: 'GetGuac FAQ | Questions & Clear Answers',
@@ -27,6 +29,8 @@ export default function FaqPage() {
     <MarketingShell subtitle="frequently asked">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
       <FaqClient />
+      <TrustLine />
+      <ConversionBand />
     </MarketingShell>
   )
 }

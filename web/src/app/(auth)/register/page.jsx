@@ -9,16 +9,18 @@ import { Check, X, Loader2, AlertCircle, AtSign, Eye, EyeOff } from 'lucide-reac
 import { createClient as createBrowserClient } from '../../../lib/supabase/client'
 import ReferralCapture from '../../../components/ReferralCapture'
 import MetaPixel, { trackSignup } from '../../../components/MetaPixel'
+import { COUNTRIES, CURRENCIES, registrationRegion } from '../../../lib/registration-region.mjs'
+import { REGION_TO_CURRENCY } from '../../../lib/currency'
 const VALID_USERNAME_RE = /^[a-z0-9][a-z0-9._-]{1,30}[a-z0-9]$/
 const REFERRAL_RE = /^[A-Z0-9]{6}$/
 const REF_STORAGE_KEY = 'pending_referral_code'
 // Benefit bullets for the desktop brand panel (left split). Clean, non-preachy.
 const SIGNUP_BENEFITS = [
-  { icon: '🧾', text: 'Track every receipt & bank statement' },
-  { icon: '🔍', text: 'See exactly where your money goes' },
-  { icon: '✂️', text: 'Catch hidden fees & forgotten subscriptions' },
-  { icon: '↩️', text: 'Never miss a return or refund deadline' },
-  { icon: '🏷️', text: 'Find a better price with Steals' },
+ {icon:'🗂️',text:'Bring income, accounts and records together'},
+ {icon:'📊',text:'Understand your dashboard and spending'},
+ {icon:'👛',text:'Build and review your monthly budget'},
+ {icon:'🎯',text:'Track savings and long-term goals'},
+ {icon:'🛡️',text:'Keep bills, returns and recoverable value in view'},
 ]
 // TURNSTILE_SITE_KEY removed 2026-08-03 with the widget — registration
 // now uses the distorted-image sum in lib/demo-challenge.js.
@@ -33,13 +35,15 @@ export default function RegisterPage({ testBypassCaptcha = false }) {
   // the dashboard. The profile-row trigger in Supabase fills the
   // first_name / last_name from Google's name fields.
   async function signInWithGoogle() {
+    try { registrationRegion(form, {required:true}) } catch(e) { setErrorMsg(e.message); document.getElementById('register-country')?.focus(); return }
     setGoogleLoading(true)
     try {
+      sessionStorage.setItem('registration-region', JSON.stringify(registrationRegion(form, {required:true})))
       const sb = createBrowserClient()
       const { error } = await sb.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
+          redirectTo: `${window.location.origin}/auth/callback?next=/register/complete`,
         },
       })
       if (error) { toast.error(error.message); setGoogleLoading(false) }
@@ -55,7 +59,7 @@ export default function RegisterPage({ testBypassCaptcha = false }) {
   const [resending, setResending] = useState(false)
   const [form, setForm] = useState({
     username: '', firstName: '', lastName: '', email: '', password: '', confirmPassword: '',
-    birthDate: '', age: '', mobileNo: ''
+    birthDate: '', age: '', mobileNo: '', country_code: '', preferred_currency: '', city: '', postal_code: ''
   })
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
@@ -146,6 +150,7 @@ export default function RegisterPage({ testBypassCaptcha = false }) {
   async function handleSubmit(e) {
     e.preventDefault()
     setErrorMsg('')
+    try { registrationRegion(form, {required:true}) } catch(e) { setErrorMsg(e.message); return }
     if (form.password !== form.confirmPassword) { setErrorMsg('Passwords do not match.'); return }
     if (usernameStatus !== 'available') { setErrorMsg('Pick an available username first.'); return }
     if (!form.birthDate) { setErrorMsg('Please enter your birth date — GetGuac is for adults 18 and older.'); return }
@@ -165,6 +170,7 @@ export default function RegisterPage({ testBypassCaptcha = false }) {
           birth_date: form.birthDate || null,
           age: form.age || null,
           mobile_no: form.mobileNo || null,
+          ...registrationRegion(form, {required:true}),
           // Bot-prevention payload — honeypot must be empty, Turnstile
           // token comes from the widget (or empty if no key configured).
           website: honeypot,
@@ -228,7 +234,7 @@ export default function RegisterPage({ testBypassCaptcha = false }) {
           </div>
           <h2 className="text-4xl xl:text-5xl font-black mt-9 leading-[1.05] text-gray-900 tracking-tight">Take control<br />of your money.</h2>
           <p className="text-gray-600 mt-4 max-w-md text-lg">
-            Create your free account and start seeing exactly where your money goes — in about a minute.
+            Create your free account to organize your money, build a budget and track the goals that matter to you.
           </p>
         </div>
         <ul className="relative space-y-3.5 max-w-md">
@@ -266,11 +272,11 @@ export default function RegisterPage({ testBypassCaptcha = false }) {
               <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-2xl">📬</div>
               <div>
                 <h2 className="text-lg font-bold text-emerald-800">Check your email</h2>
-                <p className="text-xs text-gray-500">We need to verify it's really you before unlocking the account.</p>
+                <p className="text-xs text-gray-500">We need to verify it&apos;s really you before unlocking the account.</p>
               </div>
             </div>
             <p className="text-sm text-gray-700">
-              We sent a confirmation link to <strong className="text-emerald-700">{confirmation.email}</strong>. Click it and you'll land on your dashboard with the handle <strong className="font-mono text-emerald-700">@{confirmation.username}</strong> reserved.
+              We sent a confirmation link to <strong className="text-emerald-700">{confirmation.email}</strong>. Click it and you&apos;ll land on your dashboard with the handle <strong className="font-mono text-emerald-700">@{confirmation.username}</strong> reserved.
             </p>
             <p className="text-xs text-gray-500">
               Not in your inbox in a minute? Check spam, or hit Resend below.
@@ -371,7 +377,7 @@ export default function RegisterPage({ testBypassCaptcha = false }) {
 
             <div className="grid grid-cols-2 gap-3">
               <div><label htmlFor="register-first-name" className="label">First Name</label><input id="register-first-name" required className="input" placeholder="Alex" value={form.firstName} onChange={s('firstName')} /></div>
-              <div><label htmlFor="register-last-name" className="label">Last Name</label><input id="register-last-name" required className="input" placeholder="Smith" value={form.lastName} onChange={s('lastName')} /></div>
+              <div><label htmlFor="register-last-name" className="label">Last Name (optional)</label><input id="register-last-name" className="input" placeholder="Smith" value={form.lastName} onChange={s('lastName')} /></div>
             </div>
             <div>
               <label htmlFor="register-email" className="label">Email Address</label>
@@ -461,7 +467,19 @@ export default function RegisterPage({ testBypassCaptcha = false }) {
                 />
               </div>
             </div>
-            <div><label htmlFor="register-mobile" className="label">Mobile No <span className="text-gray-400 normal-case font-normal">(Optional)</span></label><input id="register-mobile" type="tel" className="input" value={form.mobileNo} onChange={s('mobileNo')} /></div>
+            <fieldset className="rounded-xl border border-violet-200 bg-violet-50/50 p-4 space-y-3">
+              <legend className="px-1 text-sm font-bold text-violet-800">Your country & currency</legend>
+              <p className="text-sm text-slate-600">Choose where you manage your money. No address needed.</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div><label className="label" htmlFor="register-country">Country or region</label><select id="register-country" required autoComplete="country" className="input w-full" value={form.country_code} onChange={e=>setForm(p=>({...p,country_code:e.target.value,preferred_currency:REGION_TO_CURRENCY[e.target.value] || ''}))}><option value="">Choose country</option>{COUNTRIES.map(c=><option key={c.code} value={c.code}>{c.name}</option>)}</select></div>
+                <div><label className="label" htmlFor="register-currency">Preferred currency</label><select id="register-currency" required className="input w-full" value={form.preferred_currency} onChange={s('preferred_currency')}><option value="">Choose currency</option>{CURRENCIES.map(c=><option key={c} value={c}>{c}</option>)}</select></div>
+              </div>
+              <details><summary className="cursor-pointer min-h-11 py-3 text-sm font-semibold text-violet-700">Add city / postal code (optional)</summary><div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div><label className="label" htmlFor="register-city">City / locality</label><input id="register-city" autoComplete="address-level2" maxLength={100} className="input" value={form.city} onChange={s('city')}/></div>
+                <div><label className="label" htmlFor="register-postal">Postal code / ZIP</label><input id="register-postal" autoComplete="postal-code" maxLength={20} className="input" value={form.postal_code} onChange={s('postal_code')}/></div>
+              </div></details>
+            </fieldset>
+            <div><label htmlFor="register-mobile" className="label">Mobile No <span className="text-gray-400 normal-case font-normal">(Optional)</span></label><input id="register-mobile" type="tel" autoComplete="tel" placeholder="Include your country calling code" className="input" value={form.mobileNo} onChange={s('mobileNo')} /></div>
 
             {/* Referral code (optional). A friend's 6-char code — applies the
                 same as clicking their ?ref= link. */}

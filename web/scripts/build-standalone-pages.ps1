@@ -1,3 +1,4 @@
+param([switch]$SkipSitemap)
 $ErrorActionPreference = 'Stop'
 $packageRoot = Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) '..\public'
 $utf8 = [Text.UTF8Encoding]::new($false)
@@ -61,7 +62,7 @@ Get-ChildItem (Join-Path $packageRoot 'resources') -Recurse -Filter '*.html' | F
 # container, so it gets the identical nav module and mount call. Without this it
 # would be the one page still free to drift.
 $sitemap = Join-Path $packageRoot 'sitemap.html'
-if (Test-Path $sitemap) {
+if (-not $SkipSitemap -and (Test-Path $sitemap)) {
   $html = [IO.File]::ReadAllText($sitemap)
   $html = Inline-ScriptTag -Html $html -Source 'gg-nav.js' -JavaScript $resourceNavScript -Marker 'GG_NAV_INLINE' -Signature '(() => {'
   [IO.File]::WriteAllText($sitemap, $html, $utf8)

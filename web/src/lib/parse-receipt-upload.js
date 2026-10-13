@@ -67,7 +67,12 @@ function ensureTyped(file) {
 async function doParse(file) {
   const fd = new FormData()
   fd.append('file', file)
-  const res = await fetch('/api/parse-receipt', { method: 'POST', body: fd })
+  const locale = typeof navigator !== 'undefined' ? (navigator.language || '') : ''
+  const country = locale.match(/[-_]([A-Za-z]{2})$/)?.[1]?.toUpperCase() || ''
+  const res = await fetch('/api/parse-receipt', {
+    method: 'POST', body: fd,
+    headers: country ? { 'X-Guac-Country': country } : undefined,
+  })
   const text = await res.text()
   let data
   try { data = JSON.parse(text) } catch {

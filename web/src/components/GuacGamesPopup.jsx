@@ -65,8 +65,8 @@ export default function GuacGamesPopup() {
         type="button"
         onClick={toggle}
         aria-label={open ? 'Close Guac Arcade' : 'Open Guac Arcade'}
-        className="fixed z-[60] right-4 sm:right-5 bottom-40 h-11 items-center gap-2 rounded-full text-white shadow-lg ring-1 ring-black/5 pl-3.5 pr-4 hover:-translate-y-0.5 transition-transform"
-        style={{ display: open ? 'none' : 'flex', background: RAINBOW, textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
+        className={`${open ? 'hidden' : 'hidden sm:flex'} fixed z-[60] right-4 sm:right-5 bottom-40 h-11 items-center gap-2 rounded-full text-white shadow-lg ring-1 ring-black/5 pl-3.5 pr-4 hover:-translate-y-0.5 transition-transform`}
+        style={{ background: RAINBOW, textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
       >
         <Gamepad2 size={22} />
         <span className="text-sm font-extrabold">Games</span>

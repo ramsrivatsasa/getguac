@@ -94,7 +94,7 @@ export async function POST(request) {
     // Sign in via the cookie-bound SSR client — this sets the auth cookies on
     // the response so the user is signed in on subsequent requests.
     const sb = createClient()
-    const { error } = await sb.auth.signInWithPassword({ email, password })
+    const { data: signInData, error } = await sb.auth.signInWithPassword({ email, password })
     if (error) {
       // "Email not confirmed" is a security-meaningful case — show it.
       // Supabase returns code: 'email_not_confirmed' (post-2024 SDK) or
@@ -109,6 +109,18 @@ export async function POST(request) {
         }, { status: 403 })
       }
       return Response.json(GENERIC_INVALID, { status: 401 })
+    }
+
+    // Native clients cannot consume the cookie written by the SSR client.
+    // Return the refresh token only when they explicitly identify themselves;
+    // the mobile Supabase SDK exchanges it and owns subsequent refreshes.
+    if (body?.client === 'mobile') {
+      const response = Response.json({
+        ok: true,
+        refresh_token: signInData.session?.refresh_token,
+      })
+      response.headers.set('Cache-Control', 'no-store')
+      return response
     }
 
     return Response.json({ ok: true })

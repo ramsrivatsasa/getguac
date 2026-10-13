@@ -34,7 +34,7 @@ export async function reportServerError(
 ) {
   try {
     const sb = client || admin()
-    await sb.from('audit_log').insert({
+    const { data, error } = await sb.from('audit_log').insert({
       user_id: userId,
       action,
       status: level,
@@ -44,8 +44,9 @@ export async function reportServerError(
         platform,
         ...(meta ? { meta } : {}),
       },
-    })
+    }).select('id').single()
+    return error ? { ok: false } : { ok: true, id: data.id }
   } catch (_) {
-    // swallow — capture is best-effort
+    return { ok: false }
   }
 }

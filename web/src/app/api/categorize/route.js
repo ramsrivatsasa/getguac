@@ -95,7 +95,7 @@ export async function POST(request) {
     // createApiClient accepts EITHER the web cookie session OR a mobile
     // "Authorization: Bearer <token>" header, so the native Auto-categorize
     // button can call this route too. Falls back to cookies for the web app.
-    const sb = createApiClient()
+    const sb = await createApiClient()
     const { data: { user } } = await sb.auth.getUser()
     if (!user) return Response.json({ error: 'Not signed in' }, { status: 401 })
 

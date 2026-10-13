@@ -4,11 +4,13 @@
 
 import pdfParse from 'pdf-parse'
 import { rateLimit, rateKey } from '../../../lib/apiGuard'
-import { parseReceiptFromImages } from '../../../lib/parse-receipt-engine'
-import { autoCategorize } from '../../../lib/auto-categorize'
+import { normalizeVisionImage, parseReceiptFromImages } from '../../../lib/parse-receipt-engine'
+import { autoCategorize, receiptCategoryFromItems } from '../../../lib/auto-categorize'
 import { guackyNonReceiptResponse } from '../../../lib/guacky-responses'
 import { createApiClient } from '../../../lib/supabase/server'
 import { buildUserContextPrompt } from '../../../lib/user-context'
+import { normalizeReceiptDate } from '../../../lib/receipt-date'
+import { scoreReceiptConfidence } from '../../../lib/receipt-confidence'
 export const runtime = 'nodejs'
 export const maxDuration = 60
 
@@ -51,11 +53,16 @@ Return ONLY a single JSON object. No prose, no markdown fences. Schema:
     "zip": string|null,
     "phone_no": string|null,
     "website": string|null,
-    "store_no": string|null
+    "store_no": string|null,
+    "country": string|null                 // ISO 3166-1 alpha-2 from printed location, e.g. US, GB, SE
   },
   "date": string,                        // YYYY-MM-DD (transaction date, NOT email/forwarded date)
+  "date_raw": string|null,               // EXACT date characters printed, before interpretation (e.g. "07/26/11")
   "total_amount": number,                // positive purchases, NEGATIVE for returns
   "tax_paid": number,                    // negative on returns
+  "tip_amount": number|null,             // printed/charged tip only; null when not shown
+  "service_charge": number|null,          // mandatory service charge, separate from tip
+  "gratuity_included": boolean,           // true only when receipt says gratuity is included
   "payment_method": string|null,
   "payment_last4": string|null,           // Last 4 of the TENDER/payment card ONLY (VISA/MC/DEBIT/ACCT/CARD# payment block). A masked value next to Customer/BonusCard/Rewards or under a /rewards footer URL is a LOYALTY number → goes in member_number, leave this null.
   "member_number": string|null,           // The store loyalty / membership / rewards account number printed on the receipt (Costco "Member:", CVS ExtraCare, Kroger Plus, Sephora Beauty Insider, Giant Food "Customer", gas-station rewards, etc.). Return EXACTLY as printed, INCLUDING mask glyphs — e.g. Giant "Customer 4*****6108" → "4*****6108". NOT the payment card (exclude the credit-card last-4 → payment_last4). Return null when no membership identifier is printed.
@@ -63,6 +70,7 @@ Return ONLY a single JSON object. No prose, no markdown fences. Schema:
   "is_receipt": boolean,                 // TRUE for any receipt / invoice / order confirmation. FALSE for non-receipt photos (selfie, cat, landscape, blank paper, screenshot of something else).
   "non_receipt_subject": string|null,    // When is_receipt=false: short 2-3 word description of what you DID see, lowercase ("a person", "a cat", "a sunset", "a blank page", "a screenshot of a chat"). When is_receipt=true: null.
   "category": string|null,               // ONE of: "grub", "eats", "snacks", "bars", "tea", "drinks", "subs", "bills", "bank-fees", "cloud", "tech", "big-stuff", "fix-it", "outdoors", "supplies", "fits", "pharmacy", "health", "personal-care", "household", "gas-up", "fun", "gifting", "charity", "misc"
+  // Preserve specifications that are explicitly printed: brand, model/SKU, apparel size WITH size system, grocery variety/weight/volume, dimensions and pack quantity. Keep sku/model separate; retain other printed specifications in item_name so matching can use them. Never infer a size from a model number, assume a pack size, or invent missing specifications.
   "items": [
     { "sku": string|null, "model": string|null, "item_name": string, "qty": number, "price": number, "category": string|null, "health_tier": "healthy"|"neutral"|"treat"|"harmful"|null, "refund_policy_id": string|null, "returned": boolean }
   ],
@@ -77,6 +85,9 @@ Rules:
 - Home Depot "4@3.33 13.32" → qty: 4, price: 13.32 (the line total, not per-unit).
 - For returns, all money is negative AND is_return true AND each returned line has returned: true.
 - date = transaction date printed on the receipt (NOT email forward date).
+- Date order is determined from the PRINTED store country/address/currency/language; device locale is only a fallback. Preserve the exact print in date_raw.
+- Numeric dates can be YYYY/MM/DD, DD/MM/YYYY, MM/DD/YYYY, YY/MM/DD, or MM/YY/DD. If the middle value is a plausible current/recent 2-digit year but an impossible month, treat it as the year. Example: 07/26/11 on a 2026 receipt is MM/YY/DD → 2026-07-11, NEVER 2011-07-26.
+- Use today's upload date only as a plausibility check. If one interpretation creates a very large gap but another valid component order produces a recent/plausible transaction date, reconsider the order using the printed country and merchant format. Never substitute today's date for the printed transaction date, and do not alter an unambiguous historical date merely because it is old.
 
 MEMBER NUMBER — capture any loyalty / membership / rewards / account identifier printed on the receipt that ties the user to this merchant's program. Scan the ENTIRE receipt — the header at the very TOP and the footer at the very BOTTOM (membership lines are often in those edges, not the body). Return the digits/characters exactly as printed, no labels:
   "MEMBER: 111222333"                     → "111222333"
@@ -240,7 +251,7 @@ export async function POST(request) {
     // Auth — anonymous Gemini quota abuse blocker. The endpoint used to
     // burn API calls for unauth'd POSTs; cap it to signed-in users +
     // a per-user rate limit instead of IP+session.
-    const supabase = createApiClient()
+    const supabase = await createApiClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
       return Response.json({ error: 'Sign in required to parse receipts.' }, { status: 401 })
@@ -264,14 +275,17 @@ export async function POST(request) {
     // and Groq call this request makes. Wrapped in try/catch because a
     // context-fetch failure must NEVER block a parse: degraded
     // personalization is fine; a 500 here is not.
-    let userContextSuffix = ''
-    try {
-      userContextSuffix = await buildUserContextPrompt(supabase)
-    } catch (e) {
+    // Decode the multipart body while the optional personalization query is
+    // in flight. These operations are independent; doing them sequentially
+    // added database latency directly to every upload before image work began.
+    const contextPromise = buildUserContextPrompt(supabase).catch((e) => {
       console.warn('[parse-receipt] user-context fetch failed (continuing without):', e.message)
-    }
-
-    const formData = await request.formData()
+      return ''
+    })
+    const [userContextSuffix, formData] = await Promise.all([
+      contextPromise,
+      request.formData(),
+    ])
 
     // Multi-page path: client sends `file_1`, `file_2`, ... `file_N` AND/OR
     // a single `files` array. ML Kit Document Scanner returns N cleaned
@@ -298,15 +312,19 @@ export async function POST(request) {
           error: `Total upload too large (${(totalBytes/1024/1024).toFixed(1)} MB). Max ${(MAX_UPLOAD_BYTES * 10)/1024/1024} MB across all pages.`,
         }, { status: 413 })
       }
-      const images = []
       for (const f of multiFiles) {
         const t = f.type || 'image/jpeg'
         if (!t.startsWith('image/')) {
           return Response.json({ error: `Page rejected — multi-page requires images only, got ${t}` }, { status: 415 })
         }
-        const buf = Buffer.from(await f.arrayBuffer())
-        images.push({ mimeType: t, base64: buf.toString('base64') })
       }
+      // Read pages concurrently. parseReceiptFromImages owns normalization and
+      // already runs Sharp for all pages through Promise.all; normalizing here
+      // as well previously decoded every multi-page image twice.
+      const images = await Promise.all(multiFiles.map(async (f) => {
+        const buf = Buffer.from(await f.arrayBuffer())
+        return { buffer: buf, mimeType: f.type || 'image/jpeg' }
+      }))
       let multiParsed
       try {
         multiParsed = await parseReceiptFromImages({ images, userContextSuffix })
@@ -330,6 +348,18 @@ export async function POST(request) {
       }
       // Flatten back into the same response shape the single-image path
       // returns so the mobile client doesn't have to branch on it.
+      const categorizedItems = autoCategorize(multiParsed.items || [])
+      // Multi-page parsing returns the same nested store object as the
+      // single-page parser. The old `multiParsed.store_country` lookup was
+      // therefore usually undefined, silently discarding the strongest date
+      // locale signal and falling back to the phone locale.
+      const receiptCountry = multiParsed.store?.country || multiParsed.store_country
+      const normalizedDate = normalizeReceiptDate({ raw: multiParsed.date_raw, parsed: multiParsed.date, receiptCountry, deviceCountry: request.headers.get('x-guac-country') })
+      const confidence = scoreReceiptConfidence({
+        ...multiParsed,
+        date: normalizedDate || multiParsed.date || null,
+        items: categorizedItems,
+      })
       return Response.json({
         store_name: multiParsed.store_name || '',
         store_address: multiParsed.store?.address || '',
@@ -339,19 +369,24 @@ export async function POST(request) {
         store_phone: multiParsed.store?.phone_no || '',
         store_website: multiParsed.store?.website || '',
         store_no: multiParsed.store?.store_no || '',
+        store_country: receiptCountry || '',
         location_name: multiParsed.store?.location_name || '',
-        date: multiParsed.date || null,
+        date: normalizedDate || multiParsed.date || null,
         total_amount: multiParsed.total_amount,
         tax_paid: multiParsed.tax_paid,
+        tip_amount: multiParsed.tip_amount ?? null,
+        service_charge: multiParsed.service_charge ?? null,
+        gratuity_included: Boolean(multiParsed.gratuity_included),
         payment_method: multiParsed.payment_method,
         payment_last4: multiParsed.payment_last4,
         member_number: multiParsed.member_number || '',
         is_return: multiParsed.is_return,
-        category: multiParsed.category,
-        items: autoCategorize(multiParsed.items || []),
+        category: receiptCategoryFromItems(categorizedItems, multiParsed.category),
+        items: categorizedItems,
         refund_policies: multiParsed.refund_policies || [],
         _provider: multiParsed._provider,
         _pages: images.length,
+        _confidence: confidence,
       })
     }
 
@@ -368,8 +403,11 @@ export async function POST(request) {
     }
 
     const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-    const base64 = buffer.toString('base64')
+    let buffer = Buffer.from(bytes)
+    const normalized = await normalizeVisionImage({ buffer, mimeType })
+    buffer = normalized.buffer
+    const providerMimeType = normalized.mimeType
+    const base64 = normalized.base64
 
     let result
     let geminiError = null
@@ -377,7 +415,7 @@ export async function POST(request) {
     // Try Gemini first
     if (geminiKey) {
       try {
-        result = await callGemini({ apiKey: geminiKey, mimeType, base64, userContextSuffix })
+        result = await callGemini({ apiKey: geminiKey, mimeType: providerMimeType, base64, userContextSuffix })
       } catch (err) {
         geminiError = err.message
         console.warn('[parse-receipt] Gemini failed, will try Groq:', err.message)
@@ -386,7 +424,7 @@ export async function POST(request) {
 
     // Fall back to Groq if Gemini failed (or wasn't configured)
     if (!result && groqKey) {
-      result = await callGroqForFile({ apiKey: groqKey, mimeType, buffer, userContextSuffix })
+      result = await callGroqForFile({ apiKey: groqKey, mimeType: providerMimeType, buffer, userContextSuffix })
     }
 
     if (!result) {
@@ -400,7 +438,7 @@ export async function POST(request) {
     // the photo, and bumps the multi-photo batch success rate.
     if (!parsed && geminiKey) {
       try {
-        const retry = await callGemini({ apiKey: geminiKey, mimeType, base64, userContextSuffix })
+        const retry = await callGemini({ apiKey: geminiKey, mimeType: providerMimeType, base64, userContextSuffix })
         if (retry?.text) {
           parsed = safeParseJson(retry.text)
           if (parsed) {
@@ -432,6 +470,19 @@ export async function POST(request) {
       return Response.json({ error: guac.message, non_receipt: true, subject: guac.subject, tip: guac.tip }, { status: 422 })
     }
 
+    const categorizedItems = autoCategorize(Array.isArray(parsed.items) ? parsed.items.map(it => ({
+      sku: it.sku || '', model: it.model || '', item_name: it.item_name || '',
+      qty: Number(it.qty || 1), price: Number(it.price || 0),
+      category: it.category || null,
+      health_tier: it.health_tier || null,
+      refund_policy_id: it.refund_policy_id || '', returned: Boolean(it.returned),
+    })) : [])
+    const normalizedDate = normalizeReceiptDate({ raw: parsed.date_raw, parsed: parsed.date, receiptCountry: parsed.store?.country, deviceCountry: request.headers.get('x-guac-country') })
+    const confidence = scoreReceiptConfidence({
+      ...parsed,
+      date: normalizedDate || parsed.date || null,
+      items: categorizedItems,
+    })
     return Response.json({
       store_name: parsed.store_name || '',
       store_address: parsed.store?.address || '',
@@ -441,10 +492,14 @@ export async function POST(request) {
       store_phone: parsed.store?.phone_no || '',
       store_website: parsed.store?.website || '',
       store_no: parsed.store?.store_no || '',
+      store_country: parsed.store?.country || '',
       location_name: parsed.store?.location_name || '',
-      date: parsed.date || new Date().toISOString().slice(0, 10),
+      date: normalizedDate || parsed.date || new Date().toISOString().slice(0, 10),
       total_amount: Number(parsed.total_amount ?? 0),
       tax_paid: Number(parsed.tax_paid ?? 0),
+      tip_amount: parsed.tip_amount == null ? null : Number(parsed.tip_amount),
+      service_charge: parsed.service_charge == null ? null : Number(parsed.service_charge),
+      gratuity_included: Boolean(parsed.gratuity_included),
       payment_method: parsed.payment_method || '',
       payment_last4: parsed.payment_last4 || '',
       // Loyalty / membership / rewards identifier parsed off the
@@ -452,14 +507,8 @@ export async function POST(request) {
       // placeholder reward_no to the real number.
       member_number: parsed.member_number || '',
       is_return: Boolean(parsed.is_return),
-      category: parsed.category || null,
-      items: autoCategorize(Array.isArray(parsed.items) ? parsed.items.map(it => ({
-        sku: it.sku || '', model: it.model || '', item_name: it.item_name || '',
-        qty: Number(it.qty || 1), price: Number(it.price || 0),
-        category: it.category || null,
-        health_tier: it.health_tier || null,
-        refund_policy_id: it.refund_policy_id || '', returned: Boolean(it.returned),
-      })) : []),
+      category: receiptCategoryFromItems(categorizedItems, parsed.category),
+      items: categorizedItems,
       refund_policies: Array.isArray(parsed.refund_policies) ? parsed.refund_policies.map(p => ({
         policy_id: p.policy_id || '', days: p.days != null ? Number(p.days) : null,
         expiry_date: p.expiry_date || null, eligible: p.eligible !== false,
@@ -468,6 +517,7 @@ export async function POST(request) {
       _provider: result.provider,
       _model: result.model,
       _usage: result.usage,
+      _confidence: confidence,
     })
   } catch (err) {
     console.error('[parse-receipt]', err)

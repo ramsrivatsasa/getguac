@@ -230,3 +230,88 @@ export function profileToPromptContext(profile) {
   }
   return lines.join('\n')
 }
+
+// ── Adaptive opportunity ranking ───────────────────────────────
+// This extends the existing per-user profile with explainable behavioral
+// feedback. It is intentionally not a second AI agent: the profile remains
+// the single customer-learning model used across GetGuac surfaces.
+const PERSONALIZATION_STORAGE_KEY = 'getguac_user_profile_feedback_v1'
+const emptyPersonalizationSignals = () => ({ version: 1, cards: {}, updatedAt: null })
+const personalizationEventDefaults = {
+  impressions: 0,
+  clicks: 0,
+  moreUseful: 0,
+  lessUseful: 0,
+  completed: 0,
+  lastEventAt: null,
+}
+
+export function loadPersonalizationSignals() {
+  if (typeof window === 'undefined') return emptyPersonalizationSignals()
+  try {
+    const parsed = JSON.parse(localStorage.getItem(PERSONALIZATION_STORAGE_KEY) || 'null')
+    return parsed?.version === 1 && parsed.cards ? parsed : emptyPersonalizationSignals()
+  } catch {
+    return emptyPersonalizationSignals()
+  }
+}
+
+export function recordPersonalizationEvent(cardId, event) {
+  if (typeof window === 'undefined' || !cardId) return emptyPersonalizationSignals()
+  const signals = loadPersonalizationSignals()
+  const current = { ...personalizationEventDefaults, ...(signals.cards[cardId] || {}) }
+  const next = {
+    ...signals,
+    cards: {
+      ...signals.cards,
+      [cardId]: {
+        ...current,
+        impressions: current.impressions + (event === 'impression' ? 1 : 0),
+        clicks: current.clicks + (event === 'click' ? 1 : 0),
+        moreUseful: current.moreUseful + (event === 'more-useful' ? 1 : 0),
+        lessUseful: current.lessUseful + (event === 'less-useful' ? 1 : 0),
+        completed: current.completed + (event === 'completed' ? 1 : 0),
+        lastEventAt: new Date().toISOString(),
+      },
+    },
+    updatedAt: new Date().toISOString(),
+  }
+  try { localStorage.setItem(PERSONALIZATION_STORAGE_KEY, JSON.stringify(next)) } catch {}
+  return next
+}
+
+export function buildPersonalizedOpportunityRanking({ receipts = [], goals = [], bills = [], items = [], stores = [], signals = emptyPersonalizationSignals() }) {
+  const profile = buildUserProfile({ receipts, items })
+  const topCategory = Object.entries(profile.category_stats || {}).sort((a, b) => b[1].total - a[1].total)[0] || null
+  const repeatItems = Object.values(profile.item_history || {}).filter(item => item.count > 1).length
+  const activeGoal = goals[0] || null
+  const goalRemaining = Math.max(0, Number(activeGoal?.target_amount || 0) - Number(activeGoal?.current_amount || 0))
+  const topStore = stores[0] || profile.top_stores?.[0] || null
+
+  const candidates = [
+    { id: 'goal', base: activeGoal ? 78 + Math.min(15, goalRemaining / 1000) : 18, reason: activeGoal ? `Active goal: ${activeGoal.name}` : 'No active goal yet' },
+    { id: 'bills', base: bills.length ? 68 + Math.min(18, bills.length * 3) : 24, reason: bills.length ? `${bills.length} upcoming bill${bills.length === 1 ? '' : 's'}` : 'Recurring-money setup available' },
+    { id: 'prices', base: repeatItems ? 64 + Math.min(20, repeatItems * 4) : 28, reason: repeatItems ? `${repeatItems} repeat item${repeatItems === 1 ? '' : 's'} can be compared` : 'Price history can be built from itemized receipts' },
+    { id: 'store', base: topStore ? 58 + Math.min(20, Number(topStore.count || topStore.visits || 0) * 2) : 30, reason: topStore ? `${topStore.fullName || topStore.store} is a frequent merchant` : `${receipts.length} receipts can reveal merchant patterns` },
+    { id: 'protection', base: receipts.length ? 52 + Math.min(18, receipts.length) : 22, reason: receipts.length ? `${receipts.length} purchases can support protection checks` : 'Receipts unlock returns and warranties' },
+    { id: 'knowledge', base: topCategory ? 55 : 35, reason: topCategory ? `${topCategory[0]} is the leading category` : 'Contextual financial knowledge is available' },
+  ]
+
+  const ranked = candidates.map(candidate => {
+    const card = { ...personalizationEventDefaults, ...(signals.cards?.[candidate.id] || {}) }
+    const clickBoost = Math.min(12, Number(card.clicks || 0) * 3)
+    const preferenceBoost = Math.min(14, Number(card.moreUseful || 0) * 7)
+    const negativePreference = Math.min(24, Number(card.lessUseful || 0) * 12)
+    const learnedBoost = clickBoost + preferenceBoost - negativePreference
+    const saturationPenalty = Math.min(8, Math.max(0, Number(card.impressions || 0) - Number(card.clicks || 0) * 3) * 0.35)
+    return {
+      ...candidate,
+      score: Math.round(candidate.base + learnedBoost - saturationPenalty),
+      learnedBoost,
+      confidence: candidate.base >= 70 ? 'high' : candidate.base >= 50 ? 'medium' : 'exploring',
+      feedback: { moreUseful: card.moreUseful, lessUseful: card.lessUseful, completed: card.completed },
+    }
+  }).sort((a, b) => b.score - a.score)
+
+  return { profile: { ...profile, activeGoal, goalRemaining, billCount: bills.length, repeatItems, topStore, topCategory }, ranked, featured: ranked[0], generatedAt: new Date().toISOString() }
+}

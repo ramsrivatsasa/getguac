@@ -94,7 +94,7 @@ async function callGroq({ apiKey, payload }) {
 }
 
 export async function POST(request) {
-  const sb = createApiClient()
+  const sb = await createApiClient()
   const { data: { user }, error: authErr } = await sb.auth.getUser()
   if (authErr || !user?.id) {
     return Response.json({ error: 'Not authenticated' }, { status: 401 })

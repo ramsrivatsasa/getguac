@@ -26,7 +26,7 @@ export const maxDuration = 60
 const MAX_PER_RUN = 8
 
 export async function POST(request) {
-  const sb = createApiClient()
+  const sb = await createApiClient()
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return Response.json({ error: 'Not signed in' }, { status: 401 })
 

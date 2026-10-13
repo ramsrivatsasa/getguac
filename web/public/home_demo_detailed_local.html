@@ -698,7 +698,7 @@
             <div class="appshot">
               <span class="applabel">Inside the GetGuac app</span>
               <button type="button" class="shot" id="webShot" aria-label="Enlarge the GetGuac web screen">
-                <img class="web" id="stageWeb" src="home/goals/web-receipts.webp" alt="The GetGuac web app" width="900" height="563" loading="lazy" decoding="async">
+                <img class="web" id="stageWeb" src="/marketing/current/receipts.webp" alt="The GetGuac web app" width="1440" height="900" loading="lazy" decoding="async">
               </button>
               <button type="button" class="shot shot-phone" id="phoneShot" aria-label="Enlarge the GetGuac mobile screen">
                 <img id="stagePhone" src="home/goals/phone-receipts.webp" alt="The GetGuac mobile app" width="360" height="757" loading="lazy" decoding="async">
@@ -1064,7 +1064,7 @@
       setText('proofValue', s.proofValue);
       setText('proofNote', s.proofNote);
       const web = el('stageWeb'), phone = el('stagePhone'), person = el('stagePerson');
-      web.src = 'home/goals/web-' + s.slug + '.webp';
+      web.src = '/marketing/current/' + ({"bank":"bank","bills":"bills","car-miles":"car-miles","categories":"reports","fees":"guacwizard","games":"games","guac-ai":"guac-ai","guacmoney":"dashboard","inbox":"inbox","marketplace":"marketplace","organized":"dashboard","receipts":"receipts","returns":"returns","smashlist":"shopping","stash":"stash","steals":"steals","subs":"subscriptions","tax":"tax","worth-it":"worth-it","predictions":"shopping"}[s.slug] || s.slug) + '.webp';
       phone.src = 'home/goals/phone-' + s.slug + '.webp';
       person.src = 'home/story-people/' + s.image;
       person.alt = s.imageAlt;

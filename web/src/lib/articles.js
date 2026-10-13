@@ -15,7 +15,12 @@
 // true because the renderer makes it structurally impossible. Adding a link node
 // would silently make that page a lie.
 
-export const ARTICLES = [
+import { SAVINGS_ARTICLES } from './savings-articles'
+
+import { academyTitle, academySlug } from './academy-titles.mjs'
+
+const ARTICLE_CONTENT = [
+  ...SAVINGS_ARTICLES,
   {
     "slug": "compound-interest",
     "title": "The magic of compound interest",
@@ -38,26 +43,26 @@ export const ARTICLES = [
       {
         "h": "A worked example: $300 a month"
       },
-      "Say you invest $300 per month starting at age 25, at an average annual return of around 7% (a rough historical average for a diversified stock index fund, before inflation). By age 65, you'd have contributed $144,000 of your own money. But the account balance would be somewhere in the neighborhood of $790,000 — because the growth compounded on itself for 40 years.",
-      "Now imagine you wait until 35 to start. Same $300/month, same ~7% return, but only 30 years. You'd contribute $108,000 and end up with roughly $340,000. Starting just 10 years earlier — with $36,000 more contributed — could more than double the outcome. That's compounding at work.",
+      "For a hypothetical calculation, assume $300 deposited at the end of each month and a constant nominal annual rate of 7%, compounded monthly. Over 40 years you contribute $144,000, and the calculation produces about $787,000 before taxes, fees and inflation. This is an illustration of arithmetic, not a forecast of investment returns.",
+      "Using the same monthly deposits and rate for 30 years, contributions total $108,000 and the calculated balance is about $366,000. The extra ten years more than double the result in this particular example. Actual investment returns fluctuate and may be negative.",
       {
         "figure": {
           "type": "bars",
           "format": "usd",
-          "title": "$300 a month, invested at about 7%",
+          "title": "$300 a month at an assumed 7% nominal annual rate",
           "data": [
             {
               "label": "Start at 25 — 40 years of growth",
-              "value": 790000,
+              "value": 787444,
               "note": "You contribute $144,000 of your own money"
             },
             {
               "label": "Start at 35 — 30 years of growth",
-              "value": 340000,
+              "value": 365991,
               "note": "You contribute $108,000 of your own money"
             }
           ],
-          "caption": "Ten extra years of compounding more than doubles the outcome, on $36,000 more contributed. An illustration at a rough historical average — real returns vary year to year."
+          "caption": "Hypothetical end-of-month deposits with monthly compounding at 7% ÷ 12. Excludes taxes, fees and inflation. Real returns vary; these balances are not promised."
         }
       },
       {
@@ -2458,6 +2463,8 @@ export const ARTICLES = [
   }
 ]
 
+export const ARTICLES = ARTICLE_CONTENT.map(a => ({ ...a, sourceSlug: a.slug, slug: academySlug(a.slug), title: academyTitle(a.slug, a.title), updated: '2026-10-12' }))
+
 export function getArticle(slug) {
-  return ARTICLES.find((a) => a.slug === slug) || null
+  return ARTICLES.find((a) => a.slug === slug || a.sourceSlug === slug) || null
 }

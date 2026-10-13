@@ -38,7 +38,7 @@ export default function MarketingAuthButtons() {
           side and blunted the one CTA that matters. */}
       <Link
         href="/login"
-        className="hidden sm:inline"
+        className="hidden min-h-11 items-center sm:inline-flex"
         style={{ color: '#5C6B60', fontWeight: 700, fontSize: 14.5, textDecoration: 'none' }}
       >
         Sign in

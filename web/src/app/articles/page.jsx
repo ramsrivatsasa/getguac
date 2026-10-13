@@ -1,8 +1,11 @@
+import MarketingHero from '../../components/MarketingHero'
 import Link from 'next/link'
+import ToolIcon from '../../components/ToolIcon'
 import { ArrowRight } from 'lucide-react'
 import MarketingShell from '../../components/MarketingShell'
 import AdSlot from '../../components/AdSlot'
 import { ARTICLES } from '../../lib/articles'
+import ConversionBand from '../../components/ConversionBand'
 
 export const metadata = {
   title: 'Money articles & guides',
@@ -14,20 +17,13 @@ export const metadata = {
 export default function ArticlesPage() {
   return (
     <MarketingShell subtitle="articles" hideSearch>
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 pt-7 sm:pt-9 pb-4 text-center">
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider">📰 Articles</span>
-        <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-gray-900 mt-4 leading-[1.08]">
-          Money, made{' '}
-          <span className="bg-gradient-to-br from-emerald-500 via-lime-500 to-amber-500 bg-clip-text text-transparent">simple.</span>
-        </h1>
-        <p className="text-gray-600 mt-3 max-w-xl mx-auto">Short, practical guides on saving, investing, debt, and planning — each paired with a calculator.</p>
-      </section>
+      <MarketingHero eyebrow="Articles and guides" title="Money," accent="made simple." description="Practical guides on saving, debt and planning, with calculators to explore your own numbers." imageSrc="/home/story-people/protect-couple-tablet-768.webp" imageAlt="A couple reviewing their household records together" />
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 pb-16">
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {ARTICLES.map((a) => (
             <Link key={a.slug} href={`/articles/${a.slug}`} className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-emerald-200 p-4 transition-all flex flex-col">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">{a.category}</span>
+              <ToolIcon label={a.title} size={24} className="mb-3 text-violet-700"/><span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">{a.category}</span>
               <h2 className="font-bold text-gray-900 leading-snug mt-1">{a.title}</h2>
               <p className="text-sm text-gray-500 mt-1 flex-1">{a.excerpt}</p>
               <span className="text-xs font-bold text-emerald-700 mt-2 inline-flex items-center gap-1 group-hover:gap-1.5 transition-all">Read <ArrowRight size={12} /></span>
@@ -36,6 +32,7 @@ export default function ArticlesPage() {
         </div>
         <div className="mt-6"><AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_BOTTOM || '9142744455'} minHeight={90} className="max-w-3xl mx-auto" /></div>
       </div>
+      <ConversionBand />
     </MarketingShell>
   )
 }

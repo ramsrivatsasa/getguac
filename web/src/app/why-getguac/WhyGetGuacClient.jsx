@@ -1445,7 +1445,7 @@ export default function WhyGetGuacClient() {
               </div>
 
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/home/goals/web-organized.webp" alt="The GetGuac dashboard on the web" loading="lazy"
+              <img src="/marketing/current/dashboard.webp" alt="The GetGuac dashboard on the web" loading="lazy"
                 className="gj-demoshot"
                 style={{ width: '100%', display: 'block', borderRadius: 16, border: '1px solid rgba(20,83,45,0.12)', boxShadow: '0 20px 50px -24px rgba(20,40,28,0.4)' }} />
             </div>

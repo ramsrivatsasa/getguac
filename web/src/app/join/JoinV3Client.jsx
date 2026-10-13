@@ -20,7 +20,9 @@
 // The eight-stage loop's behaviour is the demo's own script, run once on mount.
 import { useEffect, useRef, useState } from 'react'
 import './join-v3.css'
+import './join-find-ten.css'
 import { MARKUP, BEHAVIOUR } from './joinV3Content'
+import { FIND_TEN_CONTENT } from './joinFindTenContent'
 import MetaPixel from '../../components/MetaPixel'
 import JoinReceiptTrial from './JoinReceiptTrial'
 import { trackClick } from '../../lib/track-click'
@@ -39,6 +41,7 @@ const CLICK_MAP = [
   [/apps\.apple\.com/, 'join-app-store'],
   [/play\.google\.com/, 'join-google-play'],
   [/\/register\?try=receipt/, 'join-try-one-receipt'],
+  [/\/find-your-10/, 'join-find-your-10'],
   [/\/how-it-works/, 'join-how-it-works'],
   [/\/articles/, 'join-guides'],
   [/\/register(\?|$)/, 'join-signup-google'],
@@ -49,6 +52,9 @@ const CLICK_MAP = [
 // requested layout, without hand-editing the generated file.
 const STORE_ROW = MARKUP.match(/\s*<div class="store-row">[\s\S]*?<\/div>/)?.[0] || ''
 const JOIN_MARKUP = MARKUP
+  .replace(/(<div class="actions">\s*)<a class="btn primary" href="\/register\?try=receipt">📷 Try 1 receipt<\/a>/,
+    '$1<a class="btn join-find-ten-primary" href="/find-your-10">Find your 10% <span aria-hidden="true">→</span></a>\n              <a class="btn line" href="/register?try=receipt">📷 Try 1 receipt</a>')
+  .replace(/(?=<!-- =+ the circle =+ -->)/, FIND_TEN_CONTENT + '\n    ')
   .replace(STORE_ROW, '')
   .replace('<div class="micro">', `${STORE_ROW}\n            <div class="micro">`)
 

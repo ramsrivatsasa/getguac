@@ -1,5 +1,8 @@
 import * as Sentry from '@sentry/nextjs'
 
+// Next 15 forwards nested server-rendering failures through this hook.
+export const onRequestError = Sentry.captureRequestError
+
 const sharedOptions = {
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
   tracesSampleRate: 0.1,

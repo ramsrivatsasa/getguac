@@ -177,7 +177,9 @@ function LoginPageInner() {
             { duration: 12000 }
           )
         } else {
-          toast.error(data.error || 'Invalid username or password')
+          // Expected credential failures already have inline form feedback.
+          // Error toasts are observed globally and would open a report dialog.
+          if (res.status !== 401) toast.error(data.error || 'Invalid username or password')
           // Form-shake feedback — three tight wiggles, no rotation.
           // Bump even on email-not-confirmed so users always get
           // motion feedback for "no, something's wrong".
@@ -264,7 +266,7 @@ function LoginPageInner() {
             <GuacMascot expression="angel" size={112} />
           </div>
           <h1 className="text-3xl font-black text-gray-900 tracking-tight">GetGuac</h1>
-          <p className="text-gray-500 mt-1 text-sm">Money's wingman — every dollar earns its smash.</p>
+          <p className="text-gray-500 mt-1 text-sm">Money&apos;s wingman — every dollar earns its smash.</p>
         </div>
 
         {/* ShakeOnError fires a 260ms three-wiggle whenever the

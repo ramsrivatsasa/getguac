@@ -11,9 +11,11 @@
 //
 // Auth: standard user cookie / Bearer. Scoped to the caller's own data via RLS.
 
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { createApiClient } from '../../../../lib/supabase/server'
 import { rateLimit, userRateKey } from '../../../../lib/apiGuard'
 import { parseReceiptFromText } from '../../../../lib/parse-receipt-engine'
+import { classifyCommerceEmail, hasCredibleReceiptEvidence } from '../../../../lib/email-classification'
 import { draftReceiptFromEmail, resolveStoreAndLocation, writeRefundPolicies, lookupStoreDefaultPolicies, stripEmailWrapper } from '../../../../lib/email-to-receipt'
 
 export const runtime = 'nodejs'
@@ -28,7 +30,7 @@ const MAX_PER_RUN = 20
 // logic (promo-section markers) stays in one place.
 
 export async function POST(request) {
-  const sb = createApiClient()
+  const sb = await createApiClient()
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return Response.json({ error: 'Not signed in' }, { status: 401 })
 
@@ -70,10 +72,18 @@ export async function POST(request) {
     recreated: 0,
     stores_linked: 0,
     failed: 0,
+    skipped: 0,
     errors: [],
   }
 
   for (const row of targets) {
+    const sourceBody = stripEmailWrapper(row.body_text || row.body_html || '')
+    const sourceMessage = { subject: row.subject, fromAddr: row.from_addr, preview: row.preview }
+    const classification = classifyCommerceEmail(sourceMessage, sourceBody)
+    if (['promotion', 'account_notice', 'order_update'].includes(classification.classification)) {
+      summary.skipped++
+      continue
+    }
     const isRecreate = row.receipt_id == null
 
     // Branch A: missing receipt — recreate via the shared draft helper, which
@@ -92,7 +102,9 @@ export async function POST(request) {
           bodyHtml: row.body_html,
           hasAttachments: row.has_attachments,
         }
-        const { receipt_id, processed } = await draftReceiptFromEmail(sb, user.id, m)
+        const admin = createAdminClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY,
+          { auth: { autoRefreshToken: false, persistSession: false } })
+        const { receipt_id, processed } = await draftReceiptFromEmail(admin, user.id, { ...m, storedId: row.id })
         if (receipt_id) {
           await sb.from('email_messages').update({ receipt_id, processed: true }).eq('id', row.id)
           summary.recreated++
@@ -153,7 +165,7 @@ export async function POST(request) {
     }
     try {
       const parsed = await parseReceiptFromText(body, { emailDate: row.received_at })
-      if (!parsed || (!parsed.store_name && !parsed.total_amount && !parsed.items?.length)) {
+      if (!hasCredibleReceiptEvidence(parsed, sourceMessage, body)) {
         summary.failed++
         summary.errors.push({ message_id: row.id, error: 'AI returned empty parse' })
         continue

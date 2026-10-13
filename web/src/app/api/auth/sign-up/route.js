@@ -1,3 +1,4 @@
+import { registrationRegion } from '../../../../lib/registration-region.mjs'
 // Sign-up route that creates an auth user AND claims their chosen username
 // (email_alias) atomically. If username is taken or invalid, returns 409/400
 // before creating any auth user.
@@ -8,11 +9,11 @@
 import { createClient } from '../../../../lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { rateLimit, rateKey } from '../../../../lib/apiGuard'
-import { createMailbox, mailboxExists } from '../../../../lib/migadu'
+import { createMailbox, mailboxExists, ensureReceiptsAlias } from '../../../../lib/migadu'
 import { encryptSecret, generateMailboxPassword } from '../../../../lib/crypto'
 import { validatePassword } from '../../../../lib/passwordStrength'
 import { isDisposableEmail } from '../../../../lib/disposable-emails'
-import { verifyChallenge, MIN_FORM_SECONDS } from '../../../../lib/demo-challenge'
+import { verifySignupChallenge } from '../../../../lib/signup-challenge'
 export const runtime = 'nodejs'
 
 // Best-effort: provision the Migadu mailbox at signup so the user's
@@ -25,6 +26,7 @@ async function provisionMailboxAtSignup(sbAdmin, userId, username, displayName) 
   }
   try {
     if (await mailboxExists(username)) {
+      await ensureReceiptsAlias(username)
       return { provisioned: true, reason: 'already_existed' }
     }
     const password = generateMailboxPassword()
@@ -75,28 +77,8 @@ export async function POST(request) {
         status: 'disposable_email',
       }, { status: 400 })
     }
-    // Arithmetic challenge, replacing Cloudflare Turnstile (2026-08-03).
-    //
-    // 🔴 WHY (measured on /register, 2026-08-02): Turnstile pulled 0.5-1.3 MB
-    // and took ~2,227 ms on a fast connection / ~5,996 ms on a mid-tier
-    // Android over 4G, with the submit button DISABLED the whole time. Ram's
-    // own code comment already recorded the failure mode this caused once:
-    // "the submit button just sits disabled with no explanation".
-    //
-    // ⚠️ Registration is a harder target than the demo login — a bot that
-    // gets through creates a real account, provisions a Migadu mailbox
-    // against a paid quota, and triggers a confirmation email. So sign-up
-    // enforces THREE gates, not one:
-    //   1. the signed sum        (HMAC; operands never on the wire)
-    //   2. the honeypot field    (CSS-hidden; scripts fill it, people do not)
-    //   3. MIN_FORM_SECONDS      (a human cannot complete this form in <3s;
-    //                             the issued-at is inside the signed token so
-    //                             the client cannot backdate it)
-    // 🔑 If fake signups ever appear, raise MIN_FORM_SECONDS first; putting
-    // Turnstile back on /register alone is the fallback.
-    const challenge = verifyChallenge(body.demo_token, body.demo_answer, body.website, {
-      minSeconds: MIN_FORM_SECONDS,
-    })
+    // Preserve the web challenge and verify legacy mobile Turnstile tokens.
+    const challenge = await verifySignupChallenge(body)
     if (!challenge.ok) {
       return Response.json({
         error: challenge.reason === 'too-fast'
@@ -108,6 +90,8 @@ export async function POST(request) {
       }, { status: 400 })
     }
 
+    let region
+    try { region = registrationRegion(body) } catch(e) { return Response.json({error:e.message}, {status:400}) }
     const username = String(body.username || '').toLowerCase().trim()
     const email    = String(body.email || '').trim()
     const password = String(body.password || '')
@@ -179,9 +163,11 @@ export async function POST(request) {
           first_name,
           last_name,
           pending_username:  username,
+          ...region,
           birth_date:        body.birth_date        || null,
           age:               body.age               || null,
           mobile_no:         body.mobile_no         || null,
+          receipt_photo_detection: body.receipt_photo_detection === true,
         },
       },
     })

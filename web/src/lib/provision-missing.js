@@ -8,7 +8,7 @@
 // Idempotent + best-effort: never throws to the caller; records outcomes on the
 // shared `summary` object and reports hard failures so they stop being silent.
 
-import { createMailbox, mailboxExists, updatePassword } from './migadu'
+import { createMailbox, mailboxExists, ensureReceiptsAlias, updatePassword } from './migadu'
 import { encryptSecret, generateMailboxPassword } from './crypto'
 
 const VALID_USERNAME_RE = /^[a-z0-9][a-z0-9._-]{1,30}[a-z0-9]$/
@@ -75,6 +75,7 @@ export async function provisionMissingMailboxes(sbAdmin, summary, reportServerEr
       // so rotate to a fresh one and store that. Rotating is safe: nobody can
       // be using a password we do not have.
       if (await mailboxExists(alias)) {
+        await ensureReceiptsAlias(alias)
         if (p.email_inbox_password_enc) {
           await sbAdmin.from('profiles').update({ email_inbox_provisioned: true }).eq('id', p.id)
           continue

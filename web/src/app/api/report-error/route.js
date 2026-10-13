@@ -9,6 +9,7 @@
 import { createApiClient } from '../../../lib/supabase/server'
 import { reportServerError } from '../../../lib/report-error'
 import { rateLimit, rateKey } from '../../../lib/apiGuard'
+import { safeErrorText, errorPath } from '../../../lib/error-feedback.mjs'
 
 export const runtime = 'nodejs'
 
@@ -17,29 +18,31 @@ export async function POST(request) {
   if (!rl.ok) return Response.json({ ok: false }, { status: 429 })
 
   const body = await request.json().catch(() => null)
-  if (!body) return Response.json({ ok: false }, { status: 400 })
+  if (!body || typeof body.message !== 'string' || body.message.length > 5000) return Response.json({ ok: false }, { status: 400 })
 
   let userId = null
   try {
-    const sb = createApiClient()
+    const sb = await createApiClient()
     const { data: { user } } = await sb.auth.getUser()
     userId = user?.id || null
   } catch (_) { /* anonymous crash */ }
 
-  await reportServerError({
-    tag: String(body.tag || 'web-error').slice(0, 60),
-    message: String(body.message || 'Unknown web error').slice(0, 500),
+  const saved = await reportServerError({
+    tag: safeErrorText(body.tag || 'web-error', 60),
+    message: safeErrorText(body.message || 'Unknown web error', 1000),
     level: 'error',
     userId,
-    platform: 'web',
-    action: 'web_error',
+    platform: ['ios', 'android'].includes(body.platform) ? body.platform : 'web',
+    action: body.manual === true ? 'error_report' : 'web_error',
     meta: {
-      stack: String(body.stack || '').split('\n').slice(0, 20).join('\n'),
-      url: String(body.url || '').slice(0, 300),
-      digest: body.digest || null,
+      stack: safeErrorText(String(body.stack || '').split('\n').slice(0, 20).join('\n'), 2000),
+      url: errorPath(body.url),
+      endpoint: errorPath(body.endpoint || '/'),
+      status: Number.isInteger(body.status) ? body.status : null,
+      digest: typeof body.digest === 'string' ? body.digest.slice(0, 100) : null,
       ua: request.headers.get('user-agent')?.slice(0, 200) || null,
     },
   })
 
-  return Response.json({ ok: true })
+  return saved?.ok ? Response.json({ ok: true, reportId: saved.id, notification: 'admin-crash-digest' }) : Response.json({ ok: false, error: 'Report could not be saved. Please retry.' }, { status: 503 })
 }

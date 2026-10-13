@@ -1,0 +1,511 @@
+// Academy-native lessons: Protection and estate (6) + Behaviour and habits (5).
+// Estate law varies by state — lessons explain concepts and point to an
+// attorney; insurance lessons describe policy types without naming insurers.
+
+const Q = (q, options, answer, why) => ({ q, options, answer, why })
+const U = '2026-10-01'
+const LAW = 'Rules vary by state — this is general education, not legal advice.'
+
+export const PROTECT_LESSONS = [
+  {
+    slug: 'will-vs-living-trust', title: 'Wills and living trusts', category: 'Family', readMins: 6, updated: U,
+    excerpt: 'A will says who gets what and who cares for children; a living trust can pass assets without probate. Many people need at least a will.',
+    body: [
+      'Estate planning decides what happens to your money and responsibilities if you die or cannot act for yourself. Two common documents are a will and a revocable living trust.',
+      { h: 'A will' },
+      'A will names who receives your property, an executor to carry it out and, importantly for parents, a guardian for minor children. Wills generally go through probate — a court process that can take time and is public.',
+      { h: 'A revocable living trust' },
+      'You move assets into a trust you control during your life. At death, a successor trustee distributes them according to the trust, usually without probate. Trusts cost more to set up and only control assets actually placed in them.',
+      { h: 'Beneficiary designations come first' },
+      'Retirement accounts, life insurance and many bank accounts pass to the beneficiaries named on the account, regardless of what a will says. Keep them current after marriage, divorce or a birth.',
+      { h: 'Without a will' },
+      'If you die without one, state law decides who inherits and a court appoints a guardian for minor children. ' + LAW,
+    ],
+    extras: {
+      objectives: ['Compare a will and a living trust', 'Know why beneficiary designations matter', 'Understand what happens without a will'],
+      ideas: [
+        { t: 'Guardians need a will', d: 'For parents of minors.' },
+        { t: 'Beneficiary forms override wills', d: 'For many accounts.' },
+        { t: 'Trusts only hold what you put in', d: 'Funding the trust matters.' },
+      ],
+      plan: [
+        { t: 'List assets and how they pass', d: 'Will, trust or beneficiary form.' },
+        { t: 'Update beneficiaries', d: 'On every account.' },
+        { t: 'Choose executor and guardian', d: 'And ask them.' },
+        { t: 'See an estate attorney', d: 'For documents valid in your state.' },
+      ],
+      example: {
+        title: 'How each asset passes', intro: 'Illustrative household.',
+        head: ['Asset', 'Passes by'],
+        rows: [['401(k)', 'Beneficiary designation'], ['Life insurance', 'Beneficiary designation'], ['Joint bank account', 'Usually to the surviving owner'], ['Car and personal items', 'Will (probate)'], ['Home held in a living trust', 'Trust (successor trustee)']],
+        takeaway: 'A will alone did not control the two largest assets — the beneficiary forms did.',
+      },
+      mistakes: ['Outdated beneficiary forms', 'No guardian named for children', 'Creating a trust but never moving assets into it'],
+      exercise: 'Log in to one retirement account and check who is named as beneficiary.',
+      apply: [{ href: '/academy/powers-of-attorney', label: 'Lesson: powers of attorney', d: 'If you cannot act yourself.' }],
+    },
+    check: {
+      questions: [
+        Q('What can a will do that matters most for parents?', ['Lower taxes', 'Name a guardian for minor children', 'Avoid all fees', 'Invest money'], 1, 'Without one, a court decides.'),
+        Q('A 401(k) usually passes by…', ['The will', 'The beneficiary designation', 'Probate always', 'The bank'], 1, 'Keep it updated.'),
+        Q('A living trust only controls…', ['Everything you own', 'Assets placed into it', 'Nothing', 'Retirement accounts'], 1, 'Funding the trust matters.'),
+      ],
+      puzzle: { q: 'Assets: 401(k) $120,000 (beneficiary named), life insurance $250,000 (named), car $15,000 and savings $10,000 (no beneficiary). How much would pass under the will?', answer: '$25,000', steps: 'Car $15,000 + savings $10,000 (assuming no payable-on-death designation on the savings).' },
+    },
+  },
+  {
+    slug: 'powers-of-attorney', title: 'Financial and medical powers of attorney', category: 'Family', readMins: 4, updated: U,
+    excerpt: 'If you cannot act for yourself, these documents name who can — for money and for health decisions.',
+    body: [
+      'A will covers what happens after death. Powers of attorney cover what happens if you are alive but unable to make decisions — after an accident or during a serious illness.',
+      { h: 'Financial power of attorney' },
+      'Names an agent who can manage money on your behalf — paying bills, handling accounts, dealing with taxes. A “durable” power of attorney stays in effect if you become incapacitated.',
+      { h: 'Healthcare power of attorney and directives' },
+      'A healthcare power of attorney (or healthcare proxy) names someone to make medical decisions for you. A living will or advance directive records your wishes about treatment.',
+      { h: 'Why they matter' },
+      { list: ['Without them, family may need a court process to gain authority.', 'Spouses do not automatically have authority over each other’s individual accounts.', 'Adult children’s medical information may be private even from parents.'] },
+      { h: 'Choose carefully' },
+      'Pick people you trust, ask them first, and name backups. Store documents where they can be found. ' + LAW,
+    ],
+    extras: {
+      objectives: ['Explain financial and healthcare powers of attorney', 'Know what “durable” means', 'Choose and brief agents'],
+      ideas: [
+        { t: 'Alive but unable', d: 'The gap these documents fill.' },
+        { t: 'Durable means it lasts', d: 'Through incapacity.' },
+        { t: 'Family is not automatic', d: 'Authority needs paperwork.' },
+      ],
+      plan: [
+        { t: 'Choose agents and backups', d: 'Money and health.' },
+        { t: 'Talk to them', d: 'About your wishes.' },
+        { t: 'Prepare state-valid documents', d: 'With an attorney.' },
+        { t: 'Store and share copies', d: 'Where they can be found.' },
+      ],
+      example: {
+        title: 'Who can act, with and without documents', intro: 'General illustration; state rules vary.',
+        head: ['Situation', 'With documents', 'Without documents'],
+        rows: [['Pay your bills from your account', 'Your financial agent', 'May need a court-appointed guardian or conservator'], ['Discuss treatment with doctors', 'Your healthcare agent', 'Depends on state law and hospital policy'], ['Follow your treatment wishes', 'Guided by your directive', 'Others must guess']],
+        takeaway: 'A few documents spare family a court process at a hard time.',
+      },
+      mistakes: ['Assuming a spouse can automatically act', 'Not telling agents where documents are', 'Naming no backup'],
+      exercise: 'Write the names of the people you would want as your financial and healthcare agents.',
+      apply: [{ href: '/academy/will-vs-living-trust', label: 'Lesson: wills and trusts', d: 'After death.' }],
+    },
+    check: {
+      questions: [
+        Q('A durable power of attorney…', ['Ends if you become incapacitated', 'Stays in effect if you become incapacitated', 'Is a will', 'Is insurance'], 1, 'That is what durable means.'),
+        Q('Who makes medical decisions if you cannot?', ['Anyone nearby', 'The agent named in a healthcare power of attorney', 'Your bank', 'Your employer'], 1, 'Or as state law decides without one.'),
+        Q('Can a spouse automatically manage your individual accounts?', ['Always', 'Not necessarily', 'Only on weekends', 'Yes if married over 5 years'], 1, 'Authority usually needs documents.'),
+      ],
+      puzzle: { q: 'You name 1 primary and 2 backup agents for money, and 1 primary and 1 backup for health. How many people do you need to brief?', answer: 'Up to 5 (fewer if someone holds both roles)', steps: '3 + 2 = 5 roles.' },
+    },
+  },
+  {
+    slug: 'term-vs-whole-life-insurance', title: 'Term versus whole life insurance', category: 'Family', readMins: 6, updated: U,
+    excerpt: 'Term covers a set period at a lower cost; permanent policies add cash value at a much higher premium. Start with the need.',
+    body: [
+      'Life insurance replaces income or covers debts for people who depend on you. If no one depends on your income, you may not need it.',
+      { h: 'Term life' },
+      'Covers you for a fixed period, such as 20 or 30 years. If you die during the term, it pays the death benefit; otherwise it ends. Premiums are usually much lower than permanent insurance for the same coverage.',
+      { h: 'Whole and other permanent life' },
+      'Lasts for life and builds cash value. Premiums are much higher, and policies can be complex, with fees and surrender charges if cancelled early.',
+      { h: 'How much coverage' },
+      { list: ['Years of income your dependants would need.', 'Debts to clear, such as a mortgage.', 'Future costs such as childcare or education.', 'Minus existing savings and other coverage.'] },
+      { h: 'Read before you sign' },
+      'Compare quotes for the same coverage and term, check the insurer’s financial strength rating, and understand any fees and surrender charges.',
+    ],
+    extras: {
+      objectives: ['Decide whether you need life insurance', 'Compare term and permanent policies', 'Estimate a coverage amount'],
+      ideas: [
+        { t: 'Need comes from dependants', d: 'No dependants, maybe no need.' },
+        { t: 'Term matches temporary needs', d: 'Mortgage and child-raising years.' },
+        { t: 'Permanent is complex', d: 'Read fees and surrender charges.' },
+      ],
+      plan: [
+        { t: 'List who depends on you', d: 'And for how long.' },
+        { t: 'Estimate the need', d: 'Income, debts, future costs.' },
+        { t: 'Subtract what you have', d: 'Savings, workplace coverage.' },
+        { t: 'Compare like-for-like quotes', d: 'Same amount and term.' },
+      ],
+      example: {
+        title: 'A simple coverage estimate', intro: 'Illustrative household with two young children.',
+        head: ['Item', 'Amount'],
+        rows: [['Income replacement (10 years × $45,000)', '$450,000'], ['Mortgage balance', '$220,000'], ['Childcare and education fund', '$80,000'], ['Minus savings and workplace coverage', '−$150,000'], ['Coverage need', '$600,000']],
+        takeaway: 'A term policy lasting until the children are grown would match this temporary need.',
+      },
+      mistakes: ['Buying coverage without dependants', 'Relying only on workplace coverage that ends with the job', 'Buying permanent insurance without understanding fees'],
+      exercise: 'Estimate how many years your household would need your income replaced.',
+      apply: [{ href: '/academy/disability-insurance', label: 'Lesson: disability insurance', d: 'Protecting income while alive.' }],
+    },
+    check: {
+      questions: [
+        Q('Term life insurance…', ['Lasts for life', 'Covers a set period', 'Builds large cash value', 'Is an investment fund'], 1, 'It ends after the term.'),
+        Q('Who usually needs life insurance most?', ['Someone with dependants relying on their income', 'A single person with no dependants', 'A child', 'No one'], 0, 'Need comes from dependants.'),
+        Q('Permanent policies typically have…', ['Lower premiums', 'Higher premiums and possible surrender charges', 'No fees', 'No death benefit'], 1, 'Read the costs.'),
+      ],
+      puzzle: { q: 'Income $50,000 for 12 years, mortgage $180,000, savings $70,000. Estimate the coverage need.', answer: '$710,000', steps: '$600,000 + $180,000 − $70,000 = $710,000.' },
+    },
+  },
+  {
+    slug: 'disability-insurance', title: 'Disability insurance: protect your income', category: 'Family', readMins: 5, updated: U,
+    excerpt: 'Your ability to earn is often your biggest asset. Disability insurance replaces part of your income if illness or injury stops you working.',
+    body: [
+      'Disability insurance pays a portion of your income if illness or injury stops you from working. For many working-age people, the ability to earn is worth more than everything they own.',
+      { h: 'Short-term and long-term' },
+      { list: ['Short-term disability covers a few months.', 'Long-term disability can last years or until a set age, after a waiting period.'] },
+      { h: 'Key terms' },
+      { list: ['Benefit: often a percentage of income.', 'Elimination period: how long you wait before benefits start.', 'Definition of disability: “own occupation” pays if you cannot do your job; “any occupation” only if you cannot do any suitable job.', 'Benefit period: how long payments last.'] },
+      { h: 'Workplace coverage' },
+      'Many employers offer group coverage. Check how much it replaces, whether benefits are taxable (often yes if your employer paid the premium), and whether it ends when you leave the job.',
+      { h: 'Your emergency fund matters' },
+      'The elimination period is often covered by savings. A longer elimination period lowers the premium but needs a bigger cushion.',
+    ],
+    extras: {
+      objectives: ['Explain short- and long-term disability cover', 'Read the key policy terms', 'Check workplace coverage gaps'],
+      ideas: [
+        { t: 'Earning power is an asset', d: 'Often your largest one.' },
+        { t: 'Definitions decide payouts', d: 'Own versus any occupation.' },
+        { t: 'Savings bridge the wait', d: 'Through the elimination period.' },
+      ],
+      plan: [
+        { t: 'Find your workplace policy', d: 'Benefits portal.' },
+        { t: 'Note benefit %, wait and definition', d: 'Key terms.' },
+        { t: 'Check if benefits are taxable', d: 'Depends on who pays.' },
+        { t: 'Size your emergency fund to the wait', d: 'At least.' },
+      ],
+      example: {
+        title: 'What a 60% benefit covers', intro: 'Illustrative $6,000 gross monthly income, group policy paid by the employer (benefit taxable), 90-day elimination period.',
+        head: ['Item', 'Amount'],
+        rows: [['Monthly benefit (60%)', '$3,600 before tax'], ['Months with no benefit (elimination period)', 'About 3'], ['Savings needed to bridge 3 months of $3,000 essentials', '$9,000']],
+        takeaway: 'The policy helps, but only after the wait — and taxable benefits stretch less far.',
+      },
+      mistakes: ['Assuming workplace cover is enough', 'Ignoring the definition of disability', 'No savings for the elimination period'],
+      exercise: 'Find your workplace disability policy and note its benefit percentage and elimination period.',
+      apply: [{ href: '/academy/emergency-fund-size', label: 'Lesson: emergency fund size', d: 'Cover the waiting period.' }],
+    },
+    check: {
+      questions: [
+        Q('The elimination period is…', ['The time before benefits start', 'When the policy ends', 'A discount', 'A tax'], 0, 'Savings often bridge it.'),
+        Q('“Own occupation” coverage pays if you…', ['Cannot do any job', 'Cannot do your own job', 'Change jobs', 'Retire'], 1, 'Broader protection.'),
+        Q('Employer-paid group benefits are often…', ['Tax-free', 'Taxable', 'Doubled', 'Unavailable'], 1, 'Depends on who pays the premium.'),
+      ],
+      puzzle: { q: 'Gross income $5,000 a month. A policy pays 65%. What is the monthly benefit before any tax?', answer: '$3,250', steps: '$5,000 × 0.65 = $3,250.' },
+    },
+  },
+  {
+    slug: 'umbrella-insurance', title: 'Umbrella liability insurance', category: 'Family', readMins: 4, updated: U,
+    excerpt: 'Extra liability coverage above your home and auto policies, for the rare large claim.',
+    body: [
+      'Umbrella insurance adds liability coverage on top of your home (or renters) and auto policies. If you are found responsible for injuring someone or damaging their property and the claim exceeds those policies’ limits, the umbrella can pay the rest, up to its own limit.',
+      { h: 'How it works' },
+      'Insurers usually require minimum liability limits on your underlying policies before they sell an umbrella. The umbrella then starts where those limits end.',
+      { h: 'Who considers it' },
+      { list: ['People with significant savings or home equity to protect.', 'Households with teenage drivers, pools or dogs.', 'Landlords and people who host often.'] },
+      { h: 'What it does not cover' },
+      'Umbrella policies cover liability, not your own property or injuries. Exclusions vary — such as business activities — so read the policy.',
+      { h: 'Check the whole picture' },
+      'Review liability limits on your home and auto policies first; raising those may be part of the same decision.',
+    ],
+    extras: {
+      objectives: ['Explain how umbrella coverage stacks on other policies', 'Recognise who may benefit', 'Know what it excludes'],
+      ideas: [
+        { t: 'Liability above liability', d: 'Starts where other limits end.' },
+        { t: 'Rare but large risks', d: 'That savings could not absorb.' },
+        { t: 'Underlying limits matter', d: 'Insurers set minimums.' },
+      ],
+      plan: [
+        { t: 'Check current liability limits', d: 'Home and auto.' },
+        { t: 'List risk factors', d: 'Teen drivers, pool, dog, rentals.' },
+        { t: 'Get a quote', d: 'With required underlying limits.' },
+        { t: 'Read exclusions', d: 'Before buying.' },
+      ],
+      example: {
+        title: 'A large claim, layered', intro: 'Illustrative $750,000 judgement after a car accident, with a $250,000 auto liability limit and a $1,000,000 umbrella.',
+        head: ['Layer', 'Pays'],
+        rows: [['Auto policy (up to $250,000)', '$250,000'], ['Umbrella (the rest, up to $1,000,000)', '$500,000'], ['You personally', '$0']],
+        takeaway: 'Without the umbrella, $500,000 could have fallen on savings or future income.',
+      },
+      mistakes: ['Assuming home and auto limits are enough', 'Not meeting the required underlying limits', 'Expecting it to cover your own property'],
+      exercise: 'Find the liability limit on your auto policy.',
+      apply: [{ href: '/academy/where-you-stand', label: 'Lesson: where you stand', d: 'Know what you are protecting.' }],
+    },
+    check: {
+      questions: [
+        Q('Umbrella insurance covers…', ['Your own car damage', 'Liability above your other policies’ limits', 'Medical bills only', 'Investments'], 1, 'It stacks on top.'),
+        Q('Insurers usually require…', ['No other policies', 'Minimum liability limits on underlying policies', 'A business', 'A pool'], 1, 'The umbrella starts above them.'),
+        Q('Which household might consider it?', ['One with teen drivers and home equity', 'No car and no assets', 'Nobody', 'Only businesses'], 0, 'Higher risk, more to protect.'),
+      ],
+      puzzle: { q: 'A $600,000 claim, $300,000 home liability limit and a $1,000,000 umbrella. How much does the umbrella pay?', answer: '$300,000', steps: '$600,000 − $300,000 = $300,000, within the umbrella’s limit.' },
+    },
+  },
+  {
+    slug: 'teaching-kids-about-money', title: 'Teaching kids about money', category: 'Family', readMins: 5, updated: U,
+    excerpt: 'Save, spend and give jars for young children; real decisions and real accounts for teenagers.',
+    body: [
+      'Money habits form early. Children learn most from handling small amounts and making real choices — including mistakes that cost little.',
+      { h: 'Young children' },
+      { list: ['Use three jars: save, spend and give.', 'Let them choose what to buy with “spend” money — and live with the choice.', 'Count coins together and compare prices at the shop.'] },
+      { h: 'Pre-teens' },
+      'Introduce a regular allowance or earnings for chores, a simple savings goal with a picture of the target, and a savings account.',
+      { h: 'Teenagers' },
+      { list: ['A checking account with a debit card, with your oversight.', 'A budget for part of their own costs, such as clothes or phone.', 'Paychecks: what taxes and deductions are.', 'How credit and interest work before they get a card.'] },
+      { h: 'Talk about your own decisions' },
+      'Explaining why you compare prices, wait before a purchase or save for something shows the habits in action.',
+    ],
+    extras: {
+      objectives: ['Match money lessons to a child’s age', 'Use real choices and small mistakes', 'Explain decisions out loud'],
+      ideas: [
+        { t: 'Small mistakes teach cheaply', d: 'Let them happen early.' },
+        { t: 'Visible goals motivate', d: 'Jars and pictures.' },
+        { t: 'Children copy what they see', d: 'Narrate your choices.' },
+      ],
+      plan: [
+        { t: 'Start jars for young children', d: 'Save, spend, give.' },
+        { t: 'Add an allowance or chore pay', d: 'Regular and predictable.' },
+        { t: 'Open an account', d: 'Age-appropriate.' },
+        { t: 'Hand over a real budget', d: 'For teenagers.' },
+      ],
+      example: {
+        title: 'A $10 weekly allowance split', intro: 'Illustrative jar split for a 9-year-old.',
+        head: ['Jar', 'Share', 'Per week', 'After 10 weeks'],
+        rows: [['Save', '50%', '$5', '$50'], ['Spend', '40%', '$4', '$40'], ['Give', '10%', '$1', '$10']],
+        takeaway: 'Ten weeks of saving reaches a $50 goal — long enough to learn patience, short enough to finish.',
+      },
+      mistakes: ['Rescuing every small mistake', 'Never discussing money at home', 'Giving a card without explaining interest'],
+      exercise: 'Ask a child in your life what they would save for, and how many weeks it would take.',
+      apply: [{ href: '/academy/money-goals', label: 'Lesson: money goals', d: 'The same idea, grown up.' }],
+    },
+    check: {
+      questions: [
+        Q('A good first tool for young children is…', ['A credit card', 'Save, spend and give jars', 'Stocks', 'A loan'], 1, 'Visible and simple.'),
+        Q('Why let children make small money mistakes?', ['To punish them', 'They teach cheaply while stakes are low', 'It saves money', 'No reason'], 1, 'Better now than later.'),
+        Q('Before a teen gets a credit card they should learn…', ['Nothing', 'How interest and credit work', 'Only rewards', 'How to hide it'], 1, 'Understand the cost first.'),
+      ],
+      puzzle: { q: 'A child saves $3 a week toward a $36 game. How many weeks?', answer: '12 weeks', steps: '$36 ÷ $3 = 12.' },
+    },
+  },
+]
+
+export const BEHAVIOR_LESSONS = [
+  {
+    slug: 'loss-aversion', title: 'Loss aversion: why losses feel bigger', category: 'Behaviour', readMins: 5, updated: U,
+    excerpt: 'Losing $100 tends to feel worse than gaining $100 feels good. Knowing this helps you avoid panicked decisions.',
+    body: [
+      'Behavioural research has found that people tend to feel losses more strongly than equal gains. This “loss aversion” helps explain many money decisions that feel right in the moment and cost later.',
+      { h: 'Where it shows up' },
+      { list: ['Selling investments after a fall to stop the pain, then missing the recovery.', 'Holding onto a losing investment to avoid “making the loss real”.', 'Keeping an unused subscription because cancelling feels like losing it.', 'Avoiding looking at accounts during bad times.'] },
+      { h: 'Reframe the decision' },
+      'Ask: “If I had cash instead of this today, would I buy it?” That question separates the decision from what you paid.',
+      { h: 'Decide in advance' },
+      'Write rules when you are calm — how you will rebalance, what you will do in a downturn. Rules made in advance are easier to follow than decisions made while it hurts.',
+    ],
+    extras: {
+      objectives: ['Recognise loss aversion', 'Use the “would I buy it today?” reframe', 'Set rules before markets fall'],
+      ideas: [
+        { t: 'Losses shout, gains whisper', d: 'The feeling is uneven.' },
+        { t: 'What you paid is history', d: 'Decide on what is best now.' },
+        { t: 'Rules beat moods', d: 'Write them when calm.' },
+      ],
+      plan: [
+        { t: 'Notice the feeling', d: 'Name it as loss aversion.' },
+        { t: 'Ask the cash question', d: 'Would I buy it today?' },
+        { t: 'Check your written rules', d: 'Before acting.' },
+        { t: 'Wait a day', d: 'For big decisions.' },
+      ],
+      example: {
+        title: 'Two investors, one downturn', intro: 'Illustrative arithmetic: both hold $10,000; markets fall 20%, then recover 25%.',
+        head: ['Investor', 'Action', 'Ends with'],
+        rows: [['A', 'Sells at the bottom ($8,000) and stays in cash', '$8,000'], ['B', 'Holds through the fall and recovery', '$10,000']],
+        takeaway: '$8,000 × 1.25 = $10,000. Selling at the bottom turned a temporary fall into a permanent loss — markets are not guaranteed to recover.',
+      },
+      mistakes: ['Selling to make the pain stop', 'Anchoring on purchase price', 'Avoiding accounts entirely'],
+      exercise: 'Write one rule you will follow the next time an investment falls 20%.',
+      apply: [{ href: '/academy/bull-and-bear-markets', label: 'Lesson: bull and bear markets', d: 'Plan for the fall.' }],
+    },
+    check: {
+      questions: [
+        Q('Loss aversion means…', ['Losses and gains feel equal', 'Losses tend to feel stronger than equal gains', 'You never lose', 'You enjoy losses'], 1, 'The feeling is uneven.'),
+        Q('A useful reframe is…', ['What did I pay?', 'If I had cash, would I buy this today?', 'What do friends think?', 'Sell everything'], 1, 'It separates the decision from the past.'),
+        Q('When should investing rules be written?', ['During a crash', 'When calm, in advance', 'Never', 'After selling'], 1, 'Rules beat moods.'),
+      ],
+      puzzle: { q: 'An investment falls from $5,000 to $4,000. What percentage gain gets it back to $5,000?', answer: '25%', steps: '$1,000 ÷ $4,000 = 0.25.' },
+    },
+  },
+  {
+    slug: 'herd-behavior-fomo', title: 'Herd behaviour and FOMO', category: 'Behaviour', readMins: 5, updated: U,
+    excerpt: 'When everyone seems to be buying something, the fear of missing out can override a plan. Slow down on purpose.',
+    body: [
+      'People tend to follow what others are doing, especially when uncertain. In money, that can mean buying what is popular after it has already risen, or selling because everyone else is.',
+      { h: 'Signs of FOMO' },
+      { list: ['You learned about it from excited posts, not research.', 'The main reason is that others made money.', 'You feel you must act today.', 'You cannot explain how it makes money or what could go wrong.'] },
+      { h: 'Why it is costly' },
+      'By the time something is widely talked about, high expectations may already be in the price. Buying late in a frenzy and selling after the fall is a common pattern.',
+      { h: 'Slow down on purpose' },
+      'Use a waiting period for any new investment idea, write down why you are buying and what would make you sell, and limit speculative ideas to a small slice decided in advance.',
+    ],
+    extras: {
+      objectives: ['Recognise herd behaviour and FOMO', 'Run a quick FOMO checklist', 'Cap speculative ideas'],
+      ideas: [
+        { t: 'Popularity is not proof', d: 'Others making money is not a reason.' },
+        { t: 'Urgency is a signal', d: 'To slow down.' },
+        { t: 'A small slice, set in advance', d: 'For speculative ideas.' },
+      ],
+      plan: [
+        { t: 'Wait a set period', d: 'Before acting on a new idea.' },
+        { t: 'Write the thesis', d: 'Why buy, when sell.' },
+        { t: 'Check the slice limit', d: 'A small share at most.' },
+        { t: 'Review later', d: 'Was the decision sound?' },
+      ],
+      example: {
+        title: 'The FOMO checklist', intro: 'Answer before acting on a hot idea.',
+        head: ['Question', 'Red flag answer'],
+        rows: [['Where did I hear about it?', 'Social media hype'], ['Why am I buying?', 'Others made money'], ['Can I explain how it makes money?', 'No'], ['What would make me sell?', 'I do not know'], ['How much of my portfolio?', 'More than my set limit']],
+        takeaway: 'Two or more red flags: wait, or skip it.',
+      },
+      mistakes: ['Buying because prices already soared', 'Selling because others panic', 'No limit on speculative bets'],
+      exercise: 'Set your maximum percentage for speculative ideas and write it down.',
+      apply: [{ href: '/academy/sector-and-thematic-etfs', label: 'Lesson: sector and thematic funds', d: 'Where FOMO often strikes.' }],
+    },
+    check: {
+      questions: [
+        Q('A sign of FOMO is…', ['A written plan', 'Feeling you must act today because others are', 'Researching first', 'Waiting a week'], 1, 'Urgency plus crowd.'),
+        Q('Why can buying a popular asset late be costly?', ['High expectations may already be in the price', 'It is illegal', 'It is always cheap', 'No reason'], 0, 'Popularity is often priced in.'),
+        Q('A sensible guardrail is…', ['No limit', 'A small, preset slice for speculative ideas', 'Borrowing to buy', 'Following the crowd'], 1, 'Decide in advance.'),
+      ],
+      puzzle: { q: 'Your portfolio is $30,000 and your speculative limit is 3%. What is the most you would put into a hot idea?', answer: '$900', steps: '$30,000 × 0.03 = $900.' },
+    },
+  },
+  {
+    slug: 'mental-accounting', title: 'Mental accounting: every dollar is the same', category: 'Behaviour', readMins: 4, updated: U,
+    excerpt: 'A refund, a bonus and a paycheck are all just money. Treating “found” money as play money is a costly habit.',
+    body: [
+      'Mental accounting is the tendency to treat money differently depending on where it came from or which “mental bucket” it sits in. A tax refund feels like a windfall; a bonus feels like fun money. But a dollar is a dollar.',
+      { h: 'Where it costs money' },
+      { list: ['Spending a refund freely while carrying a credit card balance.', 'Keeping cash in a low-rate savings bucket while paying high interest elsewhere.', 'Treating cashback as free, then spending more to earn it.'] },
+      { h: 'Where it helps' },
+      'Mental buckets are not all bad. Labelled savings goals and sinking funds use the same instinct to protect money for a purpose. The aim is to use buckets on purpose, not by accident.',
+      { h: 'A simple test' },
+      'Before spending “found” money, ask: “If this came from my paycheck, would I spend it this way?”',
+    ],
+    extras: {
+      objectives: ['Recognise mental accounting', 'Use buckets deliberately', 'Apply the paycheck test to windfalls'],
+      ideas: [
+        { t: 'A dollar is a dollar', d: 'Source does not change value.' },
+        { t: 'Buckets can help', d: 'When chosen on purpose.' },
+        { t: 'Windfalls deserve a plan', d: 'Before they arrive.' },
+      ],
+      plan: [
+        { t: 'List expected windfalls', d: 'Refunds, bonuses, gifts.' },
+        { t: 'Decide their split in advance', d: 'Debt, savings, fun.' },
+        { t: 'Check debt versus savings rates', d: 'Pay costly debt first.' },
+        { t: 'Apply the paycheck test', d: 'Every time.' },
+      ],
+      example: {
+        title: 'A $1,200 refund, two ways', intro: 'Illustrative: $1,200 card balance at 24% APR.',
+        head: ['Choice', 'Interest avoided over a year (approx.)'],
+        rows: [['Spend the refund, keep the balance', '$0'], ['Pay off the $1,200 balance', 'about $288']],
+        takeaway: '$1,200 × 24% ≈ $288 a year — the refund is worth more paying down the card than spent as “free” money.',
+      },
+      mistakes: ['Spending windfalls while carrying debt', 'Ignoring rate differences between buckets', 'Treating cashback as free money'],
+      exercise: 'Decide now how you will split your next tax refund or bonus.',
+      apply: [{ href: '/academy/fund-your-emergency-fund', label: 'Lesson: fund your emergency fund', d: 'Where windfalls can go.' }],
+    },
+    check: {
+      questions: [
+        Q('Mental accounting is…', ['Doing tax returns', 'Treating money differently by its source or bucket', 'An app', 'A bank fee'], 1, 'A dollar is still a dollar.'),
+        Q('Is every mental bucket bad?', ['Yes', 'No — deliberate savings buckets help', 'Only for cash', 'Only online'], 1, 'Use them on purpose.'),
+        Q('Best use of a refund while carrying a 24% card balance?', ['A holiday', 'Paying down the card', 'Leave in checking', 'Buy a gadget'], 1, 'High-interest debt costs most.'),
+      ],
+      puzzle: { q: 'You keep $3,000 in savings at 1% and owe $3,000 on a card at 22%. Roughly how much does the gap cost per year?', answer: 'About $630', steps: 'Card interest $660 − savings interest $30 = $630 (simplified, keeping a separate emergency fund).' },
+    },
+  },
+  {
+    slug: 'present-bias', title: 'Present bias and delayed gratification', category: 'Behaviour', readMins: 4, updated: U,
+    excerpt: 'Today’s wants feel more real than tomorrow’s needs. Automation and vivid goals make the future easier to choose.',
+    body: [
+      'Present bias is the tendency to favour rewards now over larger rewards later. It explains why saving for retirement feels harder than buying something today, even when we know the future matters.',
+      { h: 'Why willpower is not enough' },
+      'Every month presents the same choice again. Relying on willpower means winning that choice repeatedly. Removing the choice works better.',
+      { h: 'Tools that help' },
+      { list: ['Automation: savings move before you see the money.', 'Commitment: schedule contribution increases for future raises.', 'Vivid goals: name and picture what you are saving for.', 'Small wins: celebrate milestones along the way.'] },
+      { h: 'Enjoy the present too' },
+      'Delayed gratification is not about denying all present enjoyment. A plan that includes guilt-free spending money is more likely to last.',
+    ],
+    extras: {
+      objectives: ['Recognise present bias', 'Use automation and commitments', 'Keep room for present enjoyment'],
+      ideas: [
+        { t: 'Now feels louder than later', d: 'Present bias.' },
+        { t: 'Remove the monthly decision', d: 'Automation wins.' },
+        { t: 'Make the future vivid', d: 'Name and picture goals.' },
+      ],
+      plan: [
+        { t: 'Automate savings on payday', d: 'Before spending.' },
+        { t: 'Schedule future increases', d: 'Tied to raises.' },
+        { t: 'Name each goal', d: 'With a picture.' },
+        { t: 'Set guilt-free spending money', d: 'Inside the budget.' },
+      ],
+      example: {
+        title: 'Saving the same amount two ways', intro: 'Illustrative $200 a month target.',
+        head: ['Method', 'Decisions needed per year', 'Likely to stick?'],
+        rows: [['Transfer whatever is left at month end', '12', 'Often not'], ['Automatic $200 transfer on payday', '1 (set up once)', 'More likely']],
+        takeaway: 'Same target, one decision instead of twelve.',
+      },
+      mistakes: ['Relying on leftover money', 'No room for enjoyment', 'Vague goals with no picture'],
+      exercise: 'Set up or increase one automatic transfer that runs on payday.',
+      apply: [{ href: '/academy/money-goals', label: 'Lesson: money goals', d: 'Make goals specific.' }],
+    },
+    check: {
+      questions: [
+        Q('Present bias means…', ['Preferring rewards now over larger ones later', 'Saving too much', 'Liking gifts', 'Planning ahead'], 0, 'Now feels louder.'),
+        Q('Best tool against present bias?', ['More willpower', 'Automation', 'Checking accounts hourly', 'Avoiding goals'], 1, 'It removes the repeated decision.'),
+        Q('Should a plan include present enjoyment?', ['No, never', 'Yes — guilt-free spending helps it last', 'Only on holidays', 'Only for children'], 1, 'Sustainable beats strict.'),
+      ],
+      puzzle: { q: 'You automate $50 a week. How much is saved in a year (52 weeks)?', answer: '$2,600', steps: '$50 × 52 = $2,600.' },
+    },
+  },
+  {
+    slug: 'defining-enough', title: 'Defining your personal “enough”', category: 'Behaviour', readMins: 5, updated: U,
+    excerpt: 'Without a definition of enough, every goal moves once you reach it. Write down what security and a good life cost for you.',
+    body: [
+      'Many people keep raising their targets as income grows, never feeling they have enough. Defining “enough” — for spending, saving and security — turns money from an endless chase into a set of goals you can actually reach.',
+      { h: 'Enough is personal' },
+      'It depends on your values, family, health and where you live. Comparing with others rarely helps; someone else’s enough is built on their life, not yours.',
+      { h: 'Three questions' },
+      { list: ['What does a good year cost us — housing, food, people, experiences?', 'What level of savings would make us feel secure?', 'What would we do with more time if money were less of a worry?'] },
+      { h: 'Turn it into numbers' },
+      'Write a yearly “enough” budget and a security target, such as months of expenses saved. These become benchmarks that make extra money a choice — more giving, more time, earlier retirement — instead of automatic spending.',
+      { h: 'Revisit it' },
+      'Enough changes with life stages. Review it every year or two, especially after major changes.',
+    ],
+    extras: {
+      objectives: ['Define a personal “enough” budget', 'Set a security target', 'Decide in advance what extra money is for'],
+      ideas: [
+        { t: 'Moving targets never satisfy', d: 'Enough stops the chase.' },
+        { t: 'Comparison distorts', d: 'Others’ enough is not yours.' },
+        { t: 'Extra becomes a choice', d: 'Time, giving or freedom.' },
+      ],
+      plan: [
+        { t: 'Write a good-year budget', d: 'What it really costs.' },
+        { t: 'Set a security target', d: 'Months of expenses.' },
+        { t: 'Decide what extra is for', d: 'In writing.' },
+        { t: 'Review every year or two', d: 'As life changes.' },
+      ],
+      example: {
+        title: 'One household’s “enough”', intro: 'Illustrative numbers.',
+        head: ['Item', 'Amount'],
+        rows: [['Good-year spending', '$62,000'], ['Security target (6 months)', '$31,000'], ['Saving for the future', '15% of income'], ['Extra beyond this goes to', 'Giving and a sabbatical fund']],
+        takeaway: '$62,000 ÷ 12 × 6 = $31,000. A raise now has a purpose instead of quietly raising spending.',
+      },
+      mistakes: ['Never defining enough', 'Comparing with friends or social media', 'Letting every raise raise spending'],
+      exercise: 'Write one sentence describing what “enough” looks like for your household.',
+      apply: [{ href: '/academy/lifestyle-inflation', label: 'Lesson: lifestyle inflation', d: 'Keep the raise.' }, { href: '/academy/where-you-stand', label: 'Lesson: where you stand', d: 'Start from today.' }],
+    },
+    check: {
+      questions: [
+        Q('Why define “enough”?', ['To earn less', 'So goals stop moving and extra money becomes a choice', 'For taxes', 'It is required'], 1, 'It ends the endless chase.'),
+        Q('Is “enough” the same for everyone?', ['Yes', 'No — it is personal', 'Only by country', 'Only by age'], 1, 'Based on your values and life.'),
+        Q('How often should you revisit it?', ['Never', 'Every year or two and after major changes', 'Daily', 'Only at retirement'], 1, 'Life stages change it.'),
+      ],
+      puzzle: { q: 'A good year costs $48,000. What is a six-month security target?', answer: '$24,000', steps: '$48,000 ÷ 12 = $4,000. × 6 = $24,000.' },
+    },
+  },
+]

@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useReceipts } from '../../../hooks/useReceipts'
 import { createClient } from '../../../lib/supabase/client'
 import { isPaymentReceipt } from '../../../lib/payment-rows'
-import { DollarSign, TrendingUp, Undo2, Receipt as ReceiptIcon, Banknote } from 'lucide-react'
+import { DollarSign, TrendingUp, Undo2, Receipt as ReceiptIcon, Banknote, ExternalLink } from 'lucide-react'
 import GuacoScoreCard from '../../../components/GuacoScoreCard'
 import MascotLoading from '../../../components/MascotLoading'
 import FeatureHeader from '../../../components/FeatureHeader'
@@ -67,6 +67,17 @@ export default function GuacanomicsPage() {
   const { data: bankFees = [] } = useQuery({
     queryKey: ['bank_fees'],
     queryFn: async () => { const { data } = await sb.from('bank_fees').select('kind, amount, date'); return data || [] },
+  })
+  const { data: goals = [] } = useQuery({
+    queryKey: ['financial-goals', 'active'],
+    queryFn: async () => {
+      const { data } = await sb
+        .from('financial_goals')
+        .select('name, goal_type, priority, target_amount, current_amount, target_date')
+        .eq('status', 'active')
+        .order('priority', { ascending: true })
+      return data || []
+    },
   })
 
   // Single source of truth for the "since" cutoff. Snaps to midnight
@@ -162,7 +173,7 @@ export default function GuacanomicsPage() {
       if (!byCategory.has(slug)) {
         const meta = CATEGORY_BY_SLUG[slug] || CATEGORY_BY_SLUG['misc']
         byCategory.set(slug, {
-          slug, label: meta.label, emoji: meta.emoji,
+          slug, label: CATEGORY_BY_SLUG[slug]?.label || slug, emoji: meta.emoji,
           color: CATEGORY_COLORS[meta.color] || CATEGORY_COLORS.gray,
           spend: 0, count: 0,
         })
@@ -185,6 +196,22 @@ export default function GuacanomicsPage() {
       })
     }
     const categoryBuckets = [...byCategory.values()].sort((a, b) => b.spend - a.spend)
+    const categoryBucketsFor = rows => {
+      const buckets = new Map()
+      for (const r of rows) {
+        const slug = r.category || 'misc'
+        if (!buckets.has(slug)) {
+          const meta = CATEGORY_BY_SLUG[slug] || CATEGORY_BY_SLUG.misc
+          buckets.set(slug, { slug, label: CATEGORY_BY_SLUG[slug]?.label || slug, emoji: meta.emoji, color: CATEGORY_COLORS[meta.color] || CATEGORY_COLORS.gray, spend: 0, count: 0 })
+        }
+        const bucket = buckets.get(slug)
+        bucket.spend += parseFloat(r.total_amount || 0)
+        bucket.count += 1
+      }
+      return [...buckets.values()].sort((a, b) => b.spend - a.spend)
+    }
+    const businessCategoryBuckets = categoryBucketsFor(purchases.filter(r => r.business_purchase))
+    const personalCategoryBuckets = categoryBucketsFor(purchases.filter(r => !r.business_purchase))
 
     return {
       grossSpend, refunded, netSpend, totalTax, avgTicket, businessSpend,
@@ -196,9 +223,9 @@ export default function GuacanomicsPage() {
       ],
       ratingBuckets, ratedCount: rated.length, unratedCount: unrated,
       avgRating, regretSpend, topTags,
-      categoryBuckets,
+      categoryBuckets, businessCategoryBuckets, personalCategoryBuckets,
     }
-  }, [receipts, since])
+  }, [receipts, since, bankBite])
 
   return (
     <div className="space-y-6 max-w-7xl">
@@ -207,7 +234,7 @@ export default function GuacanomicsPage() {
         title="Guacanomics"
         subtitle="Where every dollar earns its smash."
         action={
-          <div className="inline-flex bg-gray-100 rounded-xl p-1 gap-1">
+          <div className="flex flex-wrap bg-gray-100 rounded-xl p-1 gap-1">
             {RANGES.map(r => (
               <button key={r.key} onClick={() => setRange(r.key)}
                 className={`px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-all ${
@@ -242,10 +269,85 @@ export default function GuacanomicsPage() {
           </div>
 
           <Charts insights={insights} />
+
+          <EconomicNewsFeed insights={insights} goals={goals} bankBite={bankBite} />
         </>
       )}
     </div>
   )
+}
+
+const ECONOMIC_MATCHERS = {
+  groceries: ['inflation', 'price', 'prices', 'food', 'consumer price'],
+  housing: ['housing', 'mortgage', 'home', 'rent', 'rate'],
+  transportation: ['auto', 'vehicle', 'fuel', 'gas', 'loan', 'rate'],
+  utilities: ['energy', 'utility', 'utilities', 'price', 'inflation'],
+  healthcare: ['health', 'insurance', 'premium', 'price'],
+  insurance: ['insurance', 'premium', 'price'],
+  debt: ['credit', 'debt', 'loan', 'interest', 'rate', 'lending'],
+  home: ['housing', 'mortgage', 'home', 'rent', 'rate'],
+  retirement: ['inflation', 'rate', 'interest', 'market'],
+  travel: ['travel', 'fuel', 'gas', 'price', 'inflation'],
+  education: ['education', 'student', 'loan', 'debt', 'rate'],
+  vehicle: ['auto', 'vehicle', 'fuel', 'gas', 'loan', 'rate'],
+  family: ['food', 'housing', 'insurance', 'price', 'inflation'],
+  emergency: ['inflation', 'price', 'jobs', 'employment', 'consumer'],
+}
+
+function personalizeEconomicItems(items, insights, goals, bankBite) {
+  const categories = (insights?.categoryBuckets || []).filter(row => row.slug !== 'bank-bite')
+  const total = categories.reduce((sum, row) => sum + Number(row.spend || 0), 0)
+  return items.map(item => {
+    const text = `${item.topic} ${item.title} ${item.summary} ${item.impact}`.toLowerCase()
+    let relevance = 0
+    const matches = []
+    for (const category of categories.slice(0, 5)) {
+      const keywords = ECONOMIC_MATCHERS[category.slug] || [category.label?.toLowerCase()].filter(Boolean)
+      if (keywords.some(keyword => text.includes(keyword))) {
+        const share = total > 0 ? Math.round(Number(category.spend || 0) / total * 100) : 0
+        relevance += 2 + share / 20
+        matches.push(`${category.label}${share ? ` (${share}% of spending)` : ''}`)
+      }
+    }
+    for (const goal of goals || []) {
+      const keywords = ECONOMIC_MATCHERS[goal.goal_type] || []
+      if (keywords.some(keyword => text.includes(keyword))) {
+        relevance += 6 - Math.min(5, Number(goal.priority || 3))
+        matches.push(`${goal.name || goal.goal_type} goal`)
+      }
+    }
+    if (Number(bankBite?.total || 0) > 0 && ECONOMIC_MATCHERS.debt.some(keyword => text.includes(keyword))) {
+      relevance += 4
+      matches.push('interest and fee exposure')
+    }
+    return { ...item, relevance, matches: [...new Set(matches)].slice(0, 2) }
+  }).sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0) || b.relevance - a.relevance)
+}
+
+function EconomicNewsFeed({ insights, goals, bankBite }) {
+  const { data, isLoading } = useQuery({
+    queryKey: ['economic-news'],
+    queryFn: async () => {
+      const response = await fetch('/api/economic-news')
+      if (!response.ok) throw new Error('News unavailable')
+      return response.json()
+    },
+    staleTime: 15 * 60 * 1000,
+    refetchInterval: 15 * 60 * 1000,
+  })
+  const items = useMemo(
+    () => personalizeEconomicItems(data?.items || [], insights, goals, bankBite),
+    [data?.items, insights, goals, bankBite]
+  )
+  const personalized = items.some(item => item.relevance > 0)
+  return <section className="overflow-hidden rounded-[20px] border border-slate-200 bg-white">
+    <div className="flex flex-wrap items-end justify-between gap-3 p-4 sm:p-5"><div><p className="text-[10px] font-black uppercase tracking-[.16em] text-emerald-700">Economic pulse</p><h2 className="mt-1 gg-h2">What the economy means for your money</h2><p className="mt-1 text-xs text-slate-600">Current official data and broad financial news, ranked using your spending, bank costs, and goals.</p></div>{data?.updatedAt && <p className="text-xs font-bold text-slate-500">Updated {new Date(data.updatedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</p>}</div>
+    {isLoading ? <div className="m-4 h-28 animate-pulse rounded-2xl bg-slate-100" /> : items.length === 0 ? <p className="m-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">No current economic updates are available.</p> : <>
+      <p className="border-t border-slate-100 px-4 py-2 text-xs font-bold text-slate-600">{personalized ? 'Most relevant to you first' : 'Latest updates first'}</p>
+      <div className="max-h-[520px] overflow-auto"><table className="w-full min-w-[980px] text-left"><thead className="sticky top-0 z-10"><tr className="border-y border-slate-200 bg-slate-50 text-xs font-black uppercase tracking-wide text-slate-600 shadow-sm"><th className="px-4 py-3">Published</th><th className="px-4 py-3">Topic</th><th className="px-4 py-3">Headline</th><th className="px-4 py-3">Why it matters</th><th className="px-4 py-3">Relevant to you</th></tr></thead><tbody>{items.slice(0, 100).map((item, index) => <tr key={`${item.source}-${item.link}`} className="border-b border-slate-100 align-top last:border-0 hover:bg-emerald-50/40"><td className="whitespace-nowrap px-4 py-3 text-sm font-bold text-slate-600">{new Date(item.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</td><td className="px-4 py-3"><span className="inline-flex whitespace-nowrap rounded-full bg-slate-100 px-2 py-1 text-xs font-black text-slate-700">{item.topic}</span><p className="mt-1 max-w-[150px] truncate text-xs text-slate-500">{item.source}</p></td><td className="px-4 py-3"><Link href={`/news?article=${index}`} className="line-clamp-2 text-sm font-black leading-5 text-slate-950 hover:text-violet-700">{item.title}</Link></td><td className="max-w-[360px] px-4 py-3 text-sm leading-5 text-slate-600">{item.impact}</td><td className="px-4 py-3 text-xs font-bold text-emerald-800">{item.matches.length ? item.matches.join(' · ') : 'General money outlook'}</td></tr>)}</tbody></table></div>
+      <div className="flex justify-end border-t border-slate-100 p-3"><Link href="/news" className="text-sm font-black text-violet-700">Open GetGuac News →</Link></div>
+    </>}
+  </section>
 }
 
 function Stat({ icon: Icon, color, label, value, sub }) {

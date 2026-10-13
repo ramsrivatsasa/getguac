@@ -408,7 +408,7 @@ export default function StealsPage() {
 
           {topItems.length > 0 && (
             <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">⚡ One-tap from your Stash</p>
+              <p className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">⚡ One-tap from My Items</p>
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 {topItems.map((it, i) => (
                   <StealCard key={i} item={it} compact

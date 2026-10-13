@@ -158,7 +158,7 @@ export default function PaymentTile({
   const d = decor || {}
   const animated = numericValue != null && Number.isFinite(Number(numericValue))
   return (
-    <div className="payment-tile-card snap-start shrink-0 w-56 relative overflow-hidden flex items-center gap-3 bg-white rounded-2xl border border-gray-200 shadow-sm p-3 hover:shadow-md transition-all">
+    <div className="payment-tile-card w-full relative overflow-hidden flex items-center gap-3 bg-white rounded-2xl border border-gray-200 shadow-sm p-3 hover:shadow-md transition-all">
       {/* Decorative pattern + emoji watermarks removed — plain, calm tiles. */}
       <div className={`tile-chip-host shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center relative z-10 shadow-md ${t.chip}`} style={{ color: t.stroke }}>
         <span className="tile-chip-icon text-2xl drop-shadow-sm">{emoji}</span>

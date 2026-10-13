@@ -14,6 +14,7 @@ const VALID_KEYS = new Set([
   'rewards_expiring', 'return_window', 'bank_bite_digest',
   'anomaly_alert', 'smashlist_day', 'steals_found', 'reengagement',
   'quiet_hours', 'quiet_start', 'quiet_end',
+  'product_recall',
 ])
 
 export async function GET() {

@@ -10,7 +10,7 @@
 // The eight stages map onto cards that already have both screenshots:
 //   capture→receipts  understand→guac-ai  remember→stash    prepare→smashlist
 //   shop→steals       protect→returns     learn→worth-it    next→predictions
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useId } from 'react'
 import Link from 'next/link'
 import { CARDS } from './GoalsShowcase'
 import GoalCard from './GoalCard'
@@ -61,7 +61,7 @@ const STAGES = [
     story: 'GetGuac remembers what came home, what you liked and what you already own—so the household does not have to.',
     metric: '39 items', metricLabel: 'Remembered and easy to find',
     points: ['Re-find a purchase in seconds', 'Avoid buying what is already at home'],
-    proofTitle: 'Before you rebuy', proofValue: 'Already owned', proofNote: 'Stash remembered it for you',
+    proofTitle: 'Before you rebuy', proofValue: 'Already owned', proofNote: 'My Items remembered it for you',
     image: '/home/story-people/prepare.webp', imageAlt: 'A couple planning their shopping together at home', imagePosition: 'center center',
     momentIcon: '🧠', momentEyebrow: 'Already at home', momentLine: 'No duplicate buy this time',
   },
@@ -151,6 +151,8 @@ export default function ReceiptFlow({
 }) {
   const [active, setActive] = useState(0)
   const [zoom, setZoom] = useState(null)
+  const flowId = useId().replace(/:/g, '')
+  const panelId = `${flowId}-panel`
 
   // Esc closes the lightbox, and the body scroll-lock stops the page drifting
   // underneath it. Both are cleaned up on unmount so a stage change mid-zoom
@@ -168,6 +170,17 @@ export default function ReceiptFlow({
   // degrades to the wrong card rather than crashing the page.
   const card = CARDS.find((c) => c.slug === stage.slug) || CARDS[0]
   const storyMode = variant === 'story'
+  const selectStage = (index) => {
+    const next=(index+STAGES.length)%STAGES.length
+    setActive(next)
+    requestAnimationFrame(()=>document.getElementById(`${flowId}-tab-${next}`)?.focus())
+  }
+  const onRailKeyDown = (event) => {
+    const step={ArrowRight:1,ArrowDown:1,ArrowLeft:-1,ArrowUp:-1}[event.key]
+    if(step){ event.preventDefault(); selectStage(active+step); return }
+    if(event.key==='Home'){ event.preventDefault(); selectStage(0) }
+    if(event.key==='End'){ event.preventDefault(); selectStage(STAGES.length-1) }
+  }
 
   return (
     <section className="gg-flow" aria-label="How GetGuac works">
@@ -180,10 +193,10 @@ export default function ReceiptFlow({
         </div>
 
         <div className="gg-flow-rail">
-          <div className="gg-flow-row" role="tablist" aria-label="Loop stages">
+          <div className="gg-flow-row" role="tablist" aria-label="Loop stages" onKeyDown={onRailKeyDown}>
             {STAGES.map((st, i) => (
-              <button key={st.key} type="button" role="tab"
-                      aria-selected={i === active} aria-controls="gg-flow-card"
+              <button key={st.key} id={`${flowId}-tab-${i}`} type="button" role="tab"
+                      aria-selected={i === active} aria-controls={panelId} tabIndex={i===active?0:-1}
                       className={'gg-flow-step' + (i === active ? ' is-active' : '')}
                       onClick={() => setActive(i)}>
                 <span className="gg-flow-puck"><Glyph k={st.key} size={30} /></span>
@@ -201,7 +214,7 @@ export default function ReceiptFlow({
       {/* The story variant is isolated to /join_demo while the concept is being
           reviewed. /join keeps the proven product-card layout until approval. */}
       {storyMode ? (
-      <div className="gg-flow-story" id="gg-flow-card" role="tabpanel" aria-live="polite"
+      <div className="gg-flow-story" id={panelId} role="tabpanel" aria-labelledby={`${flowId}-tab-${active}`} aria-live="polite"
            style={{ '--gg-accent': stage.accent, '--gg-soft': stage.soft }}>
         <div className="gg-flow-storycopy">
           <span className="gg-flow-storykicker"><Glyph k={stage.key} size={17} />{stage.kicker}</span>
@@ -237,9 +250,9 @@ export default function ReceiptFlow({
             <span className="gg-flow-storyapplabel">Inside the GetGuac app</span>
             <div className="gg-flow-storyshots">
               <Shot key={`story-w-${card.slug}`} className="gg-flow-storyweb" onZoom={setZoom}
-                    src={`/home/goals/web-${card.slug}.webp`} alt={`${card.name} on the web`} />
+                    src={`/marketing/current/${({"bank":"bank","bills":"bills","car-miles":"car-miles","categories":"reports","fees":"guacwizard","games":"games","guac-ai":"guac-ai","guacmoney":"dashboard","inbox":"inbox","marketplace":"marketplace","organized":"dashboard","receipts":"receipts","returns":"returns","smashlist":"shopping","stash":"stash","steals":"steals","subs":"subscriptions","tax":"tax","worth-it":"worth-it","predictions":"shopping"})[card.slug] || card.slug}.webp`} alt={`${card.name} on the web`} width="900" height="563" />
               <Shot key={`story-p-${card.slug}`} className="gg-flow-storyphone" onZoom={setZoom}
-                    src={`/home/goals/phone-${card.slug}.webp`} alt={`${card.name} on iPhone`} />
+                    src={`/home/goals/phone-${card.slug}.webp`} alt={`${card.name} on iPhone`} width="360" height="757" />
               <div className="gg-flow-storyproof">
                 <span>{stage.proofTitle}</span><strong>{stage.proofValue}</strong><small>{stage.proofNote}</small>
               </div>
@@ -249,7 +262,7 @@ export default function ReceiptFlow({
         </div>
       </div>
       ) : (
-      <div className="gg-flow-card" id="gg-flow-card" role="tabpanel" aria-live="polite">
+      <div className="gg-flow-card" id={panelId} role="tabpanel" aria-labelledby={`${flowId}-tab-${active}`} aria-live="polite">
         <div className="gg-flow-cardtext">
           <span className="gg-flow-cardicon" aria-hidden>{card.e}</span>
           <h3 className="gg-flow-cardh">{card.goal}</h3>
@@ -262,9 +275,9 @@ export default function ReceiptFlow({
           <div className="gg-flow-shots">
             {/* key forces a real swap instead of a stale decode when slug changes */}
             <Shot key={`w-${card.slug}`} className="gg-flow-web" onZoom={setZoom}
-                  src={`/home/goals/web-${card.slug}.webp`} alt={`${card.name} on the web`} />
+                  src={`/marketing/current/${({"bank":"bank","bills":"bills","car-miles":"car-miles","categories":"reports","fees":"guacwizard","games":"games","guac-ai":"guac-ai","guacmoney":"dashboard","inbox":"inbox","marketplace":"marketplace","organized":"dashboard","receipts":"receipts","returns":"returns","smashlist":"shopping","stash":"stash","steals":"steals","subs":"subscriptions","tax":"tax","worth-it":"worth-it","predictions":"shopping"})[card.slug] || card.slug}.webp`} alt={`${card.name} on the web`} width="900" height="563" />
             <Shot key={`p-${card.slug}`} className="gg-flow-phone" onZoom={setZoom}
-                  src={`/home/goals/phone-${card.slug}.webp`} alt={`${card.name} on iPhone`} />
+                  src={`/home/goals/phone-${card.slug}.webp`} alt={`${card.name} on iPhone`} width="360" height="757" />
           </div>
           <div className="gg-flow-actions">
             <Link className="gg-flow-cta" href={card.href}>{card.cta} &rarr;</Link>

@@ -17,6 +17,7 @@ import { rateLimit, userRateKey } from '../../../../../lib/apiGuard'
 import { parseReceiptFromText, parseReceiptFromFile } from '../../../../../lib/parse-receipt-engine'
 import { resolveStoreAndLocation, writeRefundPolicies, lookupStoreDefaultPolicies, stripEmailWrapper } from '../../../../../lib/email-to-receipt'
 import { _ensureStoreRewardServer } from '../../../../../lib/save-receipt'
+import { classifyCommerceEmail, hasCredibleReceiptEvidence } from '../../../../../lib/email-classification'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
@@ -27,7 +28,7 @@ export async function POST(_request, { params }) {
   const { id: receiptId } = await params
   if (!receiptId) return Response.json({ error: 'receipt id required' }, { status: 400 })
 
-  const sb = createApiClient()
+  const sb = await createApiClient()
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return Response.json({ error: 'Not signed in' }, { status: 401 })
 
@@ -52,7 +53,7 @@ export async function POST(_request, { params }) {
   // Path A: email-linked receipt
   const { data: emRows } = await sb
     .from('email_messages')
-    .select('id, body_text, body_html, received_at')
+    .select('id, subject, from_addr, preview, body_text, body_html, received_at')
     .eq('user_id', user.id)
     .eq('receipt_id', receiptId)
     .order('received_at', { ascending: false })
@@ -64,12 +65,16 @@ export async function POST(_request, { params }) {
 
   if (em) {
     const body = stripEmailWrapper(em.body_text || em.body_html || '')
+    const classification = classifyCommerceEmail({ subject: em.subject, fromAddr: em.from_addr, preview: em.preview }, body)
+    if (['promotion', 'account_notice', 'order_update'].includes(classification.classification)) {
+      return Response.json({ skipped: true, classification: classification.classification, message: 'This email is an offer or account update, not a purchase receipt. No receipt amounts were changed.' })
+    }
     if (!body || body.length < 60) {
       return Response.json({ error: 'Email body is too short to parse.' }, { status: 400 })
     }
     parsed = await parseReceiptFromText(body, { emailDate: em.received_at })
-    if (!parsed || (!parsed.store_name && !parsed.total_amount && !parsed.items?.length)) {
-      return Response.json({ error: 'AI returned no usable data from the email body.' }, { status: 502 })
+    if (!hasCredibleReceiptEvidence(parsed, { subject: em.subject, fromAddr: em.from_addr, preview: em.preview }, body)) {
+      return Response.json({ skipped: true, classification: 'unknown', message: 'No reliable purchase details were found in this email. No receipt amounts were changed.' })
     }
     // Date safety: if the AI returned the email forward date verbatim, that's
     // probably wrong — refuse to overwrite the existing date with it.

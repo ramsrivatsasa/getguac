@@ -15,7 +15,7 @@
 // of itself.
 import { useRef, useState } from 'react'
 
-export default function ResourceSearch() {
+export default function ResourceSearch({placeholder = 'Search articles, tools and guides', label = 'Search resources'}) {
   const [q, setQ] = useState('')
   const [empty, setEmpty] = useState(false)
   const box = useRef(null)
@@ -23,7 +23,8 @@ export default function ResourceSearch() {
   function apply(value) {
     setQ(value)
     const t = value.trim().toLowerCase()
-    const nodes = document.querySelectorAll('[data-search]')
+    const scope = box.current?.closest('[data-resource-root]') || document
+    const nodes = scope.querySelectorAll('[data-search]')
     let shown = 0
     nodes.forEach((el) => {
       const hay = `${el.dataset.search} ${el.textContent}`.toLowerCase()
@@ -34,14 +35,14 @@ export default function ResourceSearch() {
     // Goal stories are collapsed by default so the hub stays compact. Reveal
     // the collection when search finds a matching story, then restore the
     // concise default when the query is cleared.
-    document.querySelectorAll('[data-search-disclosure]').forEach((el) => {
+    scope.querySelectorAll('[data-search-disclosure]').forEach((el) => {
       const items = [...el.querySelectorAll('[data-search]')]
       const hasHit = items.some((item) => !item.hidden)
       el.open = Boolean(t && hasHit)
     })
     // A section whose every card is hidden leaves a stranded heading, so fold
     // the whole section away with it.
-    document.querySelectorAll('[data-search-group]').forEach((g) => {
+    scope.querySelectorAll('[data-search-group]').forEach((g) => {
       const items = g.querySelectorAll('[data-search]')
       g.hidden = items.length > 0 && [...items].every((el) => el.hidden)
     })
@@ -63,9 +64,9 @@ export default function ResourceSearch() {
           type="search"
           value={q}
           onChange={(e) => apply(e.target.value)}
-          placeholder="Search articles, tools and guides"
-          aria-label="Search resources"
-          style={{ width: '100%', border: 0, outline: 0, background: 'transparent', padding: '8px 0' }}
+          placeholder={placeholder}
+          aria-label={label}
+          style={{ width: '100%', minHeight: 44, border: 0, outline: 0, background: 'transparent', padding: '10px 0' }}
         />
       </label>
       {empty && (

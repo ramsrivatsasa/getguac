@@ -7,8 +7,8 @@ import { computeWizardScore } from '../../../lib/wizardScore'
 import { useBankData } from '../../../lib/useBankData'
 import { periodStartDate, timeframeLabel } from '../../../lib/timeframe'
 import { useStore } from '../../../store'
-import GuacMascot from '../../../components/GuacMascot'
 import FeatureHeader from '../../../components/FeatureHeader'
+import GuacMascot from '../../../components/GuacMascot'
 import TimeframePicker from '../../../components/TimeframePicker'
 import { CountUp, FadeUpStagger } from '../../../components/animated'
 import { Banknote, Sparkles } from 'lucide-react'
@@ -71,6 +71,7 @@ export default function GuacWizardPage() {
           no card background, mascot + title + subtitle, score on the right. */}
       <FeatureHeader
         theme="wizard"
+        showMascot={false}
         title={<span className="flex items-center gap-2">GuacWizard <Sparkles size={20} className="text-amber-500 shrink-0" /></span>}
         subtitle="Our money wizard 🪄 — one wave, no sneaky fee, charge, or leak survives the spell."
         action={

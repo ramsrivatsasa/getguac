@@ -76,7 +76,7 @@ export async function POST(request) {
     if (!rl.ok) return Response.json({ error: 'rate limited' }, { status: 429 })
 
     // Require auth — only signed-in users can mint share links.
-    const userSb = createApiClient()
+    const userSb = await createApiClient()
     const { data: { user } } = await userSb.auth.getUser()
     if (!user) return Response.json({ error: 'not signed in' }, { status: 401 })
 

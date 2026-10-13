@@ -1,3 +1,4 @@
+import { withInboxMessageClaim } from './inbox-message-claim'
 // Convert an IMAP-fetched message into a receipt row. Tries AI-parsing the
 // body first (Groq Llama for text); if that fails, falls back to a smarter
 // stub that uses the sender display name / subject instead of the bare email
@@ -13,6 +14,7 @@ import {
   normalizePhone, normalizeStoreAddress,
 } from './store-name-normalize'
 import { findExistingReceipt } from './findExistingReceipt'
+import { classifyCommerceEmail, hasCredibleReceiptEvidence } from './email-classification'
 // saveReceipt is the central save pipeline (lib/save-receipt.js). The email
 // path used to inline its own insertParsedReceipt() — now delegated so a
 // single bug fix or threshold change propagates to web + mobile + email.
@@ -363,23 +365,67 @@ async function insertStubReceipt(sb, userId, { fromAddr, subject, receivedAt, pr
 
 // Public entry: takes a poller `message` object + the supabase admin client +
 // the user_id, returns { receipt_id, processed, source }.
-export async function draftReceiptFromEmail(sb, userId, m) {
+export async function draftReceiptFromEmail(sb, userId, m, { deadlineAt = Infinity } = {}) {
+  let messageId = m.storedId
+  if (!messageId && m.uid) {
+    const { data, error } = await sb.from('email_messages').select('id')
+      .eq('user_id', userId).eq('uid', m.uid).eq('imap_folder', m.imapFolder || 'INBOX').maybeSingle()
+    if (error) throw new Error('Saved email lookup failed')
+    messageId = data?.id
+  }
+  return withInboxMessageClaim(sb, userId, messageId, () => draftClaimedReceiptFromEmail(sb, userId, m, { deadlineAt }))
+}
+
+async function draftClaimedReceiptFromEmail(sb, userId, m, { deadlineAt }) {
   const body = stripEmailWrapper(m.bodyText || m.bodyHtml || '')
+  const initialClassification = classifyCommerceEmail(m, body)
+
+  // Promotions and order-status mail never enter Receipts. They remain in the
+  // inbox for the promotions/review pipeline to consume.
+  if (initialClassification.classification !== 'purchase_receipt') {
+    return {
+      receipt_id: null,
+      processed: true,
+      source: 'classifier',
+      ...initialClassification,
+    }
+  }
+
   // Try AI parse first. Pass the email's received_at as a "do not match" hint
   // so the AI doesn't lazily return the forward date as the transaction date.
   if (body && body.length > 60) {
     try {
-      const parsed = await parseReceiptFromText(body, { emailDate: m.receivedAt })
-      if (parsed && (parsed.store_name || parsed.total_amount || parsed.items?.length)) {
+      const parsed = await parseReceiptFromText(body, { emailDate: m.receivedAt, deadlineAt })
+      if (hasCredibleReceiptEvidence(parsed, m, body)) {
         const { receipt_id } = await insertParsedReceipt(sb, userId, parsed, m.preview)
-        return { receipt_id, processed: true, source: parsed._provider || 'ai' }
+        return {
+          receipt_id,
+          processed: true,
+          source: parsed._provider || 'ai',
+          ...initialClassification,
+        }
+      }
+      return {
+        receipt_id: null,
+        processed: true,
+        source: 'classifier',
+        classification: 'unknown',
+        confidence: 0.5,
+        reason: 'AI result lacked a paid total or purchased line items',
       }
     } catch (e) {
+      if (e.code === 'RECEIPT_DEADLINE') throw e
       console.warn('[email-to-receipt] AI parse failed; falling back to stub:', e.message)
     }
   }
 
-  // Fallback: stub with better store guess from headers
-  const { receipt_id } = await insertStubReceipt(sb, userId, m)
-  return { receipt_id, processed: false, source: 'stub' }
+  // A parser failure is an inbox review item, not a fabricated $0 receipt.
+  return {
+    receipt_id: null,
+    processed: false,
+    source: 'review',
+    classification: 'unknown',
+    confidence: 0.25,
+    reason: 'Receipt-like email could not be parsed with credible transaction evidence',
+  }
 }

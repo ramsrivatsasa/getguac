@@ -13,6 +13,7 @@
 //               inside narrower headers
 
 import { useStore } from '../store'
+import { useEffect, useState } from 'react'
 
 const PERIODS = ['daily', 'weekly', 'monthly', 'yearly']
 const COUNT_OPTIONS = {
@@ -21,7 +22,7 @@ const COUNT_OPTIONS = {
   monthly: [1, 3, 6, 12, 24, 36],
   yearly:  [1, 2, 3, 5, 10],
 }
-const DEFAULT_COUNT = { daily: 7, weekly: 4, monthly: 3, yearly: 1 }
+const DEFAULT_COUNT = { daily: 7, weekly: 4, monthly: 1, yearly: 1 }
 const UNIT_LABEL = { daily: 'day', weekly: 'week', monthly: 'month', yearly: 'year' }
 
 export default function TimeframePicker({ trailing = null, compact = false }) {
@@ -30,8 +31,10 @@ export default function TimeframePicker({ trailing = null, compact = false }) {
     spendingPeriodCount, setSpendingPeriodCount,
   } = useStore()
 
-  const period = PERIODS.includes(spendingPeriod) ? spendingPeriod : 'monthly'
-  const periodCount = spendingPeriodCount || DEFAULT_COUNT[period] || 1
+  const [hydrated, setHydrated] = useState(false)
+  useEffect(() => setHydrated(true), [])
+  const period = hydrated && PERIODS.includes(spendingPeriod) ? spendingPeriod : 'monthly'
+  const periodCount = hydrated ? (spendingPeriodCount || DEFAULT_COUNT[period] || 1) : 1
 
   function selectPeriod(p) {
     setSpendingPeriod(p)
@@ -42,13 +45,13 @@ export default function TimeframePicker({ trailing = null, compact = false }) {
   }
 
   return (
-    <div className="flex flex-nowrap items-center gap-2 overflow-x-auto">
-      <div className="inline-flex shrink-0 bg-gray-100 rounded-xl p-1 gap-1">
+    <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
+      <div className="grid w-full grid-cols-4 sm:inline-flex sm:w-auto shrink-0 bg-gray-100 rounded-xl p-1 gap-1">
         {PERIODS.map(p => (
           <button
             key={p}
             onClick={() => selectPeriod(p)}
-            className={`${compact ? 'px-3' : 'px-3.5'} py-1.5 rounded-lg text-sm capitalize font-semibold transition-all ${
+            className={`${compact ? 'px-2 sm:px-3' : 'px-2 sm:px-3.5'} py-1.5 rounded-lg text-sm capitalize font-semibold transition-all ${
               period === p
                 ? 'bg-white text-guac-ink shadow-sm'
                 : 'text-gray-500 hover:text-gray-800'

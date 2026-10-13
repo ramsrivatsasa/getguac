@@ -1,4 +1,6 @@
 'use client'
+import ToolIcon from '../../components/ToolIcon'
+import MarketingHero from '../../components/MarketingHero'
 // Help-centre style FAQ: one search box over every answer, a banner per topic,
 // and a single-open accordion.
 //
@@ -34,7 +36,7 @@ const FAQ_CSS = `
 .gg-faq-people img { object-fit:cover; object-position:center; }
 .gg-faq-photo-copy { position:absolute; z-index:2; right:18px; bottom:-20px; max-width:300px; padding:15px 18px; border-radius:17px; color:#173d27; background:#fff; box-shadow:0 16px 34px rgba(22,51,31,.18); }
 .gg-faq-photo-copy strong { display:block; font-size:15px; line-height:1.25; letter-spacing:-.01em; }
-.gg-faq-photo-copy span { display:block; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.11em; color:#8a958d; margin-bottom:5px; }
+.gg-faq-photo-copy span { display:block; font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.09em; color:#748179; margin-bottom:5px; }
 
 .gg-faq-searchband { border-bottom:1px solid #e8eee5; background:#fff; }
 .gg-faq-searchwrap { max-width:760px; margin:0 auto; }
@@ -57,7 +59,7 @@ const FAQ_CSS = `
 .gg-faq-feature { display:flex; flex-direction:column; height:100%; border:1px solid #e3ebdf; border-radius:26px; padding:26px; background:#fff; box-shadow:0 18px 44px -30px rgba(22,51,31,.45); }
 .gg-faq-feature-top { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
 .gg-faq-feature-icon { width:46px; height:46px; flex:none; border-radius:15px; display:grid; place-items:center; color:#fff; background:linear-gradient(145deg,#4d7c0f,#76a91f); box-shadow:0 8px 22px rgba(77,124,15,.24); }
-.gg-faq-kicker { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.13em; color:#8a958d; }
+.gg-faq-kicker { font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.10em; color:#748179; }
 .gg-faq-feature h3 { margin:2px 0 0; font-size:21px; line-height:1.2; color:#16331f; font-family:var(--font-bricolage),sans-serif; letter-spacing:-.02em; font-weight:800; }
 .gg-faq-feature-body { color:#58655d; font-size:14px; line-height:1.75; margin:0; }
 .gg-faq-compare { display:grid; gap:10px; margin-top:16px; }
@@ -77,9 +79,9 @@ const FAQ_CSS = `
 .gg-faq-value strong { display:block; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.09em; color:#4d7c0f; margin-bottom:4px; }
 .gg-faq-value span { display:block; color:#33513e; font-size:13.5px; line-height:1.65; }
 .gg-faq-feature-foot { display:flex; flex-wrap:wrap; align-items:center; gap:14px; margin-top:auto; padding-top:16px; }
-.gg-faq-feature-link { display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:800; color:#4d7c0f; }
+.gg-faq-feature-link { display:inline-flex; min-height:44px; align-items:center; gap:6px; font-size:13px; font-weight:800; color:#4d7c0f; }
 .gg-faq-feature-link:hover { color:#3c630b; }
-.gg-faq-feature-source { font-size:12px; color:#8a958d; text-decoration:underline; }
+.gg-faq-feature-source { display:inline-flex; min-height:44px; align-items:center; font-size:12px; color:#748179; text-decoration:underline; }
 .gg-faq-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
 .gg-faq-card { border:1px solid #dfe9dc; border-radius:18px; padding:18px; background:rgba(255,255,255,.88); box-shadow:0 10px 30px rgba(31,64,44,.05); }
 .gg-faq-card svg { color:#4d7c0f; }
@@ -110,7 +112,7 @@ const FAQ_CSS = `
 .gg-faq-list li { margin:3px 0; }
 .gg-faq-answer blockquote, .gg-faq-callout { margin:13px 0 0; padding:10px 13px; border-left:3px solid #84a92d; background:#f6f9ef; color:#294733; border-radius:0 8px 8px 0; }
 .gg-faq-mark { background:#e6f7b8; color:#2c4a1c; border-radius:4px; padding:0 2px; }
-.gg-faq-qwrap { min-width:0; }
+.gg-faq-qwrap { min-width:0; flex:1; text-align:left; }
 .gg-faq-snippet { display:block; margin-top:6px; font-size:12.5px; font-weight:500; line-height:1.5; color:#77857c; }
 .gg-faq-empty { text-align:center; border:1px dashed #d5e2d0; border-radius:22px; padding:44px 24px; background:#fbfdf9; }
 .gg-faq-empty h2 { font-size:22px; color:#183322; margin:0 0 6px; }
@@ -299,30 +301,7 @@ export default function FaqClient() {
     <>
       <style>{FAQ_CSS}</style>
 
-      <section className="gg-faq-hero">
-        <div className="gg-faq-hero-inner max-w-6xl mx-auto px-4 sm:px-6 pt-14 sm:pt-20 pb-16 sm:pb-20">
-          <div>
-            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/80 border border-emerald-900/10 text-emerald-800 text-xs font-black uppercase tracking-[.16em]">
-              <Sparkles size={14} /> Help centre
-            </span>
-            <h1 className="text-5xl sm:text-7xl font-black tracking-tight mt-6 leading-[.98] text-[#16331f]">Why scan it?<br/><span className="text-lime-600">Because the total hides the story.</span></h1>
-            <p className="text-lg text-[#48614d] mt-6 max-w-xl leading-8">Checking a receipt confirms today&rsquo;s charge. Saving it helps reveal price changes, mixed-cart spending, return deadlines, warranties, and the purchases quietly shaping your budget.</p>
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Link href="/join?try=receipt" className="btn-primary inline-flex items-center gap-2">Try one receipt <ArrowRight size={16}/></Link>
-              <a href="#start-here" className="btn-secondary">Read the stories</a>
-            </div>
-            <p className="mt-4 text-xs text-[#68776d]">No bank password. No spreadsheet. Start with one receipt that matters.</p>
-          </div>
-
-          <div className="gg-faq-proof" aria-label="A family scanning a grocery receipt together">
-            <span className="gg-faq-lime-dot" aria-hidden="true" />
-            <div className="gg-faq-people">
-              <Image src="/get-started/people-receipt-habits-v1.png" alt="A family reviewing and scanning a grocery receipt together" fill priority sizes="(max-width: 860px) 90vw, 44vw" />
-            </div>
-            <div className="gg-faq-photo-copy"><span>The GetGuac promise</span><strong>See it. Understand it. Keep more.</strong></div>
-          </div>
-        </div>
-      </section>
+      <MarketingHero eyebrow="Help centre" title="Your questions." accent="Clearer answers." description="Find help with money records, Budget, Goals, Guac AI and the tools that support your next step." secondaryHref="#start-here" secondaryLabel="Browse common questions" imageSrc="/home/story-people/openai-hero-giggling-family-baby-v2-768.webp" imageAlt="A family sharing time together at home" />
 
       <section className="gg-faq-searchband px-4 sm:px-6 py-10">
         <div className="gg-faq-searchwrap">
@@ -469,7 +448,7 @@ export default function FaqClient() {
                         aria-controls={`panel-${section.id}-${index}`}
                         onClick={() => setOpenKey(isOpen ? '' : key)}
                       >
-                        <span className="gg-faq-qwrap">
+                        <ToolIcon label={faq.q} size={20} className="text-violet-700"/><span className="gg-faq-qwrap">
                           <span><Highlight text={faq.q} term={term} /></span>
                           {snippet && <span className="gg-faq-snippet"><Highlight text={snippet} term={term} /></span>}
                         </span>
@@ -499,12 +478,12 @@ export default function FaqClient() {
           </div>
         )}
 
-        <section className="rounded-[28px] bg-[#173522] text-white p-7 sm:p-10 text-center">
-          <p className="text-lime-300 font-bold text-sm uppercase tracking-wider">Have a different question?</p>
+        <section className="rounded-[28px] bg-violet-50 text-slate-950 p-7 sm:p-10 text-center">
+          <p className="text-violet-700 font-bold text-sm uppercase tracking-wider">Have a different question?</p>
           <h2 className="text-3xl sm:text-4xl mt-2">We&rsquo;re here to help.</h2>
-          <p className="text-white/70 mt-3">Email hello@getguac.app or start free and ask Guac.</p>
+          <p className="text-slate-600 mt-3">Email hello@getguac.app or start free and ask Guac.</p>
           <div className="mt-6 flex flex-wrap gap-3 justify-center">
-            <Link href="/register" className="btn-primary">Get Started Free</Link>
+            <Link href="/register" className="btn-primary">Start free</Link>
             <a href="mailto:hello@getguac.app" className="btn-secondary bg-white">Email GetGuac</a>
           </div>
         </section>
@@ -512,3 +491,4 @@ export default function FaqClient() {
     </>
   )
 }
+

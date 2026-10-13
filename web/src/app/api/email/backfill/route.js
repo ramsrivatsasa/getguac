@@ -31,7 +31,7 @@ function adminClient() {
 }
 
 export async function POST(request) {
-  const sb = createApiClient()
+  const sb = await createApiClient()
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return Response.json({ error: 'Not signed in' }, { status: 401 })
 
@@ -104,7 +104,7 @@ export async function POST(request) {
     // fall back to a smarter stub if parsing fails.
     if (isHook) {
       try {
-        const { receipt_id, processed } = await draftReceiptFromEmail(admin, user.id, m)
+        const { receipt_id, processed } = await draftReceiptFromEmail(admin, user.id, { ...m, storedId: insertedMsg.id })
         if (receipt_id) {
           await admin.from('email_messages').update({ receipt_id, processed: true }).eq('id', insertedMsg.id)
           if (processed) summary.drafted++

@@ -11,6 +11,8 @@ const BUILDERS = [
   { test: /amazon/i,           url: q => `https://www.amazon.com/s?k=${q}` },
   { test: /walmart/i,          url: q => `https://www.walmart.com/search?q=${q}` },
   { test: /target/i,           url: q => `https://www.target.com/s?searchTerm=${q}` },
+  { test: /door\s*dash/i,     url: q => `https://www.doordash.com/search/store/${q}/` },
+  { test: /instacart/i,        url: q => `https://www.instacart.com/store/s?k=${q}` },
   { test: /costco/i,           url: q => `https://www.costco.com/CatalogSearch?keyword=${q}` },
   { test: /sam'?s\s*club/i,    url: q => `https://www.samsclub.com/s/${q}` },
   { test: /home\s*depot/i,     url: q => `https://www.homedepot.com/s/${q}` },
@@ -28,6 +30,31 @@ const BUILDERS = [
   { test: /ebay/i,             url: q => `https://www.ebay.com/sch/i.html?_nkw=${q}` },
   { test: /wayfair/i,          url: q => `https://www.wayfair.com/keyword.php?keyword=${q}` },
 ]
+
+const STORE_DESTINATIONS = [
+  { test: /amazon/i, home: 'https://www.amazon.com/', locator: 'https://www.amazon.com/' },
+  { test: /target/i, home: 'https://www.target.com/', locator: 'https://www.target.com/store-locator/find-stores' },
+  { test: /walmart/i, home: 'https://www.walmart.com/', locator: 'https://www.walmart.com/store/finder' },
+  { test: /costco/i, home: 'https://www.costco.com/', locator: 'https://www.costco.com/warehouse-locations' },
+  { test: /door\s*dash/i, home: 'https://www.doordash.com/', locator: 'https://www.doordash.com/' },
+  { test: /instacart/i, home: 'https://www.instacart.com/', locator: 'https://www.instacart.com/store' },
+  { test: /sam'?s\s*club/i, home: 'https://www.samsclub.com/', locator: 'https://www.samsclub.com/club-finder' },
+  { test: /kroger/i, home: 'https://www.kroger.com/', locator: 'https://www.kroger.com/stores/search' },
+  { test: /whole\s*foods/i, home: 'https://www.wholefoodsmarket.com/', locator: 'https://www.wholefoodsmarket.com/stores' },
+  { test: /safeway/i, home: 'https://www.safeway.com/', locator: 'https://local.safeway.com/' },
+  { test: /best\s*buy/i, home: 'https://www.bestbuy.com/', locator: 'https://stores.bestbuy.com/' },
+  { test: /home\s*depot/i, home: 'https://www.homedepot.com/', locator: 'https://www.homedepot.com/l/storeDirectory' },
+]
+
+export function storeHomeUrl(store) {
+  return STORE_DESTINATIONS.find(entry => entry.test.test(store || ''))?.home || storeDealUrl(store, '')
+}
+
+export function storeLocatorUrl(store) {
+  const known = STORE_DESTINATIONS.find(entry => entry.test.test(store || ''))
+  if (known) return known.locator
+  return `https://www.google.com/maps/search/${encodeURIComponent(store || 'store')}`
+}
 
 /**
  * @param {string} store  retailer name from the result

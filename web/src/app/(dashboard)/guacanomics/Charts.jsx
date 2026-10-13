@@ -1,7 +1,9 @@
 'use client'
+import {donutPieProps,donutCategoryColor} from '../../../lib/donut-style.mjs'
 import { formatDateShort } from '../../../lib/dateFormat'
 import useCurrencySymbol from '../../../hooks/useCurrencySymbol'
 import Link from 'next/link'
+import { useState } from 'react'
 import {
   ComposedChart, Area, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts'
@@ -24,6 +26,10 @@ const HEAT_GRADIENT = 'linear-gradient(90deg,#16a34a,#f59e0b,#dc2626)'
 
 export default function Charts({ insights }) {
   const __cur = useCurrencySymbol()
+  const [categoryScope, setCategoryScope] = useState('all')
+  const categoryBuckets = categoryScope === 'business'
+    ? insights.businessCategoryBuckets
+    : categoryScope === 'personal' ? insights.personalCategoryBuckets : insights.categoryBuckets
   return (
     <>
       <div className="grid lg:grid-cols-3 gap-6">
@@ -79,7 +85,7 @@ export default function Charts({ insights }) {
                     <Pie
                       data={insights.ratingBuckets.filter(b => b.spend > 0).map(b => ({ name: `${b.emoji} ${b.label}`, value: b.spend, color: b.color }))}
                       dataKey="value" nameKey="name" cx="50%" cy="50%"
-                      innerRadius={50} outerRadius={72} paddingAngle={2} strokeWidth={0} isAnimationActive={false}>
+                      {...donutPieProps(72)}>
                       {insights.ratingBuckets.filter(b => b.spend > 0).map((b, i) => <Cell key={i} fill={b.color} />)}
                     </Pie>
                     <Tooltip
@@ -166,11 +172,11 @@ export default function Charts({ insights }) {
           {insights.grossSpend === 0 ? (
             <div className="h-56 flex items-center justify-center text-gray-400 text-sm">No purchases</div>
           ) : (
-            <div className="relative">
-              <ResponsiveContainer width="100%" height={240}>
+            <div className="relative h-[240px] self-start">
+              <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie data={insights.purchaseVsReturn} dataKey="value" nameKey="name"
-                    cx="50%" cy="50%" innerRadius={62} outerRadius={88} paddingAngle={2} strokeWidth={0} isAnimationActive={false}>
+                    cx="50%" cy="50%" {...donutPieProps(88)}>
                     {insights.purchaseVsReturn.map((_, i) => <Cell key={i} fill={PIE_COLORS[i]} />)}
                   </Pie>
                   <Tooltip
@@ -189,21 +195,22 @@ export default function Charts({ insights }) {
         </div>
       </div>
 
-      {insights.categoryBuckets.length > 0 && (
+      {(insights.categoryBuckets.length > 0 || categoryScope !== 'all') && (
         <div className="card !rounded-[22px]">
-          <h3 className="gg-h2 mb-4 flex items-center gap-2.5">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3"><h3 className="gg-h2 flex items-center gap-2.5">
             <span className="inline-flex items-center justify-center w-[30px] h-[30px] rounded-[9px] bg-guac-50 text-guac-700 shrink-0">
               <Tag size={15} />
             </span>
             Spend by Category
-          </h3>
+          </h3><div className="inline-flex rounded-xl bg-slate-100 p-1" role="group" aria-label="Purchase type">{[['all','All'],['personal','Personal'],['business','Business']].map(([value,label]) => <button type="button" key={value} onClick={() => setCategoryScope(value)} aria-pressed={categoryScope === value} className={`rounded-lg px-3 py-1.5 text-xs font-black transition ${categoryScope === value ? 'bg-white text-violet-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}>{label}</button>)}</div></div>
+          {categoryBuckets.length === 0 ? <div className="grid min-h-44 place-items-center rounded-2xl bg-slate-50 text-sm font-bold text-slate-500">No {categoryScope} purchases in this range.</div> :
           <div className="grid lg:grid-cols-2 gap-6">
-            <div className="relative">
-              <ResponsiveContainer width="100%" height={240}>
+            <div className="relative h-[240px] self-start">
+              <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={insights.categoryBuckets} dataKey="spend" nameKey="label"
-                    cx="50%" cy="50%" innerRadius={62} outerRadius={92} paddingAngle={2} strokeWidth={0} isAnimationActive={false}>
-                    {insights.categoryBuckets.map((c, i) => <Cell key={i} fill={c.color} />)}
+                  <Pie data={categoryBuckets} dataKey="spend" nameKey="label"
+                    cx="50%" cy="50%" {...donutPieProps(92)}>
+                    {categoryBuckets.map((c, i) => <Cell key={i} fill={donutCategoryColor(c.slug)} />)}
                   </Pie>
                   <Tooltip
                     contentStyle={{ borderRadius: 14, border: '1px solid #d1fae5', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', fontSize: 12 }}
@@ -213,7 +220,7 @@ export default function Charts({ insights }) {
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <span className="text-[10px] uppercase tracking-wider text-guac-muted font-bold">Total</span>
-                <span className="gg-num text-xl font-extrabold text-guac-ink leading-tight">{__cur}{money0(insights.categoryBuckets.reduce((n, c) => n + c.spend, 0))}</span>
+                <span className="gg-num text-xl font-extrabold text-guac-ink leading-tight">{__cur}{money0(categoryBuckets.reduce((n, c) => n + c.spend, 0))}</span>
                 <span className="text-[10px] text-guac-muted mt-0.5">this range</span>
               </div>
             </div>
@@ -230,14 +237,14 @@ export default function Charts({ insights }) {
                 {(() => {
                   // Use the pie's own total so the % column matches the slice
                   // sizes (Bank Bite is a synthetic slice that isn't in grossSpend).
-                  const pieTotal = insights.categoryBuckets.reduce((n, c) => n + c.spend, 0)
-                  return insights.categoryBuckets.map(c => {
+                  const pieTotal = categoryBuckets.reduce((n, c) => n + c.spend, 0)
+                  return categoryBuckets.map(c => {
                     const pct = pieTotal ? (c.spend / pieTotal) * 100 : 0
                     return (
                       <tr key={c.slug} className="hover:bg-guac-row">
                         <td className="py-2 pr-2">
                           <div className="flex items-center gap-2">
-                            <span className="w-2.5 h-2.5 rounded-[3px] shrink-0" style={{ backgroundColor: c.color }} />
+                            <span className="w-2.5 h-2.5 rounded-[3px] shrink-0" style={{ backgroundColor: donutCategoryColor(c.slug) }} />
                             <span className="text-base leading-none">{c.emoji}</span>
                             <span className="font-semibold text-guac-ink">{c.label}</span>
                           </div>
@@ -251,7 +258,7 @@ export default function Charts({ insights }) {
                 })()}
               </tbody>
             </table>
-          </div>
+          </div>}
         </div>
       )}
 
@@ -274,20 +281,28 @@ export default function Charts({ insights }) {
           <div className="grid lg:grid-cols-3 gap-6">
             <div className="lg:col-span-1">
               <p className="text-xs font-bold uppercase tracking-wider text-guac-faint mb-2 text-center">Spend by Rating</p>
-              <ResponsiveContainer width="100%" height={200}>
-                <PieChart>
-                  <Pie
-                    data={insights.ratingBuckets.filter(b => b.spend > 0).map(b => ({ name: `${b.emoji} ${b.label}`, value: b.spend, color: b.color }))}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%" cy="50%"
-                    innerRadius={40} outerRadius={75} paddingAngle={3} isAnimationActive={false}
-                  >
-                    {insights.ratingBuckets.filter(b => b.spend > 0).map((b, i) => <Cell key={i} fill={b.color} />)}
-                  </Pie>
-                  <Tooltip formatter={v => `${__cur}${money2(v)}`} />
-                </PieChart>
-              </ResponsiveContainer>
+              <div className="relative">
+                <ResponsiveContainer width="100%" height={200}>
+                  <PieChart>
+                    <Pie
+                      data={insights.ratingBuckets.filter(b => b.spend > 0).map(b => ({ name: `${b.emoji} ${b.label}`, value: b.spend, color: b.color }))}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%" cy="50%"
+                      {...donutPieProps(75)}
+                    >
+                      {insights.ratingBuckets.filter(b => b.spend > 0).map((b, i) => <Cell key={i} fill={b.color} />)}
+                    </Pie>
+                    <Tooltip formatter={v => `${__cur}${money2(v)}`} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
+                  <span className="gg-num text-base font-extrabold leading-none text-guac-ink">
+                    {__cur}{money0(insights.ratingBuckets.reduce((sum, bucket) => sum + Number(bucket.spend || 0), 0))}
+                  </span>
+                  <span className="mt-1 text-[9px] font-bold text-guac-muted">rated spend</span>
+                </div>
+              </div>
               <p className="text-center text-xs text-guac-muted mt-1">
                 Avg <span className="gg-num font-bold text-guac-700">{insights.avgRating.toFixed(1)} ★</span>
                 {' '}· Regret <span className="gg-num font-bold text-rose-700">{__cur}{money2(insights.regretSpend)}</span>

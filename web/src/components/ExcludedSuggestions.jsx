@@ -1,0 +1,9 @@
+'use client'
+import Link from 'next/link'
+import SuggestionFeedback from './SuggestionFeedback'
+import {money} from '../lib/find-your-10/wizard.mjs'
+export default function ExcludedSuggestions({progress,onSaved,disabled,reviewHref='/my-plan'}) {
+  const rows=(progress?.suggestionFeedback||[]).filter(f=>!f.restoredAt)
+  if(!rows.length)return null
+  return <section className="mt-4 space-y-2" aria-label="Excluded options"><h3 className="font-bold">Excluded options · review anytime</h3><p className="text-sm text-slate-600">Saved for next month and future plans. These options add $0 to your planned savings. Review again, then choose an option to include it.</p><div className="overflow-x-auto rounded-xl border border-violet-100"><table className="w-full text-left text-sm"><thead className="bg-violet-50"><tr><th className="p-3">Expense & option</th><th className="p-3">Excluded since</th><th className="p-3">Review</th></tr></thead><tbody>{rows.map(f=><tr key={f.key} className="border-t"><td className="p-3"><strong>{f.label}</strong><p>{f.optionLabel}</p></td><td className="p-3">{f.rejectedAt?.slice(0,10)}</td><td className="p-3"><details><summary className="min-h-11 cursor-pointer py-3 text-violet-700">Details</summary><p>{f.snapshot?.tradeoff||f.snapshot?.terms}</p>{f.scope==='cash'?<p>Saved APY: {f.snapshot?.apy}% · checked {f.snapshot?.checkedAt}. Review current bank terms before choosing.</p>:<p>Saved estimate: {money(f.snapshot?.differenceCents??f.snapshot?.estimateCents??0)} per change. Check current costs before including.</p>}</details><SuggestionFeedback disabled={disabled} progress={progress} restoreKey={f.key} onSaved={onSaved}/></td></tr>)}</tbody></table></div><Link className="inline-flex min-h-11 items-center font-semibold text-violet-700" href={reviewHref}>Review current choices →</Link></section>
+}

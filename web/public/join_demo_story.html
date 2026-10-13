@@ -374,7 +374,7 @@
 </div>
 <p class="speech" id="stage-story">Receipts disappear in pockets, bags, and inboxes. GetGuac gives every purchase one dependable home before life moves on.</p>
 <div class="appshot">
-<img class="web" id="stage-web" src="home/goals/web-organized.webp" alt="GetGuac web app">
+<img class="web" id="stage-web" src="/marketing/current/dashboard.webp" alt="GetGuac web app">
 <img class="mobile" id="stage-mobile" src="home/goals/phone-organized.webp" alt="GetGuac mobile app">
 </div>
 </div>
@@ -472,7 +472,7 @@
       {n:'Next trip',i:'↻',k:'The loop continues',t:'Every trip teaches the next one.',m:'Your history becomes a head start',p:['Keep what worked','Waste less next time'],metric:'Smarter next trip',label:'Built from what you already learned',story:'Each receipt adds a little more context, so shopping gets easier, calmer, and more personal over time.',person:'family-tablet.webp',slug:'predictions'}
     ];
     const tabs=document.getElementById('tabs');
-    function showStage(index){const s=stages[index];document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active',i===index));document.getElementById('stage-kicker').textContent=s.k;document.getElementById('stage-title').textContent=s.t;document.getElementById('stage-moment').textContent=s.m;document.getElementById('point-one').textContent=s.p[0];document.getElementById('point-two').textContent=s.p[1];document.getElementById('stage-metric').textContent=s.metric;document.getElementById('stage-label').textContent=s.label;document.getElementById('stage-story').textContent=s.story;document.getElementById('stage-person').src='home/story-people/'+s.person;document.getElementById('stage-web').src='home/goals/web-'+s.slug+'.webp';document.getElementById('stage-mobile').src='home/goals/phone-'+s.slug+'.webp'}
+    function showStage(index){const s=stages[index];document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active',i===index));document.getElementById('stage-kicker').textContent=s.k;document.getElementById('stage-title').textContent=s.t;document.getElementById('stage-moment').textContent=s.m;document.getElementById('point-one').textContent=s.p[0];document.getElementById('point-two').textContent=s.p[1];document.getElementById('stage-metric').textContent=s.metric;document.getElementById('stage-label').textContent=s.label;document.getElementById('stage-story').textContent=s.story;document.getElementById('stage-person').src='home/story-people/'+s.person;document.getElementById('stage-web').src='/marketing/current/' + ({"bank":"bank","bills":"bills","car-miles":"car-miles","categories":"reports","fees":"guacwizard","games":"games","guac-ai":"guac-ai","guacmoney":"dashboard","inbox":"inbox","marketplace":"marketplace","organized":"dashboard","receipts":"receipts","returns":"returns","smashlist":"shopping","stash":"stash","steals":"steals","subs":"subscriptions","tax":"tax","worth-it":"worth-it","predictions":"shopping"}[s.slug] || s.slug) + '.webp';document.getElementById('stage-mobile').src='home/goals/phone-'+s.slug+'.webp'}
     stages.forEach((s,i)=>{const b=document.createElement('button');b.className='tab'+(i===0?' active':'');b.innerHTML='<i>'+s.i+'</i>'+s.n;b.onclick=()=>showStage(i);tabs.appendChild(b)});
   </script>
 </body>

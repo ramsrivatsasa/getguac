@@ -33,7 +33,7 @@ export async function POST(req) {
   const rl = await rateLimit(userRateKey(user.id, 'product-image-batch'), {
     limit: 6, windowMs: 60_000,
   })
-  if (!rl.success) {
+  if (!rl.ok) {
     return NextResponse.json(
       { error: 'rate_limited', images: {}, byName: {} },
       { status: 429, headers: { 'Retry-After': '60' } }

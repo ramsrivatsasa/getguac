@@ -27,6 +27,22 @@ export async function POST(request) {
     if (!rl.ok) return Response.json({ error: 'rate limited' }, { status: 429 })
 
     const body = await request.json().catch(() => null)
+    // Background suggestions have no shopping_list row until selected.
+    // Resolve the key against this member's stored snapshot, never trust a
+    // client-provided name or another member's suggestion.
+    if (typeof body?.key === 'string' && body.key.length <= 300) {
+      const { data: snapshot, error } = await sb.from('agent_snapshots').select('result,refreshed_at')
+        .eq('user_id', user.id).eq('kind', 'shopping').maybeSingle()
+      if (error) return Response.json({ error: 'Suggestions are unavailable. Retry shortly.' }, { status: 503 })
+      const age = Date.now() - Date.parse(snapshot?.refreshed_at || '')
+      if (!Number.isFinite(age) || age < -60_000 || age > 48 * 60 * 60_000) return Response.json({ error: 'Suggestions need a refresh before changing them.' }, { status: 409 })
+      const suggestion = snapshot?.result?.data?.recommendations?.find(item => item.key === body.key)
+      if (!suggestion) return Response.json({ error: 'Suggestion no longer available. Refresh the list.' }, { status: 404 })
+      const { error: saveError } = await sb.from('smashlist_predict_dismissed')
+        .upsert({ user_id: user.id, item_key: suggestion.key }, { onConflict: 'user_id,item_key' })
+      if (saveError) return Response.json({ error: 'Could not save dismissal. Please retry.' }, { status: 503 })
+      return Response.json({ ok: true, item_key: suggestion.key })
+    }
     const checked = validate(body, { id: v.requiredString({ max: 64 }) })
     if (!checked.ok) return Response.json({ error: checked.error }, { status: 400 })
 

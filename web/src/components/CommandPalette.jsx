@@ -11,12 +11,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../lib/supabase/client'
-import { Search, Receipt as ReceiptIcon, Store as StoreIcon, ShoppingBag, Gift, LogOut, Settings, Zap, ArrowRight, X } from 'lucide-react'
+import { Search, Receipt as ReceiptIcon, Store as StoreIcon, ShoppingBag, Gift, LogOut, Settings, Zap, ArrowRight, X, WalletCards, CalendarDays } from 'lucide-react'
 
 const ACTIONS = [
   { id: 'go-dashboard', label: 'Dashboard',  hint: 'Home',         icon: Zap,         href: '/dashboard' },
   { id: 'go-receipts',  label: 'Receipts',   hint: 'All receipts', icon: ReceiptIcon, href: '/receipts' },
-  { id: 'go-stash',     label: 'Stash',      hint: 'Items',        icon: ShoppingBag, href: '/stash' },
+  { id: 'go-budget',    label: 'Budget',     hint: 'Money flow',   icon: WalletCards, href: '/budget' },
+  { id: 'go-bills',     label: 'Bills',      hint: 'Calendar',     icon: CalendarDays, href: '/bills' },
+  { id: 'go-stash',     label: 'My Items',   hint: 'Purchases',    icon: ShoppingBag, href: '/stash' },
   { id: 'go-steals',    label: 'Steals',     hint: 'Find deals',   icon: Zap,         href: '/steals' },
   { id: 'go-stores',    label: 'Stores',     hint: 'All stores',   icon: StoreIcon,   href: '/stores' },
   { id: 'go-rewards',   label: 'Rewards',    hint: 'Loyalty',      icon: Gift,        href: '/rewards' },
@@ -32,7 +34,7 @@ function useDebounced(value, ms) {
   return debounced
 }
 
-export default function CommandPalette() {
+export default function CommandPalette({ find10 = false, goalPct = 10 }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
@@ -111,6 +113,7 @@ export default function CommandPalette() {
         out.push({ kind: 'action', ...a, label: a.label, href: a.href })
       }
     }
+    if (find10 && (!q || 'my 10% plan savings targets found kept'.includes(q))) out.unshift({ kind: 'action', id: 'go-plan', label: `My ${goalPct}% plan`, hint: 'Capture, results and monthly check-in', icon: Zap, href: '/my-plan/details' })
     for (const r of results.receipts) {
       out.push({
         kind: 'receipt',
@@ -152,7 +155,7 @@ export default function CommandPalette() {
       })
     }
     return out
-  }, [results, debounced])
+  }, [results, debounced, find10, goalPct])
 
   const goTo = useCallback((href) => {
     setOpen(false)

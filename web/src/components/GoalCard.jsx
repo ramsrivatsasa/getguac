@@ -32,7 +32,7 @@ export default function GoalCard({ card: g, href }) {
           benefit-phrase titles need the whole row on a phone. */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, marginBottom: 10, padding: '0 2px' }}>
         <span style={{ ...DISPLAY, fontWeight: 800, fontSize: 15, color: '#15281C' }}>{g.e} {g.name}</span>
-        <span className="gc-tag" style={{ fontSize: 11, color: '#5F6D63', flex: '0 0 auto', whiteSpace: 'nowrap' }}>{g.tag}</span>
+        <span className="gc-tag" style={{ fontSize: 12, color: '#5F6D63', flex: '0 0 auto', whiteSpace: 'nowrap' }}>{g.tag}</span>
       </div>
       <div style={{ textAlign: 'center', margin: '4px 0 12px' }}>
         <div style={{ ...DISPLAY, fontWeight: 800, fontSize: 30, letterSpacing: '-0.02em', color: '#15281C', lineHeight: 1.1 }}>{g.big}</div>

@@ -144,27 +144,27 @@ const THEMED = new Set(['wizard', 'econ', 'reports', 'steals'])
 // with optional controls pushed to the right. Pass `theme` for a page-themed
 // avocado (econ/reports/steals), or `expression` for a plain brand mascot
 // (any GuacMascot pose) on every other page.
-export default function FeatureHeader({ theme, expression = 'happy', mascot, title, subtitle, badge, action }) {
+export default function FeatureHeader({ theme, expression = 'happy', mascot, showMascot = true, title, subtitle, badge, action }) {
   return (
     <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
-      {mascot
+      {showMascot && (mascot
         ? <div className="shrink-0 grid place-items-center" style={{ width: 72, height: 72 }}>{mascot}</div>
         : THEMED.has(theme)
         ? <ThemedAvocado theme={theme} size={theme === 'wizard' ? 96 : 72} className="shrink-0" />
-        : <GuacMascot expression={expression} size={72} className="shrink-0" />}
+        : <GuacMascot expression={expression} size={72} className="shrink-0" />)}
       {/* flex-1 + a min width keeps the title on the mascot's row instead of
           wrapping the mascot onto its own line on narrow mobile WebViews; a
           wide `action` (score, buttons) wraps below it cleanly via flex-wrap. */}
       <div className="flex-1 min-w-[11rem]">
         <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-guac-ink leading-tight tracking-tight">{title}</h1>
-        {subtitle && <p className="text-xs sm:text-sm text-guac-muted mt-1.5">{subtitle}</p>}
+        {subtitle && <p className="text-xs sm:text-sm text-slate-700 mt-1.5">{subtitle}</p>}
       </div>
       {badge && (
         <span className="text-[10px] uppercase tracking-[0.12em] font-extrabold text-guac-700 bg-guac-100 px-2.5 py-1 rounded-full shrink-0">
           {badge}
         </span>
       )}
-      {action && <div className="ml-auto shrink-0">{action}</div>}
+      {action && <div className="w-full min-w-0 sm:ml-auto sm:w-auto sm:max-w-full">{action}</div>}
     </div>
   )
 }

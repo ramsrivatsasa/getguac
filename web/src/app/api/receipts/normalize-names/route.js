@@ -26,7 +26,7 @@ export const runtime = 'nodejs'
 export const maxDuration = 30
 
 export async function POST(request) {
-  const sb = createApiClient()
+  const sb = await createApiClient()
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return Response.json({ error: 'Not signed in' }, { status: 401 })
 

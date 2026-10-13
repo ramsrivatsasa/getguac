@@ -9,7 +9,9 @@
 
 import { ImapFlow } from 'imapflow'
 import { simpleParser } from 'mailparser'
+import { emailAddressText } from './inbox-presentation.mjs'
 import { ENDPOINTS, fullEmail } from './migadu'
+import { createImapTimeBudget } from './imap-time-budget'
 
 // Max messages to fetch in a single poll run (summed across all folders).
 // Stops a single run from timing out on a backfill of thousands of historical
@@ -67,13 +69,15 @@ async function listPollableFolders(client) {
 //     messages: [{ ..., folder: 'INBOX'|'g'|... }],  // each tagged with source folder
 //     highestUidByFolder: { 'INBOX': 42, 'g': 5 },   // cursor for next run
 //   }
-export async function pollMailbox({ localPart, password, lastUidByFolder = {} }) {
+export async function pollMailbox({ localPart, password, lastUidByFolder = {}, deadlineAt = Infinity }) {
+  const budget = createImapTimeBudget(deadlineAt)
   const client = new ImapFlow({
     host: ENDPOINTS.imap.host,
     port: ENDPOINTS.imap.port,
     secure: ENDPOINTS.imap.secure,
     auth: { user: fullEmail(localPart), pass: password },
     logger: false,
+    ...budget.options,
   })
 
   const results = {
@@ -88,11 +92,12 @@ export async function pollMailbox({ localPart, password, lastUidByFolder = {} })
     folderErrors: [],
   }
 
-  await client.connect()
+  const releaseBudget = budget.arm(() => client.close())
   try {
+    await client.connect()
     const folders = await listPollableFolders(client)
     for (const folder of folders) {
-      if (results.fetched >= MAX_PER_RUN) break
+      if (results.fetched >= MAX_PER_RUN || budget.expired()) break
       const lastUid = lastUidByFolder[folder] || null
       // 🔴 PER-FOLDER ISOLATION. Before this, a throw anywhere inside one
       // folder propagated out of pollMailbox and killed the whole run —
@@ -100,7 +105,7 @@ export async function pollMailbox({ localPart, password, lastUidByFolder = {} })
       // so the next run repeated the identical failure. Forever.
       let folderFetched
       try {
-        folderFetched = await pollOneFolder(client, folder, lastUid, results)
+        folderFetched = await pollOneFolder(client, folder, lastUid, results, budget)
       } catch (e) {
         results.folderErrors.push({ folder, error: e?.message || String(e) })
         continue
@@ -111,8 +116,15 @@ export async function pollMailbox({ localPart, password, lastUidByFolder = {} })
       if (folderFetched.skipped?.length) results.skipped.push(...folderFetched.skipped)
     }
   } finally {
-    await client.logout().catch(() => {})
+    // Force-close at the budget even if LOGOUT itself stalls.
+    try {
+      if (!budget.expired()) await client.logout().catch(() => {})
+    } finally {
+      releaseBudget()
+      client.close()
+    }
   }
+  if (budget.expired()) results.folderErrors.push({ folder: '*', error: 'Mailbox deadline reached' })
 
   return results
 }
@@ -140,7 +152,7 @@ export async function pollMailbox({ localPart, password, lastUidByFolder = {} })
 //
 // Bulk fetch stays the fast path — per-UID is ~1 round trip per message and
 // only pays that cost on a mailbox that is actually broken.
-async function pollOneFolder(client, folder, lastUid, results) {
+async function pollOneFolder(client, folder, lastUid, results, budget) {
   const out = { highestUid: lastUid || 0, skipped: [] }
   const lock = await client.getMailboxLock(folder)
   try {
@@ -155,12 +167,13 @@ async function pollOneFolder(client, folder, lastUid, results) {
     const range = lastUid && lastUid > 0 ? `${lastUid + 1}:*` : '1:*'
 
     try {
-      await drainFetch(client, folder, range, lastUid, results, out)
+      await drainFetch(client, folder, range, lastUid, results, out, budget)
     } catch (bulkErr) {
       // The stream died mid-flight. Re-run the remaining range one UID at a
       // time so the offending message is isolated, recorded and stepped over
       // instead of taking every message behind it down with it.
-      await fetchOneByOne(client, folder, lastUid, results, out, bulkErr)
+      if (budget.expired()) throw new Error('Mailbox deadline reached')
+      await fetchOneByOne(client, folder, lastUid, results, out, bulkErr, budget)
     }
   } finally {
     lock.release()
@@ -169,7 +182,7 @@ async function pollOneFolder(client, folder, lastUid, results) {
 }
 
 // Bulk path. Throws on a stream-level failure so the caller can downgrade.
-async function drainFetch(client, folder, range, lastUid, results, out) {
+async function drainFetch(client, folder, range, lastUid, results, out, budget) {
   for await (const msg of client.fetch(range, {
     envelope: true,
     internalDate: true,
@@ -177,6 +190,7 @@ async function drainFetch(client, folder, range, lastUid, results, out) {
     source: true,
     bodyStructure: false,
   }, { uid: true })) {
+    if (budget.expired()) break
     if (!msg.uid || (lastUid && msg.uid <= lastUid)) continue
     // A per-message throw must not abort the stream — see rule 1.
     try {
@@ -191,7 +205,7 @@ async function drainFetch(client, folder, range, lastUid, results, out) {
 
 // Fallback path: one UID per FETCH, so a message the server cannot serve
 // fails by itself. Every failure still advances the cursor (rule 2).
-async function fetchOneByOne(client, folder, lastUid, results, out, bulkErr) {
+async function fetchOneByOne(client, folder, lastUid, results, out, bulkErr, budget) {
   let uids = []
   try {
     uids = await client.search({ uid: `${(lastUid || 0) + 1}:*` }, { uid: true }) || []
@@ -201,7 +215,7 @@ async function fetchOneByOne(client, folder, lastUid, results, out, bulkErr) {
     throw bulkErr
   }
   for (const uid of uids) {
-    if (results.fetched >= MAX_PER_RUN) break
+    if (results.fetched >= MAX_PER_RUN || budget.expired()) break
     // Compare against out.highestUid, NOT lastUid: the bulk pass may have
     // ingested part of the range before it died, and that work already moved
     // highestUid. Guarding on lastUid instead would re-ingest every one of
@@ -230,9 +244,7 @@ async function ingestMessage(msg, folder, results, out) {
   // source for Delivered-To. (imapflow's msg.headers when requested
   // as a list returns a Buffer, not a Map, so .get() throws.)
   const deliveredToRaw = parsed.headers?.get?.('delivered-to')
-  const deliveredTo = String(
-    Array.isArray(deliveredToRaw) ? deliveredToRaw[0] : (deliveredToRaw || '')
-  ).toLowerCase()
+  const deliveredTo = emailAddressText(deliveredToRaw).toLowerCase()
   const toHeader   = parsed.to?.text || ''
   const fromHeader = parsed.from?.text || ''
   const subject    = parsed.subject || ''
@@ -277,7 +289,7 @@ async function ingestMessage(msg, folder, results, out) {
 //      signal when forwarded mail rewrites Delivered-To headers.
 //   2. The Delivered-To header (Postfix / Migadu / most modern MTAs).
 //   3. The raw To header (fallback when neither of the above survives).
-const RECEIPT_TAGS = ['+g', '+receipts']
+const RECEIPT_TAGS = ['+g', '.g', '+receipts']
 const RECEIPT_FOLDERS = new Set(['g', 'receipts'])
 
 // Delete a single message from Migadu IMAP by (folder, UID). Used when the

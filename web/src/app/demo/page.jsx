@@ -12,25 +12,25 @@ export const metadata = {
 }
 
 const FEATURES = [
-  { img: '/showcase/receipts.png', title: 'Snap any receipt',
+  { img: '/marketing/current/receipts.webp', title: 'Snap any receipt',
     body: 'Paper, email, or a screenshot — add it in a tap. No manual entry, ever.' },
-  { img: '/showcase/items.png', title: 'AI reads every line',
+  { img: '/marketing/current/stash.webp', title: 'AI reads every line',
     body: 'Guac-AI pulls the store, date, total, tax, and every line item in seconds.' },
-  { img: '/showcase/dashboard.png', title: 'Scored — and anomalies caught', tag: 'Anomalies',
+  { img: '/marketing/current/dashboard.webp', title: 'Scored — and anomalies caught', tag: 'Anomalies',
     body: 'Your GuacScore rates how smart your spending is, and spending anomalies flag the overspends the moment they happen — a category spike, a missed recurring charge, a merchant running 4× your usual.' },
-  { img: '/showcase/guacwizard.png', title: 'GuacWizard hunts bank bites', tag: 'Bank bites',
+  { img: '/marketing/current/guacwizard.webp', title: 'GuacWizard hunts bank bites', tag: 'Bank bites',
     body: 'Hidden fees, interest, and leaks — surfaced and explained in plain language. One wave, and no sneaky charge survives the spell.' },
-  { img: '/showcase/steals.png', title: 'Find a cheaper price',
+  { img: '/marketing/current/steals.webp', title: 'Find a cheaper price',
     body: 'Steals scans the live web for a better price before you buy — based on what you actually shop for.' },
-  { img: '/showcase/returns.png', title: 'Claw back refunds',
+  { img: '/marketing/current/returns.webp', title: 'Claw back refunds',
     body: 'Tracks every return window and the refunds you’re actually owed, so money doesn’t slip away.' },
-  { img: '/showcase/bites.png', title: 'Rate what you buy',
+  { img: '/marketing/current/bites.webp', title: 'Rate what you buy',
     body: 'Keep the wins, skip the regrets — every dish and product you’ve tried, one tap to reorder the good ones.' },
-  { img: '/showcase/stash.png', title: 'Your whole Stash',
+  { img: '/marketing/current/stash.webp', title: 'All your items',
     body: 'Everything you’ve bought, searchable in one place, with the best price per item.' },
-  { img: '/showcase/shopping.png', title: 'Your Smashlist, automatic',
+  { img: '/marketing/current/shopping.webp', title: 'Your Smashlist, automatic',
     body: 'GetGuac predicts what you’re about to run out of and builds your shopping list for you.' },
-  { img: '/showcase/reports.png', title: 'Taxes, sorted',
+  { img: '/marketing/current/reports.webp', title: 'Taxes, sorted',
     body: 'Business and charity spend, categorized and export-ready when tax time comes.' },
 ]
 
@@ -58,7 +58,7 @@ export default function DemoPage() {
             <div className="rounded-[2.2rem] overflow-hidden ring-4 ring-white/20 shadow-2xl bg-black w-[290px]">
               {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
               <video src="/how-it-works.mp4" controls playsInline preload="metadata"
-                poster="/showcase/dashboard.png" className="block w-full h-auto" />
+                poster="/marketing/current/dashboard.webp" className="block w-full h-auto" />
             </div>
           </div>
         </div>

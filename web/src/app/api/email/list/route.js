@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic'
 const LIST_COLS =
   'id, uid, from_addr, to_addr, subject, received_at, preview, ' +
   'is_receipts_hook, has_attachments, processed, receipt_id, ' +
-  'read_at, starred, folder, ' +
+  'read_at, starred, folder, email_classification, processing_lease_until, ' +
   // Embed the linked receipt so the inbox row can show "Lowe's · $42.99"
   // instead of the forwarder's email — that's what users actually scan for.
   'receipt:receipt_id(store_name, total_amount, date, is_return, processed)'
@@ -20,7 +20,7 @@ export async function GET(request) {
   const rl = await rateLimit(rateKey(request, 'email-list'), { limit: 60, windowMs: 60_000 })
   if (!rl.ok) return Response.json({ error: 'rate limited' }, { status: 429 })
 
-  const sb = createApiClient()
+  const sb = await createApiClient()
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return Response.json({ error: 'Not signed in' }, { status: 401 })
 
@@ -32,17 +32,20 @@ export async function GET(request) {
   // When users routinely cross 500 messages, wire up infinite scroll.
   const pageSize  = Math.min(500, Math.max(10, parseInt(url.searchParams.get('pageSize') || '200', 10)))
   const filter    = url.searchParams.get('filter') || ''  // '', 'unread', 'receipts', 'starred'
-  const q         = (url.searchParams.get('q') || '').trim().toLowerCase()
+  const q         = (url.searchParams.get('q') || '').replace(/[^\p{L}\p{N}\s@.-]/gu, ' ').trim().toLowerCase().slice(0, 160)
 
   let query = sb.from('email_messages')
     .select(LIST_COLS, { count: 'exact' })
+    .eq('user_id', user.id)
     .eq('folder', folder)
     .order('received_at', { ascending: false, nullsFirst: false })
     .range(page * pageSize, page * pageSize + pageSize - 1)
 
   if (filter === 'unread')   query = query.is('read_at', null)
-  if (filter === 'receipts') query = query.eq('is_receipts_hook', true)
+  if (filter === 'receipts') query = query.not('receipt_id', 'is', null).not('email_classification', 'in', '(promotion,account_notice,order_update)')
   if (filter === 'starred')  query = query.eq('starred', true)
+  if (filter === 'offers') query = query.eq('email_classification', 'promotion')
+  if (filter === 'review') query = query.in('email_classification', ['unknown']).eq('processed', false)
   if (q) query = query.or(`subject.ilike.%${q}%,from_addr.ilike.%${q}%,preview.ilike.%${q}%`)
 
   const { data, error, count } = await query

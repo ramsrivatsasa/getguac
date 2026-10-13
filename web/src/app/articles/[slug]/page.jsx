@@ -1,9 +1,16 @@
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
+import { academyLesson } from '../../../lib/academy'
+import AcademyIllustration, { illustrationFor } from '../../../components/AcademyIllustration'
+import { publicMetadata } from '../../../lib/public-seo.mjs'
 import { ArrowLeft, ArrowRight, Calculator as CalcIcon, Clock } from 'lucide-react'
 import MarketingShell from '../../../components/MarketingShell'
 import AdSlot from '../../../components/AdSlot'
 import ArticleFigure from '../../../components/ArticleFigure'
+import ConversionBand from '../../../components/ConversionBand'
+import ArticleFeedback from '../../../components/ArticleFeedback'
+import {articleFeedbackEnabled} from '../../../lib/article-feedback.mjs'
+import AcademyReferences from '../../../components/AcademyReferences'
 import { ARTICLES, getArticle } from '../../../lib/articles'
 
 const SITE_URL = 'https://getguac.app'
@@ -33,14 +40,17 @@ export function generateStaticParams() {
   return ARTICLES.map((a) => ({ slug: a.slug }))
 }
 
-export function generateMetadata({ params }) {
-  const a = getArticle(params.slug)
+export async function generateMetadata({ params }) {
+  const { slug } = await params
+  const a = getArticle(slug)
   if (!a) return {}
   const url = `/articles/${a.slug}`
+  const lesson = academyLesson(a.sourceSlug)
+  const image = lesson ? {url:`${SITE_URL}${illustrationFor(lesson).src.replace('.svg','.png')}`,alt:illustrationFor(lesson).alt,width:1200,height:840} : {url:`${SITE_URL}/og.png`}
   return {
-    title: a.title,
-    description: a.excerpt,
-    alternates: { canonical: url },
+    ...publicMetadata(url, a.title, a.excerpt),
+    robots: { index: true, follow: true },
+    twitter: {card:'summary_large_image',title:a.title,description:a.excerpt,images:[image.url]},
     // og:image is set explicitly. Declaring an `openGraph` object REPLACES the
     // inherited one from app/layout.jsx rather than merging into it, so these
     // pages were shipping with no share image at all -- every article link
@@ -51,15 +61,18 @@ export function generateMetadata({ params }) {
       description: a.excerpt,
       url,
       type: 'article',
-      images: ['/og.png'],
-      publishedTime: a.updated || undefined,
+      images: [image],
+      modifiedTime: a.updated || undefined,
     },
   }
 }
 
-export default function ArticlePage({ params }) {
-  const a = getArticle(params.slug)
+export default async function ArticlePage({ params }) {
+  const { slug } = await params
+  const a = getArticle(slug)
   if (!a) notFound()
+  if (slug !== a.slug) permanentRedirect(`/articles/${a.slug}`)
+  const lesson = academyLesson(a.sourceSlug)
 
   // Prefer same-category related; backfill with anything else to always show 3.
   const sameCat = ARTICLES.filter((x) => x.slug !== a.slug && x.category === a.category)
@@ -76,6 +89,7 @@ export default function ArticlePage({ params }) {
     '@type': 'Article',
     headline: a.title,
     description: a.excerpt,
+    image: lesson ? { '@type': 'ImageObject', contentUrl: `${SITE_URL}${illustrationFor(lesson).src}`, name: illustrationFor(lesson).title, caption: illustrationFor(lesson).alt } : `${SITE_URL}/og.png`,
     // E-E-A-T: name the author and point at a real, public editorial policy
     // rather than leaving a bare Organization stub. Deliberately the team and
     // not an invented human byline — we are not going to fabricate a credential.
@@ -85,7 +99,6 @@ export default function ArticlePage({ params }) {
       name: 'GetGuac',
       logo: { '@type': 'ImageObject', url: `${SITE_URL}/icon-512.png` },
     },
-    datePublished: updated,
     dateModified: updated,
     mainEntityOfPage: { '@type': 'WebPage', '@id': `${SITE_URL}/articles/${a.slug}` },
   }
@@ -108,10 +121,11 @@ export default function ArticlePage({ params }) {
           <span aria-hidden>·</span>
           <span>Updated {prettyDate(updated)}</span>
           <span aria-hidden>·</span>
-          <Link href="/editorial-policy" className="text-emerald-700 hover:underline">Editorial policy</Link>
+          <Link href="/editorial-policy" className="inline-flex min-h-11 items-center text-emerald-700 hover:underline">Editorial policy</Link>
         </div>
 
         <div className="mt-6 space-y-4 text-[15px] text-gray-700 leading-relaxed">
+          {lesson && <AcademyIllustration lesson={lesson} />}
           {a.body.map((item, i) => {
             if (typeof item === 'string') return <p key={i}>{item}</p>
             if (item && item.h) return <h2 key={i} className="text-xl sm:text-2xl font-black text-gray-900 pt-4 leading-snug">{item.h}</h2>
@@ -136,6 +150,8 @@ export default function ArticlePage({ params }) {
         )}
 
         <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_BOTTOM || '9142744455'} minHeight={90} className="mt-7" tier={2} />
+        {articleFeedbackEnabled() && <ArticleFeedback slug={a.sourceSlug} />}
+        <AcademyReferences sourceSlug={a.sourceSlug} />
 
         <div className="mt-8">
           <div className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Keep reading</div>
@@ -159,16 +175,8 @@ export default function ArticlePage({ params }) {
             copy. Do not add a user-count line here ("join thousands of…"): that
             claim was cut from /join as false, and it is still false. Every
             feature named below ships today (receipt scan, email pull). */}
-        <div className="mt-10 rounded-2xl border border-emerald-100 bg-emerald-50/60 p-6 text-center">
-          <div className="text-xl sm:text-2xl font-black text-gray-900 leading-snug">Start Saving Today</div>
-          <p className="text-sm text-gray-600 mt-1.5 max-w-md mx-auto">
-            GetGuac scans your receipts, pulls them straight out of your email, and shows you where the money actually went. Free forever — no card, no fees, no spam.
-          </p>
-          <Link href="/register" className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-emerald-600 px-6 py-3 text-white font-bold text-sm hover:bg-emerald-700 transition-colors no-underline">
-            Get Started Free <ArrowRight size={15} />
-          </Link>
-        </div>
       </article>
+      <ConversionBand />
     </MarketingShell>
   )
 }

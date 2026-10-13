@@ -55,11 +55,10 @@ export default function DownloadClient() {
     <div className="max-w-3xl mx-auto px-4 py-10 sm:py-14">
       {/* Header */}
       <div className="text-center mb-10">
-        <div className="inline-flex items-center justify-center w-28 h-28 rounded-3xl bg-gradient-to-br from-lime-300 via-emerald-400 to-emerald-700 shadow-xl ring-4 ring-white mb-4">
-          <span className="text-6xl">🥑</span>
-        </div>
+        <img src="/home/story-people/capture-blonde-produce-v1-768.webp" alt="A shopper using her phone to keep a purchase record" width={768} height={512} className="mx-auto mb-6 h-auto w-full rounded-3xl" />
+        
         <h1 className="text-4xl sm:text-5xl font-black text-gray-900 tracking-tight">Download GetGuac</h1>
-        <p className="text-gray-600 mt-2 text-sm sm:text-base">Money's wingman — on your phone, in your pocket.</p>
+        <p className="text-gray-600 mt-2 text-sm sm:text-base">Money&apos;s wingman — on your phone, in your pocket.</p>
       </div>
 
       {/* Android — primary on Android, but always visible */}
@@ -93,7 +92,7 @@ export default function DownloadClient() {
 
         {/* Install instructions */}
         <details className="mt-4 text-sm text-gray-700">
-          <summary className="cursor-pointer font-semibold text-emerald-800 hover:text-emerald-900">How to install on Android</summary>
+          <summary className="flex min-h-11 items-center gap-2 cursor-pointer font-semibold text-emerald-800 hover:text-emerald-900"><Smartphone size={19} aria-hidden="true"/>Install on Android</summary>
           <ol className="list-decimal pl-5 mt-2 space-y-1.5 text-gray-700">
             <li>Tap the green button above on your phone &mdash; the APK downloads.</li>
             <li>Open your <strong>Downloads</strong> notification or the file manager.</li>
@@ -105,7 +104,7 @@ export default function DownloadClient() {
 
         {/* Other ABIs */}
         <details className="mt-3 text-xs text-gray-600">
-          <summary className="cursor-pointer font-semibold hover:text-emerald-800">Other devices (32-bit, emulators)</summary>
+          <summary className="flex min-h-11 items-center gap-2 cursor-pointer font-semibold hover:text-emerald-800"><Monitor size={19} aria-hidden="true"/>Other devices</summary>
           <div className="mt-2 space-y-1">
             {ANDROID_RELEASE.apks.filter(a => !a.primary).map(a => (
               <a
@@ -159,7 +158,7 @@ export default function DownloadClient() {
 
         {/* Add-to-Home-Screen fallback for anyone who prefers the web app */}
         <details className="mt-4 text-sm text-gray-700">
-          <summary className="cursor-pointer font-semibold text-emerald-800 hover:text-emerald-900">Prefer the web app? Add GetGuac to your home screen</summary>
+          <summary className="flex min-h-11 items-center gap-2 cursor-pointer font-semibold text-emerald-800 hover:text-emerald-900"><Share2 size={19} aria-hidden="true"/>Add the web app to your home screen</summary>
           <ol className="mt-3 list-decimal pl-5 space-y-2 text-sm text-gray-700">
             <li>Open <strong>getguac.app</strong> in <strong>Safari</strong> (not Chrome).</li>
             <li>Tap the <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-gray-100 font-mono text-xs"><Share2 size={11} /> Share</span> button at the bottom of the screen.</li>
@@ -196,7 +195,7 @@ export default function DownloadClient() {
       <p className="text-center mt-3">
         <button
           onClick={() => copy(`${ANDROID_RELEASE.base}/${primaryApk.file}`)}
-          className="inline-flex items-center gap-2 text-xs text-gray-500 hover:text-emerald-800"
+          className="inline-flex min-h-11 items-center gap-2 text-xs text-gray-500 hover:text-emerald-800"
         >
           {copied ? <Check size={12} /> : '🔗'}
           {copied ? 'Copied!' : 'Copy direct APK link'}

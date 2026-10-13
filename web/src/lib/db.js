@@ -1,3 +1,4 @@
+import {visibleShoppingItem,eligibleRestockItem} from './restock-eligibility.mjs'
 // Typed query helpers — all queries use Row Level Security automatically.
 //
 // Column-list discipline:
@@ -6,18 +7,6 @@
 //     to edit every field anyway
 //
 import { createClient } from './supabase/client'
-// Columns the list pages actually display. Skip `created_at`, `processed`,
-// `payment_method`, `payment_last4`, `validation_*`, `validated_at` etc. that
-// no list view shows. Saves ~40% on payload size for big receipt sets.
-const RECEIPTS_LIST_COLS =
-  'id, user_id, store_name, store_id, store_location_id, date, total_amount, tax_paid, ' +
-  'reward_no, receipt_link, extra_page_urls, business_purchase, rating, validation_tags, category, ' +
-  'from_statement, statement_source, statement_import_id, reconciled, reconciled_with, ' +
-  // item_name (not count) so the receipts page can do full-text search
-  // across line items client-side. Callers that just want a count read
-  // `r.receipt_items?.length`.
-  'is_return, receipt_items(item_name)'
-
 // Bank statements — small set per user, used by list pages to show which
 // statement / bank a receipt was imported from or reconciled against.
 export async function getBankStatements() {
@@ -39,26 +28,24 @@ export async function getBankStatements() {
 
 // Receipts
 export async function getReceipts({ dateFrom, dateTo, storeId, storeLocationId } = {}) {
-  const sb = createClient()
-  let q = sb.from('receipts').select(RECEIPTS_LIST_COLS).order('date', { ascending: false })
-  if (dateFrom) q = q.gte('date', dateFrom)
-  if (dateTo) q = q.lte('date', dateTo)
-  if (storeId) q = q.eq('store_id', storeId)
-  if (storeLocationId) q = q.eq('store_location_id', storeLocationId)
-  const { data, error } = await q
-  if (error) throw error
-  return data
+  const params = new URLSearchParams()
+  if (dateFrom) params.set('dateFrom', dateFrom)
+  if (dateTo) params.set('dateTo', dateTo)
+  if (storeId) params.set('storeId', storeId)
+  if (storeLocationId) params.set('storeLocationId', storeLocationId)
+  const suffix = params.size ? `?${params}` : ''
+  const response = await fetch(`/api/receipts${suffix}`, { cache: 'no-store' })
+  const body = await response.json().catch(() => ({}))
+  if (!response.ok) throw new Error(body.error || `Could not load receipts (${response.status})`)
+  if(!Array.isArray(body.receipts))throw new Error('Receipt data could not be loaded. Please retry.')
+  return body.receipts
 }
 
 export async function getReceipt(id) {
-  const sb = createClient()
-  const { data, error } = await sb
-    .from('receipts')
-    .select('*, receipt_items(*), receipt_refund_policies(*), store_locations(*)')
-    .eq('id', id)
-    .single()
-  if (error) throw error
-  return data
+  const response = await fetch(`/api/receipts/${encodeURIComponent(id)}`, { cache: 'no-store' })
+  const body = await response.json().catch(() => ({}))
+  if (!response.ok) throw new Error(body.error || `Could not load receipt (${response.status})`)
+  return body.receipt
 }
 
 // Only these keys exist as columns on the receipts table. Anything else (e.g. embedded
@@ -66,7 +53,9 @@ export async function getReceipt(id) {
 // stripped before sending to upsert, or Supabase rejects them as unknown columns.
 const RECEIPT_COLUMNS = [
   'id', 'user_id', 'store_name', 'store_id', 'store_location_id', 'date',
-  'total_amount', 'tax_paid', 'reward_no', 'receipt_link', 'extra_page_urls',
+  'total_amount', 'subtotal', 'tax_paid', 'tip_amount', 'service_charge',
+  'other_fees', 'discount_amount', 'gratuity_included',
+  'reward_no', 'receipt_link', 'extra_page_urls',
   'business_purchase', 'processed', 'payment_method', 'payment_last4',
   'rating', 'validation_tags', 'validation_comment', 'validated_at',
   'category', 'category_source',
@@ -80,9 +69,21 @@ const RECEIPT_COLUMNS = [
   'reconciled', 'reconciled_with', 'reconciled_at',
 ]
 
+// Optional money fields where blank must stay blank. An empty form input means
+// "not provided" and an explicit 0 means "none" (product spec §7) — writing ''
+// into a numeric column either errors or silently records a confident $0.00.
+const OPTIONAL_AMOUNT_COLUMNS = ['subtotal', 'tip_amount', 'service_charge', 'other_fees', 'discount_amount']
+
 function pickReceiptColumns(receipt) {
   const out = {}
   for (const k of RECEIPT_COLUMNS) if (receipt[k] !== undefined) out[k] = receipt[k]
+  for (const k of OPTIONAL_AMOUNT_COLUMNS) {
+    if (out[k] === '' || out[k] === null) { out[k] = null; continue }
+    if (out[k] !== undefined) {
+      const amount = Number(out[k])
+      out[k] = Number.isFinite(amount) ? amount : null
+    }
+  }
   return out
 }
 
@@ -359,7 +360,7 @@ export async function getShoppingList() {
     .select('*')
     .order('created_at', { ascending: false })
   if (error) throw error
-  const list = rows || []
+  const list = (rows || []).filter(visibleShoppingItem)
 
   const storeIds = Array.from(new Set(
     list.map(r => r.store_name_id).filter(Boolean)
@@ -382,6 +383,7 @@ export async function getShoppingList() {
 }
 
 export async function upsertShoppingItem(item) {
+  if(item.predicted&&!eligibleRestockItem(item))throw Error('This receipt charge is not a restockable product.')
   const sb = createClient()
   // Strip client-side joined fields that aren't real columns. getShoppingList
   // stitches a `store: {...}` object onto each row for display purposes;

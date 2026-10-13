@@ -10,7 +10,7 @@ export default function robots() {
         disallow: ['/api/', '/dashboard/', '/login', '/register', '/reset-password', '/embed', '/_dev/'],
       },
     ],
-    sitemap: `${SITE_URL}/sitemap.xml`,
+    sitemap: [`${SITE_URL}/sitemap.xml`, `${SITE_URL}/money-bootcamp/sitemap.xml`],
     host: SITE_URL,
   }
 }

@@ -652,7 +652,7 @@ export default function HowItWorksPage({ embedded = false, compact = false, cine
       )}
 
       {/* Slides */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {SLIDES.map((slide, idx) => (
           <section
             key={`${idx}-${current === idx ? 'active' : 'idle'}`}
@@ -667,7 +667,7 @@ export default function HowItWorksPage({ embedded = false, compact = false, cine
             {!slide.type && <StepSlide slide={slide} idx={idx} cinematic={cinematic} />}
           </section>
         ))}
-      </main>
+      </div>
 
       {/* Presentation controls (hidden on print). Full-page mode floats them
           bottom-center; compact mode (deck embedded inside another page)
@@ -683,8 +683,8 @@ export default function HowItWorksPage({ embedded = false, compact = false, cine
                   type="button"
                   aria-label={`Go to slide ${idx + 1}`}
                   onClick={() => scrollTo(idx, playing)}
-                  className={`h-2 rounded-full transition-all ${idx === current ? 'w-7 bg-emerald-600' : 'w-2 bg-emerald-900/15 hover:bg-emerald-600/40'}`}
-                />
+                  className="grid h-11 w-11 place-items-center rounded-full transition hover:bg-emerald-900/5"
+                ><span className={`block h-2 rounded-full transition-all ${idx === current ? 'w-7 bg-emerald-600' : 'w-2 bg-emerald-900/15'}`} aria-hidden="true"/></button>
               ))}
             </div>
           )}
@@ -694,30 +694,30 @@ export default function HowItWorksPage({ embedded = false, compact = false, cine
               onClick={() => skip(-1)}
               disabled={current === 0}
               aria-label="Previous slide"
-              className="w-9 h-9 rounded-full hover:bg-white/10 disabled:opacity-40 flex items-center justify-center transition"
+              className="h-11 w-11 shrink-0 rounded-full hover:bg-white/10 disabled:opacity-40 flex items-center justify-center transition"
             ><ChevronLeft size={18} /></button>
             <button
               onClick={togglePlay}
               aria-label={playing ? 'Pause' : 'Play'}
-              className="w-11 h-11 rounded-full bg-lime-400 text-emerald-900 hover:bg-lime-300 flex items-center justify-center shadow-md transition"
+              className="h-11 w-11 shrink-0 rounded-full bg-lime-400 text-emerald-900 hover:bg-lime-300 flex items-center justify-center shadow-md transition"
             >{playing ? <Pause size={20} /> : <Play size={20} className="ml-0.5" />}</button>
             <button
               onClick={() => skip(1)}
               disabled={current === SLIDES.length - 1}
               aria-label="Next slide"
-              className="w-9 h-9 rounded-full hover:bg-white/10 disabled:opacity-40 flex items-center justify-center transition"
+              className="h-11 w-11 shrink-0 rounded-full hover:bg-white/10 disabled:opacity-40 flex items-center justify-center transition"
             ><ChevronRight size={18} /></button>
-            <div className="w-px h-6 bg-white/20 mx-1" />
+            <div className="mx-1 hidden h-6 w-px bg-white/20 sm:block" />
             <button
               onClick={toggleMute}
               aria-label={muted ? 'Unmute narration' : 'Mute narration'}
-              className="w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center transition"
+              className="h-11 w-11 shrink-0 rounded-full hover:bg-white/10 flex items-center justify-center transition"
             >{muted ? <VolumeX size={18} /> : <Volume2 size={18} />}</button>
             <span
-              className="px-2 h-9 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold"
+              className="hidden h-9 items-center justify-center rounded-full bg-white/10 px-2 text-xs font-bold sm:flex"
               title="Fixed neural narration"
             >Neural voice</span>
-            <span className="text-xs font-mono tabular-nums pr-1 pl-1 opacity-80">
+            <span className="hidden pl-1 pr-1 font-mono text-xs tabular-nums opacity-80 sm:inline">
               {current + 1}/{SLIDES.length}
             </span>
           </div>
@@ -889,26 +889,26 @@ function StepSlide({ slide, idx, cinematic = false }) {
 // animated metaphor remains as a small supporting cue, while the actual app
 // stays visually dominant.
 const SCREEN_PAIRS = {
-  'Get a receipt': { web: '/home/goals/web-receipts.webp', phone: '/home/goals/phone-receipts.webp' },
-  'Your @getguac.app inbox': { web: '/home/goals/web-organized.webp', phone: '/home/goals/phone-organized.webp' },
-  'Guac-AI reads it': { web: '/home/goals/web-organized.webp', phone: '/home/goals/phone-organized.webp' },
-  'Duplicates get caught': { web: '/home/goals/web-receipts.webp', phone: '/home/goals/phone-receipts.webp' },
-  'Auto-categorize': { web: '/marketing/slides/v2/reports-web.webp', phone: '/home/goals/phone-tax.webp' },
-  'See where it all went': { web: '/marketing/slides/v2/dashboard-web.webp', phone: '/home/goals/phone-guacscore.webp' },
-  'Smashlist — your list writes itself': { web: '/home/goals/web-smashlist.webp', phone: '/home/goals/phone-smashlist.webp' },
-  'Steals — pay less for what you rebuy': { web: '/home/goals/web-steals.webp', phone: '/home/goals/phone-steals.webp' },
-  'Your Stash — every product you own': { web: '/home/goals/web-stash.webp', phone: '/home/goals/phone-stash.webp' },
-  'Worth it?': { web: '/home/goals/web-worth-it.webp', phone: '/home/goals/phone-worth-it.webp' },
-  'Returns & refunds, finally tracked': { web: '/home/goals/web-returns.webp', phone: '/home/goals/phone-returns.webp' },
-  'GuacWizard — magically protects your money': { web: '/home/goals/web-fees.webp', phone: '/home/goals/phone-fees.webp' },
-  'Car Miles — track every drive': { web: '/home/goals/web-car-miles.webp', phone: '/home/goals/phone-car-miles.webp' },
-  'GuacMoney — watch your wins add up': { web: '/home/goals/web-guacmoney.webp', phone: '/home/goals/phone-guacmoney.webp' },
-  'Guac AI — ask your receipts anything': { web: '/home/goals/web-guac-ai.webp', phone: '/home/goals/phone-guac-ai.webp' },
-  'Bills & planning, one calendar ahead': { web: '/home/goals/web-bills.webp', phone: '/home/goals/phone-bills.webp' },
-  'Marketplace — deals for everyone': { web: '/home/goals/web-marketplace.webp', phone: '/home/goals/phone-marketplace.webp' },
-  'Guac Arcade — 15 free games': { web: '/home/goals/web-games.webp', phone: '/home/goals/phone-games.webp' },
-  'Security you can audit': { web: '/home/goals/web-bank.webp', phone: '/home/goals/phone-bank.webp' },
-  'Your data, your call': { web: '/home/goals/web-organized.webp', phone: '/home/goals/phone-organized.webp' },
+  'Get a receipt': { web: '/marketing/current/receipts.webp', phone: '/home/goals/phone-receipts.webp' },
+  'Your @getguac.app inbox': { web: '/marketing/current/dashboard.webp', phone: '/home/goals/phone-organized.webp' },
+  'Guac-AI reads it': { web: '/marketing/current/dashboard.webp', phone: '/home/goals/phone-organized.webp' },
+  'Duplicates get caught': { web: '/marketing/current/receipts.webp', phone: '/home/goals/phone-receipts.webp' },
+  'Auto-categorize': { web: '/marketing/current/reports.webp', phone: '/home/goals/phone-tax.webp' },
+  'See where it all went': { web: '/marketing/current/dashboard.webp', phone: '/home/goals/phone-guacscore.webp' },
+  'Smashlist — your list writes itself': { web: '/marketing/current/shopping.webp', phone: '/home/goals/phone-smashlist.webp' },
+  'Steals — pay less for what you rebuy': { web: '/marketing/current/steals.webp', phone: '/home/goals/phone-steals.webp' },
+  'Your Stash — every product you own': { web: '/marketing/current/stash.webp', phone: '/home/goals/phone-stash.webp' },
+  'Worth it?': { web: '/marketing/current/worth-it.webp', phone: '/home/goals/phone-worth-it.webp' },
+  'Returns & refunds, finally tracked': { web: '/marketing/current/returns.webp', phone: '/home/goals/phone-returns.webp' },
+  'GuacWizard — magically protects your money': { web: '/marketing/current/guacwizard.webp', phone: '/home/goals/phone-fees.webp' },
+  'Car Miles — track every drive': { web: '/marketing/current/car-miles.webp', phone: '/home/goals/phone-car-miles.webp' },
+  'GuacMoney — watch your wins add up': { web: '/marketing/current/dashboard.webp', phone: '/home/goals/phone-guacmoney.webp' },
+  'Guac AI — ask your receipts anything': { web: '/marketing/current/guac-ai.webp', phone: '/home/goals/phone-guac-ai.webp' },
+  'Bills & planning, one calendar ahead': { web: '/marketing/current/bills.webp', phone: '/home/goals/phone-bills.webp' },
+  'Marketplace — deals for everyone': { web: '/marketing/current/marketplace.webp', phone: '/home/goals/phone-marketplace.webp' },
+  'Guac Arcade — 15 free games': { web: '/marketing/current/games.webp', phone: '/home/goals/phone-games.webp' },
+  'Security you can audit': { web: '/marketing/current/bank.webp', phone: '/home/goals/phone-bank.webp' },
+  'Your data, your call': { web: '/marketing/current/dashboard.webp', phone: '/home/goals/phone-organized.webp' },
 }
 
 const ACCENTS = {

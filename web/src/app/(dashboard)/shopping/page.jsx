@@ -1,15 +1,16 @@
 'use client'
-import { useState, useMemo, useCallback } from 'react'
+import ShoppingAgentSuggestions from '../../../components/ShoppingAgentSuggestions'
+import cartStyles from './ShoppingCart.module.css'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useShoppingList, useUpsertShoppingItem, useDeleteShoppingItem } from '../../../hooks/useShopping'
 import { SHOPPING_LISTS, SHOPPING_LIST_META } from '../../../lib/db'
 import toast from 'react-hot-toast'
-import { Trash2, CheckCircle, Circle, X, Sparkles, Wand2, Zap, Store as StoreIcon, MapPin, Star, Share2, ShoppingCart, BadgeDollarSign, ChevronDown, ChevronRight, MessageCircle, Phone, Mail, Copy } from 'lucide-react'
+import { Trash2, CheckCircle, Circle, X, Sparkles, Wand2, Zap, Store as StoreIcon, MapPin, Star, Share2, ShoppingCart, BadgeDollarSign, ChevronDown, ChevronRight, MessageCircle, Phone, Mail, Copy, Search, Clock3 } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
-import LottieAnimation from '../../../components/LottieAnimation'
-import emptyListLottie from '../../../lottie/empty-list.json'
 import { groupPredictionsByStore } from '../../../lib/prediction-feedback'
 import { displayStoreName } from '../../../lib/store-name-normalize'
+import { storeDealUrl, storeHomeUrl, storeLocatorUrl } from '../../../lib/storeSearch'
 import { createClient } from '../../../lib/supabase/client'
 import { StoreList } from '../../../components/StoreList'
 import { StoreLogo } from '../../../components/StoreLogo'
@@ -18,6 +19,7 @@ import { fireConfetti } from '../../../lib/confetti'
 import { logAutoAddCheapest, formatGuacMoney } from '../../../lib/guacMoney'
 import { useConfirm } from '../../../components/ConfirmDialog'
 import mascotBus from '../../../lib/mascotEventBus'
+import { itemEmoji } from '../../../lib/itemEmoji'
 
 // Same tone palette as /stash so Buy Again cards visually rhyme with
 // the Stash grid. Maps the per-Smashlist color (Pantry=emerald,
@@ -76,6 +78,29 @@ function formatRunsOut(daysToRunOut, isoDate) {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
+function priceIdentity(value) {
+  const cleaned = String(value || '')
+    .toLowerCase()
+    .replace(/\b(whole|large|small|medium|ready|fresh|organic|kirkland|signature|great value|good & gather)\b/g, ' ')
+    .replace(/\b\d+(?:\.\d+)?\s*(?:pk|pack|ct|count|rolls?|oz|lb|lbs|gal|gallon|ml|l)\b/g, ' ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+  if (/\bmilk\b/.test(cleaned)) return 'milk'
+  if (/\b(?:paper towels?|bounty)\b/.test(cleaned)) return 'paper towels'
+  if (/\b(?:dog food|adult chicken rice)\b/.test(cleaned)) return 'dog food'
+  if (/\bcoffee\b/.test(cleaned)) return 'coffee'
+  return cleaned
+}
+
+function cadenceLabel(frequency) {
+  const key = String(frequency || '').toLowerCase()
+  if (key === 'one-time') return 'One-time purchase'
+  if (key === 'weekly') return 'Every 1 week'
+  if (key === 'biweekly') return 'Every 2 weeks'
+  if (key === 'monthly') return 'Every 4 weeks'
+  return frequency ? `Every ${key}` : 'Cadence learning'
+}
+
 const LIST_TONE = {
   emerald: 'from-emerald-400 to-green-600',
   rose:    'from-rose-400 to-red-600',
@@ -83,11 +108,26 @@ const LIST_TONE = {
   lime:    'from-lime-300 to-emerald-500',
 }
 
+function curatedShoppingImage(itemName) {
+  const key = String(itemName || '').toLowerCase()
+  if (/(^|\s)whole milk($|\s)|(^|\s)milk gallon($|\s)/.test(key)) return '/products/whole-milk.png?v=2'
+  if (/sparkling water|seltzer water/.test(key)) return '/products/sparkling-water-12pk.png?v=2'
+  if (/tortilla chips|corn chips/.test(key)) return '/products/tortilla-chips.png?v=2'
+  return null
+}
+
 export default function ShoppingPage() {
   const confirm = useConfirm()
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState(EMPTY)
   const [activeList, setActiveList] = useState('all')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [emptyVideoMuted, setEmptyVideoMuted] = useState(true)
+  const [snoozedItems, setSnoozedItems] = useState(() => {
+    if (typeof window === 'undefined') return {}
+    try { return JSON.parse(window.localStorage.getItem('getguac-smashlist-snoozed') || '{}') }
+    catch { return {} }
+  })
   const [predicting, setPredicting] = useState(false)
   const [embedding, setEmbedding] = useState(false)
   // The curated Smashlist is always grouped by store now — Auto-Add
@@ -110,6 +150,7 @@ export default function ShoppingPage() {
   // Per-card selection on the Buy Again grid — drives the "Add selected
   // to <store>" picker that appears once at least one card is ticked.
   const [selectedSuggestions, setSelectedSuggestions] = useState(() => new Set())
+  const [productImages, setProductImages] = useState({})
   // Modal-style alert for actions that deserve more attention than a
   // toast (empty-state explanations, blocked operations, etc.). Set
   // the title + body to show; null = closed.
@@ -119,6 +160,35 @@ export default function ShoppingPage() {
   const upsert = useUpsertShoppingItem()
   const del = useDeleteShoppingItem()
   const s = k => e => setForm(p => ({ ...p, [k]: e.target.value }))
+
+  // Reuse the same cached product-image resolver as Stash so Shopping
+  // List rows show consistent product thumbnails across the app.
+  const shoppingImageNames = useMemo(
+    () => [...new Set(items.map(item => item.item_name).filter(Boolean))].slice(0, 80),
+    [items],
+  )
+  useEffect(() => {
+    if (shoppingImageNames.length === 0) return
+    let cancelled = false
+    const batches = Array.from(
+      { length: Math.ceil(shoppingImageNames.length / 20) },
+      (_, index) => shoppingImageNames.slice(index * 20, index * 20 + 20),
+    )
+    Promise.all(batches.map(batch => fetch('/api/product-image-batch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ names: batch }),
+    }).then(response => response.ok ? response.json() : null)))
+      .then(results => {
+        if (cancelled) return
+        const byName = Object.assign({}, ...results.map(json => json?.byName || {}))
+        if (Object.keys(byName).length > 0) {
+          setProductImages(current => ({ ...current, ...byName }))
+        }
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [shoppingImageNames])
 
   // Stores the user has shopped at — populated from receipts via the
   // stores table. Used by the Add Item form so the Store field is a
@@ -133,7 +203,11 @@ export default function ShoppingPage() {
     queryKey: ['known-stores'],
     queryFn: async () => {
       const sb = createClient()
-      const { data } = await sb.from('stores').select('id, store_name, address, phone_no, website').order('store_name')
+      const { data, error } = await sb
+        .from('stores')
+        .select('id, store_name, address, phone_no, website, store_locations(id, location_name, address, phone_no, city, state, zip, created_at)')
+        .order('store_name')
+      if (error) throw error
       return data || []
     },
     staleTime: 5 * 60_000,
@@ -166,6 +240,97 @@ export default function ShoppingPage() {
     staleTime: 5 * 60_000,
   })
 
+  // Lowest verified price seen on the user's receipts for each item.
+  // Loaded once for the page so every prediction row can show a useful
+  // price immediately instead of waiting for "Compare stores" to open.
+  const { data: cheapestByItem = new Map() } = useQuery({
+    queryKey: ['shopping-cheapest-prices'],
+    queryFn: async () => {
+      const sb = createClient()
+      const { data, error } = await sb
+        .from('receipt_items')
+        .select('item_name, price, receipts!inner(store_id, store_name, date)')
+        .not('price', 'is', null)
+        .gt('price', 0)
+        .limit(5000)
+      if (error) throw error
+      const best = new Map()
+      for (const row of data || []) {
+        const key = priceIdentity(row.item_name)
+        const price = Number(row.price)
+        if (!key || !Number.isFinite(price) || price <= 0) continue
+        const current = best.get(key)
+        if (!current || price < current.price) {
+          best.set(key, {
+            price,
+            storeId: row.receipts?.store_id || null,
+            storeName: row.receipts?.store_name ? displayStoreName(row.receipts.store_name) : null,
+            date: row.receipts?.date || null,
+          })
+        }
+      }
+      return best
+    },
+    staleTime: 5 * 60_000,
+  })
+
+  const missingPriceNames = useMemo(() => {
+    const names = items
+      .filter(item => item.predicted && !item.approved && !cheapestByItem.has(priceIdentity(item.item_name)))
+      .map(item => item.item_name)
+      .filter(Boolean)
+    return [...new Set(names)].sort()
+  }, [items, cheapestByItem])
+
+  // Only hunt the web for suggestions that have no verified receipt price.
+  // Results are cached for 30 minutes so ordinary renders never repeat the
+  // external lookup storm.
+  const { data: livePriceByItem = new Map(), isFetching: pricesLoading } = useQuery({
+    queryKey: ['shopping-live-prices', missingPriceNames],
+    enabled: missingPriceNames.length > 0,
+    queryFn: async () => {
+      const found = new Map()
+      const results = await Promise.allSettled(missingPriceNames.map(async itemName => {
+        const response = await fetch('/api/best-price', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ item_name: itemName }),
+          signal: AbortSignal.timeout(15000),
+        })
+        if (!response.ok) return null
+        const data = await response.json()
+        const price = Number(data.price)
+        if (!data.store_name || !Number.isFinite(price) || price <= 0) return null
+        return [priceIdentity(itemName), {
+          price,
+          storeId: null,
+          storeName: displayStoreName(data.store_name),
+          date: new Date().toISOString().slice(0, 10),
+          source: 'live',
+          url: data.url || null,
+        }]
+      }))
+      for (const result of results) if (result.status === 'fulfilled' && result.value) found.set(...result.value)
+      return found
+    },
+    staleTime: 30 * 60_000,
+    retry: false,
+  })
+
+  function bestPriceFor(item) {
+    const key = priceIdentity(item.item_name)
+    return cheapestByItem.get(key) || livePriceByItem.get(key) || null
+  }
+
+  function addSuggestionAtBestPrice(item) {
+    const best = bestPriceFor(item)
+    toggleApproved(best ? {
+      ...item,
+      price: best.price,
+      store_name_id: best.storeId || item.store_name_id,
+    } : item)
+  }
+
   // Lookup: store_name → { address, phone_no, website }. Used by the
   // accordion header to enrich the store group with contact info.
   // Predictor-populated items only carry store_name on the joined row,
@@ -173,21 +338,37 @@ export default function ShoppingPage() {
   const storeMeta = useMemo(() => {
     const m = new Map()
     for (const st of knownStores) {
+      // A receipt can save the physical branch in store_locations while the
+      // chain-level stores row keeps the retailer website. Prefer the newest
+      // saved branch, then fall back to the legacy top-level contact fields.
+      const savedLocations = [...(st.store_locations || [])].sort((a, b) =>
+        String(b.created_at || '').localeCompare(String(a.created_at || ''))
+      )
+      const location = savedLocations.find(loc => loc.address || loc.phone_no) || null
       m.set(displayStoreName(st.store_name), {
         id: st.id,
-        address: st.address || null,
-        phone_no: st.phone_no || null,
+        address: location?.address || st.address || null,
+        phone_no: location?.phone_no || st.phone_no || null,
         website: st.website || null,
+        location_name: location?.location_name || null,
       })
     }
     return m
   }, [knownStores])
 
-  function handleSave(e) {
+  async function handleSave(e) {
     e.preventDefault()
+    const qty = Number(form.qty)
+    const price = form.price === '' ? null : Number(form.price)
+    if (!form.item_name.trim() || !Number.isSafeInteger(qty) || qty < 1 || (price !== null && (!Number.isFinite(price) || price < 0))) {
+      toast.error('Enter an item, a whole quantity, and a valid price.')
+      return
+    }
+    const { data: { user }, error } = await createClient().auth.getUser()
+    if (error || !user) { toast.error('Please sign in to save your item.'); return }
     const list_name = form.list_name || (activeList !== 'all' ? activeList : 'Pantry')
-    upsert.mutate({ ...form, list_name }, {
-      onSuccess: () => { toast.success(`Added to ${list_name} 🛒`); setForm(EMPTY); setShowForm(false) },
+    upsert.mutate({ ...form, user_id: user.id, item_name: form.item_name.trim(), qty, price, order_date: form.order_date || null, store_name_id: form.store_name_id || null, list_name }, {
+      onSuccess: () => { toast.success(form.id ? `Updated ${list_name}` : `Added to ${list_name} 🛒`); setForm(EMPTY); setShowForm(false) },
       onError: err => toast.error(err.message),
     })
   }
@@ -217,7 +398,7 @@ export default function ShoppingPage() {
       weekday: 'long', month: 'long', day: 'numeric',
     })
     const header = activeListLabel === 'all'
-      ? `🥑 GetGuac Smashlist · ${today}`
+      ? `🥑 GetGuac Shopping List · ${today}`
       : `🥑 GetGuac ${activeListLabel} · ${today}`
     if (!items.length) return `${header}\n\n(empty list)`
     // Group by STORE so the recipient can plan one stop per merchant
@@ -269,7 +450,7 @@ export default function ShoppingPage() {
     const total_cost = itemsToShare.reduce((n, it) => n + (Number(it.price) || 0), 0)
     return {
       kind: 'list',
-      title: activeListLabel === 'all' ? 'GetGuac Smashlist' : `GetGuac ${activeListLabel}`,
+      title: activeListLabel === 'all' ? 'GetGuac Shopping List' : `GetGuac ${activeListLabel}`,
       stores,
       store_count: stores.length,
       total_items,
@@ -322,7 +503,7 @@ export default function ShoppingPage() {
     }
   }
   function shareViaEmail(text, url) {
-    const subject = 'My GetGuac Smashlist'
+    const subject = 'My GetGuac Shopping List'
     const body = url ? `${text}\n\n${url}` : text
     window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
   }
@@ -340,7 +521,7 @@ export default function ShoppingPage() {
   async function shareNative(text, url) {
     if (typeof navigator?.share === 'function') {
       try {
-        const payload = { title: 'My GetGuac Smashlist', text }
+        const payload = { title: 'My GetGuac Shopping List', text }
         if (url) payload.url = url
         await navigator.share(payload)
         return
@@ -564,9 +745,13 @@ export default function ShoppingPage() {
   }, [items])
 
   const filteredOwn = useMemo(() => {
-    if (activeList === 'all') return ownList
-    return ownList.filter(i => (i.list_name || 'Pantry') === activeList)
-  }, [ownList, activeList])
+    const query = searchQuery.trim().toLowerCase()
+    return ownList.filter(i => {
+      const inList = activeList === 'all' || (i.list_name || 'Pantry') === activeList
+      const haystack = `${i.item_name || ''} ${i.store?.store_name || ''} ${i.list_name || ''}`.toLowerCase()
+      return inList && (!query || haystack.includes(query))
+    })
+  }, [ownList, activeList, searchQuery])
 
   // Buy Again card selection helpers.
   function toggleSuggestionSelect(id) {
@@ -659,9 +844,14 @@ export default function ShoppingPage() {
   }, [filteredOwn])
 
   const filteredSuggestions = useMemo(() => {
-    const filtered = activeList === 'all'
-      ? suggestions
-      : suggestions.filter(i => (i.list_name || 'Pantry') === activeList)
+    const query = searchQuery.trim().toLowerCase()
+    const now = Date.now()
+    const filtered = suggestions.filter(i => {
+      if (new Date(snoozedItems[i.id] || 0).getTime() > now) return false
+      const inList = activeList === 'all' || (i.list_name || 'Pantry') === activeList
+      const haystack = `${i.item_name || ''} ${i.store?.store_name || ''} ${i.list_name || ''}`.toLowerCase()
+      return inList && (!query || haystack.includes(query))
+    })
     // Sort by urgency descending — most overdue at the top so the
     // user sees what's actually running out first. Rows without
     // cadence metadata fall to the bottom.
@@ -670,7 +860,26 @@ export default function ShoppingPage() {
       const ub = urgencyForItem(b)?.ratio ?? -Infinity
       return ub - ua
     })
-  }, [suggestions, activeList])
+  }, [suggestions, activeList, searchQuery, snoozedItems])
+
+  function snoozeSuggestion(item) {
+    const until = new Date(Date.now() + 7 * 86400000).toISOString()
+    setSnoozedItems(prev => {
+      const next = { ...prev, [item.id]: until }
+      window.localStorage.setItem('getguac-smashlist-snoozed', JSON.stringify(next))
+      return next
+    })
+    toast.success(`${item.item_name} snoozed for one week`)
+  }
+
+  const dueSuggestions = useMemo(
+    () => filteredSuggestions.filter(i => urgencyForItem(i)?.isOverdue),
+    [filteredSuggestions],
+  )
+  const upcomingSuggestions = useMemo(
+    () => filteredSuggestions.filter(i => !urgencyForItem(i)?.isOverdue),
+    [filteredSuggestions],
+  )
 
   // Errand Plan — group predictions by store so the user can plan "one
   // trip to Costco for these 4 items" instead of N separate trips.
@@ -679,11 +888,9 @@ export default function ShoppingPage() {
   // weekly digest email) get the same shape.
   const errandPlan = useMemo(() => groupPredictionsByStore(filteredSuggestions), [filteredSuggestions])
 
-  // Stores where AT LEAST ONE of the currently-selected (or, when no
-  // selection, all filtered) Buy Again items has been purchased. Drives
-  // the "Send to" dropdown so the user can't accidentally route bananas
-  // to Micro Center. While the history query is loading we fall back
-  // to the full knownStores list to avoid a confusing empty dropdown.
+  // Prefer stores where at least one selected item has been purchased.
+  // When no exact receipt-history match exists, fall back to every saved
+  // store so the batch action never leaves the user at a disabled dead end.
   //
   // ORDER NOTE: must live AFTER filteredSuggestions — referencing it
   // earlier in the function body puts filteredSuggestions in the
@@ -699,7 +906,7 @@ export default function ShoppingPage() {
       if (!stores) continue
       for (const sid of stores) allowed.add(sid)
     }
-    if (allowed.size === 0) return []
+    if (allowed.size === 0) return knownStores
     return knownStores.filter(st => allowed.has(st.id))
   }
   const eligibleStoresForSelected = useMemo(() => {
@@ -732,11 +939,11 @@ export default function ShoppingPage() {
   }, [ownList, suggestions])
 
   return (
-    <div className="space-y-5 max-w-7xl font-sans">
+    <div className="flex max-w-7xl flex-col gap-5 font-sans">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="page-title">Smashlist</h1>
-          <p className="text-sm text-gray-500">Stocked, themed, ready to grab</p>
+          <h1 className="page-title">Shopping List</h1>
+          <p className="text-sm text-gray-500">Your smart, receipt-powered shopping list</p>
         </div>
         <div className="flex flex-wrap gap-2">
           {/* Refresh List — re-runs the predictor on demand so the user
@@ -771,14 +978,30 @@ export default function ShoppingPage() {
               native:   shareNative,
             }}
           />
-          <button onClick={() => setShowForm(v => !v)} className="btn-primary">
+          <button onClick={() => {setForm(EMPTY);setShowForm(v => !v)}} className="btn-primary">
             <GuacMascot expression="happy" size={22} /> Add Item
           </button>
         </div>
       </div>
 
+      <div className="grid gap-3 lg:grid-cols-[minmax(260px,1fr)_auto] lg:items-center">
+        <label className="relative block">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="input pl-9"
+            placeholder="Search an item, list, or store…"
+            aria-label="Search Shopping List"
+          />
+        </label>
+        <span className="text-xs text-gray-500 lg:text-right">
+          Receipt-powered suggestions · refreshed when new purchases arrive
+        </span>
+      </div>
+
       {/* List-name tabs */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-nowrap gap-2 overflow-x-auto pb-1">
         <ListTab
           active={activeList === 'all'}
           onClick={() => setActiveList('all')}
@@ -801,10 +1024,33 @@ export default function ShoppingPage() {
         })}
       </div>
 
+      <section className="card py-3 px-4 grid grid-cols-2 sm:grid-cols-4 gap-3 items-center" aria-label="Shopping plan summary">
+        <div>
+          <p className="text-[10px] uppercase tracking-wider font-bold text-gray-500">Shopping plan</p>
+          <p className="font-extrabold text-guac-ink">{filteredOwn.length + filteredSuggestions.length} items</p>
+        </div>
+        <div>
+          <p className="text-[10px] uppercase tracking-wider font-bold text-gray-500">Stores</p>
+          <p className="font-extrabold text-guac-ink">{new Set([...filteredOwn, ...filteredSuggestions].map(i => i.store?.store_name).filter(Boolean)).size || 0}</p>
+        </div>
+        <div>
+          <p className="text-[10px] uppercase tracking-wider font-bold text-gray-500">Due now</p>
+          <p className="font-extrabold text-rose-600">{dueSuggestions.length}</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => autoAddAll({ kind: 'as-is' }, dueSuggestions)}
+          disabled={dueSuggestions.length === 0}
+          className="btn-primary justify-self-stretch sm:justify-self-end disabled:opacity-50"
+        >
+          <ShoppingCart size={14} /> Add all due
+        </button>
+      </section>
+
       {showForm && (
         <div className="card space-y-4">
-          <h3 className="gg-h2">Add Item</h3>
-          <form onSubmit={handleSave} className="space-y-4">
+          <h3 className="gg-h2">{form.id ? 'Edit item' : 'Add Item'}</h3>
+          <form id="shopping-item-form" onSubmit={handleSave} className="space-y-4">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               <div>
                 <label className="label">List</label>
@@ -812,10 +1058,10 @@ export default function ShoppingPage() {
                   {SHOPPING_LISTS.map(n => <option key={n} value={n}>{SHOPPING_LIST_META[n]?.emoji} {n}</option>)}
                 </select>
               </div>
-              <div><label className="label">Item Name*</label><input required className="input" value={form.item_name} onChange={s('item_name')} /></div>
+              <div><label className="label">Item Name*</label><input required aria-label="Item name" className="input" value={form.item_name} onChange={s('item_name')} /></div>
               <div><label className="label">SKU</label><input className="input" value={form.sku} onChange={s('sku')} /></div>
-              <div><label className="label">Qty</label><input type="number" className="input" value={form.qty} onChange={s('qty')} /></div>
-              <div><label className="label">Price ($)</label><input type="number" step="0.01" className="input" value={form.price} onChange={s('price')} /></div>
+              <div><label className="label">Qty</label><input type="number" min="1" step="1" required aria-label="Quantity" className="input" value={form.qty} onChange={s('qty')} /></div>
+              <div><label className="label">Price ($)</label><input type="number" min="0" step="0.01" aria-label="Price" className="input" value={form.price} onChange={s('price')} /></div>
               <div>
                 <label className="label">Store</label>
                 <select
@@ -835,13 +1081,13 @@ export default function ShoppingPage() {
               <div>
                 <label className="label">Frequency</label>
                 <select className="input font-sans" value={form.frequency} onChange={s('frequency')}>
-                  <option>Monthly</option><option>Weekly</option><option>Biweekly</option>
+                  <option>Monthly</option><option>Weekly</option><option>Biweekly</option><option>One-time</option>
                 </select>
               </div>
               <div><label className="label">Comments</label><input className="input" value={form.comments} onChange={s('comments')} /></div>
             </div>
             <div className="flex gap-3">
-              <button type="submit" disabled={upsert.isPending} className="btn-primary">{upsert.isPending ? 'Saving…' : 'Add'}</button>
+              <button type="submit" disabled={upsert.isPending} className="btn-primary">{upsert.isPending ? 'Saving…' : form.id ? 'Save changes' : 'Add'}</button>
               <button type="button" className="btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
             </div>
           </form>
@@ -852,7 +1098,7 @@ export default function ShoppingPage() {
           there are 2+ stores with predictions (1 store doesn't need a
           "plan"). Click-through filters the Smashlist to that store. */}
       {errandPlan.length >= 2 && (
-        <section className="space-y-2">
+        <section className="space-y-2" style={{ order: 7 }}>
           <div className="flex items-center gap-2">
             <MapPin size={16} className="text-guac-700" />
             <h2 className="gg-h2">Errand plan</h2>
@@ -892,11 +1138,12 @@ export default function ShoppingPage() {
         </section>
       )}
 
+      <ShoppingAgentSuggestions items={items} />
       {/* Buy Again section — items the predictor thinks are due for a
           restock. Renders below the Errand Plan, above the curated list,
           so it's the first thing the user sees inside the Smashlist tabs. */}
       {filteredSuggestions.length > 0 && (
-        <section className="space-y-2">
+        <section className="space-y-2" style={{ order: 6 }}>
           <div className="flex items-center gap-2 flex-wrap">
             <Sparkles size={16} className="text-violet-500" />
             <h2 className="gg-h2">Buy Again</h2>
@@ -944,15 +1191,13 @@ export default function ShoppingPage() {
                 {selectedSuggestions.size} selected
               </span>
               <span className="text-xs text-guac-700/80">Send to:</span>
-              {/* Typeable picker — narrow the list as you type. Restricted
-                  to stores where the user has bought at least one of the
-                  selected items. For sending an item to a brand-new store,
-                  they should use the Add Item form below. */}
+              {/* Typeable picker — receipt-matched stores appear when
+                  available; otherwise all saved stores remain selectable. */}
               <StorePicker
                 stores={eligibleStoresForSelected}
                 onPick={(sid) => addSelectedToStore(sid)}
                 placeholder={eligibleStoresForSelected.length === 0
-                  ? 'No matching store history'
+                  ? 'No saved stores yet'
                   : 'Pick a store…'}
                 disabled={eligibleStoresForSelected.length === 0}
               />
@@ -971,19 +1216,36 @@ export default function ShoppingPage() {
               best-price hunter, and Qty + Add to Smashlist footer. Mirrors
               ProductCard from /stash so the two surfaces feel like one
               app. */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {filteredSuggestions.map(item => (
-              <BuyAgainCard
-                key={item.id}
-                item={item}
-                selected={selectedSuggestions.has(item.id)}
-                onToggleSelect={() => toggleSuggestionSelect(item.id)}
-                onAdd={() => toggleApproved(item)}
-                onQty={(qty) => upsert.mutate({ ...item, qty }, {
-                  onError: (err) => toast.error(err.message),
-                })}
-              />
-            ))}
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,3fr)_minmax(240px,1fr)] xl:items-start">
+            <div className="overflow-hidden bg-white">
+              {dueSuggestions.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 px-1 py-3 text-rose-600">
+                    <Clock3 size={16} />
+                    <div><p className="text-xs font-extrabold uppercase tracking-wide">Due now</p><p className="text-[11px] text-gray-500">{dueSuggestions.length} item{dueSuggestions.length === 1 ? '' : 's'} ready to restock</p></div>
+                  </div>
+                  <div className="divide-y divide-guac-line">
+                    {dueSuggestions.map(item => (
+                      <BuyAgainCard key={item.id} item={item} imageUrl={curatedShoppingImage(item.item_name) || productImages[item.item_name]} bestPrice={bestPriceFor(item)} priceLoading={pricesLoading && !bestPriceFor(item)} selected={selectedSuggestions.has(item.id)} onToggleSelect={() => toggleSuggestionSelect(item.id)} onAdd={() => addSuggestionAtBestPrice(item)} onSnooze={() => snoozeSuggestion(item)} onQty={(qty) => upsert.mutate({ ...item, qty }, { onError: (err) => toast.error(err.message) })} />
+                    ))}
+                  </div>
+                </div>
+              )}
+              {upcomingSuggestions.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 px-1 py-3 text-amber-600">
+                    <Zap size={16} />
+                    <div><p className="text-xs font-extrabold uppercase tracking-wide">Due soon</p><p className="text-[11px] text-gray-500">{upcomingSuggestions.length} item{upcomingSuggestions.length === 1 ? '' : 's'} coming up</p></div>
+                  </div>
+                  <div className="divide-y divide-guac-line">
+                    {upcomingSuggestions.map(item => (
+                      <BuyAgainCard key={item.id} item={item} imageUrl={curatedShoppingImage(item.item_name) || productImages[item.item_name]} bestPrice={bestPriceFor(item)} priceLoading={pricesLoading && !bestPriceFor(item)} selected={selectedSuggestions.has(item.id)} onToggleSelect={() => toggleSuggestionSelect(item.id)} onAdd={() => addSuggestionAtBestPrice(item)} onSnooze={() => snoozeSuggestion(item)} onQty={(qty) => upsert.mutate({ ...item, qty }, { onError: (err) => toast.error(err.message) })} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            <ShoppingPlanRail groups={ownByStore} bestPriceFor={bestPriceFor} />
           </div>
           <p className="text-[11px] text-gray-400 px-1">
             * Calculated based on your purchase dates.
@@ -994,10 +1256,10 @@ export default function ShoppingPage() {
       {/* Your Smashlist — the items the user has actually committed to
           buying. Renders below the Buy Again strip, always with a
           visible header so the user can find where Approved items go. */}
-      <section className="space-y-2">
+      <section className="space-y-2" style={{ order: 5 }}>
         <div className="flex items-center gap-2 flex-wrap">
           <ShoppingCart size={16} className="text-guac-700" />
-          <h2 className="gg-h2">Your Smashlist</h2>
+          <h2 className="gg-h2">My Cart</h2>
           <span className="text-xs text-gray-500">
             {filteredOwn.length} item{filteredOwn.length === 1 ? '' : 's'} ready to grab
           </span>
@@ -1055,13 +1317,32 @@ export default function ShoppingPage() {
           {isLoading ? (
             <div className="py-12 text-center text-gray-400">Loading…</div>
           ) : filteredOwn.length === 0 ? (
-            <div className="py-10 text-center flex flex-col items-center gap-3">
-              <LottieAnimation data={emptyListLottie} size={160} fallback="🛒" />
-              <p className="text-gray-500 max-w-sm">
+            <div className="flex flex-col items-center gap-1 py-3 text-center">
+              <div className="relative w-[510px] max-w-full">
+                <video
+                  src="/mascot/cart-empty-selected.mp4"
+                  autoPlay
+                  loop
+                  muted={emptyVideoMuted}
+                  playsInline
+                  preload="metadata"
+                  aria-label="GetGuac mascot waiting for items"
+                  className="aspect-video w-full bg-white object-contain"
+                />
+                <button
+                  type="button"
+                  onClick={() => setEmptyVideoMuted((muted) => !muted)}
+                  aria-pressed={!emptyVideoMuted}
+                  className="absolute bottom-2 right-2 rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-sm ring-1 ring-gray-200 hover:bg-white"
+                >
+                  {emptyVideoMuted ? 'Turn music on' : 'Turn music off'}
+                </button>
+              </div>
+              <p className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap px-2 text-xs text-gray-500 sm:text-sm">
                 {activeList === 'all'
                   ? (filteredSuggestions.length > 0
-                      ? 'Nothing on your Smashlist yet — tap "Add to Smashlist" on any Buy Again row above to start.'
-                      : 'Smashlist is empty. Drop items from receipts or pick from your Stash.')
+                      ? 'Your cart is empty — tap Add on any Buy Again row below to start.'
+                      : 'Your shopping list is empty. Add items from receipts or pick from My Items.')
                   : `Nothing in ${activeList} yet.`}
               </p>
             </div>
@@ -1102,31 +1383,49 @@ export default function ShoppingPage() {
                             return next
                           })
                         }}
-                        className="flex-1 flex items-start gap-2 text-left hover:bg-guac-50/50 -mx-1 px-1 py-1 rounded-lg transition-colors"
+                        className="-mx-1 flex flex-1 items-center gap-2 rounded-lg px-1 py-1 text-left transition-colors hover:bg-guac-50/50"
                       >
                         <div className="w-7 h-7 rounded-lg bg-guac-100 flex items-center justify-center mt-0.5 shrink-0">
                           {collapsed
                             ? <ChevronRight size={14} className="text-guac-700" />
                             : <ChevronDown size={14} className="text-guac-700" />}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="gg-h3">{store}</h3>
+                        <StoreLogo
+                          storeName={store}
+                          fallbackEmoji="🏪"
+                          size={34}
+                          emojiClassName="bg-white ring-1 ring-guac-line"
+                        />
+                        <div className={cartStyles.headerContent}>
+                            <h3 className="gg-h3 shrink-0">{store}</h3>
                             <span className="text-[10px] text-gray-500 font-semibold bg-gray-100 px-1.5 py-0.5 rounded-full">
                               {rows.length} item{rows.length === 1 ? '' : 's'}
                             </span>
-                          </div>
                           {/* Meta line — only render the separators when
                               we actually have the field, so a store with
                               just an address doesn't show " - · - ". */}
-                          {(meta.address || meta.phone_no || meta.website) ? (
-                            <div className="text-[11px] text-gray-500 mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                          <div className={`${cartStyles.headerLinks} text-[11px] text-gray-500`}>
                               {meta.address && (
-                                <span className="inline-flex items-center gap-1">
+                                <a
+                                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(meta.address)}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="inline-flex min-w-0 items-center gap-1 truncate hover:text-guac-700 hover:underline"
+                                >
                                   <MapPin size={10} className="text-gray-400" />
-                                  {meta.address}
-                                </span>
+                                  Usual location: {meta.address}
+                                </a>
                               )}
+                              <a
+                                href={storeLocatorUrl(store)}
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="inline-flex shrink-0 items-center gap-1 font-semibold text-guac-700 hover:underline"
+                              >
+                                <MapPin size={10} /> Find nearest location
+                              </a>
                               {meta.phone_no && (
                                 <>
                                   <span className="text-gray-300">·</span>
@@ -1140,33 +1439,23 @@ export default function ShoppingPage() {
                                   </a>
                                 </>
                               )}
-                              {meta.website && (
-                                <>
-                                  <span className="text-gray-300">·</span>
-                                  <a
-                                    href={meta.website.startsWith('http') ? meta.website : `https://${meta.website}`}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    onClick={(e) => e.stopPropagation()}
-                                    className="inline-flex items-center gap-1 text-fuchsia-700 hover:underline font-semibold"
-                                  >
-                                    <ShoppingCart size={10} />
-                                    Online order
-                                  </a>
-                                </>
-                              )}
-                            </div>
-                          ) : (
-                            <div className="text-[11px] text-gray-400 mt-0.5 italic">
-                              No address / phone / website on file
-                            </div>
-                          )}
-                        </div>
+                              <span className="text-gray-300">·</span>
+                              <a
+                                href={meta.website ? (meta.website.startsWith('http') ? meta.website : `https://${meta.website}`) : storeHomeUrl(store)}
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="inline-flex shrink-0 items-center gap-1 font-semibold text-fuchsia-700 hover:underline"
+                              >
+                                <ShoppingCart size={10} /> Store website
+                              </a>
+                          </div>
+                          </div>
                       </button>
                     </div>
                     {!collapsed && (
                       <div className="overflow-x-auto border-t border-gray-50">
-                        <table className="gg-tbl w-full text-sm">
+                        <table className={`gg-tbl w-full text-sm ${cartStyles.table}`}>
                           <thead className="border-b border-guac-line gg-colhead">
                             <tr>
                               <th className="px-3 py-2 w-8"></th>
@@ -1180,11 +1469,13 @@ export default function ShoppingPage() {
                               <SmashRow
                                 key={item.id}
                                 item={item}
+                                imageUrl={curatedShoppingImage(item.item_name) || productImages[item.item_name]}
                                 omitStoreCol
                                 selected={bulkSelected.has(item.id)}
                                 onToggleSelect={() => toggleBulkSelect(item.id)}
                                 onQty={(qty) => upsert.mutate({ ...item, qty }, { onError: (err) => toast.error(err.message) })}
                                 onToggleApproved={() => toggleApproved(item)}
+                                onEdit={() => {setForm({...EMPTY,...item,sku:item.sku||'',price:item.price??'',store_name_id:item.store_name_id||'',comments:item.comments||''});setShowForm(true);requestAnimationFrame(()=>document.getElementById('shopping-item-form')?.scrollIntoView({behavior:'smooth',block:'center'}))}}
                                 onDelete={() => removeFromSmashlist(item).then(
                                   () => toast.success(item.predicted ? 'Sent back to Buy Again ↩' : 'Removed'),
                                   (e) => toast.error(e?.message || 'Remove failed'),
@@ -1214,6 +1505,116 @@ export default function ShoppingPage() {
         />
       )}
     </div>
+  )
+}
+
+function ShoppingPlanRail({ groups, bestPriceFor }) {
+  const totalItems = groups.reduce((sum, group) => sum + group.items.length, 0)
+  const total = groups.reduce((sum, group) => sum + group.items.reduce((groupSum, item) => {
+    const price = Number(item.price || 0)
+    return groupSum + (Number.isFinite(price) ? price * Number(item.qty || 1) : 0)
+  }, 0), 0)
+  const potentialSavings = groups.reduce((sum, group) => sum + group.items.reduce((groupSum, item) => {
+    const currentPrice = Number(item.price || 0)
+    const bestPrice = Number(bestPriceFor?.(item)?.price || 0)
+    const qty = Number(item.qty || 1)
+    return groupSum + (currentPrice > bestPrice && bestPrice > 0 ? (currentPrice - bestPrice) * qty : 0)
+  }, 0), 0)
+
+  // These are planning targets, not checkout guarantees. Retailers can vary
+  // delivery minimums by location, membership, and fulfillment method.
+  const deliveryMinimumFor = (store) => {
+    const key = String(store || '').toLowerCase()
+    if (key.includes('costco')) return 75
+    if (key.includes('target') || key.includes('walmart')) return 35
+    return null
+  }
+
+  return (
+    <aside className="rounded-2xl bg-guac-50/60 p-4 xl:sticky xl:top-4" aria-label="Shopping plan by store">
+      <div className="mb-3 flex items-center justify-between">
+        <h3 className="gg-h2">Shopping plan</h3>
+        <span className="text-xs text-gray-500">{totalItems} item{totalItems === 1 ? '' : 's'}</span>
+      </div>
+      {groups.length === 0 ? (
+        <p className="py-6 text-center text-xs text-gray-500">Add a suggested item to start your plan.</p>
+      ) : (
+        <div className="divide-y divide-guac-line">
+          {groups.map(group => {
+            const subtotal = group.items.reduce((sum, item) => sum + Number(item.price || 0) * Number(item.qty || 1), 0)
+            return (
+              <div key={group.store} className="py-3 first:pt-0">
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <span className="truncate text-xs font-extrabold text-guac-ink">{group.store}</span>
+                  <span className="shrink-0 text-[11px] text-gray-500">{group.items.length} item{group.items.length === 1 ? '' : 's'}</span>
+                </div>
+                <div className="space-y-1.5">
+                  {group.items.slice(0, 4).map(item => (
+                    <div key={item.id} className="flex items-center justify-between gap-2 text-[11px]">
+                      <span className="truncate text-gray-700">{item.item_name}</span>
+                      <span className="shrink-0 font-semibold tabular-nums text-guac-ink">{item.price ? formatGuacMoney(Number(item.price) * Number(item.qty || 1)) : '—'}</span>
+                    </div>
+                  ))}
+                  {group.items.length > 4 && <p className="text-[10px] text-gray-400">+{group.items.length - 4} more</p>}
+                </div>
+                {subtotal > 0 && <p className="mt-2 text-right text-xs font-extrabold text-guac-ink">Subtotal {formatGuacMoney(subtotal)}</p>}
+                {group.store !== 'Any store' && (
+                  <a
+                    href={storeDealUrl(group.store, group.items.map(item => item.item_name).join(' '))}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-2 inline-flex w-full items-center justify-center rounded-lg bg-white px-2.5 py-2 text-[11px] font-bold text-guac-700 no-underline hover:bg-guac-100"
+                  >
+                    Shop at {group.store}
+                  </a>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
+      <div className="mt-3 rounded-xl bg-white/80 px-3 py-2 text-xs">
+        <div className="flex justify-between"><span className="text-gray-500">Estimated total</span><strong>{total > 0 ? formatGuacMoney(total) : 'Prices pending'}</strong></div>
+      </div>
+      <div className="mt-3 rounded-xl bg-emerald-50 px-3 py-3 text-xs ring-1 ring-emerald-100">
+        <div className="flex items-center justify-between gap-3">
+          <span className="inline-flex items-center gap-1.5 font-extrabold text-guac-ink">
+            <BadgeDollarSign size={15} className="text-guac-700" /> Potential savings
+          </span>
+          <strong className="text-sm text-guac-700">
+            {potentialSavings > 0 ? formatGuacMoney(potentialSavings) : 'Checking deals'}
+          </strong>
+        </div>
+        <p className="mt-0.5 text-[10px] text-gray-500">Based on your receipt prices and current store deals.</p>
+      </div>
+      {groups.map(group => {
+        const minimum = deliveryMinimumFor(group.store)
+        if (!minimum) return null
+        const subtotal = group.items.reduce((sum, item) => sum + Number(item.price || 0) * Number(item.qty || 1), 0)
+        const remaining = Math.max(0, minimum - subtotal)
+        const progress = Math.min(100, Math.max(0, (subtotal / minimum) * 100))
+        return (
+          <div key={`delivery-${group.store}`} className="mt-3 rounded-xl bg-white px-3 py-3 text-xs ring-1 ring-guac-line">
+            <div className="flex items-center justify-between gap-2">
+              <span className="inline-flex min-w-0 items-center gap-1.5 font-bold text-guac-ink">
+                <StoreIcon size={14} className="shrink-0" />
+                <span className="truncate">{group.store} delivery minimum</span>
+              </span>
+              <span className="shrink-0 font-semibold tabular-nums">{formatGuacMoney(subtotal)} / {formatGuacMoney(minimum)}</span>
+            </div>
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-gray-100">
+              <div className="h-full rounded-full bg-guac-600 transition-[width]" style={{ width: `${progress}%` }} />
+            </div>
+            <p className="mt-1.5 text-[10px] text-gray-500">
+              {remaining > 0 ? `Add ${formatGuacMoney(remaining)} more toward ${group.store} delivery.` : 'Estimated delivery minimum reached.'}
+            </p>
+          </div>
+        )
+      })}
+      <button type="button" className="btn-primary mt-3 w-full justify-center" disabled={totalItems === 0}>
+        Review shopping plan
+      </button>
+    </aside>
   )
 }
 
@@ -1379,7 +1780,7 @@ function ShareMenu({ buildText, getShareUrl, handlers }) {
         type="button"
         onClick={() => setOpen(v => !v)}
         className="btn-secondary inline-flex items-center gap-1.5 text-sm"
-        title="Share this Smashlist"
+        title="Share this Shopping List"
       >
         <Share2 size={16} /> Share <ChevronDown size={12} />
       </button>
@@ -1412,12 +1813,36 @@ function ShareMenu({ buildText, getShareUrl, handlers }) {
   )
 }
 
+function ProductThumb({ imageUrl, itemName, fallback = '🛒', className = 'h-10 w-10' }) {
+  const [failed, setFailed] = useState(false)
+  useEffect(() => setFailed(false), [imageUrl])
+
+  return (
+    <span className={`inline-flex shrink-0 items-center justify-center overflow-hidden rounded-xl bg-guac-50 ring-1 ring-guac-line ${className}`}>
+      {imageUrl && !failed ? (
+        <img
+          src={imageUrl}
+          alt=""
+          title={itemName}
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          onError={() => setFailed(true)}
+          className="h-full w-full object-contain p-0.5"
+        />
+      ) : (
+        <span aria-hidden="true" className="text-lg">{itemEmoji(itemName, fallback)}</span>
+      )}
+    </span>
+  )
+}
+
 // Curated Smashlist row — used by the per-store accordion view. The
 // `omitStoreCol` flag skips the Store cell when the parent renders rows
 // grouped under a per-store header (the header already shows the store
 // name). selected/onToggleSelect drive the leading bulk-select checkbox.
-function SmashRow({ item, omitStoreCol = false, selected = false, onToggleSelect, onQty, onToggleApproved, onDelete }) {
+function SmashRow({ item, imageUrl = null, omitStoreCol = false, selected = false, onToggleSelect, onQty, onToggleApproved, onDelete, onEdit }) {
   const meta = SHOPPING_LIST_META[item.list_name || 'Pantry'] || {}
+  const source = String(item.comments||'').match(/https:\/\/[^\s]+/)?.[0]
   const cellPad = omitStoreCol ? 'px-3 py-2' : 'px-4 py-3'
   return (
     <tr className={`hover:bg-guac-row ${selected ? 'bg-rose-50/60' : ''}`}>
@@ -1433,11 +1858,9 @@ function SmashRow({ item, omitStoreCol = false, selected = false, onToggleSelect
         </td>
       )}
       <td className={cellPad}>
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-guac-50 border border-guac-line2 text-guac-700 shrink-0">
-            {meta.emoji}
-          </span>
-          <span className="font-medium">{item.item_name}</span>
+        <div className={`flex items-center gap-2 ${cartStyles.name}`}>
+          <ProductThumb imageUrl={imageUrl} itemName={item.item_name} fallback={meta.emoji} className="h-9 w-9" />
+          <div><span className="font-medium">{item.item_name}</span>{item.comments&&<details className="text-xs text-slate-600"><summary className="inline-flex min-h-11 cursor-pointer items-center text-violet-700">Details</summary><p className="max-w-sm whitespace-normal break-words">{item.comments}</p>{source&&<a href={source} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center text-violet-700">View option ↗</a>}</details>}</div>
           {item.predicted && (
             <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-violet-100 text-violet-700"
               title={item.predicted_reason || 'Predicted from purchase history'}>
@@ -1449,14 +1872,14 @@ function SmashRow({ item, omitStoreCol = false, selected = false, onToggleSelect
           <div className="text-[11px] text-gray-400 mt-0.5">{item.predicted_reason}</div>
         )}
       </td>
-      <td className={`text-gray-400 text-xs ${cellPad}`}>{item.sku || '—'}</td>
+      <td data-label="SKU" data-empty={!item.sku} className={`text-gray-400 text-xs ${cellPad}`}>{item.sku || '—'}</td>
       {!omitStoreCol && (
         <td className="px-4 py-3 text-gray-500">{item.store?.store_name ? displayStoreName(item.store.store_name) : '—'}</td>
       )}
-      <td className={cellPad}>
+      <td data-label="Qty" className={cellPad}>
         <QtyInput value={item.qty || 1} onSave={onQty} />
       </td>
-      <td className={cellPad}>{item.price ? `$${item.price}` : '—'}</td>
+      <td data-label="Price" className={cellPad}>{item.price ? `$${Number(item.price).toFixed(2)}` : '—'}</td>
       <td className={cellPad}><span className="badge-gray">{item.frequency}</span></td>
       <td className={cellPad}>
         <button onClick={onToggleApproved} className="flex items-center gap-1 text-xs font-medium">
@@ -1467,6 +1890,7 @@ function SmashRow({ item, omitStoreCol = false, selected = false, onToggleSelect
         </button>
       </td>
       <td className={cellPad}>
+        {onEdit&&<button type="button" onClick={onEdit} aria-label={`Edit ${item.item_name}`} className="min-h-11 px-2 text-sm font-semibold text-violet-700">Edit</button>}
         <button onClick={onDelete}
           title={item.predicted ? 'Send back to Buy Again' : 'Remove from list'}
           className="w-8 h-8 rounded-full bg-rose-100 text-rose-600 hover:bg-rose-200 hover:scale-110 active:scale-95 transition-all flex items-center justify-center shadow-sm">
@@ -1482,11 +1906,12 @@ function SmashRow({ item, omitStoreCol = false, selected = false, onToggleSelect
 // best-price hunter (calls /api/best-price with geolocation), and a
 // Qty + Add to Smashlist footer. The optional checkbox in the top-left
 // drives the per-card selection flow ("Add selected to <store>").
-function BuyAgainCard({ item, selected = false, onToggleSelect, onAdd, onQty }) {
+function BuyAgainCard({ item, imageUrl = null, bestPrice = null, priceLoading = false, selected = false, onToggleSelect, onAdd, onQty, onSnooze }) {
   const meta = SHOPPING_LIST_META[item.list_name || 'Pantry'] || {}
   const tone = TONE_TINT[meta.color] || TONE_TINT.gray
   const u = urgencyForItem(item)
-  const storeName = item.store?.store_name ? displayStoreName(item.store.store_name) : ''
+  const storeName = bestPrice?.storeName || (item.store?.store_name ? displayStoreName(item.store.store_name) : '')
+  const displayPrice = bestPrice?.price ?? (item.price != null && item.price !== '' ? Number(item.price) : null)
 
   // Per-store history of THIS item across the user's receipts. Lazy:
   // fetched on first expand so the page-load cost stays zero. Same
@@ -1569,8 +1994,7 @@ function BuyAgainCard({ item, selected = false, onToggleSelect, onAdd, onQty }) 
   }, [item.item_name, getLocation])
 
   return (
-    <div className={`relative bg-gradient-to-br ${tone.from} ${tone.to} rounded-2xl border-2 ${selected ? 'border-guac-600 ring-2 ring-guac-600' : 'border-transparent'} shadow-sm hover:shadow-xl hover:border-guac-line2 hover:scale-[1.01] hover:-translate-y-0.5 transition-all duration-200 ring-1 ${tone.ring}`}>
-      <div className={`h-1 ${tone.accent} rounded-t-2xl`} />
+    <div className={`relative bg-white transition-colors hover:bg-guac-50/30 ${selected ? 'bg-guac-50 ring-1 ring-inset ring-guac-200' : ''}`}>
       {/* Top-left checkbox — sits over the gradient so it's discoverable
           without taking grid space from the rest of the card. The label
           covers the area so the touch target is comfortable on mobile. */}
@@ -1590,24 +2014,34 @@ function BuyAgainCard({ item, selected = false, onToggleSelect, onAdd, onQty }) 
             badge. The avatar uses the store's real wordmark when we can
             resolve it, falling back to the per-list emoji + tone accent
             so unknown stores still get a coloured chip. */}
-        <div className="flex items-start gap-2.5">
-          <div className={onToggleSelect ? 'ml-5' : ''}>
-            <StoreLogo
-              storeName={storeName}
-              fallbackEmoji={meta.emoji || '🛒'}
-              size={40}
-              emojiClassName={`${tone.accent} text-white`}
-            />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className={`font-bold text-sm leading-tight line-clamp-2 ${tone.text}`}>{item.item_name}</p>
+        <div className="flex flex-wrap items-start gap-2.5">
+          <ProductThumb imageUrl={imageUrl} itemName={item.item_name} fallback={meta.emoji || '🛒'} className={`h-10 w-10 ${onToggleSelect ? 'ml-5' : ''}`} />
+          <div className="min-w-[140px] max-w-full flex-1">
+            <p className={`font-bold text-sm leading-tight whitespace-normal break-words ${tone.text}`}>{item.item_name}</p>
             <p className="text-[10px] text-gray-500 mt-0.5 truncate">
-              {item.list_name || 'Pantry'}
+              {cadenceLabel(item.frequency)}
+              {item.predicted_last_purchase_date && <> · Last purchased {new Date(item.predicted_last_purchase_date + 'T00:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</>}
             </p>
+          </div>
+          <div className="hidden md:flex items-center gap-4 lg:gap-6 shrink-0">
+            <div className="min-w-[105px] flex items-center gap-2 text-xs font-semibold text-gray-700">
+              <StoreLogo storeName={storeName} fallbackEmoji="🏪" size={24} emojiClassName="bg-guac-50" />
+              <span className="max-w-[78px] truncate">{storeName || 'Any store'}</span>
+            </div>
+            <span className="w-16 text-right text-sm font-extrabold text-guac-ink tabular-nums">
+              {displayPrice != null ? formatGuacMoney(displayPrice) : priceLoading ? '…' : 'Price unavailable'}
+            </span>
+            <QtyInput value={item.qty || 1} onSave={onQty} />
+            <button type="button" onClick={onSnooze} className="btn-secondary inline-flex items-center gap-1.5 px-3 py-2 text-xs">
+              <Clock3 size={13} /> Snooze
+            </button>
+            <button type="button" onClick={onAdd} className="inline-flex items-center gap-1.5 rounded-xl bg-guac-600 px-3 py-2 text-xs font-bold text-white hover:bg-guac-700">
+              <ShoppingCart size={13} /> Add
+            </button>
           </div>
           {/* Right stack: list pill + urgency badge (matches the
               "Drinks dropdown + count chip" stack on the Stash card). */}
-          <div className="shrink-0 flex flex-col items-end gap-1">
+          <div className="shrink-0 flex flex-col items-end gap-1 md:hidden">
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/80 text-guac-700 border border-guac-line2">
               {meta.emoji} {item.list_name || 'Pantry'}
             </span>
@@ -1623,6 +2057,17 @@ function BuyAgainCard({ item, selected = false, onToggleSelect, onAdd, onQty }) 
           </div>
         </div>
 
+        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-gray-500 md:hidden">
+          <span className={u?.isOverdue ? 'font-bold text-rose-700' : 'font-semibold text-amber-700'}>
+            {u ? (u.isOverdue ? 'Due now' : `Due ${formatRunsOut(u.daysToRunOut, u.runsOutISO)}`) : 'Restock timing unavailable'}
+          </span>
+          <span>·</span>
+          <span>{item.frequency ? `${item.frequency} purchase` : 'Cadence learning'}</span>
+          {item.predicted_last_purchase_date && <><span>·</span><span>Last bought {new Date(item.predicted_last_purchase_date + 'T00:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span></>}
+          {storeName && <><span>·</span><span className="font-semibold text-guac-700">{storeName}</span></>}
+        </div>
+
+        {expanded && <>
         {/* 4 stat tiles — Restock | Order frequency | Last bought | Store */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-3 text-xs">
           <div className="rounded-xl bg-white/80 px-2 py-1 text-center ring-1 ring-white">
@@ -1670,6 +2115,7 @@ function BuyAgainCard({ item, selected = false, onToggleSelect, onAdd, onQty }) 
             </span>
           </div>
         )}
+        </>}
 
         {/* Compare stores — same expandable affordance as the Stash card.
             Tapping opens a panel with the user's per-store price history
@@ -1677,14 +2123,14 @@ function BuyAgainCard({ item, selected = false, onToggleSelect, onAdd, onQty }) 
         <button
           type="button"
           onClick={() => { setExpanded(v => !v); fetchStoreHistory() }}
-          className="mt-3 flex items-center gap-1 text-xs font-semibold text-guac-700 hover:text-guac-ink self-start"
+          className="mt-2 flex items-center gap-1 text-xs font-semibold text-guac-700 hover:text-guac-ink self-start"
         >
           {expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
           {yourStores && yourStores.length > 1
             ? `Compare ${yourStores.length} stores`
             : yourStores && yourStores.length === 1
               ? `1 store`
-              : 'Compare stores'}
+              : 'Details & compare prices'}
         </button>
 
         {expanded && (
@@ -1738,18 +2184,21 @@ function BuyAgainCard({ item, selected = false, onToggleSelect, onAdd, onQty }) 
         )}
 
         {/* Footer — qty stepper + Share + Add to Smashlist CTA */}
-        <div className="flex items-center justify-between mt-4 pt-3 border-t border-white/50 gap-2">
+        <div className="flex items-center justify-between mt-3 pt-3 border-t border-guac-line gap-2 md:hidden">
           <div className="flex items-center gap-2">
             <span className="text-[9px] uppercase tracking-wider text-gray-500 font-bold">Qty</span>
             <QtyInput value={item.qty || 1} onSave={onQty} />
           </div>
           <div className="flex items-center gap-1.5">
             <BuyAgainShareButton item={item} yourStores={yourStores} />
+            <button type="button" onClick={onSnooze} className="inline-flex items-center gap-1 rounded-xl border border-guac-line bg-white px-2.5 py-2 text-xs font-semibold text-gray-700">
+              <Clock3 size={13} /> Snooze
+            </button>
             <button
               type="button"
               onClick={onAdd}
               className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-guac-600 hover:bg-guac-700 text-white text-xs font-bold shadow-sm hover:shadow-md transition-all"
-              title="Add to Smashlist"
+              title="Add to My Cart"
             >
               <ShoppingCart size={13} /> Add
             </button>

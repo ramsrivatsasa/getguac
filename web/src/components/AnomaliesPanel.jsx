@@ -22,7 +22,7 @@ function narrativeKey(a) {
   return `${a.kind}:${a.storeKey || a.category || 'na'}:${a._periodStart || ''}`
 }
 
-export default function AnomaliesPanel({ receipts = [] }) {
+export default function AnomaliesPanel({ receipts = [], showEmpty = false }) {
   const [dismissed, setDismissed] = useState(false)
   // Collapsed by default — the full list took up too much vertical
   // space on the dashboard (3 rows × ~50px + header + padding). Header
@@ -83,7 +83,11 @@ export default function AnomaliesPanel({ receipts = [] }) {
     // Re-fetch only when the top-N anomaly identities change.
   }, [topAnomalies.map(a => narrativeKey(a)).join('|')]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (topAnomalies.length === 0 || dismissed) return null
+  if (dismissed) return null
+  if (topAnomalies.length === 0) {
+    if (!showEmpty) return null
+    return <div className="flex items-center gap-3 rounded-2xl border border-cyan-100 bg-gradient-to-r from-cyan-50 via-white to-violet-50 p-4"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-cyan-600 text-white"><Sparkles size={17}/></span><div><p className="text-sm font-black text-slate-900">No unusual spending detected.</p><p className="mt-1 text-xs text-slate-500">GetGuac compares merchants and categories with your own recent history.</p></div></div>
+  }
 
   function dismiss() {
     setDismissed(true)

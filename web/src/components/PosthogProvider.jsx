@@ -9,36 +9,39 @@
 // the route-change events PostHog hooks into — instead we watch pathname +
 // searchParams and capture $pageview manually on every change.
 
-import { useEffect, Suspense } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
-import posthog from 'posthog-js'
 import { createClient } from '../lib/supabase/client'
 
 const POSTHOG_KEY  = process.env.NEXT_PUBLIC_POSTHOG_KEY
 const POSTHOG_HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com'
 
-function PosthogPageviewTracker() {
+function PosthogPageviewTracker({ client }) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   useEffect(() => {
     if (!POSTHOG_KEY) return
-    if (!posthog.__loaded) return
+    if (!client?.__loaded) return
     const search = searchParams?.toString()
     const url = pathname + (search ? `?${search}` : '')
-    posthog.capture('$pageview', { $current_url: url })
-  }, [pathname, searchParams])
+    client.capture('$pageview', { $current_url: url })
+  }, [pathname, searchParams, client])
   return null
 }
 
 export default function PosthogProvider({ children }) {
+  const [client, setClient] = useState(null)
   useEffect(() => {
     if (!POSTHOG_KEY) return
-    if (posthog.__loaded) return
-    posthog.init(POSTHOG_KEY, {
+    let cancelled = false, subscription
+    import('posthog-js').then(({ default: posthog }) => {
+    if (cancelled) return
+    if (!posthog.__loaded) posthog.init(POSTHOG_KEY, {
       api_host: POSTHOG_HOST,
       person_profiles: 'identified_only',
       capture_pageview: false, // we fire $pageview manually (see tracker above)
     })
+    setClient(posthog)
 
     // Tie events to the signed-in Supabase user. SIGNED_IN fires both on
     // login and on every cold start with an existing session, so identify
@@ -59,7 +62,9 @@ export default function PosthogProvider({ children }) {
         posthog.reset()
       }
     })
-    return () => { sub?.subscription?.unsubscribe?.() }
+    subscription = sub.subscription
+    }).catch(() => {})
+    return () => { cancelled = true; subscription?.unsubscribe?.() }
   }, [])
 
   return (
@@ -67,7 +72,7 @@ export default function PosthogProvider({ children }) {
       {/* useSearchParams() requires a Suspense boundary or the Vercel
           static-export build freezes (see project memory). */}
       <Suspense fallback={null}>
-        <PosthogPageviewTracker />
+        <PosthogPageviewTracker client={client} />
       </Suspense>
       {children}
     </>

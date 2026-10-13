@@ -14,7 +14,7 @@ import { getSavedSearches as getCookieSearches, clearSavedSearches } from '../li
 // showed on the dashboard. On dashboard load we import the cookie's searches
 // into saved_searches (idempotent dedupe) and clear the cookie, fulfilling the
 // marketplace's "create an account and we'll watch these for you" promise.
-export default function DashboardSavedSearches() {
+export default function DashboardSavedSearches({ embedded = false, showEmpty = false }) {
   const { data: saved = [] } = useSavedSearches()
   const addSearch = useAddSavedSearch()
   const claimed = useRef(false)
@@ -33,11 +33,11 @@ export default function DashboardSavedSearches() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  if (!saved.length) return null
+  if (!saved.length && !showEmpty) return null
   const items = saved.slice(0, 12)
 
   return (
-    <div className="bg-white rounded-2xl border border-guac-line shadow-sm p-4 mb-4">
+    <div className={embedded ? '' : 'bg-white rounded-2xl border border-guac-line shadow-sm p-4 mb-4'}>
       <div className="flex items-center justify-between mb-3">
         <h3 className="gg-h2 inline-flex items-center gap-2">
           <Bookmark size={15} className="text-gray-400" /> Searches you saved
@@ -46,7 +46,7 @@ export default function DashboardSavedSearches() {
           Manage in Steals <ArrowRight size={12} />
         </Link>
       </div>
-      <div className="flex flex-wrap gap-2">
+      {items.length ? <div className="flex flex-wrap gap-2">
         {items.map((s) => {
           const q = s.query || s.label
           return (
@@ -59,7 +59,7 @@ export default function DashboardSavedSearches() {
             </Link>
           )
         })}
-      </div>
+      </div> : <Link href="/steals" className="flex min-h-24 items-center gap-3 rounded-xl border border-dashed border-violet-200 bg-violet-50/60 p-4"><span className="grid h-10 w-10 place-items-center rounded-xl bg-violet-600 text-white"><Search size={17}/></span><span><strong className="block text-sm text-slate-900">Save a product search</strong><span className="mt-1 block text-xs font-normal text-slate-500">Get back to products you are comparing and watch for better prices.</span></span></Link>}
     </div>
   )
 }

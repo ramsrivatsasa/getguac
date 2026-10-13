@@ -74,7 +74,7 @@ export default function GuacScorePage() {
 
       <section className="border-b border-[#cfe5d2] bg-[#eaf7ff] py-16 text-[#15281C] sm:py-20">
         <div className="mx-auto grid max-w-6xl items-center gap-10 px-5 sm:px-8 lg:grid-cols-[1.05fr_.95fr]">
-          <div className="overflow-hidden rounded-[28px] border border-white bg-white p-4 shadow-xl shadow-[#68b9ee]/15"><ZoomableImage src="/marketing/slides/v2/guacanomics-web.webp" alt="GetGuac web Guacanomics screen showing GuacScore, Worth-It ratings, spending, refunds, fees, and trends" width={1200} height={800}/></div>
+          <div className="overflow-hidden rounded-[28px] border border-white bg-white p-4 shadow-xl shadow-[#68b9ee]/15"><ZoomableImage src="/marketing/current/guacanomics.webp" alt="GetGuac web Guacanomics screen showing GuacScore, Worth-It ratings, spending, refunds, fees, and trends" width={1148} height={704}/></div>
           <div><p className="text-xs font-black uppercase tracking-[.16em] text-[#168A4B]">Read the pattern</p><h2 className="mt-3 text-3xl font-black tracking-tight sm:text-5xl">The number is the start, not the verdict.</h2><p className="mt-5 text-lg leading-8 text-[#45564A]">Use the score with its supporting details: how many purchases you rated, the dollars represented, your Worth-It mix, and any Bank Bite penalty. A score built from two ratings is an invitation to add context—not a conclusion.</p><ul className="mt-6 space-y-3 text-[#45564A]"><li>• Change the time window to compare recent and longer-term patterns.</li><li>• Rate more purchases before treating a short-term movement as meaningful.</li><li>• Open expensive low-rated purchases and ask what you would do differently.</li></ul></div>
         </div>
       </section>

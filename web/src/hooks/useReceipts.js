@@ -94,6 +94,12 @@ export function useAddReceipt() {
         date:           receipt.date,
         total_amount:   receipt.total_amount,
         tax_paid:       receipt.tax_paid,
+        tip_amount:     receipt.tip_amount,
+        service_charge: receipt.service_charge,
+        other_fees:     receipt.other_fees,
+        discount_amount: receipt.discount_amount,
+        subtotal:       receipt.subtotal,
+        gratuity_included: receipt.gratuity_included,
         payment_method: receipt.payment_method,
         payment_last4:  receipt.payment_last4,
         is_return:      receipt.is_return,
@@ -116,6 +122,7 @@ export function useAddReceipt() {
       //    hangs the UI: returns within 30s either as success or queued.
       const result = await saveReceiptViaOutbox({
         parsed,
+        source: file ? (file.type === 'application/pdf' ? 'pdf' : 'image') : 'manual',
         receipt_link,
         business_purchase: Boolean(receipt.business_purchase),
         user_category: receipt.category || undefined,

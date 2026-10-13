@@ -203,14 +203,14 @@ export default function InvitePage() {
             <strong>{REWARD_DAYS} Smash days</strong> to your 🔥 chip — and{' '}
             <strong>{REWARD_DAYS} more</strong> to theirs.
           </li>
-          <li>One bonus per new user. Self-referrals don't count.</li>
+          <li>One bonus per new user. Self-referrals don&apos;t count.</li>
         </ul>
       </section>
 
       {/* Past invites */}
       <section>
         <h2 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-3">
-          People you've invited ({sentRefs.length})
+          People you&apos;ve invited ({sentRefs.length})
         </h2>
         {sentRefs.length === 0 ? (
           <div className="bg-white border border-gray-100 rounded-2xl p-5 text-sm text-gray-500 flex flex-col items-center gap-3">

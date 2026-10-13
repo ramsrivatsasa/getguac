@@ -470,7 +470,7 @@
             </div>
             <div class="person main">
               <img src="home/story-people/family-tablet.webp" alt="A family happily reviewing GetGuac savings together">
-              <span class="tablet-screen" aria-hidden="true"><img src="marketing/slides/v2/dashboard-web.webp" alt=""></span>
+              <span class="tablet-screen" aria-hidden="true"><img src="/marketing/current/dashboard.webp" alt=""></span>
             </div>
             <img class="phone" src="home/demo-2/guac-phone-current.png" alt="GetGuac showing Guacanomics, spending trends and a return-window reminder">
           </div>
@@ -578,7 +578,7 @@
             <div class="appshot">
               <span class="applabel">Inside the GetGuac app</span>
               <button type="button" class="shot" id="webShot" aria-label="Enlarge the GetGuac web screen">
-                <img class="web" id="stageWeb" src="home/goals/web-receipts.webp" alt="The GetGuac web app" loading="lazy">
+                <img class="web" id="stageWeb" src="/marketing/current/receipts.webp" alt="The GetGuac web app" loading="lazy">
               </button>
               <button type="button" class="shot shot-phone" id="phoneShot" aria-label="Enlarge the GetGuac mobile screen">
                 <img id="stagePhone" src="home/goals/phone-receipts.webp" alt="The GetGuac mobile app" loading="lazy">
@@ -829,7 +829,7 @@
       setText('proofValue', s.proofValue);
       setText('proofNote', s.proofNote);
       const web = el('stageWeb'), phone = el('stagePhone'), person = el('stagePerson');
-      web.src = 'home/goals/web-' + s.slug + '.webp';
+      web.src = '/marketing/current/' + ({"bank":"bank","bills":"bills","car-miles":"car-miles","categories":"reports","fees":"guacwizard","games":"games","guac-ai":"guac-ai","guacmoney":"dashboard","inbox":"inbox","marketplace":"marketplace","organized":"dashboard","receipts":"receipts","returns":"returns","smashlist":"shopping","stash":"stash","steals":"steals","subs":"subscriptions","tax":"tax","worth-it":"worth-it","predictions":"shopping"}[s.slug] || s.slug) + '.webp';
       phone.src = 'home/goals/phone-' + s.slug + '.webp';
       person.src = 'home/story-people/' + s.image;
       person.alt = s.imageAlt;

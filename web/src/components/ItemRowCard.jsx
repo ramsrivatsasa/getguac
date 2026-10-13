@@ -9,7 +9,7 @@
 // renderer at `web/scripts/render-item-card-scenarios.mjs` produces
 // a contract PDF that's the visual reference for both implementations.
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { Star, Heart, Share2, MoreHorizontal, Bolt } from 'lucide-react'
 
 function fmt(n) {
@@ -55,6 +55,8 @@ export default function ItemRowCard({
   onMenu,
 }) {
   const [pickerOpen, setPickerOpen] = useState(false)
+  const [imageFailed, setImageFailed] = useState(false)
+  useEffect(() => setImageFailed(false), [imageUrl])
   const valueText = value != null
     ? (valueIsPrefix ? `${valueLabel}${fmt(value)}` : `${fmt(value)}${valueLabel}`)
     : ''
@@ -76,11 +78,11 @@ export default function ItemRowCard({
         className="w-[72px] h-[72px] rounded-xl flex items-center justify-center text-[36px] shrink-0"
         style={{ background: tint }}
       >
-        {imageUrl ? (
+        {imageUrl && !imageFailed ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={imageUrl} alt="" width={68} height={68}
             className="w-[68px] h-[68px] rounded-[10px] object-cover"
-            onError={(e) => { e.currentTarget.style.display = 'none' }} />
+            onError={() => setImageFailed(true)} />
         ) : (
           <span>{imageEmoji || '📦'}</span>
         )}

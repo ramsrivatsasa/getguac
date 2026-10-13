@@ -1,15 +1,12 @@
+import { publicMetadata } from '../lib/public-seo.mjs'
 import fs from 'node:fs'
 import path from 'node:path'
 import { redirect } from 'next/navigation'
 import { createClient } from '../lib/supabase/server'
 import HomeInteractions from './HomeInteractions'
 
-export const metadata = {
-  title: 'GetGuac: Make Every Dollar Worth It',
-  description:
-    'Turn receipts and statements into smarter money decisions. Find spending patterns, hidden fees, missed refunds, better prices, and purchases truly worth repeating.',
-  alternates: { canonical: '/' },
-}
+export const metadata = publicMetadata('/', 'Everyday Savings & Consumer Protection',
+  'Find everyday savings, compare costs, review bills, and protect your purchases with GetGuac. Build a practical savings plan from receipts and spending records. No bank login required.')
 
 function extract(source, pattern, label) {
   const match = source.match(pattern)

@@ -65,8 +65,8 @@ export const metadata = {
 // is a third thing to look at on a page with exactly one job.
 export default function Page() {
   return (
-    <MarketingShell ads={false} hideSearch>
-      <JoinDemoClient />
+    <MarketingShell ads={false} hideSearch findTenLabel="Find your 10%">
+      <JoinDemoClient showPlanHero />
     </MarketingShell>
   )
 }

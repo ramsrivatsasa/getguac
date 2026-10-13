@@ -15,7 +15,7 @@ export const runtime = 'nodejs'
 export const maxDuration = 20
 
 export async function POST(request) {
-  const sb = createApiClient() // accepts the mobile app's Bearer access token
+  const sb = await createApiClient() // accepts the mobile app's Bearer access token
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return Response.json({ error: 'Not signed in' }, { status: 401 })
 

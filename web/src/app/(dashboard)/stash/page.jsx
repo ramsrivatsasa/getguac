@@ -13,6 +13,15 @@ import { guacImpactChip } from '../../../lib/guacImpact'
 import { fetchInventoryMap, setOnHand, inventoryKey, lowStockVerdict } from '../../../lib/inventory'
 import { selectStashView, formatPurchaseFrequency } from '../../../lib/stashEngine'
 import { imageCacheKey } from '../../../lib/productImage'
+import { itemEmoji } from '../../../lib/itemEmoji'
+
+function curatedStashImage(itemName) {
+  const key = String(itemName || '').toLowerCase()
+  if (/(^|\s)whole milk($|\s)|(^|\s)milk gallon($|\s)/.test(key)) return '/products/whole-milk.png?v=2'
+  if (/sparkling water|seltzer water/.test(key)) return '/products/sparkling-water-12pk.png?v=2'
+  if (/tortilla chips|corn chips/.test(key)) return '/products/tortilla-chips.png?v=2'
+  return null
+}
 import { fetchLikeStats, toggleLike, formatLikeCount } from '../../../lib/productLikes'
 import { CATEGORIES, CATEGORY_BY_SLUG, categoryClass } from '../../../lib/categories'
 import CategoryPicker, { CategoryCreatePill } from '../../../components/CategoryPicker'
@@ -45,12 +54,31 @@ function timeframeCutoff(tf) {
 }
 
 const SORTS = [
+  { key: 'importance', label: 'Importance' },
   { key: 'recent',     label: 'Most recent' },
   { key: 'most_bought', label: 'Most bought' },
   { key: 'top_spend',   label: 'Highest spend' },
   { key: 'multi_store', label: 'Multi-store first' },
   { key: 'a_z',         label: 'A → Z' },
 ]
+
+const ESSENTIAL_CATEGORIES = new Set(['grub', 'household', 'pharmacy', 'health', 'personal-care'])
+
+function restockUrgency(item) {
+  const purchases = Number(item.times || 0)
+  if (purchases < 2 || !item.first_date || !item.last_date) return { band: 'other', score: 0 }
+  const first = new Date(`${item.first_date}T00:00:00Z`).getTime()
+  const last = new Date(`${item.last_date}T00:00:00Z`).getTime()
+  if (!Number.isFinite(first) || !Number.isFinite(last) || last <= first) return { band: 'other', score: 0 }
+  const cadence = Math.max(1, (last - first) / 86400000 / (purchases - 1))
+  const daysSince = Math.max(0, (Date.now() - last) / 86400000)
+  const ratio = daysSince / cadence
+  const essentialBoost = ESSENTIAL_CATEGORIES.has(item.category) ? 0.2 : 0
+  return {
+    band: ratio >= 1 ? 'due' : ratio >= 0.75 ? 'soon' : 'other',
+    score: ratio + essentialBoost + Math.min(purchases, 20) / 100,
+  }
+}
 
 // Money formatter — thousands separators + 2 decimals, matching the
 // mockup's Bricolage money figures (paired with `.gg-num` for the font).
@@ -90,7 +118,7 @@ export default function StashPage() {
   const money = useMemo(() => moneyWith(__cur), [__cur])
   const [search, setSearch] = useState('')
   const [activeCat, setActiveCat] = useState('all')
-  const [sort, setSort] = useState('recent')
+  const [sort, setSort] = useState('importance')
   const [timeframe, setTimeframe] = useState('all')
   const [view, setView] = useState('grid')  // 'grid' | 'list' | 'accordion'
   const [expanded, setExpanded] = useState(null)
@@ -335,6 +363,7 @@ export default function StashPage() {
     }
     list = [...list].sort((a, b) => {
       switch (sort) {
+        case 'importance':   return restockUrgency(b).score - restockUrgency(a).score
         case 'most_bought':  return b.times - a.times
         case 'top_spend':    return b.total_spend - a.total_spend
         case 'multi_store':  return b.store_count - a.store_count
@@ -344,6 +373,12 @@ export default function StashPage() {
     })
     return list
   }, [items, search, activeCat, sort, timeframe])
+
+  const priorityGroups = useMemo(() => {
+    const grouped = { due: [], soon: [], other: [] }
+    for (const item of filtered) grouped[restockUrgency(item).band].push(item)
+    return grouped
+  }, [filtered])
 
   // Accordion mode only applies when "All" is active + no search.
   // In any other case, fall back to the flat grid/list rendering.
@@ -367,15 +402,21 @@ export default function StashPage() {
     if (filtered.length === 0) return
     let cancelled = false
     const names = [...new Set(filtered.map(it => it.item_name).filter(Boolean))].slice(0, 80)
-    fetch('/api/product-image-batch', {
+    const batches = Array.from(
+      { length: Math.ceil(names.length / 20) },
+      (_, index) => names.slice(index * 20, index * 20 + 20),
+    )
+    Promise.all(batches.map(batch => fetch('/api/product-image-batch', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ names }),
-    })
-      .then(r => r.ok ? r.json() : null)
-      .then(json => {
-        if (cancelled || !json?.byName) return
-        setProductImages(prev => ({ ...prev, ...json.byName }))
+      body: JSON.stringify({ names: batch }),
+    }).then(r => r.ok ? r.json() : null)))
+      .then(results => {
+        if (cancelled) return
+        const byName = Object.assign({}, ...results.map(json => json?.byName || {}))
+        if (Object.keys(byName).length > 0) {
+          setProductImages(prev => ({ ...prev, ...byName }))
+        }
       })
       .catch(() => {/* degrade to emoji fallback */})
     return () => { cancelled = true }
@@ -445,7 +486,7 @@ export default function StashPage() {
     <div className="space-y-5 max-w-7xl font-sans">
       <FeatureHeader
         expression="standing"
-        title="Stash"
+        title="My Items"
         subtitle="Everything you've ever bought — and where to buy it cheapest."
         action={
           <span className="text-sm text-gray-500">
@@ -479,7 +520,7 @@ export default function StashPage() {
               BEST-STORE CHECK
             </span>
             <p className="font-display font-extrabold text-white leading-tight text-xl sm:text-2xl">
-              You're overpaying on <span className="gg-num">{overCount}</span> item{overCount === 1 ? '' : 's'} — <span className="gg-num">{money0(saveTotal)}</span> in easy savings.
+              You&apos;re overpaying on <span className="gg-num">{overCount}</span> item{overCount === 1 ? '' : 's'} — <span className="gg-num">{money0(saveTotal)}</span> in easy savings.
             </p>
             <p className="text-[13px] text-emerald-100/90 mt-1.5">
               Buy each at its cheapest store on your next run and pocket the difference.
@@ -632,7 +673,7 @@ export default function StashPage() {
           <LottieAnimation data={emptyListLottie} size={160} fallback="🥑" />
           <p className="text-gray-500 max-w-sm">
             {items.length === 0
-              ? <>No items yet. <Link href="/receipts" className="text-guac-700 font-semibold hover:underline">Add your first receipt</Link> to start your stash.</>
+              ? <>No items yet. <Link href="/receipts" className="text-guac-700 font-semibold hover:underline">Add your first receipt</Link> to start My Items.</>
               : 'No matches in this category.'}
           </p>
         </div>
@@ -671,7 +712,20 @@ export default function StashPage() {
           className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 anim-crossfade"
           delayMs={40}
         >
-          {filtered.map(it => {
+          {(sort === 'importance' ? [
+            { key: 'due', label: 'Due now', note: 'Likely ready to restock', tone: 'text-rose-600', items: priorityGroups.due },
+            { key: 'soon', label: 'Due soon', note: 'Coming up based on your buying rhythm', tone: 'text-amber-600', items: priorityGroups.soon },
+            { key: 'other', label: 'Other items', note: 'Organized by household importance and purchase history', tone: 'text-guac-700', items: priorityGroups.other },
+          ].filter(group => group.items.length > 0) : [{ key: 'sorted', label: '', note: '', tone: '', items: filtered }]).map(group => (
+            <section key={group.key} className="col-span-full">
+              {group.label && (
+                <div className={`mb-2 flex items-baseline gap-2 ${group.tone}`}>
+                  <h2 className="text-xs font-extrabold uppercase tracking-wide">{group.label}</h2>
+                  <span className="text-[11px] font-normal text-gray-500">{group.items.length} · {group.note}</span>
+                </div>
+              )}
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {group.items.map(it => {
             // Wrapper div is needed because the card is memo'd and
             // doesn't forward className/style — FadeUpStagger applies
             // its animation classes to the immediate child.
@@ -679,12 +733,16 @@ export default function StashPage() {
               <div key={it.key}>
                 <StashSavingsCard
                   item={it}
+                  imageUrl={curatedStashImage(it.item_name) || productImages[it.item_name]}
                   onAddToSmashlist={() => handleAddToSmashlist(it)}
                   onFindDeals={() => setStealsItem(it)}
                 />
               </div>
             )
-          })}
+              })}
+              </div>
+            </section>
+          ))}
         </FadeUpStagger>
       ) : (
         <div className="card p-0 overflow-hidden">
@@ -795,7 +853,7 @@ function CategorySection({ cat, items, expandedKey, onCardToggle, onAddToSmashli
               onToggle={() => onCardToggle(it.key)}
               onAddToSmashlist={(store) => onAddToSmashlist(it, store)}
               onFindDeals={() => onFindDeals(it)}
-              imageUrl={productImages[it.item_name]}
+              imageUrl={curatedStashImage(it.item_name) || productImages[it.item_name]}
             />
           ))}
         </div>
@@ -853,7 +911,7 @@ const StashCard = memo(function StashCard({ item, expanded, onToggle, onAddToSma
       <ItemRowCard
         title={item.item_name}
         subtitle={subtitle}
-        imageEmoji={cat.emoji}
+        imageEmoji={itemEmoji(item.item_name, cat.emoji)}
         imageUrl={imageUrl}
         tint={tone.tintHex || '#fef9c3'}
         frequency={formatPurchaseFrequency(item.times, item.first_date, item.last_date)}
@@ -935,7 +993,7 @@ const StashCard = memo(function StashCard({ item, expanded, onToggle, onAddToSma
  * repurchase button. A compact star row keeps rating alive. Every
  * value comes from the already-aggregated `item` — no new queries.
  */
-const StashSavingsCard = memo(function StashSavingsCard({ item, onAddToSmashlist, onFindDeals }) {
+const StashSavingsCard = memo(function StashSavingsCard({ item, imageUrl, onAddToSmashlist, onFindDeals }) {
   const __cur = useCurrencySymbol()
   const money = useMemo(() => moneyWith(__cur), [__cur])
   const qc = useQueryClient()
@@ -943,6 +1001,8 @@ const StashSavingsCard = memo(function StashSavingsCard({ item, onAddToSmashlist
   const tintBg = TINT_HEX[cat.color] || TINT_HEX.gray
   const isMulti = item.store_count > 1
   const [hoverRate, setHoverRate] = useState(0)
+  const [imageFailed, setImageFailed] = useState(false)
+  useEffect(() => setImageFailed(false), [imageUrl])
 
   // Bulk-rate mutation — cascades the rating across every
   // receipt_item of this product at each store (same as StashCard).
@@ -987,13 +1047,21 @@ const StashSavingsCard = memo(function StashSavingsCard({ item, onAddToSmashlist
       style={{ borderColor: 'rgba(20,83,45,.09)' }}
       onClick={goReceipt}
     >
-      {/* Head: tinted emoji tile + name + meta + multi-store star pill */}
+      {/* Head: product thumbnail + name + meta + multi-store star pill */}
       <div className="flex items-start gap-3">
         <div
-          className="w-[52px] h-[52px] rounded-[15px] flex items-center justify-center text-2xl shrink-0"
+          className="w-[52px] h-[52px] overflow-hidden rounded-[15px] flex items-center justify-center text-2xl shrink-0"
           style={{ background: tintBg }}
         >
-          {cat.emoji}
+          {imageUrl && !imageFailed ? (
+            <img
+              src={imageUrl}
+              alt=""
+              loading="lazy"
+              className="h-full w-full object-contain p-1"
+              onError={() => setImageFailed(true)}
+            />
+          ) : itemEmoji(item.item_name, cat.emoji)}
         </div>
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-guac-ink text-[14.5px] leading-snug line-clamp-2">{item.item_name}</p>
@@ -1020,7 +1088,7 @@ const StashSavingsCard = memo(function StashSavingsCard({ item, onAddToSmashlist
       ) : (
         <div className="flex items-center gap-2.5 rounded-lg px-3 py-2 bg-gray-50 text-gray-500 text-[12px] leading-snug">
           <span className="shrink-0">🏬</span>
-          <span>Only store you've bought this at{item.last_store ? ` — ${item.last_store}` : ''}</span>
+          <span>Only store you&apos;ve bought this at{item.last_store ? ` — ${item.last_store}` : ''}</span>
         </div>
       )}
 

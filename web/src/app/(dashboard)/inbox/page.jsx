@@ -11,6 +11,7 @@ import {
 import FeatureHeader from '../../../components/FeatureHeader'
 import { StoreLogo } from '../../../components/StoreLogo'
 import { displayStoreName } from '../../../lib/store-name-normalize'
+import { inboxReceiptStatus, emailAddressText } from '../../../lib/inbox-presentation.mjs'
 import { useConfirm } from '../../../components/ConfirmDialog'
 import { FadeUpStagger, ShimmerBox } from '../../../components/animated'
 
@@ -18,6 +19,8 @@ const FILTERS = [
   { value: '',         label: 'All' },
   { value: 'unread',   label: 'Unread' },
   { value: 'receipts', label: 'Receipts' },
+  { value: 'offers',   label: 'Offers' },
+  { value: 'review',   label: 'Needs review' },
   { value: 'starred',  label: 'Starred' },
 ]
 
@@ -193,6 +196,11 @@ export default function InboxPage() {
       return res.json()
     },
     onSuccess: (data, vars) => {
+      const offers = data?.offerImports
+      if (offers && Object.values(offers).some(Boolean)) {
+        qc.invalidateQueries({ queryKey: ['promotions'] })
+        toast.success(`${offers.added} offers captured · ${offers.duplicates} duplicates skipped · ${offers.expired} expired · ${offers.requiringReview} to review`)
+      }
       if (data?.inserted > 0) {
         qc.invalidateQueries({ queryKey: ['inbox'] })
         toast.success(`Pulled ${data.inserted} new message${data.inserted === 1 ? '' : 's'}`)
@@ -250,7 +258,7 @@ export default function InboxPage() {
         title="Inbox"
         subtitle={(() => {
           const todayStr = new Date().toISOString().slice(0, 10)
-          const filed = messages.filter(m => m.receipt)
+          const filed = messages.filter(m => inboxReceiptStatus(m).receipt)
           const filedToday = filed.filter(m => (m.received_at || '').slice(0, 10) === todayStr)
           return (
             <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
@@ -273,7 +281,7 @@ export default function InboxPage() {
           )
         })()}
         action={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Link
               href="/connections"
               className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-guac-line2 text-guac-700 text-sm font-bold hover:bg-guac-50 transition-colors"
@@ -319,12 +327,12 @@ export default function InboxPage() {
           <Panel defaultSize={35} minSize={20}>
             <section className="h-full bg-white flex flex-col">
               <div className="p-3 border-b border-gray-100 flex items-center gap-2 shrink-0">
-                <Search size={14} className="text-gray-400" />
+                <Search size={14} className="text-slate-500" />
                 <input
                   value={q}
                   onChange={e => setQ(e.target.value)}
                   placeholder="Search sender, subject, preview…"
-                  className="flex-1 bg-transparent text-sm outline-none"
+                  className="flex-1 bg-transparent text-sm text-slate-800 placeholder:text-slate-600 outline-none"
                 />
               </div>
               <div className="flex-1 overflow-y-auto divide-y divide-guac-line">
@@ -396,7 +404,7 @@ export default function InboxPage() {
                   <div className="space-y-1.5">
                     <p className="font-bold text-guac-ink text-base">Pick a message to read</p>
                     <p className="text-gray-500 text-xs max-w-xs">
-                      Forward any receipt to your <span className="font-mono font-semibold text-guac-700">+g</span> address and Guac-AI will file it as a receipt automatically.
+                      Forward any receipt to your <span className="font-mono font-semibold text-guac-700">+g</span> or <span className="font-mono font-semibold text-guac-700">.g</span> address and Guac-AI will file it as a receipt automatically.
                     </p>
                   </div>
                 </div>
@@ -508,7 +516,8 @@ function formatMoney(n) {
 
 function MessageRow({ m, selected, onClick, onToggleStar }) {
   const unread = !m.read_at
-  const rcpt = m.receipt  // embedded { store_name, total_amount, date, is_return, processed }
+  const status = inboxReceiptStatus(m)
+  const rcpt = status.receipt
   const isReceipt = !!rcpt
   const isReturn = rcpt?.is_return
   const amount = rcpt ? formatMoney(rcpt.total_amount) : null
@@ -523,7 +532,7 @@ function MessageRow({ m, selected, onClick, onToggleStar }) {
       {/* Avocado-green accent stripe for receipt-hook rows — instant visual scan */}
       {m.is_receipts_hook && (
         <span className={`absolute left-0 top-0 bottom-0 w-1 rounded-r ${
-          isReturn ? 'bg-rose-400' : isReceipt && rcpt?.processed ? 'bg-guac-600' : 'bg-guac-100 animate-pulse'
+          isReturn ? 'bg-rose-400' : isReceipt && rcpt?.processed ? 'bg-guac-600' : status.active ? 'bg-guac-100 animate-pulse' : 'bg-guac-100'
         }`} />
       )}
       <span
@@ -548,8 +557,8 @@ function MessageRow({ m, selected, onClick, onToggleStar }) {
                   {amount}
                 </span>
               )}
-              {!rcpt.processed && (
-                <span className="text-[9px] font-bold uppercase bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-full">Parsing…</span>
+              {(status.active || status.needsReview) && (
+                <span className="text-xs font-semibold bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-full">{status.active ? 'Parsing…' : 'Needs review'}</span>
               )}
             </>
           ) : (
@@ -560,6 +569,7 @@ function MessageRow({ m, selected, onClick, onToggleStar }) {
               {m.is_receipts_hook && (
                 <span className="text-[9px] font-bold uppercase bg-guac-100 text-guac-700 px-1.5 py-0.5 rounded-full">+g</span>
               )}
+              {status.active && <span className="text-xs font-semibold text-amber-800">Parsing…</span>}
             </>
           )}
           <span className="text-[10px] text-gray-400 ml-auto shrink-0">{shortDate(m.received_at)}</span>
@@ -576,6 +586,8 @@ function MessageRow({ m, selected, onClick, onToggleStar }) {
 }
 
 function MessagePreview({ m, onStar, onTrash, onReply }) {
+  const status = inboxReceiptStatus(m)
+  const deliveredTo = emailAddressText(m.delivered_to)
   return (
     <div className="flex flex-col h-full">
       <div className="p-4 border-b border-gray-100 flex items-start gap-3">
@@ -584,8 +596,8 @@ function MessagePreview({ m, onStar, onTrash, onReply }) {
           <p className="text-xs text-gray-500 mt-1">
             <strong>{m.from_addr}</strong> · {new Date(m.received_at).toLocaleString()}
           </p>
-          {m.delivered_to && m.delivered_to !== m.to_addr && (
-            <p className="text-[10px] text-gray-400 mt-0.5 font-mono">Delivered to: {m.delivered_to}</p>
+          {deliveredTo && deliveredTo !== emailAddressText(m.to_addr) && (
+            <p className="text-xs text-gray-500 mt-0.5 break-words">Delivered to: {deliveredTo}</p>
           )}
         </div>
         <div className="flex items-center gap-1 shrink-0">
@@ -600,12 +612,13 @@ function MessagePreview({ m, onStar, onTrash, onReply }) {
           </button>
         </div>
       </div>
-      {m.processed && m.receipt_id && (
+      {status.receipt?.processed && m.receipt_id && (
         <div className="px-4 py-2 bg-amber-50/60 border-b border-amber-100 text-xs text-amber-900 flex items-center gap-2">
           <Sparkles size={12} /> Guac-AI parsed this into a receipt.
           <a href={`/receipts/${m.receipt_id}`} className="ml-auto font-bold text-amber-800 hover:underline">Open receipt →</a>
         </div>
       )}
+      {m.email_classification === 'promotion' && <div className="flex items-center gap-2 border-b border-violet-100 bg-violet-50 px-4 py-2 text-xs text-violet-800"><Sparkles size={12} /><span>Offer email</span><Link href="/promotions?source=email" className="ml-auto inline-flex min-h-11 items-center font-semibold">Review offers →</Link></div>}
       <div className="flex-1 overflow-y-auto bg-white">
         <MessageBody m={m} />
       </div>
@@ -789,10 +802,10 @@ function ComposeModal({ prefill, onClose, onSent }) {
 
 function EmptyState({ folder, filter }) {
   return (
-    <div className="p-10 text-center text-gray-400 text-sm flex flex-col items-center gap-3">
+    <div className="p-10 text-center text-slate-600 text-sm flex flex-col items-center gap-3">
       <p>
         {filter === 'unread'   ? 'All caught up. Nothing unread.' :
-         filter === 'receipts' ? 'No receipts forwarded yet. Try forwarding an order confirmation to your +g address.' :
+         filter === 'receipts' ? 'No receipts forwarded yet. Try forwarding an order confirmation to your +g or .g address.' :
          filter === 'starred'  ? 'No starred messages.' :
          folder === 'trash'    ? 'Trash is empty.' :
          folder === 'sent'     ? "You haven't sent anything yet." :

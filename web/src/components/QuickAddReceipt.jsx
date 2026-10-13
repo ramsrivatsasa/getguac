@@ -179,13 +179,13 @@ export default function QuickAddReceipt() {
       {/* Full-page drop overlay — appears whenever dragging files */}
       {pageDragging && (
         <div
-          className="fixed inset-0 z-[55] flex items-center justify-center bg-guac-600/20 backdrop-blur-sm"
+          className="fixed inset-0 z-[55] flex items-center justify-center bg-violet-600/20 backdrop-blur-sm"
           onDragOver={(e) => { e.preventDefault(); e.stopPropagation() }}
           onDrop={handleOverlayDrop}
         >
-          <div className="rounded-2xl border-4 border-dashed border-guac-600 bg-white/95 px-10 py-8 flex flex-col items-center gap-3 shadow-2xl pointer-events-none">
-            <Upload size={48} className="text-guac-600 animate-bounce" />
-            <p className="text-xl font-semibold text-guac-700">Drop to auto-add receipts</p>
+          <div className="rounded-2xl border-4 border-dashed border-violet-500 bg-white/95 px-10 py-8 flex flex-col items-center gap-3 shadow-2xl pointer-events-none">
+            <Upload size={48} className="text-violet-600 animate-bounce" />
+            <p className="text-xl font-semibold text-violet-800">Drop to auto-add receipts</p>
             <p className="text-sm text-gray-500">PDF or images — Guacanomics handles the rest 🥑</p>
           </div>
         </div>
@@ -219,7 +219,7 @@ export default function QuickAddReceipt() {
           <button
             type="button"
             onClick={handlePickFile}
-            className="hidden sm:flex h-12 w-12 items-center justify-center rounded-full bg-white border border-gray-200 text-gray-600 hover:text-guac-700 hover:border-guac-600 shadow-md hover:shadow-lg transition-all"
+            className="hidden sm:flex h-12 w-12 items-center justify-center rounded-full bg-white border border-gray-200 text-gray-600 hover:text-violet-700 hover:border-violet-500 shadow-md hover:shadow-lg transition-all"
             title="Upload a file"
           >
             <Upload size={18} />
@@ -228,12 +228,12 @@ export default function QuickAddReceipt() {
           <button
             type="button"
             onClick={handleFabClick}
-            className="group flex items-center gap-2 h-14 pl-4 pr-5 rounded-full bg-gradient-to-br from-emerald-500 to-green-700 text-white shadow-lg hover:shadow-xl hover:from-emerald-600 hover:to-green-800 transition-all"
+            className="group flex items-center gap-2 h-14 pl-4 pr-5 rounded-full bg-gradient-to-br from-violet-600 to-indigo-600 text-white shadow-lg hover:shadow-xl hover:from-violet-700 hover:to-indigo-700 transition-all"
             title="Add receipt"
           >
             <span className="text-xl">🥑</span>
             <span className="hidden sm:inline font-bold text-sm">Add Receipt</span>
-            <Camera size={18} className="text-guac-100" />
+            <Camera size={18} className="text-violet-100" />
           </button>
         </div>
         <input

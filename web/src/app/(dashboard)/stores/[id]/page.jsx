@@ -272,7 +272,7 @@ export default function StoreDetailPage() {
           <div className="flex items-center gap-2 mb-3">
             <Shield size={16} className="text-guac-600" />
             <h3 className="gg-h2">Return Policy</h3>
-            <span className="ml-auto text-[11px] text-gray-400">From the merchant's published policy</span>
+            <span className="ml-auto text-[11px] text-gray-400">From the merchant&apos;s published policy</span>
           </div>
           <div className="space-y-3">
             {returnPolicies.map(p => {
@@ -300,7 +300,7 @@ export default function StoreDetailPage() {
                         className="inline-flex items-center gap-1 mt-1.5 text-[11px] font-semibold text-guac-700 hover:text-guac-ink"
                         title={`Read ${displayStoreName(store.store_name)}'s full return policy`}
                       >
-                        Read {displayStoreName(store.store_name)}'s full policy <ExternalLink size={11} />
+                        Read {displayStoreName(store.store_name)}&apos;s full policy <ExternalLink size={11} />
                       </a>
                     )}
                   </div>

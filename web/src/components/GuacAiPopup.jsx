@@ -20,8 +20,7 @@ export default function GuacAiPopup() {
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-label={open ? 'Close Guac AI' : 'Ask Guac AI'}
-        className="fixed z-[60] right-4 sm:right-5 bottom-24 h-11 items-center gap-2 rounded-full bg-white shadow-lg ring-1 ring-guac-700/15 pl-1.5 pr-4 hover:-translate-y-0.5 transition-transform"
-        style={{ display: open ? 'none' : 'flex' }}
+        className={`${open ? 'hidden' : 'hidden sm:flex'} fixed z-[60] right-4 sm:right-5 bottom-24 h-11 items-center gap-2 rounded-full bg-white shadow-lg ring-1 ring-guac-700/15 pl-1.5 pr-4 hover:-translate-y-0.5 transition-transform`}
       >
         <GuacMascot expression="happy" size={30} className="shrink-0" />
         <span className="text-sm font-extrabold" style={{ color: '#15281C' }}>Guac AI</span>

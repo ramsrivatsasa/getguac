@@ -95,6 +95,7 @@ export async function saveReceiptViaOutbox(payload) {
       },
       body: JSON.stringify({
         parsed:             payload.parsed,
+        source:             payload.source,
         receipt_link:       payload.receipt_link,
         extra_page_urls:    payload.extra_page_urls,
         business_purchase:  payload.business_purchase,
@@ -123,6 +124,7 @@ export async function saveReceiptViaOutbox(payload) {
     enqueue({
       id: idemKey,
       parsed:             payload.parsed,
+      source:             payload.source,
       receipt_link:       payload.receipt_link,
       extra_page_urls:    payload.extra_page_urls,
       business_purchase:  payload.business_purchase,
@@ -196,6 +198,7 @@ export async function flushOutbox() {
         },
         body: JSON.stringify({
           parsed:             entry.parsed,
+          source:             entry.source,
           receipt_link:       entry.receipt_link,
           extra_page_urls:    entry.extra_page_urls,
           business_purchase:  entry.business_purchase,

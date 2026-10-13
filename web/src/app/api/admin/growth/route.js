@@ -20,7 +20,7 @@ function serviceClient() {
 }
 
 async function requireAdmin() {
-  const client = createApiClient()
+  const client = await createApiClient()
   const { data: { user } } = await client.auth.getUser()
   if (!user) return { error: Response.json({ error: 'Not signed in' }, { status: 401 }) }
   const { data: profile } = await client.from('profiles').select('is_admin').eq('id', user.id).maybeSingle()

@@ -102,7 +102,7 @@ export async function GET(request) {
     return NextResponse.redirect(back)
   }
 
-  const sb = createApiClient()
+  const sb = await createApiClient()
   const { error: exchErr } = await sb.auth.exchangeCodeForSession(code)
   if (exchErr) {
     const back = new URL('/login', url.origin)

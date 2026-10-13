@@ -39,6 +39,7 @@ import {
 } from './email-to-receipt'
 import { applyCategoryRules } from './categorizeRules'
 import { categorizeReceiptInline, tagItemsInline } from './guacAiEnrich'
+import { receiptCategoryFromItems } from './auto-categorize'
 
 /**
  * @param {object} sb        Supabase client bound to the caller's identity
@@ -101,10 +102,16 @@ export async function saveReceipt(sb, userId, parsed, opts = {}) {
   // More rules slot into RULE_ORDER in lib/categorizeRules.js — each
   // checks items first, store second.
   const ruleCategory = applyCategoryRules(flatParsed, flatParsed.items)
+  const itemCategory = receiptCategoryFromItems(flatParsed.items, flatParsed.category)
+  const categorizedItemKinds = new Set((flatParsed.items || []).filter(it => it && !it.returned && it.category).map(it => it.category))
+  const hasMixedItemCategories = categorizedItemKinds.size > 1
   let finalCategory, categorySource
   if (opts.user_category) {
     finalCategory = opts.user_category
     categorySource = 'user'
+  } else if (hasMixedItemCategories) {
+    finalCategory = null
+    categorySource = 'ai'
   } else if (ruleCategory) {
     finalCategory = ruleCategory
     categorySource = 'rule'
@@ -112,7 +119,7 @@ export async function saveReceipt(sb, userId, parsed, opts = {}) {
     finalCategory = inferredCategory
     categorySource = 'inferred'
   } else {
-    finalCategory = flatParsed.category || null
+    finalCategory = itemCategory
     categorySource = 'ai'
   }
 
@@ -154,6 +161,12 @@ export async function saveReceipt(sb, userId, parsed, opts = {}) {
     date: flatParsed.date || new Date().toISOString().slice(0, 10),
     total_amount: Number(flatParsed.total_amount ?? 0),
     tax_paid: Number(flatParsed.tax_paid ?? 0),
+    subtotal: optionalAmount(flatParsed.subtotal),
+    tip_amount: optionalAmount(flatParsed.tip_amount),
+    service_charge: optionalAmount(flatParsed.service_charge),
+    other_fees: optionalAmount(flatParsed.other_fees),
+    discount_amount: optionalAmount(flatParsed.discount_amount),
+    gratuity_included: Boolean(flatParsed.gratuity_included),
     payment_method: flatParsed.payment_method || null,
     payment_last4: flatParsed.payment_last4 || null,
     is_return: Boolean(flatParsed.is_return),
@@ -338,6 +351,15 @@ async function mergeIntoExisting(sb, userId, existingId, ctx) {
   }
 
   return { receipt_id: existingId, merged: true }
+}
+
+// A blank optional amount means "not provided"; an explicit 0 means "none"
+// (product spec §7). An empty form field must therefore store NULL — coercing
+// it through Number('') would record a confident $0.00 tip on every receipt.
+function optionalAmount(value) {
+  if (value === null || value === undefined || value === '') return null
+  const amount = Number(value)
+  return Number.isFinite(amount) ? amount : null
 }
 
 function flattenParsed(p) {

@@ -1,7 +1,21 @@
 /** @type {import('next').NextConfig} */
 import { withSentryConfig } from '@sentry/nextjs'
+import { isLoopbackBackend } from './src/lib/find-your-10/local-boundary.mjs'
+import { ACADEMY_TITLES, academySlug } from './src/lib/academy-titles.mjs'
+import { ARTICLE_ROUTE_ALIASES } from './src/lib/article-route-aliases.mjs'
 
 const scriptEvalDirective = process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''
+
+// Local development points NEXT_PUBLIC_SUPABASE_URL at the Supabase CLI stack on
+// 127.0.0.1:54321 (see .env.development.local). The production connect-src only
+// allows *.supabase.co, so without this every client-side screen — receipts,
+// stash, bills — silently fails to reach the database in local dev while the
+// server-rendered ones keep working, which is a confusing way to lose an hour.
+// Development only; production keeps the narrow list.
+const localBackend = process.env.NODE_ENV === 'development' && isLoopbackBackend(process.env.NEXT_PUBLIC_SUPABASE_URL)
+  ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).origin : null
+const localSupabaseConnect = localBackend
+  ? ` ${localBackend} ${localBackend.replace(/^http/, 'ws')}` : ''
 
 // Security headers — applied to every response. The CSP is deliberately tight
 // for app pages; we relax it only where third-party scripts are required
@@ -59,7 +73,7 @@ const securityHeaders = [
       // into the console on each one, which buries the errors worth reading.
       // *.google.com does not cover it — gstatic.com is a different registrable
       // domain, which is why the existing wildcard let it through unnoticed.
-      "connect-src 'self' https://*.supabase.co https://*.supabase.in wss://*.supabase.co wss://*.supabase.in https://api.migadu.com https://dns.google https://pagead2.googlesyndication.com https://*.googlesyndication.com https://googleads.g.doubleclick.net https://*.google.com https://csi.gstatic.com https://*.adtrafficquality.google https://connect.facebook.net https://www.facebook.com https://va.vercel-scripts.com https://vitals.vercel-insights.com",
+      `connect-src 'self'${localSupabaseConnect} https://*.supabase.co https://*.supabase.in wss://*.supabase.co wss://*.supabase.in https://api.migadu.com https://dns.google https://pagead2.googlesyndication.com https://*.googlesyndication.com https://googleads.g.doubleclick.net https://*.google.com https://csi.gstatic.com https://*.adtrafficquality.google https://connect.facebook.net https://www.facebook.com https://va.vercel-scripts.com https://vitals.vercel-insights.com`,
       // Ad creatives render inside Google ad iframes; Turnstile renders its
       // challenge in a challenges.cloudflare.com iframe.
       // youtube-nocookie.com / youtube.com = the how-it-works video embed;
@@ -75,12 +89,20 @@ const securityHeaders = [
       "base-uri 'self'",
       "form-action 'self'",
       "object-src 'none'",
-      "upgrade-insecure-requests",
+      ...(localBackend ? [] : ["upgrade-insecure-requests"]),
     ].join('; '),
   },
 ]
 
 const nextConfig = {
+  // Keep public metadata in the initial head for crawlers and audit tools.
+  htmlLimitedBots: /.*/,
+  async rewrites() {
+    return localBackend ? ['auth/v1', 'rest/v1', 'storage/v1', 'realtime/v1'].map(service => ({
+      source: `/_local/supabase/${service}/:path*`,
+      destination: `${localBackend}/${service}/:path*`,
+    })) : []
+  },
   // 🔴 TWO DEV SERVERS CANNOT SHARE ONE BUILD DIRECTORY.
   //
   // Measured 2026-08-09: a second `next dev` in this repo rebuilt `.next` with
@@ -104,16 +126,11 @@ const nextConfig = {
     // actually uses (lucide-react is imported on nearly every page; the
     // sidebar alone references ~30 icons). Cuts dev compile time + bundle size.
     optimizePackageImports: ['lucide-react', 'date-fns', 'recharts'],
-    // Next 14.2 name (renamed to top-level `serverExternalPackages` in Next 15).
-    // At top level it's silently ignored here, so it MUST live under experimental
-    // — keeps webpack from mangling the brotli-packed Chromium binary.
-    serverComponentsExternalPackages: ['pdf-parse', 'imapflow', 'mailparser', '@sparticuz/chromium', 'puppeteer-core'],
-    // Next's file tracer still drops @sparticuz/chromium's bin/ (the packed
-    // Chromium) from the email-snapshot function — so executablePath() 500s with
-    // "bin does not exist". Force the whole package into that function.
-    outputFileTracingIncludes: {
-      '/api/receipts/[id]/email-snapshot': ['./node_modules/@sparticuz/chromium/**'],
-    },
+  },
+  // Next 15 names: preserve native/PDF/email packages and snapshot binaries.
+  serverExternalPackages: ['pdf-parse', 'imapflow', 'mailparser', '@sparticuz/chromium', 'puppeteer-core'],
+  outputFileTracingIncludes: {
+    '/api/receipts/[id]/email-snapshot': ['./node_modules/@sparticuz/chromium/**'],
   },
   // Build-time SHA baked into the client bundle. The UpdatePrompt
   // component compares this to the SHA returned by /api/build-info
@@ -141,6 +158,9 @@ const nextConfig = {
   // subdomain to be assigned to this Vercel project (Settings → Domains).
   async redirects() {
     return [
+      ...Object.keys(ACADEMY_TITLES).filter(id => id !== academySlug(id)).map(id => ({source:`/academy/${id}`,destination:`/academy/${academySlug(id)}`,permanent:true})),
+      ...Object.keys(ACADEMY_TITLES).filter(id => id !== academySlug(id)).map(id => ({source:`/money-bootcamp/${academySlug(id)}`,destination:`/money-bootcamp/${id}`,permanent:true})),
+      ...ARTICLE_ROUTE_ALIASES.filter(([old, next]) => old !== next).map(([old, next]) => ({source:`/articles/${old}`,destination:`/articles/${next}`,permanent:true})),
       {
         source: '/:path*',
         has: [{ type: 'host', value: 'webmail.getguac.app' }],
@@ -166,7 +186,9 @@ const nextConfig = {
       // security.html, index.html and four guides/*.html — and the Learn page
       // links to every one of them. A wildcard here would bounce all eleven to
       // /learn and take the tools and guides sections down with it.
-      { source: '/resources', destination: '/learn', permanent: true },
+      { source: '/academy', destination: '/academy/lessons', permanent: true },
+      { source: '/resources', destination: '/academy', permanent: true },
+      { source: '/learn', destination: '/academy', permanent: true },
     ]
   },
 }

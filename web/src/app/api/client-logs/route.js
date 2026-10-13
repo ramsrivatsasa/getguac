@@ -18,7 +18,7 @@ import { createApiClient } from '../../../lib/supabase/server'
 export const runtime = 'nodejs'
 
 export async function POST(request) {
-  const sb = createApiClient()
+  const sb = await createApiClient()
   const { data: { user } } = await sb.auth.getUser()
   // Signed out is NOT an error here. audit_log rows are keyed to a user, so
   // there is nothing to write — but answering 401 made every logged-out visitor

@@ -46,8 +46,8 @@
   <h1>Wikipedia Lookup — 20-Scenario Report</h1>
   <p>Tests <code>cleanProductNameForLookup</code> (pure) and the live Wikipedia REST hits that turn cleaned names into real Stash card images.</p>
 </header>
-<div class="banner ok">All 38 assertions passed.</div>
-<div class="net ran">Network portion ran — live Wikipedia thumbnails embedded below.</div>
+<div class="banner ok">All 20 assertions passed.</div>
+<div class="net skipped">Network portion skipped. Run <code>WIKI_NETWORK=1 node web/scripts/test-wikipedia-lookup-scenarios.mjs</code> to verify each cleaned name actually resolves to an image.</div>
 <main>
   <table>
     <thead>
@@ -65,11 +65,11 @@
         <span class="check pass">✓</span>
       </td>
       <td class="thumb">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Chou-fleur_02.jpg/330px-Chou-fleur_02.jpg" alt="Cauliflower" />
+        <span class="empty">(skipped)</span>
       </td>
       <td class="expect">image</td>
-      <td class="ok pass">
-        ✓
+      <td class="ok na">
+        —
       </td>
     </tr>
   
@@ -84,11 +84,11 @@
         <span class="check pass">✓</span>
       </td>
       <td class="thumb">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Chou-fleur_02.jpg/330px-Chou-fleur_02.jpg" alt="Cauliflower" />
+        <span class="empty">(skipped)</span>
       </td>
       <td class="expect">image</td>
-      <td class="ok pass">
-        ✓
+      <td class="ok na">
+        —
       </td>
     </tr>
   
@@ -103,11 +103,11 @@
         <span class="check pass">✓</span>
       </td>
       <td class="thumb">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Mentha_spicata-IMG_6186.jpg/330px-Mentha_spicata-IMG_6186.jpg" alt="Mentha" />
+        <span class="empty">(skipped)</span>
       </td>
       <td class="expect">image</td>
-      <td class="ok pass">
-        ✓
+      <td class="ok na">
+        —
       </td>
     </tr>
   
@@ -122,11 +122,11 @@
         <span class="check pass">✓</span>
       </td>
       <td class="thumb">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Huevo_frito.jpg/330px-Huevo_frito.jpg" alt="Eggs as food" />
+        <span class="empty">(skipped)</span>
       </td>
       <td class="expect">image</td>
-      <td class="ok pass">
-        ✓
+      <td class="ok na">
+        —
       </td>
     </tr>
   
@@ -141,11 +141,11 @@
         <span class="check pass">✓</span>
       </td>
       <td class="thumb">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Joghurt.jpg/330px-Joghurt.jpg" alt="Yogurt" />
+        <span class="empty">(skipped)</span>
       </td>
       <td class="expect">image</td>
-      <td class="ok pass">
-        ✓
+      <td class="ok na">
+        —
       </td>
     </tr>
   
@@ -160,11 +160,11 @@
         <span class="check pass">✓</span>
       </td>
       <td class="thumb">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Bananavarieties.jpg/330px-Bananavarieties.jpg" alt="Banana" />
+        <span class="empty">(skipped)</span>
       </td>
       <td class="expect">image</td>
-      <td class="ok pass">
-        ✓
+      <td class="ok na">
+        —
       </td>
     </tr>
   
@@ -179,11 +179,11 @@
         <span class="check pass">✓</span>
       </td>
       <td class="thumb">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Persea_americana_fruit_2.JPG/330px-Persea_americana_fruit_2.JPG" alt="Avocado" />
+        <span class="empty">(skipped)</span>
       </td>
       <td class="expect">image</td>
-      <td class="ok pass">
-        ✓
+      <td class="ok na">
+        —
       </td>
     </tr>
   
@@ -198,11 +198,11 @@
         <span class="check pass">✓</span>
       </td>
       <td class="thumb">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Garden_strawberry_%28Fragaria_%C3%97_ananassa%29_single2.jpg/330px-Garden_strawberry_%28Fragaria_%C3%97_ananassa%29_single2.jpg" alt="Strawberry" />
+        <span class="empty">(skipped)</span>
       </td>
       <td class="expect">image</td>
-      <td class="ok pass">
-        ✓
+      <td class="ok na">
+        —
       </td>
     </tr>
   
@@ -217,11 +217,11 @@
         <span class="check pass">✓</span>
       </td>
       <td class="thumb">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Peas_in_pods_-_Studio.jpg/330px-Peas_in_pods_-_Studio.jpg" alt="Pea" />
+        <span class="empty">(skipped)</span>
       </td>
       <td class="expect">image</td>
-      <td class="ok pass">
-        ✓
+      <td class="ok na">
+        —
       </td>
     </tr>
   
@@ -236,11 +236,11 @@
         <span class="check pass">✓</span>
       </td>
       <td class="thumb">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/Almonds_-_in_shell%2C_shell_cracked_open%2C_shelled%2C_blanched.jpg/330px-Almonds_-_in_shell%2C_shell_cracked_open%2C_shelled%2C_blanched.jpg" alt="Almond" />
+        <span class="empty">(skipped)</span>
       </td>
       <td class="expect">image</td>
-      <td class="ok pass">
-        ✓
+      <td class="ok na">
+        —
       </td>
     </tr>
   
@@ -255,11 +255,11 @@
         <span class="check pass">✓</span>
       </td>
       <td class="thumb">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Persea_americana_fruit_2.JPG/330px-Persea_americana_fruit_2.JPG" alt="Avocado" />
+        <span class="empty">(skipped)</span>
       </td>
       <td class="expect">image</td>
-      <td class="ok pass">
-        ✓
+      <td class="ok na">
+        —
       </td>
     </tr>
   
@@ -274,11 +274,11 @@
         <span class="check pass">✓</span>
       </td>
       <td class="thumb">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Oliven_V1.jpg/330px-Oliven_V1.jpg" alt="Olive oil" />
+        <span class="empty">(skipped)</span>
       </td>
       <td class="expect">image</td>
-      <td class="ok pass">
-        ✓
+      <td class="ok na">
+        —
       </td>
     </tr>
   
@@ -293,11 +293,11 @@
         <span class="check pass">✓</span>
       </td>
       <td class="thumb">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/Cononut_milk.JPG/330px-Cononut_milk.JPG" alt="Coconut milk" />
+        <span class="empty">(skipped)</span>
       </td>
       <td class="expect">image</td>
-      <td class="ok pass">
-        ✓
+      <td class="ok na">
+        —
       </td>
     </tr>
   
@@ -312,11 +312,11 @@
         <span class="check pass">✓</span>
       </td>
       <td class="thumb">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Broccoli_and_cross_section_edit.jpg/330px-Broccoli_and_cross_section_edit.jpg" alt="Broccoli" />
+        <span class="empty">(skipped)</span>
       </td>
       <td class="expect">image</td>
-      <td class="ok pass">
-        ✓
+      <td class="ok na">
+        —
       </td>
     </tr>
   
@@ -331,11 +331,11 @@
         <span class="check pass">✓</span>
       </td>
       <td class="thumb">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Lattice_apple_pie.png/330px-Lattice_apple_pie.png" alt="Apple pie" />
+        <span class="empty">(skipped)</span>
       </td>
       <td class="expect">image</td>
-      <td class="ok pass">
-        ✓
+      <td class="ok na">
+        —
       </td>
     </tr>
   
@@ -388,11 +388,11 @@
         <span class="check pass">✓</span>
       </td>
       <td class="thumb">
-        <span class="empty">no image</span>
+        <span class="empty">(skipped)</span>
       </td>
       <td class="expect">no image</td>
-      <td class="ok pass">
-        ✓
+      <td class="ok na">
+        —
       </td>
     </tr>
   
@@ -407,11 +407,11 @@
         <span class="check pass">✓</span>
       </td>
       <td class="thumb">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/Rock_salt_%28halitite%29_%28Billianwala_Salt_Member%2C_Salt_Range_Formation%2C_Ediacaran_to_Lower_Cambrian%3B_Khewra_Salt_Mine%2C_Salt_Range%2C_Pakistan%29_14.jpg/330px-Rock_salt_%28halitite%29_%28Billianwala_Salt_Member%2C_Salt_Range_Formation%2C_Ediacaran_to_Lower_Cambrian%3B_Khewra_Salt_Mine%2C_Salt_Range%2C_Pakistan%29_14.jpg" alt="Salt" />
+        <span class="empty">(skipped)</span>
       </td>
       <td class="expect">image</td>
-      <td class="ok pass">
-        ✓
+      <td class="ok na">
+        —
       </td>
     </tr>
   
@@ -426,11 +426,11 @@
         <span class="check pass">✓</span>
       </td>
       <td class="thumb">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/P1030323.JPG/330px-P1030323.JPG" alt="Lemon" />
+        <span class="empty">(skipped)</span>
       </td>
       <td class="expect">image</td>
-      <td class="ok pass">
-        ✓
+      <td class="ok na">
+        —
       </td>
     </tr>
   </tbody>

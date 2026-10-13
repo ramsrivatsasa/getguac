@@ -12,7 +12,7 @@ import { useConfirm } from '../../../components/ConfirmDialog'
 import { useQuery } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { formatDateShort } from '../../../lib/dateFormat'
-import { Upload, Trash2, Eye, Search, Download, Loader2, Sparkles, X, Shield, Camera, ChevronDown, ChevronRight, Undo2, ShoppingCart, Monitor, Link2, Tag, RefreshCw, Copy, FileText, Mic, Plus } from 'lucide-react'
+import { Upload, Trash2, Eye, Search, Download, Loader2, Sparkles, X, Shield, Camera, ChevronDown, ChevronRight, Undo2, ShoppingCart, Monitor, Link2, Tag, RefreshCw, Copy, FileText, Mic, Plus, Check, Pencil, LockKeyhole } from 'lucide-react'
 import { guessCategory } from '../../../lib/categorizeRules'
 import { normalizeStoreName, displayStoreName } from '../../../lib/store-name-normalize'
 import { logoUrlForStore } from '../../../lib/store-logo'
@@ -32,8 +32,9 @@ import { ShimmerBox } from '../../../components/animated'
 import LottieAnimation from '../../../components/LottieAnimation'
 import emptyReceiptsLottie from '../../../lottie/empty-receipts.json'
 import docFileSearching from '../../../lottie/doc-file-searching.json'
+import AmountReconciliation from '../../../components/AmountReconciliation'
 
-const EMPTY = { store_name: '', date: '', total_amount: '', tax_paid: '', reward_no: '', business_purchase: false }
+const EMPTY = { store_name: '', date: '', total_amount: '', subtotal: '', tax_paid: '', tip_amount: '', service_charge: '', other_fees: '', discount_amount: '', gratuity_included: false, reward_no: '', business_purchase: false }
 
 // Column definitions for the receipts table. `default` is the initial pixel
 // width; users can drag the right edge of any header to override, and the
@@ -129,8 +130,11 @@ export default function ReceiptsPage() {
   const initialDeeplink = parseReceiptsUrlParams(searchParams)
   const [search, setSearch] = useState(initialDeeplink.store)
   const [period, setPeriod] = useState(initialDeeplink.period)
-  const [showForm, setShowForm] = useState(false)
+  const initialManual = searchParams.get('manual') === '1'
+  const [showForm, setShowForm] = useState(initialManual)
+  const [manualEntry, setManualEntry] = useState(initialManual)
   const [form, setForm] = useState(EMPTY)
+  useEffect(()=>{if(initialManual)setForm(previous=>({...previous,date:new Date().toLocaleDateString('en-CA')}))},[initialManual])
   const [file, setFile] = useState(null)
   const [parsing, setParsing] = useState(false)
   const [parsedItems, setParsedItems] = useState([])
@@ -138,6 +142,7 @@ export default function ReceiptsPage() {
   const [locationInfo, setLocationInfo] = useState(null)
   const [refundPolicies, setRefundPolicies] = useState([])
   const [duplicate, setDuplicate] = useState(null)
+  const [scanSuccess, setScanSuccess] = useState(null)
   const [selected, setSelected] = useState(() => new Set())
   // Only one row can be expanded at a time — clicking another auto-closes the previous.
   const [expandedId, setExpandedId] = useState(null)
@@ -155,7 +160,7 @@ export default function ReceiptsPage() {
   // lower bound (for "All"). useReceipts is keyed by filters so swapping
   // periods triggers a fresh fetch automatically.
   const dateFrom = useMemo(() => chipToDateFrom(period), [period])
-  const { data: receipts = [], isLoading } = useReceipts({ dateFrom })
+  const { data: receipts = [], isLoading, error: receiptsError, refetch: retryReceipts } = useReceipts({ dateFrom })
   const { data: bankStmts = new Map() } = useBankStatementMap()
   // Quick lookup so we can resolve reconciled-but-not-from-statement rows
   // to their paired statement row's issuer/file_name without an extra query.
@@ -202,10 +207,31 @@ export default function ReceiptsPage() {
   // Uses the shared parser so the chip allowlist + default stay in one place.
   useEffect(() => {
     const dl = parseReceiptsUrlParams(searchParams)
-    if (dl.store && dl.store !== search) setSearch(dl.store)
+    if (dl.store !== search) setSearch(dl.store)
     if (dl.period && dl.period !== period) setPeriod(dl.period)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams])
+
+  // Keep a durable in-session return target for detail-page Close/Save.
+  // Browser Back still uses native history, while these explicit controls no
+  // longer discard the selected duration or store filter.
+  useEffect(() => {
+    try {
+      const query = searchParams.toString()
+      sessionStorage.setItem('getguac.receipts.returnTo', query ? `/receipts?${query}` : '/receipts')
+    } catch {}
+  }, [searchParams])
+
+  // Persist the selected duration in the list URL. Opening a receipt and
+  // navigating back now restores the exact same filter instead of rebuilding
+  // the page with the default 1M chip.
+  const selectPeriod = useCallback((nextPeriod) => {
+    setPeriod(nextPeriod)
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('period', nextPeriod)
+    router.replace(`/receipts?${params.toString()}`, { scroll: false })
+  }, [router, searchParams])
+
   const startResize = useCallback((e, colId) => {
     e.preventDefault()
     e.stopPropagation()
@@ -242,7 +268,13 @@ export default function ReceiptsPage() {
         store_name: data.store_name || prev.store_name,
         date: data.date || prev.date,
         total_amount: data.total_amount ?? prev.total_amount,
+        subtotal: data.subtotal ?? prev.subtotal,
         tax_paid: data.tax_paid ?? prev.tax_paid,
+        tip_amount: data.tip_amount ?? prev.tip_amount,
+        service_charge: data.service_charge ?? prev.service_charge,
+        other_fees: data.other_fees ?? prev.other_fees,
+        discount_amount: data.discount_amount ?? prev.discount_amount,
+        gratuity_included: data.gratuity_included ?? prev.gratuity_included,
       }))
       if (Array.isArray(data.items) && data.items.length > 0) setParsedItems(data.items)
       setStoreInfo({
@@ -312,8 +344,22 @@ export default function ReceiptsPage() {
         validation_comment: voiceComment || undefined,
       },
       {
-        onSuccess: () => {
-          toast.success(existingId ? 'Receipt updated' : 'Receipt saved')
+        onSuccess: saved => {
+          if(saved?.queued) toast('Receipt queued. It will save when your connection returns.')
+          else toast.success(existingId ? 'Receipt updated' : 'Receipt saved')
+          if (!existingId && !saved?.queued) {
+            const categories = new Set(parsedItems.map(item => item.category).filter(Boolean))
+            setScanSuccess({
+              id: saved?.id,
+              store: form.store_name,
+              date: form.date,
+              total: Number(form.total_amount || 0),
+              tax: Number(form.tax_paid || 0),
+              items: parsedItems.length,
+              categories: categories.size,
+              returns: refundPolicies.filter(policy => policy.eligible !== false).length,
+            })
+          }
           setForm(EMPTY); setFile(null); setParsedItems([]); setRefundPolicies([]); setLocationInfo(null); setShowForm(false)
           setVoiceComment(null)
         },
@@ -332,6 +378,7 @@ export default function ReceiptsPage() {
   }
 
   function handleCancel() {
+    setManualEntry(false)
     setShowForm(false); setForm(EMPTY); setFile(null); setParsedItems([])
     setDuplicate(null); setStoreInfo(null); setLocationInfo(null); setRefundPolicies([])
     setVoiceComment(null)
@@ -363,6 +410,7 @@ export default function ReceiptsPage() {
       const res = await fetch(`/api/receipts/${id}/reparse`, { method: 'POST' })
       const body = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(body?.error || `Re-parse failed (${res.status})`)
+      if (body?.skipped) { toast(body.message, { id: t, duration: 6000 }); return }
       const updatedStore = body?.receipt?.store_name || storeName || 'Receipt'
       const items = body?.items_parsed || 0
       toast.success(`Re-parsed ${updatedStore} · ${items} items`, { id: t, duration: 4000 })
@@ -397,6 +445,7 @@ export default function ReceiptsPage() {
       date: data.date,
       total_amount: data.total_amount ?? 0,
       tax_paid: data.tax_paid ?? 0,
+      tip_amount: data.tip_amount ?? null,
       business_purchase: false,
       processed: (data.items?.length || 0) > 0,
     }
@@ -559,7 +608,13 @@ export default function ReceiptsPage() {
         store_name: data.store_name || prev.store_name,
         date: data.date || prev.date,
         total_amount: data.total_amount ?? prev.total_amount,
+        subtotal: data.subtotal ?? prev.subtotal,
         tax_paid: data.tax_paid ?? prev.tax_paid,
+        tip_amount: data.tip_amount ?? prev.tip_amount,
+        service_charge: data.service_charge ?? prev.service_charge,
+        other_fees: data.other_fees ?? prev.other_fees,
+        discount_amount: data.discount_amount ?? prev.discount_amount,
+        gratuity_included: data.gratuity_included ?? prev.gratuity_included,
       }))
       setParsedItems(Array.isArray(data.items) ? data.items : [])
       setStoreInfo({
@@ -1051,6 +1106,7 @@ export default function ReceiptsPage() {
           </button>
           {addMenuOpen && (
             <div role="menu" className="absolute left-0 top-full mt-2 z-30 w-48 rounded-2xl bg-white shadow-xl ring-1 ring-gray-100 p-1.5 anim-fadeup">
+              <button role="menuitem" type="button" onClick={() => { setAddMenuOpen(false); handleCancel(); setForm({...EMPTY,date:new Date().toLocaleDateString('en-CA')}); setManualEntry(true); setShowForm(true) }} className="flex min-h-11 w-full items-center gap-2.5 rounded-xl px-3 text-sm font-medium text-violet-700 hover:bg-violet-50"><FileText size={16}/> Manual receipt</button>
               <button role="menuitem" type="button" onClick={() => { setAddMenuOpen(false); handleCameraClick() }}
                 className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-gray-700 hover:bg-guac-50 hover:text-guac-700 transition-colors">
                 <Camera size={16} /> Camera
@@ -1119,10 +1175,11 @@ export default function ReceiptsPage() {
 
       {showForm && (
         <div className="card space-y-4">
-          <h3 className="gg-h2">New Receipt</h3>
+          <h3 className="gg-h2">{manualEntry?'Manual receipt':'New Receipt'}</h3>
+          {manualEntry&&<p className="text-sm text-slate-600">Enter your purchase details. No photo required.</p>}
 
           {/* Upload zone — first so scanning fills the form below */}
-          <div>
+          {!manualEntry&&<div>
             <label className="label">Upload Receipt</label>
             <div {...getRootProps()} className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors ${
               isDragActive ? 'border-guac-600 bg-guac-50' : parsing ? 'border-amber-400 bg-amber-50' : 'border-gray-300 hover:border-guac-600 hover:bg-guac-row'
@@ -1146,25 +1203,45 @@ export default function ReceiptsPage() {
                 </div>
               )}
             </div>
-          </div>
+          </div>}
 
           <form onSubmit={handleSave} className="space-y-4">
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
               <div>
                 <label className="label">Store Name</label>
-                <input required className="input" value={form.store_name} onChange={s('store_name')} placeholder="Auto-filled from scan" />
+                <input aria-label="Store name" required className="input" value={form.store_name} onChange={s('store_name')} placeholder="Merchant name" />
               </div>
               <div>
                 <label className="label">Date</label>
-                <input type="date" required className="input" value={form.date} onChange={s('date')} />
+                <input aria-label="Receipt date" type="date" required className="input" value={form.date} onChange={s('date')} />
               </div>
               <div>
                 <label className="label">Total Amount ($)</label>
-                <input type="number" step="0.01" required className="input" value={form.total_amount} onChange={s('total_amount')} placeholder="0.00" />
+                <input aria-label="Total amount" type="number" min="0" step="0.01" required className="input" value={form.total_amount} onChange={s('total_amount')} placeholder="0.00" />
               </div>
               <div>
                 <label className="label">Tax Paid ($)</label>
                 <input type="number" step="0.01" className="input" value={form.tax_paid} onChange={s('tax_paid')} placeholder="0.00" />
+              </div>
+              <div>
+                <label className="label">Subtotal ($) <span className="font-normal text-gray-400">optional</span></label>
+                <input type="number" step="0.01" className="input" value={form.subtotal} onChange={s('subtotal')} placeholder="0.00" />
+              </div>
+              <div>
+                <label className="label">Tip ($) <span className="font-normal text-gray-400">optional</span></label>
+                <input type="number" min="0" step="0.01" className="input" value={form.tip_amount} onChange={s('tip_amount')} placeholder="0.00" />
+              </div>
+              <div>
+                <label className="label">Service Charge ($) <span className="font-normal text-gray-400">optional</span></label>
+                <input type="number" min="0" step="0.01" className="input" value={form.service_charge} onChange={s('service_charge')} placeholder="0.00" />
+              </div>
+              <div>
+                <label className="label">Fees ($) <span className="font-normal text-gray-400">optional</span></label>
+                <input type="number" min="0" step="0.01" className="input" value={form.other_fees} onChange={s('other_fees')} placeholder="0.00" />
+              </div>
+              <div>
+                <label className="label">Discount ($) <span className="font-normal text-gray-400">optional</span></label>
+                <input type="number" min="0" step="0.01" className="input" value={form.discount_amount} onChange={s('discount_amount')} placeholder="0.00" />
               </div>
               <div>
                 <label className="label">Reward No</label>
@@ -1177,8 +1254,11 @@ export default function ReceiptsPage() {
               </div>
             </div>
 
+            <AmountReconciliation receipt={form} />
+
             {/* Parsed line items preview */}
-            {parsedItems.length > 0 && (
+            {manualEntry&&<section aria-label="Manual receipt items" className="space-y-2"><div className="flex flex-wrap items-center justify-between gap-2"><h4 className="font-semibold">Items</h4><button type="button" className="btn-secondary min-h-11" onClick={()=>setParsedItems(previous=>[...previous,{item_name:'',qty:1,price:''}])}>Add item</button></div>{parsedItems.map((item,i)=><div key={i} className="grid grid-cols-2 gap-2 rounded-lg border border-violet-100 p-2 sm:grid-cols-[minmax(0,1fr)_80px_120px_auto]"><label className="col-span-2 grid gap-1 text-sm sm:col-span-1">Item name<input required className="input min-h-11" value={item.item_name} onChange={e=>updateItem(i,'item_name',e.target.value)}/></label><label className="grid gap-1 text-sm">Quantity<input required type="number" min="1" step="1" className="input min-h-11" value={item.qty} onChange={e=>updateItem(i,'qty',Number(e.target.value))}/></label><label className="grid gap-1 text-sm">Line total ($)<input required type="number" min="0" step="0.01" className="input min-h-11" value={item.price} onChange={e=>updateItem(i,'price',e.target.value)}/></label><button type="button" aria-label={`Remove item ${i+1}`} className="min-h-11 self-end text-sm text-violet-700" onClick={()=>removeItem(i)}>Remove</button></div>)}</section>}
+            {!manualEntry && parsedItems.length > 0 && (
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="label mb-0">Line Items <span className="text-guac-600 font-semibold">({parsedItems.length} scanned)</span></label>
@@ -1309,6 +1389,61 @@ export default function ReceiptsPage() {
         </div>
       )}
 
+      {scanSuccess && (
+        <div className="fixed inset-0 z-[80] overflow-y-auto bg-[#F8FBF6]/95 px-4 py-6 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="receipt-success-title">
+          <div className="mx-auto flex min-h-full max-w-5xl items-center justify-center">
+            <section className="relative w-full overflow-hidden rounded-[32px] border border-[#176B33]/10 bg-white p-5 shadow-[0_24px_80px_rgba(20,60,35,0.16)] sm:p-8 lg:p-10">
+              <button type="button" onClick={() => setScanSuccess(null)} className="absolute right-5 top-5 rounded-full p-2 text-[#64748B] hover:bg-[#F1F6EA]" aria-label="Close receipt success"><X size={22} /></button>
+              <div className="grid items-center gap-6 lg:grid-cols-[1fr_260px]">
+                <div>
+                  <span className="mb-5 inline-flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-200"><Check size={34} strokeWidth={3} /></span>
+                  <h2 id="receipt-success-title" className="gg-h1 text-[38px] leading-none text-[#08142D] sm:text-[52px]">Receipt organized</h2>
+                  <p className="mt-3 text-[#64748B]">Everything from this scan is saved and ready to review.</p>
+                </div>
+                <div className="relative mx-auto w-[180px] sm:w-[220px]">
+                  <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-visible">
+                    {['#FBB040','#8B5CF6','#FF5C7A','#339AF0','#22A447','#FBB040','#8B5CF6','#FF5C7A'].map((color, index) => (
+                      <span key={index} className="receipt-confetti absolute h-2.5 w-1.5 rounded-[2px]" style={{ backgroundColor: color, left: `${8 + (index * 12) % 88}%`, top: `${6 + (index % 3) * 14}%`, animationDelay: `${index * -0.22}s`, '--drift': `${index % 2 ? 20 : -18}px` }} />
+                    ))}
+                  </div>
+                  <GuacMascot expression="celebrating" size={220} />
+                </div>
+              </div>
+
+              <div className="mt-7 rounded-[24px] border border-[#176B33]/10 bg-white p-5 shadow-[0_12px_35px_rgba(20,50,30,0.08)] sm:p-7">
+                <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[#E8EFE7] pb-5">
+                  <div><h3 className="text-2xl font-extrabold text-[#08142D]">{scanSuccess.store || 'Receipt'}</h3><p className="mt-1 text-[#64748B]">{formatDateShort(scanSuccess.date)}</p></div>
+                  <strong className="gg-num text-2xl text-[#08142D]">{__cur}{money(scanSuccess.total)}</strong>
+                </div>
+                <div className="grid grid-cols-3 divide-x divide-[#E8EFE7] pt-5 text-center">
+                  <div><strong className="block text-xl text-[#08142D]">{scanSuccess.items}</strong><span className="text-sm text-[#64748B]">items</span></div>
+                  <div><strong className="block text-xl text-[#08142D]">{scanSuccess.categories}</strong><span className="text-sm text-[#64748B]">categories</span></div>
+                  <div><strong className="gg-num block text-xl text-[#08142D]">{__cur}{money(scanSuccess.tax)}</strong><span className="text-sm text-[#64748B]">tax</span></div>
+                </div>
+              </div>
+
+              {scanSuccess.returns > 0 && <div className="mt-4 flex items-center gap-4 rounded-[20px] border border-orange-200 bg-orange-50 p-4 text-orange-900"><Undo2 className="shrink-0 text-orange-500" /><div><span className="text-sm font-semibold text-orange-600">Return opportunity</span><strong className="block">{scanSuccess.returns} return {scanSuccess.returns === 1 ? 'policy' : 'policies'} found</strong></div></div>}
+
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                <button type="button" onClick={() => { setScanSuccess(null); setShowForm(true) }} className="btn-secondary flex-1">Add another</button>
+                <button type="button" onClick={() => scanSuccess.id ? router.push(`/receipts/${scanSuccess.id}`) : setScanSuccess(null)} className="btn-primary flex flex-1 items-center justify-center gap-2"><Pencil size={17} /> Review receipt</button>
+                <button type="button" onClick={() => setScanSuccess(null)} className="btn-primary flex-1 bg-emerald-600">Done</button>
+              </div>
+              <p className="mt-5 flex items-center justify-center gap-2 text-sm text-[#64748B]"><LockKeyhole size={15} /> Saved privately to your account</p>
+              <style jsx>{`
+                @keyframes receipt-confetti-fall {
+                  0% { opacity: 0; transform: translate3d(0,-12px,0) rotate(0deg); }
+                  18% { opacity: 1; }
+                  100% { opacity: 0; transform: translate3d(var(--drift),150px,0) rotate(520deg); }
+                }
+                .receipt-confetti { animation: receipt-confetti-fall 2.1s ease-in infinite; }
+                @media (prefers-reduced-motion: reduce) { .receipt-confetti { animation: none; opacity: .75; } }
+              `}</style>
+            </section>
+          </div>
+        </div>
+      )}
+
       {/* Pre-trip prompt — surfaces pending Smashlist predictions
           grouped by store so the user can glance before walking
           in. Self-hides when nothing pending; session-dismissable. */}
@@ -1322,7 +1457,7 @@ export default function ReceiptsPage() {
             <button
               key={id}
               type="button"
-              onClick={() => setPeriod(id)}
+              onClick={() => selectPeriod(id)}
               className={`text-[12.5px] px-3.5 py-1.5 rounded-lg transition-colors ${
                 period === id
                   ? 'bg-white text-[#14532D] font-extrabold shadow-[0_1px_3px_rgba(20,40,28,0.08)]'
@@ -1342,7 +1477,7 @@ export default function ReceiptsPage() {
             onChange={e => setSearch(e.target.value)}
           />
         </div>
-        <span className="shrink-0 text-[13px] font-semibold text-[#9AA89E]">{filtered.length} result{filtered.length !== 1 ? 's' : ''}</span>
+        <span className="shrink-0 text-[13px] font-semibold text-[#9AA89E]">{receiptsError?'Unavailable':isLoading?'Loading…':`${filtered.length} result${filtered.length !== 1 ? 's' : ''}`}</span>
         {selected.size > 0 && (
           <button type="button" onClick={handleDeleteSelected} className="btn-danger text-xs py-1.5 shrink-0">
             <Trash2 size={13} /> Delete {selected.size}
@@ -1352,7 +1487,7 @@ export default function ReceiptsPage() {
 
       {/* Table */}
       <div className="card p-0 overflow-hidden">
-        {isLoading ? (
+        {receiptsError ? <div role="alert" className="rounded-xl border border-violet-100 bg-white p-5"><h2 className="font-bold">Receipts could not be loaded</h2><p className="mt-2">Your records may be temporarily unavailable or your session may have expired.</p><div className="mt-3 flex gap-3"><button type="button" className="btn-primary" onClick={()=>retryReceipts()}>Retry</button><a href="/login" className="inline-flex min-h-11 items-center underline">Sign in again</a></div></div> : isLoading ? (
           // ShimmerBox skeletons stand in while the receipts query
           // resolves. Eight rows is enough to fill a typical viewport
           // without flashing tons of placeholders.
@@ -1569,7 +1704,7 @@ export default function ReceiptsPage() {
             </div>
             <div className="p-4 overflow-y-auto flex-1">
               <p className="text-sm text-gray-600 mb-3">
-                Pick which receipt to <strong>keep</strong> per group (radio) and uncheck any duplicate you'd rather <strong>not delete</strong>. Items and refund policies on the kept row are preserved; email-message links are re-pointed automatically.
+                Pick which receipt to <strong>keep</strong> per group (radio) and uncheck any duplicate you&apos;d rather <strong>not delete</strong>. Items and refund policies on the kept row are preserved; email-message links are re-pointed automatically.
               </p>
               <div className="space-y-3 text-xs">
                 {dedupPreview.groups.map(g => {

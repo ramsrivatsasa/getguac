@@ -9,6 +9,7 @@
 // sitemap entry for a noindexed URL only sends a contradictory signal.
 // Re-add `...GAMES.map(...)` below once AdSense approves.
 import { ARTICLES } from '../lib/articles'
+import { academyLessons } from '../lib/academy'
 
 const SITE_URL = 'https://getguac.app'
 
@@ -34,6 +35,12 @@ const FEATURE_GUIDES = [
   '/goals/emergency.html',
   '/goals/tax-records.html',
   '/goals/grocery.html',
+  '/goals/take-stock.html',
+  '/goals/first-budget.html',
+  '/goals/money-goals.html',
+  '/goals/pay-down-debt.html',
+  '/goals/credit-cards.html',
+  '/goals/credit-report.html',
 ]
 
 // Real content under public/resources that was indexable but had never been
@@ -73,7 +80,6 @@ export default function sitemap() {
     // Google at all. Priority matches /articles: these are the two things on the
     // site worth ranking for.
     { path: '/calculators', priority: 0.9, changeFrequency: 'monthly' },
-    { path: '/learn', priority: 0.8, changeFrequency: 'monthly' },
     { path: '/faq', priority: 0.8, changeFrequency: 'monthly' },
     { path: '/pricing', priority: 0.8, changeFrequency: 'monthly' },
     { path: '/security', priority: 0.7, changeFrequency: 'monthly' },
@@ -112,5 +118,11 @@ export default function sitemap() {
     changeFrequency: 'monthly',
     priority: 0.6,
   }))
-  return [...pages, ...featureGuides, ...resourcePages, ...articles]
+  // Every Academy lesson has its own canonical: course objectives, practice,
+  // worked examples and action plans distinguish it from the related article.
+  const academy = [
+    ...['lessons','articles','guides','tools'].map(section=>({url:`${SITE_URL}/academy/${section}`,lastModified:'2026-10-12',changeFrequency:'monthly',priority:0.7})),
+    ...academyLessons().map((l) => ({ url: `${SITE_URL}/academy/${l.slug}`, lastModified: '2026-10-12', changeFrequency: 'monthly', priority: 0.6, images:[`${SITE_URL}/academy/illustrations/${l.sourceSlug}.svg`] })),
+  ]
+  return [...pages, ...featureGuides, ...resourcePages, ...articles, ...academy]
 }

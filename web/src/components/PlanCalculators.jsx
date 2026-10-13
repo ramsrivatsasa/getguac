@@ -478,7 +478,7 @@ export default function PlanCalculators() {
         {/* Center: selected calculator (+ mobile picker) */}
         <div className="min-w-0">
           <select value={selId} onChange={(e) => setSelId(e.target.value)}
-            className="lg:hidden w-full mb-3 input rounded-lg border border-gray-200 px-3 py-2 text-sm">
+            className="mb-3 min-h-11 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm lg:hidden">
             {CATEGORIES.map((cat) => (
               <optgroup key={cat} label={cat}>
                 {CALCS.filter((c) => c.cat === cat).map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
@@ -557,9 +557,10 @@ function Calculator({ id, icon: Icon, title, subtitle, fields, validate, compute
             <div className="mt-0.5 flex items-center rounded-lg border border-gray-200 bg-white focus-within:ring-2 focus-within:ring-guac-600 overflow-hidden">
               {f.prefix && <span className="pl-2.5 text-gray-400 text-sm">{f.prefix}</span>}
               <input type="number" inputMode="decimal" step={f.step || 1} min={0}
+                aria-label={f.label}
                 value={vals[f.key] ?? ''} placeholder={f.placeholder}
                 onChange={(e) => set(f.key)(e.target.value === '' ? '' : Number(e.target.value))}
-                className="w-full px-2.5 py-1.5 text-sm outline-none bg-transparent placeholder:text-gray-300" />
+                className="min-h-11 w-full bg-transparent px-2.5 py-2 text-sm outline-none placeholder:text-gray-300" />
               {f.suffix && <span className="pr-2.5 text-gray-400 text-sm">{f.suffix}</span>}
             </div>
           </label>

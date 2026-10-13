@@ -27,11 +27,10 @@
 //   deltaLabel  — short human badge like '↑ 12%' or '—' for zero prior
 
 import { subDays, subWeeks, subMonths, subYears } from 'date-fns'
-import { isPaymentReceipt } from './payment-rows'
+import { isPaymentReceipt } from './payment-rows.js'
 
 // ── Period helpers ──────────────────────────────────────────────────
-function periodStart(period, count) {
-  const now = new Date()
+function periodStart(period, count, now = new Date()) {
   if (period === 'daily')   return subDays(now,  count)
   if (period === 'weekly')  return subWeeks(now, count)
   if (period === 'monthly') return subMonths(now, count)
@@ -114,14 +113,15 @@ export function computeDashboardAnalysis({
   transactions = [],
   period = 'monthly',
   periodCount = 3,
+  now = new Date(),
 } = {}) {
   // Drop card-payment + transfer receipts before any spending math —
   // same filter the dashboard already applies. Mirroring it here means
   // mobile gets the same numbers without re-implementing the rule.
   const spendingReceipts = receipts.filter(r => !isPaymentReceipt(r))
 
-  const currentStart = toIsoDate(periodStart(period, periodCount))
-  const priorStart   = toIsoDate(periodStart(period, periodCount * 2))
+  const currentStart = toIsoDate(periodStart(period, periodCount, now))
+  const priorStart   = toIsoDate(periodStart(period, periodCount * 2, now))
   // No upper bound for the current window — anything from currentStart
   // forward (including today) counts. The prior window ends where the
   // current one starts.

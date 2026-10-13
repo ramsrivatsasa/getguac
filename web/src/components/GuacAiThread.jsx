@@ -68,9 +68,9 @@ function loadThread() {
   } catch { return [] }
 }
 
-export default function GuacAiThread({ onBack, onClose, heightClass = 'h-[70vh]' }) {
+export default function GuacAiThread({ onBack, onClose, initialPrompt = '', heightClass = 'h-[70vh]' }) {
   const [messages, setMessages] = useState([])
-  const [input, setInput] = useState('')
+  const [input, setInput] = useState(initialPrompt)
   const [busy, setBusy] = useState(false)
   const scrollRef = useRef(null)
 

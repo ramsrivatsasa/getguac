@@ -43,12 +43,30 @@ export function imageCacheKey(itemName) {
     .slice(0, 120)
 }
 
+// Curated, app-owned thumbnails take precedence over third-party search
+// results. This removes previously cached mismatches and guarantees the same
+// recognizable product artwork everywhere the shared resolver is used.
+const CURATED_PRODUCT_IMAGES = [
+  { matches: key => key === 'ikea bergenes stand', url: 'https://www.ikea.com/us/en/images/products/bergenes-holder-for-mobile-phone-tablet-bamboo__0730164_pe737412_s5.jpg' },
+  { matches: key => key === 'goodfellow crewneck t shirt', url: 'https://target.scene7.com/is/image/Target/GUEST_dca744cf-34ad-4f69-aa7a-bf6cc9e9a694' },
+  { matches: key => /(^| )whole milk($| )|(^| )milk gallon($| )/.test(key), url: '/products/whole-milk.png?v=2' },
+  { matches: key => /sparkling water|seltzer water/.test(key), url: '/products/sparkling-water-12pk.png?v=2' },
+  { matches: key => /tortilla chips|corn chips/.test(key), url: '/products/tortilla-chips.png?v=2' },
+]
+
+export function curatedProductImage(itemName) {
+  const key = imageCacheKey(itemName)
+  return CURATED_PRODUCT_IMAGES.find(entry => entry.matches(key))?.url || null
+}
+
 // Single-item resolver. Checks the cache, then Google CSE on miss.
 // Returns null when nothing can be resolved (env vars missing, CSE
 // returns no results, etc.). Never throws.
 export async function resolveProductImage(itemName) {
   const key = imageCacheKey(itemName)
   if (!key) return null
+  const curated = curatedProductImage(itemName)
+  if (curated) return curated
   const sb = admin()
 
   // 1. Cache lookup. Bumps hit_count atomically (best-effort).

@@ -1,0 +1,14 @@
+.join-find-ten{padding:36px 0;background:#faf8ff;border-block:1px solid #ede9fe}
+.join-find-ten-heading{display:flex;align-items:center;justify-content:space-between;gap:24px;margin-bottom:20px}
+.join-find-ten-kicker{display:block;margin-bottom:9px;color:#6d28d9;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.join-find-ten-heading h2{display:flex;align-items:center;gap:12px;font-size:clamp(30px,3.2vw,42px)}
+.join-find-ten-heading h2 span{font-size:30px}
+.join-find-ten-heading p{max-width:650px;margin-top:12px;color:var(--ink-2);font-size:15px;line-height:1.6}
+.btn.join-find-ten-primary{background:#7c3aed;color:#fff;font-size:17px;font-weight:800;min-height:52px;box-shadow:0 8px 20px -10px #7c3aed;flex-shrink:0}
+.btn.join-find-ten-primary:hover{background:#6d28d9}
+.join-find-ten-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.join-find-ten-steps article{position:relative;background:#fff;border:1px solid #e8e1f5;border-radius:16px;padding:17px 17px 17px 51px}
+.join-find-ten-step{position:absolute;left:16px;top:17px;display:grid;place-items:center;width:24px;height:24px;background:#ede9fe;color:#6d28d9;border-radius:8px;font-size:12px;font-weight:800}
+.join-find-ten-steps h3{font-size:18px;line-height:1.25;letter-spacing:-.02em}
+.join-find-ten-steps p{margin-top:8px;color:var(--ink-2);font-size:13px;line-height:1.55}
+@media(max-width:640px){.join-find-ten{padding:28px 0}.join-find-ten-heading{align-items:flex-start;flex-direction:column;gap:17px}.join-find-ten-steps{grid-template-columns:1fr}.join-find-ten-steps article{padding-block:15px}.join-find-ten-heading>.btn{width:100%}}

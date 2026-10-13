@@ -34,30 +34,33 @@
 import { NextResponse } from 'next/server'
 import { headers } from 'next/headers'
 import { createClient } from '../../lib/supabase/server'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]', '::1'])
 
-// Same credentials the login page already publishes for the demo account.
-const DEMO_EMAIL = process.env.DEMO_EMAIL || 'demo@getguac.app'
-const DEMO_PASSWORD = process.env.DEMO_PASSWORD || 'Guac!Demo2026'
+// Dedicated local QA identity. It is intentionally different from the public
+// demo account so a stale/rotated public password cannot block local testing,
+// and dashboard/page.jsx can safely grant this identity all test modules.
+const DEMO_EMAIL = process.env.DEMO_EMAIL || 'localdemo@getguac.test'
+const DEMO_PASSWORD = process.env.DEMO_PASSWORD || 'LocalDemo!2026'
 
 const notFound = () => new NextResponse('Not found', { status: 404 })
 
 // Exported so /dev-login can gate its own render with the identical rules —
 // one definition, so the page can never be reachable where the route is not.
-export function devSignInAllowed() {
+export async function devSignInAllowed() {
   if (process.env.NODE_ENV === 'production') return false
   if (process.env.GG_DEV_SIGNIN !== '1') return false
-  const host = (headers().get('host') || '').split(':')[0]
+  const host = ((await headers()).get('host') || '').split(':')[0]
   return LOCAL_HOSTS.has(host)
 }
 
 // POST is what the /dev-login form uses, so the password stays out of the URL.
 export async function POST(request) {
-  if (!devSignInAllowed()) return notFound()
+  if (!(await devSignInAllowed())) return notFound()
   // Parsed from the raw body rather than request.formData(): formData() throws
   // on a urlencoded body here and the failure is invisible — it just falls back
   // to the defaults, so `next` was silently ignored and every sign-in landed on
@@ -71,7 +74,7 @@ export async function POST(request) {
 }
 
 export async function GET(request) {
-  if (!devSignInAllowed()) return notFound()
+  if (!(await devSignInAllowed())) return notFound()
   const url = new URL(request.url)
   return signIn(url, {
     email: url.searchParams.get('email'),
@@ -89,7 +92,36 @@ async function signIn(url, params) {
   const next = requested.startsWith('/') && !requested.startsWith('//') ? requested : '/dashboard'
 
   const supabase = createClient()
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+  let { data, error } = await supabase.auth.signInWithPassword({ email, password })
+
+  // First local run: create the isolated QA user through the admin API, then
+  // sign in normally so the SSR client writes the same cookies as production.
+  // This path is still protected by devSignInAllowed's localhost + env gates.
+  if ((error || !data?.session) && email === DEMO_EMAIL) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (supabaseUrl && serviceKey) {
+      const admin = createAdminClient(supabaseUrl, serviceKey, { auth: { persistSession: false } })
+      const created = await admin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { full_name: 'Local Demo', is_demo: true },
+      }).catch(() => null)
+      if (!created?.data?.user) {
+        const listed = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 }).catch(() => null)
+        const existing = listed?.data?.users?.find(user => user.email?.toLowerCase() === email.toLowerCase())
+        if (existing) {
+          await admin.auth.admin.updateUserById(existing.id, {
+            password,
+            email_confirm: true,
+            user_metadata: { ...existing.user_metadata, full_name: 'Local Demo', is_demo: true },
+          }).catch(() => null)
+        }
+      }
+      ;({ data, error } = await supabase.auth.signInWithPassword({ email, password }))
+    }
+  }
 
   if (error || !data?.session) {
     return NextResponse.json(

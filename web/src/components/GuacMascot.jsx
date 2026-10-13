@@ -1,5 +1,7 @@
 'use client'
 import { useId } from 'react'
+import styles from './GuacMascot.module.css'
+// Owner-approved 2026-09-29: one eye blink every three seconds; artwork stays unchanged.
 
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  🔒 DO NOT CHANGE — the GetGuac brand mascot SVG.                ║
@@ -113,9 +115,9 @@ function PoseBehind({ e }) {
 }
 
 function PoseFace({ e }) {
-  const open = (<><circle cx="96" cy="96" r="8.5" fill="#fff" stroke="#1f2937" strokeWidth="1.5" /><circle cx="124" cy="96" r="8.5" fill="#fff" stroke="#1f2937" strokeWidth="1.5" /><circle cx="97" cy="97" r="4.2" fill="#1f2937" /><circle cx="125" cy="97" r="4.2" fill="#1f2937" /><circle cx="94.5" cy="94" r="1.7" fill="#fff" /><circle cx="122.5" cy="94" r="1.7" fill="#fff" /></>)
+  const open = (<g className={styles.blink}><circle cx="96" cy="96" r="8.5" fill="#fff" stroke="#1f2937" strokeWidth="1.5" /><circle cx="124" cy="96" r="8.5" fill="#fff" stroke="#1f2937" strokeWidth="1.5" /><circle cx="97" cy="97" r="4.2" fill="#1f2937" /><circle cx="125" cy="97" r="4.2" fill="#1f2937" /><circle cx="94.5" cy="94" r="1.7" fill="#fff" /><circle cx="122.5" cy="94" r="1.7" fill="#fff" /></g>)
   const closed = (<><path d="M 88 97 Q 96 103 104 97" stroke="#1f2937" strokeWidth="3" fill="none" strokeLinecap="round" /><path d="M 116 97 Q 124 103 132 97" stroke="#1f2937" strokeWidth="3" fill="none" strokeLinecap="round" /></>)
-  const wide = (<><circle cx="96" cy="95" r="10.5" fill="#fff" stroke="#1f2937" strokeWidth="1.5" /><circle cx="124" cy="95" r="10.5" fill="#fff" stroke="#1f2937" strokeWidth="1.5" /><circle cx="96" cy="96" r="5" fill="#1f2937" /><circle cx="124" cy="96" r="5" fill="#1f2937" /><circle cx="93.5" cy="92.5" r="2" fill="#fff" /><circle cx="121.5" cy="92.5" r="2" fill="#fff" /></>)
+  const wide = (<g className={styles.blink}><circle cx="96" cy="95" r="10.5" fill="#fff" stroke="#1f2937" strokeWidth="1.5" /><circle cx="124" cy="95" r="10.5" fill="#fff" stroke="#1f2937" strokeWidth="1.5" /><circle cx="96" cy="96" r="5" fill="#1f2937" /><circle cx="124" cy="96" r="5" fill="#1f2937" /><circle cx="93.5" cy="92.5" r="2" fill="#fff" /><circle cx="121.5" cy="92.5" r="2" fill="#fff" /></g>)
   const smile = (<path d="M 101 114 Q 110 122 119 114" stroke="#1f2937" strokeWidth="3.2" fill="none" strokeLinecap="round" />)
   const grin = (<><path d="M 99 112 Q 110 130 121 112 Z" fill="#1f2937" /><path d="M 101 112 L 119 112 L 117 117 Q 110 120 103 117 Z" fill="#fff" /><ellipse cx="110" cy="123" rx="5" ry="3" fill="#fb6f8a" /></>)
   const smallO = (<ellipse cx="110" cy="116" rx="4.5" ry="5.5" fill="#1f2937" />)

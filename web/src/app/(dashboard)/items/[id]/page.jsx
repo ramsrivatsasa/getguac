@@ -187,7 +187,7 @@ export default function ItemDetailPage() {
   if (!item) return (
     <div className="text-rose-500 py-10 text-center flex flex-col items-center gap-3">
       <p>Item not found.</p>
-      <Link href="/stash" className="text-sm text-guac-700 font-semibold hover:underline">Back to stash</Link>
+      <Link href="/stash" className="text-sm text-guac-700 font-semibold hover:underline">Back to My Items</Link>
     </div>
   )
 
@@ -315,7 +315,7 @@ export default function ItemDetailPage() {
       {stores.length > 0 && (
         <section className="mt-5 bg-white rounded-2xl shadow-sm px-5 py-4">
           <h2 className="gg-h2 mb-3 flex items-center gap-2">
-            <MapPin size={14} className="text-guac-600" /> Where you've bought it
+            <MapPin size={14} className="text-guac-600" /> Where you&apos;ve bought it
           </h2>
           {/* Staggered fade-in on mount — each store row lands with
               a 35ms offset so the list reads as building itself up. */}

@@ -9,6 +9,9 @@ import FeatureHeader from '../../../components/FeatureHeader'
 import PrivacyPanel from '../../../components/PrivacyPanel'
 import EmailAliasPicker from '../../../components/EmailAliasPicker'
 import HouseholdPanel from '../../../components/HouseholdPanel'
+import RegistrationTrial from '../../../components/RegistrationTrial'
+import ProfileLocation from '../../../components/ProfileLocation'
+import {registrationRegion} from '../../../lib/registration-region.mjs'
 
 export default function ProfilePage() {
   const sb = createClient()
@@ -27,14 +30,22 @@ export default function ProfilePage() {
   })
 
   const [form, setForm] = useState({})
+  const [location, setLocation] = useState({})
   const [payForm, setPayForm] = useState({ payment_type: '', card_last4: '', card_type: 'Visa', business_card: false })
   const [showPayForm, setShowPayForm] = useState(false)
 
   useEffect(() => { if (profile) setForm(profile) }, [profile])
+  useEffect(() => { if (user) setLocation(user.user_metadata || {}) }, [user])
 
   const saveProfile = useMutation({
-    mutationFn: async () => sb.from('profiles').update(form).eq('id', user.id),
-    onSuccess: () => { toast.success('Profile saved'); qc.invalidateQueries({ queryKey: ['profile'] }) },
+    mutationFn: async () => {
+      const region=registrationRegion(location,{optionalFields:true})
+      const {error}=await sb.from('profiles').upsert({...form,id:user.id}).select('id').single()
+      if(error)throw error
+      const {error:regionError}=await sb.auth.updateUser({data:region})
+      if(regionError)throw regionError
+    },
+    onSuccess: () => { toast.success('Profile saved'); qc.invalidateQueries({queryKey:['profile']}); qc.invalidateQueries({queryKey:['user']}); fetch('/api/agents',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kind:'plan',action:'refresh'})}).catch(()=>{}) },
     onError: err => toast.error(err.message),
   })
 
@@ -78,6 +89,8 @@ export default function ProfilePage() {
         }
       />
 
+      <RegistrationTrial userId={user?.id} />
+
       {/* Invite friends tile — the "vertical list of tiles" lives in
           mobile Profile (see mobile/lib/screens/profile/profile_screen.dart
           _VRow rows). On web the Profile is form-shaped, so we surface
@@ -119,7 +132,8 @@ export default function ProfilePage() {
           <div><label className="label">Age</label><input type="number" className="input" value={form.age || ''} onChange={s('age')} /></div>
         </div>
 
-        <button onClick={() => saveProfile.mutate()} disabled={saveProfile.isPending} className="btn-primary">
+        <ProfileLocation value={location} onChange={setLocation} disabled={saveProfile.isPending}/>
+        <button onClick={() => saveProfile.mutate()} disabled={!user || saveProfile.isPending} className="btn-primary">
           <Save size={15} /> {saveProfile.isPending ? 'Saving…' : 'Save Profile'}
         </button>
       </div>

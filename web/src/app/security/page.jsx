@@ -1,3 +1,4 @@
+import MarketingHero from '../../components/MarketingHero'
 // Public /security page — the single source of truth for what GetGuac
 // encrypts, what it can see, and what users control. Linked from the footer
 // and from every privacy banner. Written in plain language deliberately:
@@ -7,6 +8,8 @@ import Link from 'next/link'
 import GuacMascot from '../../components/GuacMascot'
 import MarketingShell from '../../components/MarketingShell'
 import { Shield, Lock, Eye, EyeOff, Database, Mail, Trash2, KeyRound, CheckCircle2, AlertCircle } from 'lucide-react'
+import TrustLine from '../../components/TrustLine'
+import ConversionBand from '../../components/ConversionBand'
 
 export const metadata = {
   title: 'Security & Privacy — GetGuac',
@@ -20,24 +23,7 @@ export default function SecurityPage() {
   return (
     <MarketingShell subtitle="security & privacy">
       {/* Hero */}
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 pt-7 sm:pt-9 pb-8">
-        <div className="flex items-start gap-5 flex-wrap">
-          <GuacMascot expression="angel" size={120} />
-          <div className="flex-1 min-w-[260px]">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider">
-              <Shield size={12} /> Plain-language security
-            </span>
-            <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-gray-900 mt-3 leading-tight">
-              Here&apos;s exactly what<br />
-              <span className="bg-gradient-to-br from-emerald-500 via-lime-500 to-amber-500 bg-clip-text text-transparent">we can &amp; can&apos;t see.</span>
-            </h1>
-            <p className="text-lg text-gray-600 mt-3 max-w-2xl">
-              We don&apos;t use scary marketing words. Below: how data flows, what&apos;s encrypted,
-              what isn&apos;t, and the buttons you press to wipe it all.
-            </p>
-          </div>
-        </div>
-      </section>
+      <MarketingHero eyebrow="Security and privacy" title="Your records." accent="Your control." description="See how data flows, what is encrypted, what we can see, and how you can remove your records." imageSrc="/home/story-people/protect-couple-tablet-768.webp" imageAlt="A couple reviewing their household records together" />
 
       {/* What we encrypt */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
@@ -172,6 +158,8 @@ export default function SecurityPage() {
           <p><strong>Per-field encryption (in progress)</strong> — High-sensitivity columns like alternative email and mobile number being moved to AES-GCM encryption so even our DB doesn&apos;t see the plaintext.</p>
         </div>
       </section>
+      <TrustLine />
+      <ConversionBand eyebrow="Your information, your choice" title="Build your money picture at your pace." description="Choose the income, balances and records you add. No bank connection is required." />
     </MarketingShell>
   )
 }

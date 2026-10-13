@@ -28,7 +28,7 @@ export async function POST(request) {
   const rl = await rateLimit(rateKey(request, 'email-send'), { limit: 10, windowMs: 60_000 })
   if (!rl.ok) return Response.json({ error: 'Too many sends. Try again shortly.' }, { status: 429 })
 
-  const sb = createApiClient()
+  const sb = await createApiClient()
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return Response.json({ error: 'Not signed in' }, { status: 401 })
 

@@ -310,7 +310,7 @@
             <div class="appshot">
               <span class="applabel">Inside the GetGuac app</span>
               <button type="button" class="shot" id="webShot" aria-label="Enlarge the GetGuac web screen">
-                <img class="web" id="stageWeb" src="home/goals/web-receipts.webp" alt="The GetGuac web app" loading="lazy">
+                <img class="web" id="stageWeb" src="/marketing/current/receipts.webp" alt="The GetGuac web app" loading="lazy">
               </button>
               <button type="button" class="shot shot-phone" id="phoneShot" aria-label="Enlarge the GetGuac mobile screen">
                 <img id="stagePhone" src="home/goals/phone-receipts.webp" alt="The GetGuac mobile app" loading="lazy">
@@ -439,7 +439,7 @@
       setText('proofTitle',s.proofTitle); setText('proofValue',s.proofValue); setText('proofNote',s.proofNote)
       el('stageCta').href=CTA
       const web=el('stageWeb'), phone=el('stagePhone')
-      web.src='home/goals/web-'+s.slug+'.webp'
+      web.src='/marketing/current/' + ({"bank":"bank","bills":"bills","car-miles":"car-miles","categories":"reports","fees":"guacwizard","games":"games","guac-ai":"guac-ai","guacmoney":"dashboard","inbox":"inbox","marketplace":"marketplace","organized":"dashboard","receipts":"receipts","returns":"returns","smashlist":"shopping","stash":"stash","steals":"steals","subs":"subscriptions","tax":"tax","worth-it":"worth-it","predictions":"shopping"}[s.slug] || s.slug) + '.webp'
       phone.src='home/goals/phone-'+s.slug+'.webp'
       if(!reduce)[web,phone].forEach(n=>{n.classList.remove('swap'); void n.offsetWidth; n.classList.add('swap')})
       prog.style.width=((i+1)/STAGES.length*100)+'%'

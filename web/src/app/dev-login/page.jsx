@@ -22,20 +22,20 @@ import { devSignInAllowed } from '../dev-signin/route'
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Dev sign in', robots: { index: false, follow: false } }
 
-const DEMO_EMAIL = process.env.DEMO_EMAIL || 'demo@getguac.app'
-const DEMO_PASSWORD = process.env.DEMO_PASSWORD || 'Guac!Demo2026'
+const DEMO_EMAIL = process.env.DEMO_EMAIL || 'localdemo@getguac.test'
+const DEMO_PASSWORD = process.env.DEMO_PASSWORD || 'LocalDemo!2026'
 
 const SHORTCUTS = [
   ['/reports', 'Reports'],
   ['/receipts', 'Receipts'],
   ['/bills', 'Bills'],
   ['/dashboard', 'Dashboard'],
-  ['/stash', 'Stash'],
+  ['/stash', 'My Items'],
   ['/steals', 'Steals'],
 ]
 
-export default function DevLoginPage() {
-  if (!devSignInAllowed()) notFound()
+export default async function DevLoginPage() {
+  if (!(await devSignInAllowed())) notFound()
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#f7f3df] via-[#eef7e7] to-white p-5">

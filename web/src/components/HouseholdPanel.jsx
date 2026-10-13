@@ -348,7 +348,7 @@ function Chat({ householdId, memberIds }) {
       <div className="flex items-center gap-2">
         <MessageSquare size={14} className="text-gray-500" />
         <h4 className="gg-h2">Family chat</h4>
-        <span className="text-[10px] text-gray-400">"I'm at Costco — anything else?"</span>
+        <span className="text-[10px] text-gray-400">&quot;I&apos;m at Costco — anything else?&quot;</span>
       </div>
       <div
         ref={scrollRef}

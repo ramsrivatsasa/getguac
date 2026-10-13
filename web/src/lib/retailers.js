@@ -23,11 +23,11 @@ export const RETAILERS = [
     receiptDomain: 'walmart.com',
     category: 'grocery',
     setupSteps: [
-      'Open the Walmart app or sign in at walmart.com',
-      'Tap your account icon → "Account settings"',
-      'Find "Communication preferences" or "Receipt delivery"',
-      'Enable "Email me my receipts" and enter your GetGuac alias',
-      'Save — future Walmart receipts will land in your Inbox',
+      'Walmart keeps eligible online and saved-card purchases under Account → Purchase History',
+      'For account import, use GetGuac mobile and sign in directly on Walmart’s page',
+      'Preview the completed orders visible in Purchase History, then confirm the import',
+      'For email capture, forward Walmart order and shipping confirmations from your own inbox to your GetGuac alias',
+      'For missing store purchases, scan the paper receipt in the Walmart app or use Walmart’s receipt lookup, then add it to GetGuac',
     ],
   },
   {
@@ -100,6 +100,20 @@ export const RETAILERS = [
       'Open Instacart → Account → Settings',
       'Under "Email preferences", enable "Email me my receipts"',
       'Set the delivery address to your GetGuac alias',
+    ],
+  },
+  {
+    id: 'doordash',
+    name: 'DoorDash',
+    color: '#ff3008',
+    domain: 'doordash.com',
+    receiptDomain: 'doordash.com',
+    category: 'food-delivery',
+    setupSteps: [
+      'DoorDash sends order confirmations to your account email automatically',
+      'Create an inbox forwarding rule for messages from DoorDash',
+      'Forward order confirmations and final receipts to your GetGuac alias',
+      'Place a test order or forward a recent receipt to verify the connection',
     ],
   },
   {
@@ -180,10 +194,10 @@ export const RETAILERS = [
     receiptDomain: 'homedepot.com',
     category: 'home-improvement',
     setupSteps: [
-      'Sign in to homedepot.com → "Pro Xtra" or main account',
-      'Open Account → "Receipts"',
-      'Enable digital-receipt delivery to your GetGuac alias',
-      'Use the Pro Xtra phone number at checkout to associate in-store buys',
+      'For account import, sign in directly on Home Depot’s page in GetGuac mobile',
+      'Open Account → Purchase History and wait for completed purchases to load',
+      'Preview the visible purchases, then confirm the import',
+      'For future purchases, you can also forward Home Depot receipts to your GetGuac alias',
     ],
   },
   // ── Grocery ──────────────────────────────────────────────────────
@@ -393,14 +407,6 @@ export const RETAILERS = [
     ],
   },
   // ── Restaurants / food delivery ──────────────────────────────────
-  { id: 'doordash', name: 'DoorDash', color: '#ff3008', domain: 'doordash.com', receiptDomain: 'doordash.com', category: 'food-delivery',
-    setupSteps: [
-      'DoorDash emails delivery receipts to your account email',
-      'Set up a forwarding rule:',
-      '  → Filter: from "no-reply@doordash.com"',
-      '  → Action: Forward to your GetGuac alias',
-    ],
-  },
   { id: 'uber_eats', name: 'Uber Eats', color: '#06c167', domain: 'ubereats.com', receiptDomain: 'uber.com', category: 'food-delivery',
     setupSteps: [
       'Uber + Uber Eats both email receipts from "uber.us@uber.com"',

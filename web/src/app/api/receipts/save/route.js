@@ -37,6 +37,7 @@
 import { rateLimit, rateKey } from '../../../../lib/apiGuard'
 import { createApiClient } from '../../../../lib/supabase/server'
 import { saveReceipt } from '../../../../lib/save-receipt'
+import { recordImportEvent } from '../../../../lib/import-events'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
@@ -57,7 +58,7 @@ export async function POST(request) {
       )
     }
 
-    const supabase = createApiClient()
+    const supabase = await createApiClient()
     const { data: { user }, error: authErr } = await supabase.auth.getUser()
     if (authErr || !user?.id) {
       return Response.json({ error: 'Not authenticated' }, { status: 401 })
@@ -94,6 +95,10 @@ export async function POST(request) {
         .maybeSingle()
 
       if (cached?.receipt_id) {
+        await recordImportEvent(supabase, userId, {
+          source: body.source || 'image', status: 'replayed',
+          receipt_ids: [cached.receipt_id], imported_count: 1,
+        })
         return Response.json({
           receipt_id: cached.receipt_id,
           merged: Boolean(cached.merged),
@@ -152,6 +157,16 @@ export async function POST(request) {
           if (e?.code !== '23505') console.warn('[receipts/save] idempotency record failed:', e.message)
         })
     }
+
+    await recordImportEvent(supabase, userId, {
+      source: body.source || 'image',
+      provider: body.parsed?._provider,
+      status: result.merged ? 'replayed' : 'succeeded',
+      imported_count: 1,
+      receipt_ids: [result.receipt_id],
+      confidence_score: body.parsed?._confidence?.score,
+      metadata: { item_count: Array.isArray(body.parsed?.items) ? body.parsed.items.length : 0 },
+    })
 
     return Response.json({
       receipt_id: result.receipt_id,

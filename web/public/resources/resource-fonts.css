@@ -2,3 +2,7 @@
   --display:"Bricolage Grotesque",ui-sans-serif,system-ui,"Segoe UI",sans-serif;
   --text:"Plus Jakarta Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
 }
+
+.search input {
+  min-height: 44px;
+}

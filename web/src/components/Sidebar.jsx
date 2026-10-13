@@ -5,24 +5,24 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '../lib/supabase/client'
 import { useStore } from '../store'
 import {
-  LayoutDashboard, Receipt, Gift, ShoppingCart, Car, User, X, Store, Undo2, Sparkles, ChevronsLeft, ChevronsRight, Package, Utensils, BadgeDollarSign, Banknote, Wand2, Mail, BarChart3,
-  Inbox as InboxIcon, Send, Trash2, Filter, ChevronDown, Home, MessageSquare, Link2, ShoppingBag, Ticket, CalendarDays, TrendingUp, BookOpen, Gamepad2,
+  ListTodo, LayoutDashboard, Receipt, Gift, ShoppingCart, Car, User, X, Store, Undo2, Sparkles, ChevronsLeft, ChevronsRight, Package, Utensils, BadgeDollarSign, Banknote, Wand2, Mail, BarChart3,
+  Inbox as InboxIcon, Send, Trash2, Filter, ChevronDown, Home, MessageSquare, Link2, ShoppingBag, Ticket, CalendarDays, TrendingUp, BookOpen, Gamepad2, WalletCards, ShieldCheck, LogOut, Megaphone,
 } from 'lucide-react'
 import clsx from 'clsx'
-import GuacMascot from './GuacMascot'
-import GuacMascotAnimated from './GuacMascotAnimated'
 
 // Every item gets a `hoverMascot` expression. It's hidden by default and
 // fades in when the cursor is over the row. Pick the expression that best
 // fits the page's vibe.
 const sections = [
   {
-    title: 'Overview',
+    title: 'MY GUAC',
     items: [
       { href: '/dashboard',   icon: LayoutDashboard, label: 'Dashboard',   emoji: '🏠', hoverMascot: 'sitting' },
+      { href: '/news', icon: TrendingUp, label: 'News & Finance', emoji: '📰', hoverMascot: 'happy' },
       { href: '/guacanomics', icon: Sparkles,        label: 'Guacanomics', emoji: '✨', hoverMascot: 'celebrating' },
       { href: '/validate',    icon: Receipt,         label: 'Worth It?',   emoji: '🥑', hoverMascot: 'thumbsup' },
       { href: '/chat',        icon: MessageSquare,   label: 'Guac AI',     emoji: '🥑💬', hoverMascot: 'happy' },
+      { href: '/guac-ai/agents', icon: Sparkles, label: 'AI agents', emoji: '🤖', hoverMascot: 'happy' },
       { href: '/guacwizard',  icon: Wand2,           label: 'GuacWizard',  emoji: '🧙‍♂️✨', hoverMascot: 'rich' },
     ],
   },
@@ -31,8 +31,9 @@ const sections = [
     items: [
       { href: '/receipts', icon: Receipt,        label: 'Receipts', emoji: '🧾', hoverMascot: 'happy' },
       { href: '/reports',  icon: BarChart3,      label: 'Reports',  emoji: '📊', hoverMascot: 'celebrating' },
+      { href: '/budget',   icon: WalletCards,    label: 'Budget',   emoji: '💵', hoverMascot: 'rich' },
       { href: '/bills',    icon: CalendarDays,   label: 'Bills',    emoji: '🗓️', hoverMascot: 'sitting' },
-      { href: '/calculators', icon: TrendingUp, label: 'Plan',     emoji: '🎯', hoverMascot: 'rich' },
+      { href: '/wealth',   icon: TrendingUp, label: 'Wealth Path', emoji: '🎯', hoverMascot: 'rich' },
       { href: '/bank',     icon: Banknote,       label: 'Bank',     emoji: '🏦', hoverMascot: 'rich' },
       { href: '/returns',  icon: Undo2,          label: 'Returns',  emoji: '↩️', hoverMascot: 'surprised' },
       { href: '/rewards',  icon: Gift,           label: 'Rewards',  emoji: '🎁', hoverMascot: 'celebrating' },
@@ -50,16 +51,18 @@ const sections = [
     title: 'Chatter',
     items: [
       { href: '/inbox',       icon: Mail,          label: 'Inbox',       emoji: '📬', hoverMascot: 'eating' },
+      { href: '/notifications', icon: InboxIcon, label: 'Notifications', emoji: '🔔', hoverMascot: 'sitting' },
       { href: '/connections', icon: Link2,         label: 'Connections', emoji: '🔌', hoverMascot: 'thumbsup' },
     ],
   },
   {
     title: 'Shop',
     items: [
-      { href: '/stash',       icon: Package,        label: 'Stash',       emoji: '📦', hoverMascot: 'sitting' },
+      { href: '/stash',       icon: Package,        label: 'My Items',    emoji: '📦', hoverMascot: 'sitting' },
       { href: '/bites',       icon: Utensils,       label: 'Bites',       emoji: '🍽️', hoverMascot: 'eating' },
-      { href: '/shopping',    icon: ShoppingCart,   label: 'Smashlist',   emoji: '🛒', hoverMascot: 'thumbsup' },
+      { href: '/shopping',    icon: ShoppingCart,   label: 'Shopping List', emoji: '🛒', hoverMascot: 'thumbsup' },
       { href: '/steals',      icon: BadgeDollarSign, label: 'Steals',     emoji: '💎', hoverMascot: 'rich' },
+      { href: '/promotions',  icon: Megaphone,       label: 'Promotions', emoji: '📣', hoverMascot: 'celebrating' },
       { href: '/marketplace', icon: ShoppingBag,    label: 'Marketplace', emoji: '🛍️', hoverMascot: 'rich' },
       { href: '/coupons',     icon: Ticket,         label: 'Coupons',     emoji: '🎟️', hoverMascot: 'happy' },
     ],
@@ -75,9 +78,29 @@ const sections = [
   },
 ]
 
-export default function Sidebar({ isAdmin }) {
+const navIconTones = [
+  'text-violet-600',
+  'text-blue-600',
+  'text-fuchsia-600',
+  'text-orange-600',
+  'text-cyan-600',
+  'text-rose-600',
+]
+
+export default function Sidebar({ isAdmin, find10 = false, initialPlanPercent = 10 }) {
+  const [planPercent,setPlanPercent]=useState(initialPlanPercent)
+  const [pendingCount,setPendingCount]=useState(null)
+  const memberSections = sections.map(section => ({ ...section, items: section.items.filter(item => item.href !== '/guac-ai/agents' || isAdmin) }))
+  const navigation = find10 ? memberSections.map((section, index) => index ? section : { ...section, items: [section.items[0], { href: '/my-plan/details', icon: TrendingUp, label: planPercent==null?'My Plan':`My ${planPercent}% Plan`, emoji: '🥑', hoverMascot: 'happy' }, { href: '/tasks', icon: ListTodo, label: 'Tasks' }, ...section.items.slice(1)] }) : memberSections
   const pathname = usePathname()
   const router = useRouter()
+  useEffect(()=>{
+    if(!find10)return
+    let active=true
+    const refresh=()=>fetch('/api/find-your-10/progress').then(r=>r.ok?r.json():null).then(result=>{if(active){setPlanPercent(result?.percent??null);setPendingCount(result?.pendingTasks??null)}}).catch(()=>{})
+    refresh();const timer=setInterval(refresh,30000);window.addEventListener('focus',refresh);window.addEventListener('plan-updated',refresh)
+    return ()=>{active=false;clearInterval(timer);window.removeEventListener('focus',refresh);window.removeEventListener('plan-updated',refresh)}
+  },[find10,pathname])
   const { sidebarOpen, setSidebarOpen, sidebarCollapsed, toggleSidebar } = useStore()
 
   async function handleLogout() {
@@ -102,18 +125,18 @@ export default function Sidebar({ isAdmin }) {
         <div className="fixed inset-0 z-40 bg-black/30 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
       <aside className={clsx(
-        'fixed lg:static inset-y-0 left-0 z-50 flex flex-col overflow-hidden font-sans',
-        'bg-[#FBFCF9] text-[#4A5A4E]',
-        'border-r border-[#176B33]/10',
+        'fixed lg:sticky lg:top-0 lg:self-start lg:h-screen inset-y-0 left-0 z-50 flex flex-col overflow-hidden font-sans',
+        'bg-white text-slate-600',
+        'border-r border-slate-200',
         'transform transition-all duration-200 ease-in-out',
-        collapsed ? 'lg:w-20' : 'lg:w-64',
-        'w-64',
+        collapsed ? 'lg:w-24' : 'lg:w-64',
+        'w-72',
         sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       )} style={{ fontFamily: 'var(--font-jakarta)' }}>
         {/* Brand */}
         <div className={clsx(
-          'flex items-center border-b border-emerald-100/80 h-16 shrink-0',
-          collapsed ? 'lg:justify-center px-3' : 'px-5 justify-between'
+          'flex items-center border-b border-slate-200 h-16 shrink-0',
+          collapsed ? 'lg:justify-center px-3' : 'px-6 justify-between'
         )}>
           <Link href="/dashboard" className="flex items-center gap-3 min-w-0">
             {/* Brand logo — matches the marketing home-page lockup EXACTLY
@@ -128,12 +151,12 @@ export default function Sidebar({ isAdmin }) {
                   <span style={{ fontSize: 22 }}>🥑</span>
                   <span style={{ fontFamily: 'var(--font-bricolage), sans-serif', fontWeight: 800, fontSize: 20, color: '#15281C', letterSpacing: '-0.02em' }}>GetGuac</span>
                 </div>
-                <div className="text-[10px] text-guac-faint font-bold mt-1 uppercase tracking-[0.14em]">money's wingman</div>
+                <div className="text-[10px] text-slate-600 font-bold mt-1 uppercase tracking-[0.14em]">money&apos;s wingman</div>
               </div>
             )}
           </Link>
           {!collapsed && (
-            <button className="lg:hidden text-gray-500 hover:text-gray-800" onClick={() => setSidebarOpen(false)}>
+            <button type="button" aria-label="Close navigation" className="lg:hidden inline-flex min-h-11 min-w-11 items-center justify-center text-gray-500 hover:text-gray-800" onClick={() => setSidebarOpen(false)}>
               <X size={20} />
             </button>
           )}
@@ -141,15 +164,15 @@ export default function Sidebar({ isAdmin }) {
 
         {/* Nav */}
         <nav className="flex-1 py-1 overflow-y-auto">
-          {sections.map(section => (
+          {navigation.map((section, sectionIndex) => (
             <div key={section.title} className={clsx('mb-0.5', collapsed && 'lg:mb-0.5')}>
               {!collapsed && (
-                <div className="px-5 pb-0.5 pt-1.5 text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#B3BEB2]">
+                <div className="px-6 pb-1 pt-2 text-xs font-extrabold uppercase tracking-[0.12em] text-slate-500">
                   {section.title}
                 </div>
               )}
-              <div className={clsx('space-y-px', collapsed ? 'lg:px-1 px-3' : 'px-3')}>
-                {section.items.map(({ href, icon: Icon, label, emoji, hoverMascot }) => {
+              <div className={clsx('space-y-px', collapsed ? 'lg:px-2 px-3' : 'px-4')}>
+                {section.items.map(({ href, icon: Icon, label }, itemIndex) => {
                   const active = isActive(href)
                   return (
                     <div key={href}>
@@ -168,39 +191,29 @@ export default function Sidebar({ isAdmin }) {
                         }}
                         title={collapsed ? label : undefined}
                         className={clsx(
-                          'group flex items-center rounded-xl text-[13.5px] transition-all',
-                          collapsed ? 'lg:flex-col lg:justify-center lg:gap-0.5 lg:px-1 lg:py-1.5 px-3 py-1 gap-2.5' : 'gap-2.5 px-3 py-1',
+                          'group flex items-center rounded-xl text-sm transition-all',
+                          collapsed ? 'lg:flex-col lg:justify-center lg:gap-1 lg:px-1 lg:py-2 px-3 py-1.5 gap-3' : 'gap-3 px-3.5 py-1.5',
                           // Active row is a flat avocado pill with an inset
                           // hairline ring — no pop/scale animation, so clicking
                           // a menu item never looks like it vibrates.
                           active
-                            ? 'bg-[#E9F5DD] text-[#14532D] font-extrabold shadow-[inset_0_0_0_1px_rgba(31,138,61,0.16)]'
-                            : 'text-[#4A5A4E] hover:bg-[#F1F6EA] hover:text-[#14532D]'
+                            ? 'bg-violet-100 text-violet-800 font-extrabold shadow-[inset_0_0_0_1px_rgba(124,58,237,0.16)]'
+                            : 'text-slate-600 hover:bg-slate-100 hover:text-violet-700'
                         )}
                       >
                         <span className={clsx(
-                          'flex items-center justify-center shrink-0 transition-all text-base',
-                          // Collapsed rail keeps the rounded tap-target chip;
-                          // expanded mode shows the bare emoji (avocado redesign).
+                          'flex items-center justify-center shrink-0 transition-colors',
                           collapsed
-                            ? clsx('w-8 h-8 rounded-lg', active ? 'bg-white shadow-sm ring-1 ring-emerald-200/60' : 'group-hover:bg-white/70')
-                            : 'w-5'
-                        )}>{emoji}</span>
+                            ? clsx('w-8 h-8 rounded-lg', active ? 'bg-white text-violet-700 shadow-sm ring-1 ring-violet-200/70' : 'group-hover:bg-white/70')
+                            : clsx('w-5', active ? 'text-violet-700' : navIconTones[(sectionIndex + itemIndex) % navIconTones.length])
+                        )}><Icon size={collapsed ? 18 : 16} strokeWidth={active ? 2.4 : 1.9} /></span>
                         {!collapsed ? (
                           <>
                             <span className="flex-1">{label}</span>
                             {/* Show chevron on the Inbox row when active so users
                                 know it's a toggle as well as a link. */}
                             {href === '/inbox' && active && (
-                              <ChevronDown size={14} className={`shrink-0 text-emerald-700 transition-transform ${inboxSubExpanded ? '' : '-rotate-90'}`} />
-                            )}
-                            {hoverMascot && (
-                              <span
-                                className="shrink-0 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 -my-1"
-                                aria-hidden="true"
-                              >
-                                <GuacMascotAnimated animation="wave" size={22} />
-                              </span>
+                              <ChevronDown size={14} className={`shrink-0 text-violet-700 transition-transform ${inboxSubExpanded ? '' : '-rotate-90'}`} />
                             )}
                           </>
                         ) : (
@@ -209,12 +222,14 @@ export default function Sidebar({ isAdmin }) {
                           // drawer is always full-width with normal rows.
                           <span className="hidden lg:block w-full text-[9.5px] font-semibold leading-[1.1] text-center tracking-tight">{label}</span>
                         )}
+                        {href==='/tasks'&&pendingCount>0&&<span aria-label={`${pendingCount} pending tasks`} className="shrink-0 rounded-full bg-violet-100 px-2 py-0.5 text-xs font-bold tabular-nums text-violet-800">{pendingCount}</span>}
                       </Link>
                       {/* Inbox: render the Folders + Filters accordion inline when
                           the user is on the inbox page AND the sub-nav is expanded. */}
                       {href === '/inbox' && active && !collapsed && inboxSubExpanded && (
                         <InboxSubNav onNavigate={() => setSidebarOpen(false)} />
                       )}
+                      {href === '/shopping' && !collapsed && <Link href="/shopping/groceries" onClick={() => setSidebarOpen(false)} className={clsx('ml-9 flex min-h-11 items-center rounded-lg px-3 text-sm', pathname === '/shopping/groceries' ? 'bg-violet-50 font-semibold text-violet-700' : 'text-gray-600 hover:bg-violet-50')}>Groceries</Link>}
                     </div>
                   )
                 })}
@@ -236,7 +251,7 @@ export default function Sidebar({ isAdmin }) {
                     : 'text-gray-600 hover:bg-amber-50 hover:text-amber-900'
                 )}
               >
-                <span className="w-8 h-8 rounded-xl flex items-center justify-center bg-white/70 shadow-sm text-base shrink-0">🛡️</span>
+                <span className="w-8 h-8 rounded-xl flex items-center justify-center bg-white/70 shadow-sm shrink-0"><ShieldCheck size={17} /></span>
                 {!collapsed
                   ? <span>Admin</span>
                   : <span className="hidden lg:block w-full text-[9.5px] font-semibold leading-[1.1] text-center tracking-tight">Admin</span>}
@@ -245,17 +260,34 @@ export default function Sidebar({ isAdmin }) {
           )}
         </nav>
 
+        {pathname === '/dashboard' && !collapsed && (
+          <div className="hidden shrink-0 border-t border-slate-200 p-2 lg:block">
+            <div className="rounded-xl border border-slate-200 bg-white p-2">
+              <div className="flex items-center justify-between px-1 pb-1.5"><p className="text-[10px] font-black text-[#27372D]">Dashboard presets</p><span className="text-[10px] text-slate-400">ⓘ</span></div>
+              {[['Everyday', LayoutDashboard, true], ['Save more', ShieldCheck, false], ['Pay debt', Banknote, false], ['Build wealth', TrendingUp, false]].map(([label, Icon, active]) => (
+                <button type="button" key={label} className={clsx('flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[10px] font-bold transition-colors', active ? 'bg-violet-50 text-violet-700' : 'text-slate-600 hover:bg-slate-50')}>
+                  <Icon size={12}/><span className="flex-1 text-left">{label}</span>{active && <span>✓</span>}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Footer: collapse toggle + logout */}
-        <div className="border-t border-emerald-100/80 p-3 space-y-1 shrink-0">
+        <div className="border-t border-slate-200 p-3 space-y-1 shrink-0">
+          <button type="button" onClick={() => { setSidebarOpen(false); window.dispatchEvent(new Event('guac-open-error-report')) }} title="Report error" aria-label="Report error" className={clsx('flex items-center w-full rounded-2xl text-sm font-medium text-slate-600 hover:bg-violet-50 hover:text-violet-700 min-h-11', collapsed ? 'lg:flex-col lg:justify-center lg:gap-0.5 lg:px-1 lg:py-1.5 px-3 py-1.5 gap-2.5' : 'gap-2.5 px-3 py-1.5')}>
+            <span className="w-8 h-8 rounded-xl flex items-center justify-center bg-white/70 shrink-0"><MessageSquare size={17}/></span>
+            <span className={collapsed ? 'hidden lg:block w-full text-[9.5px] font-semibold leading-[1.1] text-center tracking-tight' : ''}>Report error</span>
+          </button>
           <button
             onClick={handleLogout}
             title={collapsed ? 'Sign Out' : undefined}
             className={clsx(
               'flex items-center w-full rounded-2xl text-sm font-medium transition-all',
-              'text-[#4A5A4E] hover:bg-rose-50 hover:text-rose-700',
+              'text-slate-600 hover:bg-rose-50 hover:text-rose-700',
               collapsed ? 'lg:flex-col lg:justify-center lg:gap-0.5 lg:px-1 lg:py-1.5 px-3 py-1.5 gap-2.5' : 'gap-2.5 px-3 py-1.5'
             )}>
-            <span className="w-8 h-8 rounded-xl flex items-center justify-center bg-white/70 text-base shrink-0">👋</span>
+            <span className="w-8 h-8 rounded-xl flex items-center justify-center bg-white/70 shrink-0"><LogOut size={17} /></span>
             {!collapsed
               ? <span>Sign Out</span>
               : <span className="hidden lg:block w-full text-[9.5px] font-semibold leading-[1.1] text-center tracking-tight">Sign Out</span>}
@@ -267,7 +299,7 @@ export default function Sidebar({ isAdmin }) {
             title={collapsed ? 'Expand' : 'Collapse'}
             className={clsx(
               'hidden lg:flex items-center w-full rounded-2xl text-xs font-semibold transition-all',
-              'text-emerald-700 hover:bg-emerald-100',
+              'text-violet-700 hover:bg-violet-100',
               collapsed ? 'flex-col justify-center gap-0.5 px-1 py-1.5' : 'gap-2 px-3 py-2'
             )}>
             {collapsed

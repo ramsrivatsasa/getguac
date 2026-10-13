@@ -8,8 +8,10 @@
 import { useEffect, useState } from 'react'
 import { Bell, Gift, Package, TrendingUp, AlertTriangle, ShoppingCart, MoonStar, Clock, Tag } from 'lucide-react'
 import FeatureHeader from '../../../components/FeatureHeader'
+import ProductAlerts from '../../../components/ProductAlerts'
 
 const CATEGORIES = [
+  { key: 'product_recall', icon: AlertTriangle, label: 'Product safety alerts', desc: 'Recall notices that may match purchases on your receipts, with groceries first.' },
   { key: 'rewards_expiring', icon: Gift,           label: 'Reward expiring',         desc: 'Heads-up when a reward expires within 7 days.' },
   { key: 'return_window',    icon: Package,        label: 'Return window closing',    desc: "Reminder the day before an item's return-by date." },
   { key: 'bank_bite_digest', icon: TrendingUp,     label: 'Weekly Bank Bite digest',  desc: 'Monday recap of interest + fees from the prior 7 days.' },
@@ -22,20 +24,34 @@ const CATEGORIES = [
 export default function NotificationsPage() {
   const [prefs, setPrefs] = useState(null)
   const [busy, setBusy]   = useState(null)
+  const [error,setError]=useState('')
+  const [attempt,setAttempt]=useState(0)
 
   useEffect(() => {
-    fetch('/api/notify/prefs').then(r => r.json()).then(d => setPrefs(d.prefs || {}))
-  }, [])
+    let active=true
+    const controller=new AbortController()
+    const timer=setTimeout(()=>controller.abort(),10000)
+    setError('')
+    fetch('/api/notify/prefs',{signal:controller.signal}).then(async r=>{
+      if(!r.ok)throw new Error('Preferences could not load. Please retry.')
+      return r.json()
+    }).then(d=>{if(active)setPrefs(d.prefs||{})}).catch(()=>{if(active)setError('Preferences could not load. Please retry.')}).finally(()=>clearTimeout(timer))
+    return ()=>{active=false;clearTimeout(timer);controller.abort()}
+  }, [attempt])
 
   async function toggle(key, value) {
-    setBusy(key)
+    setBusy(key);setError('')
+    const previous=prefs
     const next = { ...(prefs || {}), [key]: value }
     setPrefs(next)                                  // optimistic
     try {
-      await fetch('/api/notify/prefs', {
+      const response=await fetch('/api/notify/prefs', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ [key]: value }),
       })
+      if(!response.ok)throw new Error('Save failed')
+    } catch {
+      setPrefs(previous);setError('Preferences could not save. Please retry.')
     } finally {
       setBusy(null)
     }
@@ -46,7 +62,7 @@ export default function NotificationsPage() {
       <div className="max-w-2xl space-y-4">
         <h1 className="page-title">Notifications</h1>
         <div className="card text-gray-400 py-8 text-center text-sm flex flex-col items-center gap-3">
-          <p>Loading…</p>
+          {error?<><p role="alert">{error}</p><button onClick={()=>setAttempt(n=>n+1)}>Retry</button></>:<p>Loading…</p>}
         </div>
       </div>
     )
@@ -59,6 +75,9 @@ export default function NotificationsPage() {
         title="Notifications"
         subtitle="Pick which alerts you want. Changes save automatically."
       />
+
+      {error&&<p role="alert" className="text-sm text-red-700">{error}</p>}
+      <ProductAlerts />
 
       <div className="card divide-y divide-guac-line p-0 overflow-hidden">
         {CATEGORIES.map(({ key, icon: Icon, label, desc }) => {
@@ -75,7 +94,7 @@ export default function NotificationsPage() {
               <input
                 type="checkbox"
                 checked={on}
-                disabled={busy === key}
+                disabled={busy !== null}
                 onChange={e => toggle(key, e.target.checked)}
                 className="mt-1.5 w-10 h-6 appearance-none rounded-full bg-gray-200 checked:bg-guac-600 relative cursor-pointer transition-colors before:content-[''] before:absolute before:top-0.5 before:left-0.5 before:w-5 before:h-5 before:rounded-full before:bg-white before:shadow checked:before:translate-x-4 before:transition-transform"
               />

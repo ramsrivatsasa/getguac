@@ -9,7 +9,7 @@
 
 import { createClient } from '../../../../lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
-import { createMailbox, mailboxExists } from '../../../../lib/migadu'
+import { createMailbox, mailboxExists, ensureReceiptsAlias } from '../../../../lib/migadu'
 import { encryptSecret, generateMailboxPassword } from '../../../../lib/crypto'
 import { reportServerError } from '../../../../lib/report-error'
 export const runtime = 'nodejs'
@@ -33,6 +33,7 @@ async function provisionMailbox(sbAdmin, userId, username, displayName) {
   }
   try {
     if (await mailboxExists(username)) {
+      await ensureReceiptsAlias(username)
       return { provisioned: true, reason: 'already_existed' }
     }
     const password = generateMailboxPassword()

@@ -23,7 +23,7 @@
 //
 // 🔒 Never call detectCurrency() directly inside a render path.
 
-const REGION_TO_CURRENCY = {
+export const REGION_TO_CURRENCY = {
   US: 'USD', PR: 'USD', GU: 'USD', VI: 'USD',
   GB: 'GBP', CA: 'CAD', AU: 'AUD', NZ: 'NZD',
   IN: 'INR', JP: 'JPY', CN: 'CNY', KR: 'KRW',

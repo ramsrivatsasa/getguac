@@ -27,7 +27,7 @@ export default function MascotInAppPage() {
           <h1 className="text-3xl font-black tracking-tight text-gray-900">Our mascot, in context</h1>
           <p className="text-sm text-gray-500 mt-1 leading-relaxed">
             Mockups of where our recolored-mascot animations could live. These are previews only —
-            say which you like and I'll wire it into the real screen.
+            say which you like and I&apos;ll wire it into the real screen.
           </p>
         </section>
 
@@ -41,7 +41,7 @@ export default function MascotInAppPage() {
               </div>
               <div>
                 <p className="text-lg font-black leading-tight">Good morning, Ram 👋</p>
-                <p className="text-sm text-emerald-50/90 mt-0.5">Have a nice day — you've smashed 4 lists this week.</p>
+                <p className="text-sm text-emerald-50/90 mt-0.5">Have a nice day — you&apos;ve smashed 4 lists this week.</p>
               </div>
             </div>
           </Mock>
@@ -63,7 +63,7 @@ export default function MascotInAppPage() {
               <p className="text-base font-black text-emerald-800 mt-1 inline-flex items-center gap-1.5">
                 <Sparkles size={16} className="text-amber-500" /> Worth it!
               </p>
-              <p className="text-xs text-gray-500 mt-1">You rated 5 items — that's a Smash day.</p>
+              <p className="text-xs text-gray-500 mt-1">You rated 5 items — that&apos;s a Smash day.</p>
             </div>
           </Mock>
 

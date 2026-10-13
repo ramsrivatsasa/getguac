@@ -1,0 +1,12 @@
+.card{container-type:inline-size;display:grid!important;grid-template-columns:64px minmax(0,.8fr) minmax(0,1.8fr);gap:16px!important;align-items:start!important;background:#faf8ff;font-size:14px;line-height:1.45}
+.card>div{min-width:0}.card>div:first-child{grid-column:1}.card>div:nth-child(2){grid-column:2/-1}.card>div:last-child{grid-column:1/-1}
+.dashboardData{display:grid;grid-column:1/-1;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1fr);gap:16px;min-width:0}
+.sectionTitle{font-size:14px;font-weight:700;margin:0 0 8px}.chartAndLegend{display:flex;align-items:center;gap:12px}
+.donut{width:100px;height:100px;position:relative;flex-shrink:0}.donut svg{width:100%;height:100%}.donut>div{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}.donut strong{font-size:24px;color:#5b21b6}.donut span{font-size:14px;color:#625675}
+.legend{flex:1;min-width:0}.legend>div{display:grid;grid-template-columns:8px minmax(0,1fr) auto;gap:6px;align-items:center;font-size:14px;padding:3px 0}.legend i{width:8px;height:8px;border-radius:50%;flex-shrink:0}.legend b{font-variant-numeric:tabular-nums;white-space:nowrap}
+.chartNote{font-size:14px;color:#625675;margin:8px 0}.chartAction>a{min-height:44px;padding:8px 14px;margin-top:0}
+.planSummary,.monthSummary{border-left:1px solid #e9e2f2;padding-left:14px}.summaryRow,.monthSummary dl>div{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:4px 0}.summaryRow p,.monthSummary dt{min-width:0;font-size:14px;font-weight:400;color:#625675}.summaryRow strong,.monthSummary dd{font-size:14px!important;font-weight:700;color:#6d28d9;font-variant-numeric:tabular-nums}.card>div:last-child>p{font-size:14px}
+@container(min-width:1000px){.card>div:nth-child(2){grid-column:2}.dashboardData{grid-column:3}}
+@container(max-width:650px){.dashboardData{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.chartAction{grid-column:1/-1}.chartAndLegend{max-width:420px}.planSummary{padding-left:0;border:0}}
+@container(max-width:380px){.dashboardData{grid-template-columns:minmax(0,1fr)}.monthSummary{border-left:0;border-top:1px solid #e9e2f2;padding:12px 0 0}}
+@media(max-width:420px){.card{padding:12px!important;grid-template-columns:56px minmax(0,1fr);gap:10px!important}.card h2{font-size:21px}.card input[type=range]{width:110px}.card>div:first-child{max-width:56px;overflow:hidden}}

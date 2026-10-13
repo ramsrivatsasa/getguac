@@ -35,7 +35,7 @@ const CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || 'ca-pub-595969167144170
 // to measure. Every ad-bearing page was logging that error, not just /learn.
 const COLLAPSED = { height: 0, overflow: 'hidden', margin: 0, padding: 0 }
 
-export default function AdSlot({ slot = '', format = 'auto', className = '', minHeight = 100, label = 'Advertisement', tier = 1 }) {
+export default function AdSlot({ slot = '', format = 'auto', className = '', minHeight = 100, label = 'Sponsored', tier = 1 }) {
   const pushed = useRef(false)
   const insRef = useRef(null)
   // null = AdSense hasn't decided yet · 'filled' = ad on screen · 'unfilled' = collapse
@@ -141,36 +141,27 @@ export default function AdSlot({ slot = '', format = 'auto', className = '', min
   }, [slot, hideForPremium])
 
   // Tier-2 ad + premium subscriber, or inside the app WebView → render nothing.
-  if (hideForPremium || embedded) return null
+  if (hideForPremium) return null
+  if (embedded) return <div data-guac-sponsored-slot="native" aria-hidden="true" />
 
-  // Placeholder mode — keeps positions visible until a publisher id is set.
-  if (!CLIENT || !slot) {
-    return (
-      <div
-        className={`relative rounded-2xl border border-dashed border-gray-200 bg-gray-50/60 flex flex-col items-center justify-center gap-1 text-gray-300 ${className}`}
-        style={{ minHeight }}
-        aria-hidden="true"
-      >
-        <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Ad</span>
-        <span className="text-[9px] tracking-wide">your ad could be here</span>
-      </div>
-    )
-  }
+  // No inventory configuration means no reserved or invented ad.
+  if (!CLIENT || !slot) return null
 
   // No ad served → render nothing visible (but keep the <ins> mounted so
   // AdSense can still report a late fill).
   const filled = status === 'filled'
   return (
     <div
-      className={className}
-      style={status === 'unfilled' ? COLLAPSED : undefined}
+      className={`rounded-xl border border-violet-100 bg-white ${className}`}
+      aria-label={filled ? 'Sponsored post' : undefined}
+      style={!filled ? {...COLLAPSED,borderTopWidth:0,borderBottomWidth:0} : undefined}
     >
       {/* The loader lives with the slot, not in the root layout — see
           AdSenseScript. Rendering it here is what keeps Google off every
           signed-in page. Deduped by id, so N slots still load it once. */}
       <AdSenseScript />
       {filled && (
-        <p className="text-[9px] uppercase tracking-[0.2em] text-gray-300 text-center mb-1">{label}</p>
+        <p className="px-3 py-2 text-left text-sm font-semibold text-slate-500">{label}</p>
       )}
       <ins
         ref={insRef}

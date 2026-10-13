@@ -7,7 +7,7 @@ import Link from 'next/link'
 import useCurrencySymbol from '../hooks/useCurrencySymbol'
 import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Tag, Star, ArrowRight, Search, ChevronDown } from 'lucide-react'
+import { Tag, Star, ArrowRight, Search, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import { getStealsFeed } from '../lib/steals'
 import { useSavedSearches } from '../hooks/useSavedSearches'
 
@@ -30,7 +30,6 @@ export default function DashboardSteals() {
   const steals = data?.steals || []
   const unread = data?.unread || 0
   const [open, setOpen] = useState(false)
-  if (!steals.length && !savedSearches.length) return null
 
   // Group by the configured steal (the saved search the deal came from).
   const groups = {}
@@ -57,6 +56,7 @@ export default function DashboardSteals() {
           type="button"
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
+          aria-controls="dashboard-steals-content"
           className="font-semibold text-gray-900 flex items-center gap-2 -m-1 p-1 rounded-lg hover:text-gray-700"
         >
           <Tag size={18} className="text-gray-400" /> Steals for you
@@ -72,7 +72,17 @@ export default function DashboardSteals() {
         </Link>
       </div>
       {open && (
-      <div className="space-y-4">
+      <div id="dashboard-steals-content" className="space-y-4">
+        <p className="-mt-1 hidden text-[11px] leading-4 text-slate-500 lg:block">Browse price drops from your saved searches. Each row scrolls independently and opens the original retailer offer.</p>
+        {!ordered.length && !hunting.length && (
+          <div>
+            <div className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-gray-500">Your saved deal searches</div>
+            <Link href="/steals" className="flex min-h-28 items-center justify-center gap-3 rounded-xl border border-dashed border-violet-200 bg-gradient-to-r from-violet-50 via-white to-orange-50 px-4 text-center text-xs font-semibold text-slate-600 transition hover:border-violet-300 hover:shadow-sm">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-violet-600 text-white"><Search size={17}/></span>
+              <span><strong className="block text-sm text-slate-900">Tell Steals what to watch.</strong><span className="mt-1 block font-normal text-slate-500">Product images, price drops, discounts, and store ratings will scroll here.</span></span>
+            </Link>
+          </div>
+        )}
         {ordered.map(([q, items]) => (
           <div key={q}>
             <div className="text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1.5 truncate">{q}</div>
@@ -101,6 +111,7 @@ export default function DashboardSteals() {
 // honors prefers-reduced-motion. Manual scroll still works (overflow-x-auto).
 function AutoScrollRow({ children }) {
   const ref = useRef(null)
+  const move = (direction) => ref.current?.scrollBy({ left: direction * 360, behavior: 'smooth' })
   useEffect(() => {
     const el = ref.current
     if (!el) return
@@ -139,11 +150,13 @@ function AutoScrollRow({ children }) {
     }
   }, [])
 
-  return (
-    <div ref={ref} className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+  return <div className="group/steal-row relative">
+    <button type="button" onClick={() => move(-1)} aria-label="Scroll deals left" className="absolute left-1 top-1/2 z-10 hidden h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-slate-200 bg-white/95 text-slate-700 shadow-md group-hover/steal-row:grid"><ChevronLeft size={18}/></button>
+    <div ref={ref} className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1 -mx-1 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {children}
     </div>
-  )
+    <button type="button" onClick={() => move(1)} aria-label="Scroll deals right" className="absolute right-1 top-1/2 z-10 hidden h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-slate-200 bg-white/95 text-slate-700 shadow-md group-hover/steal-row:grid"><ChevronRight size={18}/></button>
+  </div>
 }
 
 function DealCard({ d }) {

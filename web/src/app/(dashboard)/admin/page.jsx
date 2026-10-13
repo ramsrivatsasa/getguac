@@ -6,6 +6,7 @@ import { createClient } from '../../../lib/supabase/client'
 import { ShieldCheck, Search, Upload, Trash2, Bug, TrendingUp, LineChart } from 'lucide-react'
 import { displayStoreName } from '../../../lib/store-name-normalize'
 import { useConfirm } from '../../../components/ConfirmDialog'
+import {articleFeedbackEnabled} from '../../../lib/article-feedback.mjs'
 export default function AdminPage() {
   const confirm = useConfirm()
   const [type, setType] = useState('receipts')
@@ -48,6 +49,8 @@ export default function AdminPage() {
       </div>
 
       <div className="grid sm:grid-cols-2 gap-2">
+        {articleFeedbackEnabled() && <Link href="/admin/article-comments" className="flex min-h-16 items-center rounded-xl border border-slate-200 bg-white px-4 py-3 font-semibold text-violet-700">Article comments · review and moderation →</Link>}
+        <Link href="/admin/promotions" className="flex min-h-16 items-center rounded-xl border border-violet-200 bg-white px-4 py-3 font-semibold text-violet-700">Major promotions · sources & review →</Link>
         <Link href="/admin/crashes" className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white border border-gray-200 hover:border-rose-200 hover:shadow-sm">
           <div className="w-9 h-9 rounded-lg bg-rose-50 flex items-center justify-center shrink-0"><Bug size={18} className="text-rose-600" /></div>
           <div className="min-w-0">
@@ -216,7 +219,7 @@ function TestDataImporter() {
           type="file"
           accept=".csv,text/csv"
           onChange={handleFile}
-          className="block text-sm"
+            className="block w-full min-w-0 max-w-full text-sm"
         />
         <details className="text-xs text-gray-600">
           <summary className="cursor-pointer font-semibold">Or paste CSV directly</summary>

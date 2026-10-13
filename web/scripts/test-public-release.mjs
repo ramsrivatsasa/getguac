@@ -1,0 +1,87 @@
+import assert from 'node:assert/strict'
+import {mkdir,writeFile} from 'node:fs/promises'
+import {chromium} from 'playwright'
+import {releaseAccess} from './release-access.mjs'
+
+const base = (process.env.RELEASE_URL || 'http://127.0.0.1:3002').replace(/\/$/,'')
+const output = process.env.REVIEW_OUTPUT || '.local/public-release-20261013'
+const access = await releaseAccess(base), request = access.fetch
+const sections = ['lessons','articles','guides','tools'], rows = []
+await mkdir(output,{recursive:true})
+const titles = new Set()
+for (const section of sections) {
+  const path = `/academy/${section}`, response = await request(base+path)
+  assert.equal(response.status,200,path)
+  const html = await response.text(), title = html.match(/<title>(.*?)<\/title>/)?.[1]
+  assert(title&&!titles.has(title),path);titles.add(title)
+  assert(html.includes(`rel="canonical" href="https://getguac.app${path}"`),path)
+  assert(html.includes('CollectionPage')&&html.includes('BreadcrumbList'),path)
+  rows.push({path,title,status:response.status})
+}
+const root = await request(base+'/academy',{redirect:'manual'})
+assert.equal(root.status,308);assert.equal(root.headers.get('location'),'/academy/lessons')
+const sitemap = await (await request(base+'/sitemap.xml')).text()
+for (const section of sections) assert(sitemap.includes(`https://getguac.app/academy/${section}`))
+assert(!sitemap.includes('<loc>https://getguac.app/academy</loc>'))
+const browser = await chromium.launch({headless:true})
+try {
+  for (const width of [1440,390,320]) {
+    const page = await browser.newPage({viewport:{width,height:900}}), errors = []
+    await page.context().addCookies(access.cookies)
+    page.setDefaultNavigationTimeout(120000);page.setDefaultTimeout(30000)
+    page.on('pageerror',error=>errors.push(error.message))
+    const fits = async()=>assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`${page.url()} ${width}`)
+    await page.goto(base+'/',{waitUntil:'networkidle'})
+    assert.equal(await page.locator('head meta[name="description"]').count(),1,'Homepage description must be in head')
+    assert.match(await page.title(),/Everyday Savings & Consumer Protection/)
+    await page.locator('#tenIncome').fill('5000')
+    await page.getByRole('button',{name:'Show my 10%',exact:true}).click()
+    await page.locator('#tenOut').filter({hasText:'$500 a month'}).waitFor()
+    await page.getByRole('button',{name:'Enlarge receipt preview',exact:true}).click()
+    await page.locator('#zoom.open').waitFor();await page.locator('#zoomImg').evaluate(n=>n.decode())
+    await page.keyboard.press('Escape');await page.locator('#zoom.open').waitFor({state:'detached'})
+    const cards = page.locator('a.post');assert.equal(await cards.count(),4)
+    await cards.evaluateAll(ns=>{for(const n of ns)n.querySelector('img').loading='eager'})
+    await page.waitForFunction(()=>[...document.querySelectorAll('a.post img')].every(n=>n.complete&&n.naturalWidth>0))
+    await cards.evaluateAll(ns=>Promise.all(ns.map(n=>n.querySelector('img').decode())))
+    await page.locator('main img').evaluateAll(ns=>Promise.all(ns.map(async n=>{n.loading='eager';await n.decode();if(!n.naturalWidth)throw Error(`Missing homepage image: ${n.src}`)})))
+    await fits();await page.screenshot({path:`${output}/home-${width}.png`,fullPage:true})
+    await cards.last().click();await page.waitForURL('**/academy/size-your-emergency-fund-for-real-life');await page.locator('.ac-lesson-h1').waitFor()
+    await page.goBack({waitUntil:'networkidle'});await page.waitForURL(base+'/');assert.equal(new URL(page.url()).pathname,'/')
+    await page.goto(base+'/academy/lessons',{waitUntil:'networkidle'})
+    assert.equal(await page.locator('.ac-card').count(),100)
+    await page.evaluate(()=>localStorage.setItem('gg_academy_done_v1',JSON.stringify({'where-you-stand':true})))
+    await page.reload({waitUntil:'networkidle'});await page.locator('.ac-card-num-done').first().waitFor()
+    assert.match(await page.locator('.ac-progress-num').innerText(),/^1/)
+    assert.equal(await page.locator('.ac-bar').getAttribute('aria-valuenow'),'1')
+    await page.locator('.ac-card-art img').evaluateAll(ns=>Promise.all(ns.map(async n=>{n.loading='eager';await n.decode();if(!n.naturalWidth)throw Error('Missing lesson cover')})))
+    await page.evaluate(()=>scrollTo({top:0,behavior:'instant'}))
+    await fits();await page.screenshot({path:`${output}/lessons-${width}.png`})
+    await page.locator('.ac-search').fill('zero-based');assert.equal(await page.locator('.ac-card').count(),1)
+    await page.locator('.ac-card').click();await page.locator('.ac-lesson-h1').waitFor()
+    await page.locator('.ac-illustration img').evaluate(n=>n.decode());await fits()
+    await page.screenshot({path:`${output}/lesson-${width}.png`,fullPage:true})
+    await page.goBack({waitUntil:'networkidle'});await page.locator('.ac-search').fill('')
+    for (const section of sections) {
+      await page.locator(`.ac-library-nav a[href="/academy/${section}"]`).click()
+      await page.waitForURL(`**/academy/${section}`)
+      await page.locator(`.ac-library-nav a[href="/academy/${section}"][aria-current="page"]`).waitFor()
+      assert.equal(await page.locator('h1').count(),1);await fits()
+      await page.screenshot({path:`${output}/${section}-${width}.png`})
+    }
+    await page.goto(base+'/academy#articles',{waitUntil:'networkidle'})
+    await page.waitForURL('**/academy/articles')
+    await page.locator('[data-resource-root] input[type="search"]').fill('refund')
+    const match = page.locator('.rs-topic-link').filter({hasText:/refund/i}).first()
+    await match.waitFor({state:'visible'});await match.click();await page.waitForURL('**/articles/**')
+    await page.goBack({waitUntil:'networkidle'})
+    await page.waitForURL('**/academy/articles')
+    await page.locator('[data-resource-root] input[type="search"]').waitFor({state:'visible'})
+    await fits()
+    assert.deepEqual(errors,[]);rows.push({width,images:true,progress:true,calculator:true,zoom:true,clickAndBack:true,sections:true,legacyHash:true,errors})
+    console.log('PASS public release',width);await page.close()
+  }
+} finally {
+  await browser.close()
+  await writeFile(`${output}/results.json`,JSON.stringify({base,checkedAt:new Date().toISOString(),rows},null,2))
+}

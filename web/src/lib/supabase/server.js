@@ -1,21 +1,24 @@
 import { createServerClient } from '@supabase/ssr'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { cookies, headers } from 'next/headers'
+import { assertLocalBackend } from '../find-your-10/local-boundary.mjs'
 
 // Default server client — reads the user's session from cookies (set by the
 // Next.js SSR auth flow when they sign in via the web app).
 export function createClient() {
+  assertLocalBackend()
   const cookieStore = cookies()
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
       cookies: {
-        getAll() { return cookieStore.getAll() },
-        setAll(cookiesToSet) {
+        async getAll() { return (await cookieStore).getAll() },
+        async setAll(cookiesToSet) {
           try {
+            const store = await cookieStore
             cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
+              store.set(name, value, options)
             )
           } catch {}
         },
@@ -33,8 +36,9 @@ export function createClient() {
 // "Authorization: Bearer <token>", we mint a Supabase client bound to that
 // token (so auth.getUser() returns the right person and RLS still applies).
 // Otherwise we fall back to the cookie-based createClient().
-export function createApiClient() {
-  const headerStore = headers()
+export async function createApiClient() {
+  assertLocalBackend()
+  const headerStore = await headers()
   const authHeader = headerStore.get('authorization') || ''
   const match = authHeader.match(/^Bearer\s+(\S+)$/i)
   if (match) {

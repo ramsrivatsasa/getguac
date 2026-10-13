@@ -1,8 +1,10 @@
+import MarketingHero from '../../components/MarketingHero'
 // Public /contact page — simple ways to reach us. Uses a mailto so it needs no
 // backend; kept intentionally minimal and honest for a small team.
 import Link from 'next/link'
 import MarketingShell from '../../components/MarketingShell'
 import { Mail, MessageCircle, LifeBuoy, ShieldCheck } from 'lucide-react'
+import TrustLine from '../../components/TrustLine'
 
 export const metadata = {
   title: 'Contact GetGuac',
@@ -20,40 +22,31 @@ const CHANNELS = [
 export default function ContactPage() {
   return (
     <MarketingShell subtitle="contact">
-      <section className="max-w-3xl mx-auto px-4 sm:px-6 pt-14 sm:pt-20 pb-6 text-center">
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider">
-          <Mail size={12} /> We read every message
-        </span>
-        <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-gray-900 mt-4 leading-tight">
-          Get in touch
-        </h1>
-        <p className="text-lg text-gray-600 mt-3 max-w-xl mx-auto">
-          A real, small team is behind GetGuac. Whatever you need, reach out — we’d love to hear from you.
-        </p>
-      </section>
+      <MarketingHero eyebrow="Contact GetGuac" title="Get in touch." accent="" description="Support, feedback or a privacy question: choose the right contact below to reach our team." imageSrc="/home/story-people/capture-blonde-produce-v1-768.webp" imageAlt="A shopper keeping a purchase record on her phone" primaryHref="mailto:support@getguac.app" primaryLabel="Email support" secondaryHref="/faq" secondaryLabel="Read common questions" />
 
-      <section className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
-        <div className="grid sm:grid-cols-3 gap-4">
+      <section className="mx-auto max-w-6xl py-8 sm:py-10">
+        <div className="grid gap-5 md:grid-cols-3">
           {CHANNELS.map((c) => (
-            <a key={c.title} href={c.href} className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm hover:shadow-md hover:border-emerald-200 transition block">
+            <a key={c.title} href={c.href} className="group grid min-h-[220px] min-w-0 grid-rows-[auto_auto_1fr_auto] rounded-3xl border border-slate-200 bg-white p-7 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-emerald-700">
               <div className="w-11 h-11 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
                 <c.icon size={22} />
               </div>
-              <h3 className="font-bold text-gray-900 mt-4">{c.title}</h3>
-              <p className="text-sm text-gray-600 mt-1.5 leading-snug">{c.body}</p>
-              <span className="inline-block text-sm font-bold text-emerald-700 mt-3 break-all">{c.cta}</span>
+              <h2 className="mt-4 text-xl font-black text-slate-950">{c.title}</h2>
+              <p className="mt-2 max-w-sm text-base leading-7 text-slate-600">{c.body}</p>
+              <span className="mt-5 inline-flex min-h-11 min-w-0 items-center break-words text-base font-bold text-emerald-700 group-hover:underline">{c.cta}</span>
             </a>
           ))}
         </div>
 
-        <div className="text-center mt-10">
+        <div className="mt-8 flex flex-col items-center justify-between gap-4 rounded-2xl bg-slate-50 px-5 py-4 text-center sm:flex-row sm:text-left">
           <p className="text-gray-600">Looking for answers first?</p>
-          <div className="mt-4 flex flex-wrap gap-3 justify-center">
+          <div className="flex flex-wrap justify-center gap-3">
             <Link href="/faq" className="btn-secondary">Read the FAQ</Link>
             <Link href="/security" className="btn-secondary">Security &amp; privacy</Link>
           </div>
         </div>
       </section>
+      <TrustLine className="pb-14" />
     </MarketingShell>
   )
 }

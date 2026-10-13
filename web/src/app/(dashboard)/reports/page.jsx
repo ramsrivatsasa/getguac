@@ -9,6 +9,7 @@
 // power users we'd swap to a server-side SQL aggregate.
 
 'use client'
+import {DONUT,donutGeometry,donutCategoryColor} from '../../../lib/donut-style.mjs'
 import { useMemo, useState, Fragment } from 'react'
 import useCurrencySymbol from '../../../hooks/useCurrencySymbol'
 import Link from 'next/link'
@@ -17,7 +18,7 @@ import { createClient } from '../../../lib/supabase/client'
 import { CATEGORIES, categoryLabel, categoryClass, CATEGORY_BY_SLUG } from '../../../lib/categories'
 import { isPaymentReceipt } from '../../../lib/payment-rows'
 import { displayStoreName, storeGroupKey } from '../../../lib/store-name-normalize'
-import { computeTaxSummary, buildTaxExportCsv } from '../../../lib/tax-summary'
+import { computeTaxSummary, buildTaxExportCsv, taxRowsToCsv } from '../../../lib/tax-summary'
 import { detectSubscriptions, summarizeSubscriptions } from '../../../lib/subscription-tracker'
 import { computeSpendingTrend, formatTrend } from '../../../lib/spending-trends'
 import { formatDateShort } from '../../../lib/dateFormat'
@@ -37,17 +38,7 @@ import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis
 // /guacwizard use.
 
 // Recharts donut colors — matches CATEGORIES palette as closely as Tailwind lets.
-const CATEGORY_COLORS = {
-  grub: '#22C55E', eats: '#f97316', snacks: '#fbbf24', bars: '#d946ef', tea: '#10b981',
-  drinks: '#ef4444',
-  subs: '#8b5cf6', bills: '#38BDF8', 'bank-fees': '#dc2626', cloud: '#38bdf8', tech: '#3B82F6',
-  'big-stuff': '#6366f1', 'fix-it': '#f59e0b', outdoors: '#84cc16',
-  supplies: '#6366f1', fits: '#A855F7',
-  pharmacy: '#f43f5e', health: '#10b981',
-  'personal-care': '#ec4899', household: '#f59e0b',
-  'gas-up': '#ef4444', fun: '#8b5cf6',
-  gifting: '#ec4899', charity: '#f43f5e', misc: '#9AA3AE',
-}
+
 
 // Presentation-only money formatter — thousands separators + 2 decimals
 // ($1,234.56), matching the mockup. `dp` overrides fraction digits (e.g. 0
@@ -91,6 +82,9 @@ export default function ReportsPage() {
   const curSymbol = useCurrencySymbol()
   const money = useMemo(() => moneyWith(curSymbol), [curSymbol])
   const [selectedCategory, setSelectedCategory] = useState(null)
+  const [categoryMode, setCategoryMode] = useState('receipt')
+  const [businessOnly, setBusinessOnly] = useState(false)
+  const [taxReportMode, setTaxReportMode] = useState('category')
   const { spendingPeriod, spendingPeriodCount } = useStore()
   const dateFrom = periodStartIsoDate(spendingPeriod, spendingPeriodCount)
   const periodLabel = timeframeLabel(spendingPeriod, spendingPeriodCount)
@@ -108,6 +102,10 @@ export default function ReportsPage() {
     queryFn: () => getReportsData({ dateFrom }),
     staleTime: 60_000,
   })
+  const reportReceipts = useMemo(
+    () => businessOnly ? receipts.filter(receipt => receipt.business_purchase) : receipts,
+    [businessOnly, receipts]
+  )
 
   // Subscriptions need a wider lens than the page's period chip to
   // detect recurring patterns. Pull last 12 months regardless of
@@ -121,19 +119,21 @@ export default function ReportsPage() {
   })
 
   // Aggregate everything in one pass: category totals, store totals, per-item history.
-  const { byCategory, byStore, itemHistory, totalSpent, totalReceipts } = useMemo(() => {
-    const cat = new Map()
+  const { receiptByCategory, itemByCategory, byStore, itemHistory, totalSpent, totalItemSpent, totalReceipts } = useMemo(() => {
+    const receiptCat = new Map()
+    const itemCat = new Map()
     const store = new Map()
     const items = new Map()  // key = lower(item_name)|sku, value = { name, sku, count, qty, spent, lastDate, stores }
     let sum = 0
-    for (const r of receipts) {
+    let itemSum = 0
+    for (const r of reportReceipts) {
       if (r.is_return) continue                      // refunds don't count as spend
       if (isPaymentReceipt(r)) continue              // CC payments move money between accounts; not spending
       const amt = parseFloat(r.total_amount || 0)
       if (amt <= 0) continue                         // skip $0 / negative-but-not-marked-return rows so they don't drag category totals negative (was producing "Misc -169%" on the donut)
       sum += amt
       const ck = r.category || 'misc'
-      cat.set(ck, (cat.get(ck) || 0) + amt)
+      receiptCat.set(ck, (receiptCat.get(ck) || 0) + amt)
       // Bucket by CANONICAL alias key (same logic the dashboard's
       // Spending-by-Store chart uses) — not by raw store_id. Otherwise
       // every duplicate `stores` table row for the same merchant gets
@@ -146,6 +146,12 @@ export default function ReportsPage() {
       store.set(sk, sentry)
       for (const it of (r.receipt_items || [])) {
         if (it.returned) continue
+        const itemAmount = parseFloat(it.price || 0)
+        if (itemAmount > 0) {
+          const itemCategory = it.category || 'misc'
+          itemCat.set(itemCategory, (itemCat.get(itemCategory) || 0) + itemAmount)
+          itemSum += itemAmount
+        }
         const key = `${(it.item_name || '').toLowerCase().trim()}|${(it.sku || '').trim()}`
         if (!key.replace('|', '')) continue
         const ie = items.get(key) || {
@@ -164,13 +170,18 @@ export default function ReportsPage() {
       }
     }
     return {
-      byCategory: [...cat.entries()].map(([slug, amount]) => ({ slug, amount })).sort((a, b) => b.amount - a.amount),
+      receiptByCategory: [...receiptCat.entries()].map(([slug, amount]) => ({ slug, amount })).sort((a, b) => b.amount - a.amount),
+      itemByCategory: [...itemCat.entries()].map(([slug, amount]) => ({ slug, amount })).sort((a, b) => b.amount - a.amount),
       byStore: [...store.values()].sort((a, b) => b.spent - a.spent),
       itemHistory: [...items.values()].map(it => ({ ...it, stores: [...it.stores] })),
       totalSpent: sum,
-      totalReceipts: receipts.filter(r => !r.is_return && !isPaymentReceipt(r)).length,
+      totalItemSpent: itemSum,
+      totalReceipts: reportReceipts.filter(r => !r.is_return && !isPaymentReceipt(r)).length,
     }
-  }, [receipts])
+  }, [reportReceipts])
+
+  const byCategory = categoryMode === 'item' ? itemByCategory : receiptByCategory
+  const categoryTotal = categoryMode === 'item' ? totalItemSpent : totalSpent
 
   const oneTime = useMemo(() => itemHistory.filter(it => it.count === 1).sort((a, b) => b.spent - a.spent), [itemHistory])
   const repeats = useMemo(() => itemHistory.filter(it => it.count >= 2).sort((a, b) => b.count - a.count || b.spent - a.spent), [itemHistory])
@@ -198,6 +209,25 @@ export default function ReportsPage() {
   // show on /reports today AND can be reused later (year-end email,
   // GuacWizard prompts, etc.) without duplicating the aggregation.
   const taxStats = useMemo(() => computeTaxSummary(receipts), [receipts])
+  const taxItemStats = useMemo(() => {
+    const businessRows = []
+    const charityRows = []
+    for (const receipt of receipts) {
+      if (receipt.is_return || isPaymentReceipt(receipt)) continue
+      for (const item of (receipt.receipt_items || [])) {
+        const amount = parseFloat(item.price || 0)
+        if (item.returned || amount <= 0) continue
+        const row = { ...item, amount, date: receipt.date, store_name: receipt.store_name, receipt_id: receipt.id, business_purchase: Boolean(receipt.business_purchase) }
+        if (receipt.business_purchase) businessRows.push(row)
+        if ((item.category || '') === 'charity') charityRows.push(row)
+      }
+    }
+    return {
+      businessRows, charityRows,
+      businessSpent: businessRows.reduce((sum, row) => sum + row.amount, 0),
+      charityDonated: charityRows.reduce((sum, row) => sum + row.amount, 0),
+    }
+  }, [receipts])
 
   // Subscription detection — always runs against the 12-month window
   // (not the page chip) so monthly + quarterly patterns surface
@@ -233,16 +263,103 @@ export default function ReportsPage() {
     URL.revokeObjectURL(url)
   }
 
+  function downloadTaxRows(kind) {
+    const rows = taxReportMode === 'item'
+      ? (kind === 'business' ? taxItemStats.businessRows : taxItemStats.charityRows)
+      : (kind === 'business' ? taxStats.businessRows : taxStats.charityRows)
+    if (!rows.length) return
+    const itemCsv = taxReportMode === 'item' && [
+      ['Date', 'Store', 'Item', 'SKU', 'Category', 'Quantity', 'Amount', 'Classification', 'Receipt ID'],
+      ...rows.map(row => [row.date, displayStoreName(row.store_name), row.item_name, row.sku, row.category || 'misc', row.qty || 1, row.amount.toFixed(2), kind === 'business' ? 'Business' : 'Charity', row.receipt_id]),
+    ].map(row => row.map(value => `"${String(value ?? '').replaceAll('"', '""')}"`).join(',')).join('\r\n')
+    const blob = new Blob([`\uFEFF${taxReportMode === 'item' ? itemCsv : taxRowsToCsv(rows)}`], { type: 'text/csv;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    const periodSlug = period.label.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+    a.href = url
+    a.download = `getguac-${kind}-${taxReportMode}-${periodSlug}.csv`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
+  function downloadCurrentTaxCsv() {
+    if (taxReportMode === 'category') return downloadTaxCsv()
+    const rows = [
+      ...taxItemStats.businessRows.map(row => ({ ...row, classification: 'Business' })),
+      ...taxItemStats.charityRows.map(row => ({ ...row, classification: 'Charity' })),
+    ]
+    if (!rows.length) return
+    const headers = ['Date', 'Store', 'Item', 'SKU', 'Category', 'Quantity', 'Amount', 'Classification', 'Receipt ID']
+    const body = [headers, ...rows.map(row => [row.date, displayStoreName(row.store_name), row.item_name, row.sku, row.category || 'misc', row.qty || 1, row.amount.toFixed(2), row.classification, row.receipt_id])]
+      .map(row => row.map(value => `"${String(value ?? '').replaceAll('"', '""')}"`).join(',')).join('\r\n')
+    const blob = new Blob([`\uFEFF${body}`], { type: 'text/csv;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `getguac-tax-items-${period.label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.csv`
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url)
+  }
+
+  function downloadCategoryCsv(mode) {
+    const csvCell = (value) => {
+      let text = value == null ? '' : String(value)
+      if (/^[=+\-@]/.test(text)) text = `'${text}`
+      return `"${text.replaceAll('"', '""')}"`
+    }
+    const rows = mode === 'item'
+      ? reportReceipts.flatMap(r => {
+          if (r.is_return || isPaymentReceipt(r)) return []
+          return (r.receipt_items || [])
+            .filter(it => !it.returned && parseFloat(it.price || 0) > 0 && (!selectedCategory || (it.category || 'misc') === selectedCategory))
+            .map(it => [r.date, displayStoreName(r.store_name), it.item_name, it.sku, it.qty || 1, it.category || 'misc', parseFloat(it.price || 0), r.business_purchase ? 'Business' : 'Personal', r.id])
+        })
+      : reportReceipts
+          .filter(r => !r.is_return && !isPaymentReceipt(r) && parseFloat(r.total_amount || 0) > 0 && (!selectedCategory || (r.category || 'misc') === selectedCategory))
+          .map(r => [r.date, displayStoreName(r.store_name), r.category || 'misc', parseFloat(r.total_amount || 0), parseFloat(r.tax_paid || 0), (r.receipt_items || []).filter(it => !it.returned).length, r.business_purchase ? 'Business' : 'Personal', r.id])
+    const headers = mode === 'item'
+      ? ['Date', 'Store', 'Item', 'SKU', 'Quantity', 'Item category', 'Item amount', 'Purchase type', 'Receipt ID']
+      : ['Date', 'Store', 'Receipt category', 'Receipt total', 'Tax paid', 'Item count', 'Purchase type', 'Receipt ID']
+    const body = [headers, ...rows].map(row => row.map(csvCell).join(',')).join('\r\n')
+    const blob = new Blob([`\uFEFF${body}`], { type: 'text/csv;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    const scope = selectedCategory ? `-${selectedCategory}` : '-all-categories'
+    const periodSlug = period.label.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+    a.href = url
+    a.download = `getguac-${businessOnly ? 'business-' : ''}${mode}-spending-${periodSlug}${scope}.csv`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
   // Receipts in the user-selected category. Tagging is on the receipt itself
   // (r.category) — receipt_items have their own category but the donut groups
   // by receipt-level, so we keep this consistent. Returns are excluded to match
   // the donut totals.
   const categoryReceipts = useMemo(() => {
     if (!selectedCategory) return []
-    return receipts
+    return reportReceipts
       .filter(r => !r.is_return && (r.category || 'misc') === selectedCategory)
       .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
-  }, [receipts, selectedCategory])
+  }, [reportReceipts, selectedCategory])
+
+  const categoryItems = useMemo(() => {
+    if (!selectedCategory) return []
+    return reportReceipts.flatMap(r => {
+      if (r.is_return || isPaymentReceipt(r)) return []
+      return (r.receipt_items || [])
+        .filter(it => !it.returned && (it.category || 'misc') === selectedCategory && parseFloat(it.price || 0) > 0)
+        .map(it => ({ ...it, receiptId: r.id, receiptDate: r.date, storeName: r.store_name, storeId: r.store_id }))
+    }).sort((a, b) => (b.receiptDate || '').localeCompare(a.receiptDate || ''))
+  }, [reportReceipts, selectedCategory])
+
+  function changeCategoryMode(mode) {
+    setCategoryMode(mode)
+    setSelectedCategory(null)
+  }
 
   function toggleCategory(slug) {
     setSelectedCategory(prev => prev === slug ? null : slug)
@@ -294,9 +411,44 @@ export default function ReportsPage() {
 
           {/* 1. Spending by category */}
           <div className="card">
-            <SectionTitle emoji="🥧" title="Spending by category" />
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+              <SectionTitle emoji="🥧" title="Spending by category" />
+              <div className="flex flex-wrap items-center gap-2">
+                <label className={`inline-flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-xs font-bold transition-colors ${businessOnly ? 'border-blue-300 bg-blue-50 text-blue-800' : 'border-guac-line bg-white text-gray-600'}`}>
+                  <input type="checkbox" checked={businessOnly} onChange={event => { setBusinessOnly(event.target.checked); setSelectedCategory(null) }} className="h-4 w-4 rounded border-gray-300 accent-blue-600" />
+                  Business only
+                </label>
+                <div className="inline-flex rounded-lg border border-guac-line bg-guac-50 p-1" role="group" aria-label="Category grouping">
+                  {[
+                    ['receipt', 'By receipt'],
+                    ['item', 'By item'],
+                  ].map(([mode, label]) => (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => changeCategoryMode(mode)}
+                      aria-pressed={categoryMode === mode}
+                      className={`rounded-md px-3 py-1.5 text-xs font-bold transition-colors ${categoryMode === mode ? 'bg-white text-guac-800 shadow-sm' : 'text-gray-500 hover:text-guac-700'}`}
+                    >{label}</button>
+                  ))}
+                </div>
+                  <button
+                    type="button"
+                    onClick={() => downloadCategoryCsv(categoryMode)}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-guac-line bg-white px-3 py-2 text-xs font-bold text-guac-700 hover:bg-guac-50 transition-colors"
+                    title={`Download ${businessOnly ? 'business ' : ''}${categoryMode === 'item' ? 'item' : 'receipt'} categories for ${period.label}${selectedCategory ? `, filtered to ${categoryLabel(selectedCategory)}` : ''}`}
+                  >
+                    <Download size={13} /> Download CSV
+                  </button>
+              </div>
+            </div>
+            {categoryMode === 'item' && (
+              <p className="-mt-2 mb-4 text-xs text-gray-400">
+                Categorized line items total {money(categoryTotal)}. Receipt-level tax, tips, and unparsed amounts may not be included.
+              </p>
+            )}
             <div className="flex flex-col lg:flex-row gap-8 items-center">
-              <CategoryDonut data={byCategory} total={totalSpent} colors={CATEGORY_COLORS} caption={period.label} />
+              <CategoryDonut data={byCategory} total={categoryTotal} caption={categoryMode === 'item' ? `${period.label} · items` : period.label} />
               {/* Right column: each row = coloured dot + emoji + label, a
                   share bar, then amount · share. 4th col (Trend badge) only
                   on ≤90d windows. Same +/-% formatter as the Dashboard's
@@ -304,19 +456,19 @@ export default function ReportsPage() {
               <div className="flex-1 min-w-0 w-full">
                 <div
                   className="grid items-center gap-x-4 px-1.5 pb-2 border-b border-guac-line gg-colhead"
-                  style={{ gridTemplateColumns: trendsShown ? 'minmax(120px,150px) 1fr auto auto' : 'minmax(120px,150px) 1fr auto' }}
+                  style={{ gridTemplateColumns: trendsShown && categoryMode === 'receipt' ? 'minmax(120px,150px) 1fr auto auto' : 'minmax(120px,150px) 1fr auto' }}
                 >
                   <span>Category</span>
                   <span />
                   <span className="text-right">Amount · Share</span>
-                  {trendsShown && <span className="text-right w-12" title={`vs avg of prior 3 ${period.label.toLowerCase()} windows`}>Trend</span>}
+                  {trendsShown && categoryMode === 'receipt' && <span className="text-right w-12" title={`vs avg of prior 3 ${period.label.toLowerCase()} windows`}>Trend</span>}
                 </div>
                 {byCategory.slice(0, 10).map(c => {
                   const isSelected = selectedCategory === c.slug
                   const meta = CATEGORY_BY_SLUG[c.slug]
-                  const color = CATEGORY_COLORS[c.slug] || '#94a3b8'
-                  const pct = totalSpent > 0 ? (c.amount / totalSpent) * 100 : 0
-                  const trend = trendsShown ? formatTrend(categoryTrends[c.slug]?.deltaPct) : null
+                  const color = donutCategoryColor(c.slug)
+                  const pct = categoryTotal > 0 ? (c.amount / categoryTotal) * 100 : 0
+                  const trend = trendsShown && categoryMode === 'receipt' ? formatTrend(categoryTrends[c.slug]?.deltaPct) : null
                   return (
                     <button
                       key={c.slug}
@@ -324,7 +476,7 @@ export default function ReportsPage() {
                       onClick={() => toggleCategory(c.slug)}
                       title={isSelected ? 'Hide records' : 'Show records'}
                       className={`w-full grid items-center gap-x-4 px-1.5 py-2 rounded-lg text-left transition-colors hover:bg-guac-row ${isSelected ? 'bg-guac-row ring-1 ring-guac-line2' : ''}`}
-                      style={{ gridTemplateColumns: trendsShown ? 'minmax(120px,150px) 1fr auto auto' : 'minmax(120px,150px) 1fr auto' }}
+                      style={{ gridTemplateColumns: trendsShown && categoryMode === 'receipt' ? 'minmax(120px,150px) 1fr auto auto' : 'minmax(120px,150px) 1fr auto' }}
                     >
                       <span className="inline-flex items-center gap-2 text-sm font-bold text-guac-ink min-w-0">
                         <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: color }} />
@@ -338,7 +490,7 @@ export default function ReportsPage() {
                         <span className="gg-num font-semibold text-[13px] text-guac-ink">{money(c.amount)}</span>
                         <span className="gg-sub ml-2 inline-block w-8 text-right">{pct.toFixed(0)}%</span>
                       </span>
-                      {trendsShown && (
+                      {trendsShown && categoryMode === 'receipt' && (
                         <span className="text-right w-12">
                           {trend && (
                             <span
@@ -367,11 +519,13 @@ export default function ReportsPage() {
               <div className="flex items-center justify-between gap-2 mb-3">
                 <div className="flex items-center gap-2">
                   <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-xs ${categoryClass(selectedCategory)}`}>
-                    <span className="w-2 h-2 rounded-full" style={{ background: CATEGORY_COLORS[selectedCategory] || '#94a3b8' }} />
+                    <span className="w-2 h-2 rounded-full" style={{ background: donutCategoryColor(selectedCategory) }} />
                     <span>{categoryLabel(selectedCategory)}</span>
                   </span>
                   <h2 className="gg-h3">
-                    {categoryReceipts.length} receipt{categoryReceipts.length === 1 ? '' : 's'} in {period.label.toLowerCase()}
+                    {categoryMode === 'item'
+                      ? `${categoryItems.length} item${categoryItems.length === 1 ? '' : 's'} in ${period.label.toLowerCase()}`
+                      : `${categoryReceipts.length} receipt${categoryReceipts.length === 1 ? '' : 's'} in ${period.label.toLowerCase()}`}
                   </h2>
                 </div>
                 <button
@@ -384,7 +538,38 @@ export default function ReportsPage() {
                   <X size={14} />
                 </button>
               </div>
-              {categoryReceipts.length === 0 ? (
+              {categoryMode === 'item' ? (categoryItems.length === 0 ? (
+                <p className="text-xs text-gray-400 py-4 text-center">No line items tagged with this category in the selected period.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="gg-tbl w-full text-sm">
+                    <thead className="border-b border-guac-line gg-colhead">
+                      <tr>
+                        <th className="px-3 py-1 text-left">Date</th>
+                        <th className="px-3 py-1 text-left">Store</th>
+                        <th className="px-3 py-1 text-left">Item</th>
+                        <th className="px-3 py-1 text-right">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-guac-line">
+                      {categoryItems.map((it, index) => (
+                        <tr key={`${it.receiptId}-${it.id || index}`} className="hover:bg-guac-50/30">
+                          <td className="px-3 py-1.5 text-gray-500 whitespace-nowrap gg-num">{dateSpaced(it.receiptDate)}</td>
+                          <td className="px-3 py-1.5">
+                            {it.storeId ? (
+                              <Link href={`/stores/${it.storeId}`} className="text-guac-700 hover:underline">{displayStoreName(it.storeName) || '—'}</Link>
+                            ) : <span>{displayStoreName(it.storeName) || '—'}</span>}
+                          </td>
+                          <td className="px-3 py-1.5 text-gray-600">{it.item_name || 'Unnamed item'}</td>
+                          <td className="px-3 py-1.5 text-right font-semibold gg-num text-guac-ink">
+                            <Link href={`/receipts/${it.receiptId}`} className="hover:text-guac-700">{money(it.price)}</Link>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )) : categoryReceipts.length === 0 ? (
                 <p className="text-xs text-gray-400 py-4 text-center">No receipts tagged with this category in the selected period.</p>
               ) : (
                 <div className="overflow-x-auto">
@@ -438,30 +623,34 @@ export default function ReportsPage() {
               emoji="🧮"
               title="Tax summary"
               meta={period.label}
-              action={
+              nowrap
+              beside={<div className="inline-flex rounded-lg border border-guac-line bg-guac-50 p-1" role="group" aria-label="Tax report detail">{[['category','By category'],['item','By item']].map(([mode,label]) => <button type="button" key={mode} onClick={() => setTaxReportMode(mode)} aria-pressed={taxReportMode === mode} className={`whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-bold ${taxReportMode === mode ? 'bg-white text-guac-800 shadow-sm' : 'text-gray-500'}`}>{label}</button>)}</div>}
+              action={<div className="flex flex-wrap gap-2">
+                <button type="button" onClick={() => downloadTaxRows('business')} disabled={(taxReportMode === 'item' ? taxItemStats.businessRows.length : taxStats.businessCount) === 0} className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 text-xs font-extrabold text-blue-700 hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-40"><Download size={12}/> Business</button>
+                <button type="button" onClick={() => downloadTaxRows('charity')} disabled={(taxReportMode === 'item' ? taxItemStats.charityRows.length : taxStats.charityCount) === 0} className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 text-xs font-extrabold text-rose-700 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-40"><Download size={12}/> Charity</button>
                 <button
                   type="button"
-                  onClick={downloadTaxCsv}
-                  disabled={taxStats.businessCount === 0 && taxStats.charityCount === 0}
+                  onClick={downloadCurrentTaxCsv}
+                  disabled={taxReportMode === 'item' ? taxItemStats.businessRows.length === 0 && taxItemStats.charityRows.length === 0 : taxStats.businessCount === 0 && taxStats.charityCount === 0}
                   className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-guac-50 border border-guac-line2 text-guac-700 font-extrabold text-xs hover:bg-guac-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   title="Download business + charity receipts as CSV for filing"
                 >
-                  <Download size={12} /> Export CSV
+                  <Download size={12} /> Combined
                 </button>
-              }
+              </div>}
             />
             <div className="grid sm:grid-cols-3 gap-3">
               <div className="rounded-2xl border border-guac-line2 bg-guac-50/60 p-4">
                 <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.05em] font-extrabold text-guac-700"><span className="text-sm">💼</span> Business</div>
-                <p className="gg-stat !text-guac-700 mt-2">{money(taxStats.businessSpent)}</p>
+                <p className="gg-stat !text-guac-700 mt-2">{money(taxReportMode === 'item' ? taxItemStats.businessSpent : taxStats.businessSpent)}</p>
                 <p className="gg-sub mt-1.5">
-                  {taxStats.businessCount} receipt{taxStats.businessCount === 1 ? '' : 's'}{taxStats.businessTax > 0 && <> · {money(taxStats.businessTax)} tax</>}
+                  {taxReportMode === 'item' ? `${taxItemStats.businessRows.length} item${taxItemStats.businessRows.length === 1 ? '' : 's'}` : <>{taxStats.businessCount} receipt{taxStats.businessCount === 1 ? '' : 's'}{taxStats.businessTax > 0 && <> · {money(taxStats.businessTax)} tax</>}</>}
                 </p>
               </div>
               <div className="rounded-2xl border border-rose-200/60 bg-rose-50/50 p-4">
                 <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.05em] font-extrabold text-rose-600"><span className="text-sm">💝</span> Charity</div>
-                <p className="gg-stat !text-rose-600 mt-2">{money(taxStats.charityDonated)}</p>
-                <p className="gg-sub mt-1.5">{taxStats.charityCount} donation{taxStats.charityCount === 1 ? '' : 's'}</p>
+                <p className="gg-stat !text-rose-600 mt-2">{money(taxReportMode === 'item' ? taxItemStats.charityDonated : taxStats.charityDonated)}</p>
+                <p className="gg-sub mt-1.5">{taxReportMode === 'item' ? taxItemStats.charityRows.length : taxStats.charityCount} {taxReportMode === 'item' ? 'charity item' : 'donation'}{(taxReportMode === 'item' ? taxItemStats.charityRows.length : taxStats.charityCount) === 1 ? '' : 's'}</p>
               </div>
               <div className="rounded-2xl border border-amber-200/60 bg-amber-50/50 p-4">
                 <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.05em] font-extrabold text-amber-700"><span className="text-sm">🧾</span> Sales tax paid</div>
@@ -679,15 +868,16 @@ export default function ReportsPage() {
 // an emoji chip + a Bricolage (font-display) 18px title, optional muted meta,
 // and a right-aligned action. Every card on /reports uses this so the header
 // size / weight / font is identical top to bottom.
-function SectionTitle({ emoji, title, meta, action }) {
+function SectionTitle({ emoji, title, meta, action, beside, nowrap = false }) {
   return (
-    <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
+    <div className={`flex items-center justify-between gap-3 mb-4 ${nowrap ? 'flex-nowrap overflow-x-auto' : 'flex-wrap'}`}>
       <div className="flex items-center gap-2.5 min-w-0">
         <span className="gg-chip">{emoji}</span>
         <h2 className="gg-h2 truncate">
           {title}
           {meta && <span className="font-sans font-semibold gg-sub ml-1.5">· {meta}</span>}
         </h2>
+        {beside && <div className="shrink-0">{beside}</div>}
       </div>
       {action && <div className="shrink-0">{action}</div>}
     </div>
@@ -744,7 +934,7 @@ function SortableTh({ label, sortKey, align, sort, onSort }) {
 // component sits outside it — referencing the parent's `money` here is a
 // ReferenceError that takes the whole page down to the error boundary.
 // Learned the hard way: the page rendered "Something went sideways."
-function CategoryDonut({ data, total, colors, size = 240, caption }) {
+function CategoryDonut({ data, total, size = 300, caption }) {
   const curSymbol = useCurrencySymbol()
   const money = useMemo(() => moneyWith(curSymbol), [curSymbol])
   if (!data || data.length === 0 || !total) {
@@ -754,8 +944,7 @@ function CategoryDonut({ data, total, colors, size = 240, caption }) {
       </div>
     )
   }
-  const radius = 90
-  const stroke = 50
+  const {radius,stroke} = donutGeometry(size)
   const circumference = 2 * Math.PI * radius
   let cursor = 0
   const cx = size / 2
@@ -764,12 +953,12 @@ function CategoryDonut({ data, total, colors, size = 240, caption }) {
   return (
     <div className="shrink-0 relative" style={{ width: size, height: size }}>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
-        <circle cx={cx} cy={cy} r={radius} fill="none" stroke="#f3f4f6" strokeWidth={stroke} />
+        <circle cx={cx} cy={cy} r={radius} fill="none" stroke={DONUT.track} strokeWidth={stroke} />
         {data.map(d => {
           const frac = total > 0 ? d.amount / total : 0
           const arcLen = circumference * frac
           // Small gap between slices: shorten each arc by 2px, leave a 2px gap.
-          const visible = Math.max(0, arcLen - 2)
+          const visible = Math.max(0, arcLen)
           const segment = (
             <circle
               key={d.slug}
@@ -777,7 +966,7 @@ function CategoryDonut({ data, total, colors, size = 240, caption }) {
               cy={cy}
               r={radius}
               fill="none"
-              stroke={colors[d.slug] || '#94a3b8'}
+              stroke={donutCategoryColor(d.slug)}
               strokeWidth={stroke}
               strokeDasharray={`${visible} ${circumference - visible}`}
               strokeDashoffset={-cursor}

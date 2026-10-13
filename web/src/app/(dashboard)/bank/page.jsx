@@ -14,6 +14,7 @@ import {
   Banknote, FileText, AlertTriangle, Percent, CreditCard, Trash2, ExternalLink, ChevronDown, ChevronRight, Sparkles, ArrowLeft, Upload, Calendar, Clock, Wand2, Loader2, RefreshCw
 } from 'lucide-react'
 import GuacMascot from '../../../components/GuacMascot'
+import FeatureHeader from '../../../components/FeatureHeader'
 import { StoreLogo } from '../../../components/StoreLogo'
 import { bankAccountTotals, PERIODS } from '../../../lib/financeInsights'
 import { CountUp } from '../../../components/animated'
@@ -474,7 +475,7 @@ export default function BankPage() {
           <p className="text-sm text-rose-800 mt-2 font-mono break-words">{errS.message}</p>
           <div className="text-xs text-rose-700 mt-3 space-y-1">
             <p>Open Supabase → SQL editor and run the combined Bank SQL (migrations <strong>017 + 018 + 019</strong>).</p>
-            <p>Then run: <code className="font-mono px-1.5 py-0.5 rounded bg-white">notify pgrst, 'reload schema';</code></p>
+            <p>Then run: <code className="font-mono px-1.5 py-0.5 rounded bg-white">notify pgrst, &apos;reload schema&apos;;</code></p>
             <p className="text-rose-600">If you already ran it and still see this, the PostgREST schema cache may be stale — wait ~10 seconds then hard-refresh (Ctrl+Shift+R). If it persists, the simplest fix is to restart the project in the Supabase dashboard.</p>
           </div>
         </div>
@@ -512,12 +513,12 @@ export default function BankPage() {
         />
 
         <div className="card flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-center gap-3">
-            <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-100 via-sky-100 to-emerald-100 shadow-sm ring-2 ring-white flex items-center justify-center">
+          <div className="flex min-w-0 max-w-full items-center gap-3">
+            <div className="relative shrink-0 w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-100 via-sky-100 to-emerald-100 shadow-sm ring-2 ring-white flex items-center justify-center">
               <Banknote size={28} className="text-indigo-700" />
             </div>
             <div>
-              <h2 className="gg-h2 leading-none flex items-center gap-2">
+              <h2 className="gg-h2 min-w-0 break-words leading-none flex flex-wrap items-center gap-2">
                 {pickedBank.issuer}
                 {pickedBank.account_last4 && (
                   <span className="gg-num text-sm text-indigo-700 bg-indigo-50 border border-indigo-100 rounded-full px-2 py-0.5">
@@ -544,7 +545,7 @@ export default function BankPage() {
         {combinedTx.length > 0 && (
           <details className="card group" open>
             <summary className="cursor-pointer flex items-center justify-between gap-2 list-none">
-              <div className="flex items-center gap-2">
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
                 <CreditCard size={16} className="text-guac-600" />
                 <h3 className="gg-h2">All transactions across this account</h3>
                 <span className="text-[11px] text-gray-400">· {combinedTx.length} rows from {pickedBank.statements.length} statement{pickedBank.statements.length === 1 ? '' : 's'}</span>
@@ -557,7 +558,7 @@ export default function BankPage() {
           </details>
         )}
 
-        <div className="card p-0 overflow-hidden">
+        <div className="card min-w-0 p-0 overflow-x-auto">
           <div className="px-5 py-3 border-b border-gray-100">
             <h3 className="gg-h2">Statements for {pickedBank.issuer}</h3>
           </div>
@@ -763,13 +764,13 @@ export default function BankPage() {
           <HeaderCTA />
         </div>
       ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {banks.map(b => (
             <button
               key={b.key}
               type="button"
               onClick={() => { setPickedIssuer(b.key); setView('statements') }}
-              className="card text-left hover:shadow-lg hover:-translate-y-0.5 transition-all group"
+              className="card min-w-0 max-w-full text-left hover:shadow-lg hover:-translate-y-0.5 transition-all group"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -777,8 +778,8 @@ export default function BankPage() {
                     <CreditCard size={22} className="text-guac-600" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="font-bold text-gray-900 truncate flex items-center gap-2">
-                      <span className="truncate">{b.issuer}</span>
+                    <p className="font-bold text-gray-900 flex flex-wrap items-center gap-2">
+                      <span className="min-w-0 break-words">{b.issuer}</span>
                       {b.account_last4 && (
                         <span className="gg-num text-xs text-guac-700 bg-[#E9F5DD] border border-guac-line rounded-md px-1.5 py-0.5 shrink-0">
                           ••{b.account_last4}
@@ -792,7 +793,7 @@ export default function BankPage() {
                       {(PERIODS.find(p => p.key === period) || PERIODS[3]).label}
                     </p>
                     {b.issuerAliases.length > 1 && (
-                      <p className="text-[10px] text-gray-400 italic mt-0.5 truncate" title={b.issuerAliases.join(' · ')}>
+                      <p className="text-[10px] text-gray-400 italic mt-0.5 break-words" title={b.issuerAliases.join(' · ')}>
                         merged: {b.issuerAliases.join(' · ')}
                       </p>
                     )}
@@ -833,18 +834,7 @@ export default function BankPage() {
 }
 
 function PageHeader({ title, subtitle, cta }) {
-  // Matches the other feature pages' <FeatureHeader>: same mascot size (60),
-  // no box, same title/subtitle styling.
-  return (
-    <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
-      <GuacMascot expression="rich" size={60} className="shrink-0" />
-      <div className="min-w-0">
-        <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-guac-ink leading-none tracking-tight">{title}</h1>
-        {subtitle && <p className="text-xs sm:text-sm text-guac-muted mt-1.5">{subtitle}</p>}
-      </div>
-      {cta && <div className="ml-auto shrink-0">{cta}</div>}
-    </div>
-  )
+  return <FeatureHeader title={title} subtitle={subtitle} expression="rich" action={cta} />
 }
 
 function Breadcrumb({ onBank, onIssuer, issuer, leaf }) {

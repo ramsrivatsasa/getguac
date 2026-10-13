@@ -87,7 +87,7 @@ export async function POST(request) {
     // Auth — saving requires a user. /api/parse-receipt allows anonymous
     // calls (parse-only is harmless), but this endpoint writes a row, so
     // the user MUST be signed in.
-    const supabase = createApiClient()
+    const supabase = await createApiClient()
     const { data: { user }, error: authErr } = await supabase.auth.getUser()
     if (authErr || !user?.id) {
       return Response.json({ error: 'Not authenticated' }, { status: 401 })

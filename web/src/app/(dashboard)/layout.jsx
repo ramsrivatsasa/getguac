@@ -4,28 +4,32 @@ import { createClient } from '../../lib/supabase/server'
 import Sidebar from '../../components/Sidebar'
 import TopBar from '../../components/TopBar'
 import QuickAddReceipt from '../../components/QuickAddReceipt'
-import GuacAiPopup from '../../components/GuacAiPopup'
-import GuacGamesPopup from '../../components/GuacGamesPopup'
 import OutboxFlusher from '../../components/OutboxFlusher'
+import GuacAgentRefresh from '../../components/GuacAgentRefresh'
 import EmbedErrorBoundary from '../../components/EmbedErrorBoundary'
 import { ConfirmProvider } from '../../components/ConfirmDialog'
 import CommandPalette from '../../components/CommandPalette'
+import AdSlot from '../../components/AdSlot'
+import { find10Enabled, find10BackendAllowed } from '../../lib/find-your-10/integration'
 
 export default async function DashboardLayout({ children }) {
+  if (find10Enabled() && !find10BackendAllowed()) redirect('/local-setup')
   const sb = createClient()
   const { data: { user } } = await sb.auth.getUser()
   if (!user) redirect('/login')
 
   // Embedded mode (mobile WebView, set by /embed): render the page bare —
   // no sidebar/topbar/FAB — so it sits cleanly inside the native shell.
-  const embedded = cookies().get('guac_embedded')?.value === '1'
+  const embedded = (await cookies()).get('guac_embedded')?.value === '1'
   if (embedded) {
     return (
       <ConfirmProvider>
         <main className="guac-embedded min-h-screen bg-gray-50 p-4">
+          
           <EmbedErrorBoundary>{children}</EmbedErrorBoundary>
         </main>
         <OutboxFlusher />
+        <GuacAgentRefresh />
       </ConfirmProvider>
     )
   }
@@ -39,23 +43,28 @@ export default async function DashboardLayout({ children }) {
       {/* Redesign shell: gradient backdrop with the whole app floating in a
           centered rounded card (mockup layout). */}
       <div
-        className="h-screen overflow-hidden flex justify-center p-0 sm:p-3 lg:p-7"
-        style={{ background: 'radial-gradient(120% 70% at 50% 0%, #F2F5EE 0%, #E6EAE1 80%)' }}
+        className="min-h-screen bg-slate-50"
       >
-        <div className="w-full max-w-[1320px] flex overflow-hidden rounded-none sm:rounded-2xl lg:rounded-[28px] border border-[#176B33]/10 bg-white shadow-[0_40px_90px_-50px_rgba(16,40,26,0.5)]">
-          <Sidebar isAdmin={isAdmin} />
-          <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-            <TopBar user={user} />
-            <main className="flex-1 overflow-y-auto p-4 lg:px-6 lg:py-4">
+        <div className="w-full flex items-start">
+          <Sidebar isAdmin={isAdmin} find10={find10Enabled()} initialPlanPercent={user.user_metadata?.find10_goal_pct || 10} />
+          <div className="flex-1 flex flex-col min-w-0 min-h-screen xl:pr-[280px]">
+            <TopBar user={user} find10={find10Enabled()} />
+            <main className="dashboard-main w-full max-w-[1664px] flex-1 min-w-0 p-4 lg:px-6 lg:py-4 [&>div]:!w-full [&>div]:!max-w-none [&>div]:!mx-0">
+              
               {children}
+              {!find10Enabled() && <AdSlot
+                slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_DASHBOARD || process.env.NEXT_PUBLIC_ADSENSE_SLOT_BOTTOM || '9142744455'}
+                minHeight={90}
+                className="mx-auto mt-6 w-full max-w-5xl"
+                tier={2}
+              />}
             </main>
           </div>
         </div>
         <QuickAddReceipt />
-        <GuacAiPopup />
-        <GuacGamesPopup />
         <OutboxFlusher />
-        <CommandPalette />
+        <GuacAgentRefresh />
+        <CommandPalette find10={find10Enabled()} goalPct={user.user_metadata?.find10_goal_pct || 10} />
       </div>
     </ConfirmProvider>
   )

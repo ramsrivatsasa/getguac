@@ -89,7 +89,7 @@ export default function PreviewPage() {
           </div>
           <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50/50 p-4 text-xs text-amber-900 leading-relaxed">
             <strong>Heads up:</strong> the two hot-link slots show emoji fallbacks until you paste real lottiefiles.com URLs.
-            From <a href="https://iconscout.com/lottie-animations/kitten" target="_blank" rel="noopener noreferrer" className="underline font-bold">iconscout</a> or <a href="https://lottiefiles.com" target="_blank" rel="noopener noreferrer" className="underline font-bold">lottiefiles.com</a>: click an animation → Download → JSON → drop into <code>web/src/lottie/</code> and reference via the <code>data</code> prop, OR copy the "Hosted lottie" URL and paste into the <code>src</code> prop of either card above.
+            From <a href="https://iconscout.com/lottie-animations/kitten" target="_blank" rel="noopener noreferrer" className="underline font-bold">iconscout</a> or <a href="https://lottiefiles.com" target="_blank" rel="noopener noreferrer" className="underline font-bold">lottiefiles.com</a>: click an animation → Download → JSON → drop into <code>web/src/lottie/</code> and reference via the <code>data</code> prop, OR copy the &quot;Hosted lottie&quot; URL and paste into the <code>src</code> prop of either card above.
           </div>
         </Showcase>
 
@@ -495,7 +495,7 @@ function SlideUpDemo() {
               <p className="text-xs text-gray-500">Slides up + fades in over 320ms</p>
             </div>
           </div>
-          <p className="text-sm text-gray-700">Trader Joe's · $42.18 · 4.5★ avg item rating</p>
+          <p className="text-sm text-gray-700">Trader Joe&apos;s · $42.18 · 4.5★ avg item rating</p>
         </div>
       </SlideUp>
     </Showcase>

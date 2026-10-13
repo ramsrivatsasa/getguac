@@ -20,7 +20,8 @@
 // google-services.json / GoogleService-Info.plist into the mobile
 // project so the device token actually belongs to this project.
 
-import admin from 'firebase-admin'
+import { cert, getApp, getApps, initializeApp } from 'firebase-admin/app'
+import { getMessaging } from 'firebase-admin/messaging'
 import { createClient } from '@supabase/supabase-js'
 
 let _adminApp = null
@@ -43,9 +44,9 @@ function _loadAdmin() {
     let parsed
     try { parsed = JSON.parse(raw) }
     catch { parsed = JSON.parse(Buffer.from(raw, 'base64').toString('utf-8')) }
-    _adminApp = admin.apps.length
-      ? admin.app()
-      : admin.initializeApp({ credential: admin.credential.cert(parsed) })
+    _adminApp = getApps().length
+      ? getApp()
+      : initializeApp({ credential: cert(parsed) })
     return _adminApp
   } catch (e) {
     _initError = `firebase-admin init failed: ${e.message}`
@@ -155,7 +156,7 @@ export async function sendPushToUser(userId, { title, body, route, data = {} }, 
 
   let response
   try {
-    response = await admin.messaging().sendEachForMulticast(message)
+    response = await getMessaging(app).sendEachForMulticast(message)
   } catch (e) {
     console.error('[fcm] send failed', userId, e)
     return { sent: 0, failed: tokens.length, dead: 0, error: e.message }
@@ -185,4 +186,15 @@ export async function sendPushToUser(userId, { title, body, route, data = {} }, 
   }
 
   return { sent, failed, dead: dead.length }
+}
+
+// Only call after server-side authorization and campaign deduplication.
+export async function sendPushToDevice(token, { title, body }) {
+ if (!_loadAdmin()) return { sent: false, error: 'Push service unavailable' }
+ try {
+  await getMessaging(_loadAdmin()).send({token,notification:{title,body},data:{route:'/register'},android:{notification:{channelId:'getguac_default'}},apns:{payload:{aps:{sound:'default'}}}})
+  return {sent:true}
+ } catch(error) {
+  return {sent:false,dead:['messaging/registration-token-not-registered','messaging/invalid-registration-token'].includes(error.code)}
+ }
 }

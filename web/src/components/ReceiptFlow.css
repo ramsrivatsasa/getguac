@@ -22,7 +22,7 @@
 .gg-flow-h { font-family: var(--font-bricolage), sans-serif; font-weight: 800; font-size: 29px;
              line-height: 1.14; letter-spacing: -0.02em; color: #12261B; margin: 0 0 12px; }
 .gg-flow-blurb { font-size: 14.5px; line-height: 1.55; color: #5F6D63; margin: 0 0 20px; }
-.gg-flow-link { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px;
+.gg-flow-link { display: inline-flex; min-height: 44px; align-items: center; gap: 6px; font-size: 13.5px;
                 font-weight: 700; color: #1B8A4B; text-decoration: none; }
 .gg-flow-link:hover { text-decoration: underline; }
 .gg-flow-rail { flex: 1 1 auto; min-width: 0; }
@@ -35,7 +35,7 @@
 .gg-flow-step:hover .gg-flow-puck { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(21,40,28,.13); }
 .gg-flow-step.is-active .gg-flow-puck { background: #1B8A4B; color: #fff;
                 box-shadow: 0 8px 20px rgba(27,138,75,.30); }
-.gg-flow-label { display: block; font-size: 10.5px; font-weight: 800; letter-spacing: 0.05em;
+.gg-flow-label { display: block; font-size: 12px; font-weight: 800; letter-spacing: 0.035em;
                  text-transform: uppercase; color: #5F6D63; }
 .gg-flow-step.is-active .gg-flow-label { color: #12261B; }
 .gg-flow-glyph { display: block; }
@@ -85,7 +85,7 @@
                font-weight: 700; font-size: 15px; padding: 13px 26px; border-radius: 999px;
                text-decoration: none; }
 .gg-flow-cta:hover { background: #438723; }
-.gg-flow-demo { font-size: 14.5px; font-weight: 700; color: #12261B; text-decoration: none; }
+.gg-flow-demo { display: inline-flex; min-height: 44px; align-items: center; font-size: 14.5px; font-weight: 700; color: #12261B; text-decoration: none; }
 .gg-flow-demo:hover { text-decoration: underline; }
 .gg-flow-fine { text-align: center; font-size: 12.5px; color: #8A978D; margin: 12px 0 0; }
 

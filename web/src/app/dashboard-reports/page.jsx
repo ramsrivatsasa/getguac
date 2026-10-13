@@ -88,7 +88,7 @@ export default function DashboardReportsPage() {
 
       <section className="mx-auto max-w-6xl px-5 py-16 sm:px-8 sm:py-20">
         <SectionHeading eyebrow="Dashboard: your financial briefing" title="Much more than a shortcut to Reports." body="The dashboard brings the most time-sensitive signals together. It helps answer: What changed? What deserves attention today? Where can I act before money, a return window, a reward, or a better price is lost?"/>
-        <div className="mt-10 overflow-hidden rounded-[30px] border border-[#E4EDE4] bg-[#eff9e8] p-4 shadow-xl shadow-[#12341f]/10"><ZoomableImage src="/marketing/slides/v2/dashboard-web.webp" alt="GetGuac desktop dashboard showing decision scores, spending anomalies, saved searches, personalized deals, and navigation to every money feature" width={1200} height={750}/></div>
+        <div className="mt-10 overflow-hidden rounded-[30px] border border-[#E4EDE4] bg-[#eff9e8] p-4 shadow-xl shadow-[#12341f]/10"><ZoomableImage src="/marketing/current/dashboard.webp" alt="GetGuac desktop dashboard showing decision scores, spending anomalies, saved searches, personalized deals, and navigation to every money feature" width={1148} height={718}/></div>
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {dashboardFeatures.map(([Icon,title,body],index)=><article key={title} className={`rounded-3xl border border-[#E4EDE4] p-5 ${['bg-[#fff5dc]','bg-[#eff9e8]','bg-[#fff0ec]','bg-[#eaf7ff]'][index%4]}`}><Icon size={22} className={['text-[#d97706]','text-[#168A4B]','text-[#c85f4e]','text-[#397ea8]'][index%4]}/><h3 className="mt-4 text-lg font-black">{title}</h3><p className="mt-2 text-sm leading-6 text-[#5C6B60]">{body}</p></article>)}
         </div>
@@ -96,7 +96,7 @@ export default function DashboardReportsPage() {
 
       <section className="border-y border-[#cfe5d2] bg-[#eaf7ff] py-16 sm:py-20">
         <div className="mx-auto grid max-w-6xl items-center gap-10 px-5 sm:px-8 lg:grid-cols-[.72fr_1fr]">
-          <div className="mx-auto w-full max-w-[340px] rounded-[34px] bg-white p-4 shadow-2xl shadow-[#68b9ee]/15"><ZoomableImage src="/showcase/dashboard.png" alt="GetGuac mobile dashboard showing GuacScore, GuacWizard, spending anomalies, financial tiles, and spending by store" width={560} height={1216}/></div>
+          <div className="mx-auto w-full max-w-[340px] rounded-[34px] bg-white p-4 shadow-2xl shadow-[#68b9ee]/15"><ZoomableImage src="/marketing/current/dashboard.webp" alt="GetGuac mobile dashboard showing GuacScore, GuacWizard, spending anomalies, financial tiles, and spending by store" width={1148} height={718}/></div>
           <div><p className="text-xs font-black uppercase tracking-[.16em] text-[#168A4B]">The same story on mobile</p><h2 className="mt-3 text-3xl font-black tracking-tight sm:text-5xl">Check the signal while the decision is still fresh.</h2><p className="mt-5 text-lg leading-8 text-[#45564A]">The mobile dashboard keeps the period controls, decision scores, anomalies, financial cards, and store chart close. That makes it useful after checkout, during a weekly review, or before returning to a store.</p><div className="mt-6 grid gap-3 sm:grid-cols-2"><p className="rounded-2xl bg-white p-4 font-bold">Tap a store bar to reach its receipts.</p><p className="rounded-2xl bg-white p-4 font-bold">Open Worth-It or Guacanomics from the top.</p><p className="rounded-2xl bg-white p-4 font-bold">Review unusual spending before it repeats.</p><p className="rounded-2xl bg-white p-4 font-bold">Add the next receipt without leaving the flow.</p></div></div>
         </div>
       </section>
@@ -112,8 +112,8 @@ export default function DashboardReportsPage() {
         <div className="mx-auto max-w-6xl px-5 sm:px-8">
           <SectionHeading eyebrow="Reports: the evidence workspace" title="Compare the dollars behind the dashboard signals." body="Reports groups the selected receipt history into categories, stores, items, subscriptions, and tax-preparation summaries. It is designed for questions that need more than a headline number."/>
           <div className="mt-10 grid items-center gap-8 lg:grid-cols-[1fr_.38fr]">
-            <div className="overflow-hidden rounded-[28px] border border-[#E4EDE4] bg-white p-4 shadow-xl shadow-[#12341f]/10"><ZoomableImage src="/marketing/slides/v2/reports-web.webp" alt="GetGuac desktop Reports workspace showing spending by category, tax summary, recurring subscriptions, and period controls" width={1200} height={750}/></div>
-            <div className="mx-auto w-full max-w-[310px] rounded-[32px] bg-white p-3 shadow-xl shadow-[#12341f]/10"><ZoomableImage src="/showcase/reports.png" alt="GetGuac mobile Reports workspace showing category spending, tax summary, and CSV export" width={560} height={1216}/></div>
+            <div className="overflow-hidden rounded-[28px] border border-[#E4EDE4] bg-white p-4 shadow-xl shadow-[#12341f]/10"><ZoomableImage src="/marketing/current/reports.webp" alt="GetGuac desktop Reports workspace showing spending by category, tax summary, recurring subscriptions, and period controls" width={1440} height={900}/></div>
+            <div className="mx-auto w-full max-w-[310px] rounded-[32px] bg-white p-3 shadow-xl shadow-[#12341f]/10"><ZoomableImage src="/marketing/current/reports.webp" alt="GetGuac mobile Reports workspace showing category spending, tax summary, and CSV export" width={1440} height={900}/></div>
           </div>
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {reportFeatures.map(([Icon,title,body],index)=><article key={title} className={`rounded-3xl border border-[#E4EDE4] p-5 ${index%2===0?'bg-white':'bg-[#fffdf8]'}`}><Icon size={22} className="text-[#168A4B]"/><h3 className="mt-4 text-lg font-black">{title}</h3><p className="mt-2 text-sm leading-6 text-[#5C6B60]">{body}</p></article>)}
@@ -128,7 +128,7 @@ export default function DashboardReportsPage() {
             <SectionHeading eyebrow="Business and tax preparation" title="Build the record during the year—not the scramble at the end." body="When a receipt is saved and reviewed while the purchase is still familiar, its merchant, date, amount, tax, category, business status, and notes are easier to verify. Reports then gathers the relevant rows into a period summary and export."/>
           </div>
 
-          <div className="mt-10 overflow-hidden rounded-[28px] border border-[#ead9ad] bg-white p-4 shadow-xl shadow-[#12341f]/10"><ZoomableImage src="/home/goals/web-tax.webp" alt="GetGuac desktop Tax summary showing business spending, charitable giving, sales tax paid, and Export CSV" width={1200} height={280}/></div>
+          <div className="mt-10 overflow-hidden rounded-[28px] border border-[#ead9ad] bg-white p-4 shadow-xl shadow-[#12341f]/10"><ZoomableImage src="/marketing/current/tax.webp" alt="GetGuac desktop Tax summary showing business spending, charitable giving, sales tax paid, and Export CSV" width={850} height={203}/></div>
 
           <div className="mt-10 grid gap-8 lg:grid-cols-[.38fr_1fr] lg:items-center">
             <div className="mx-auto w-full max-w-[300px] rounded-[32px] bg-white p-3 shadow-xl shadow-[#12341f]/10"><ZoomableImage src="/home/goals/phone-tax.webp" alt="GetGuac mobile Tax summary showing business, charity, sales-tax, and recurring-charge details" width={600} height={1260}/></div>

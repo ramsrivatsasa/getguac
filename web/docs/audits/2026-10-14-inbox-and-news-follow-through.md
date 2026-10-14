@@ -20,6 +20,14 @@ Focused lint passes without warnings/errors. Cron authentication tests pass for 
 
 Automatic Vercel cadence is awaiting observation. SMTP is absent in both the production environment inventory and GitHub secret-name list. CLI environment pulls redact sensitive values, so they were not treated as usable credentials or disclosed. This release does not establish email-alert delivery, News feature completion, native app release, or all-project completion.
 
+## Later operational verification
+
+Vercel request records confirm automatic GET /api/email/poll calls with user agent vercel-cron/1.0 returning HTTP 200 at 21:00:25 and 21:10:25 UTC (5:00 and 5:10 p.m. Eastern). This supersedes the pending automatic-cadence note above: the ten-minute automatic schedule was independently observed.
+
+The owner supplied a mailbox password and confirmed it belongs to noreply@getguac.app. Two SMTP verification attempts returned EAUTH / 454 with the provider response “temporary authentication failure: please try again later.” No email was sent and no secret was installed. This does not prove the password is incorrect. Credentials were held in process memory, not written into the audit, scripts or command arguments. Backup-alert readiness remains blocked by SMTP authentication.
+
+The owner also reported no subscribers and supplied advertising metrics: 903 link clicks and 434 landing-page views (approximately 48%). These show traffic, not account creation or payment conversion. Clarification requested on whether “subscribers” means new accounts or paying subscribers. Billing implementation remains deferred; no advertising spend, campaign status or account credentials were changed.
+
 ## News scope confirmed by owner in this chat
 
 - Public visitors can browse News without login. Preserve signed-in navigation and private records. Public navigation needs a News entry.

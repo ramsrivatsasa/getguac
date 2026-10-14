@@ -49,6 +49,7 @@ export default function AdminPage() {
       </div>
 
       <div className="grid sm:grid-cols-2 gap-2">
+        <Link href="/admin/statistics" className="flex min-h-16 items-center rounded-xl border border-slate-200 bg-white px-4 py-3 font-semibold text-violet-700">Website statistics · time, location, pages & signup funnel →</Link>
         {articleFeedbackEnabled() && <Link href="/admin/article-comments" className="flex min-h-16 items-center rounded-xl border border-slate-200 bg-white px-4 py-3 font-semibold text-violet-700">Article comments · review and moderation →</Link>}
         <Link href="/admin/promotions" className="flex min-h-16 items-center rounded-xl border border-violet-200 bg-white px-4 py-3 font-semibold text-violet-700">Major promotions · sources & review →</Link>
         <Link href="/admin/crashes" className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white border border-gray-200 hover:border-rose-200 hover:shadow-sm">

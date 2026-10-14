@@ -12,6 +12,7 @@ import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { createMailbox, mailboxExists, ensureReceiptsAlias } from '../../../../lib/migadu'
 import { encryptSecret, generateMailboxPassword } from '../../../../lib/crypto'
 import { reportServerError } from '../../../../lib/report-error'
+import { recordSiteEvent } from '../../../../lib/record-site-event'
 export const runtime = 'nodejs'
 
 const VALID_USERNAME_RE = /^[a-z0-9][a-z0-9._-]{1,30}[a-z0-9]$/
@@ -57,7 +58,7 @@ async function provisionMailbox(sbAdmin, userId, username, displayName) {
   }
 }
 
-export async function POST() {
+export async function POST(request) {
   try {
     const sb = createClient()
     const { data: { user } } = await sb.auth.getUser()
@@ -84,11 +85,13 @@ export async function POST() {
     // confirmation over an analytics write.
     const sbAdminEarly = admin()
     try {
-      const { error: cErr } = await sbAdminEarly
+      const { data: confirmed, error: cErr } = await sbAdminEarly
         .from('signups')
         .update({ confirmed_at: new Date().toISOString() })
         .eq('user_id', user.id)
         .is('confirmed_at', null)          // first confirmation only, never overwritten
+        .select('user_id')
+      if(confirmed?.length) await recordSiteEvent(sbAdminEarly,request,{path:'/register',event:'email_confirmed'})
       if (cErr) console.error('[auth/finish-signup] signups.confirmed_at failed:', cErr.message)
     } catch (e) {
       console.error('[auth/finish-signup] signups.confirmed_at threw:', e.message)

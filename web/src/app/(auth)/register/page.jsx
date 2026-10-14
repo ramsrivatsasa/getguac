@@ -9,6 +9,7 @@ import { Check, X, Loader2, AlertCircle, AtSign, Eye, EyeOff } from 'lucide-reac
 import { createClient as createBrowserClient } from '../../../lib/supabase/client'
 import ReferralCapture from '../../../components/ReferralCapture'
 import MetaPixel, { trackSignup } from '../../../components/MetaPixel'
+import { trackSiteEvent } from '../../../lib/track-site-event'
 import { COUNTRIES, CURRENCIES, registrationRegion } from '../../../lib/registration-region.mjs'
 import { REGION_TO_CURRENCY } from '../../../lib/currency'
 const VALID_USERNAME_RE = /^[a-z0-9][a-z0-9._-]{1,30}[a-z0-9]$/
@@ -35,6 +36,8 @@ export default function RegisterPage({ testBypassCaptcha = false }) {
   // the dashboard. The profile-row trigger in Supabase fills the
   // first_name / last_name from Google's name fields.
   async function signInWithGoogle() {
+    trackStart()
+    trackSiteEvent('signup_submit','/register')
     try { registrationRegion(form, {required:true}) } catch(e) { setErrorMsg(e.message); document.getElementById('register-country')?.focus(); return }
     setGoogleLoading(true)
     try {
@@ -67,6 +70,9 @@ export default function RegisterPage({ testBypassCaptcha = false }) {
   // In-page error, rendered as a red banner above the submit button —
   // more visible than a transient toast, per product ask.
   const [errorMsg, setErrorMsg] = useState('')
+  const statisticsStarted = useRef(false)
+  useEffect(() => { if(errorMsg) trackSiteEvent('signup_error','/register') },[errorMsg])
+  function trackStart() { if(!statisticsStarted.current){statisticsStarted.current=true;trackSiteEvent('signup_start','/register')} }
   // Referral code (optional). Synced with the pending_referral_code stash so a
   // manually typed code applies exactly like one captured from a ?ref= link.
   const [referralCode, setReferralCode] = useState('')
@@ -149,6 +155,8 @@ export default function RegisterPage({ testBypassCaptcha = false }) {
 
   async function handleSubmit(e) {
     e.preventDefault()
+    trackStart()
+    trackSiteEvent('signup_submit','/register')
     setErrorMsg('')
     try { registrationRegion(form, {required:true}) } catch(e) { setErrorMsg(e.message); return }
     if (form.password !== form.confirmPassword) { setErrorMsg('Passwords do not match.'); return }
@@ -332,7 +340,7 @@ export default function RegisterPage({ testBypassCaptcha = false }) {
           </div>
 
           <PrivacyNote className="mb-5" showDelete={false} />
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onFocus={trackStart} onSubmit={handleSubmit} className="space-y-4">
             {/* Username = sign-in handle AND @getguac.app email alias */}
             <div className="rounded-2xl border-2 border-emerald-200 bg-emerald-50/40 p-3">
               <label htmlFor="register-username" className="text-[11px] uppercase tracking-wider font-bold text-emerald-800 flex items-center gap-1.5">

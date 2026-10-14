@@ -1,4 +1,5 @@
 import { registrationRegion } from '../../../../lib/registration-region.mjs'
+import { recordSiteEvent } from '../../../../lib/record-site-event'
 // Sign-up route that creates an auth user AND claims their chosen username
 // (email_alias) atomically. If username is taken or invalid, returns 409/400
 // before creating any auth user.
@@ -189,6 +190,7 @@ export async function POST(request) {
     // still a queryable row — and those are precisely the ones worth chasing.
     //
     async function recordSignup(uid) {
+      if(data?.user?.identities?.length !== 0) await recordSiteEvent(sbAdmin,request,{path:'/register',event:'account_created'})
       try {
         const { error: sErr } = await sbAdmin.from('signups').upsert({
           user_id: uid,

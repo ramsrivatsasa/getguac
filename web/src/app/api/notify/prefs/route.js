@@ -7,7 +7,8 @@
 // own row.
 
 import { NextResponse } from 'next/server'
-import { createClient } from '../../../../lib/supabase/server'
+import { createApiClient } from '../../../../lib/supabase/server'
+import { NEWS_FREQUENCIES } from '../../../../lib/news-notifications.mjs'
 export const dynamic = 'force-dynamic'
 
 const VALID_KEYS = new Set([
@@ -15,10 +16,11 @@ const VALID_KEYS = new Set([
   'anomaly_alert', 'smashlist_day', 'steals_found', 'reengagement',
   'quiet_hours', 'quiet_start', 'quiet_end',
   'product_recall',
+  'news_frequency', 'news_push', 'news_watchlist_only',
 ])
 
 export async function GET() {
-  const sb = createClient()
+  const sb = await createApiClient()
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   const { data, error } = await sb
@@ -31,7 +33,7 @@ export async function GET() {
 }
 
 export async function POST(req) {
-  const sb = createClient()
+  const sb = await createApiClient()
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
 
@@ -44,6 +46,12 @@ export async function POST(req) {
   const sanitised = {}
   for (const [k, v] of Object.entries(body || {})) {
     if (!VALID_KEYS.has(k)) continue
+    if (k === 'news_frequency') {
+      if (!NEWS_FREQUENCIES.includes(v)) return NextResponse.json({ error: 'Choose a valid news frequency' }, { status: 400 })
+      sanitised[k] = v
+      continue
+    }
+    if (['news_push', 'news_watchlist_only'].includes(k) && typeof v !== 'boolean') return NextResponse.json({ error: 'Invalid news preference' }, { status: 400 })
     if (typeof v === 'boolean' || (typeof v === 'number' && Number.isFinite(v))) {
       sanitised[k] = v
     }

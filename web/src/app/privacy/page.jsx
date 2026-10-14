@@ -17,7 +17,7 @@ export const metadata = {
   alternates: { canonical: '/privacy' },
 }
 
-const LAST_UPDATED = 'July 28, 2026'
+const LAST_UPDATED = 'October 14, 2026'
 
 export default function PrivacyPage() {
   return (
@@ -92,7 +92,7 @@ export default function PrivacyPage() {
             <li><strong>Google AdSense</strong> — loads across our public pages to serve the ads that fund the free tier, and sets its own cookies (<code>test_cookie</code> and others from <code>doubleclick.net</code>).</li>
           </ul>
           <p className="mt-2">Neither of these ever receives your receipts, your totals, your categories, or anything we have parsed from a purchase. We do not send your email address or phone number to any advertising network — Meta&rsquo;s &ldquo;advanced matching&rdquo; feature, which would do exactly that, is deliberately turned off.</p>
-          <p className="mt-2">Our own analytics are first-party and aggregate: a per-day, per-page view count and a visitor tally where the visitor identifier is a salted hash whose salt rotates daily, so the same person on two days cannot be linked. We store no IP address and no user agent against it. Error and performance logs are kept 30 days.</p>
+          <p className="mt-2">Our first-party statistics show aggregate page visits, visit times, signup steps, device categories, broad referral sources, and approximate city, region and country provided by our hosting platform. Location estimates may be inaccurate, especially for VPNs and mobile networks. Detailed events are kept for up to 30 days of activity; historical daily page totals are retained separately. A server-generated visitor hash rotates daily, so it cannot link the same visitor across days. We do not store IP addresses, user agents, form contents or URL query strings in these statistics. Detailed statistics are admin-only. We honor browser Do Not Track and Global Privacy Control for the new detailed tracking. Error and performance logs are kept 30 days.</p>
         </Section>
 
         <Section icon={ShieldCheck} title="9. Third Parties We Use">

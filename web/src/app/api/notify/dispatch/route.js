@@ -23,7 +23,9 @@ import { createClient } from '@supabase/supabase-js'
 import { sendPushToUser } from '../../../../lib/fcm'
 import { getCachedSearch } from '../../../../lib/shoppingCache'
 import { dispatchProductAlerts } from '../../../../lib/dispatch-product-alerts'
+import { dispatchNewsNotifications } from '../../../../lib/dispatch-news-notifications.mjs'
 export const dynamic = 'force-dynamic'
+export const maxDuration = 60
 
 // ── Auth helper ─────────────────────────────────────────────────────
 function unauthorized() {
@@ -468,6 +470,10 @@ export async function GET(req) {
   if (!verifyCron(req)) return unauthorized()
 
   const results = {}
+  try { results.news = await dispatchNewsNotifications(sb(), sendPushToUser) } catch { results.news = { error: 'News dispatch failed' } }
+  // Hourly news checks can resume after quiet hours. Preserve the existing
+  // 14:00 UTC cadence for all other categories; manual calls still run all.
+  if ((req.headers.get('user-agent') || '').startsWith('vercel-cron') && new Date().getUTCHours() !== 14) return NextResponse.json({ ok: true, results })
   try { results.product_recall = await dispatchProductAlerts(sb(), sendPushToUser) } catch (e) { results.product_recall = { error: e.message } }
   // Run sequentially so logs are linear and one failing trigger
   // doesn't break the others.

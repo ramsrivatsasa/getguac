@@ -7,6 +7,7 @@ import toast from 'react-hot-toast'
 import GuacMascot from '../../../components/GuacMascot'
 import { Eye, EyeOff, Check } from 'lucide-react'
 import { ShakeOnError } from '../../../components/animated'
+import { safeAuthNext } from '../../../lib/auth-next.mjs'
 
 // Cloudflare Turnstile site key — public, safe to ship in the client.
 // On /login the CAPTCHA renders ONLY for the demo-account flow (?demo=1):
@@ -65,6 +66,7 @@ function LoginPageInner() {
   // failed Google logins back to /login?oauth_error=... so we read it
   // here and clear the URL.
   const search = useSearchParams()
+  const next = safeAuthNext(search?.get('next'))
   useEffect(() => {
     const err = search?.get('oauth_error')
     if (err) {
@@ -119,7 +121,7 @@ function LoginPageInner() {
       const { error } = await sb.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
         },
       })
       if (error) {
@@ -189,7 +191,7 @@ function LoginPageInner() {
         setLoading(false)
         return
       }
-      router.push('/dashboard')
+      router.push(next)
       router.refresh()
     } catch (err) {
       toast.error(err.message || 'Sign-in failed')

@@ -664,6 +664,11 @@ class _LoginScreenState extends State<LoginScreen> {
                               const Expanded(child: Divider(color: Color(0xFFe5e7eb))),
                             ]),
                             const SizedBox(height: 4),
+                            TextButton.icon(
+                              onPressed: () => UpdateService.openDownload('${const String.fromEnvironment('API_BASE_URL', defaultValue: 'https://getguac.app')}/news'),
+                              icon: const Icon(Icons.newspaper_outlined, size: 18),
+                              label: const Text('Read news without signing in'),
+                            ),
                             OutlinedButton.icon(
                               onPressed: () => UpdateService.openDownload('https://getguac.app/how-it-works'),
                               icon: const Icon(Icons.play_circle_outline, color: ggLime, size: 16),

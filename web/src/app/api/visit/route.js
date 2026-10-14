@@ -24,6 +24,8 @@
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { createHash } from 'node:crypto'
 import { rateLimit, rateKey } from '../../../lib/apiGuard'
+import { CLIENT_EVENTS } from '../../../lib/site-statistics.mjs'
+import { recordSiteEvent } from '../../../lib/record-site-event'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -66,6 +68,8 @@ export async function POST(request) {
     if (!rl.ok) return NO_CONTENT()
 
     const body = await request.json().catch(() => null)
+    const event = body?.event || (body?.path?.startsWith('/click/') ? 'store_click' : 'page_view')
+    if (!CLIENT_EVENTS.has(event)) return NO_CONTENT()
     let path = typeof body?.path === 'string' ? body.path : ''
     // Query strings are dropped, not stored: they carry UTM tags and, on some
     // routes, tokens and email addresses. Which PAGE the traffic landed on is
@@ -111,7 +115,8 @@ export async function POST(request) {
       { auth: { autoRefreshToken: false, persistSession: false } }
     )
     // record_visit is granted to service_role only and returns void.
-    await sb.rpc('record_visit', { p_path: path, p_visitor_hash: visitorHash })
+    if (event === 'page_view' || event === 'store_click') await sb.rpc('record_visit', { p_path: path, p_visitor_hash: visitorHash })
+    await recordSiteEvent(sb, request, { path, event, referrer: body?.referrer })
 
     return NO_CONTENT()
   } catch (err) {

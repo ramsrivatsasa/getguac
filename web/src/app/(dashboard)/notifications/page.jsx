@@ -9,6 +9,8 @@ import { useEffect, useState } from 'react'
 import { Bell, Gift, Package, TrendingUp, AlertTriangle, ShoppingCart, MoonStar, Clock, Tag } from 'lucide-react'
 import FeatureHeader from '../../../components/FeatureHeader'
 import ProductAlerts from '../../../components/ProductAlerts'
+import NewsNotifications from '../../../components/NewsNotifications'
+import { newsFrequency } from '../../../lib/news-notifications.mjs'
 
 const CATEGORIES = [
   { key: 'product_recall', icon: AlertTriangle, label: 'Product safety alerts', desc: 'Recall notices that may match purchases on your receipts, with groceries first.' },
@@ -78,6 +80,13 @@ export default function NotificationsPage() {
 
       {error&&<p role="alert" className="text-sm text-red-700">{error}</p>}
       <ProductAlerts />
+      <NewsNotifications />
+      <section className="rounded-xl border border-violet-100 bg-white p-4 space-y-3" aria-label="News notification preferences">
+        <div className="flex flex-wrap items-center justify-between gap-3"><label htmlFor="news-frequency" className="text-sm font-bold">News frequency</label><select id="news-frequency" value={newsFrequency(prefs)} disabled={busy !== null} onChange={e => toggle('news_frequency', e.target.value)} className="min-h-11 rounded-lg border border-violet-200 px-3 text-sm"><option value="off">Off</option><option value="daily">Daily roundup</option><option value="weekly">Weekly roundup</option><option value="important">Important only</option></select></div>
+        <p className="text-xs text-guac-muted">At most one roundup per UTC day, or one per Monday–Sunday week. Important only includes official Fed policy, BLS inflation and employment releases, and feed-marked important stories. Product safety alerts use their separate setting.</p>
+        <label className="flex min-h-11 items-center gap-3 text-sm"><input type="checkbox" checked={prefs.news_watchlist_only === true} disabled={busy !== null} onChange={e => toggle('news_watchlist_only', e.target.checked)}/>Only news matching stocks in my saved watchlists</label>
+        <label className="flex min-h-11 items-center gap-3 text-sm"><input type="checkbox" checked={prefs.news_push === true} disabled={busy !== null} onChange={e => toggle('news_push', e.target.checked)}/>Also send news to my enabled notification devices</label>
+      </section>
 
       <div className="card divide-y divide-guac-line p-0 overflow-hidden">
         {CATEGORIES.map(({ key, icon: Icon, label, desc }) => {

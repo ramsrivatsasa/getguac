@@ -27,6 +27,8 @@ import { NextResponse } from 'next/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { createApiClient } from '../../../lib/supabase/server'
 import { trackServerEvent } from '../../../lib/meta-capi'
+import { recordSiteEvent } from '../../../lib/record-site-event'
+import { safeAuthNext } from '../../../lib/auth-next.mjs'
 
 export const runtime = 'nodejs'
 
@@ -84,7 +86,7 @@ function splitName(fullName) {
 export async function GET(request) {
   const url = new URL(request.url)
   const code = url.searchParams.get('code')
-  const next = url.searchParams.get('next') || '/dashboard'
+  const next = safeAuthNext(url.searchParams.get('next'))
   const errorParam = url.searchParams.get('error')
   const errorDescription = url.searchParams.get('error_description')
 
@@ -197,6 +199,8 @@ export async function GET(request) {
       //
       // No-ops entirely until FB_CAPI_TOKEN is set. See lib/meta-capi.js.
       if (isNewAccount) {
+        await recordSiteEvent(adminSb,request,{path:'/register',event:'account_created'})
+        if(user.email_confirmed_at) await recordSiteEvent(adminSb,request,{path:'/register',event:'email_confirmed'})
         await trackServerEvent('CompleteRegistration', {
           request,
           email: user.email,

@@ -1,0 +1,46 @@
+# Statistics, public News and notification build — October 14, 2026
+
+## Scope and release boundary
+
+Owner requested completion without routine questions, then deferred app deployment. Complete source and build verification; do not promote Vercel candidates, submit mobile binaries, or publish store/ad copy. The earlier Inbox polling recovery remains the live release. Statistics candidates submitted before the deferral remain unpromoted. No further deployments are authorized by this build task.
+
+Local runtime: C:/Money/getguac-upgrade, port 3002, local Supabase via localhost:54326 bridge. Release source: C:/Money/tmp/public-release-git-20261013; only this task's changes are copied into the existing release baseline. Main checkout contains substantial other work and is not a deployment source. New News notification migration applied locally only. Statistics migration was already applied to production before deployment was deferred.
+
+## Implemented
+
+- Dedicated admin Statistics: dates/timezone, daily/hourly views, approximate city/region/country, devices, acquisition source, entry/last pages, route transitions and signup stages. Detailed records retained 30 days; historical daily totals shown separately. Daily visitor hashes and inferred 30-minute visits are estimates, not unique people or proof of why someone left. No raw IP, user agent, email, form contents, URL query or referrer path stored. Honor DNT/GPC. Production-only collection and server/admin authorization; raw events denied to anonymous and ordinary members.
+- Public /news and /news/stocks/[symbol], preserving authenticated DashboardLayout and saved watchlists. Guests use MarketingShell and News navigation, can read/search, and see sign-in actions for private features. Disable private watchlist requests and exclude cached member data from guest rendering. Await stock route params. Safe same-origin login return path supports returning to watchlists.
+- Persisted news notifications, owner-only reads and read-status updates, service-only creation, unique user/event key. Frequency: Off, Daily, Weekly, Important. UTC day/week windows; default in-app daily, push opt-in false. Saved-watchlist-only option uses all saved lists; matches explicit tickers and named major companies. Important sources: official Fed monetary-policy decisions, BLS CPI/employment releases, or explicit feed priority. No model urgency guesses. Deduplicate stories and reject stale/future/unsafe links.
+- Reuse the existing notification dispatcher. Hourly news checks allow resuming after quiet hours; all prior categories retain 14:00 UTC scheduled processing. No every-minute notifications. Existing product-recall processing and preference remain separate. Mobile header bell opens the existing notification destination.
+- Earnings adapter and compact company/watchlist display: previous 7 / next 30 days, report date/time and supplied quarter/year, expected EPS/revenue separated from reported values, timestamp/source and consensus caveat. Missing figures/currency are not invented. Existing major-company set retained. Related-news matching uses company aliases/tickers. FINNHUB_API_KEY remains required for live data; no subscription was purchased.
+- Native login offers Read news without signing in through the existing external-browser helper. It uses configured API_BASE_URL; signed-in News WebView routing is preserved.
+
+## Design review and evidence
+
+Reviewed owner consolidated changes, design memory and DESIGN_GUIDELINES before editing. This is access/routing and integration work preserving the existing News/Markets and notification designs, not a new landing-page redesign. Composition: public header → mascot-left News heading → shared Markets/Watchlist/News tabs → sourced reports/stories; member navigation stays in the existing shell. Notification cadence control lives within its own news-preference section and governs news only.
+
+Criteria: compact reports/alerts, violet controls rather than green structural changes, readable typography/wrapping, 44px actions, existing branding/navigation, private saved state, guest/member separation, real clicks/back navigation and mobile overflow checks. Reused MarketingShell, DashboardLayout, FinanceHub, NewsDesktop, GuacMascot, notification API and existing cron.
+
+Local synthetic QA only (not live earnings or user purchases): web/.local/test-news-build.mjs, web/.local/news-review/results.json and guest/notifications screenshots at 1440, 390, 320px. Passed guest HTTP200 without watchlist request, member saved list preserved, stock/back clicks, no page errors or whole-page overflow, preference save/reload, API401 anonymous, table denial to anon, cross-user isolation, forbidden title update, duplicate insert suppression and persisted read status. Visually inspected full desktop and mobile compositions. Added the existing mascot left of News heading after review; repeated the rendered checks. Existing product-alert description and older category styling are preserved.
+
+Statistics QA: web/.local/test-statistics-ui.mjs, web/.local/statistics-review/results.json and screenshots at 1440/390/320. Passed admin/member/anonymous controls, persisted counts, invalid dates, timezone/hour controls and back/entry navigation. Review corrected date wrapping and excessive expanded-table height. Unit checks cover DST, Eastern/UTC midnight, path privacy, event minimization, ordered signup funnel, inference limits and opt-outs.
+
+Focused News/earnings/auth lint passed. Statistics, privacy, cadence/quiet-hours/watchlist/priority/dedup dispatcher tests, earnings adapter and email-cron authentication tests passed. Native changed login screen: flutter analyze passed with no issues. Release build evidence and artifact hashes are recorded below after builds finish. Existing wider-repository hook/image warnings are not new errors and remain outside this patch.
+
+## Remaining external verification
+
+- Finnhub credential and permitted calendar/consensus access are not configured. Nasdaq public calendar timed out; Yahoo calendar endpoint returned401. Do not describe displayed test fixtures as live data. Confirm real provider response, units/currency and current estimates when access exists.
+- SMTP secret names exist in GitHub and Vercel after owner's reset, but reset credential authentication and delivered backup email are unverified. The live deployment predates the new environment snapshot. No password is written in this audit.
+- FCM delivery to a real opted-in device and native login-button presentation/tap are unverified. Desktop/mobile web interactions are verified. iOS release compilation requires a macOS host and is not established by the Windows Android build.
+- Grok/OpenAI implementation and subscriptions remain deferred by the owner's earlier direction. Requested Gemini/Grok/OpenAI copy remains a draft; current provider wording must not imply unimplemented functionality. Store/ad publication and app deployment are deferred.
+
+Primary provider reference: https://finnhub.io/docs/api/earnings-calendar . No investment recommendations or model-training claims added.
+
+## Final build evidence
+
+- Web: npm run build exited0 against the isolated release checkout and local Supabase build configuration. 987 static pages generated; public News, stock routes, admin Statistics and both new APIs present in the route output. Build ID txWsI2-4MnpTmEDueKiKC. Log: web/.local/final-build-20261014.log. This locally configured output is verification evidence; production hosting must rebuild with its own environment when deployment is resumed.
+- Android: flutter build appbundle --release --no-pub exited0 from the main mobile source. Gradle completed in610.9s, reported99.0MB. Archive: C:/Money/release-builds/2026-10-14/GetGuac-android-build-2026-10-14.aab, 103840887 bytes, SHA256 2DCD98196F03EE25E34DF05C18D9A5FABCF9FFCEF0BE4CE27CABECD38932A7E7. Archive copy hash matches original; ZIP verified to contain the base manifest and arm64 app library. Log: web/.local/android-build-20261014.log.
+- Android merged release manifests identify0.4.21, versionCode221, retaining the current source version. This is a build artifact, not a store submission. Release version/build number must be reconciled with current Play/App Store versions before upload; the verified iOS store release is0.4.24/build264. Do not upload this artifact as a new store version without that release step.
+- Android build emitted a nonfatal existing-plugin Kotlin migration warning. No SDK/plugin upgrade or source-version bump was introduced by this task. No iOS binary built on Windows.
+- Final rendered QA included the sourced quarter/year row at320px with wrapping and no overflow. One concurrent-build QA run exceeded a30-second wait for the watchlist while local route compilation took26.8s. That run is not counted as a pass. The subsequent warm-server run with a90-second diagnostic allowance passed all three widths; final results.json contains three successful entries. No production performance conclusion is drawn from local dev compilation.
+- The Android build includes the existing main mobile working changes; it is not proof that those unrelated changes have all received product review. The release checkout contains only the small News-login entry patch for this task.

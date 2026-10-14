@@ -22,6 +22,7 @@
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { sendAdminAlert, adminAlertConfigured, alertRecipient } from '../../../../lib/alert-email'
 import { QUARANTINE_AFTER_FAILURES } from '../../../../lib/mailbox-reauth'
+import { emailCronAuthorized } from '../../../../lib/email-cron-auth.mjs'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
@@ -64,7 +65,7 @@ async function alertedRecently(sb, signature) {
 }
 
 export async function POST(request) {
-  if (request.headers.get('x-cron-secret') !== process.env.CRON_SECRET) {
+  if (!emailCronAuthorized(request)) {
     return Response.json({ healthy: false, error: 'unauthorized: cron secret mismatch' }, { status: 401 })
   }
 
@@ -262,3 +263,5 @@ export async function POST(request) {
   const couldNotAlert = !throttled && !alerted
   return Response.json(payload, { status: couldNotAlert ? 503 : 200 })
 }
+
+export const GET = POST

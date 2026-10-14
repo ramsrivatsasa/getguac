@@ -21,6 +21,7 @@ import { provisionMissingMailboxes } from '../../../../lib/provision-missing'
 import { verifyRetailerReceiptConnection } from '../../../../lib/retailer-connections'
 import { hasSeparateEmailOffer, saveEmailPromotionCandidate } from '../../../../lib/email-promotion'
 import { classifyCommerceEmail } from '../../../../lib/email-classification'
+import { emailCronAuthorized } from '../../../../lib/email-cron-auth.mjs'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -42,7 +43,7 @@ function leafLooksLikeGuacked(path) {
 }
 
 export async function POST(request) {
-  if (request.headers.get('x-cron-secret') !== process.env.CRON_SECRET) {
+  if (!emailCronAuthorized(request)) {
     // Diagnostic (no secret values leaked): tells you *which* side is wrong —
     // a missing header = GitHub Actions secret unset; UNSET server env =
     // Vercel CRON_SECRET missing/stale (often a failed/partial deploy).
@@ -360,3 +361,6 @@ export async function POST(request) {
 
   return Response.json(summary)
 }
+
+// Run the same Inbox pipeline from Vercel's GET scheduler. No second agent.
+export const GET = POST

@@ -2,6 +2,14 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "crons": [
     {
+      "path": "/api/email/poll",
+      "schedule": "*/10 * * * *"
+    },
+    {
+      "path": "/api/email/health",
+      "schedule": "5,35 * * * *"
+    },
+    {
       "path": "/api/embeddings/refresh",
       "schedule": "30 5 * * *"
     },

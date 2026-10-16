@@ -33,6 +33,8 @@ The two new approved marketing images were inspected, uploaded, selected at one 
 
 ## Mobile and unresolved dependencies
 
+Final advertising follow-up: NEXT_PUBLIC_GOOGLE_ADS_ENABLED=1 was also saved in the Vercel production project environment for future builds, matching the tested deployment override. Call-asset creation UI offers only Create new/Use existing, not a campaign inheritance exclusion. The official API supports campaign.excluded_parent_asset_field_types including CALL, but no authenticated Google Ads API connector/developer credential is available here. No fake replacement number, global chess-asset change or unverified exclusion is introduced.
+
 Android0.4.25/code265 compiled successfully. Manifest/version and archive SHA256 verified;245 tests pass with one fixture-dependent integration skip. Analysis passes with93 existing warnings/information and no errors. Artifact and exact limits: C:/Money/release-builds/2026-10-16/BUILD_STATUS.md. No device connected; physical-device attestations, real FCM delivery, iOS archive and store submissions remain open. Do not replace the gate with a false attestation.
 
 Finnhub key is absent. Existing documented provider probes and adapter tests do not establish permitted live calendar/consensus access. An asynchronous question asks where an existing secure key is stored; no purchase/key creation is inferred. Actual source earnings values remain unavailable.

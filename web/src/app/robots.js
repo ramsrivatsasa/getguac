@@ -7,7 +7,9 @@ export default function robots() {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/api/', '/dashboard/', '/login', '/register', '/reset-password', '/embed', '/_dev/'],
+        // Auth pages must be crawlable for their noindex metadata to be read.
+        // Authentication, rather than robots.txt, protects member records.
+        disallow: ['/api/', '/embed', '/_dev/'],
       },
     ],
     sitemap: [`${SITE_URL}/sitemap.xml`, `${SITE_URL}/money-bootcamp/sitemap.xml`],

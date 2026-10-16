@@ -46,7 +46,7 @@ const securityHeaders = [
       // *.adtrafficquality.google = AdSense's invalid-traffic checks (sodar).
       // Google won't reliably serve ads while these are CSP-blocked, so it
       // must be in script-src + connect-src + frame-src per Google's CSP docs.
-      `script-src 'self' 'unsafe-inline'${scriptEvalDirective} https://challenges.cloudflare.com https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.googleadservices.com https://adservice.google.com https://*.google.com https://*.adtrafficquality.google https://cdn.ampproject.org https://connect.facebook.net https://va.vercel-scripts.com`,
+      `script-src 'self' 'unsafe-inline'${scriptEvalDirective} https://www.googletagmanager.com https://challenges.cloudflare.com https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.googleadservices.com https://adservice.google.com https://*.google.com https://*.adtrafficquality.google https://cdn.ampproject.org https://connect.facebook.net https://va.vercel-scripts.com`,
       // connect.facebook.net = Meta Pixel loader, va.vercel-scripts.com =
       // Vercel Analytics. Both ALSO need connect-src below to report events —
       // a script that loads but can't POST is a silently broken counter, which
@@ -73,7 +73,7 @@ const securityHeaders = [
       // into the console on each one, which buries the errors worth reading.
       // *.google.com does not cover it — gstatic.com is a different registrable
       // domain, which is why the existing wildcard let it through unnoticed.
-      `connect-src 'self'${localSupabaseConnect} https://*.supabase.co https://*.supabase.in wss://*.supabase.co wss://*.supabase.in https://api.migadu.com https://dns.google https://pagead2.googlesyndication.com https://*.googlesyndication.com https://googleads.g.doubleclick.net https://*.google.com https://csi.gstatic.com https://*.adtrafficquality.google https://connect.facebook.net https://www.facebook.com https://va.vercel-scripts.com https://vitals.vercel-insights.com`,
+      `connect-src 'self'${localSupabaseConnect} https://www.googleadservices.com https://*.supabase.co https://*.supabase.in wss://*.supabase.co wss://*.supabase.in https://api.migadu.com https://dns.google https://pagead2.googlesyndication.com https://*.googlesyndication.com https://googleads.g.doubleclick.net https://*.google.com https://csi.gstatic.com https://*.adtrafficquality.google https://connect.facebook.net https://www.facebook.com https://va.vercel-scripts.com https://vitals.vercel-insights.com`,
       // Ad creatives render inside Google ad iframes; Turnstile renders its
       // challenge in a challenges.cloudflare.com iframe.
       // youtube-nocookie.com / youtube.com = the how-it-works video embed;
@@ -187,8 +187,11 @@ const nextConfig = {
       // links to every one of them. A wildcard here would bounce all eleven to
       // /learn and take the tools and guides sections down with it.
       { source: '/academy', destination: '/academy/lessons', permanent: true },
-      { source: '/resources', destination: '/academy', permanent: true },
-      { source: '/learn', destination: '/academy', permanent: true },
+      // Redirect before rendering: an in-page redirect can stream HTTP 200.
+      { source: '/plan', destination: '/calculators', permanent: true },
+      { source: '/home', destination: '/', permanent: true },
+      { source: '/resources', destination: '/academy/lessons', permanent: true },
+      { source: '/learn', destination: '/academy/lessons', permanent: true },
     ]
   },
 }

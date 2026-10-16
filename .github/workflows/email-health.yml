@@ -21,6 +21,15 @@ on:
   schedule:
     - cron: '5,35 * * * *'   # every 30 min, offset from the :00/:10/:20 poll
   workflow_dispatch:
+    inputs:
+      verify_smtp:
+        description: 'Verify the configured operational SMTP credentials'
+        type: boolean
+        default: false
+      send_test_email:
+        description: 'Send one verification message to the configured admin recipient'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -29,6 +38,39 @@ jobs:
   health:
     runs-on: ubuntu-latest
     steps:
+      - name: Verify operational SMTP and optional delivery
+        if: github.event_name == 'workflow_dispatch' && inputs.verify_smtp
+        env:
+          SMTP_USER: ${{ secrets.ALERT_SMTP_USER || 'noreply@getguac.app' }}
+          SMTP_PASS: ${{ secrets.ALERT_SMTP_PASS }}
+          ADMIN: ${{ secrets.ADMIN_ALERT_EMAIL || 'admin@getguac.app' }}
+          SEND_TEST: ${{ inputs.send_test_email }}
+        run: |
+          python3 - <<'PY'
+          import os, smtplib, ssl
+          from email.message import EmailMessage
+          from email.utils import make_msgid
+          password = os.environ.get('SMTP_PASS', '')
+          if not password:
+              raise SystemExit('ALERT_SMTP_PASS is missing')
+          try:
+              with smtplib.SMTP_SSL('smtp.migadu.com', 465, timeout=25, context=ssl.create_default_context()) as smtp:
+                  smtp.login(os.environ['SMTP_USER'], password)
+                  print('PASS SMTP authentication with the stored GitHub secret')
+                  if os.environ.get('SEND_TEST') == 'true':
+                      message = EmailMessage()
+                      message['From'] = os.environ['SMTP_USER']
+                      message['To'] = os.environ['ADMIN']
+                      message['Subject'] = 'GetGuac operational delivery verification'
+                      message['Message-ID'] = make_msgid(domain='getguac.app')
+                      message.set_content('This is the requested GetGuac operational email-delivery test. No user records or financial information are included.')
+                      refused = smtp.send_message(message)
+                      if refused:
+                          raise SystemExit('SMTP did not accept the configured recipient')
+                      print('PASS SMTP server accepted the test message for the configured admin recipient; inbox receipt must be independently verified')
+          except smtplib.SMTPResponseException as error:
+              raise SystemExit('SMTP verification failed with provider code ' + str(error.smtp_code))
+          PY
       - name: Check email-pull health
         id: health
         run: |

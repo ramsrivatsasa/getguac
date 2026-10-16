@@ -31,7 +31,13 @@ import { normalizeStoreName } from './store-name-normalize'
 
 export async function findExistingReceipt(sb, userId, candidate) {
   if (!sb || !userId || !candidate) return null
-  const { store_name, date, total_amount } = candidate
+  const { store_name, date, total_amount, retailer_order_key } = candidate
+  if (retailer_order_key) {
+    const { data, error } = await sb.from('receipts').select('id')
+      .eq('user_id', userId).eq('retailer_order_key', retailer_order_key).maybeSingle()
+    if (error) throw error
+    return data?.id || null
+  }
   if (!store_name || !date || total_amount == null) return null
 
   const norm = normalizeStoreName(store_name)
@@ -49,6 +55,7 @@ export async function findExistingReceipt(sb, userId, candidate) {
     .select('id, store_name, total_amount')
     .eq('user_id', userId)
     .eq('date', date)
+    .is('retailer_order_key', null)
     .limit(50)
   if (error || !data || data.length === 0) return null
 

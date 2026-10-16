@@ -68,7 +68,7 @@ export async function POST(request) {
   // and fine at the scale of "one person's lifetime of receipts" (<10k rows).
   const { data: receipts, error } = await sb
     .from('receipts')
-    .select('id, store_name, date, total_amount, tax_paid, from_statement, receipt_link, created_at, is_return, reconciled, statement_source')
+    .select('id, store_name, date, total_amount, tax_paid, from_statement, receipt_link, created_at, is_return, reconciled, statement_source, retailer_order_key')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
   if (error) return Response.json({ error: error.message }, { status: 500 })
@@ -84,6 +84,8 @@ export async function POST(request) {
   const dedupKey = (raw) => normalizeStoreName(raw).replace(/[^a-z0-9]/g, '')
   const buckets = new Map()
   for (const r of receipts || []) {
+    // Distinct verified retailer identities must never be merged by price.
+    if (r.retailer_order_key) continue
     if (!r.store_name || !r.date || r.total_amount == null) continue
     const norm = dedupKey(r.store_name)
     if (!norm) continue

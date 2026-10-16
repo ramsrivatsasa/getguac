@@ -10,6 +10,9 @@
 // Re-add `...GAMES.map(...)` below once AdSense approves.
 import { ARTICLES } from '../lib/articles'
 import { academyLessons } from '../lib/academy'
+import { GETGUAC_STAGES } from '../lib/getguac-circle'
+import { MONEY_GROUPS } from '../lib/money-journey'
+import { FEATURE_DETAILS } from '../lib/feature-details'
 
 const SITE_URL = 'https://getguac.app'
 
@@ -124,5 +127,15 @@ export default function sitemap() {
     ...['lessons','articles','guides','tools'].map(section=>({url:`${SITE_URL}/academy/${section}`,lastModified:'2026-10-12',changeFrequency:'monthly',priority:0.7})),
     ...academyLessons().map((l) => ({ url: `${SITE_URL}/academy/${l.slug}`, lastModified: '2026-10-12', changeFrequency: 'monthly', priority: 0.6, images:[`${SITE_URL}/academy/illustrations/${l.sourceSlug}.svg`] })),
   ]
-  return [...pages, ...featureGuides, ...resourcePages, ...articles, ...academy]
+  // Use the route catalogs so new public guides cannot silently miss discovery.
+  const featurePaths = [...new Set([
+    ...GETGUAC_STAGES.map(stage => `/features/${stage.slug}`),
+    ...MONEY_GROUPS.map(group => `/features/${group.slug}`),
+    ...Object.entries(FEATURE_DETAILS).flatMap(([group, tools]) =>
+      Object.keys(tools).map(tool => `/features/${group}/${tool}`)),
+  ])]
+  const features = featurePaths.map(path => ({
+    url: `${SITE_URL}${path}`, changeFrequency: 'monthly', priority: 0.7,
+  }))
+  return [...pages, ...features, ...featureGuides, ...resourcePages, ...articles, ...academy]
 }

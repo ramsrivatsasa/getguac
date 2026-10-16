@@ -15,6 +15,7 @@ import { encryptSecret, generateMailboxPassword } from '../../../../lib/crypto'
 import { validatePassword } from '../../../../lib/passwordStrength'
 import { isDisposableEmail } from '../../../../lib/disposable-emails'
 import { verifySignupChallenge } from '../../../../lib/signup-challenge'
+import { googleAdsSignupId } from '../../../../lib/google-ads-signup.mjs'
 export const runtime = 'nodejs'
 
 // Best-effort: provision the Migadu mailbox at signup so the user's
@@ -243,10 +244,14 @@ export async function POST(request) {
       })
     }
 
+    const googleAdsId = googleAdsSignupId(data.user)
+    const adsMeasurement = googleAdsId ? { google_ads_event_id: googleAdsId } : {}
+
     // ── Confirmation required? (Supabase returns session=null when "Confirm
     //    email" is enabled in the project's Auth settings.) ──
     if (!data.session) {
       return Response.json({
+        ...adsMeasurement,
         ok: true,
         needs_email_confirmation: true,
         email,
@@ -267,13 +272,13 @@ export async function POST(request) {
     if (upErr) {
       console.error('[auth/sign-up] username claim failed:', upErr.message)
       // Don't fail the signup — they can claim it later from /profile
-      return Response.json({ ok: true, username_claim_failed: upErr.message })
+      return Response.json({ ok: true, username_claim_failed: upErr.message, ...adsMeasurement })
     }
 
     const displayName = [first_name, last_name].filter(Boolean).join(' ') || username
     const mailbox = await provisionMailboxAtSignup(sbAdmin, userId, username, displayName)
 
-    return Response.json({ ok: true, username, mailbox })
+    return Response.json({ ok: true, username, mailbox, ...adsMeasurement })
   } catch (err) {
     console.error('[auth/sign-up]', err)
     return Response.json({ error: 'Sign-up failed' }, { status: 500 })

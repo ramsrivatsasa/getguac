@@ -12,6 +12,10 @@ import CommandPalette from '../../components/CommandPalette'
 import AdSlot from '../../components/AdSlot'
 import { find10Enabled, find10BackendAllowed } from '../../lib/find-your-10/integration'
 
+export const metadata = {
+  robots: { index: false, follow: false, googleBot: { index: false, follow: false } },
+}
+
 export default async function DashboardLayout({ children }) {
   if (find10Enabled() && !find10BackendAllowed()) redirect('/local-setup')
   const sb = createClient()

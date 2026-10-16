@@ -4,6 +4,7 @@ import path from 'node:path'
 import { redirect } from 'next/navigation'
 import { createClient } from '../lib/supabase/server'
 import HomeInteractions from './HomeInteractions'
+import GoogleAdsTag from '../components/GoogleAdsTag'
 
 export const metadata = publicMetadata('/', 'Everyday Savings & Consumer Protection',
   'Find everyday savings, compare costs, review bills, and protect your purchases with GetGuac. Build a practical savings plan from receipts and spending records. No bank login required.')
@@ -35,6 +36,7 @@ export default async function Home() {
   // the client to take over. Only the behaviour is an island.
   return (
     <>
+      <GoogleAdsTag />
       <style dangerouslySetInnerHTML={{ __html: css }} />
       <div dangerouslySetInnerHTML={{ __html: markup }} />
       <HomeInteractions script={script} />

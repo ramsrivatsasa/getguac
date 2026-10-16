@@ -128,8 +128,9 @@ export async function saveReceipt(sb, userId, parsed, opts = {}) {
     store_name: flatParsed.store_name || 'Receipt',
     date: flatParsed.date || new Date().toISOString().slice(0, 10),
     total_amount: Number(flatParsed.total_amount ?? 0),
+    ...(opts.retailer_order_key ? { retailer_order_key: opts.retailer_order_key } : {}),
   }
-  const existingId = await findExistingReceipt(sb, userId, candidate).catch(() => null)
+  const existingId = await findExistingReceipt(sb, userId, candidate)
 
   if (existingId) {
     return mergeIntoExisting(sb, userId, existingId, {
@@ -154,6 +155,7 @@ export async function saveReceipt(sb, userId, parsed, opts = {}) {
 
   // 5. INSERT new row.
   const insertRow = {
+    ...(opts.retailer_order_key ? { retailer_order_key: opts.retailer_order_key } : {}),
     user_id: userId,
     store_name: flatParsed.store_name || 'Receipt',
     store_id,

@@ -13,7 +13,7 @@ export function discoveryPriority(groups,data,now=new Date()) {
  const start=historyStart.toISOString().slice(0,10),through=new Date(now).toISOString().slice(0,10)
  const policy={...discoveryDefaults,...data.discoveryPolicy}
  const recommendations=data.planSuggestions?.suggestions||[]
- return groups.filter(g=>!isBasketProduce(g)&&sameApparelSize(g.title,g.title)&&!/^\s*(?:merchandise|knits|receipt total|purchase|items?)\s*$/i.test(g.title))
+ return groups.filter(g=>!isBasketProduce(g)&&sameApparelSize(g.title,g.title,g.rows.map(row=>row.category||'').join(' '))&&!/^\s*(?:merchandise|knits|receipt total|purchase|items?)\s*$/i.test(g.title))
   .map(g=>{
    const spending=g.rows.reduce((n,r)=>n+Math.max(0,Math.round(Number(r.price)*100)),0)
    const model=recordedModel(g)

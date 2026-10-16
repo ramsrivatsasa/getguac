@@ -35,7 +35,7 @@ export function quickOpportunities(data, now = new Date()) {
     if (essential) continue
     const historyStart=new Date(now);historyStart.setUTCDate(historyStart.getUTCDate()-180)
     const historyAllowed=r=>allowedSuggestions(data.progress,'purchase',g.key,[{key:`history:${r.id}`,historyMerchant:r.receipts.store_name}]).length>0
-    const matchingIdentity=r=>(!latest.model||containsModel(r.model||'',latest.model))&&sameApparelSize(latest.item_name,r.item_name)
+    const matchingIdentity=r=>(!latest.model||containsModel(r.model||'',latest.model))&&sameApparelSize(latest.item_name,r.item_name,latest.category)
     const historical=!dining&&(data.items||[]).filter(r=>usableItem(r)&&matchingIdentity(r)&&r.id!==latest.id&&String(r.item_name||'').trim().toLowerCase().replace(/\s+/g,' ')===g.key&&(!latest.sku||!r.sku||latest.sku===r.sku)&&r.receipts.date>=historyStart.toISOString().slice(0,10)&&r.receipts.date<latest.receipts.date&&Math.round(Number(r.price)*100/Number(r.qty))<unit).sort((a,b)=>a.price/a.qty-b.price/b.qty).find(historyAllowed)
     if(historical) {
       const alternativeCents=Math.round(Number(historical.price)*100/Number(historical.qty))
@@ -108,7 +108,8 @@ export function quickOpportunities(data, now = new Date()) {
     const option=history?.alternatives[0] || product || (c.alternatives || [c]).find(a=>!a.needsPrice && (a.estimateCents>0||a.reviewOnly&&a.listedDifferenceCents>0))
     return option ? {...c,...option,sourceIds:[...new Set([...c.sourceIds,...(history?.sourceIds||[])])],receiptIds:[...new Set([...c.receiptIds,...(history?.receiptIds||[])])],alternatives:[option,...(product&&product.key!==option.key?[product]:[]),...(c.alternatives || []).filter(a=>a.key!==option.key&&a.key!==product?.key)]} : null
   }).filter(Boolean).flatMap(c=>{
-    const alternatives=allowedSuggestions(data.progress,'purchase',c.itemKey,c.alternatives||[c]).filter(a=>(a.sourceLabel!=='Product'||a.available===true)&&sameApparelSize(c.title,a.sourceLabel==='Your receipt'?c.title:a.choice))
+    const category=(data.items||[]).filter(item=>c.sourceIds.includes(item.id)).map(item=>item.category||'').join(' ')
+    const alternatives=allowedSuggestions(data.progress,'purchase',c.itemKey,c.alternatives||[c]).filter(a=>(a.sourceLabel!=='Product'||a.available===true)&&sameApparelSize(c.title,a.sourceLabel==='Your receipt'?c.title:a.choice,category))
     return alternatives.length?[{...c,...alternatives[0],alternatives}]:[]
   }).map(c=>{
     const rows=(data.items||[]).filter(i=>c.sourceIds.includes(i.id))

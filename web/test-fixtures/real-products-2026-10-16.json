@@ -1,0 +1,31 @@
+{
+  "syntheticTransactions": true,
+  "note": "Primary-source facts checked October 16. No recorded user purchase or ZIP-specific price is established. Unknown sizes remain unknown.",
+  "products": [
+    {
+      "name": "Vitamin D Whole Milk - 1gal - Good & Gather",
+      "brand": "Good & Gather",
+      "sku": "13276134",
+      "upc": "085239284056",
+      "retailer": "Target",
+      "sourceUrl": "https://www.target.com/p/-/A-13276134",
+      "observedPublicPrice": 2.99,
+      "currency": "USD",
+      "specifications": {"volume": "1 US gallon", "packCount": 1, "fat": "whole", "organic": false},
+      "verifiedOn": "2026-10-16",
+      "locationVerified": false,
+      "priceBasis": "Public product page price; not verified for a chosen store, shipping, delivery, tax or membership costs. Cannot substantiate local basket savings."
+    },
+    {
+      "name": "Nike Everyday Plus Cushioned Training Crew Socks (6 Pairs)",
+      "brand": "Nike",
+      "model": "SX6897-904",
+      "retailer": "Nike",
+      "sourceUrl": "https://www.nike.com/t/everyday-plus-cushioned-training-crew-socks-6-pairs-xGOLbiOE/SX6897-904",
+      "specifications": {"packPairs": 6, "size": null},
+      "verifiedOn": "2026-10-16",
+      "observedPublicPrice": null,
+      "priceBasis": "Product identity only. No selected size or size-specific available price verified. Model digits are not a size."
+    }
+  ]
+}

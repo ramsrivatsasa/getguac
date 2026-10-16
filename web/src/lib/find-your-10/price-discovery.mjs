@@ -26,7 +26,7 @@ export function priceOptions(results, group, now=new Date()) {
   const model=recordedModel(group)
   const exactModel=model&&containsModel([title,r.model].filter(Boolean).join(' '),model)
   if(model&&!exactModel){const review=compatibleReviewOption(r,group,now);return review?[review]:[]}
-  if(!sameApparelSize(group.title,title))return []
+  if(!sameApparelSize(group.title,title,group.rows.map(row=>row.category||'').join(' ')))return []
   if(!sameMeasurements(group.title,title))return []
   if(/\b(?:potting|soil)\b/i.test(group.title)&&['cactus','succulent','orchid','african violet','seed starting'].some(t=>title.toLowerCase().includes(t)&&!group.title.toLowerCase().includes(t)))return []
   if(egg&&/egg carton|flocked|decorative|artificial|miniature|hard boiled|liquid/i.test(title))return []

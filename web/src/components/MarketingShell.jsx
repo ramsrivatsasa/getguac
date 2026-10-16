@@ -12,6 +12,7 @@ import MarketingAuthButtons from './MarketingAuthButtons'
 import MarketingMobileMenu from './MarketingMobileMenu'
 import MarketingFooter from './MarketingFooter'
 import AdSenseScript from './AdSenseScript'
+import GoogleAdsTag from './GoogleAdsTag'
 import { GG_NAV, GG_NAV_FLAT, GG_CARET, ggNavCss } from '../lib/gg-nav-def'
 
 // The nav is NOT defined here any more. It lives in src/lib/gg-nav-def.js, the
@@ -255,6 +256,7 @@ export default function MarketingShell({ subtitle, hideSearch = true, headerTitl
         </div>
       </header>
 
+      <GoogleAdsTag />
       <main>{children}</main>
 
       <div className="gg-embed-hide"><MarketingFooter finePrint={footerFinePrint} /></div>

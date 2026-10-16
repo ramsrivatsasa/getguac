@@ -1,4 +1,5 @@
-const apparel=/\b(shirts?|t-shirts?|tees?|knits?|hoodies?|sweaters?|jackets?|pants|jeans|shorts|dresses|shoes?|sneakers?|footwear|downshifter|revolution|jacquard|clothing|apparel)\b/i
+const apparel=/\b(shirts?|t-shirts?|tees?|knits?|hoodies?|sweaters?|jackets?|pants|jeans|shorts|dresses|shoes?|sneakers?|footwear|downshifter|revolution|jacquard|clothing|apparel|socks?|polos?|blouses?|leggings?|bras?|underwear|swimwear|swimsuits?|boots?|sandals?|slippers?|skirts?|suits?|coats?|tank tops?)\b/i
+const apparelCategory=/\b(clothing|clothes|apparel|fashion|footwear|shoes)\b/i
 export function apparelSize(title='') {
  const text=String(title)
  const aliases={'extra small':'XS',small:'S',medium:'M',large:'L','extra large':'XL','2xl':'XXL','3xl':'XXXL'}
@@ -8,8 +9,8 @@ export function apparelSize(title='') {
  const sizes=[...new Set([...matches,...numeric,...leading])]
  return sizes.length===1?sizes[0]:null
 }
-export function sameApparelSize(purchase,offer) {
- if(!apparel.test(purchase))return true
+export function sameApparelSize(purchase,offer,category='') {
+ if(!apparel.test(purchase)&&!apparelCategory.test(category))return true
  const original=apparelSize(purchase),candidate=apparelSize(offer)
  return Boolean(original&&candidate&&original===candidate)
 }

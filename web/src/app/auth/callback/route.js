@@ -29,6 +29,7 @@ import { createApiClient } from '../../../lib/supabase/server'
 import { trackServerEvent } from '../../../lib/meta-capi'
 import { recordSiteEvent } from '../../../lib/record-site-event'
 import { safeAuthNext } from '../../../lib/auth-next.mjs'
+import { googleAdsSignupId } from '../../../lib/google-ads-signup.mjs'
 
 export const runtime = 'nodejs'
 
@@ -84,6 +85,7 @@ function splitName(fullName) {
 }
 
 export async function GET(request) {
+  let googleAdsId = null
   const url = new URL(request.url)
   const code = url.searchParams.get('code')
   const next = safeAuthNext(url.searchParams.get('next'))
@@ -199,6 +201,7 @@ export async function GET(request) {
       //
       // No-ops entirely until FB_CAPI_TOKEN is set. See lib/meta-capi.js.
       if (isNewAccount) {
+        googleAdsId = googleAdsSignupId(user)
         await recordSiteEvent(adminSb,request,{path:'/register',event:'account_created'})
         if(user.email_confirmed_at) await recordSiteEvent(adminSb,request,{path:'/register',event:'email_confirmed'})
         await trackServerEvent('CompleteRegistration', {
@@ -216,5 +219,10 @@ export async function GET(request) {
     console.error('[auth/callback] profile-provision non-fatal:', err)
   }
 
-  return NextResponse.redirect(new URL(next, url.origin))
+  const destination = googleAdsId ? `/register/complete?next=${encodeURIComponent(next)}` : next
+  const response = NextResponse.redirect(new URL(destination, url.origin))
+  if (googleAdsId) response.cookies.set('gg_ads_signup', googleAdsId, {
+    path: '/register', maxAge: 300, sameSite: 'lax', secure: url.protocol === 'https:',
+  })
+  return response
 }
